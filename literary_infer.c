@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "channel_protocol.h"
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #define API EMSCRIPTEN_KEEPALIVE
@@ -12,6 +14,8 @@
 #endif
 
 #define MAX_PARAMETERS 128
+#define HOLO_DIMENSION 256
+#define HOLO_CAPACITY 32
 
 typedef struct {
     char magic[8];
@@ -58,6 +62,161 @@ static int recent_next;
 static uint64_t position;
 static uint32_t random_state = 1;
 static int loaded;
+
+/*
+ * Browser-scale projection of holostuff's LocalAgentCore memory contract:
+ * deterministic text hypervectors, an exact cosine index, and honest
+ * abstention in the caller.  The transformer remains the summarizer; this
+ * index only retrieves an older compressed episode that may be relevant.
+ */
+static float holo_vectors[HOLO_CAPACITY][HOLO_DIMENSION];
+static int holo_count;
+static int holo_next;
+static float holo_score;
+
+static uint64_t holo_mix(uint64_t value)
+{
+    value ^= value >> 30;
+    value *= UINT64_C(0xbf58476d1ce4e5b9);
+    value ^= value >> 27;
+    value *= UINT64_C(0x94d049bb133111eb);
+    return value ^ (value >> 31);
+}
+
+static int holo_stopword(const char *word, int length)
+{
+    static const char *words[] = {
+        "and", "are", "but", "for", "from", "have", "not", "only",
+        "that", "the", "then", "this", "was", "were", "what", "when",
+        "where", "with", "you", "your"
+    };
+    size_t index;
+    for (index = 0; index < sizeof(words) / sizeof(words[0]); ++index) {
+        if ((int)strlen(words[index]) == length &&
+            memcmp(word, words[index], (size_t)length) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void holo_add_feature(float *vector, uint64_t feature, int width,
+                             float weight)
+{
+    uint64_t state = holo_mix(feature);
+    int index;
+    for (index = 0; index < width; ++index) {
+        state = holo_mix(state + (uint64_t)index + UINT64_C(0x9e3779b97f4a7c15));
+        vector[state & (HOLO_DIMENSION - 1)] +=
+            (state & UINT64_C(0x100)) ? weight : -weight;
+    }
+}
+
+static void holo_encode(const unsigned char *text, int length, float *vector)
+{
+    char word[48];
+    int word_length = 0;
+    uint64_t previous = 0;
+    int have_previous = 0;
+    int cursor;
+    float norm = 0.0f;
+    memset(vector, 0, HOLO_DIMENSION * sizeof(*vector));
+    for (cursor = 0; cursor <= length; ++cursor) {
+        int value = cursor < length ? text[cursor] : ' ';
+        int alphanumeric = (value >= 'A' && value <= 'Z') ||
+                           (value >= 'a' && value <= 'z') ||
+                           (value >= '0' && value <= '9') || value == '_';
+        if (alphanumeric && word_length < (int)sizeof(word) - 1) {
+            word[word_length++] = (char)(value >= 'A' && value <= 'Z'
+                                                    ? value + ('a' - 'A')
+                                                    : value);
+        } else if (word_length != 0) {
+            uint64_t hash = UINT64_C(14695981039346656037);
+            int index;
+            word[word_length] = '\0';
+            for (index = 0; index < word_length; ++index) {
+                hash ^= (unsigned char)word[index];
+                hash *= UINT64_C(1099511628211);
+            }
+            if (word_length >= 3 && !holo_stopword(word, word_length)) {
+                uint64_t prefix_hash = UINT64_C(14695981039346656037);
+                holo_add_feature(vector, hash, 16, 1.0f);
+                for (index = 0; index < word_length && index < 6; ++index) {
+                    prefix_hash ^= (unsigned char)word[index];
+                    prefix_hash *= UINT64_C(1099511628211);
+                    if (index >= 3 && index + 1 < word_length) {
+                        holo_add_feature(vector, prefix_hash, 6, 0.45f);
+                    }
+                }
+                if (have_previous) {
+                    holo_add_feature(vector,
+                                     holo_mix(previous ^ (hash << 1)),
+                                     8, 0.65f);
+                }
+                previous = hash;
+                have_previous = 1;
+            }
+            word_length = 0;
+        }
+    }
+    for (cursor = 0; cursor < HOLO_DIMENSION; ++cursor) {
+        norm += vector[cursor] * vector[cursor];
+    }
+    norm = sqrtf(norm);
+    if (norm > 0.0f) {
+        for (cursor = 0; cursor < HOLO_DIMENSION; ++cursor) {
+            vector[cursor] /= norm;
+        }
+    }
+}
+
+API void lm_holo_reset(void)
+{
+    memset(holo_vectors, 0, sizeof(holo_vectors));
+    holo_count = 0;
+    holo_next = 0;
+    holo_score = 0.0f;
+}
+
+API int lm_holo_remember(const unsigned char *text, int length)
+{
+    int slot;
+    if (text == NULL || length <= 0 || length > 8192) return -1;
+    slot = holo_next;
+    holo_encode(text, length, holo_vectors[slot]);
+    holo_next = (holo_next + 1) % HOLO_CAPACITY;
+    if (holo_count < HOLO_CAPACITY) ++holo_count;
+    return slot;
+}
+
+API int lm_holo_recall(const unsigned char *text, int length)
+{
+    float query[HOLO_DIMENSION];
+    float best = -1.0f;
+    int best_slot = -1;
+    int slot;
+    if (text == NULL || length <= 0 || length > 8192 || holo_count == 0) {
+        holo_score = 0.0f;
+        return -1;
+    }
+    holo_encode(text, length, query);
+    for (slot = 0; slot < holo_count; ++slot) {
+        float score = 0.0f;
+        int index;
+        for (index = 0; index < HOLO_DIMENSION; ++index) {
+            score += query[index] * holo_vectors[slot][index];
+        }
+        if (score > best) {
+            best = score;
+            best_slot = slot;
+        }
+    }
+    holo_score = best;
+    return best_slot;
+}
+
+API float lm_holo_get_score(void) { return holo_score; }
+API int lm_holo_get_count(void) { return holo_count; }
 
 static void release_working_memory(void)
 {
@@ -288,6 +447,7 @@ API int lm_load(const unsigned char *data, int length)
     loaded = 1;
     position = 0;
     recent_count = recent_next = 0;
+    lm_holo_reset();
     return 0;
 }
 
@@ -395,8 +555,11 @@ API int lm_sample(float temperature, int top_k, float repetition_penalty)
                 break;
             }
         }
-        if (repeated) score -= logf(repetition_penalty);
-        if (!(token == '\n' || (token >= 32 && token < 127))) {
+        if (repeated && token != CHANNEL_MESSAGE_END_TOKEN) {
+            score -= logf(repetition_penalty);
+        }
+        if (!(token == CHANNEL_MESSAGE_END_TOKEN || token == '\n' ||
+              (token >= 32 && token < 127))) {
             score = -INFINITY;
         }
         candidates[token].token = token;
@@ -433,16 +596,100 @@ API int lm_get_parameters(void)
 }
 
 #ifndef __EMSCRIPTEN__
+static void feed_text(const char *text)
+{
+    int i;
+    for (i = 0; text[i]; ++i) {
+        unsigned char token = (unsigned char)text[i];
+        lm_feed(token < config.vocab ? token : '?');
+    }
+}
+
+static const char *style_summary(char style)
+{
+    if (style == 'S') return "Shakespearean dramatic scene";
+    if (style == 'C') return "Crowleyan dramatic scene";
+    if (style == 'B') return "Blakean visionary verse";
+    return "mixed literary conversation";
+}
+
+static int holo_self_test(void)
+{
+    static const unsigned char moon[] =
+        "friends hear a silver gate answer beneath the moon";
+    static const unsigned char crown[] =
+        "the king wears a gold crown in the morning court";
+    static const unsigned char query[] = "what answered at the moonlit gate";
+    static const unsigned char unrelated[] = "winter rivers cross the forest";
+    int result;
+    float relevant_score;
+    float unrelated_score;
+    lm_holo_reset();
+    if (lm_holo_remember(moon, (int)sizeof(moon) - 1) != 0 ||
+        lm_holo_remember(crown, (int)sizeof(crown) - 1) != 1) {
+        return 0;
+    }
+    result = lm_holo_recall(query, (int)sizeof(query) - 1);
+    relevant_score = lm_holo_get_score();
+    lm_holo_recall(unrelated, (int)sizeof(unrelated) - 1);
+    unrelated_score = lm_holo_get_score();
+    lm_holo_recall(query, (int)sizeof(query) - 1);
+    return result == 0 && relevant_score > 0.22f &&
+           unrelated_score < 0.22f && lm_holo_get_count() == 2;
+}
+
 int main(int argc, char **argv)
 {
     FILE *file;
     long size;
     unsigned char *data;
     const char *prompt;
+    const char *old_memory = NULL;
+    const char *response = NULL;
+    int chat = 0;
+    int memory = 0;
+    char style = 'D';
     int count;
     int i;
-    if (argc < 4) {
-        fprintf(stderr, "usage: %s MODEL PROMPT TOKENS\n", argv[0]);
+    if (argc == 2 && strcmp(argv[1], "--holo-self-test") == 0) {
+        if (!holo_self_test()) {
+            fprintf(stderr, "holographic memory self-test failed\n");
+            return EXIT_FAILURE;
+        }
+        printf("holographic memory self-test passed (cosine %.3f)\n",
+               lm_holo_get_score());
+        return EXIT_SUCCESS;
+    }
+    if (argc == 8 && strcmp(argv[2], "--memory") == 0) {
+        memory = 1;
+        if (strlen(argv[3]) != 1) {
+            fprintf(stderr, "error: memory style must be one character\n");
+            return EXIT_FAILURE;
+        }
+        style = argv[3][0];
+        old_memory = argv[4];
+        prompt = argv[5];
+        response = argv[6];
+        count = atoi(argv[7]);
+    } else if (argc == 6 && strcmp(argv[2], "--chat") == 0) {
+        chat = 1;
+        if (strlen(argv[3]) != 1) {
+            fprintf(stderr, "error: chat style must be one character\n");
+            return EXIT_FAILURE;
+        }
+        style = argv[3][0];
+        prompt = argv[4];
+        count = atoi(argv[5]);
+    } else if (argc == 4) {
+        prompt = argv[2];
+        count = atoi(argv[3]);
+    } else {
+        fprintf(stderr,
+                "usage: %s --holo-self-test\n"
+                "       %s MODEL PROMPT TOKENS\n"
+                "       %s MODEL --chat STYLE PROMPT TOKENS\n"
+                "       %s MODEL --memory STYLE OLD USER REPLY TOKENS\n",
+                argv[0], argv[0], argv[0], argv[0]);
         return EXIT_FAILURE;
     }
     file = fopen(argv[1], "rb");
@@ -461,17 +708,54 @@ int main(int argc, char **argv)
         fprintf(stderr, "error: invalid model\n");
         return EXIT_FAILURE;
     }
-    prompt = argv[2];
-    count = atoi(argv[3]);
-    for (i = 0; prompt[i]; ++i) {
-        unsigned char token = (unsigned char)prompt[i];
-        lm_feed(token < config.vocab ? token : '?');
-        putchar(prompt[i]);
+    if (memory) {
+        lm_feed(CHANNEL_START_TOKEN);
+        lm_feed(style);
+        lm_feed(CHANNEL_SUMMARY_TOKEN);
+        feed_text(old_memory);
+        lm_feed(CHANNEL_MESSAGE_END_TOKEN);
+        lm_feed(CHANNEL_MESSAGE_TOKEN);
+        lm_feed('A');
+        feed_text(prompt);
+        lm_feed(CHANNEL_MESSAGE_END_TOKEN);
+        lm_feed(CHANNEL_MESSAGE_TOKEN);
+        lm_feed('Z');
+        lm_feed(CHANNEL_REPLY_TOKEN);
+        lm_feed('A');
+        feed_text(response);
+        lm_feed(CHANNEL_MESSAGE_END_TOKEN);
+        lm_feed(CHANNEL_SUMMARY_TOKEN);
+        lm_feed(CHANNEL_TARGET_TOKEN);
+        printf("old memory: %s\nnew memory: ", old_memory);
+    } else if (chat) {
+        lm_feed(CHANNEL_START_TOKEN);
+        lm_feed(style);
+        lm_feed(CHANNEL_SUMMARY_TOKEN);
+        feed_text(style_summary(style));
+        lm_feed(CHANNEL_MESSAGE_END_TOKEN);
+        lm_feed(CHANNEL_MESSAGE_TOKEN);
+        lm_feed('A');
+        feed_text(prompt);
+        lm_feed(CHANNEL_MESSAGE_END_TOKEN);
+        lm_feed(CHANNEL_MESSAGE_TOKEN);
+        lm_feed('Z');
+        lm_feed(CHANNEL_REPLY_TOKEN);
+        lm_feed('A');
+        lm_feed(CHANNEL_TARGET_TOKEN);
+        printf("A: %s\nZ: ", prompt);
+    } else {
+        for (i = 0; prompt[i]; ++i) {
+            unsigned char token = (unsigned char)prompt[i];
+            lm_feed(token < config.vocab ? token : '?');
+            putchar(prompt[i]);
+        }
     }
     for (i = 0; i < count; ++i) {
-        int token = lm_sample(0.62f, 28, 1.12f);
-        putchar(token);
+        int token = memory ? lm_sample(0.42f, 20, 1.04f)
+                           : lm_sample(0.52f, 20, 1.12f);
         lm_feed(token);
+        if ((chat || memory) && token == CHANNEL_MESSAGE_END_TOKEN) break;
+        putchar(token);
     }
     putchar('\n');
     free(data);

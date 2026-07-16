@@ -9,6 +9,9 @@ mechanically checked synthetic-corpus generator:
   collections such as Shakespeare, William Blake, and Aleister Crowley.
 - `logic_corpus`: a reproducible generator for compact natural-deduction
   proofs over hereditarily finite sets.
+- `channel_corpus`: a converter that turns scripts, verse, and consented chat
+  exports into multi-speaker channels with explicit reply edges and learned
+  lossy-memory transitions.
 
 Both are written in C11. On macOS, `literary_lm` automatically uses Apple's
 built-in Accelerate framework for matrix multiplication. Other platforms use a
@@ -47,18 +50,76 @@ python3 -m http.server 8000 --directory docs
 
 Then open `http://localhost:8000`. The first visit downloads `model.litq8`;
 after that, inference and conversation memory remain within the page. The UI
-offers mixed, Shakespeare, Blake, and Crowley opening voices, together with
-temperature, top-k, repetition, and output-length controls.
+shows the model's evolving lossy channel memory and any recalled holographic
+echo. It offers mixed, Shakespeare, Blake, and Crowley opening voices, together
+with temperature, top-k, repetition, and output-length controls.
 
 The standalone quantized C engine can also be tested without a browser:
 
 ```sh
 ./literary_infer docs/model.litq8 "The zero opened its eyes, and" 240
+./literary_infer docs/model.litq8 --chat D "What walks beneath the moon?" 240
+./literary_infer docs/model.litq8 --memory D "old memory" "new message" "reply" 100
 node tests/test_web_model.mjs
 ```
 
 GitHub Pages serves directly from `docs/`; no backend, API key, JavaScript
 framework, or hosted inference service is required.
+
+## Train the channel-native model
+
+The original literary checkpoint is a useful language base, but raw dramatic
+text does not identify which participant the model should speak as. Build the
+structured channel data first:
+
+```sh
+make channel-data
+```
+
+Records contain a compact channel memory or vibe, up to three recent messages,
+locally anonymized speaker roles, and either ZERO's target reply or an updated
+lossy-memory target. The learned loop is `old memory + recent messages -> new
+memory`, followed by `memory + recent messages -> reply`. Control values 1–7
+reuse otherwise dormant rows in the existing 128-token vocabulary, so this
+representation does not increase model size.
+
+The browser also includes a 256-dimensional, 32-entry episodic index in the C
+inference runtime. It follows `holostuff`'s `LocalAgentCore` contract:
+deterministic text hypervectors plus exact cosine recall. Each completed
+exchange is stored under its lexical content with the learned compressed memory
+as its value. A later prompt can recall one sufficiently similar old episode as
+an `echo`; the learned memory update then decides whether to retain it. The
+index adds roughly 32 KiB of runtime state but no transformer parameters, model
+weights, network service, or browser persistence.
+
+Continue training from the literary checkpoint with the channel file weighted
+more heavily than any individual author:
+
+```sh
+./literary_lm \
+  --resume literary-v6.ckpt \
+  --tokenizer corpus/literary.bpe \
+  --text corpus/bpe/shakespeare.tok \
+  --text corpus/bpe/blake.tok \
+  --text corpus/bpe/crowley.tok \
+  --channel corpus/channel/literary-dialogue.tok \
+  --channel-weight 6 \
+  --steps 4000 --batch 2 --lr 0.00005 \
+  --dropout 0.1 --cosine \
+  --report 100 --validation 20 \
+  --best literary-v8.ckpt --patience 20 \
+  --save literary-v8-last.ckpt --save-every 500 \
+  --tokens 0
+```
+
+For channel records, training and validation use only the target reply or
+memory span for cross-entropy. Headers and previous messages still condition
+that target through attention. Sampling begins at record boundaries, and
+validation begins on whole held-out records rather than an arbitrary byte
+inside a conversation. After every exchange, the browser generates a new
+memory and drops that completed pair from its working context.
+The import format for consented human channel data is documented in
+[`corpus/channel/README.md`](corpus/channel/README.md).
 
 ## Try the transformer
 

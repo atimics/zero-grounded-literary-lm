@@ -35,7 +35,7 @@
     <section class="chat" aria-label="Literary model chat">
       <div class="empty-state" id="emptyState">
         <span class="ornament">∅</span>
-        <p>This is a continuation model, not an instruction-following assistant. Give it a line, an image, or the opening of a scene.</p>
+        <p>This is a channel-native literary model. It compresses each exchange into a learned, lossy memory and can recall a relevant older compressed episode as a holographic echo.</p>
         <div class="suggestions" id="suggestions">
           <button type="button" data-prompt="The zero opened its eyes, and">The zero opened its eyes…</button>
           <button type="button" data-prompt="To see a world in a grain of sand">To see a world…</button>
@@ -57,14 +57,29 @@
         <button class="tune-button" id="tuneButton" type="button" aria-expanded="false" aria-controls="tuning">TUNE</button>
       </div>
 
+      <div class="summary-row">
+        <label for="channelSummary">CHANNEL VIBE</label>
+        <input id="channelSummary" type="text" maxlength="120" value="mixed literary conversation; strange, attentive, intimate" spellcheck="true">
+      </div>
+
+      <div class="memory-row">
+        <span>LOSSY MEMORY</span>
+        <output id="channelMemory" class="empty" aria-live="polite">not yet compressed</output>
+      </div>
+
+      <div class="memory-row">
+        <span>HOLOGRAPHIC ECHO</span>
+        <output id="holographicEcho" class="empty" aria-live="polite">no relevant older episode</output>
+      </div>
+
       <div class="tuning" id="tuning" hidden>
         <label>
-          <span>Temperature <output id="temperatureValue">0.68</output></span>
-          <input id="temperature" type="range" min="0.2" max="1.2" value="0.68" step="0.01">
+          <span>Temperature <output id="temperatureValue">0.52</output></span>
+          <input id="temperature" type="range" min="0.2" max="1.2" value="0.52" step="0.01">
         </label>
         <label>
-          <span>Top-k <output id="topKValue">32</output></span>
-          <input id="topK" type="range" min="4" max="80" value="32" step="1">
+          <span>Top-k <output id="topKValue">20</output></span>
+          <input id="topK" type="range" min="4" max="80" value="20" step="1">
         </label>
         <label>
           <span>Repetition <output id="repetitionValue">1.12</output></span>
@@ -96,14 +111,14 @@
     <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
     <p class="eyebrow">MODEL NOTE</p>
     <h2>A real, very small language model.</h2>
-    <p>ZERO is a decoder-only character transformer trained from scratch on three public-domain literary collections. Its 4.85 million learned parameters are quantized to 8-bit rows for this page.</p>
+    <p>ZERO is a decoder-only character transformer trained on three literary collections, then continued on structured multi-speaker channels. Its 4.85 million learned parameters are quantized to 8-bit rows for this page.</p>
     <p>The C engine performs embeddings, RMS normalization, rotary attention, GELU feed-forward layers, and sampling inside WebAssembly. It uses no server and no machine-learning runtime.</p>
-    <p>It can continue prose and verse, but it does not understand instructions reliably, retrieve facts, or match a contemporary large language model. Oddness is part of its honest scale.</p>
+    <p>It learned two related channel operations: answer a message, and compress old memory plus recent turns into new lossy memory. The page feeds that generated memory back into the next exchange and discards those turns. A small C holographic index—adapted from holostuff's deterministic encode-and-recall contract—can reintroduce one relevant older compressed episode. It still cannot retrieve outside facts or match a contemporary large language model. Oddness is part of its honest scale.</p>
     <dl>
       <div><dt>CONTEXT</dt><dd>512 characters</dd></div>
       <div><dt>LAYERS</dt><dd>6</dd></div>
       <div><dt>DIMENSION</dt><dd>256</dd></div>
-      <div><dt>TRAINING</dt><dd>11,600 updates</dd></div>
+      <div><dt>TRAINING</dt><dd id="trainingValue">loading…</dd></div>
     </dl>
     <a class="source-link" href="https://github.com/atimics/zero-grounded-literary-lm">READ THE C SOURCE ↗</a>
   </dialog>

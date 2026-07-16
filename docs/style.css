@@ -210,9 +210,28 @@ h1 em { color: #c7beac; font-weight: 400; }
 
 .composer { position: relative; margin-top: 22px; border: 1px solid var(--line); background: rgba(32, 30, 25, .82); }
 .voice-row { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
-.voice-row label { color: var(--faint); font-family: var(--mono); font-size: 9px; letter-spacing: .15em; }
+.voice-row label,
+.summary-row label,
+.memory-row > span { color: var(--faint); font-family: var(--mono); font-size: 9px; letter-spacing: .15em; }
 .voice-row select { appearance: none; padding: 0 20px 0 0; border: 0; outline: 0; background: transparent; font-family: var(--serif); font-size: 12px; font-style: italic; }
 .tune-button { margin-left: auto; }
+
+.summary-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.summary-row input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+  font-style: italic;
+}
+.summary-row input:focus { color: var(--ink); }
+
+.memory-row { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: rgba(0, 0, 0, .08); }
+.memory-row output { color: var(--gold); font-family: var(--mono); font-size: 9px; line-height: 1.5; overflow-wrap: anywhere; }
+.memory-row output.empty { color: var(--faint); font-style: italic; }
 
 .tuning { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
 .tuning[hidden] { display: none; }
@@ -291,6 +310,7 @@ noscript { display: block; padding: 20px; color: #fff; background: var(--red); t
   .message { grid-template-columns: 1fr; gap: 7px; }
   .message-text { font-size: 15px; }
   .tuning { grid-template-columns: 1fr 1fr; }
+  .summary-row, .memory-row { grid-template-columns: 1fr; gap: 7px; }
   .writing-row { flex-direction: column; }
   .send-button { min-height: 48px; border-top: 1px solid var(--line); border-left: 0; }
   dialog { padding: 34px 25px; }

@@ -7,6 +7,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "channel_protocol.h"
+
 #ifdef USE_ACCELERATE
 #include <Accelerate/Accelerate.h>
 #endif
@@ -135,6 +137,13 @@ typedef struct {
     size_t training_length;
     size_t validation_start;
     size_t validation_length;
+    int channel;
+    float weight;
+    size_t *record_starts;
+    size_t record_count;
+    size_t training_record_count;
+    size_t validation_record_index;
+    size_t validation_record_count;
 } CorpusRange;
 
 typedef struct {
@@ -161,6 +170,7 @@ typedef struct {
     int cosine_decay;
     const char *tokenizer_path;
     float repetition_penalty;
+    float channel_weight;
 } Options;
 
 static volatile sig_atomic_t interrupted = 0;
@@ -872,9 +882,10 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
 }
 
 /* Forward returns mean next-token cross entropy when targets is non-NULL. */
-static float model_forward(Model *model, const Token *tokens,
-                           const Token *targets, float dropout,
-                           Rng *dropout_rng)
+static float model_forward_masked(Model *model, const Token *tokens,
+                                  const Token *targets, float dropout,
+                                  Rng *dropout_rng,
+                                  const unsigned char *loss_mask)
 {
     const Config *cfg = &model->cfg;
     size_t td = (size_t)cfg->context * cfg->dim;
@@ -882,8 +893,17 @@ static float model_forward(Model *model, const Token *tokens,
     int time;
     int i;
     int layer_index;
+    int loss_count = cfg->context;
     float loss = 0.0f;
     LayerCache *first = &model->cache[0];
+
+    if (loss_mask != NULL) {
+        loss_count = 0;
+        for (time = 0; time < cfg->context; ++time) {
+            if (loss_mask[time]) ++loss_count;
+        }
+        if (loss_count == 0) loss_count = 1;
+    }
 
     for (time = 0; time < cfg->context; ++time) {
         int token = tokens[time];
@@ -973,20 +993,30 @@ static float model_forward(Model *model, const Token *tokens,
         for (token = 0; token < cfg->vocab; ++token) {
             row[token] /= total;
         }
-        if (targets != NULL) {
+        if (targets != NULL &&
+            (loss_mask == NULL || loss_mask[time] != 0)) {
             float probability = row[targets[time]];
             if (probability < 1.0e-20f) {
                 probability = 1.0e-20f;
             }
-            loss -= logf(probability) / cfg->context;
+            loss -= logf(probability) / loss_count;
         }
     }
     return loss;
 }
 
+static float model_forward(Model *model, const Token *tokens,
+                           const Token *targets, float dropout,
+                           Rng *dropout_rng)
+{
+    return model_forward_masked(model, tokens, targets, dropout, dropout_rng,
+                                NULL);
+}
+
 /* Adds this sequence's gradients; call model_zero_grad before a new batch. */
-static void model_backward(Model *model, const Token *tokens,
-                           const Token *targets)
+static void model_backward_masked(Model *model, const Token *tokens,
+                                  const Token *targets,
+                                  const unsigned char *loss_mask)
 {
     const Config *cfg = &model->cfg;
     size_t td = (size_t)cfg->context * cfg->dim;
@@ -998,14 +1028,25 @@ static void model_backward(Model *model, const Token *tokens,
     int token;
     int i;
     int layer_index;
+    int loss_count = cfg->context;
+
+    if (loss_mask != NULL) {
+        loss_count = 0;
+        for (time = 0; time < cfg->context; ++time) {
+            if (loss_mask[time]) ++loss_count;
+        }
+        if (loss_count == 0) loss_count = 1;
+    }
 
     memset(dy, 0, td * sizeof(float));
     for (time = 0; time < cfg->context; ++time) {
         float *row = &model->probs[time * cfg->vocab];
         for (token = 0; token < cfg->vocab; ++token) {
-            row[token] =
-                (row[token] - (token == targets[time] ? 1.0f : 0.0f)) /
-                cfg->context;
+            row[token] = loss_mask != NULL && !loss_mask[time]
+                             ? 0.0f
+                             : (row[token] -
+                                (token == targets[time] ? 1.0f : 0.0f)) /
+                                   loss_count;
         }
     }
     linear_backward(cfg->context, cfg->dim, cfg->vocab, model->final_n,
@@ -1086,6 +1127,12 @@ static void model_backward(Model *model, const Token *tokens,
             }
         }
     }
+}
+
+static void model_backward(Model *model, const Token *tokens,
+                           const Token *targets)
+{
+    model_backward_masked(model, tokens, targets, NULL);
 }
 
 static float optimizer_update(Model *model, uint64_t step, float learning_rate,
@@ -1220,6 +1267,76 @@ static void corpus_destroy(Corpus *corpus)
 {
     free(corpus->data);
     memset(corpus, 0, sizeof(*corpus));
+}
+
+static int channel_loss_mask(const Token *tokens, const Token *targets,
+                             unsigned char *mask, int context)
+{
+    int active = 0;
+    int count = 0;
+    int time;
+    for (time = 0; time < context; ++time) {
+        if (tokens[time] == CHANNEL_TARGET_TOKEN) active = 1;
+        mask[time] = (unsigned char)active;
+        if (active) ++count;
+        if (targets[time] == CHANNEL_MESSAGE_END_TOKEN ||
+            targets[time] == CHANNEL_RECORD_END_TOKEN) {
+            active = 0;
+        }
+    }
+    return count;
+}
+
+static void prepare_channel_range(CorpusRange *range, const Corpus *corpus,
+                                  int context, const char *path)
+{
+    size_t end = range->start + range->length;
+    size_t index;
+    size_t split;
+    size_t training_records = 0;
+    size_t validation_records = 0;
+    for (index = range->start; index < end; ++index) {
+        if (corpus->data[index] == CHANNEL_START_TOKEN) ++range->record_count;
+    }
+    if (range->record_count < 20) {
+        fprintf(stderr, "error: channel file '%s' contains only %zu records\n",
+                path, range->record_count);
+        exit(EXIT_FAILURE);
+    }
+    range->record_starts = zero_alloc(range->record_count,
+                                      sizeof(*range->record_starts));
+    range->record_count = 0;
+    for (index = range->start; index < end; ++index) {
+        if (corpus->data[index] == CHANNEL_START_TOKEN) {
+            range->record_starts[range->record_count++] = index;
+        }
+    }
+    split = range->record_count * 95 / 100;
+    if (split == 0) split = 1;
+    if (split >= range->record_count) split = range->record_count - 1;
+    range->validation_record_index = split;
+    range->validation_start = range->record_starts[split];
+    range->training_length = range->validation_start - range->start;
+    range->validation_length = end - range->validation_start;
+    for (index = 0; index < split; ++index) {
+        if (range->record_starts[index] + (size_t)context + 1 <=
+            range->validation_start) {
+            ++training_records;
+        }
+    }
+    for (index = split; index < range->record_count; ++index) {
+        if (range->record_starts[index] + (size_t)context + 1 <= end) {
+            ++validation_records;
+        }
+    }
+    if (training_records == 0 || validation_records == 0) {
+        fprintf(stderr,
+                "error: channel file '%s' lacks complete %d-token windows\n",
+                path, context);
+        exit(EXIT_FAILURE);
+    }
+    range->training_record_count = training_records;
+    range->validation_record_count = validation_records;
 }
 
 typedef struct {
@@ -1418,24 +1535,52 @@ static float evaluate_balanced(Model *model, const Corpus *corpus,
                                const CorpusRange *ranges, int range_count,
                                int batches)
 {
-    int batch;
+    unsigned char *mask = zero_alloc((size_t)model->cfg.context, 1);
+    int samples_per_range = batches / range_count;
+    int range_index;
     float total = 0.0f;
-    for (batch = 0; batch < batches; ++batch) {
-        int range_index = batch % range_count;
-        int sample_index = batch / range_count;
-        int samples_for_range =
-            (batches - 1 - range_index) / range_count + 1;
+    float total_weight = 0.0f;
+    if (samples_per_range < 1) samples_per_range = 1;
+    for (range_index = 0; range_index < range_count; ++range_index) {
         const CorpusRange *range = &ranges[range_index];
-        size_t choices = range->validation_length - model->cfg.context;
-        size_t offset = samples_for_range == 1
-                            ? 0
-                            : (size_t)sample_index * (choices - 1) /
-                                  (size_t)(samples_for_range - 1);
-        total += model_forward(
-            model, corpus->data + range->validation_start + offset,
-            corpus->data + range->validation_start + offset + 1, 0.0f, NULL);
+        float range_total = 0.0f;
+        int sample;
+        for (sample = 0; sample < samples_per_range; ++sample) {
+            size_t start;
+            if (range->channel) {
+                size_t local = samples_per_range == 1
+                                   ? 0
+                                   : (size_t)sample *
+                                         (range->validation_record_count - 1) /
+                                         (size_t)(samples_per_range - 1);
+                size_t record = range->validation_record_index + local;
+                start = range->record_starts[record];
+                if (channel_loss_mask(corpus->data + start,
+                                      corpus->data + start + 1, mask,
+                                      model->cfg.context) == 0) {
+                    fail("channel validation window has no reply target");
+                }
+                range_total += model_forward_masked(
+                    model, corpus->data + start, corpus->data + start + 1,
+                    0.0f, NULL, mask);
+            } else {
+                size_t choices =
+                    range->validation_length - model->cfg.context;
+                size_t offset = samples_per_range == 1
+                                    ? 0
+                                    : (size_t)sample * (choices - 1) /
+                                          (size_t)(samples_per_range - 1);
+                start = range->validation_start + offset;
+                range_total += model_forward(
+                    model, corpus->data + start, corpus->data + start + 1,
+                    0.0f, NULL);
+            }
+        }
+        total += range->weight * range_total / samples_per_range;
+        total_weight += range->weight;
     }
-    return total / batches;
+    free(mask);
+    return total / total_weight;
 }
 
 typedef struct {
@@ -1710,11 +1855,28 @@ static float parse_float(const char *text, const char *option)
     return value;
 }
 
+static int choose_weighted_range(const CorpusRange *ranges, int count,
+                                 Rng *rng)
+{
+    float total = 0.0f;
+    float choice;
+    int index;
+    for (index = 0; index < count; ++index) total += ranges[index].weight;
+    choice = rng_unit(rng) * total;
+    for (index = 0; index < count; ++index) {
+        choice -= ranges[index].weight;
+        if (choice <= 0.0f) return index;
+    }
+    return count - 1;
+}
+
 static void print_usage(const char *program)
 {
     printf("usage: %s [options]\n\n", program);
     printf("data and architecture:\n");
     printf("  --text FILE          add a uniformly sampled training text (repeatable)\n");
+    printf("  --channel FILE       add a structured reply-record token file\n");
+    printf("  --channel-weight X   sampling weight per channel file (default: 1)\n");
     printf("  --preset NAME        tiny (default) or literary\n");
     printf("  --context N          sequence length\n");
     printf("  --dim N              embedding width\n");
@@ -1800,6 +1962,48 @@ static int run_self_test(void)
             }
         }
     }
+    {
+        const Token channel_tokens[4] = {
+            CHANNEL_START_TOKEN, CHANNEL_TARGET_TOKEN, 'x', 'y'
+        };
+        const Token channel_targets[4] = {
+            CHANNEL_TARGET_TOKEN, 'x', 'y', CHANNEL_MESSAGE_END_TOKEN
+        };
+        unsigned char mask[4];
+        Parameter *parameter = &model.final_norm;
+        float original = parameter->w[0];
+        float analytic;
+        float plus;
+        float minus;
+        float numeric;
+        float tolerance;
+        if (channel_loss_mask(channel_tokens, channel_targets, mask, 4) != 3) {
+            fprintf(stderr, "masked-loss self-test constructed a bad mask\n");
+            ++failures;
+        }
+        model_zero_grad(&model);
+        model_forward_masked(&model, channel_tokens, channel_targets, 0.0f,
+                             NULL, mask);
+        model_backward_masked(&model, channel_tokens, channel_targets, mask);
+        analytic = parameter->g[0];
+        parameter->w[0] = original + epsilon;
+        plus = model_forward_masked(&model, channel_tokens, channel_targets,
+                                    0.0f, NULL, mask);
+        parameter->w[0] = original - epsilon;
+        minus = model_forward_masked(&model, channel_tokens, channel_targets,
+                                     0.0f, NULL, mask);
+        parameter->w[0] = original;
+        numeric = (plus - minus) / (2.0f * epsilon);
+        tolerance = 0.002f + 0.08f * (fabsf(analytic) + fabsf(numeric));
+        ++checks;
+        if (!isfinite(numeric) || fabsf(analytic - numeric) > tolerance) {
+            fprintf(stderr,
+                    "masked gradient mismatch final_norm[0]: analytic=%g "
+                    "numeric=%g\n",
+                    analytic, numeric);
+            ++failures;
+        }
+    }
     model_destroy(&model);
     if (failures == 0) {
         printf("self-test: %d finite-difference gradient checks passed\n", checks);
@@ -1817,6 +2021,7 @@ int main(int argc, char **argv)
     Options options;
     const char **text_paths;
     CorpusRange *text_ranges;
+    unsigned char *text_channel;
     int text_count = 0;
     int i;
     Rng rng;
@@ -1852,8 +2057,11 @@ int main(int argc, char **argv)
     options.seed = 0;
     options.dropout = 0.1f;
     options.repetition_penalty = 1.1f;
+    options.channel_weight = 1.0f;
     text_paths = zero_alloc((size_t)(argc > 1 ? argc : 1), sizeof(*text_paths));
     text_ranges = zero_alloc((size_t)(argc > 1 ? argc : 1), sizeof(*text_ranges));
+    text_channel = zero_alloc((size_t)(argc > 1 ? argc : 1),
+                              sizeof(*text_channel));
 
     /* Apply the requested preset before individual dimension overrides. */
     for (i = 1; i + 1 < argc; ++i) {
@@ -1868,11 +2076,19 @@ int main(int argc, char **argv)
             print_usage(argv[0]);
             free(text_paths);
             free(text_ranges);
+            free(text_channel);
             return EXIT_SUCCESS;
         } else if (strcmp(argv[i], "--preset") == 0 && i + 1 < argc) {
             ++i;
         } else if (strcmp(argv[i], "--text") == 0 && i + 1 < argc) {
             text_paths[text_count++] = argv[++i];
+        } else if (strcmp(argv[i], "--channel") == 0 && i + 1 < argc) {
+            text_channel[text_count] = 1;
+            text_paths[text_count++] = argv[++i];
+        } else if (strcmp(argv[i], "--channel-weight") == 0 &&
+                   i + 1 < argc) {
+            options.channel_weight =
+                parse_float(argv[++i], "--channel-weight");
         } else if (strcmp(argv[i], "--context") == 0 && i + 1 < argc) {
             cfg.context = (int)parse_long(argv[++i], "--context");
         } else if (strcmp(argv[i], "--dim") == 0 && i + 1 < argc) {
@@ -1938,6 +2154,7 @@ int main(int argc, char **argv)
             print_usage(argv[0]);
             free(text_paths);
             free(text_ranges);
+            free(text_channel);
             return EXIT_FAILURE;
         }
     }
@@ -1956,7 +2173,8 @@ int main(int argc, char **argv)
         options.generate_tokens < 0 || options.temperature < 0.0f ||
         options.top_k < 0 || options.top_k > cfg.vocab ||
         options.dropout < 0.0f || options.dropout >= 1.0f ||
-        options.patience < 0 || options.repetition_penalty < 1.0f) {
+        options.patience < 0 || options.repetition_penalty < 1.0f ||
+        options.channel_weight <= 0.0f) {
         fail("invalid training or generation option");
     }
     if (options.save_every > 0 && options.save_path == NULL) {
@@ -1965,6 +2183,7 @@ int main(int argc, char **argv)
     if (options.self_test) {
         free(text_paths);
         free(text_ranges);
+        free(text_channel);
         return run_self_test() ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
@@ -2007,9 +2226,16 @@ int main(int argc, char **argv)
             for (i = 0; i < text_count; ++i) {
                 size_t before = corpus.length;
                 corpus_add_file(&corpus, text_paths[i],
-                                tokenizer.loaded ? tokenizer.token_width : 1);
+                                text_channel[i]
+                                    ? 2
+                                    : (tokenizer.loaded ? tokenizer.token_width
+                                                        : 1));
                 text_ranges[i].start = before + (before != 0 ? 2 : 0);
                 text_ranges[i].length = corpus.length - text_ranges[i].start;
+                text_ranges[i].channel = text_channel[i];
+                text_ranges[i].weight = text_channel[i]
+                                            ? options.channel_weight
+                                            : 1.0f;
             }
         }
         for (i = 0; i < (int)corpus.length; ++i) {
@@ -2030,19 +2256,26 @@ int main(int argc, char **argv)
         } else {
             for (i = 0; i < text_count; ++i) {
                 CorpusRange *range = &text_ranges[i];
-                if (range->length < minimum) {
-                    fprintf(stderr,
-                            "error: training file '%s' is too short for a "
-                            "per-file training/validation split\n",
-                            text_paths[i]);
-                    exit(EXIT_FAILURE);
+                if (range->channel) {
+                    prepare_channel_range(range, &corpus, cfg.context,
+                                          text_paths[i]);
+                } else {
+                    if (range->length < minimum) {
+                        fprintf(stderr,
+                                "error: training file '%s' is too short for a "
+                                "per-file training/validation split\n",
+                                text_paths[i]);
+                        exit(EXIT_FAILURE);
+                    }
+                    range->validation_length = range->length / 20;
+                    if (range->validation_length < (size_t)cfg.context + 1) {
+                        range->validation_length = (size_t)cfg.context + 1;
+                    }
+                    range->training_length =
+                        range->length - range->validation_length;
+                    range->validation_start =
+                        range->start + range->training_length;
                 }
-                range->validation_length = range->length / 20;
-                if (range->validation_length < (size_t)cfg.context + 1) {
-                    range->validation_length = (size_t)cfg.context + 1;
-                }
-                range->training_length = range->length - range->validation_length;
-                range->validation_start = range->start + range->training_length;
                 training_length += range->training_length;
                 validation_length += range->validation_length;
             }
@@ -2051,13 +2284,16 @@ int main(int argc, char **argv)
                "sampling=%s\n",
                corpus.length, training_length, validation_length,
                cfg.context * options.batch,
-               text_count > 0 ? "balanced-files" : "uniform-bytes");
+               text_count > 0 ? "weighted-files-and-channel-records"
+                              : "uniform-bytes");
 
         signal(SIGINT, on_interrupt);
         training_start = wall_seconds();
         interval_start = training_start;
-        while (completed_steps < options.steps && !interrupted &&
-               !stop_training) {
+        {
+            unsigned char *loss_mask = zero_alloc((size_t)cfg.context, 1);
+            while (completed_steps < options.steps && !interrupted &&
+                   !stop_training) {
             int batch;
             float gradient_norm;
             float current_lr;
@@ -2065,20 +2301,35 @@ int main(int argc, char **argv)
             for (batch = 0; batch < options.batch; ++batch) {
                 size_t choices;
                 size_t start;
+                const unsigned char *active_mask = NULL;
                 if (text_count > 0) {
-                    int range_index = (int)(rng_next(&rng) % (uint64_t)text_count);
+                    int range_index = choose_weighted_range(
+                        text_ranges, text_count, &rng);
                     const CorpusRange *range = &text_ranges[range_index];
-                    choices = range->training_length - (size_t)cfg.context;
-                    start = range->start + (size_t)(rng_next(&rng) % choices);
+                    if (range->channel) {
+                        size_t record = (size_t)(rng_next(&rng) %
+                                                range->training_record_count);
+                        start = range->record_starts[record];
+                        if (channel_loss_mask(corpus.data + start,
+                                              corpus.data + start + 1,
+                                              loss_mask, cfg.context) == 0) {
+                            fail("channel training window has no reply target");
+                        }
+                        active_mask = loss_mask;
+                    } else {
+                        choices = range->training_length - (size_t)cfg.context;
+                        start = range->start +
+                                (size_t)(rng_next(&rng) % choices);
+                    }
                 } else {
                     choices = training_length - (size_t)cfg.context;
                     start = (size_t)(rng_next(&rng) % choices);
                 }
-                float loss = model_forward(
+                float loss = model_forward_masked(
                     &model, corpus.data + start, corpus.data + start + 1,
-                    options.dropout, &rng);
-                model_backward(&model, corpus.data + start,
-                               corpus.data + start + 1);
+                    options.dropout, &rng, active_mask);
+                model_backward_masked(&model, corpus.data + start,
+                                      corpus.data + start + 1, active_mask);
                 interval_loss += loss;
                 ++interval_sequences;
             }
@@ -2154,6 +2405,8 @@ int main(int argc, char **argv)
                 checkpoint_save(options.save_path, &model, update, &rng);
                 printf("saved %s\n", options.save_path);
             }
+            }
+            free(loss_mask);
         }
         printf("training time %.2f seconds\n", wall_seconds() - training_start);
         if (interrupted) {
@@ -2173,7 +2426,9 @@ int main(int argc, char **argv)
 
     corpus_destroy(&corpus);
     model_destroy(&model);
+    for (i = 0; i < text_count; ++i) free(text_ranges[i].record_starts);
     free(text_paths);
     free(text_ranges);
+    free(text_channel);
     return EXIT_SUCCESS;
 }

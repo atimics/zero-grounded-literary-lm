@@ -12,6 +12,9 @@ const ui = {
   messages: document.querySelector("#messages"),
   empty: document.querySelector("#emptyState"),
   voice: document.querySelector("#voice"),
+  summary: document.querySelector("#channelSummary"),
+  memory: document.querySelector("#channelMemory"),
+  echo: document.querySelector("#holographicEcho"),
   tune: document.querySelector("#tuneButton"),
   tuning: document.querySelector("#tuning"),
   about: document.querySelector("#aboutButton"),
@@ -21,20 +24,33 @@ const ui = {
   topK: document.querySelector("#topK"),
   repetition: document.querySelector("#repetition"),
   length: document.querySelector("#length"),
+  trainingValue: document.querySelector("#trainingValue"),
 };
 
-const voiceOpenings = {
-  mixed: "",
-  shakespeare: "ACT I.\nSCENE I.\n\n",
-  blake: "SONGS OF VISION\n\n",
-  crowley: "THE BOOK OF THE LAW\n\n",
+const protocol = {
+  channel: 1,
+  message: 2,
+  reply: 3,
+  endMessage: 4,
+  target: 6,
+  summary: 7,
+};
+
+const voiceSettings = {
+  mixed: { style: "D", summary: "mixed literary conversation; strange, attentive, intimate" },
+  shakespeare: { style: "S", summary: "Shakespearean dramatic scene; answer as a present companion" },
+  blake: { style: "B", summary: "Blakean visionary verse; symbolic, lucid, wondering" },
+  crowley: { style: "C", summary: "Crowleyan dramatic scene; ceremonial, oracular, direct" },
 };
 
 let module;
 let modelPointer = 0;
 let generating = false;
 let shouldStop = false;
-let conversationStarted = false;
+let history = [];
+let channelMemory = "";
+let holographicEcho = "";
+let holographicEpisodes = [];
 
 function normalizeAscii(text) {
   const replacements = {
@@ -53,6 +69,148 @@ function normalizeAscii(text) {
 
 function feed(text) {
   for (const character of normalizeAscii(text)) module._lm_feed(character.charCodeAt(0));
+}
+
+function feedToken(token) {
+  module._lm_feed(token);
+}
+
+function compactMessage(text, limit = 150) {
+  const normalized = normalizeAscii(text).replace(/\s+/g, " ").trim();
+  return normalized.length <= limit ? normalized : normalized.slice(-limit);
+}
+
+function compactSummary(text, limit = 100) {
+  return normalizeAscii(text).replace(/\s+/g, " ").trim().slice(0, limit);
+}
+
+function activeMemory() {
+  const voice = voiceSettings[ui.voice.value];
+  return channelMemory || compactSummary(ui.summary.value) || voice.summary;
+}
+
+function contextMemory() {
+  const memory = activeMemory();
+  if (!holographicEcho) return compactSummary(memory, 80);
+  return compactSummary(`${memory.slice(0, 48)} | ~${holographicEcho.slice(0, 28)}`, 80);
+}
+
+function updateMemoryDisplay() {
+  ui.memory.textContent = channelMemory || "not yet compressed";
+  ui.memory.classList.toggle("empty", !channelMemory);
+}
+
+function updateEchoDisplay(score = 0) {
+  ui.echo.textContent = holographicEcho
+    ? `${holographicEcho} · cosine ${score.toFixed(2)}`
+    : "no relevant older episode";
+  ui.echo.classList.toggle("empty", !holographicEcho);
+}
+
+function withModelBytes(text, operation) {
+  const bytes = new TextEncoder().encode(normalizeAscii(text));
+  if (!bytes.length) return -1;
+  const pointer = module._malloc(bytes.length);
+  if (!pointer) return -1;
+  module.HEAPU8.set(bytes, pointer);
+  const result = operation(pointer, bytes.length);
+  module._free(pointer);
+  return result;
+}
+
+function recallEpisode(query) {
+  holographicEcho = "";
+  if (!module || module._lm_holo_get_count() === 0) {
+    updateEchoDisplay();
+    return;
+  }
+  const slot = withModelBytes(query, (pointer, length) => module._lm_holo_recall(pointer, length));
+  const score = module._lm_holo_get_score();
+  if (slot >= 0 && score >= 0.22 && holographicEpisodes[slot]) {
+    holographicEcho = holographicEpisodes[slot].memory;
+  }
+  updateEchoDisplay(score);
+}
+
+function rememberEpisode(key, memory) {
+  const slot = withModelBytes(key, (pointer, length) => module._lm_holo_remember(pointer, length));
+  if (slot >= 0) holographicEpisodes[slot] = { key, memory: compactSummary(memory, 80) };
+}
+
+function feedMessage(message) {
+  feedToken(protocol.message);
+  feedToken(message.role.charCodeAt(0));
+  if (message.reply) {
+    feedToken(protocol.reply);
+    feedToken(message.reply.charCodeAt(0));
+  }
+  feed(message.text);
+  feedToken(protocol.endMessage);
+}
+
+function recentMessages(maximum = 3, budget = 300) {
+  const recent = [];
+  for (let index = history.length - 1; index >= 0 && recent.length < maximum && budget > 24; index -= 1) {
+    const text = compactMessage(history[index].text, 110);
+    if (!text) continue;
+    const cost = text.length + 5;
+    if (cost > budget && recent.length) break;
+    recent.push({ ...history[index], text: cost > budget ? text.slice(-Math.max(20, budget - 5)) : text });
+    budget -= Math.min(cost, budget);
+  }
+  return recent.reverse();
+}
+
+function rebuildChannel() {
+  const voice = voiceSettings[ui.voice.value];
+  const recent = recentMessages();
+
+  module._lm_reset();
+  feedToken(protocol.channel);
+  feedToken(voice.style.charCodeAt(0));
+  feedToken(protocol.summary);
+  feed(contextMemory());
+  feedToken(protocol.endMessage);
+  recent.forEach(feedMessage);
+  feedToken(protocol.message);
+  feedToken("Z".charCodeAt(0));
+  feedToken(protocol.reply);
+  feedToken("A".charCodeAt(0));
+  feedToken(protocol.target);
+}
+
+async function compressChannelMemory() {
+  if (history.length < 2 || shouldStop) return;
+  const voice = voiceSettings[ui.voice.value];
+  const recent = recentMessages();
+  ui.statusText.textContent = "compressing the channel memory";
+  await new Promise(resolve => requestAnimationFrame(resolve));
+
+  module._lm_reset();
+  feedToken(protocol.channel);
+  feedToken(voice.style.charCodeAt(0));
+  feedToken(protocol.summary);
+  feed(contextMemory());
+  feedToken(protocol.endMessage);
+  recent.forEach(feedMessage);
+  feedToken(protocol.summary);
+  feedToken(protocol.target);
+
+  let memory = "";
+  for (let index = 0; index < 80 && !shouldStop; index += 1) {
+    const token = module._lm_sample(0.42, 20, 1.04);
+    if (token < 0 || token === protocol.endMessage) break;
+    module._lm_feed(token);
+    memory += String.fromCharCode(token);
+    if (index % 8 === 0) await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+  const compressed = compactSummary(memory, 80);
+  if (compressed) {
+    channelMemory = compressed;
+    history = [];
+    updateMemoryDisplay();
+  }
+  ui.statusText.textContent = compressed ? "model awake · memory compressed" : "model awake · local only";
 }
 
 function addMessage(kind, text = "") {
@@ -77,6 +235,7 @@ function setReady() {
   ui.send.disabled = false;
   ui.loadBar.style.width = "100%";
   ui.modelStats.textContent = `${module._lm_get_parameters().toLocaleString()} parameters · ${module._lm_get_context()} character memory · update ${module._lm_get_update().toLocaleString()}`;
+  ui.trainingValue.textContent = `${module._lm_get_update().toLocaleString()} updates`;
   ui.prompt.focus();
 }
 
@@ -138,26 +297,28 @@ async function generate() {
   const answer = addMessage("model");
   ui.prompt.value = "";
 
-  if (!conversationStarted) {
-    module._lm_reset();
+  if (history.length === 0) {
     module._lm_seed((Date.now() >>> 0) || 1);
-    feed(voiceOpenings[ui.voice.value]);
-    conversationStarted = true;
-  } else {
-    feed("\n\n");
   }
-  feed(`${prompt}\n\n`);
+  recallEpisode(prompt);
+  history.push({ role: "A", reply: history.length ? "Z" : "", text: prompt });
+  rebuildChannel();
 
   const length = Number(ui.length.value);
   const temperature = Number(ui.temperature.value);
   const topK = Number(ui.topK.value);
   const repetition = Number(ui.repetition.value);
   let text = "";
+  let endedByModel = false;
 
   for (let index = 0; index < length && !shouldStop; index += 1) {
     const token = module._lm_sample(temperature, topK, repetition);
     if (token < 0) break;
     module._lm_feed(token);
+    if (token === protocol.endMessage) {
+      endedByModel = true;
+      break;
+    }
     text += String.fromCharCode(token);
     if (index % 5 === 0 || index === length - 1) {
       answer.body.textContent = text;
@@ -167,7 +328,12 @@ async function generate() {
   }
 
   answer.body.textContent = text.trimEnd();
+  if (!endedByModel) feedToken(protocol.endMessage);
+  history.push({ role: "Z", reply: "A", text: text.trimEnd() });
   answer.article.classList.add("done");
+  const stoppedByUser = shouldStop;
+  if (!stoppedByUser) await compressChannelMemory();
+  rememberEpisode(prompt, channelMemory || `${prompt}; ${text}`);
   generating = false;
   shouldStop = false;
   ui.sendLabel.textContent = "BEGIN";
@@ -179,7 +345,13 @@ async function generate() {
 function clearMemory() {
   if (!module || generating) return;
   module._lm_reset();
-  conversationStarted = false;
+  history = [];
+  channelMemory = "";
+  holographicEcho = "";
+  holographicEpisodes = [];
+  module._lm_holo_reset();
+  updateMemoryDisplay();
+  updateEchoDisplay();
   ui.messages.replaceChildren();
   ui.empty.hidden = false;
   ui.prompt.value = "";
@@ -194,6 +366,15 @@ ui.prompt.addEventListener("keydown", event => {
   if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); generate(); }
 });
 ui.clear.addEventListener("click", clearMemory);
+ui.voice.addEventListener("change", () => {
+  ui.summary.value = voiceSettings[ui.voice.value].summary;
+  channelMemory = "";
+  updateMemoryDisplay();
+});
+ui.summary.addEventListener("change", () => {
+  channelMemory = "";
+  updateMemoryDisplay();
+});
 ui.tune.addEventListener("click", () => {
   const opening = ui.tuning.hidden;
   ui.tuning.hidden = !opening;
@@ -216,4 +397,6 @@ for (const [control, output] of [
   control.addEventListener("input", () => { document.querySelector(`#${output}`).value = control.value; });
 }
 
+updateMemoryDisplay();
+updateEchoDisplay();
 initialize();
