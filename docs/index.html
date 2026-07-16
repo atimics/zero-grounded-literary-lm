@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171612">
+  <meta name="description" content="A small literary transformer, written in C and running entirely in your browser.">
+  <title>ZERO — a literary language model in C</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="masthead">
+      <a class="wordmark" href="./" aria-label="Zero home">
+        <span class="zero-mark">0</span>
+        <span>ZERO</span>
+      </a>
+      <div class="status" id="status" role="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="statusText">preparing the engine</span>
+      </div>
+      <button class="about-button" id="aboutButton" type="button">ABOUT</button>
+    </header>
+
+    <section class="intro" aria-labelledby="pageTitle">
+      <p class="eyebrow">A 4,852,992-PARAMETER TRANSFORMER</p>
+      <h1 id="pageTitle">Begin with a fragment.<br><em>Let the machine dream onward.</em></h1>
+      <p class="dek">Trained on Shakespeare, William Blake, and Aleister Crowley. Written in C. Running locally in this browser—your words are never sent anywhere.</p>
+    </section>
+
+    <section class="chat" aria-label="Literary model chat">
+      <div class="empty-state" id="emptyState">
+        <span class="ornament">∅</span>
+        <p>This is a continuation model, not an instruction-following assistant. Give it a line, an image, or the opening of a scene.</p>
+        <div class="suggestions" id="suggestions">
+          <button type="button" data-prompt="The zero opened its eyes, and">The zero opened its eyes…</button>
+          <button type="button" data-prompt="To see a world in a grain of sand">To see a world…</button>
+          <button type="button" data-prompt="What spirit walks beneath the moon?">What spirit walks…</button>
+        </div>
+      </div>
+      <div class="messages" id="messages" aria-live="polite"></div>
+    </section>
+
+    <section class="composer" aria-label="Write to the model">
+      <div class="voice-row">
+        <label for="voice">VOICE</label>
+        <select id="voice">
+          <option value="mixed">The threefold voice</option>
+          <option value="shakespeare">Shakespearean stage</option>
+          <option value="blake">Blakean vision</option>
+          <option value="crowley">Crowleyan oracle</option>
+        </select>
+        <button class="tune-button" id="tuneButton" type="button" aria-expanded="false" aria-controls="tuning">TUNE</button>
+      </div>
+
+      <div class="tuning" id="tuning" hidden>
+        <label>
+          <span>Temperature <output id="temperatureValue">0.68</output></span>
+          <input id="temperature" type="range" min="0.2" max="1.2" value="0.68" step="0.01">
+        </label>
+        <label>
+          <span>Top-k <output id="topKValue">32</output></span>
+          <input id="topK" type="range" min="4" max="80" value="32" step="1">
+        </label>
+        <label>
+          <span>Repetition <output id="repetitionValue">1.12</output></span>
+          <input id="repetition" type="range" min="1" max="1.35" value="1.12" step="0.01">
+        </label>
+        <label>
+          <span>Length <output id="lengthValue">320</output></span>
+          <input id="length" type="range" min="80" max="700" value="320" step="20">
+        </label>
+      </div>
+
+      <div class="writing-row">
+        <label class="sr-only" for="prompt">Your fragment</label>
+        <textarea id="prompt" rows="2" maxlength="1200" placeholder="Write the beginning…" disabled></textarea>
+        <button class="send-button" id="sendButton" type="button" disabled aria-label="Generate continuation">
+          <span id="sendLabel">BEGIN</span>
+          <span aria-hidden="true">↗</span>
+        </button>
+      </div>
+      <div class="composer-foot">
+        <span id="modelStats">Loading 4.7 MB model…</span>
+        <button id="clearButton" type="button">CLEAR MEMORY</button>
+      </div>
+      <div class="load-track" aria-hidden="true"><span id="loadBar"></span></div>
+    </section>
+  </main>
+
+  <dialog id="aboutDialog">
+    <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
+    <p class="eyebrow">MODEL NOTE</p>
+    <h2>A real, very small language model.</h2>
+    <p>ZERO is a decoder-only character transformer trained from scratch on three public-domain literary collections. Its 4.85 million learned parameters are quantized to 8-bit rows for this page.</p>
+    <p>The C engine performs embeddings, RMS normalization, rotary attention, GELU feed-forward layers, and sampling inside WebAssembly. It uses no server and no machine-learning runtime.</p>
+    <p>It can continue prose and verse, but it does not understand instructions reliably, retrieve facts, or match a contemporary large language model. Oddness is part of its honest scale.</p>
+    <dl>
+      <div><dt>CONTEXT</dt><dd>512 characters</dd></div>
+      <div><dt>LAYERS</dt><dd>6</dd></div>
+      <div><dt>DIMENSION</dt><dd>256</dd></div>
+      <div><dt>TRAINING</dt><dd>11,600 updates</dd></div>
+    </dl>
+    <a class="source-link" href="https://github.com/atimics/zero-grounded-literary-lm">READ THE C SOURCE ↗</a>
+  </dialog>
+
+  <noscript>This page needs JavaScript to run the model in your browser.</noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

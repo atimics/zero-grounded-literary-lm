@@ -1,0 +1,4 @@
+corpus/*.txt whitespace=-trailing-space
+corpus/*.bpe binary
+docs/*.litq8 binary
+docs/*.wasm binary
