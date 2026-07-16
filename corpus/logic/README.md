@@ -68,6 +68,17 @@ mkdir -p corpus/logic
 ./logic_corpus --verify corpus/logic/hf.txt
 ```
 
+Check an individual model-produced proof against its requested theorem:
+
+```sh
+./logic_corpus \
+  --check-theorem 'i(m(0,s(0)),m(0,s(0)))' \
+  --proof 'ii(m(0,s(0)),h0)'
+```
+
+This prints `valid` only when the proof term is well formed, accepted by the
+kernel, and concludes exactly the requested theorem.
+
 Options:
 
 - `--examples N` controls the finite corpus size. New seeds and larger values

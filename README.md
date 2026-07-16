@@ -1,5 +1,8 @@
 # Zero-grounded language models in C
 
+Read [**The ZERO Manifesto**](MANIFESTO.md) and the
+[mathematical foundations](FOUNDATIONS.md).
+
 This project contains two dependency-free neural language models and a
 mechanically checked synthetic-corpus generator:
 
@@ -296,6 +299,21 @@ Encode and train it through the existing pipeline:
 The concrete syntax, proof rules, held-out templates, and limitations are
 documented in [`corpus/logic/README.md`](corpus/logic/README.md).
 
+### Trained logic-v1 result
+
+The first formal run used 250,000 generated records (46,955,875 character
+tokens) and completed all 30,000 updates. `logic-v1.ckpt` preserves update
+26,600, the best state, with held-out next-character loss 0.1491.
+`logic-v1-last.ckpt` preserves the completed update-30,000 optimizer state.
+
+A small deterministic proof probe on fresh formulas produced kernel-valid
+proofs for all six proof shapes present in the training region. It produced one
+valid proof out of four structurally held-out shapes: duplication succeeded,
+while implication composition, conjunction reassociation, and nested
+projection failed. This is a diagnostic rather than a statistically complete
+benchmark, but it shows that low character loss does not imply general proof
+search at this model size.
+
 ## Architecture
 
 `literary_lm` implements, including its backward pass:
@@ -314,6 +332,10 @@ learning library. The tokenizer and every model operation are implemented in
 C; Accelerate supplies optimized matrix multiplication on macOS.
 
 ## What “grounded in zero” means here
+
+The full set-theoretic construction, transformer equations, channel objective,
+recurrent-memory system, holographic index, and formal claims are given in
+[`FOUNDATIONS.md`](FOUNDATIONS.md).
 
 The finite mathematical ladder is represented concretely:
 

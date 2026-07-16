@@ -1229,16 +1229,19 @@ static void usage(const char *program)
            "  %s --output FILE [--examples N] [--seed N] [--max-depth N]\n"
            "     [--max-chars N] [--validation-percent N]\n"
            "  %s --verify FILE\n"
+           "  %s --check-theorem FORMULA --proof PROOF\n"
            "  %s --self-test\n\n"
            "defaults: --examples 10000 --seed 1 --max-depth 3 "
            "--max-chars 480 --validation-percent 5\n",
-           program, program, program);
+           program, program, program, program);
 }
 
 int main(int argc, char **argv)
 {
     const char *output_path = NULL;
     const char *verify_path = NULL;
+    const char *check_theorem = NULL;
+    const char *check_proof = NULL;
     long examples = 10000;
     long seed = 1;
     int max_depth = 3;
@@ -1254,6 +1257,10 @@ int main(int argc, char **argv)
             output_path = argv[++i];
         } else if (strcmp(argv[i], "--verify") == 0 && i + 1 < argc) {
             verify_path = argv[++i];
+        } else if (strcmp(argv[i], "--check-theorem") == 0 && i + 1 < argc) {
+            check_theorem = argv[++i];
+        } else if (strcmp(argv[i], "--proof") == 0 && i + 1 < argc) {
+            check_proof = argv[++i];
         } else if (strcmp(argv[i], "--examples") == 0 && i + 1 < argc) {
             examples = parse_long(argv[++i], "--examples");
         } else if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc) {
@@ -1272,9 +1279,13 @@ int main(int argc, char **argv)
             fail("unknown or incomplete option");
         }
     }
-    if ((output_path != NULL) + (verify_path != NULL) + run_self_test != 1) {
+    if ((check_theorem == NULL) != (check_proof == NULL)) {
+        fail("--check-theorem and --proof must be used together");
+    }
+    if ((output_path != NULL) + (verify_path != NULL) +
+            (check_theorem != NULL) + run_self_test != 1) {
         usage(argv[0]);
-        fail("choose exactly one of --output, --verify, or --self-test");
+        fail("choose exactly one generator, verifier, proof check, or self-test mode");
     }
     if (examples < 1 || max_depth < 0 || max_depth > 6 || max_chars < 128 ||
         max_chars >= TEXT_CAPACITY || validation_percent < 0 ||
@@ -1283,6 +1294,12 @@ int main(int argc, char **argv)
     }
     if (run_self_test) self_test();
     else if (verify_path != NULL) verify_corpus(verify_path);
+    else if (check_theorem != NULL) {
+        int syntax_ok;
+        int valid = parse_and_check(check_theorem, check_proof, &syntax_ok);
+        if (!syntax_ok) fail("malformed theorem or proof");
+        printf("%s\n", valid ? "valid" : "invalid");
+    }
     else generate_corpus(output_path, examples, seed, max_depth, max_chars,
                          validation_percent);
     return EXIT_SUCCESS;
