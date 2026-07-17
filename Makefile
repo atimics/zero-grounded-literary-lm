@@ -1,6 +1,7 @@
 CC ?= cc
 CFLAGS ?= -O2 -std=c11 -Wall -Wextra -Wpedantic
 EMCC ?= emcc
+ZERO_WEB_ARTIFACT ?= teachers/zero3-balanced-final.teacher
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
@@ -53,8 +54,8 @@ corpus/channel/literary-dialogue.tok: channel_corpus corpus/bpe/shakespeare.tok 
 
 channel-data: corpus/channel/literary-dialogue.tok
 
-docs/model.litq8: export_literary literary-v8-last.ckpt
-	./export_literary literary-v8-last.ckpt $@
+docs/model.litq8: export_literary $(ZERO_WEB_ARTIFACT)
+	./export_literary $(ZERO_WEB_ARTIFACT) $@
 
 docs/literary.js docs/literary.wasm: literary_infer.c channel_protocol.h
 	$(EMCC) literary_infer.c -O3 -msimd128 --no-entry \

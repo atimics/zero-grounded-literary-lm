@@ -1,9 +1,11 @@
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import createLiteraryModule from "../docs/literary.js";
 
 const protocol = { channel: 1, message: 2, reply: 3, endMessage: 4, target: 6, summary: 7 };
 const wasmBinary = fs.readFileSync(new URL("../docs/literary.wasm", import.meta.url));
 const model = fs.readFileSync(new URL("../docs/model.litq8", import.meta.url));
+const modelSha256 = createHash("sha256").update(model).digest("hex");
 const runtime = await createLiteraryModule({ wasmBinary });
 const pointer = runtime._malloc(model.length);
 runtime.HEAPU8.set(model, pointer);
@@ -11,7 +13,10 @@ runtime.HEAPU8.set(model, pointer);
 if (runtime._lm_load(pointer, model.length) !== 0) throw new Error("model failed to load");
 if (runtime._lm_get_parameters() !== 4_852_992) throw new Error("parameter count changed");
 if (runtime._lm_get_context() !== 512) throw new Error("context changed");
-if (runtime._lm_get_update() <= 11_600) throw new Error("channel checkpoint was not exported");
+if (runtime._lm_get_update() !== 16_600) throw new Error("ZERO.3 final was not exported");
+if (modelSha256 !== "05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24") {
+  throw new Error(`unexpected ZERO.3 artifact: ${modelSha256}`);
+}
 
 function feedToken(token) { runtime._lm_feed(token); }
 function feed(text) { for (const character of text) feedToken(character.charCodeAt(0)); }
