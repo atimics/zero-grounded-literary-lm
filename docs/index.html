@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171612">
-  <meta name="description" content="A small literary transformer, written in C and running entirely in your browser.">
-  <title>ZERO — a literary language model in C</title>
+  <meta name="description" content="ZERO.3, a small literary transformer written in C and running entirely in your browser.">
+  <title>ZERO.3 — a literary language model in C</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
     <header class="masthead">
       <a class="wordmark" href="./" aria-label="Zero home">
         <span class="zero-mark">0</span>
-        <span>ZERO</span>
+        <span>ZERO.3</span>
       </a>
       <div class="status" id="status" role="status" aria-live="polite">
         <span class="status-dot"></span>
@@ -27,9 +27,9 @@
     </header>
 
     <section class="intro" aria-labelledby="pageTitle">
-      <p class="eyebrow">A 4,852,992-PARAMETER TRANSFORMER</p>
+      <p class="eyebrow">ZERO.3 · A 4,852,992-PARAMETER TRANSFORMER</p>
       <h1 id="pageTitle">Begin with a fragment.<br><em>Let the machine dream onward.</em></h1>
-      <p class="dek">Trained on Shakespeare, William Blake, and Aleister Crowley. Written in C. Running locally in this browser—your words are never sent anywhere.</p>
+      <p class="dek">Distilled from ZERO.1 and ZERO.2, then trained across foundation, literary, biblical, and channel corpora. Written in C. Running locally in this browser—your words are never sent anywhere.</p>
     </section>
 
     <section class="chat" aria-label="Literary model chat">
@@ -111,7 +111,7 @@
     <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
     <p class="eyebrow">MODEL NOTE</p>
     <h2>A real, very small language model.</h2>
-    <p>ZERO is a decoder-only character transformer trained on three literary collections, then continued on structured multi-speaker channels. Its 4.85 million learned parameters are quantized to 8-bit rows for this page.</p>
+    <p>ZERO.3 is a decoder-only character transformer distilled from the frozen ZERO.1 foundation and ZERO.2 literary teachers while learning Shakespeare, William Blake, Aleister Crowley, the King James Bible, and structured multi-speaker channels. Its 4.85 million learned parameters are quantized to 8-bit rows for this page.</p>
     <p>The C engine performs embeddings, RMS normalization, rotary attention, GELU feed-forward layers, and sampling inside WebAssembly. It uses no server and no machine-learning runtime.</p>
     <p>It learned two related channel operations: answer a message, and compress old memory plus recent turns into new lossy memory. The page feeds that generated memory back into the next exchange and discards those turns. A small C holographic index—adapted from holostuff's deterministic encode-and-recall contract—can reintroduce one relevant older compressed episode. It still cannot retrieve outside facts or match a contemporary large language model. Oddness is part of its honest scale.</p>
     <dl>

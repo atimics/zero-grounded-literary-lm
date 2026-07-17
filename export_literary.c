@@ -124,6 +124,8 @@ int main(int argc, char **argv)
 {
     static const char checkpoint_magic[8] =
         {'Z', 'E', 'R', 'O', 'L', 'M', '2', '\0'};
+    static const char teacher_magic[8] =
+        {'Z', 'E', 'R', 'O', 'T', 'C', 'H', '1'};
     static const char inference_magic[8] =
         {'L', 'I', 'T', 'Q', '8', 'V', '1', '\0'};
     const char *input_path;
@@ -133,10 +135,11 @@ int main(int argc, char **argv)
     FILE *output;
     CheckpointHeader checkpoint;
     InferenceHeader inference;
+    int weight_only;
     int index;
 
     if (argc != 3) {
-        fprintf(stderr, "usage: %s CHECKPOINT OUTPUT\n", argv[0]);
+        fprintf(stderr, "usage: %s MODEL_ARTIFACT OUTPUT\n", argv[0]);
         return EXIT_FAILURE;
     }
     input_path = argv[1];
@@ -144,8 +147,10 @@ int main(int argc, char **argv)
     input = fopen(input_path, "rb");
     if (input == NULL) fail_path("open", input_path);
     read_exact(input, &checkpoint, sizeof(checkpoint), 1, input_path);
-    if (memcmp(checkpoint.magic, checkpoint_magic, 8) != 0 ||
-        checkpoint.version < 2 || checkpoint.version > 3 ||
+    weight_only = memcmp(checkpoint.magic, teacher_magic, 8) == 0;
+    if ((!weight_only && memcmp(checkpoint.magic, checkpoint_magic, 8) != 0) ||
+        (weight_only ? checkpoint.version != 1U
+                     : (checkpoint.version < 2 || checkpoint.version > 3)) ||
         (checkpoint.reserved & 1U) == 0 || checkpoint.vocab < 2 ||
         checkpoint.vocab > 2048 || checkpoint.context < 2 ||
         checkpoint.parameter_count != 2 + checkpoint.layers * 8) {
@@ -189,7 +194,8 @@ int main(int argc, char **argv)
         weights = checked_alloc((size_t)file_count, sizeof(*weights));
         read_exact(input, weights, sizeof(*weights), (size_t)file_count,
                    input_path);
-        if (fseek(input, (long)(2 * file_count * sizeof(float)), SEEK_CUR) != 0) {
+        if (!weight_only &&
+            fseek(input, (long)(2 * file_count * sizeof(float)), SEEK_CUR) != 0) {
             fclose(input);
             fclose(output);
             fail_path("skip optimizer state in", input_path);

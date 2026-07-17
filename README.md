@@ -48,6 +48,11 @@ make web
 python3 -m http.server 8000 --directory docs
 ```
 
+The checked-in browser artifact is frozen ZERO.3-final at update 16,600
+(`SHA-256 05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24`).
+It is exported from `teachers/zero3-balanced-final.teacher`; override
+`ZERO_WEB_ARTIFACT` only when deliberately testing another model.
+
 Then open `http://localhost:8000`. The first visit downloads `model.litq8`;
 after that, inference and conversation memory remain within the page. The UI
 shows the model's evolving lossy channel memory and any recalled holographic
