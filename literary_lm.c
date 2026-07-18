@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include "channel_protocol.h"
+#include "zero1_protocol.h"
 
 #ifdef USE_ACCELERATE
 #include <Accelerate/Accelerate.h>
@@ -29,6 +30,8 @@
 #define RMS_EPSILON 1.0e-5f
 #define BPE_BASE_TOKENS 128
 #define BPE_MAX_MERGES (MAX_VOCAB_SIZE - BPE_BASE_TOKENS)
+#define MAX_FACULTY_TEACHERS 3
+#define MAX_SAME_ARCH_TEACHERS (MAX_FACULTY_TEACHERS - 1)
 
 typedef uint16_t Token;
 
@@ -118,6 +121,21 @@ typedef struct {
 
 typedef struct {
     int loaded;
+    int vocab;
+    int char_to_token[ZERO1_MAX_VOCAB];
+    unsigned char token_to_char[ZERO1_MAX_VOCAB];
+    float *embedding;
+    float *w1;
+    float *b1;
+    float *w2;
+    float *b2;
+    float x[ZERO1_CONTEXT * ZERO1_EMBED];
+    float h[ZERO1_HIDDEN];
+    float probs[ZERO1_MAX_VOCAB];
+} Zero1Teacher;
+
+typedef struct {
+    int loaded;
     int merge_count;
     int vocab;
     int token_width;
@@ -138,6 +156,10 @@ typedef struct {
     size_t validation_start;
     size_t validation_length;
     int channel;
+    int foundation;
+    int teacher_eligible;
+    int distill_override;
+    float distill_weights[MAX_FACULTY_TEACHERS];
     float weight;
     size_t *record_starts;
     size_t record_count;
@@ -153,11 +175,15 @@ typedef struct {
     float weight_decay;
     float clip;
     long warmup;
+    long schedule_offset;
+    long schedule_total;
     long report_every;
     int validation_batches;
     const char *save_path;
     long save_every;
     const char *resume_path;
+    const char *init_path;
+    int eval_only;
     const char *prompt;
     long generate_tokens;
     float temperature;
@@ -168,9 +194,17 @@ typedef struct {
     const char *best_path;
     long patience;
     int cosine_decay;
+    long gradient_cosine_every;
     const char *tokenizer_path;
     float repetition_penalty;
     float channel_weight;
+    float foundation_weight;
+    int artifact_weight;
+    const char *teacher_paths[MAX_SAME_ARCH_TEACHERS];
+    float teacher_weights[MAX_SAME_ARCH_TEACHERS];
+    int teacher_count;
+    const char *zero1_teacher_path;
+    float zero1_weight;
 } Options;
 
 static volatile sig_atomic_t interrupted = 0;
@@ -893,16 +927,16 @@ static float model_forward_masked(Model *model, const Token *tokens,
     int time;
     int i;
     int layer_index;
-    int loss_count = cfg->context;
+    float loss_weight = (float)cfg->context;
     float loss = 0.0f;
     LayerCache *first = &model->cache[0];
 
     if (loss_mask != NULL) {
-        loss_count = 0;
+        loss_weight = 0.0f;
         for (time = 0; time < cfg->context; ++time) {
-            if (loss_mask[time]) ++loss_count;
+            loss_weight += loss_mask[time];
         }
-        if (loss_count == 0) loss_count = 1;
+        if (loss_weight == 0.0f) loss_weight = 1.0f;
     }
 
     for (time = 0; time < cfg->context; ++time) {
@@ -999,7 +1033,8 @@ static float model_forward_masked(Model *model, const Token *tokens,
             if (probability < 1.0e-20f) {
                 probability = 1.0e-20f;
             }
-            loss -= logf(probability) / loss_count;
+            loss -= (loss_mask == NULL ? 1.0f : loss_mask[time]) *
+                    logf(probability) / loss_weight;
         }
     }
     return loss;
@@ -1013,10 +1048,74 @@ static float model_forward(Model *model, const Token *tokens,
                                 NULL);
 }
 
+static float model_blended_loss(const Model *model, const Token *targets,
+                                const unsigned char *loss_mask,
+                                const unsigned char *teacher_mask,
+                                const float *const *teacher_probabilities,
+                                const float *teacher_weights,
+                                int teacher_count)
+{
+    const Config *cfg = &model->cfg;
+    float loss = 0.0f;
+    float loss_weight = (float)cfg->context;
+    int time;
+    int token;
+
+    if (loss_mask != NULL) {
+        loss_weight = 0.0f;
+        for (time = 0; time < cfg->context; ++time) {
+            loss_weight += loss_mask[time];
+        }
+        if (loss_weight == 0.0f) loss_weight = 1.0f;
+    }
+    for (time = 0; time < cfg->context; ++time) {
+        const float *student = &model->probs[time * cfg->vocab];
+        float soft_weight = 0.0f;
+        float hard_weight;
+        int teacher;
+        if (loss_mask != NULL && !loss_mask[time]) continue;
+        if (teacher_mask == NULL || teacher_mask[time]) {
+            for (teacher = 0; teacher < teacher_count; ++teacher) {
+                if (teacher_probabilities[teacher] != NULL) {
+                    soft_weight += teacher_weights[teacher];
+                }
+            }
+        }
+        hard_weight = 1.0f - soft_weight;
+        if (hard_weight > 0.0f) {
+            float probability = student[targets[time]];
+            if (probability < 1.0e-20f) probability = 1.0e-20f;
+            loss -= (loss_mask == NULL ? 1.0f : loss_mask[time]) *
+                    hard_weight * logf(probability) / loss_weight;
+        }
+        for (token = 0; token < cfg->vocab; ++token) {
+            float probability = student[token];
+            float target_probability = 0.0f;
+            if (probability < 1.0e-20f) probability = 1.0e-20f;
+            if (teacher_mask == NULL || teacher_mask[time]) {
+                for (teacher = 0; teacher < teacher_count; ++teacher) {
+                    if (teacher_probabilities[teacher] != NULL) {
+                        target_probability += teacher_weights[teacher] *
+                            teacher_probabilities[teacher]
+                                [time * cfg->vocab + token];
+                    }
+                }
+            }
+            if (target_probability > 0.0f) {
+                loss -= (loss_mask == NULL ? 1.0f : loss_mask[time]) *
+                        target_probability * logf(probability) / loss_weight;
+            }
+        }
+    }
+    return loss;
+}
+
 /* Adds this sequence's gradients; call model_zero_grad before a new batch. */
-static void model_backward_masked(Model *model, const Token *tokens,
-                                  const Token *targets,
-                                  const unsigned char *loss_mask)
+static void model_backward_blended_masked(
+    Model *model, const Token *tokens, const Token *targets,
+    const unsigned char *loss_mask, const unsigned char *teacher_mask,
+    const float *const *teacher_probabilities, const float *teacher_weights,
+    int teacher_count)
 {
     const Config *cfg = &model->cfg;
     size_t td = (size_t)cfg->context * cfg->dim;
@@ -1028,25 +1127,47 @@ static void model_backward_masked(Model *model, const Token *tokens,
     int token;
     int i;
     int layer_index;
-    int loss_count = cfg->context;
+    float loss_weight = (float)cfg->context;
 
     if (loss_mask != NULL) {
-        loss_count = 0;
+        loss_weight = 0.0f;
         for (time = 0; time < cfg->context; ++time) {
-            if (loss_mask[time]) ++loss_count;
+            loss_weight += loss_mask[time];
         }
-        if (loss_count == 0) loss_count = 1;
+        if (loss_weight == 0.0f) loss_weight = 1.0f;
     }
 
     memset(dy, 0, td * sizeof(float));
     for (time = 0; time < cfg->context; ++time) {
         float *row = &model->probs[time * cfg->vocab];
+        float soft_weight = 0.0f;
+        float hard_weight;
+        int teacher;
+        if (teacher_mask == NULL || teacher_mask[time]) {
+            for (teacher = 0; teacher < teacher_count; ++teacher) {
+                if (teacher_probabilities[teacher] != NULL) {
+                    soft_weight += teacher_weights[teacher];
+                }
+            }
+        }
+        hard_weight = 1.0f - soft_weight;
         for (token = 0; token < cfg->vocab; ++token) {
+            float target_probability =
+                token == targets[time] ? hard_weight : 0.0f;
+            if (teacher_mask == NULL || teacher_mask[time]) {
+                for (teacher = 0; teacher < teacher_count; ++teacher) {
+                    if (teacher_probabilities[teacher] != NULL) {
+                        target_probability += teacher_weights[teacher] *
+                            teacher_probabilities[teacher]
+                                [time * cfg->vocab + token];
+                    }
+                }
+            }
             row[token] = loss_mask != NULL && !loss_mask[time]
                              ? 0.0f
-                             : (row[token] -
-                                (token == targets[time] ? 1.0f : 0.0f)) /
-                                   loss_count;
+                             : (row[token] - target_probability) *
+                                   (loss_mask == NULL ? 1.0f : loss_mask[time]) /
+                                   loss_weight;
         }
     }
     linear_backward(cfg->context, cfg->dim, cfg->vocab, model->final_n,
@@ -1127,6 +1248,14 @@ static void model_backward_masked(Model *model, const Token *tokens,
             }
         }
     }
+}
+
+static void model_backward_masked(Model *model, const Token *tokens,
+                                  const Token *targets,
+                                  const unsigned char *loss_mask)
+{
+    model_backward_blended_masked(model, tokens, targets, loss_mask, NULL,
+                                  NULL, NULL, 0);
 }
 
 static void model_backward(Model *model, const Token *tokens,
@@ -1269,22 +1398,135 @@ static void corpus_destroy(Corpus *corpus)
     memset(corpus, 0, sizeof(*corpus));
 }
 
+static int token_text_at(const Token *tokens, int start, int end,
+                         const char *text)
+{
+    int index;
+    for (index = 0; text[index] != '\0'; ++index) {
+        if (start + index >= end ||
+            tokens[start + index] != (unsigned char)text[index]) {
+            return 0;
+        }
+    }
+    return index;
+}
+
+static void weight_artifact_span(const Token *targets, unsigned char *mask,
+                                 int start, int end, int artifact_weight)
+{
+    static const char prefix[] = "@artifact ";
+    static const char suffix[] = " @summary ";
+    int artifact_start = -1;
+    int artifact_end = -1;
+    int time;
+    if (artifact_weight <= 1) return;
+    for (time = start; time < end; ++time) {
+        int length = token_text_at(targets, time, end, prefix);
+        if (length != 0) {
+            artifact_start = time + length;
+            break;
+        }
+    }
+    if (artifact_start < 0) return;
+    for (time = artifact_start; time < end; ++time) {
+        if (token_text_at(targets, time, end, suffix) != 0) {
+            artifact_end = time;
+            break;
+        }
+    }
+    if (artifact_end < artifact_start) return;
+    for (time = artifact_start; time < artifact_end; ++time) {
+        mask[time] = (unsigned char)artifact_weight;
+    }
+}
+
 static int channel_loss_mask(const Token *tokens, const Token *targets,
-                             unsigned char *mask, int context)
+                             unsigned char *mask, int context,
+                             int artifact_weight)
 {
     int active = 0;
     int count = 0;
+    int span_start = -1;
     int time;
     for (time = 0; time < context; ++time) {
-        if (tokens[time] == CHANNEL_TARGET_TOKEN) active = 1;
+        if (tokens[time] == CHANNEL_TARGET_TOKEN) {
+            active = 1;
+            span_start = time;
+        }
         mask[time] = (unsigned char)active;
         if (active) ++count;
         if (targets[time] == CHANNEL_MESSAGE_END_TOKEN ||
             targets[time] == CHANNEL_RECORD_END_TOKEN) {
+            if (span_start >= 0) {
+                weight_artifact_span(targets, mask, span_start, time,
+                                     artifact_weight);
+            }
             active = 0;
+            span_start = -1;
         }
     }
+    if (span_start >= 0) {
+        weight_artifact_span(targets, mask, span_start, context,
+                             artifact_weight);
+    }
     return count;
+}
+
+static int find_target_text(const Token *targets, int start, int end,
+                            const char *text)
+{
+    int time;
+    for (time = start; time < end; ++time) {
+        if (token_text_at(targets, time, end, text) != 0) return time;
+    }
+    return -1;
+}
+
+/*
+ * Historical channel replies contain only semantic reply bytes, so their
+ * complete target span remains teacher-eligible. Structured faculty chunks
+ * keep controller grammar hard: teachers may regularize artifact and summary
+ * contents, but never @tags or executable @request spans.
+ */
+static void channel_teacher_mask(const Token *targets,
+                                 const unsigned char *loss_mask,
+                                 unsigned char *teacher_mask, int context)
+{
+    static const char artifact_prefix[] = "@artifact ";
+    static const char summary_prefix[] = " @summary ";
+    static const char close_prefix[] = " @close";
+    static const char request_prefix[] = "@request ";
+    int start = 0;
+    int end = context;
+    int artifact;
+    int summary;
+    int close;
+    int request;
+    int time;
+    while (start < context && !loss_mask[start]) ++start;
+    while (end > start && !loss_mask[end - 1]) --end;
+    for (time = 0; time < context; ++time) {
+        teacher_mask[time] = loss_mask[time] ? 1U : 0U;
+    }
+    if (start == end) return;
+    artifact = find_target_text(targets, start, end, artifact_prefix);
+    request = find_target_text(targets, start, end, request_prefix);
+    if (artifact < 0 && request < 0) return;
+    memset(teacher_mask, 0, (size_t)context);
+    if (request >= 0) return;
+    summary = find_target_text(targets, artifact, end, summary_prefix);
+    close = find_target_text(targets,
+                             summary >= 0 ? summary : artifact, end,
+                             close_prefix);
+    if (summary < 0) return;
+    for (time = artifact + (int)strlen(artifact_prefix); time < summary;
+         ++time) {
+        teacher_mask[time] = 1U;
+    }
+    if (close < 0) close = end;
+    for (time = summary + (int)strlen(summary_prefix); time < close; ++time) {
+        teacher_mask[time] = 1U;
+    }
 }
 
 static void prepare_channel_range(CorpusRange *range, const Corpus *corpus,
@@ -1355,6 +1597,7 @@ typedef struct {
 } CheckpointHeader;
 
 static const char CHECKPOINT_MAGIC[8] = {'Z', 'E', 'R', 'O', 'L', 'M', '2', '\0'};
+static const char TEACHER_MAGIC[8] = {'Z', 'E', 'R', 'O', 'T', 'C', 'H', '1'};
 
 static int write_items(FILE *file, const void *data, size_t size, size_t count)
 {
@@ -1381,6 +1624,30 @@ static CheckpointHeader checkpoint_read_header(FILE *file, const char *path)
     return header;
 }
 
+static CheckpointHeader artifact_read_header(FILE *file, const char *path,
+                                             int *weight_only)
+{
+    CheckpointHeader header;
+    if (!read_items(file, &header, sizeof(header), 1)) {
+        fail_path("read model artifact header from", path);
+    }
+    *weight_only =
+        memcmp(header.magic, TEACHER_MAGIC, sizeof(header.magic)) == 0;
+    if (*weight_only) {
+        if (header.version != 1U || header.vocab < 2 ||
+            header.vocab > MAX_VOCAB_SIZE) {
+            fail("unsupported or corrupt teacher artifact");
+        }
+    } else if (memcmp(header.magic, CHECKPOINT_MAGIC,
+                      sizeof(header.magic)) != 0 ||
+               (header.version != 1U && header.version != 2U &&
+                header.version != CHECKPOINT_VERSION) ||
+               header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
+        fail("unsupported or corrupt model artifact");
+    }
+    return header;
+}
+
 static Config checkpoint_peek(const char *path)
 {
     Config cfg;
@@ -1399,6 +1666,33 @@ static Config checkpoint_peek(const char *path)
     cfg.layers = (int)header.layers;
     cfg.ff = (int)header.ff;
     cfg.rotary = header.version >= 2U && (header.reserved & 1U) != 0;
+    cfg.vocab = (int)header.vocab;
+    return cfg;
+}
+
+static Config artifact_peek(const char *path)
+{
+    Config cfg;
+    CheckpointHeader header;
+    FILE *file = fopen(path, "rb");
+    int weight_only;
+    if (file == NULL) {
+        fail_path("open", path);
+    }
+    header = artifact_read_header(file, path, &weight_only);
+    (void)weight_only;
+    if (fclose(file) != 0) {
+        fail_path("close", path);
+    }
+    cfg.context = (int)header.context;
+    cfg.dim = (int)header.dim;
+    cfg.heads = (int)header.heads;
+    cfg.layers = (int)header.layers;
+    cfg.ff = (int)header.ff;
+    cfg.rotary = header.version >= 2U && (header.reserved & 1U) != 0;
+    if (memcmp(header.magic, TEACHER_MAGIC, sizeof(header.magic)) == 0) {
+        cfg.rotary = (header.reserved & 1U) != 0;
+    }
     cfg.vocab = (int)header.vocab;
     return cfg;
 }
@@ -1511,6 +1805,207 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng)
     return header.step;
 }
 
+static uint64_t artifact_load_weights(const char *path, Model *model)
+{
+    CheckpointHeader header;
+    FILE *file = fopen(path, "rb");
+    int parameter_index;
+    int weight_only;
+    if (file == NULL) {
+        fail_path("open", path);
+    }
+    header = artifact_read_header(file, path, &weight_only);
+    if ((int)header.context != model->cfg.context ||
+        (int)header.dim != model->cfg.dim ||
+        (int)header.heads != model->cfg.heads ||
+        (int)header.layers != model->cfg.layers ||
+        (int)header.ff != model->cfg.ff ||
+        (int)header.vocab != model->cfg.vocab ||
+        ((header.reserved & 1U) != 0) != model->cfg.rotary ||
+        (int)header.parameter_count != model->parameter_count) {
+        fclose(file);
+        fail("model artifact architecture does not match model");
+    }
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        uint64_t count = 0;
+        if (!read_items(file, &count, sizeof(count), 1) ||
+            count != parameter->count ||
+            !read_items(file, parameter->w, sizeof(float), parameter->count)) {
+            fclose(file);
+            fprintf(stderr,
+                    "error: model artifact parameter %d (%s) is corrupt or "
+                    "incomplete; file count=%llu expected=%zu\n",
+                    parameter_index, parameter->name,
+                    (unsigned long long)count, parameter->count);
+            exit(EXIT_FAILURE);
+        }
+        if (!weight_only &&
+            fseek(file, (long)(2 * parameter->count * sizeof(float)),
+                  SEEK_CUR) != 0) {
+            fclose(file);
+            fail_path("skip optimizer state in", path);
+        }
+        memset(parameter->m, 0, parameter->count * sizeof(float));
+        memset(parameter->v, 0, parameter->count * sizeof(float));
+    }
+    if (fclose(file) != 0) {
+        fail_path("close", path);
+    }
+    return header.step;
+}
+
+static void zero1_teacher_load(Zero1Teacher *teacher, const char *path)
+{
+    Zero1CheckpointHeader header;
+    FILE *file = fopen(path, "rb");
+    size_t embedding_count;
+    size_t w1_count = (size_t)ZERO1_HIDDEN * ZERO1_CONTEXT * ZERO1_EMBED;
+    size_t w2_count;
+    int token;
+
+    if (file == NULL) fail_path("open ZERO.1 teacher", path);
+    if (!read_items(file, &header, sizeof(header), 1) ||
+        memcmp(header.magic, ZERO1_CHECKPOINT_MAGIC, sizeof(header.magic)) != 0 ||
+        header.version != ZERO1_CHECKPOINT_VERSION ||
+        header.vocab < 2 || header.vocab > ZERO1_MAX_VOCAB ||
+        header.context != ZERO1_CONTEXT || header.embed != ZERO1_EMBED ||
+        header.hidden != ZERO1_HIDDEN) {
+        fclose(file);
+        fail("unsupported or corrupt ZERO.1 teacher checkpoint");
+    }
+    memset(teacher, 0, sizeof(*teacher));
+    teacher->vocab = (int)header.vocab;
+    for (token = 0; token < ZERO1_MAX_VOCAB; ++token) {
+        teacher->char_to_token[token] = -1;
+    }
+    for (token = 0; token < teacher->vocab; ++token) {
+        unsigned char character = header.token_to_char[token];
+        if (teacher->char_to_token[character] >= 0) {
+            fclose(file);
+            fail("ZERO.1 teacher vocabulary contains a duplicate character");
+        }
+        teacher->char_to_token[character] = token;
+        teacher->token_to_char[token] = character;
+    }
+    if (teacher->char_to_token[(unsigned char)' '] < 0) {
+        fclose(file);
+        fail("ZERO.1 teacher vocabulary has no padding-space token");
+    }
+
+    embedding_count = (size_t)teacher->vocab * ZERO1_EMBED;
+    w2_count = (size_t)teacher->vocab * ZERO1_HIDDEN;
+    teacher->embedding = zero_alloc(embedding_count, sizeof(float));
+    teacher->w1 = zero_alloc(w1_count, sizeof(float));
+    teacher->b1 = zero_alloc(ZERO1_HIDDEN, sizeof(float));
+    teacher->w2 = zero_alloc(w2_count, sizeof(float));
+    teacher->b2 = zero_alloc((size_t)teacher->vocab, sizeof(float));
+    if (!read_items(file, teacher->embedding, sizeof(float), embedding_count) ||
+        !read_items(file, teacher->w1, sizeof(float), w1_count) ||
+        !read_items(file, teacher->b1, sizeof(float), ZERO1_HIDDEN) ||
+        !read_items(file, teacher->w2, sizeof(float), w2_count) ||
+        !read_items(file, teacher->b2, sizeof(float),
+                    (size_t)teacher->vocab) ||
+        fgetc(file) != EOF) {
+        fclose(file);
+        fail("ZERO.1 teacher checkpoint is incomplete or has trailing data");
+    }
+    if (fclose(file) != 0) fail_path("close ZERO.1 teacher", path);
+    teacher->loaded = 1;
+    printf("loaded ZERO.1 teacher %s at update %llu\n", path,
+           (unsigned long long)header.step);
+}
+
+static void zero1_teacher_destroy(Zero1Teacher *teacher)
+{
+    free(teacher->embedding);
+    free(teacher->w1);
+    free(teacher->b1);
+    free(teacher->w2);
+    free(teacher->b2);
+    memset(teacher, 0, sizeof(*teacher));
+}
+
+static void zero1_teacher_forward(Zero1Teacher *teacher,
+                                  const int context[ZERO1_CONTEXT],
+                                  float *ascii_probs, int output_vocab)
+{
+    int position;
+    int i;
+    int hidden;
+    int token;
+    float maximum;
+    float total = 0.0f;
+
+    memset(ascii_probs, 0, (size_t)output_vocab * sizeof(float));
+    for (position = 0; position < ZERO1_CONTEXT; ++position) {
+        int input_token = context[position];
+        for (i = 0; i < ZERO1_EMBED; ++i) {
+            teacher->x[position * ZERO1_EMBED + i] =
+                teacher->embedding[input_token * ZERO1_EMBED + i];
+        }
+    }
+    for (hidden = 0; hidden < ZERO1_HIDDEN; ++hidden) {
+        float activation = teacher->b1[hidden];
+        const float *weights =
+            teacher->w1 + (size_t)hidden * ZERO1_CONTEXT * ZERO1_EMBED;
+        for (i = 0; i < ZERO1_CONTEXT * ZERO1_EMBED; ++i) {
+            activation += weights[i] * teacher->x[i];
+        }
+        teacher->h[hidden] = tanhf(activation);
+    }
+    for (token = 0; token < teacher->vocab; ++token) {
+        float logit = teacher->b2[token];
+        for (hidden = 0; hidden < ZERO1_HIDDEN; ++hidden) {
+            logit += teacher->w2[token * ZERO1_HIDDEN + hidden] *
+                     teacher->h[hidden];
+        }
+        teacher->probs[token] = logit;
+    }
+    maximum = teacher->probs[0];
+    for (token = 1; token < teacher->vocab; ++token) {
+        if (teacher->probs[token] > maximum) maximum = teacher->probs[token];
+    }
+    for (token = 0; token < teacher->vocab; ++token) {
+        teacher->probs[token] = expf(teacher->probs[token] - maximum);
+        total += teacher->probs[token];
+    }
+    for (token = 0; token < teacher->vocab; ++token) {
+        int character = teacher->token_to_char[token];
+        teacher->probs[token] /= total;
+        if (character >= 0 && character < output_vocab) {
+            ascii_probs[character] = teacher->probs[token];
+        }
+    }
+}
+
+static void zero1_teacher_sequence(Zero1Teacher *teacher, const Token *tokens,
+                                   int length, int output_vocab,
+                                   float *probabilities)
+{
+    int padding = teacher->char_to_token[(unsigned char)' '];
+    int time;
+    for (time = 0; time < length; ++time) {
+        int context[ZERO1_CONTEXT];
+        int position;
+        for (position = 0; position < ZERO1_CONTEXT; ++position) {
+            int source = time + position - (ZERO1_CONTEXT - 1);
+            int character = source < 0 ? ' ' : tokens[source];
+            if (character < 0 || character >= ZERO1_MAX_VOCAB ||
+                teacher->char_to_token[character] < 0) {
+                fail("foundation corpus contains a character outside the ZERO.1 vocabulary");
+            }
+            context[position] = source < 0
+                                    ? padding
+                                    : teacher->char_to_token[character];
+        }
+        zero1_teacher_forward(
+            teacher, context, probabilities + (size_t)time * output_vocab,
+            output_vocab);
+    }
+}
+
 static float evaluate(Model *model, const Token *data, size_t length,
                       int batches)
 {
@@ -1533,7 +2028,7 @@ static float evaluate(Model *model, const Token *data, size_t length,
 
 static float evaluate_balanced(Model *model, const Corpus *corpus,
                                const CorpusRange *ranges, int range_count,
-                               int batches)
+                               int batches, int artifact_weight)
 {
     unsigned char *mask = zero_alloc((size_t)model->cfg.context, 1);
     int samples_per_range = batches / range_count;
@@ -1557,7 +2052,8 @@ static float evaluate_balanced(Model *model, const Corpus *corpus,
                 start = range->record_starts[record];
                 if (channel_loss_mask(corpus->data + start,
                                       corpus->data + start + 1, mask,
-                                      model->cfg.context) == 0) {
+                                      model->cfg.context,
+                                      artifact_weight) == 0) {
                     fail("channel validation window has no reply target");
                 }
                 range_total += model_forward_masked(
@@ -1581,6 +2077,102 @@ static float evaluate_balanced(Model *model, const Corpus *corpus,
     }
     free(mask);
     return total / total_weight;
+}
+
+static void probe_range_gradient(Model *model, const Corpus *corpus,
+                                 const CorpusRange *range,
+                                 unsigned char *mask, int artifact_weight)
+{
+    size_t start;
+    model_zero_grad(model);
+    if (range->channel) {
+        start = range->record_starts[range->validation_record_index];
+        if (channel_loss_mask(corpus->data + start, corpus->data + start + 1,
+                              mask, model->cfg.context,
+                              artifact_weight) == 0) {
+            fail("gradient-cosine channel probe has no target");
+        }
+        (void)model_forward_masked(model, corpus->data + start,
+                                   corpus->data + start + 1, 0.0f, NULL, mask);
+        model_backward_masked(model, corpus->data + start,
+                              corpus->data + start + 1, mask);
+    } else {
+        start = range->validation_start;
+        (void)model_forward(model, corpus->data + start,
+                            corpus->data + start + 1, 0.0f, NULL);
+        model_backward(model, corpus->data + start,
+                       corpus->data + start + 1);
+    }
+}
+
+static float faculty_replay_gradient_cosine(
+    Model *model, const Corpus *corpus, const CorpusRange *ranges,
+    int range_count, uint64_t probe_index, int artifact_weight,
+    int *replay_range_index)
+{
+    const CorpusRange *faculty = NULL;
+    const CorpusRange *replay = NULL;
+    int eligible_count = 0;
+    int chosen;
+    int range_index;
+    size_t parameter_total = model_parameter_total(model);
+    float *replay_gradient = zero_alloc(parameter_total,
+                                        sizeof(*replay_gradient));
+    unsigned char *mask = zero_alloc((size_t)model->cfg.context, 1);
+    size_t offset = 0;
+    double dot = 0.0;
+    double replay_norm = 0.0;
+    double faculty_norm = 0.0;
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        if (ranges[range_index].channel &&
+            !ranges[range_index].teacher_eligible && faculty == NULL) {
+            faculty = &ranges[range_index];
+        }
+        if (ranges[range_index].teacher_eligible) ++eligible_count;
+    }
+    if (faculty == NULL || eligible_count == 0) {
+        free(mask);
+        free(replay_gradient);
+        return NAN;
+    }
+    chosen = (int)(probe_index % (uint64_t)eligible_count);
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        if (ranges[range_index].teacher_eligible && chosen-- == 0) {
+            replay = &ranges[range_index];
+            *replay_range_index = range_index;
+            break;
+        }
+    }
+    probe_range_gradient(model, corpus, replay, mask, artifact_weight);
+    for (range_index = 0; range_index < model->parameter_count; ++range_index) {
+        Parameter *parameter = model->parameters[range_index];
+        size_t element;
+        memcpy(replay_gradient + offset, parameter->g,
+               parameter->count * sizeof(*parameter->g));
+        for (element = 0; element < parameter->count; ++element) {
+            double value = parameter->g[element];
+            replay_norm += value * value;
+        }
+        offset += parameter->count;
+    }
+    probe_range_gradient(model, corpus, faculty, mask, artifact_weight);
+    offset = 0;
+    for (range_index = 0; range_index < model->parameter_count; ++range_index) {
+        Parameter *parameter = model->parameters[range_index];
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double faculty_value = parameter->g[element];
+            double replay_value = replay_gradient[offset + element];
+            dot += faculty_value * replay_value;
+            faculty_norm += faculty_value * faculty_value;
+        }
+        offset += parameter->count;
+    }
+    model_zero_grad(model);
+    free(mask);
+    free(replay_gradient);
+    if (faculty_norm == 0.0 || replay_norm == 0.0) return NAN;
+    return (float)(dot / sqrt(faculty_norm * replay_norm));
 }
 
 typedef struct {
@@ -1855,6 +2447,26 @@ static float parse_float(const char *text, const char *option)
     return value;
 }
 
+static void parse_distill_weights(const char *text,
+                                  float weights[MAX_FACULTY_TEACHERS])
+{
+    int consumed = 0;
+    int teacher;
+    if (sscanf(text, "%f,%f,%f%n", &weights[0], &weights[1], &weights[2],
+               &consumed) != MAX_FACULTY_TEACHERS || text[consumed] != '\0') {
+        fail("--distill requires ZERO1,ZERO2,ZERO3 weights");
+    }
+    for (teacher = 0; teacher < MAX_FACULTY_TEACHERS; ++teacher) {
+        if (!isfinite(weights[teacher]) || weights[teacher] < 0.0f ||
+            weights[teacher] > 1.0f) {
+            fail("--distill weights must be finite and between zero and one");
+        }
+    }
+    if (weights[0] + weights[1] + weights[2] > 1.0f + 1.0e-6f) {
+        fail("--distill teacher weights must sum to at most one");
+    }
+}
+
 static int choose_weighted_range(const CorpusRange *ranges, int count,
                                  Rng *rng)
 {
@@ -1875,8 +2487,14 @@ static void print_usage(const char *program)
     printf("usage: %s [options]\n\n", program);
     printf("data and architecture:\n");
     printf("  --text FILE          add a uniformly sampled training text (repeatable)\n");
+    printf("  --foundation FILE    add ZERO.1 text with teacher distillation\n");
     printf("  --channel FILE       add a structured reply-record token file\n");
+    printf("  --hard-channel FILE  add a channel excluded from teacher logits\n");
     printf("  --channel-weight X   sampling weight per channel file (default: 1)\n");
+    printf("  --foundation-weight X sampling weight per foundation file (default: 2)\n");
+    printf("  --sample-weight X    override the most recently added file weight\n");
+    printf("  --distill A,B,C      ZERO.1, ZERO.2, ZERO.3 weights for the preceding file\n");
+    printf("  --artifact-weight N  relative hard loss on @artifact contents (default: 1)\n");
     printf("  --preset NAME        tiny (default) or literary\n");
     printf("  --context N          sequence length\n");
     printf("  --dim N              embedding width\n");
@@ -1891,17 +2509,27 @@ static void print_usage(const char *program)
     printf("  --weight-decay X     AdamW decay (default: 0.01)\n");
     printf("  --clip X             global gradient norm limit (default: 1)\n");
     printf("  --warmup N           linear warmup updates (default: 100)\n");
+    printf("  --schedule-offset N  completed phase updates before this run\n");
+    printf("  --schedule-total N   total phase updates for chunk-stable LR decay\n");
     printf("  --report N           report interval (default: 100)\n");
     printf("  --validation N       validation sequences per report (default: 8)\n");
     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
+    printf("  --gradient-cosine N  report fixed faculty/replay probe cosine every N updates\n");
     printf("  --best FILE          save each new best-validation checkpoint\n");
     printf("  --patience N         early-stop after N stale validation reports\n");
     printf("  --seed N             deterministic seed (default: 0)\n\n");
+    printf("distillation:\n");
+    printf("  --teacher FILE       frozen same-architecture teacher; repeat for ZERO.2/3\n");
+    printf("  --teacher-weight X   weight for the preceding --teacher (default: 0.15)\n");
+    printf("  --zero1-teacher FILE checkpoint produced by zero_lm --save\n");
+    printf("  --zero1-weight X     ZERO.1 weight on foundation data (default: 0.25)\n\n");
     printf("checkpoints and generation:\n");
     printf("  --save FILE          save model and AdamW state\n");
     printf("  --save-every N       periodic checkpoint interval\n");
     printf("  --resume FILE        resume architecture, weights, optimizer, and RNG\n");
+    printf("  --init FILE          initialize weights with fresh optimizer and RNG\n");
+    printf("  --eval-only          read-only validation; never updates or saves\n");
     printf("  --generate-only      equivalent to --steps 0\n");
     printf("  --prompt TEXT        generation prefix (default: zero)\n");
     printf("  --tokens N           tokens to generate (default: 256)\n");
@@ -1977,7 +2605,7 @@ static int run_self_test(void)
         float minus;
         float numeric;
         float tolerance;
-        if (channel_loss_mask(channel_tokens, channel_targets, mask, 4) != 3) {
+        if (channel_loss_mask(channel_tokens, channel_targets, mask, 4, 1) != 3) {
             fprintf(stderr, "masked-loss self-test constructed a bad mask\n");
             ++failures;
         }
@@ -2004,6 +2632,120 @@ static int run_self_test(void)
             ++failures;
         }
     }
+    {
+        static const char output[] =
+            "@artifact result 5 @summary exact @close";
+        Token weighted_tokens[sizeof(output) + 1];
+        Token weighted_targets[sizeof(output) + 1];
+        unsigned char weighted_mask[sizeof(output) + 1];
+        int artifact_start = (int)strlen("@artifact ");
+        int artifact_end = artifact_start + (int)strlen("result 5");
+        int context = (int)strlen(output) + 1;
+        int position;
+        weighted_tokens[0] = CHANNEL_TARGET_TOKEN;
+        for (position = 0; output[position] != '\0'; ++position) {
+            weighted_targets[position] = (unsigned char)output[position];
+            weighted_tokens[position + 1] = (unsigned char)output[position];
+        }
+        weighted_targets[context - 1] = CHANNEL_MESSAGE_END_TOKEN;
+        if (channel_loss_mask(weighted_tokens, weighted_targets,
+                              weighted_mask, context, 4) != context) {
+            fprintf(stderr, "artifact-weight self-test lost target positions\n");
+            ++failures;
+        }
+        for (position = 0; position < context; ++position) {
+            int expected = position >= artifact_start &&
+                                   position < artifact_end ? 4 : 1;
+            if (weighted_mask[position] != expected) {
+                fprintf(stderr,
+                        "artifact-weight self-test mismatch at %d: %d != %d\n",
+                        position, weighted_mask[position], expected);
+                ++failures;
+                break;
+            }
+        }
+        ++checks;
+    }
+    {
+        static const char output[] =
+            "@request quantity.add 2 3 @close";
+        Token request_tokens[sizeof(output) + 1];
+        Token request_targets[sizeof(output) + 1];
+        unsigned char request_loss_mask[sizeof(output) + 1];
+        unsigned char request_teacher_mask[sizeof(output) + 1];
+        int context = (int)strlen(output) + 1;
+        int position;
+        request_tokens[0] = CHANNEL_TARGET_TOKEN;
+        for (position = 0; output[position] != '\0'; ++position) {
+            request_targets[position] = (unsigned char)output[position];
+            request_tokens[position + 1] = (unsigned char)output[position];
+        }
+        request_targets[context - 1] = CHANNEL_MESSAGE_END_TOKEN;
+        if (channel_loss_mask(request_tokens, request_targets,
+                              request_loss_mask, context, 1) != context) {
+            fprintf(stderr, "request-mask self-test lost hard target positions\n");
+            ++failures;
+        }
+        channel_teacher_mask(request_targets, request_loss_mask,
+                             request_teacher_mask, context);
+        for (position = 0; position < context; ++position) {
+            if (request_teacher_mask[position] != 0) {
+                fprintf(stderr,
+                        "request-mask self-test leaked teacher mass at %d\n",
+                        position);
+                ++failures;
+                break;
+            }
+        }
+        ++checks;
+    }
+    {
+        float soft_targets[4 * DEFAULT_VOCAB_SIZE];
+        const float *teacher_probabilities[MAX_FACULTY_TEACHERS] = {
+            soft_targets, soft_targets, NULL
+        };
+        const float teacher_weights[MAX_FACULTY_TEACHERS] = {
+            0.1f, 0.1f, 0.0f
+        };
+        Parameter *parameter = &model.final_norm;
+        float original = parameter->w[1];
+        float analytic;
+        float plus;
+        float minus;
+        float numeric;
+        float tolerance;
+        int i;
+        for (i = 0; i < 4 * DEFAULT_VOCAB_SIZE; ++i) {
+            soft_targets[i] = 1.0f / DEFAULT_VOCAB_SIZE;
+        }
+        model_zero_grad(&model);
+        model_forward(&model, tokens, NULL, 0.0f, NULL);
+        model_backward_blended_masked(
+            &model, tokens, targets, NULL, NULL, teacher_probabilities,
+            teacher_weights, MAX_FACULTY_TEACHERS);
+        analytic = parameter->g[1];
+        parameter->w[1] = original + epsilon;
+        model_forward(&model, tokens, NULL, 0.0f, NULL);
+        plus = model_blended_loss(
+            &model, targets, NULL, NULL, teacher_probabilities,
+            teacher_weights, MAX_FACULTY_TEACHERS);
+        parameter->w[1] = original - epsilon;
+        model_forward(&model, tokens, NULL, 0.0f, NULL);
+        minus = model_blended_loss(
+            &model, targets, NULL, NULL, teacher_probabilities,
+            teacher_weights, MAX_FACULTY_TEACHERS);
+        parameter->w[1] = original;
+        numeric = (plus - minus) / (2.0f * epsilon);
+        tolerance = 0.002f + 0.08f * (fabsf(analytic) + fabsf(numeric));
+        ++checks;
+        if (!isfinite(numeric) || fabsf(analytic - numeric) > tolerance) {
+            fprintf(stderr,
+                    "distillation gradient mismatch final_norm[1]: "
+                    "analytic=%g numeric=%g\n",
+                    analytic, numeric);
+            ++failures;
+        }
+    }
     model_destroy(&model);
     if (failures == 0) {
         printf("self-test: %d finite-difference gradient checks passed\n", checks);
@@ -2022,10 +2764,16 @@ int main(int argc, char **argv)
     const char **text_paths;
     CorpusRange *text_ranges;
     unsigned char *text_channel;
+    unsigned char *text_foundation;
     int text_count = 0;
+    int foundation_count = 0;
     int i;
     Rng rng;
+    Rng teacher_rng;
     Model model;
+    Model teacher_models[MAX_SAME_ARCH_TEACHERS];
+    int teacher_loaded[MAX_SAME_ARCH_TEACHERS] = {0};
+    Zero1Teacher zero1_teacher = {0};
     Tokenizer tokenizer = {0};
     uint64_t update = 0;
     Corpus corpus = {0};
@@ -2048,6 +2796,8 @@ int main(int argc, char **argv)
     options.weight_decay = 0.01f;
     options.clip = 1.0f;
     options.warmup = 100;
+    options.schedule_offset = 0;
+    options.schedule_total = 0;
     options.report_every = 100;
     options.validation_batches = 8;
     options.prompt = "zero";
@@ -2058,10 +2808,15 @@ int main(int argc, char **argv)
     options.dropout = 0.1f;
     options.repetition_penalty = 1.1f;
     options.channel_weight = 1.0f;
+    options.foundation_weight = 2.0f;
+    options.artifact_weight = 1;
+    options.zero1_weight = 0.25f;
     text_paths = zero_alloc((size_t)(argc > 1 ? argc : 1), sizeof(*text_paths));
     text_ranges = zero_alloc((size_t)(argc > 1 ? argc : 1), sizeof(*text_ranges));
     text_channel = zero_alloc((size_t)(argc > 1 ? argc : 1),
                               sizeof(*text_channel));
+    text_foundation = zero_alloc((size_t)(argc > 1 ? argc : 1),
+                                 sizeof(*text_foundation));
 
     /* Apply the requested preset before individual dimension overrides. */
     for (i = 1; i + 1 < argc; ++i) {
@@ -2077,18 +2832,55 @@ int main(int argc, char **argv)
             free(text_paths);
             free(text_ranges);
             free(text_channel);
+            free(text_foundation);
             return EXIT_SUCCESS;
         } else if (strcmp(argv[i], "--preset") == 0 && i + 1 < argc) {
             ++i;
         } else if (strcmp(argv[i], "--text") == 0 && i + 1 < argc) {
+            text_ranges[text_count].teacher_eligible = 1;
             text_paths[text_count++] = argv[++i];
+        } else if (strcmp(argv[i], "--foundation") == 0 && i + 1 < argc) {
+            text_foundation[text_count] = 1;
+            text_ranges[text_count].teacher_eligible = 1;
+            text_paths[text_count++] = argv[++i];
+            ++foundation_count;
         } else if (strcmp(argv[i], "--channel") == 0 && i + 1 < argc) {
             text_channel[text_count] = 1;
+            text_ranges[text_count].teacher_eligible = 1;
+            text_paths[text_count++] = argv[++i];
+        } else if (strcmp(argv[i], "--hard-channel") == 0 &&
+                   i + 1 < argc) {
+            text_channel[text_count] = 1;
+            text_ranges[text_count].teacher_eligible = 0;
             text_paths[text_count++] = argv[++i];
         } else if (strcmp(argv[i], "--channel-weight") == 0 &&
                    i + 1 < argc) {
             options.channel_weight =
                 parse_float(argv[++i], "--channel-weight");
+        } else if (strcmp(argv[i], "--foundation-weight") == 0 &&
+                   i + 1 < argc) {
+            options.foundation_weight =
+                parse_float(argv[++i], "--foundation-weight");
+        } else if (strcmp(argv[i], "--sample-weight") == 0 &&
+                   i + 1 < argc) {
+            float weight;
+            if (text_count == 0) {
+                fail("--sample-weight requires a preceding data file");
+            }
+            weight = parse_float(argv[++i], "--sample-weight");
+            if (weight <= 0.0f) fail("--sample-weight must be positive");
+            text_ranges[text_count - 1].weight = weight;
+        } else if (strcmp(argv[i], "--distill") == 0 && i + 1 < argc) {
+            if (text_count == 0) {
+                fail("--distill requires a preceding data file");
+            }
+            parse_distill_weights(
+                argv[++i], text_ranges[text_count - 1].distill_weights);
+            text_ranges[text_count - 1].distill_override = 1;
+        } else if (strcmp(argv[i], "--artifact-weight") == 0 &&
+                   i + 1 < argc) {
+            options.artifact_weight =
+                (int)parse_long(argv[++i], "--artifact-weight");
         } else if (strcmp(argv[i], "--context") == 0 && i + 1 < argc) {
             cfg.context = (int)parse_long(argv[++i], "--context");
         } else if (strcmp(argv[i], "--dim") == 0 && i + 1 < argc) {
@@ -2113,6 +2905,13 @@ int main(int argc, char **argv)
             options.clip = parse_float(argv[++i], "--clip");
         } else if (strcmp(argv[i], "--warmup") == 0 && i + 1 < argc) {
             options.warmup = parse_long(argv[++i], "--warmup");
+        } else if (strcmp(argv[i], "--schedule-offset") == 0 &&
+                   i + 1 < argc) {
+            options.schedule_offset =
+                parse_long(argv[++i], "--schedule-offset");
+        } else if (strcmp(argv[i], "--schedule-total") == 0 &&
+                   i + 1 < argc) {
+            options.schedule_total = parse_long(argv[++i], "--schedule-total");
         } else if (strcmp(argv[i], "--report") == 0 && i + 1 < argc) {
             options.report_every = parse_long(argv[++i], "--report");
         } else if (strcmp(argv[i], "--validation") == 0 && i + 1 < argc) {
@@ -2122,18 +2921,47 @@ int main(int argc, char **argv)
             options.dropout = parse_float(argv[++i], "--dropout");
         } else if (strcmp(argv[i], "--cosine") == 0) {
             options.cosine_decay = 1;
+        } else if (strcmp(argv[i], "--gradient-cosine") == 0 &&
+                   i + 1 < argc) {
+            options.gradient_cosine_every =
+                parse_long(argv[++i], "--gradient-cosine");
         } else if (strcmp(argv[i], "--best") == 0 && i + 1 < argc) {
             options.best_path = argv[++i];
         } else if (strcmp(argv[i], "--patience") == 0 && i + 1 < argc) {
             options.patience = parse_long(argv[++i], "--patience");
         } else if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc) {
             options.seed = parse_long(argv[++i], "--seed");
+        } else if (strcmp(argv[i], "--teacher") == 0 && i + 1 < argc) {
+            if (options.teacher_count >= MAX_SAME_ARCH_TEACHERS) {
+                fail("at most two same-architecture teachers are allowed");
+            }
+            options.teacher_paths[options.teacher_count] = argv[++i];
+            options.teacher_weights[options.teacher_count] = 0.15f;
+            ++options.teacher_count;
+        } else if (strcmp(argv[i], "--teacher-weight") == 0 &&
+                   i + 1 < argc) {
+            if (options.teacher_count == 0) {
+                fail("--teacher-weight requires a preceding --teacher");
+            }
+            options.teacher_weights[options.teacher_count - 1] =
+                parse_float(argv[++i], "--teacher-weight");
+        } else if (strcmp(argv[i], "--zero1-teacher") == 0 &&
+                   i + 1 < argc) {
+            options.zero1_teacher_path = argv[++i];
+        } else if (strcmp(argv[i], "--zero1-weight") == 0 &&
+                   i + 1 < argc) {
+            options.zero1_weight =
+                parse_float(argv[++i], "--zero1-weight");
         } else if (strcmp(argv[i], "--save") == 0 && i + 1 < argc) {
             options.save_path = argv[++i];
         } else if (strcmp(argv[i], "--save-every") == 0 && i + 1 < argc) {
             options.save_every = parse_long(argv[++i], "--save-every");
         } else if (strcmp(argv[i], "--resume") == 0 && i + 1 < argc) {
             options.resume_path = argv[++i];
+        } else if (strcmp(argv[i], "--init") == 0 && i + 1 < argc) {
+            options.init_path = argv[++i];
+        } else if (strcmp(argv[i], "--eval-only") == 0) {
+            options.eval_only = 1;
         } else if (strcmp(argv[i], "--generate-only") == 0) {
             options.steps = 0;
         } else if (strcmp(argv[i], "--prompt") == 0 && i + 1 < argc) {
@@ -2155,27 +2983,104 @@ int main(int argc, char **argv)
             free(text_paths);
             free(text_ranges);
             free(text_channel);
+            free(text_foundation);
             return EXIT_FAILURE;
         }
     }
 
-    if (options.resume_path != NULL) {
-        cfg = checkpoint_peek(options.resume_path);
-        if (options.save_path == NULL) {
-            options.save_path = options.resume_path;
+    if (options.resume_path != NULL && options.init_path != NULL) {
+        fail("--resume and --init are mutually exclusive");
+    }
+    if (options.eval_only) {
+        options.steps = 0;
+        options.generate_tokens = 0;
+        if (options.resume_path == NULL && options.init_path == NULL) {
+            fail("--eval-only requires --resume or --init");
+        }
+        if (text_count == 0) {
+            fail("--eval-only requires at least one data file");
         }
     }
+    if (options.resume_path != NULL) {
+        cfg = checkpoint_peek(options.resume_path);
+        if (options.save_path == NULL && !options.eval_only &&
+            options.steps > 0) {
+            options.save_path = options.resume_path;
+        }
+    } else if (options.init_path != NULL) {
+        cfg = artifact_peek(options.init_path);
+    }
     validate_config(&cfg);
+    {
+        float same_arch_total = 0.0f;
+        int teacher;
+        for (teacher = 0; teacher < options.teacher_count; ++teacher) {
+            if (options.teacher_weights[teacher] < 0.0f ||
+                options.teacher_weights[teacher] > 1.0f) {
+                fail("teacher weights must be between zero and one");
+            }
+            same_arch_total += options.teacher_weights[teacher];
+        }
+        if (same_arch_total > 1.0f + 1.0e-6f ||
+            (foundation_count > 0 &&
+             same_arch_total + options.zero1_weight > 1.0f + 1.0e-6f)) {
+            fail("active teacher weights must sum to at most one");
+        }
+    }
     if (options.steps < 0 || options.batch < 1 || options.learning_rate < 0.0f ||
         options.weight_decay < 0.0f || options.clip < 0.0f ||
-        options.warmup < 0 || options.report_every < 1 ||
+        options.warmup < 0 || options.schedule_offset < 0 ||
+        options.schedule_total < 0 || options.report_every < 1 ||
         options.validation_batches < 1 || options.save_every < 0 ||
         options.generate_tokens < 0 || options.temperature < 0.0f ||
         options.top_k < 0 || options.top_k > cfg.vocab ||
         options.dropout < 0.0f || options.dropout >= 1.0f ||
         options.patience < 0 || options.repetition_penalty < 1.0f ||
-        options.channel_weight <= 0.0f) {
+        options.channel_weight <= 0.0f || options.foundation_weight <= 0.0f ||
+        options.artifact_weight < 1 || options.artifact_weight > 32 ||
+        options.zero1_weight < 0.0f || options.zero1_weight > 1.0f ||
+        options.gradient_cosine_every < 0 ||
+        (options.schedule_total > 0 &&
+         options.schedule_offset + options.steps > options.schedule_total)) {
         fail("invalid training or generation option");
+    }
+    for (i = 0; i < text_count; ++i) {
+        int teacher;
+        float total = 0.0f;
+        if (!text_ranges[i].distill_override) continue;
+        if (!text_foundation[i] &&
+            text_ranges[i].distill_weights[0] > 0.0f) {
+            fail("ZERO.1 distillation is allowed only on --foundation data");
+        }
+        if (!text_ranges[i].teacher_eligible &&
+            (text_ranges[i].distill_weights[1] > 0.0f ||
+             text_ranges[i].distill_weights[2] > 0.0f)) {
+            fail("--hard-channel cannot receive same-architecture teacher mass");
+        }
+        if (text_ranges[i].distill_weights[0] > 0.0f &&
+            options.zero1_teacher_path == NULL) {
+            fail("nonzero ZERO.1 route requires --zero1-teacher");
+        }
+        for (teacher = 0; teacher < MAX_FACULTY_TEACHERS; ++teacher) {
+            total += text_ranges[i].distill_weights[teacher];
+        }
+        if (total > 1.0f + 1.0e-6f) {
+            fail("per-file teacher weights must sum to at most one");
+        }
+        for (teacher = options.teacher_count + 1;
+             teacher < MAX_FACULTY_TEACHERS; ++teacher) {
+            if (text_ranges[i].distill_weights[teacher] > 0.0f) {
+                fail("per-file route refers to an unloaded teacher");
+            }
+        }
+    }
+    if (options.steps > 0 && foundation_count > 0 &&
+        options.zero1_weight > 0.0f &&
+        options.zero1_teacher_path == NULL) {
+        fail("--foundation with nonzero --zero1-weight requires --zero1-teacher");
+    }
+    if (foundation_count == 0 && options.zero1_teacher_path != NULL) {
+        fail("--zero1-teacher requires at least one --foundation file");
     }
     if (options.save_every > 0 && options.save_path == NULL) {
         fail("--save-every requires --save");
@@ -2184,6 +3089,7 @@ int main(int argc, char **argv)
         free(text_paths);
         free(text_ranges);
         free(text_channel);
+        free(text_foundation);
         return run_self_test() ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
@@ -2204,6 +3110,26 @@ int main(int argc, char **argv)
         update = checkpoint_load(options.resume_path, &model, &rng);
         printf("resumed %s at update %llu\n", options.resume_path,
                (unsigned long long)update);
+    } else if (options.init_path != NULL) {
+        uint64_t source_update = artifact_load_weights(options.init_path,
+                                                       &model);
+        printf("initialized weights from %s source-update=%llu; optimizer "
+               "and RNG are fresh\n",
+               options.init_path, (unsigned long long)source_update);
+    }
+    for (i = 0; i < options.teacher_count; ++i) {
+        rng_seed(&teacher_rng, (uint64_t)i);
+        model_create(&teacher_models[i], cfg, &teacher_rng);
+        (void)artifact_load_weights(options.teacher_paths[i],
+                                    &teacher_models[i]);
+        teacher_loaded[i] = 1;
+        printf("loaded frozen faculty teacher %d %s default-weight=%.3f\n",
+               i + 2, options.teacher_paths[i], options.teacher_weights[i]);
+    }
+    if (options.zero1_teacher_path != NULL) {
+        zero1_teacher_load(&zero1_teacher, options.zero1_teacher_path);
+        printf("ZERO.1 foundation distillation weight=%.3f\n",
+               options.zero1_weight);
     }
 
 #ifdef USE_ACCELERATE
@@ -2217,7 +3143,7 @@ int main(int argc, char **argv)
            cfg.rotary ? "rotary" : "learned",
            model_parameter_total(&model));
 
-    if (options.steps > 0) {
+    if (options.steps > 0 || options.eval_only) {
         size_t minimum;
         if (text_count == 0) {
             corpus_use_sample(&corpus);
@@ -2233,9 +3159,14 @@ int main(int argc, char **argv)
                 text_ranges[i].start = before + (before != 0 ? 2 : 0);
                 text_ranges[i].length = corpus.length - text_ranges[i].start;
                 text_ranges[i].channel = text_channel[i];
-                text_ranges[i].weight = text_channel[i]
-                                            ? options.channel_weight
-                                            : 1.0f;
+                text_ranges[i].foundation = text_foundation[i];
+                if (text_ranges[i].weight == 0.0f) {
+                    text_ranges[i].weight =
+                        text_channel[i]
+                            ? options.channel_weight
+                            : (text_foundation[i] ? options.foundation_weight
+                                                  : 1.0f);
+                }
             }
         }
         for (i = 0; i < (int)corpus.length; ++i) {
@@ -2287,11 +3218,33 @@ int main(int argc, char **argv)
                text_count > 0 ? "weighted-files-and-channel-records"
                               : "uniform-bytes");
 
+        if (options.eval_only) {
+            float validation_loss;
+            int validation_batches = options.validation_batches;
+            if (text_count > 0) {
+                if (validation_batches < text_count) {
+                    validation_batches = text_count;
+                }
+                validation_loss = evaluate_balanced(
+                    &model, &corpus, text_ranges, text_count,
+                    validation_batches, options.artifact_weight);
+            } else {
+                validation_loss = evaluate(
+                    &model, corpus.data + training_length, validation_length,
+                    validation_batches);
+            }
+            printf("evaluation-only val %.4f batches=%d (no update, no save)\n",
+                   validation_loss, validation_batches);
+        } else {
         signal(SIGINT, on_interrupt);
         training_start = wall_seconds();
         interval_start = training_start;
         {
             unsigned char *loss_mask = zero_alloc((size_t)cfg.context, 1);
+            unsigned char *teacher_mask = zero_alloc((size_t)cfg.context, 1);
+            float *zero1_probabilities = zero1_teacher.loaded
+                ? zero_alloc((size_t)cfg.context * cfg.vocab, sizeof(float))
+                : NULL;
             while (completed_steps < options.steps && !interrupted &&
                    !stop_training) {
             int batch;
@@ -2302,20 +3255,39 @@ int main(int argc, char **argv)
                 size_t choices;
                 size_t start;
                 const unsigned char *active_mask = NULL;
+                const unsigned char *active_teacher_mask = NULL;
+                const CorpusRange *active_range = NULL;
+                int foundation_sample = 0;
+                int teacher_sample = 1;
+                const float *teacher_probabilities[MAX_FACULTY_TEACHERS] = {
+                    NULL, NULL, NULL
+                };
+                float active_teacher_weights[MAX_FACULTY_TEACHERS] = {
+                    0.0f, 0.0f, 0.0f
+                };
+                int teacher;
                 if (text_count > 0) {
                     int range_index = choose_weighted_range(
                         text_ranges, text_count, &rng);
                     const CorpusRange *range = &text_ranges[range_index];
+                    active_range = range;
+                    foundation_sample = range->foundation;
+                    teacher_sample = range->teacher_eligible;
                     if (range->channel) {
                         size_t record = (size_t)(rng_next(&rng) %
                                                 range->training_record_count);
                         start = range->record_starts[record];
                         if (channel_loss_mask(corpus.data + start,
                                               corpus.data + start + 1,
-                                              loss_mask, cfg.context) == 0) {
+                                              loss_mask, cfg.context,
+                                              options.artifact_weight) == 0) {
                             fail("channel training window has no reply target");
                         }
                         active_mask = loss_mask;
+                        channel_teacher_mask(
+                            corpus.data + start + 1, loss_mask, teacher_mask,
+                            cfg.context);
+                        active_teacher_mask = teacher_mask;
                     } else {
                         choices = range->training_length - (size_t)cfg.context;
                         start = range->start +
@@ -2325,33 +3297,92 @@ int main(int argc, char **argv)
                     choices = training_length - (size_t)cfg.context;
                     start = (size_t)(rng_next(&rng) % choices);
                 }
-                float loss = model_forward_masked(
+                for (teacher = 0; teacher < options.teacher_count; ++teacher) {
+                    float route_weight =
+                        active_range != NULL && active_range->distill_override
+                            ? active_range->distill_weights[teacher + 1]
+                            : (teacher_sample
+                                   ? options.teacher_weights[teacher]
+                                   : 0.0f);
+                    if (teacher_loaded[teacher] && route_weight > 0.0f) {
+                        model_forward(&teacher_models[teacher],
+                                      corpus.data + start, NULL, 0.0f, NULL);
+                        teacher_probabilities[teacher + 1] =
+                            teacher_models[teacher].probs;
+                        active_teacher_weights[teacher + 1] = route_weight;
+                    }
+                }
+                active_teacher_weights[0] =
+                    active_range != NULL && active_range->distill_override
+                        ? active_range->distill_weights[0]
+                        : (foundation_sample ? options.zero1_weight : 0.0f);
+                if (foundation_sample && zero1_teacher.loaded &&
+                    active_teacher_weights[0] > 0.0f) {
+                    zero1_teacher_sequence(
+                        &zero1_teacher, corpus.data + start, cfg.context,
+                        cfg.vocab, zero1_probabilities);
+                    teacher_probabilities[0] = zero1_probabilities;
+                }
+                (void)model_forward_masked(
                     &model, corpus.data + start, corpus.data + start + 1,
                     options.dropout, &rng, active_mask);
-                model_backward_masked(&model, corpus.data + start,
-                                      corpus.data + start + 1, active_mask);
-                interval_loss += loss;
+                {
+                    float loss = model_blended_loss(
+                        &model, corpus.data + start + 1, active_mask,
+                        active_teacher_mask, teacher_probabilities,
+                        active_teacher_weights, MAX_FACULTY_TEACHERS);
+                    model_backward_blended_masked(
+                        &model, corpus.data + start,
+                        corpus.data + start + 1, active_mask,
+                        active_teacher_mask, teacher_probabilities,
+                        active_teacher_weights, MAX_FACULTY_TEACHERS);
+                    interval_loss += loss;
+                }
                 ++interval_sequences;
             }
             ++update;
             ++completed_steps;
             current_lr = options.learning_rate;
-            if (options.warmup > 0 && update < (uint64_t)options.warmup) {
-                current_lr *= (float)update / options.warmup;
+            {
+                long schedule_step = options.schedule_offset + completed_steps;
+                long schedule_total = options.schedule_total > 0
+                                          ? options.schedule_total
+                                          : options.steps;
+            if (options.warmup > 0 && schedule_step <= options.warmup) {
+                current_lr *= (float)schedule_step / options.warmup;
             }
-            if (options.cosine_decay && options.steps > options.warmup &&
-                completed_steps > options.warmup) {
+            if (options.cosine_decay && schedule_total > options.warmup &&
+                schedule_step > options.warmup) {
                 float progress =
-                    (float)(completed_steps - options.warmup) /
-                    (float)(options.steps - options.warmup);
+                    (float)(schedule_step - options.warmup) /
+                    (float)(schedule_total - options.warmup);
                 const float pi = 3.14159265358979323846f;
                 if (progress > 1.0f) progress = 1.0f;
                 current_lr *= 0.5f * (1.0f + cosf(pi * progress));
+            }
             }
             gradient_norm = optimizer_update(
                 &model, update, current_lr, options.weight_decay, options.clip,
                 1.0f / options.batch);
             interval_tokens += (uint64_t)cfg.context * options.batch;
+
+            if (options.gradient_cosine_every > 0 && text_count > 0 &&
+                (options.schedule_offset + completed_steps) %
+                        options.gradient_cosine_every ==
+                    0) {
+                int replay_range_index = -1;
+                uint64_t probe_index =
+                    (uint64_t)((options.schedule_offset + completed_steps) /
+                               options.gradient_cosine_every - 1);
+                float cosine = faculty_replay_gradient_cosine(
+                    &model, &corpus, text_ranges, text_count, probe_index,
+                    options.artifact_weight, &replay_range_index);
+                printf("gradient-cosine update %llu phase-update %ld faculty-hard replay-range %d cosine %.6f\n",
+                       (unsigned long long)update,
+                       options.schedule_offset + completed_steps,
+                       replay_range_index, cosine);
+                fflush(stdout);
+            }
 
             if (update % (uint64_t)options.report_every == 0 ||
                 completed_steps == options.steps) {
@@ -2365,7 +3396,7 @@ int main(int argc, char **argv)
                     }
                     validation_loss = evaluate_balanced(
                         &model, &corpus, text_ranges, text_count,
-                        validation_batches);
+                        validation_batches, options.artifact_weight);
                 } else {
                     validation_loss = evaluate(
                         &model, corpus.data + training_length, validation_length,
@@ -2406,6 +3437,8 @@ int main(int argc, char **argv)
                 printf("saved %s\n", options.save_path);
             }
             }
+            free(zero1_probabilities);
+            free(teacher_mask);
             free(loss_mask);
         }
         printf("training time %.2f seconds\n", wall_seconds() - training_start);
@@ -2415,6 +3448,7 @@ int main(int argc, char **argv)
         if (options.save_path != NULL && completed_steps > 0) {
             checkpoint_save(options.save_path, &model, update, &rng);
             printf("saved %s\n", options.save_path);
+        }
         }
     }
 
@@ -2426,9 +3460,14 @@ int main(int argc, char **argv)
 
     corpus_destroy(&corpus);
     model_destroy(&model);
+    for (i = 0; i < options.teacher_count; ++i) {
+        if (teacher_loaded[i]) model_destroy(&teacher_models[i]);
+    }
+    if (zero1_teacher.loaded) zero1_teacher_destroy(&zero1_teacher);
     for (i = 0; i < text_count; ++i) free(text_ranges[i].record_starts);
     free(text_paths);
     free(text_ranges);
     free(text_channel);
+    free(text_foundation);
     return EXIT_SUCCESS;
 }

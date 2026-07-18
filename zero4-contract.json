@@ -1,0 +1,203 @@
+{
+  "schema": "zero.zero4.contract.v1",
+  "id": "zero4-three-teachers-many-channels-v1",
+  "status": "q22r_seed2_go_replication_seeds_1_and_3_pending",
+  "frozen": null,
+  "purpose": "Combine exactly ZERO.1 ZERO.2 and ZERO.3 with channel-specific eligibility and weights to train one atomic-channel ZERO.4 student.",
+  "fixed_architecture": {
+    "initial_checkpoint_teacher_id": "zero3",
+    "initialization_mode": "weights_only_fresh_optimizer_and_rng",
+    "initialization_artifact": "teachers/zero3-balanced-final.teacher",
+    "vocab": 128,
+    "tokenizer": "corpus/literary.bpe",
+    "tokenizer_sha256": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1056,
+    "parameters": 4852992,
+    "seeds": [1, 2, 3]
+  },
+  "teacher_set": {
+    "cardinality": 3,
+    "allow_additional_teacher_models": false,
+    "materialized_channel_mentor_models": false,
+    "teachers": [
+      {
+        "id": "zero1",
+        "checkpoint": "teachers/zero1-foundation.teacher",
+        "sha256": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+        "source_update": 20000,
+        "status": "frozen",
+        "default_role": "foundation adapter",
+        "tokenizer_policy": "frozen ZERO.1 to 128-token adapter",
+        "abstains_outside_declared_foundation_records": true
+      },
+      {
+        "id": "zero2",
+        "checkpoint": "teachers/zero2-literary.teacher",
+        "sha256": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+        "source_update": 12600,
+        "status": "frozen",
+        "binding_rule": "immutable ZERO.2 weight-only artifact",
+        "default_role": "historical specialist",
+        "tokenizer_policy": "must match the fixed 128-token map"
+      },
+      {
+        "id": "zero3",
+        "checkpoint": "teachers/zero3-balanced-final.teacher",
+        "sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137",
+        "source_update": 16600,
+        "status": "frozen",
+        "binding_rule": "immutable ZERO.3 balanced-final weight-only artifact",
+        "default_role": "integrator and common anchor",
+        "tokenizer_policy": "must match the fixed 128-token map"
+      }
+    ]
+  },
+  "virtual_channel_mentor": {
+    "materialized_checkpoint": false,
+    "kind": "eligible calibrated probability mixture",
+    "parameter_averaging": false,
+    "raw_hidden_state_mixing": false,
+    "eligibility_source": "frozen teacher-channel-task validation matrix",
+    "reliability_source": "frozen validation split only",
+    "disagreement_metric": "pairwise Jensen-Shannon divergence",
+    "high_disagreement_effect": "gate least reliable teacher without reducing hard-target weight",
+    "unsupported_teacher_mass": "return to hard target",
+    "missing_all_teachers_effect": "hard target only"
+  },
+  "protocol": {
+    "chunk_schema": "zero.faculty_chunk.v1",
+    "episode_schema": "zero.faculty_episode.v1",
+    "states": ["idle", "enter", "emit_locked_chunk", "close", "verify_or_critique", "commit_or_reject"],
+    "switch_only_when_idle": true,
+    "requests_queued_until_close": true,
+    "artifact_and_summary_commit_atomically": true,
+    "rejected_state_mutation_allowed": false,
+    "shared_synthesis_is_channel": true,
+    "teacher_hidden_states_enter_channel_memory": false
+  },
+  "stage_zero_channel_loss_defaults": [
+    {"channel": "foundation", "hard": 0.60, "zero1": 0.25, "zero2": 0.05, "zero3": 0.10},
+    {"channel": "logic", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00},
+    {"channel": "literary", "hard": 0.65, "zero1": 0.00, "zero2": 0.20, "zero3": 0.15},
+    {"channel": "participation", "hard": 0.70, "zero1": 0.00, "zero2": 0.10, "zero3": 0.20},
+    {"channel": "quantity", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00},
+    {"channel": "geometry", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00},
+    {"channel": "physics", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00},
+    {"channel": "art", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00},
+    {"channel": "epistemics", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00},
+    {"channel": "shared-synthesis", "hard": 1.00, "zero1": 0.00, "zero2": 0.00, "zero3": 0.00}
+  ],
+  "weight_freeze_rules": [
+    "every row sums to one",
+    "every nonzero teacher weight requires measured validation competence and coverage",
+    "teacher below hard-only control receives zero weight",
+    "ineligible or unsupported mass returns to hard",
+    "weights freeze before ZERO.4 training",
+    "hidden promotion panel never influences weights"
+  ],
+  "student_training": {
+    "student_output": "zero4.ckpt",
+    "student_final_output": "zero4-last.ckpt",
+    "one_open_channel_per_sequence": true,
+    "teacher_loss_output_span_only": true,
+    "sampling_proposal": {
+      "balanced_single_channel_and_summary_chunks": 0.50,
+      "episode_and_shared_synthesis_chunks": 0.25,
+      "general_literary_channel_replay": 0.15,
+      "protocol_negative_repair_abstention_boundary": 0.10
+    },
+    "sampling_unit": "channel and task family",
+    "updates": null,
+    "batch": null,
+    "learning_rate": null
+  },
+  "evaluation": {
+    "teacher_channel_matrix_required": true,
+    "controls": ["hard-only", "zero1-only-where-eligible", "zero2-only", "zero3-only", "all-three-channel-weighted"],
+    "protocol_metrics": [
+      "natural_close_rate",
+      "forced_close_rate",
+      "illegal_mid_chunk_switch_rate",
+      "rejected_state_mutation_rate",
+      "channel_summary_isolation",
+      "request_precision",
+      "dependency_order_accuracy",
+      "summary_artifact_consistency"
+    ],
+    "all_seeds_best_and_final_required": true,
+    "quantized_report_required": true
+  },
+  "promotion": {
+    "teacher_ids_and_hashes_frozen_before_calibration": true,
+    "nonzero_weights_require_validation_support": true,
+    "best_eligible_teacher_gain_retained_minimum": 0.90,
+    "mandatory_channel_regression_points_maximum": 2.0,
+    "literary_validation_relative_regression_maximum": 0.02,
+    "natural_chunk_close_minimum": 0.99,
+    "illegal_mid_chunk_switches_maximum": 0,
+    "rejected_state_mutations_maximum": 0,
+    "authority_labels_preserved": true,
+    "local_browser_budget_required": true
+  },
+  "latest_experiment": {
+    "id": "zero4-q22r-seed2",
+    "manifest": "benchmarks/zero4-q22r-v1/seed2/manifest.json",
+    "selection": "benchmarks/zero4-q22r-v1/seed2/selection.json",
+    "decision": "go_for_seed_not_promotion",
+    "completed_seeds": [2],
+    "unrun_seeds": [1, 3],
+    "model_contract": "operation selection only",
+    "controller_contract": "bind canonical arguments from parsed source",
+    "kernel_contract": "compute and atomically commit exact artifact",
+    "selected_source_update": 400,
+    "replay_repair_updates": 100,
+    "public_operation_rate": 0.966,
+    "promotion_operation_rate": 0.976,
+    "promotion_exact_commits": 488,
+    "promotion_cases": 500,
+    "rejected_state_mutations": 0,
+    "replay_baseline_loss": 1.631,
+    "replay_student_loss": 1.6623,
+    "replay_relative_regression": 0.019190680564071187,
+    "jointly_feasible_checkpoint": true,
+    "promotion_evaluated": true,
+    "promotion_eligible": false,
+    "replay_relative_regression_maximum": 0.02,
+    "neural_arithmetic_claimed": false,
+    "stop_reason": "replay-only repair budget completed and the selected feasible checkpoint passed the one-time seed-2 promotion evaluation",
+    "next_gate": "run independent Q2.2 and Q2.2-R lineages for seeds 1 and 3 without reopening seed 2 promotion"
+  },
+  "next_experiment": {
+    "id": "zero4-q22r-three-seed-replication",
+    "status": "seed2_complete_seeds1_and3_pending",
+    "independent_variable": "declared random seed only",
+    "required_seeds": [1, 2, 3],
+    "completed_seeds": [2],
+    "promotion_rule": "all three seeds must pass quantity and replay gates",
+    "promotion_split_access": "once per seed after selection from public validation",
+    "teacher_or_architecture_change_allowed": false
+  },
+  "proposed_followup": {
+    "id": "zero4-q23-transactional-optimizer",
+    "status": "designed_not_frozen_not_current_replication_gate",
+    "backlog": "ZERO4-BACKLOG.md",
+    "independent_variable": "optimizer-boundary replay observation and atomic guard",
+    "learned_state_atomic_unit": ["weights", "adam_first_moments", "adam_second_moments", "committed_update"],
+    "orchestration_state": ["attempt", "sampler_rng", "guard_state"],
+    "diagnostic_groups": ["token_embedding", "attention_qkv_o_by_layer", "feed_forward_by_layer", "rms_gains_by_layer", "final_norm"],
+    "stages": ["observer_only", "shadow_commit_reject", "local_guard", "seed2_diagnostic", "three_seed_replication"],
+    "promotion_split_access": "once after a jointly feasible public-validation checkpoint",
+    "teacher_or_architecture_change_allowed": false
+  },
+  "phases": [
+    {"id": "zero4-f", "name": "immutable three-teacher stable", "status": "complete"},
+    {"id": "zero4-p", "name": "atomic channel protocol", "status": "controller_and_fixtures_passed"},
+    {"id": "zero4-t", "name": "three-teacher channel calibration", "status": "router_v2_implemented_task_level_matrix_pending"},
+    {"id": "zero4-e", "name": "channel and episode corpora", "status": "quantity_operation_geometry_art_pilots_generated_episodes_pending"},
+    {"id": "zero4-s", "name": "shared ZERO.4 student", "status": "q22r_seed2_feasible_and_seed_level_go_seeds1_and3_pending_no_promotion"}
+  ]
+}

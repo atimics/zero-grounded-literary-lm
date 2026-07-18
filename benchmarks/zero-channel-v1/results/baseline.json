@@ -1,0 +1,144 @@
+{
+  "schema": "zero.eval.result.v1",
+  "benchmark_id": "zero-channel-v1",
+  "model": {"path": "docs/model.litq8", "fnv1a64": "893902e1eb27be4d", "parameters": 4852992, "context": 512, "update": 14500},
+  "inputs": {"cases_path": "benchmarks/zero-channel-v1/cases.tsv", "cases_fnv1a64": "5e6b2fe2c1c571d1", "holo_path": "benchmarks/zero-channel-v1/holo.tsv", "holo_fnv1a64": "790559427a4758d1"},
+  "modes": [
+    {
+      "id": "transcript", "contrast_cases": 18, "wins": 13, "ties": 0, "win_rate": 0.72222222, "mean_positive_bits": 2.41491792, "mean_margin_bits": 0.40819154, "holo_cases": 0, "holo_hits": 0, "holo_rate": 0.00000000,
+      "cases": [
+        {"id": "reply-01", "task": "reply_edge", "positive_bits": 2.61170459, "negative_bits": 3.17727493, "margin_bits": 0.56557034, "win": 1},
+        {"id": "reply-02", "task": "reply_edge", "positive_bits": 2.44329184, "negative_bits": 2.12997043, "margin_bits": -0.31332141, "win": -1},
+        {"id": "reply-03", "task": "reply_edge", "positive_bits": 2.48270213, "negative_bits": 2.28728501, "margin_bits": -0.19541712, "win": -1},
+        {"id": "speaker-01", "task": "speaker_role", "positive_bits": 5.64414818, "negative_bits": 7.26017370, "margin_bits": 1.61602552, "win": 1},
+        {"id": "speaker-02", "task": "speaker_role", "positive_bits": 2.55983820, "negative_bits": 2.08602496, "margin_bits": -0.47381324, "win": -1},
+        {"id": "speaker-03", "task": "speaker_role", "positive_bits": 2.33105969, "negative_bits": 3.07038023, "margin_bits": 0.73932054, "win": 1},
+        {"id": "continuity-01", "task": "continuity", "positive_bits": 2.52604057, "negative_bits": 2.65135278, "margin_bits": 0.12531221, "win": 1},
+        {"id": "continuity-02", "task": "continuity", "positive_bits": 2.45473093, "negative_bits": 2.44770535, "margin_bits": -0.00702558, "win": -1},
+        {"id": "continuity-03", "task": "continuity", "positive_bits": 3.10310048, "negative_bits": 3.49637675, "margin_bits": 0.39327628, "win": 1},
+        {"id": "contradiction-01", "task": "contradiction", "positive_bits": 1.67655949, "negative_bits": 2.57737568, "margin_bits": 0.90081619, "win": 1},
+        {"id": "contradiction-02", "task": "contradiction", "positive_bits": 1.83298658, "negative_bits": 2.16318917, "margin_bits": 0.33020258, "win": 1},
+        {"id": "contradiction-03", "task": "contradiction", "positive_bits": 2.33607202, "negative_bits": 1.97420883, "margin_bits": -0.36186320, "win": -1},
+        {"id": "style-01", "task": "style", "positive_bits": 2.07046763, "negative_bits": 2.08036161, "margin_bits": 0.00989397, "win": 1},
+        {"id": "style-02", "task": "style", "positive_bits": 2.12731077, "negative_bits": 2.94888804, "margin_bits": 0.82157727, "win": 1},
+        {"id": "style-03", "task": "style", "positive_bits": 1.85255364, "negative_bits": 3.11486940, "margin_bits": 1.26231576, "win": 1},
+        {"id": "abstain-01", "task": "abstention", "positive_bits": 1.39373040, "negative_bits": 2.37090786, "margin_bits": 0.97717747, "win": 1},
+        {"id": "abstain-02", "task": "abstention", "positive_bits": 2.05401400, "negative_bits": 2.87205784, "margin_bits": 0.81804384, "win": 1},
+        {"id": "abstain-03", "task": "abstention", "positive_bits": 1.96821143, "negative_bits": 2.10756780, "margin_bits": 0.13935637, "win": 1}
+      ],
+      "holo": [
+
+      ]
+    },
+    {
+      "id": "recurrent", "contrast_cases": 24, "wins": 17, "ties": 0, "win_rate": 0.70833333, "mean_positive_bits": 2.55159438, "mean_margin_bits": 0.27397118, "holo_cases": 0, "holo_hits": 0, "holo_rate": 0.00000000,
+      "cases": [
+        {"id": "reply-01", "task": "reply_edge", "positive_bits": 2.66299393, "negative_bits": 3.18696457, "margin_bits": 0.52397064, "win": 1},
+        {"id": "reply-02", "task": "reply_edge", "positive_bits": 2.45241877, "negative_bits": 2.11793596, "margin_bits": -0.33448281, "win": -1},
+        {"id": "reply-03", "task": "reply_edge", "positive_bits": 2.40153594, "negative_bits": 2.26301949, "margin_bits": -0.13851645, "win": -1},
+        {"id": "speaker-01", "task": "speaker_role", "positive_bits": 5.58739847, "negative_bits": 6.98959588, "margin_bits": 1.40219741, "win": 1},
+        {"id": "speaker-02", "task": "speaker_role", "positive_bits": 2.54864915, "negative_bits": 2.11648362, "margin_bits": -0.43216553, "win": -1},
+        {"id": "speaker-03", "task": "speaker_role", "positive_bits": 2.21411584, "negative_bits": 3.07893896, "margin_bits": 0.86482312, "win": 1},
+        {"id": "continuity-01", "task": "continuity", "positive_bits": 2.52133302, "negative_bits": 2.65688945, "margin_bits": 0.13555643, "win": 1},
+        {"id": "continuity-02", "task": "continuity", "positive_bits": 2.45564494, "negative_bits": 2.48011871, "margin_bits": 0.02447377, "win": 1},
+        {"id": "continuity-03", "task": "continuity", "positive_bits": 3.09904553, "negative_bits": 3.51472099, "margin_bits": 0.41567546, "win": 1},
+        {"id": "memory-retain-01", "task": "memory_retain", "positive_bits": 2.80272302, "negative_bits": 3.01651447, "margin_bits": 0.21379144, "win": 1},
+        {"id": "memory-retain-02", "task": "memory_retain", "positive_bits": 3.19833252, "negative_bits": 2.49653977, "margin_bits": -0.70179275, "win": -1},
+        {"id": "memory-retain-03", "task": "memory_retain", "positive_bits": 3.08138147, "negative_bits": 3.23260224, "margin_bits": 0.15122076, "win": 1},
+        {"id": "memory-forget-01", "task": "memory_forget", "positive_bits": 3.31412159, "negative_bits": 2.85863153, "margin_bits": -0.45549006, "win": -1},
+        {"id": "memory-forget-02", "task": "memory_forget", "positive_bits": 3.04070879, "negative_bits": 2.93144215, "margin_bits": -0.10926664, "win": -1},
+        {"id": "memory-forget-03", "task": "memory_forget", "positive_bits": 2.54015905, "negative_bits": 2.68917774, "margin_bits": 0.14901869, "win": 1},
+        {"id": "contradiction-01", "task": "contradiction", "positive_bits": 1.68609173, "negative_bits": 2.53379508, "margin_bits": 0.84770335, "win": 1},
+        {"id": "contradiction-02", "task": "contradiction", "positive_bits": 1.82884220, "negative_bits": 2.14913061, "margin_bits": 0.32028841, "win": 1},
+        {"id": "contradiction-03", "task": "contradiction", "positive_bits": 2.34685254, "negative_bits": 1.96654831, "margin_bits": -0.38030423, "win": -1},
+        {"id": "style-01", "task": "style", "positive_bits": 2.07046763, "negative_bits": 2.08036161, "margin_bits": 0.00989397, "win": 1},
+        {"id": "style-02", "task": "style", "positive_bits": 2.12731077, "negative_bits": 2.94888804, "margin_bits": 0.82157727, "win": 1},
+        {"id": "style-03", "task": "style", "positive_bits": 1.85255364, "negative_bits": 3.11486940, "margin_bits": 1.26231576, "win": 1},
+        {"id": "abstain-01", "task": "abstention", "positive_bits": 1.39246635, "negative_bits": 2.35780563, "margin_bits": 0.96533928, "win": 1},
+        {"id": "abstain-02", "task": "abstention", "positive_bits": 2.02643434, "negative_bits": 2.93816200, "margin_bits": 0.91172766, "win": 1},
+        {"id": "abstain-03", "task": "abstention", "positive_bits": 1.98668390, "negative_bits": 2.09443715, "margin_bits": 0.10775325, "win": 1}
+      ],
+      "holo": [
+
+      ]
+    },
+    {
+      "id": "flat", "contrast_cases": 24, "wins": 17, "ties": 0, "win_rate": 0.70833333, "mean_positive_bits": 2.55159438, "mean_margin_bits": 0.27397118, "holo_cases": 8, "holo_hits": 7, "holo_rate": 0.87500000,
+      "cases": [
+        {"id": "reply-01", "task": "reply_edge", "positive_bits": 2.66299393, "negative_bits": 3.18696457, "margin_bits": 0.52397064, "win": 1},
+        {"id": "reply-02", "task": "reply_edge", "positive_bits": 2.45241877, "negative_bits": 2.11793596, "margin_bits": -0.33448281, "win": -1},
+        {"id": "reply-03", "task": "reply_edge", "positive_bits": 2.40153594, "negative_bits": 2.26301949, "margin_bits": -0.13851645, "win": -1},
+        {"id": "speaker-01", "task": "speaker_role", "positive_bits": 5.58739847, "negative_bits": 6.98959588, "margin_bits": 1.40219741, "win": 1},
+        {"id": "speaker-02", "task": "speaker_role", "positive_bits": 2.54864915, "negative_bits": 2.11648362, "margin_bits": -0.43216553, "win": -1},
+        {"id": "speaker-03", "task": "speaker_role", "positive_bits": 2.21411584, "negative_bits": 3.07893896, "margin_bits": 0.86482312, "win": 1},
+        {"id": "continuity-01", "task": "continuity", "positive_bits": 2.52133302, "negative_bits": 2.65688945, "margin_bits": 0.13555643, "win": 1},
+        {"id": "continuity-02", "task": "continuity", "positive_bits": 2.45564494, "negative_bits": 2.48011871, "margin_bits": 0.02447377, "win": 1},
+        {"id": "continuity-03", "task": "continuity", "positive_bits": 3.09904553, "negative_bits": 3.51472099, "margin_bits": 0.41567546, "win": 1},
+        {"id": "memory-retain-01", "task": "memory_retain", "positive_bits": 2.80272302, "negative_bits": 3.01651447, "margin_bits": 0.21379144, "win": 1},
+        {"id": "memory-retain-02", "task": "memory_retain", "positive_bits": 3.19833252, "negative_bits": 2.49653977, "margin_bits": -0.70179275, "win": -1},
+        {"id": "memory-retain-03", "task": "memory_retain", "positive_bits": 3.08138147, "negative_bits": 3.23260224, "margin_bits": 0.15122076, "win": 1},
+        {"id": "memory-forget-01", "task": "memory_forget", "positive_bits": 3.31412159, "negative_bits": 2.85863153, "margin_bits": -0.45549006, "win": -1},
+        {"id": "memory-forget-02", "task": "memory_forget", "positive_bits": 3.04070879, "negative_bits": 2.93144215, "margin_bits": -0.10926664, "win": -1},
+        {"id": "memory-forget-03", "task": "memory_forget", "positive_bits": 2.54015905, "negative_bits": 2.68917774, "margin_bits": 0.14901869, "win": 1},
+        {"id": "contradiction-01", "task": "contradiction", "positive_bits": 1.68609173, "negative_bits": 2.53379508, "margin_bits": 0.84770335, "win": 1},
+        {"id": "contradiction-02", "task": "contradiction", "positive_bits": 1.82884220, "negative_bits": 2.14913061, "margin_bits": 0.32028841, "win": 1},
+        {"id": "contradiction-03", "task": "contradiction", "positive_bits": 2.34685254, "negative_bits": 1.96654831, "margin_bits": -0.38030423, "win": -1},
+        {"id": "style-01", "task": "style", "positive_bits": 2.07046763, "negative_bits": 2.08036161, "margin_bits": 0.00989397, "win": 1},
+        {"id": "style-02", "task": "style", "positive_bits": 2.12731077, "negative_bits": 2.94888804, "margin_bits": 0.82157727, "win": 1},
+        {"id": "style-03", "task": "style", "positive_bits": 1.85255364, "negative_bits": 3.11486940, "margin_bits": 1.26231576, "win": 1},
+        {"id": "abstain-01", "task": "abstention", "positive_bits": 1.39246635, "negative_bits": 2.35780563, "margin_bits": 0.96533928, "win": 1},
+        {"id": "abstain-02", "task": "abstention", "positive_bits": 2.02643434, "negative_bits": 2.93816200, "margin_bits": 0.91172766, "win": 1},
+        {"id": "abstain-03", "task": "abstention", "positive_bits": 1.98668390, "negative_bits": 2.09443715, "margin_bits": 0.10775325, "win": 1}
+      ],
+      "holo": [
+        {"id": "holo-01", "family": "relevant", "expected": 0, "recalled_slot": 0, "score": 0.25500998, "pass": true},
+        {"id": "holo-02", "family": "relevant", "expected": 0, "recalled_slot": 0, "score": 0.51425433, "pass": true},
+        {"id": "holo-03", "family": "relevant", "expected": 0, "recalled_slot": 0, "score": 0.19093025, "pass": false},
+        {"id": "holo-04", "family": "relevant", "expected": 0, "recalled_slot": 0, "score": 0.49949095, "pass": true},
+        {"id": "holo-05", "family": "abstention", "expected": -1, "recalled_slot": 1, "score": 0.05638703, "pass": true},
+        {"id": "holo-06", "family": "abstention", "expected": -1, "recalled_slot": 0, "score": 0.06096110, "pass": true},
+        {"id": "holo-07", "family": "lexical", "expected": 0, "recalled_slot": 0, "score": 0.28991589, "pass": true},
+        {"id": "holo-08", "family": "lexical", "expected": 0, "recalled_slot": 0, "score": 0.41073099, "pass": true}
+      ]
+    },
+    {
+      "id": "partitioned", "contrast_cases": 24, "wins": 17, "ties": 0, "win_rate": 0.70833333, "mean_positive_bits": 2.55159438, "mean_margin_bits": 0.27397118, "holo_cases": 8, "holo_hits": 5, "holo_rate": 0.62500000,
+      "cases": [
+        {"id": "reply-01", "task": "reply_edge", "positive_bits": 2.66299393, "negative_bits": 3.18696457, "margin_bits": 0.52397064, "win": 1},
+        {"id": "reply-02", "task": "reply_edge", "positive_bits": 2.45241877, "negative_bits": 2.11793596, "margin_bits": -0.33448281, "win": -1},
+        {"id": "reply-03", "task": "reply_edge", "positive_bits": 2.40153594, "negative_bits": 2.26301949, "margin_bits": -0.13851645, "win": -1},
+        {"id": "speaker-01", "task": "speaker_role", "positive_bits": 5.58739847, "negative_bits": 6.98959588, "margin_bits": 1.40219741, "win": 1},
+        {"id": "speaker-02", "task": "speaker_role", "positive_bits": 2.54864915, "negative_bits": 2.11648362, "margin_bits": -0.43216553, "win": -1},
+        {"id": "speaker-03", "task": "speaker_role", "positive_bits": 2.21411584, "negative_bits": 3.07893896, "margin_bits": 0.86482312, "win": 1},
+        {"id": "continuity-01", "task": "continuity", "positive_bits": 2.52133302, "negative_bits": 2.65688945, "margin_bits": 0.13555643, "win": 1},
+        {"id": "continuity-02", "task": "continuity", "positive_bits": 2.45564494, "negative_bits": 2.48011871, "margin_bits": 0.02447377, "win": 1},
+        {"id": "continuity-03", "task": "continuity", "positive_bits": 3.09904553, "negative_bits": 3.51472099, "margin_bits": 0.41567546, "win": 1},
+        {"id": "memory-retain-01", "task": "memory_retain", "positive_bits": 2.80272302, "negative_bits": 3.01651447, "margin_bits": 0.21379144, "win": 1},
+        {"id": "memory-retain-02", "task": "memory_retain", "positive_bits": 3.19833252, "negative_bits": 2.49653977, "margin_bits": -0.70179275, "win": -1},
+        {"id": "memory-retain-03", "task": "memory_retain", "positive_bits": 3.08138147, "negative_bits": 3.23260224, "margin_bits": 0.15122076, "win": 1},
+        {"id": "memory-forget-01", "task": "memory_forget", "positive_bits": 3.31412159, "negative_bits": 2.85863153, "margin_bits": -0.45549006, "win": -1},
+        {"id": "memory-forget-02", "task": "memory_forget", "positive_bits": 3.04070879, "negative_bits": 2.93144215, "margin_bits": -0.10926664, "win": -1},
+        {"id": "memory-forget-03", "task": "memory_forget", "positive_bits": 2.54015905, "negative_bits": 2.68917774, "margin_bits": 0.14901869, "win": 1},
+        {"id": "contradiction-01", "task": "contradiction", "positive_bits": 1.68609173, "negative_bits": 2.53379508, "margin_bits": 0.84770335, "win": 1},
+        {"id": "contradiction-02", "task": "contradiction", "positive_bits": 1.82884220, "negative_bits": 2.14913061, "margin_bits": 0.32028841, "win": 1},
+        {"id": "contradiction-03", "task": "contradiction", "positive_bits": 2.34685254, "negative_bits": 1.96654831, "margin_bits": -0.38030423, "win": -1},
+        {"id": "style-01", "task": "style", "positive_bits": 2.07046763, "negative_bits": 2.08036161, "margin_bits": 0.00989397, "win": 1},
+        {"id": "style-02", "task": "style", "positive_bits": 2.12731077, "negative_bits": 2.94888804, "margin_bits": 0.82157727, "win": 1},
+        {"id": "style-03", "task": "style", "positive_bits": 1.85255364, "negative_bits": 3.11486940, "margin_bits": 1.26231576, "win": 1},
+        {"id": "abstain-01", "task": "abstention", "positive_bits": 1.39246635, "negative_bits": 2.35780563, "margin_bits": 0.96533928, "win": 1},
+        {"id": "abstain-02", "task": "abstention", "positive_bits": 2.02643434, "negative_bits": 2.93816200, "margin_bits": 0.91172766, "win": 1},
+        {"id": "abstain-03", "task": "abstention", "positive_bits": 1.98668390, "negative_bits": 2.09443715, "margin_bits": 0.10775325, "win": 1}
+      ],
+      "holo": [
+        {"id": "holo-01", "family": "relevant", "expected": 0, "recalled_slot": 0, "score": -0.05829891, "pass": false},
+        {"id": "holo-02", "family": "relevant", "expected": 0, "recalled_slot": -1, "score": 0.00000000, "pass": false},
+        {"id": "holo-03", "family": "relevant", "expected": 0, "recalled_slot": 8, "score": -0.03626707, "pass": false},
+        {"id": "holo-04", "family": "relevant", "expected": 0, "recalled_slot": 16, "score": 0.49949095, "pass": true},
+        {"id": "holo-05", "family": "abstention", "expected": -1, "recalled_slot": 8, "score": -0.01455886, "pass": true},
+        {"id": "holo-06", "family": "abstention", "expected": -1, "recalled_slot": -1, "score": 0.00000000, "pass": true},
+        {"id": "holo-07", "family": "lexical", "expected": 0, "recalled_slot": 16, "score": 0.28991589, "pass": true},
+        {"id": "holo-08", "family": "lexical", "expected": 0, "recalled_slot": 0, "score": 0.41073099, "pass": true}
+      ]
+    }
+  ]
+}

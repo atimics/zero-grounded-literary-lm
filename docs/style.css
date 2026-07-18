@@ -227,6 +227,19 @@ h1 em { color: #c7beac; font-weight: 400; }
   font-size: 11px;
   font-style: italic;
 }
+.summary-row select {
+  appearance: none;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 12px;
+  font-style: italic;
+}
+.summary-row select:focus { color: var(--ink); }
 .summary-row input:focus { color: var(--ink); }
 
 .memory-row { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: rgba(0, 0, 0, .08); }

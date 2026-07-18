@@ -1,0 +1,75 @@
+{
+  "schema": "zero.zero4_q1_result.v1",
+  "id": "zero4-q1-seed1",
+  "decision": "no-go",
+  "design": {
+    "initialization": "frozen ZERO.3 weights with fresh optimizer and RNG",
+    "faculty": "quantity only; deterministic oracle; teacher logits excluded",
+    "replay": "ZERO.3 distillation on historical ranges only",
+    "sampling": {
+      "quantity": 0.85,
+      "historical_replay": 0.15
+    },
+    "artifact_loss_weight": 4,
+    "planned_updates": 4000,
+    "batch": 2,
+    "peak_learning_rate": 0.00002,
+    "decoder": "controller-scaffolded quantity grammar with semantic commit gate"
+  },
+  "model": {
+    "path": "/tmp/zero4-q1-seed1-best.litq8",
+    "update": 3000,
+    "sha256": "791d2ce2e94abeab2f22bc76c903b6a525d0515a3506046e95daea28b624273e",
+    "bytes": 4920400
+  },
+  "raw": {
+    "cases": 500,
+    "closed": 500,
+    "syntax": 500,
+    "exact_artifact": 20,
+    "verified_artifact": 20,
+    "committed": 20,
+    "natural_artifact_close": 0,
+    "exact_chunk": 12,
+    "target_bits": 0.29787121
+  },
+  "constrained": {
+    "cases": 500,
+    "closed": 500,
+    "syntax": 500,
+    "exact_artifact": 20,
+    "verified_artifact": 20,
+    "committed": 20,
+    "natural_artifact_close": 500,
+    "exact_chunk": 20,
+    "target_bits": 0.29787121
+  },
+  "replay": {
+    "baseline_loss": 1.631,
+    "student_loss": 1.6745,
+    "relative_regression": 0.026670754138565355
+  },
+  "rates": {
+    "exact_artifact": 0.04,
+    "verified_artifact": 0.04,
+    "syntax": 1,
+    "controller_close": 1,
+    "natural_artifact_close": 1
+  },
+  "thresholds": {
+    "exact_artifact_minimum": 0.95,
+    "verified_artifact_minimum": 0.95,
+    "syntax_minimum": 1,
+    "controller_close_minimum": 1,
+    "natural_artifact_close_minimum": 0.99,
+    "replay_relative_regression_maximum": 0.02
+  },
+  "gates": {
+    "exact_artifact": false,
+    "verified_artifact": false,
+    "syntax": true,
+    "controller_close": true,
+    "natural_artifact_close": true,
+    "replay": false
+  }
+}

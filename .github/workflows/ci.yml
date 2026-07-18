@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/*.html', 'docs/*.css', 'docs/*.js']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} · ${{ matrix.backend }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            backend: portable
+          - os: macos-15
+            backend: accelerate
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Build all binaries
+        run: make -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu)"
+
+      - name: Run full test suite
+        run: make check
+
+      - name: Validate frozen teacher registry
+        run: python3 scripts/verify_teacher_artifacts.py --registry-only
+
+      - name: Run benchmark manifest check
+        run: make zero-benchmark-check
+
+  training-assets:
+    name: Training assets and deterministic smoke
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Restore ignored training assets
+        run: |
+          test -n "$AWS_BUCKET"
+          aws s3 sync "s3://${AWS_BUCKET}/assets/teachers/" teachers/ --no-cli-pager
+          aws s3 sync "s3://${AWS_BUCKET}/assets/corpus/" corpus/ --no-cli-pager
+
+      - name: Verify teacher artifacts
+        run: python3 scripts/verify_teacher_artifacts.py
+
+      - name: Build smoke dependencies
+        run: make -j"$(getconf _NPROCESSORS_ONLN)" literary_lm faculty_controller
+
+      - name: Verify smoke checkpoint determinism
+        run: |
+          make zero4-smoke
+          cp /tmp/zero4-smoke-best.ckpt /tmp/zero4-smoke-run1.ckpt
+          rm -f /tmp/zero4-smoke-best.ckpt /tmp/zero4-smoke-last.ckpt
+          make zero4-smoke
+          cmp /tmp/zero4-smoke-run1.ckpt /tmp/zero4-smoke-best.ckpt
+          sha256sum /tmp/zero4-smoke-run1.ckpt /tmp/zero4-smoke-best.ckpt
+
+  wasm:
+    name: WASM build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install pinned Emscripten SDK
+        env:
+          EMSCRIPTEN_VERSION: '4.0.20'
+        run: |
+          git clone --depth 1 --branch "$EMSCRIPTEN_VERSION" https://github.com/emscripten-core/emsdk.git
+          ./emsdk/emsdk install "$EMSCRIPTEN_VERSION"
+          ./emsdk/emsdk activate "$EMSCRIPTEN_VERSION"
+          echo "EMSDK=$PWD/emsdk" >> "$GITHUB_ENV"
+
+      - name: Build WebAssembly
+        run: |
+          source "$EMSDK/emsdk_env.sh"
+          make -B docs/literary.js
+
+      - name: Verify WASM artifacts
+        run: |
+          test -s docs/literary.js
+          test -s docs/literary.wasm
+          echo "WASM build: $(wc -c < docs/literary.wasm) bytes"
+
+  results-integrity:
+    name: Results integrity check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Verify result records and experiment registry
+        run: python3 scripts/verify_results.py
+
+  provenance:
+    name: Provenance record
+    runs-on: ubuntu-24.04
+    needs: [build-and-test, wasm, results-integrity]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Record provenance
+        env:
+          ZERO_COMMIT: ${{ github.sha }}
+          ZERO_REF: ${{ github.ref }}
+          ZERO_REPOSITORY: ${{ github.repository }}
+          ZERO_RUN_ID: ${{ github.run_id }}
+          ZERO_RUN_NUMBER: ${{ github.run_number }}
+          ZERO_WORKFLOW: ${{ github.workflow }}
+        run: |
+          mkdir -p provenance
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+
+          record = {
+              "schema": "zero.ci_provenance.v1",
+              "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "git": {
+                  "commit": os.environ["ZERO_COMMIT"],
+                  "ref": os.environ["ZERO_REF"],
+                  "repository": os.environ["ZERO_REPOSITORY"],
+              },
+              "ci": {
+                  "run_id": os.environ["ZERO_RUN_ID"],
+                  "run_number": os.environ["ZERO_RUN_NUMBER"],
+                  "workflow": os.environ["ZERO_WORKFLOW"],
+              },
+          }
+          with open("provenance/ci.json", "w", encoding="utf-8") as handle:
+              json.dump(record, handle, indent=2)
+              handle.write("\n")
+          PY
+
+      - name: Upload provenance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ci-provenance-${{ github.run_id }}
+          path: provenance/ci.json
+          if-no-files-found: error

@@ -12,6 +12,7 @@ const ui = {
   messages: document.querySelector("#messages"),
   empty: document.querySelector("#emptyState"),
   voice: document.querySelector("#voice"),
+  memoryMode: document.querySelector("#memoryMode"),
   summary: document.querySelector("#channelSummary"),
   memory: document.querySelector("#channelMemory"),
   echo: document.querySelector("#holographicEcho"),
@@ -43,6 +44,13 @@ const voiceSettings = {
   crowley: { style: "C", summary: "Crowleyan dramatic scene; ceremonial, oracular, direct" },
 };
 
+const memoryModes = {
+  transcript: { holo: 0, compress: false, echo: false, label: "transcript window" },
+  recurrent: { holo: 0, compress: true, echo: false, label: "recurrent memory" },
+  flat: { holo: 1, compress: true, echo: true, label: "flat Holo" },
+  partitioned: { holo: 2, compress: true, echo: true, label: "partitioned Holo" },
+};
+
 let module;
 let modelPointer = 0;
 let generating = false;
@@ -51,6 +59,14 @@ let history = [];
 let channelMemory = "";
 let holographicEcho = "";
 let holographicEpisodes = [];
+
+function selectedMemoryMode() {
+  return memoryModes[ui.memoryMode.value] || memoryModes.flat;
+}
+
+function applyMemoryMode() {
+  if (module) module._lm_holo_set_mode(selectedMemoryMode().holo);
+}
 
 function normalizeAscii(text) {
   const replacements = {
@@ -86,25 +102,30 @@ function compactSummary(text, limit = 100) {
 
 function activeMemory() {
   const voice = voiceSettings[ui.voice.value];
+  if (!selectedMemoryMode().compress) return compactSummary(ui.summary.value) || voice.summary;
   return channelMemory || compactSummary(ui.summary.value) || voice.summary;
 }
 
 function contextMemory() {
   const memory = activeMemory();
-  if (!holographicEcho) return compactSummary(memory, 80);
+  if (!selectedMemoryMode().echo || !holographicEcho) return compactSummary(memory, 80);
   return compactSummary(`${memory.slice(0, 48)} | ~${holographicEcho.slice(0, 28)}`, 80);
 }
 
 function updateMemoryDisplay() {
-  ui.memory.textContent = channelMemory || "not yet compressed";
+  const enabled = selectedMemoryMode().compress;
+  ui.memory.textContent = enabled ? (channelMemory || "not yet compressed") : "disabled; retaining recent turns";
   ui.memory.classList.toggle("empty", !channelMemory);
 }
 
 function updateEchoDisplay(score = 0) {
-  ui.echo.textContent = holographicEcho
+  const enabled = selectedMemoryMode().echo;
+  ui.echo.textContent = !enabled
+    ? "disabled in this mode"
+    : holographicEcho
     ? `${holographicEcho} · cosine ${score.toFixed(2)}`
     : "no relevant older episode";
-  ui.echo.classList.toggle("empty", !holographicEcho);
+  ui.echo.classList.toggle("empty", !enabled || !holographicEcho);
 }
 
 function withModelBytes(text, operation) {
@@ -120,7 +141,7 @@ function withModelBytes(text, operation) {
 
 function recallEpisode(query) {
   holographicEcho = "";
-  if (!module || module._lm_holo_get_count() === 0) {
+  if (!selectedMemoryMode().echo || !module || module._lm_holo_get_count() === 0) {
     updateEchoDisplay();
     return;
   }
@@ -133,6 +154,7 @@ function recallEpisode(query) {
 }
 
 function rememberEpisode(key, memory) {
+  if (!selectedMemoryMode().echo) return;
   const slot = withModelBytes(key, (pointer, length) => module._lm_holo_remember(pointer, length));
   if (slot >= 0) holographicEpisodes[slot] = { key, memory: compactSummary(memory, 80) };
 }
@@ -180,7 +202,7 @@ function rebuildChannel() {
 }
 
 async function compressChannelMemory() {
-  if (history.length < 2 || shouldStop) return;
+  if (!selectedMemoryMode().compress || history.length < 2 || shouldStop) return;
   const voice = voiceSettings[ui.voice.value];
   const recent = recentMessages();
   ui.statusText.textContent = "compressing the channel memory";
@@ -230,7 +252,7 @@ function addMessage(kind, text = "") {
 
 function setReady() {
   ui.status.className = "status ready";
-  ui.statusText.textContent = "model awake · local only";
+  ui.statusText.textContent = `model awake · ${selectedMemoryMode().label} · local only`;
   ui.prompt.disabled = false;
   ui.send.disabled = false;
   ui.loadBar.style.width = "100%";
@@ -278,6 +300,7 @@ async function initialize() {
     module.HEAPU8.set(bytes, modelPointer);
     const result = module._lm_load(modelPointer, bytes.length);
     if (result !== 0) throw new Error(`Model format error ${result}`);
+    applyMemoryMode();
     module._lm_seed((Date.now() >>> 0) || 1);
     setReady();
   } catch (error) {
@@ -292,6 +315,7 @@ async function generate() {
   shouldStop = false;
   ui.sendLabel.textContent = "STOP";
   ui.send.disabled = false;
+  ui.memoryMode.disabled = true;
   ui.prompt.disabled = true;
   addMessage("user", prompt);
   const answer = addMessage("model");
@@ -339,6 +363,8 @@ async function generate() {
   ui.sendLabel.textContent = "BEGIN";
   ui.prompt.disabled = false;
   ui.send.disabled = false;
+  ui.memoryMode.disabled = false;
+  ui.statusText.textContent = `model awake · ${selectedMemoryMode().label} · local only`;
   ui.prompt.focus();
 }
 
@@ -374,6 +400,12 @@ ui.voice.addEventListener("change", () => {
 ui.summary.addEventListener("change", () => {
   channelMemory = "";
   updateMemoryDisplay();
+});
+ui.memoryMode.addEventListener("change", () => {
+  if (!module || generating) return;
+  applyMemoryMode();
+  clearMemory();
+  ui.statusText.textContent = `model awake · ${selectedMemoryMode().label} · local only`;
 });
 ui.tune.addEventListener("click", () => {
   const opening = ui.tuning.hidden;

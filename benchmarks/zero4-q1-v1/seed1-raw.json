@@ -1,0 +1,7 @@
+{
+  "schema": "zero.faculty_eval.v1",
+  "model": "/tmp/zero4-q1-seed1-best.litq8",
+  "domains": {
+    "quantity": {"cases": 500, "closed": 500, "syntax": 500, "exact_artifact": 20, "verified_artifact": 20, "committed": 20, "natural_artifact_close": 0, "exact_chunk": 12, "target_bits": 0.29787121}
+  }
+}

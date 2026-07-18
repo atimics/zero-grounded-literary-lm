@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "channel_protocol.h"
+#include "literary_infer.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
@@ -16,6 +17,8 @@
 #define MAX_PARAMETERS 128
 #define HOLO_DIMENSION 256
 #define HOLO_CAPACITY 32
+#define HOLO_PARTITIONS 4
+#define HOLO_PARTITION_CAPACITY (HOLO_CAPACITY / HOLO_PARTITIONS)
 
 typedef struct {
     char magic[8];
@@ -73,6 +76,9 @@ static float holo_vectors[HOLO_CAPACITY][HOLO_DIMENSION];
 static int holo_count;
 static int holo_next;
 static float holo_score;
+static int holo_mode = LM_HOLO_FLAT;
+static int holo_partition_count[HOLO_PARTITIONS];
+static int holo_partition_next[HOLO_PARTITIONS];
 
 static uint64_t holo_mix(uint64_t value)
 {
@@ -170,18 +176,78 @@ static void holo_encode(const unsigned char *text, int length, float *vector)
     }
 }
 
+/* Deterministic nearest-anchor routing. Similar normalized vectors tend to
+ * choose the same partition, keeping each exact-search trace below the flat
+ * memory's capacity while retaining one global 32-slot budget. */
+static int holo_partition_for_vector(const float *vector)
+{
+    int best_partition = 0;
+    float best_score = -INFINITY;
+    int partition;
+    for (partition = 0; partition < HOLO_PARTITIONS; ++partition) {
+        uint64_t state = holo_mix(UINT64_C(0x7a65726f6d656d31) +
+                                  (uint64_t)partition);
+        float score = 0.0f;
+        int index;
+        for (index = 0; index < HOLO_DIMENSION; ++index) {
+            state = holo_mix(state + (uint64_t)index +
+                             UINT64_C(0x9e3779b97f4a7c15));
+            score += vector[index] *
+                     ((state & UINT64_C(1)) ? 1.0f : -1.0f);
+        }
+        if (score > best_score) {
+            best_score = score;
+            best_partition = partition;
+        }
+    }
+    return best_partition;
+}
+
 API void lm_holo_reset(void)
 {
     memset(holo_vectors, 0, sizeof(holo_vectors));
+    memset(holo_partition_count, 0, sizeof(holo_partition_count));
+    memset(holo_partition_next, 0, sizeof(holo_partition_next));
     holo_count = 0;
     holo_next = 0;
     holo_score = 0.0f;
 }
 
+API int lm_holo_set_mode(int mode)
+{
+    if (mode < LM_HOLO_DISABLED || mode > LM_HOLO_PARTITIONED) return -1;
+    if (mode != holo_mode) {
+        holo_mode = mode;
+        lm_holo_reset();
+    }
+    return 0;
+}
+
+API int lm_holo_get_mode(void) { return holo_mode; }
+
 API int lm_holo_remember(const unsigned char *text, int length)
 {
     int slot;
-    if (text == NULL || length <= 0 || length > 8192) return -1;
+    if (holo_mode == LM_HOLO_DISABLED || text == NULL || length <= 0 ||
+        length > 8192) {
+        return -1;
+    }
+    if (holo_mode == LM_HOLO_PARTITIONED) {
+        float vector[HOLO_DIMENSION];
+        int partition;
+        holo_encode(text, length, vector);
+        partition = holo_partition_for_vector(vector);
+        slot = partition * HOLO_PARTITION_CAPACITY +
+               holo_partition_next[partition];
+        memcpy(holo_vectors[slot], vector, sizeof(vector));
+        holo_partition_next[partition] =
+            (holo_partition_next[partition] + 1) % HOLO_PARTITION_CAPACITY;
+        if (holo_partition_count[partition] < HOLO_PARTITION_CAPACITY) {
+            ++holo_partition_count[partition];
+            ++holo_count;
+        }
+        return slot;
+    }
     slot = holo_next;
     holo_encode(text, length, holo_vectors[slot]);
     holo_next = (holo_next + 1) % HOLO_CAPACITY;
@@ -195,11 +261,31 @@ API int lm_holo_recall(const unsigned char *text, int length)
     float best = -1.0f;
     int best_slot = -1;
     int slot;
-    if (text == NULL || length <= 0 || length > 8192 || holo_count == 0) {
+    if (holo_mode == LM_HOLO_DISABLED || text == NULL || length <= 0 ||
+        length > 8192 || holo_count == 0) {
         holo_score = 0.0f;
         return -1;
     }
     holo_encode(text, length, query);
+    if (holo_mode == LM_HOLO_PARTITIONED) {
+        int partition = holo_partition_for_vector(query);
+        int count = holo_partition_count[partition];
+        int index;
+        for (index = 0; index < count; ++index) {
+            float score = 0.0f;
+            int coordinate;
+            slot = partition * HOLO_PARTITION_CAPACITY + index;
+            for (coordinate = 0; coordinate < HOLO_DIMENSION; ++coordinate) {
+                score += query[coordinate] * holo_vectors[slot][coordinate];
+            }
+            if (score > best) {
+                best = score;
+                best_slot = slot;
+            }
+        }
+        holo_score = best_slot >= 0 ? best : 0.0f;
+        return best_slot;
+    }
     for (slot = 0; slot < holo_count; ++slot) {
         float score = 0.0f;
         int index;
@@ -582,6 +668,24 @@ API int lm_sample(float temperature, int top_k, float repetition_penalty)
     return candidates[limit - 1].token;
 }
 
+API float lm_probability(int token)
+{
+    float maximum;
+    float total = 0.0f;
+    int index;
+    if (!loaded || position == 0 || token < 0 || token >= (int)config.vocab) {
+        return 0.0f;
+    }
+    maximum = logits[0];
+    for (index = 1; index < (int)config.vocab; ++index) {
+        if (logits[index] > maximum) maximum = logits[index];
+    }
+    for (index = 0; index < (int)config.vocab; ++index) {
+        total += expf(logits[index] - maximum);
+    }
+    return expf(logits[token] - maximum) / total;
+}
+
 API int lm_get_context(void) { return (int)config.context; }
 API int lm_get_position(void) { return (int)position; }
 API int lm_get_update(void) { return (int)config.step; }
@@ -595,7 +699,7 @@ API int lm_get_parameters(void)
     return (int)total;
 }
 
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(LITERARY_INFER_NO_MAIN)
 static void feed_text(const char *text)
 {
     int i;
@@ -610,6 +714,9 @@ static const char *style_summary(char style)
     if (style == 'S') return "Shakespearean dramatic scene";
     if (style == 'C') return "Crowleyan dramatic scene";
     if (style == 'B') return "Blakean visionary verse";
+    if (style == 'K') {
+        return "brainfuck channel uses strict bounded 8-bit semantics";
+    }
     return "mixed literary conversation";
 }
 
@@ -646,7 +753,9 @@ int main(int argc, char **argv)
     const char *prompt;
     const char *old_memory = NULL;
     const char *response = NULL;
+    const char *channel_summary = NULL;
     int chat = 0;
+    int channel = 0;
     int memory = 0;
     char style = 'D';
     int count;
@@ -671,6 +780,17 @@ int main(int argc, char **argv)
         prompt = argv[5];
         response = argv[6];
         count = atoi(argv[7]);
+    } else if (argc == 7 && strcmp(argv[2], "--channel") == 0) {
+        chat = 1;
+        channel = 1;
+        if (strlen(argv[3]) != 1) {
+            fprintf(stderr, "error: channel style must be one character\n");
+            return EXIT_FAILURE;
+        }
+        style = argv[3][0];
+        channel_summary = argv[4];
+        prompt = argv[5];
+        count = atoi(argv[6]);
     } else if (argc == 6 && strcmp(argv[2], "--chat") == 0) {
         chat = 1;
         if (strlen(argv[3]) != 1) {
@@ -688,8 +808,9 @@ int main(int argc, char **argv)
                 "usage: %s --holo-self-test\n"
                 "       %s MODEL PROMPT TOKENS\n"
                 "       %s MODEL --chat STYLE PROMPT TOKENS\n"
+                "       %s MODEL --channel STYLE SUMMARY PROMPT TOKENS\n"
                 "       %s MODEL --memory STYLE OLD USER REPLY TOKENS\n",
-                argv[0], argv[0], argv[0], argv[0]);
+                argv[0], argv[0], argv[0], argv[0], argv[0]);
         return EXIT_FAILURE;
     }
     file = fopen(argv[1], "rb");
@@ -728,21 +849,22 @@ int main(int argc, char **argv)
         lm_feed(CHANNEL_TARGET_TOKEN);
         printf("old memory: %s\nnew memory: ", old_memory);
     } else if (chat) {
+        int speaker = style == 'K' ? 'U' : 'A';
         lm_feed(CHANNEL_START_TOKEN);
         lm_feed(style);
         lm_feed(CHANNEL_SUMMARY_TOKEN);
-        feed_text(style_summary(style));
+        feed_text(channel ? channel_summary : style_summary(style));
         lm_feed(CHANNEL_MESSAGE_END_TOKEN);
         lm_feed(CHANNEL_MESSAGE_TOKEN);
-        lm_feed('A');
+        lm_feed(speaker);
         feed_text(prompt);
         lm_feed(CHANNEL_MESSAGE_END_TOKEN);
         lm_feed(CHANNEL_MESSAGE_TOKEN);
         lm_feed('Z');
         lm_feed(CHANNEL_REPLY_TOKEN);
-        lm_feed('A');
+        lm_feed(speaker);
         lm_feed(CHANNEL_TARGET_TOKEN);
-        printf("A: %s\nZ: ", prompt);
+        printf("%c: %s\nZ: ", speaker, prompt);
     } else {
         for (i = 0; prompt[i]; ++i) {
             unsigned char token = (unsigned char)prompt[i];
@@ -752,7 +874,8 @@ int main(int argc, char **argv)
     }
     for (i = 0; i < count; ++i) {
         int token = memory ? lm_sample(0.42f, 20, 1.04f)
-                           : lm_sample(0.52f, 20, 1.12f);
+                    : chat && style == 'K' ? lm_sample(0.0f, 1, 1.0f)
+                                          : lm_sample(0.52f, 20, 1.12f);
         lm_feed(token);
         if ((chat || memory) && token == CHANNEL_MESSAGE_END_TOKEN) break;
         putchar(token);

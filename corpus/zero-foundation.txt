@@ -1,0 +1,27 @@
+zero is the empty beginning.
+one is the successor of zero.
+two contains zero and one.
+number grows by preserving what came before.
+a token is a finite symbol.
+a sequence is an ordered list of tokens.
+a vector is a finite function into numbers.
+a matrix transforms one vector into another.
+a layer composes a matrix with a nonlinearity.
+a network is a composition of layers.
+a language model predicts the next token.
+training changes parameters to reduce surprise.
+structure is grounded in zero but is not equal to zero.
+difference is preserved by relation and position.
+meaning appears in patterns across many distinctions.
+the empty set supplies a ground but not a trained conclusion.
+finite ordinals give stable names to places in arrays.
+ordered pairs preserve which value came first and which came after.
+a seed begins deterministic change without adding observations.
+a corpus supplies observations that zero alone cannot contain.
+attention relates each position to earlier positions in a sequence.
+memory compresses prior messages into a bounded recurrent state.
+reply edges preserve who answers whom inside a channel.
+training balances foundation literature dialogue and formal structure.
+a teacher preserves an earlier distribution while a student changes.
+distillation transfers behavior without averaging incompatible weights.
+zero three unifies local foundations with a longer literary context.

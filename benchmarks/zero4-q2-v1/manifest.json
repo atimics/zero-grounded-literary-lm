@@ -1,0 +1,91 @@
+{
+  "schema": "zero.zero4_q2_result.v1",
+  "id": "zero4-q2-seed1",
+  "decision": "no-go",
+  "promotion_eligible": false,
+  "promotion_blocker": "Q2 must pass all three declared seeds before ZERO.4 promotion",
+  "design": {
+    "objective": "model emits a typed, input-bound quantity request; deterministic kernel computes and atomically commits the artifact",
+    "neural_arithmetic_claimed": false,
+    "initialization": "immutable ZERO.3 weights with fresh optimizer and RNG",
+    "teacher_router": {
+      "cardinality": 3,
+      "zero1": "foundation only",
+      "zero2": "literary replay only",
+      "zero3": "foundation, literary, and participation replay",
+      "request_channel": "hard-only",
+      "structured_protocol_tags": "hard-only",
+      "exact_artifacts": "kernel-only"
+    },
+    "sampling": {
+      "quantity_requests": 0.6,
+      "historical_replay": 0.4
+    },
+    "updates": 2000,
+    "seed": 1
+  },
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "model": {
+    "path": "/tmp/zero4-q2-seed1-best.litq8",
+    "update": 2000,
+    "bytes": 4920400,
+    "sha256": "8c514ebc6e9f43aab7c68214c14cd1bf785c375ddb2bfefff2d50f263d09595a"
+  },
+  "quantity": {
+    "cases": 500,
+    "closed": 500,
+    "syntax": 500,
+    "operation": 500,
+    "arguments": 1,
+    "exact_request": 1,
+    "oracle_arithmetic": 500,
+    "committed": 1,
+    "exact_artifact": 1,
+    "rejected": 499,
+    "rejected_state_mutations": 0,
+    "target_bits": 0.40376688
+  },
+  "rates": {
+    "closed": 1,
+    "syntax": 1,
+    "operation": 1,
+    "arguments": 0.002,
+    "exact_request": 0.002,
+    "oracle_arithmetic": 1,
+    "committed": 0.002,
+    "exact_artifact": 0.002
+  },
+  "replay": {
+    "baseline_loss": 1.631,
+    "student_loss": 1.6751,
+    "relative_regression": 0.027038626609442076
+  },
+  "thresholds": {
+    "closed_minimum": 0.99,
+    "syntax_minimum": 0.99,
+    "operation_minimum": 0.95,
+    "arguments_minimum": 0.95,
+    "exact_request_minimum": 0.95,
+    "oracle_arithmetic_minimum": 1,
+    "committed_minimum": 0.95,
+    "exact_artifact_minimum": 0.95,
+    "rejected_state_mutations_maximum": 0,
+    "replay_relative_regression_maximum": 0.02
+  },
+  "gates": {
+    "closed": true,
+    "syntax": true,
+    "operation": true,
+    "arguments": false,
+    "exact_request": false,
+    "oracle_arithmetic": true,
+    "committed": false,
+    "exact_artifact": false,
+    "rejected_state_mutations": true,
+    "replay": false
+  }
+}

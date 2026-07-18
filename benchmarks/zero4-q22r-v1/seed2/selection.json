@@ -1,0 +1,181 @@
+{
+  "schema": "zero.zero4_q22r_selection.v1",
+  "seed": 2,
+  "decision": "go",
+  "policy": {
+    "sources": [
+      400,
+      300
+    ],
+    "replayOnly": true,
+    "freshOptimizerPerBranch": true,
+    "learningRate": 0.000001,
+    "warmup": 0,
+    "cosineDecay": false,
+    "dropout": 0.01,
+    "sentinelEvery": 25,
+    "fullEvaluationEvery": 50,
+    "maximumRepairUpdates": 100,
+    "stopOnQuantityFailure": true,
+    "selection": "feasibility first, then maximum minimum learned faculty-gate margin, then lower replay loss"
+  },
+  "baselines": {
+    "sentinelReplayLoss": 1.6694,
+    "fullReplayLoss": 1.631
+  },
+  "branches": [
+    {
+      "sourceUpdate": 400,
+      "repairUpdates": 100,
+      "stoppedReason": "repair budget completed"
+    },
+    {
+      "sourceUpdate": 300,
+      "repairUpdates": 100,
+      "stoppedReason": "repair budget completed"
+    }
+  ],
+  "frontier": [
+    {
+      "sourceUpdate": 400,
+      "repairUpdate": 100,
+      "minimumFacultyMargin": 0.010000000000000009,
+      "quantityPass": true,
+      "replayLoss": 1.6623,
+      "replayRegression": 0.019190680564071187,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.966,
+        "arguments": 1,
+        "exact_request": 0.966,
+        "oracle_arithmetic": 1,
+        "committed": 0.966,
+        "exact_artifact": 0.966
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22r-v1/seed2/frontier/u400-r100.ckpt",
+      "owned": true
+    },
+    {
+      "sourceUpdate": 300,
+      "repairUpdate": 0,
+      "minimumFacultyMargin": 0.008000000000000007,
+      "quantityPass": true,
+      "replayLoss": 1.6613,
+      "replayRegression": 0.018577559779276512,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.958,
+        "arguments": 1,
+        "exact_request": 0.958,
+        "oracle_arithmetic": 1,
+        "committed": 0.958,
+        "exact_artifact": 0.958
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22-v1/seed2/frontier/u000300.ckpt",
+      "owned": false
+    }
+  ],
+  "selected": {
+    "sourceUpdate": 400,
+    "repairUpdate": 100,
+    "minimumFacultyMargin": 0.010000000000000009,
+    "quantityPass": true,
+    "replayLoss": 1.6623,
+    "replayRegression": 0.019190680564071187,
+    "feasible": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.966,
+      "arguments": 1,
+      "exact_request": 0.966,
+      "oracle_arithmetic": 1,
+      "committed": 0.966,
+      "exact_artifact": 0.966
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    },
+    "checkpoint": "benchmarks/zero4-q22r-v1/seed2/frontier/u400-r100.ckpt",
+    "owned": true
+  },
+  "promotion": {
+    "evaluatedOnceAtEnd": true,
+    "quantityPass": true,
+    "quantity": {
+      "cases": 500,
+      "closed": 500,
+      "syntax": 500,
+      "operation": 488,
+      "arguments": 500,
+      "exact_request": 488,
+      "oracle_arithmetic": 500,
+      "committed": 488,
+      "exact_artifact": 488,
+      "rejected": 12,
+      "rejected_state_mutations": 0,
+      "target_bits": 0.09649037
+    },
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.976,
+      "arguments": 1,
+      "exact_request": 0.976,
+      "oracle_arithmetic": 1,
+      "committed": 0.976,
+      "exact_artifact": 0.976
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    }
+  },
+  "artifacts": {
+    "checkpoint": "benchmarks/zero4-q22r-v1/seed2/frontier/u400-r100.ckpt",
+    "quantized": "benchmarks/zero4-q22r-v1/seed2/selected.litq8",
+    "checkpointSha256": "16fca2e1bf1977fbafd68720f61f7769da7ff05f7f15865f1491112493fb50cd",
+    "quantizedSha256": "0fe6e507f8d8ae5bc51e615be79b72425410664976ecc4fbeebb594319f67e8d"
+  }
+}

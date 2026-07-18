@@ -1,0 +1,70 @@
+{
+  "schema": "zero.zero4_q22r_frontier.v1",
+  "baselineFull": 1.631,
+  "frontier": [
+    {
+      "sourceUpdate": 400,
+      "repairUpdate": 100,
+      "minimumFacultyMargin": 0.010000000000000009,
+      "quantityPass": true,
+      "replayLoss": 1.6623,
+      "replayRegression": 0.019190680564071187,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.966,
+        "arguments": 1,
+        "exact_request": 0.966,
+        "oracle_arithmetic": 1,
+        "committed": 0.966,
+        "exact_artifact": 0.966
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22r-v1/seed2/frontier/u400-r100.ckpt",
+      "owned": true
+    },
+    {
+      "sourceUpdate": 300,
+      "repairUpdate": 0,
+      "minimumFacultyMargin": 0.008000000000000007,
+      "quantityPass": true,
+      "replayLoss": 1.6613,
+      "replayRegression": 0.018577559779276512,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.958,
+        "arguments": 1,
+        "exact_request": 0.958,
+        "oracle_arithmetic": 1,
+        "committed": 0.958,
+        "exact_artifact": 0.958
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22-v1/seed2/frontier/u000300.ckpt",
+      "owned": false
+    }
+  ]
+}

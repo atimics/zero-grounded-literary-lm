@@ -1,0 +1,95 @@
+{
+  "schema": "zero.dialogue_ablation.v1",
+  "id": "zero-dialogue-ablation-v1",
+  "benchmark": "zero-channel-v1",
+  "status": "frozen_before_training",
+  "purpose": "Measure whether explicit channel relations improve dialogue at fixed architecture and training budget.",
+  "fixed": {
+    "vocab": 128,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1056,
+    "parameters": 4852992,
+    "initial_checkpoint": "literary-v6.ckpt",
+    "updates": 4000,
+    "batch": 2,
+    "learning_rate": 0.00005,
+    "dropout": 0.1,
+    "channel_weight": 6,
+    "seeds": [1, 2, 3]
+  },
+  "split_policy": {
+    "unit": "whole source channel, play, poem, or consented chat channel",
+    "validation_percent": 5,
+    "forbidden": [
+      "random token split across the same channel",
+      "training on zero-channel-v1",
+      "selecting a checkpoint on the hidden comparison panel"
+    ]
+  },
+  "candidates": [
+    {
+      "id": "A-flat",
+      "representation": "normalized literary bytes without channel controls",
+      "reply_edges": false,
+      "summary": false,
+      "target_mask": false
+    },
+    {
+      "id": "B-turns",
+      "representation": "speaker-tagged turns in chronological order",
+      "reply_edges": false,
+      "summary": false,
+      "target_mask": true
+    },
+    {
+      "id": "C-replies",
+      "representation": "speaker-tagged turns with explicit reply edges",
+      "reply_edges": true,
+      "summary": false,
+      "target_mask": true
+    },
+    {
+      "id": "D-channel",
+      "representation": "full channel records with vibe, lossy-memory targets, turns, and reply edges",
+      "reply_edges": true,
+      "summary": true,
+      "target_mask": true
+    }
+  ],
+  "primary_metrics": [
+    "zero-channel-v1 contrastive win rate",
+    "reply-edge win rate",
+    "speaker-role win rate",
+    "memory-retention win rate",
+    "irrelevant-recall abstention rate",
+    "blinded human reply preference"
+  ],
+  "secondary_metrics": [
+    "held-out channel NLL",
+    "mean preferred-target bits per token",
+    "repetition rate",
+    "ASCII validity",
+    "author-balanced literary validation NLL"
+  ],
+  "promotion": {
+    "candidate": "D-channel",
+    "requirements": [
+      "beats A-flat by at least 10 percentage points on reply-edge plus speaker-role win rate averaged over seeds",
+      "wins at least 60 percent of a blinded 200-prompt human comparison against A-flat",
+      "does not regress author-balanced literary validation NLL by more than 2 percent",
+      "reports every seed and every task family",
+      "passes deterministic artifact and benchmark hash checks"
+    ]
+  },
+  "required_artifacts": [
+    "training configuration and corpus manifest per candidate and seed",
+    "best and final checkpoint hashes",
+    "zero_eval JSON per checkpoint",
+    "generated Markdown comparison",
+    "blinded human-review rows",
+    "promotion verdict with failed requirements retained"
+  ]
+}

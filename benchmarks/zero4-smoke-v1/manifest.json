@@ -1,0 +1,64 @@
+{
+  "schema": "zero.zero4_smoke.v1",
+  "decision": "no-go",
+  "status": "mechanics_smoke_not_promotion",
+  "date": "2026-07-16",
+  "teacher_initialization": {
+    "artifact": "teachers/zero3-balanced-final.teacher",
+    "sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137",
+    "source_update": 16600,
+    "mode": "weights_only_fresh_optimizer_and_rng"
+  },
+  "corpora": {
+    "quantity": {
+      "train": 9500,
+      "validation": 500,
+      "promotion": 500,
+      "tokens_sha256": "b23ed9340196e51f34151f83a870b35f7868c21891bbb773ef42ab5095692741",
+      "canonical_sha256": "54126f26f57aa3ceeaf489fbbc779b42a39c22a4c7830c9028550c4c23e22a56"
+    },
+    "geometry": {
+      "train": 9500,
+      "validation": 500,
+      "promotion": 500,
+      "tokens_sha256": "7e7fccd5edc6ff6c75c79ef7559fc2b2b9458f2abfa7c614ec5cb0f5c570eef0",
+      "canonical_sha256": "89918783dd4a7edb2e940edccaa125fdea1d60c3f0ca2994bff20e6afa07593e"
+    },
+    "art": {
+      "train": 4750,
+      "validation": 250,
+      "promotion": 250,
+      "tokens_sha256": "654973a02865c83c765a8ad291eaecae90c341168c65536fe7934d0eb18f1917",
+      "canonical_sha256": "0a4794cdf04eca7c90d613435d4ea8fed592ac5d9d7bec6c467340dfd02e5d2f"
+    }
+  },
+  "training": {
+    "updates": 20,
+    "batch": 1,
+    "learning_rate": 0.000003,
+    "warmup": 5,
+    "dropout": 0.03,
+    "seed": 0,
+    "teacher_loss": "none; new channels hard-only",
+    "best_checkpoint_sha256": "5d7ce2057b34202ce48811027242f840c64fa04f4ecdca26bda695b99abe2114"
+  },
+  "loss": {
+    "update_10": {"train": 2.7277, "mixed_validation": 2.9104},
+    "update_20": {"train": 2.0446, "mixed_validation": 2.8762},
+    "faculty_only": {"zero3_baseline": 3.9336, "smoke": 3.7842},
+    "quantity": {"zero3_baseline": 4.1362, "smoke": 3.9578},
+    "geometry": {"zero3_baseline": 3.3100, "smoke": 3.1822},
+    "art": {"zero3_baseline": 4.0469, "smoke": 3.9209},
+    "historical_replay": {"zero3_baseline": 1.7424, "smoke": 1.7386}
+  },
+  "protocol": {
+    "controller_self_test": "pass",
+    "corpus_validator_records": 26250,
+    "corpus_validator_failures": 0
+  },
+  "generation_probe": {
+    "prompt": "quantity:add 2 3",
+    "exact": false,
+    "interpretation": "20 updates prove mechanics and positive validation movement, not task capability"
+  }
+}

@@ -1,0 +1,9 @@
+id	family	key0	key1	key2	query	expected	threshold
+holo-01	relevant	friends hear a silver gate answer beneath the moon	the king wears a gold crown in the morning court	winter rivers cross the dark forest	what answered at the moonlit gate	0	0.22
+holo-02	relevant	a silver key waits beneath the eastern door	a black crown rests upon the empty throne	a blue bird circles above the old well	where was the silver key waiting	0	0.22
+holo-03	relevant	the third candle must remain unlit	the red flower opens only at sunset	the broken bridge requires the shallow ford	which candle stays dark	0	0.22
+holo-04	relevant	mara carries the folded map northward	rowan guards the sealed book at midnight	the child listens for the second bell	who carries the map	0	0.22
+holo-05	abstention	friends hear a silver gate answer beneath the moon	the king wears a gold crown in the morning court	winter rivers cross the dark forest	calculate the square root of nine	-1	0.22
+holo-06	abstention	a blue bird circles above the old well	the bridge is broken beside the shallow ford	the silver key waits at the eastern door	explain database transaction isolation	-1	0.22
+holo-07	lexical	the remembered observatory stands ruined in the north	a ceremonial circle waits beneath the tower	a quiet harbor opens toward the south	remember our northern observatory	0	0.22
+holo-08	lexical	the messenger brings news from the northern road	the gardener watches a flower at sunset	the watchman keeps the eastern door	what news came down the north road	0	0.22

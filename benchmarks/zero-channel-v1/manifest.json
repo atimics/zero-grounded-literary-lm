@@ -1,0 +1,28 @@
+{
+  "schema": "zero.eval.manifest.v1",
+  "id": "zero-channel-v1",
+  "frozen": "2026-07-16",
+  "cases": {
+    "path": "benchmarks/zero-channel-v1/cases.tsv",
+    "sha256": "7656119216740edead8d432919fa37be1e3623cc5dee45a2bd6a75849f4b8c49"
+  },
+  "holographic_cases": {
+    "path": "benchmarks/zero-channel-v1/holo.tsv",
+    "sha256": "e0b6db9e5692e55f07a022cad4941b0af2be587ead0d1a2743de9380d0f18981"
+  },
+  "baseline_model": {
+    "path": "docs/model.litq8",
+    "sha256": "63ccb24611e851aafc14905f8ca01cded5336a4cd755a420248e87abdf9bde89",
+    "parameters": 4852992,
+    "context": 512,
+    "update": 14500
+  },
+  "evaluator": {
+    "path": "zero_eval.c",
+    "result_schema": "zero.eval.result.v1",
+    "score": "teacher-forced mean bits per byte including the channel end marker",
+    "contrast_win": "positive target has fewer bits per token than its negative control"
+  },
+  "authority": "corpus_proxy",
+  "warning": "This public benchmark is a development diagnostic, not a hidden generalization test. Never train on its rows."
+}

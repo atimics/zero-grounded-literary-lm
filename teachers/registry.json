@@ -1,0 +1,87 @@
+{
+  "schema": "zero.teacher_registry.v1",
+  "frozen_at": "2026-07-16",
+  "teacher_count": 3,
+  "additional_teacher_models_allowed": false,
+  "student_initialization": {
+    "teacher_id": "zero3",
+    "mode": "weights_only_fresh_optimizer_and_rng",
+    "resume_source_checkpoint": false
+  },
+  "teachers": [
+    {
+      "id": "zero1",
+      "artifact": "teachers/zero1-foundation.teacher",
+      "format": "ZERO.1 checkpoint and inference artifact",
+      "artifact_sha256": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+      "source_update": 20000,
+      "role": "foundation constraint",
+      "scope": "declared ZERO.1-compatible foundation records only",
+      "resume_safe": false
+    },
+    {
+      "id": "zero2",
+      "artifact": "teachers/zero2-literary.teacher",
+      "format": "ZEROTCH1 weight-only",
+      "artifact_sha256": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+      "quantized_export_sha256": "34102b6d315a71589e6b808f9a9012609d60a67c888b9465c82f2fd4b34316e7",
+      "source_checkpoint": "literary-v8-consolidated.ckpt",
+      "source_checkpoint_sha256_at_training_freeze": "a8c289d10a66743f45830e7e6024440fe8e13640f9c80dbf4100e1f0712f51e8",
+      "source_update": 12600,
+      "role": "literary and historical specialist",
+      "resume_safe": false
+    },
+    {
+      "id": "zero3",
+      "artifact": "teachers/zero3-balanced-final.teacher",
+      "format": "ZEROTCH1 weight-only",
+      "artifact_sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137",
+      "quantized_export_sha256": "05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24",
+      "source_checkpoint": "zero3-balanced-last.ckpt",
+      "source_checkpoint_sha256_at_training_freeze": "f9ab189eccb070bcdc6444ccc782e2f19a3d7ec553d5a6e2c949c6c849662166",
+      "source_update": 16600,
+      "role": "generalist integrator and student initialization",
+      "resume_safe": false
+    }
+  ],
+  "matched_validation_48_batches": {
+    "zero2": 1.8325,
+    "zero3_best_diagnostic": 1.7415,
+    "zero3": 1.7424
+  },
+  "per_source_validation_48_batches": {
+    "foundation": {"zero2": 2.0783, "zero3_best_diagnostic": 1.7876, "zero3": 1.7946},
+    "shakespeare": {"zero2": 1.6350, "zero3_best_diagnostic": 1.5872, "zero3": 1.5896},
+    "blake": {"zero2": 1.7323, "zero3_best_diagnostic": 1.6577, "zero3": 1.6593},
+    "crowley": {"zero2": 1.6384, "zero3_best_diagnostic": 1.5783, "zero3": 1.5794},
+    "bible": {"zero2": 1.6292, "zero3_best_diagnostic": 1.3780, "zero3": 1.3807},
+    "channel": {"zero2": 1.7773, "zero3_best_diagnostic": 1.7723, "zero3": 1.7699}
+  },
+  "zero_channel_v1": {
+    "zero2": {
+      "transcript": "14/18",
+      "transcript_mean_positive_bits": 2.38312318,
+      "transcript_margin": 0.423214,
+      "recurrent": "18/24",
+      "recurrent_mean_positive_bits": 2.50044776,
+      "recurrent_margin": 0.30099964,
+      "holo_flat": "7/8",
+      "holo_partition": "5/8"
+    },
+    "zero3": {
+      "transcript": "13/18",
+      "transcript_mean_positive_bits": 2.35936782,
+      "transcript_margin": 0.43561726,
+      "recurrent": "18/24",
+      "recurrent_mean_positive_bits": 2.48235586,
+      "recurrent_margin": 0.30238042,
+      "holo_flat": "7/8",
+      "holo_partition": "5/8"
+    }
+  },
+  "integrity_note": {
+    "quantized_weights_match_pre_probe_exports": true,
+    "full_checkpoint_optimizer_and_rng_state_resume_safe": false,
+    "required_training_interface": "--init immutable teacher artifact"
+  }
+}

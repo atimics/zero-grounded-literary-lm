@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "zero1_protocol.h"
+
 /*
  * zero_lm.c
  *
@@ -21,9 +23,9 @@
  */
 
 enum {
-    CONTEXT = 16,
-    EMBED = 12,
-    HIDDEN = 32
+    CONTEXT = ZERO1_CONTEXT,
+    EMBED = ZERO1_EMBED,
+    HIDDEN = ZERO1_HIDDEN
 };
 
 static const char TRAINING_TEXT[] =
@@ -413,6 +415,98 @@ static float parse_float(const char *text, const char *option)
     return value;
 }
 
+static int write_items(FILE *file, const void *data, size_t size, size_t count)
+{
+    return fwrite(data, size, count, file) == count;
+}
+
+static void checkpoint_save(const char *path, const Model *model,
+                            const Vocabulary *vocab, uint64_t step)
+{
+    Zero1CheckpointHeader header;
+    FILE *file = fopen(path, "wb");
+    size_t embedding_count = (size_t)model->vocab * EMBED;
+    size_t w1_count = (size_t)HIDDEN * model->input;
+    size_t w2_count = (size_t)model->vocab * HIDDEN;
+
+    if (file == NULL) {
+        fprintf(stderr, "error: could not create checkpoint '%s': %s\n",
+                path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    memset(&header, 0, sizeof(header));
+    memcpy(header.magic, ZERO1_CHECKPOINT_MAGIC, sizeof(header.magic));
+    header.version = ZERO1_CHECKPOINT_VERSION;
+    header.vocab = (uint32_t)model->vocab;
+    header.context = CONTEXT;
+    header.embed = EMBED;
+    header.hidden = HIDDEN;
+    header.step = step;
+    memcpy(header.token_to_char, vocab->token_to_char,
+           (size_t)vocab->size);
+
+    if (!write_items(file, &header, sizeof(header), 1) ||
+        !write_items(file, model->embedding, sizeof(float), embedding_count) ||
+        !write_items(file, model->w1, sizeof(float), w1_count) ||
+        !write_items(file, model->b1, sizeof(float), HIDDEN) ||
+        !write_items(file, model->w2, sizeof(float), w2_count) ||
+        !write_items(file, model->b2, sizeof(float), (size_t)model->vocab)) {
+        fclose(file);
+        remove(path);
+        fprintf(stderr, "error: could not write checkpoint '%s'\n", path);
+        exit(EXIT_FAILURE);
+    }
+    if (fclose(file) != 0) {
+        remove(path);
+        fprintf(stderr, "error: could not close checkpoint '%s': %s\n",
+                path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    printf("saved ZERO.1 teacher %s at update %llu\n", path,
+           (unsigned long long)step);
+}
+
+static uint64_t checkpoint_load(const char *path, Model *model,
+                                const Vocabulary *vocab)
+{
+    Zero1CheckpointHeader header;
+    FILE *file = fopen(path, "rb");
+    size_t embedding_count = (size_t)model->vocab * EMBED;
+    size_t w1_count = (size_t)HIDDEN * model->input;
+    size_t w2_count = (size_t)model->vocab * HIDDEN;
+    if (file == NULL) {
+        fprintf(stderr, "error: could not open checkpoint '%s': %s\n",
+                path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    if (fread(&header, sizeof(header), 1, file) != 1 ||
+        memcmp(header.magic, ZERO1_CHECKPOINT_MAGIC,
+               sizeof(header.magic)) != 0 ||
+        header.version != ZERO1_CHECKPOINT_VERSION ||
+        header.vocab != (uint32_t)model->vocab ||
+        header.context != CONTEXT || header.embed != EMBED ||
+        header.hidden != HIDDEN ||
+        memcmp(header.token_to_char, vocab->token_to_char,
+               (size_t)vocab->size) != 0 ||
+        fread(model->embedding, sizeof(float), embedding_count, file) !=
+            embedding_count ||
+        fread(model->w1, sizeof(float), w1_count, file) != w1_count ||
+        fread(model->b1, sizeof(float), HIDDEN, file) != HIDDEN ||
+        fread(model->w2, sizeof(float), w2_count, file) != w2_count ||
+        fread(model->b2, sizeof(float), (size_t)model->vocab, file) !=
+            (size_t)model->vocab ||
+        fgetc(file) != EOF) {
+        fclose(file);
+        die("unsupported, incompatible, or corrupt ZERO.1 checkpoint");
+    }
+    if (fclose(file) != 0) {
+        fprintf(stderr, "error: could not close checkpoint '%s': %s\n",
+                path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    return header.step;
+}
+
 static void usage(const char *program)
 {
     printf("usage: %s [options]\n", program);
@@ -421,6 +515,8 @@ static void usage(const char *program)
     printf("  --tokens N         tokens to generate (default: 160)\n");
     printf("  --temperature X    0 for greedy, higher for variety (default: 0.35)\n");
     printf("  --seed N           deterministic seed (default: 0)\n");
+    printf("  --save FILE        save trained weights for ZERO.3 distillation\n");
+    printf("  --load FILE        load frozen ZERO.1 weights for inference or continuation\n");
     printf("  --help             show this message\n");
 }
 
@@ -430,6 +526,9 @@ int main(int argc, char **argv)
     long generated_tokens = 160;
     long seed_value = 0;
     const char *prompt = "zero";
+    const char *save_path = NULL;
+    const char *load_path = NULL;
+    int steps_explicit = 0;
     float temperature = 0.35f;
     float learning_rate = 0.025f;
     Vocabulary vocab = {{0}, {0}, 0};
@@ -441,6 +540,7 @@ int main(int argc, char **argv)
     int context[CONTEXT];
     long step;
     long report_every;
+    uint64_t loaded_step = 0;
     float running_loss = 0.0f;
     int i;
 
@@ -450,6 +550,7 @@ int main(int argc, char **argv)
             return EXIT_SUCCESS;
         } else if (strcmp(argv[i], "--steps") == 0 && i + 1 < argc) {
             steps = parse_long(argv[++i], "--steps");
+            steps_explicit = 1;
         } else if (strcmp(argv[i], "--prompt") == 0 && i + 1 < argc) {
             prompt = argv[++i];
         } else if (strcmp(argv[i], "--tokens") == 0 && i + 1 < argc) {
@@ -458,12 +559,17 @@ int main(int argc, char **argv)
             temperature = parse_float(argv[++i], "--temperature");
         } else if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc) {
             seed_value = parse_long(argv[++i], "--seed");
+        } else if (strcmp(argv[i], "--save") == 0 && i + 1 < argc) {
+            save_path = argv[++i];
+        } else if (strcmp(argv[i], "--load") == 0 && i + 1 < argc) {
+            load_path = argv[++i];
         } else {
             fprintf(stderr, "error: unknown or incomplete option: %s\n", argv[i]);
             usage(argv[0]);
             return EXIT_FAILURE;
         }
     }
+    if (load_path != NULL && !steps_explicit) steps = 0;
     if (steps < 0 || generated_tokens < 0 || temperature < 0.0f) {
         die("steps, tokens, and temperature must be nonnegative");
     }
@@ -477,6 +583,15 @@ int main(int argc, char **argv)
 
     rng_seed(&rng, (uint64_t)seed_value);
     model = model_create(vocab.size, &rng);
+    if (load_path != NULL) {
+        loaded_step = checkpoint_load(load_path, &model, &vocab);
+        rng_seed(&rng, (uint64_t)seed_value);
+        printf("loaded ZERO.1 teacher %s at update %llu\n", load_path,
+               (unsigned long long)loaded_step);
+    }
+    if (save_path != NULL && loaded_step > UINT64_MAX - (uint64_t)steps) {
+        die("checkpoint update overflow");
+    }
     report_every = steps >= 10 ? steps / 10 : (steps > 0 ? steps : 1);
 
     printf("zero_lm: vocab=%d context=%d embed=%d hidden=%d parameters=%zu\n",
@@ -493,6 +608,11 @@ int main(int argc, char **argv)
             printf("step %6ld  mean loss %.4f\n", step, running_loss / window);
             running_loss = 0.0f;
         }
+    }
+
+    if (save_path != NULL) {
+        checkpoint_save(save_path, &model, &vocab,
+                        loaded_step + (uint64_t)steps);
     }
 
     for (i = 0; i < CONTEXT; ++i) {

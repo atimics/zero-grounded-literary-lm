@@ -1,0 +1,125 @@
+{
+  "schema": "zero.zero4_q22r_result.v1",
+  "id": "zero4-q22r-seed2",
+  "decision": "go",
+  "promotion_eligible": false,
+  "promotion_blocker": "Q2.2-R must pass all three declared seeds before ZERO.4 promotion",
+  "design": {
+    "objective": "model selects a typed quantity operation; controller binds arguments from the parsed source; deterministic kernel computes and atomically commits the artifact",
+    "request_mode": "operation",
+    "neural_arithmetic_claimed": false,
+    "initialization": "retained Q2.2 source update 400 weights with fresh optimizer and RNG for replay repair",
+    "teacher_router": {
+      "cardinality": 3,
+      "zero1": "foundation only",
+      "zero2": "literary replay only",
+      "zero3": "foundation, literary, and participation replay",
+      "request_channel": "hard-only",
+      "structured_protocol_tags": "hard-only",
+      "exact_artifacts": "kernel-only"
+    },
+    "sampling": [
+      {
+        "phase": "replay-repair",
+        "quantity_requests": 0,
+        "historical_replay": 1,
+        "optimizer": "fresh",
+        "source_updates": [
+          400,
+          300
+        ]
+      }
+    ],
+    "optimizer_updates_executed": 100,
+    "seed": 2
+  },
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "model": {
+    "path": "selected.litq8",
+    "update": 100,
+    "bytes": 4920400,
+    "sha256": "0fe6e507f8d8ae5bc51e615be79b72425410664976ecc4fbeebb594319f67e8d"
+  },
+  "checkpoint_selection": {
+    "policy": {
+      "sources": [
+        400,
+        300
+      ],
+      "replayOnly": true,
+      "freshOptimizerPerBranch": true,
+      "learningRate": 0.000001,
+      "warmup": 0,
+      "cosineDecay": false,
+      "dropout": 0.01,
+      "sentinelEvery": 25,
+      "fullEvaluationEvery": 50,
+      "maximumRepairUpdates": 100,
+      "stopOnQuantityFailure": true,
+      "selection": "feasibility first, then maximum minimum learned faculty-gate margin, then lower replay loss"
+    },
+    "selected_source_update": 400,
+    "selected_repair_update": 100,
+    "selected_minimum_faculty_gate_margin": 0.010000000000000009,
+    "public_validation_feasible": true,
+    "frontier_size": 2,
+    "promotion_evaluated_once_at_end": true
+  },
+  "quantity": {
+    "cases": 500,
+    "closed": 500,
+    "syntax": 500,
+    "operation": 488,
+    "arguments": 500,
+    "exact_request": 488,
+    "oracle_arithmetic": 500,
+    "committed": 488,
+    "exact_artifact": 488,
+    "rejected": 12,
+    "rejected_state_mutations": 0,
+    "target_bits": 0.09649037
+  },
+  "rates": {
+    "closed": 1,
+    "syntax": 1,
+    "operation": 0.976,
+    "arguments": 1,
+    "exact_request": 0.976,
+    "oracle_arithmetic": 1,
+    "committed": 0.976,
+    "exact_artifact": 0.976
+  },
+  "replay": {
+    "baseline_loss": 1.631,
+    "student_loss": 1.6623,
+    "relative_regression": 0.019190680564071187
+  },
+  "thresholds": {
+    "closed_minimum": 0.99,
+    "syntax_minimum": 0.99,
+    "operation_minimum": 0.95,
+    "arguments_minimum": 0.95,
+    "exact_request_minimum": 0.95,
+    "oracle_arithmetic_minimum": 1,
+    "committed_minimum": 0.95,
+    "exact_artifact_minimum": 0.95,
+    "rejected_state_mutations_maximum": 0,
+    "replay_relative_regression_maximum": 0.02
+  },
+  "gates": {
+    "closed": true,
+    "syntax": true,
+    "operation": true,
+    "arguments": true,
+    "exact_request": true,
+    "oracle_arithmetic": true,
+    "committed": true,
+    "exact_artifact": true,
+    "rejected_state_mutations": true,
+    "replay": true
+  }
+}

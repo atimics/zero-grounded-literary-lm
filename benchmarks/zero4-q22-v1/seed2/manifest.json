@@ -1,0 +1,15 @@
+{
+  "schema": "zero.zero4_q22_invalid_result.v1",
+  "id": "zero4-q22-seed2",
+  "decision": "no-go",
+  "status": "evaluation-invalidated",
+  "promotion_eligible": false,
+  "promotion_blocker": "Replay evaluation used a different sampling functional from training and the frozen baseline",
+  "selection_record": "selection.json",
+  "evaluation_notice": "EVALUATION-NOTICE.md",
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  }
+}

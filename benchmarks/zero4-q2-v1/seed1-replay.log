@@ -1,0 +1,5 @@
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q2-seed1-best.ckpt at update 2000
+literary_lm: backend=Accelerate context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=38463202 tokens train=36949744 validation=1513448 tokens/update=512 sampling=weighted-files-and-channel-records
+evaluation-only val 1.6751 batches=48 (no update, no save)

@@ -1,0 +1,52 @@
+loaded tokenizer corpus/literary.bpe
+initialized weights from benchmarks/zero4-q22-v1/seed2/frontier/u000400.ckpt source-update=400; optimizer and RNG are fresh
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+literary_lm: backend=Accelerate context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=38463202 tokens train=36949744 validation=1513448 tokens/update=1024 sampling=weighted-files-and-channel-records
+update       10 train 1.1240 val 1.6624 grad 1.298 lr 1e-06 tok/s 3369
+update       20 train 1.0176 val 1.6630 grad 2.303 lr 1e-06 tok/s 2184
+update       25 train 1.3310 val 1.6630 grad 0.836 lr 1e-06 tok/s 1604
+training time 12.73 seconds
+saved /tmp/zero4-q22r-seed2-u400-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q22r-seed2-u400-active.ckpt at update 25
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+literary_lm: backend=Accelerate context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=38463202 tokens train=36949744 validation=1513448 tokens/update=1024 sampling=weighted-files-and-channel-records
+update       30 train 1.2369 val 1.6628 grad 0.562 lr 1e-06 tok/s 3107
+update       40 train 1.0346 val 1.6630 grad 0.952 lr 1e-06 tok/s 2068
+update       50 train 1.1286 val 1.6632 grad 1.394 lr 1e-06 tok/s 2099
+training time 13.23 seconds
+saved /tmp/zero4-q22r-seed2-u400-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q22r-seed2-u400-active.ckpt at update 50
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+literary_lm: backend=Accelerate context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=38463202 tokens train=36949744 validation=1513448 tokens/update=1024 sampling=weighted-files-and-channel-records
+update       60 train 1.1412 val 1.6630 grad 1.625 lr 1e-06 tok/s 3287
+update       70 train 0.9931 val 1.6627 grad 0.756 lr 1e-06 tok/s 2117
+update       75 train 1.0778 val 1.6625 grad 0.774 lr 1e-06 tok/s 1575
+training time 13.00 seconds
+saved /tmp/zero4-q22r-seed2-u400-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q22r-seed2-u400-active.ckpt at update 75
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+literary_lm: backend=Accelerate context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=38463202 tokens train=36949744 validation=1513448 tokens/update=1024 sampling=weighted-files-and-channel-records
+update       80 train 0.9765 val 1.6624 grad 1.296 lr 1e-06 tok/s 3281
+update       90 train 1.0791 val 1.6622 grad 1.177 lr 1e-06 tok/s 2105
+update      100 train 1.0603 val 1.6623 grad 0.799 lr 1e-06 tok/s 2059
+training time 13.20 seconds
+saved /tmp/zero4-q22r-seed2-u400-active.ckpt

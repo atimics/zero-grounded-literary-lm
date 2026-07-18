@@ -1,16 +1,24 @@
+# Built binaries (C compilation targets)
 zero_lm
 literary_lm
 logic_corpus
+brainfuck_corpus
 channel_corpus
 export_literary
+freeze_literary_teacher
 literary_infer
+zero_eval
+faculty_controller
+faculty_eval
+quantity_request_eval
 bpe_tokenizer
+
+# Model artifacts (large binaries)
 *.ckpt
-literary-training.log
-screenlog.0
-corpus/*.bpe
-!corpus/literary.bpe
-!corpus/literary-v2.bpe
+*.teacher
+*.litq8
+
+# Generated corpus files
 corpus/bpe/
 corpus/bpe-v2/
 corpus/intermediate/
@@ -18,5 +26,31 @@ corpus/raw/
 corpus/logic/*.txt
 corpus/logic/*.tok
 corpus/logic/*.bpe
-corpus/channel/*
-!corpus/channel/README.md
+corpus/logic/.monkey-tokenized
+corpus/brainfuck/*.txt
+corpus/brainfuck/*.tok
+corpus/brainfuck/*.bpe
+corpus/channel/*.tok
+corpus/channel/PREVIEW.txt
+corpus/faculty/generated/
+corpus/faculty/q2/
+corpus/faculty/q21/
+corpus/faculty/q22/
+corpus/bible-kjv.txt
+
+# Python/Node
+__pycache__/
+*.py[cod]
+node_modules/
+
+# Misc
+literary-training.log
+screenlog.0
+*.tmp
+/tmp/
+.DS_Store
+
+# Corpus tokenizer files (except the literary preset)
+corpus/*.bpe
+!corpus/literary.bpe
+!corpus/literary-v2.bpe

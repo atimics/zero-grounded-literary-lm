@@ -1,0 +1,74 @@
+{
+  "schema": "zero.zero4_q21_multiseed.v1",
+  "id": "zero4-q21-multiseed",
+  "decision": "no-go",
+  "promotion_eligible": false,
+  "stop_reason": "seed 2 exceeded the fixed 2% replay-regression ceiling; seed 3 was not run",
+  "declared_seeds": [
+    1,
+    2,
+    3
+  ],
+  "completed_seeds": [
+    1,
+    2
+  ],
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "results": {
+    "1": {
+      "decision": "go",
+      "model_update": 1200,
+      "model_sha256": "2ad8379237ba44533036e076d1155580dcabec4f46223bf2893a5dcadbd73f23",
+      "cases": 500,
+      "operation_requests": 499,
+      "source_argument_bindings": 500,
+      "oracle_arithmetic": 500,
+      "committed_artifacts": 499,
+      "rejected_state_mutations": 0,
+      "replay_relative_regression": 0.018638871857755968,
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true,
+        "replay": true
+      }
+    },
+    "2": {
+      "decision": "no-go",
+      "model_update": 900,
+      "model_sha256": "bb89161261dc9b18b1756084e5552ccf9be76a68527f5c2368e9b2a241b31e69",
+      "cases": 500,
+      "operation_requests": 500,
+      "source_argument_bindings": 500,
+      "oracle_arithmetic": 500,
+      "committed_artifacts": 500,
+      "rejected_state_mutations": 0,
+      "replay_relative_regression": 0.020110361741262992,
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true,
+        "replay": false
+      }
+    },
+    "3": {
+      "decision": "not-run"
+    }
+  }
+}

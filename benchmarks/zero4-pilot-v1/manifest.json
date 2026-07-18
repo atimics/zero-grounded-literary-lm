@@ -1,0 +1,63 @@
+{
+  "schema": "zero.zero4_pilot.v1",
+  "status": "seed1_rejected_before_replication",
+  "date": "2026-07-16",
+  "decision": "no-go",
+  "initial_teacher": {
+    "artifact": "teachers/zero3-balanced-final.teacher",
+    "sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "evaluator": {
+    "cases_per_domain": 20,
+    "selection": "first deterministic promotion cases",
+    "quantized": true,
+    "metrics": ["natural_close", "chunk_syntax", "exact_artifact", "exact_chunk", "target_bits"]
+  },
+  "zero3_baseline": {
+    "quantity": {"closed": "10/20", "syntax": "0/20", "exact_artifact": "0/20", "target_bits": 5.99425595},
+    "geometry": {"closed": "4/20", "syntax": "0/20", "exact_artifact": "0/20", "target_bits": 4.86854789},
+    "art": {"closed": "5/20", "syntax": "0/20", "exact_artifact": "0/20", "target_bits": 5.74018080},
+    "historical_replay_loss": 1.7424
+  },
+  "stages": [
+    {
+      "id": "protocol",
+      "updates": 400,
+      "checkpoint_sha256": "0af600017c7d02b579666e5fb2d75e2e22eedbfd8c15bb43f0b77168cab793c0",
+      "mixed_validation": 1.2194,
+      "historical_replay_loss": 1.8052
+    },
+    {
+      "id": "capability",
+      "additional_updates": 1500,
+      "global_update": 1900,
+      "checkpoint_sha256": "29d6b2fc7b74023bca460e8fc29400546cdcb37774680e2e7c401bb5159322b6",
+      "quantized_sha256": "b81d6d94093889a9a351de6631fc146ded04bb525d07cd44cb5520da0cafafcb",
+      "mixed_validation": 1.3220,
+      "historical_replay_loss": 1.8140,
+      "quantity": {"closed": "15/20", "syntax": "9/20", "exact_artifact": "0/20", "target_bits": 1.48027993},
+      "geometry": {"closed": "11/20", "syntax": "5/20", "exact_artifact": "0/20", "target_bits": 1.28492516},
+      "art": {"closed": "7/20", "syntax": "0/20", "exact_artifact": "0/20", "target_bits": 1.31507873}
+    },
+    {
+      "id": "replay_consolidation",
+      "additional_updates": 400,
+      "global_update": 2300,
+      "checkpoint_sha256": "0e9e2ad1f965068ab06bbdafdee0157716de75918ff69387af6a825674c58aba",
+      "historical_replay_loss": 1.8038
+    }
+  ],
+  "failed_gates": {
+    "exact_artifacts": "zero in every domain",
+    "art_syntax": "0/20",
+    "historical_replay_relative_regression": 0.0352,
+    "historical_replay_allowed": 0.02
+  },
+  "replicated_seeds": [],
+  "next_required_changes": [
+    "boundary-aware loss or controller-scaffolded typed decoding",
+    "semantic validator scoring of generated artifacts rather than exact-string-only art scoring",
+    "replay-preserving objective that passes the two-percent gate",
+    "repeat seed 1 before authorizing seeds 2 and 3"
+  ]
+}

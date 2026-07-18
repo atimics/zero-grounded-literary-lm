@@ -1,0 +1,11 @@
+{
+  "schema": "zero.quantity_request_eval.v1",
+  "model": "/tmp/zero4-q2-seed1-best.litq8",
+  "quantity": {
+    "cases": 500, "closed": 500, "syntax": 500,
+    "operation": 500, "arguments": 1, "exact_request": 1,
+    "oracle_arithmetic": 500, "committed": 1, "exact_artifact": 1,
+    "rejected": 499, "rejected_state_mutations": 0,
+    "target_bits": 0.40376688
+  }
+}

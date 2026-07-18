@@ -3,8 +3,9 @@
 Read [**The ZERO Manifesto**](MANIFESTO.md) and the
 [mathematical foundations](FOUNDATIONS.md).
 
-This project contains two dependency-free neural language models and a
-mechanically checked synthetic-corpus generator:
+This project contains two dependency-free neural language models together with
+checked corpus generators, validators, faculty-controller experiments, and a
+small browser runtime:
 
 - `zero_lm`: a 7,436-parameter character MLP that makes the construction easy
   to inspect.
@@ -12,6 +13,11 @@ mechanically checked synthetic-corpus generator:
   collections such as Shakespeare, William Blake, and Aleister Crowley.
 - `logic_corpus`: a reproducible generator for compact natural-deduction
   proofs over hereditarily finite sets.
+- `brainfuck_corpus`: an interpreter-checked generator for execution,
+  trace-composition, repair, and synthesis records.
+- `state_corpus` and `modal_corpus`: experimental generators for
+  modality-neutral state composition and finite-world reachability. They are
+  not yet part of the Makefile training pipeline.
 - `channel_corpus`: a converter that turns scripts, verse, and consented chat
   exports into multi-speaker channels with explicit reply edges and learned
   lossy-memory transitions.
@@ -21,9 +27,9 @@ built-in Accelerate framework for matrix multiplication. Other platforms use a
 portable C fallback.
 
 The `docs/` directory contains a static chat interface for GitHub Pages. It
-runs a row-wise int8 export of the trained model entirely in the browser using
-the same C inference code compiled to WebAssembly. No prompt or generated text
-is sent to a server.
+runs a mixed-format export—row-wise int8 matrices with floating-point scales
+and normalization gains—entirely in the browser using the same C inference
+code compiled to WebAssembly. No prompt or generated text is sent to a server.
 
 `bpe_tokenizer` is the companion corpus normalizer and experimental byte-pair
 trainer. Tests at 256, 512, and 2,048 vocabulary entries overfit fragments on
@@ -43,18 +49,20 @@ backward pass as well as short end-to-end training runs.
 
 ## Run the browser chat
 
-Build the 4.7 MB inference model and WebAssembly runtime from the recommended
-checkpoint:
+Build the 4.7 MB inference model and WebAssembly runtime from the deployed
+browser checkpoint:
 
 ```sh
 make web
 python3 -m http.server 8000 --directory docs
 ```
 
-The checked-in browser artifact is frozen ZERO.3-final at update 16,600
-(`SHA-256 05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24`).
-It is exported from `teachers/zero3-balanced-final.teacher`; override
-`ZERO_WEB_ARTIFACT` only when deliberately testing another model.
+`make web` expects the local weight source `literary-v8-last.ckpt`. That binary
+checkpoint is not stored in Git. The checked-in `docs/model.litq8` is the
+frozen browser baseline at update 14,500, SHA-256
+`63ccb24611e851aafc14905f8ca01cded5336a4cd755a420248e87abdf9bde89`.
+It is distinct from both the historical ZERO.3 training run and the frozen
+update-16,600 ZERO.3 teacher.
 
 Then open `http://localhost:8000`. The first visit downloads `model.litq8`;
 after that, inference and conversation memory remain within the page. The UI
@@ -73,6 +81,172 @@ node tests/test_web_model.mjs
 
 GitHub Pages serves directly from `docs/`; no backend, API key, JavaScript
 framework, or hosted inference service is required.
+
+## Run the ZERO.4 faculty gates
+
+ZERO.4-Q1, Q2, and Q2.1 are measured experiments, not promoted models. Q2.2 is
+the frozen follow-up instrumentation experiment. Q1
+tests neural arithmetic artifacts. Q2 keeps the three historical teachers
+immutable, routes them by corpus, trains typed quantity requests as hard
+targets, and lets an input-bound deterministic kernel alone calculate and
+commit exact results. Q2.1 moves source-argument binding into the controller so
+the student selects only the typed operation:
+
+```sh
+make zero4-q1
+make zero4-q2
+make zero4-q21
+make zero4-q22 ZERO4_Q22_SEED=2
+make zero4-q22r ZERO4_Q22R_SEED=2
+```
+
+The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
+New seed-1 and seed-3 replications require their own Q2.2 source frontiers
+before Q2.2-R can repair them.
+
+The frozen seed-1 reports are in
+[`benchmarks/zero4-q1-v1/RESULTS.md`](benchmarks/zero4-q1-v1/RESULTS.md) and
+[`benchmarks/zero4-q2-v1/RESULTS.md`](benchmarks/zero4-q2-v1/RESULTS.md). The
+Q2.1 multi-seed result is in
+[`benchmarks/zero4-q21-v1/AGGREGATE.md`](benchmarks/zero4-q21-v1/AGGREGATE.md).
+Q2 learned closure, grammar, and operation routing perfectly, but not exact
+numeric argument copying; bound-request commit therefore remained closed. Q2.1
+fixed that responsibility boundary: seed 2 reached 500/500 exact commits with
+controller-bound arguments, deterministic arithmetic, and zero rejected-state
+mutations. The two-seed run still failed promotion because seed 2 replay loss
+regressed 2.011%, just above the frozen 2.000% ceiling. Seed 3 was not run and
+no ZERO.4 checkpoint replaces ZERO.3.
+
+Q2.2 freezes the Q2.1 architecture and teacher weights, evaluates quantity and
+replay jointly every 100 updates, and retains a feasibility-aware Pareto
+frontier. Its first seed-2 replay report was invalidated because the evaluation
+adapter accidentally restored a 2x foundation weight. The corrected adapter
+preserves equal historical-source weights and reproduces the declared `1.6310`
+baseline.
+
+Q2.2-R repaired retained updates 400 and 300 using replay only. Seed 2 selected
+update 400 plus 100 repair updates and passed: 488/500 promotion operations and
+commits (97.6%), zero state mutations, and 1.919% replay regression. This is a
+seed-level go, not promotion; seeds 1 and 3 remain required. Results are in
+[`benchmarks/zero4-q22r-v1/seed2/RESULTS.md`](benchmarks/zero4-q22r-v1/seed2/RESULTS.md).
+
+Q2.3 is the proposed lower-level follow-up. It makes each AdamW attempt a
+transaction, measures faculty/replay conflict globally and by tensor, evaluates
+candidate weights in shadow state, and commits or rejects weights and optimizer
+moments together. It is a design and backlog, not an implemented or promoted
+experiment. See [`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer)
+and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
+
+## Measure channel behavior
+
+The frozen [`zero-channel-v1`](benchmarks/zero-channel-v1/README.md) benchmark
+tests matched coherent/incoherent continuations and deterministic episodic
+recall. It evaluates the deployed 4.85M-parameter checkpoint without sampling:
+
+```sh
+make zero-benchmark
+make zero-benchmark-check
+```
+
+The browser exposes the same bounded runtime policies: a recent transcript
+window, recurrent lossy memory, recurrent memory with flat Holo recall, and an
+experimental partitioned Holo index. The current checked-in result and its
+interpretation are in
+[`benchmarks/zero-channel-v1/results/BASELINE.md`](benchmarks/zero-channel-v1/results/BASELINE.md).
+The architecture stays fixed; the four-way training comparison is frozen in
+[`ablation-contract.json`](benchmarks/zero-channel-v1/ablation-contract.json),
+and the larger sequence of work is tracked in [`ZEROADMAP.md`](ZEROADMAP.md).
+
+## Build ZERO.3
+
+ZERO.3 is a single literary-transformer parameter set distilled from both
+earlier models. It does not average their incompatible arrays. Instead:
+
+- the ZERO.2 transformer checkpoint initializes the student and remains loaded
+  as a frozen teacher over every training sequence;
+- `zero_lm` exports its deterministic 7,436-parameter ZERO.1 network as a
+  frozen character-distribution teacher;
+- the ZERO.1 teacher is applied only to the explicit foundation stream; and
+- ordinary next-character loss continues to learn Shakespeare, Blake,
+  Crowley, the King James Bible, and structured channel replies.
+
+The bridge statements in `corpus/zero-foundation.txt` do not modify ZERO.1's
+embedded corpus or weights. They are new hard targets presented to ZERO.3 while
+the original ZERO.1 function remains frozen.
+
+For one sequence, ZERO.3 minimizes the weighted cross entropy
+
+```text
+0.60 * observed target + 0.15 * ZERO.2 distribution
+                       + 0.25 * ZERO.1 distribution
+```
+
+on foundation examples. Outside that stream, the observed target receives
+weight `0.85` and ZERO.2 receives `0.15`. The frozen ZERO.2 target is replayed
+on all sources to limit catastrophic forgetting while the new corpus is
+absorbed.
+
+Prepare the teachers and all token streams:
+
+```sh
+make zero3-data
+```
+
+This includes the existing Shakespeare, Blake, Crowley, and channel data. It
+also prepares a cleaned King James Bible from Project Gutenberg eBook 30. The
+Bible is sampled as one ordinary text file, independently of its byte size; in
+the recommended mix it receives one-twelfth of training sequences, while the
+channel stream receives one-half and the foundation stream one-sixth. This
+keeps its repetitive verse structure from dominating the small model.
+
+Train from the consolidated ZERO.2 checkpoint:
+
+```sh
+make zero3-train
+```
+
+The target runs three deterministic stages: broad absorption, higher-weight
+ZERO.2 consolidation, and a short retention-balance pass. The later stages
+were added because mixed-corpus validation alone did not fully preserve the
+frozen channel benchmark.
+
+The default input is `literary-v8-consolidated.ckpt`; override it or the number
+of updates when needed:
+
+```sh
+make zero3-train \
+  ZERO2_CHECKPOINT=another-zero2.ckpt \
+  ZERO3_STEPS=8000 \
+  ZERO3_CONSOLIDATION_STEPS=1600 \
+  ZERO3_BALANCE_STEPS=600
+```
+
+The stage checkpoints are `zero3.ckpt`, `zero3-consolidated.ckpt`, and
+`zero3-balanced.ckpt`; the last is the recommended result. Teacher checkpoints
+affect only training. ZERO.3 uses the unchanged 4,852,992-parameter transformer
+and the existing WebAssembly export/runtime.
+
+### Historical ZERO.3 training result
+
+The completed run selected these hard-target validation states:
+
+| Stage | Update | Validation loss |
+| --- | ---: | ---: |
+| Broad absorption | 16,100 | 1.7540 |
+| ZERO.2 consolidation | 16,200 | 1.7387 |
+| Retention balance | 16,300 | 1.7347 |
+
+On the frozen `zero-channel-v1` benchmark, the final int8 export scored 13/18
+transcript and 17/24 recurrent contrastive wins, compared with 14/18 and 18/24
+for the exact ZERO.2 teacher. The binary counts are each one lower, but ZERO.3
+has better mean positive-token bits (`2.3612` vs `2.3831` transcript and
+`2.4835` vs `2.5004` recurrent) and equal or better mean margins. Flat and
+partitioned holographic recall are unchanged at 7/8 and 5/8 because that index
+is parameter-free. This is a real tradeoff rather than an unqualified channel
+win, so the checked-in browser model was not replaced automatically. This
+table describes the historical update-16,300 run. The subsequently frozen
+teacher is a distinct update-16,600 artifact whose authoritative metrics are
+recorded in `teachers/registry.json` and `TEACHERS.md`.
 
 ## Train the channel-native model
 
@@ -313,6 +487,77 @@ while implication composition, conjunction reassociation, and nested
 projection failed. This is a diagnostic rather than a statistically complete
 benchmark, but it shows that low character loss does not imply general proof
 search at this model size.
+
+### Continued logic + Shakespeare result
+
+`logic-shakespeare-v1` resumed the best pure-logic checkpoint for 20,000
+additional updates, sampling logic and Shakespeare with equal probability. The
+phase used a `1e-4` peak learning rate with cosine decay. The selected
+`logic-shakespeare-v1.ckpt` is global update 43,300 with equal-weighted mixed
+validation loss 0.8828; `logic-shakespeare-v1-last.ckpt` preserves the completed
+global update 46,600 state.
+
+On the same small deterministic proof probe, five of six trained proof shapes
+remained kernel-valid, while none of the four structurally held-out shapes
+succeeded. Shakespeare-prompted output gained recognizable dramatic cadence
+and vocabulary. This demonstrates a usable hybrid model, but also measurable
+formal-logic forgetting and continued weak proof-schema generalization.
+
+## Train the Infinite Monkey curriculum
+
+The Brainfuck faculty extends the same checked-corpus idea from proof terms to
+program execution. `brainfuck_corpus` constructs bounded terminating programs,
+runs every record under a strict 8-bit interpreter, and emits both a readable
+audit and a target-masked channel stream. Its held-out tail uses loop and data
+movement shapes absent from training.
+
+Build and independently verify the program corpus:
+
+```sh
+make brainfuck-data
+```
+
+Run a short end-to-end check of all curriculum transitions:
+
+```sh
+make monkey-smoke
+```
+
+Then train Brainfuck, the generated finite-set logic language, Shakespeare,
+Blake, and Crowley in cumulative stages:
+
+```sh
+make monkey-train
+make monkey-eval
+```
+
+Each stage gives the newly introduced language additional sampling weight but
+continues replaying every earlier corpus. Formal consolidation is followed by
+a literature-heavy polish and a final rebalance at `3/3/2/2/2` for Brainfuck,
+logic, Shakespeare, Blake, and Crowley. All stages
+share the fixed 128-character tokenizer and the existing 4,852,992-parameter,
+512-character transformer. Exact semantics, split policy, options, and stage
+overrides are documented in
+[`corpus/brainfuck/README.md`](corpus/brainfuck/README.md).
+
+The completed seed-89 baseline and its measured capacity verdict are in
+[`benchmarks/infinite-monkey-v1/RESULTS.md`](benchmarks/infinite-monkey-v1/RESULTS.md).
+
+For the systematic-execution experiment, generate grouped state traces and
+train the 9,876,800-parameter specialist:
+
+```sh
+make brainfuck-trace-data
+make monkey-trace10m-smoke
+make monkey-trace10m-train
+make monkey-trace10m-eval
+```
+
+Each six-record `bf2` episode teaches two primitive transitions, a composed
+multi-instruction block, completion from that state, whole-program behavior,
+and synthesis or repair. The compact state emitted as one chunk's channel
+summary becomes the next chunk's channel memory exactly. Validation withholds
+program compositions while retaining the primitive instruction vocabulary.
 
 ## Architecture
 

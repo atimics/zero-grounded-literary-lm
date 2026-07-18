@@ -1,0 +1,351 @@
+{
+  "schema": "zero.faculty.v1",
+  "id": "zero-faculty-v1",
+  "status": "mixed_built_experimental_and_proposed_see_implementation_status",
+  "frozen": null,
+  "student": {
+    "architecture": "literary-transformer",
+    "vocab": 128,
+    "context": 512,
+    "parameters": 4852992,
+    "deployment": "target architecture; current browser deploys the literary channel runtime, not the faculty controller"
+  },
+  "implementation_status": {
+    "built_and_tested": [
+      "fixed-capacity 16-channel controller current-state store",
+      "atomic close and verified commit fixtures",
+      "rejection without mutation of committed state",
+      "quantity source parsing controller binding deterministic kernel execution and commit",
+      "three-teacher routed training paths",
+      "quantity geometry art and protocol pilot generation"
+    ],
+    "experimental_not_deployed": [
+      "quantity Q2.2-R seed-2 student",
+      "Brainfuck trace-composition curriculum",
+      "modality-neutral state-composition generator",
+      "finite-world modal reachability generator"
+    ],
+    "proposed_not_implemented": [
+      "bounded per-faculty episodic history",
+      "dependency scheduler",
+      "shared-synthesis runtime",
+      "durable artifact reference store",
+      "faculty-controller browser integration",
+      "transactional AdamW shadow commit"
+    ]
+  },
+  "principles": {
+    "hard_targets_primary": true,
+    "routed_teachers": true,
+    "faculty_is_persistent_channel": true,
+    "atomic_output_chunks": true,
+    "preserve_faculty_identity_in_rollup": true,
+    "raw_teacher_latents_shared": false,
+    "global_teacher_vote": false,
+    "parameter_averaging": false,
+    "synthetic_open_world_facts": false,
+    "split_before_surface_generation": true,
+    "report_every_seed_and_task": true
+  },
+  "channel_system": {
+    "chunk_schema": "zero.faculty_chunk.v1",
+    "episode_schema": "zero.faculty_episode.v1",
+    "controller_states": [
+      "idle",
+      "enter",
+      "emit_locked_chunk",
+      "close",
+      "verify_or_critique",
+      "commit_or_reject"
+    ],
+    "switch_allowed_only_from": "idle",
+    "requests_are_queued_until_close": true,
+    "shared_synthesis_is_a_channel": true,
+    "channel_owns_teacher_set": true,
+    "teachers_may_belong_to_multiple_channels_with_distinct_roles": true,
+    "rejected_chunks_update_shared_state": false,
+    "exact_artifacts_retained": true,
+    "faculty_state": {
+      "current": "one explicit rolling summary and one common-space vector per active faculty",
+      "history": "bounded episodic index of older committed chunk digests",
+      "update": "old summary plus complete chunk produces proposed summary; artifact and summary commit atomically after external validation",
+      "rejection": "retain old summary and discard proposed state"
+    },
+    "rollup": {
+      "form": "bounded tagged set of faculty summaries",
+      "anonymous_vector_average": false,
+      "faculty_v1_registrar": "deterministic 256D Holo encoding of explicit chunk summary",
+      "faculty_v1_model_conditioning": "selected explicit summary text",
+      "faculty_v2_candidate": "shared-student close-state encoding with continuous virtual prefix tokens",
+      "faculty_v2_virtual_token_limit_initial": 4,
+      "raw_teacher_hidden_states_allowed": false
+    },
+    "planes": {
+      "training": "three immutable historical teachers routed across checked faculty channels plus common registrar and shared student",
+      "deployment": "one student reenacts faculty channels under the same controller",
+      "laboratory_optional": "the three frozen teachers loaded for comparison with separately declared compute"
+    }
+  },
+  "record_contract": {
+    "schema": "zero.faculty_chunk.v1",
+    "canonical_format": "jsonl",
+    "training_format": "target-masked token stream",
+    "benchmark_format": "domain evaluator rows",
+    "maximum_context": 512,
+    "visible_ascii_tags": true,
+    "required_manifest_fields": [
+      "id",
+      "domain",
+      "curriculum",
+      "task",
+      "channel_epoch",
+      "split_unit",
+      "split",
+      "authority",
+      "source_kind",
+      "generator_or_source_id",
+      "version",
+      "seed_or_source_unit",
+      "license_or_consent",
+      "content_hash"
+    ]
+  },
+  "distillation": {
+    "teacher_model_count": 3,
+    "additional_teacher_checkpoints": false,
+    "new_channel_defaults": {
+      "hard_target": 1.00,
+      "zero1": 0.00,
+      "zero2": 0.00,
+      "zero3": 0.00
+    },
+    "foundation_weights": {
+      "hard_target": 0.60,
+      "zero1": 0.25,
+      "zero2": 0.05,
+      "zero3": 0.10
+    },
+    "target_span_only": true,
+    "disagreement_diagnostics": [
+      "teacher_entropy",
+      "pairwise_teacher_js_divergence"
+    ]
+  },
+  "data_tiers": [
+    {
+      "id": "pilot",
+      "records_per_domain": 10000,
+      "purpose": "parser checker overfit and representation tests"
+    },
+    {
+      "id": "faculty-v1",
+      "records_per_domain": 100000,
+      "purpose": "three-seed teacher and student comparison"
+    },
+    {
+      "id": "scale",
+      "records_per_domain_maximum": 1000000,
+      "purpose": "conditional positive-learning-curve expansion"
+    }
+  ],
+  "curriculum_experiments": [
+    {
+      "id": "state-composition-v1",
+      "status": "generator_self_tested_not_makefile_integrated_not_trained",
+      "source": "state_corpus.c",
+      "tasks": ["transition", "compose2", "complete", "recover-operation", "recover-state"],
+      "validation": "held-out adjacent operation pairs"
+    },
+    {
+      "id": "brainfuck-trace10m-v2",
+      "status": "measured_no_go",
+      "result": "benchmarks/infinite-monkey-trace10m-v2/RESULTS.md",
+      "train_exact": "0/42",
+      "validation_exact": "0/42"
+    },
+    {
+      "id": "modal-reachability-v1",
+      "status": "generator_self_tested_not_makefile_integrated_not_trained",
+      "source": "modal_corpus.c",
+      "tasks": ["frontier-step", "frontier-compose2", "possible", "necessary", "witness", "counterexample"]
+    }
+  ],
+  "faculty_channels": [
+    {
+      "id": "zero-f",
+      "name": "foundation",
+      "phase": "existing",
+      "status": "built",
+      "kind": "anchor",
+      "authority": "authored foundation corpus",
+      "baseline_artifact": "teachers/zero1-foundation.teacher",
+      "synthetic": false,
+      "tasks": ["foundation continuation"],
+      "validator": null
+    },
+    {
+      "id": "zero-l",
+      "name": "literary",
+      "phase": "existing",
+      "status": "built",
+      "kind": "corpus",
+      "authority": "pinned public-domain literary corpus",
+      "baseline_artifact": "teachers/zero2-literary.teacher",
+      "synthetic": false,
+      "tasks": ["continuation", "voice", "metaphor", "dialogue", "critique"],
+      "validator": "provenance and held-out corpus evaluation"
+    },
+    {
+      "id": "zero-logic",
+      "name": "logic",
+      "phase": "existing",
+      "status": "experimental",
+      "kind": "kernel",
+      "authority": "declared intuitionistic finite-set proof system",
+      "baseline_artifact": "logic-v1.ckpt",
+      "synthetic": true,
+      "tasks": ["prove", "check", "complete", "reject", "repair"],
+      "validator": "logic_corpus"
+    },
+    {
+      "id": "zero-channel",
+      "name": "channel",
+      "phase": "existing",
+      "status": "representation-built-evaluation-baseline-complete",
+      "kind": "corpus",
+      "authority": "reply relations bounded memory and consented observations",
+      "baseline_artifact": null,
+      "synthetic": "partial",
+      "tasks": ["reply", "address", "remember", "forget", "recall", "abstain", "repair"],
+      "validator": "zero_eval plus hidden human channel evaluation"
+    },
+    {
+      "id": "zero-q",
+      "name": "quantity-algebra-units",
+      "phase": "faculty-v1",
+      "status": "q22r_seed2_go_seeds1_and3_pending",
+      "kind": "kernel",
+      "authority": "exact typed integer and rational arithmetic",
+      "baseline_artifact": null,
+      "synthetic": true,
+      "tasks": ["add", "multiply", "add-rational", "unit-convert", "solve-linear"],
+      "validator": "quantity_oracle plus quantity_request_eval",
+      "depends_on": ["zero-logic"]
+    },
+    {
+      "id": "zero-g",
+      "name": "geometry",
+      "phase": "faculty-v1",
+      "status": "pilot-generated-checked",
+      "kind": "kernel",
+      "authority": "declared exact two-dimensional construction system",
+      "baseline_artifact": null,
+      "synthetic": true,
+      "tasks": ["construct", "derive", "classify", "check", "repair", "describe"],
+      "validator": "checker embedded in scripts/generate_zero4_faculty.mjs",
+      "depends_on": ["zero-q"]
+    },
+    {
+      "id": "zero-p",
+      "name": "physics",
+      "phase": "faculty-v1",
+      "status": "planned-after-quantity-and-geometry-promotion",
+      "kind": "simulator",
+      "authority": "declared closed Newtonian and optional ideal circuit models",
+      "baseline_artifact": null,
+      "synthetic": true,
+      "tasks": ["predict", "derive", "check", "repair", "compare"],
+      "validator": "physics_sim",
+      "depends_on": ["zero-q", "zero-g"]
+    },
+    {
+      "id": "zero-a",
+      "name": "art",
+      "phase": "faculty-v1",
+      "status": "pilot-generated-constraint-checked",
+      "kind": "critic",
+      "authority": "declared constraints rubrics and attributable human preference",
+      "baseline_artifact": null,
+      "synthetic": "partial",
+      "tasks": ["compose", "describe", "critique", "compare", "revise", "repair"],
+      "validator": "constraint checker and SVG renderer in scripts/generate_zero4_faculty.mjs; human preference not yet implemented",
+      "depends_on": ["zero-g", "zero-l"]
+    },
+    {
+      "id": "zero-e",
+      "name": "epistemics",
+      "phase": "faculty-v1",
+      "status": "planned",
+      "kind": "kernel",
+      "authority": "claims relative to generated worlds and revealed observations",
+      "baseline_artifact": null,
+      "synthetic": true,
+      "tasks": ["classify", "support", "counterexample", "unknown", "experiment"],
+      "validator": "epistemic_check",
+      "depends_on": ["zero-logic"]
+    },
+    {
+      "id": "zero-code",
+      "name": "code",
+      "phase": "faculty-v2",
+      "status": "brainfuck_trace10m_measured_no_go_state_pretraining_proposed",
+      "kind": "interpreter",
+      "authority": "declared total programming language and tests",
+      "baseline_artifact": null,
+      "synthetic": true,
+      "tasks": ["execute", "complete", "test", "repair"],
+      "validator": "brainfuck_corpus interpreter for the current experiment; zero_vm remains proposed",
+      "depends_on": ["zero-logic", "zero-q"]
+    },
+    {
+      "id": "zero-m",
+      "name": "music",
+      "phase": "faculty-v2",
+      "status": "candidate",
+      "kind": "critic",
+      "authority": "symbolic constraints public-domain scores and attributable preference",
+      "baseline_artifact": null,
+      "synthetic": "partial",
+      "tasks": ["compose", "transform", "analyze", "compare", "revise"],
+      "validator": "score_check plus blinded human preference",
+      "depends_on": ["zero-q", "zero-l"]
+    },
+    {
+      "id": "zero-s",
+      "name": "systems-control",
+      "phase": "faculty-v2",
+      "status": "candidate",
+      "kind": "simulator",
+      "authority": "declared state queue and feedback systems",
+      "baseline_artifact": null,
+      "synthetic": true,
+      "tasks": ["predict", "verify", "stabilize", "repair"],
+      "validator": "systems_sim",
+      "depends_on": ["zero-code", "zero-p"]
+    }
+  ],
+  "initial_student_experiment": {
+    "mandatory_domains": ["zero-q", "zero-logic", "zero-g", "zero-a", "zero-channel"],
+    "anchor": "zero-l",
+    "seeds": [1, 2, 3],
+    "maximum_simultaneous_mandatory_domains": 5,
+    "student_retained_best_eligible_gain_minimum": 0.90,
+    "mandatory_domain_absolute_regression_points_maximum": 2.0
+  },
+  "implementation_order": [
+    "faculty chunk episode and controller contracts",
+    "atomic boundary and switch fixtures",
+    "deterministic shared Holo registrar and tagged rollup",
+    "quantity generator checker evaluator",
+    "scene language geometry checker SVG renderer",
+    "physics world language and simulator",
+    "epistemic world generator and checker",
+    "art corpus renderer and preference tooling",
+    "three-teacher channel competence calibration",
+    "channel-routed multi-teacher training",
+    "shared-latent multi-faculty episode generation",
+    "five-domain student ablation",
+    "conditional learned registrar and continuous latent prefix experiment",
+    "conditional faculty-v2 admission"
+  ]
+}
