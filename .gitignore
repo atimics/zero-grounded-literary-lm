@@ -7,7 +7,7 @@ channel_corpus
 export_literary
 freeze_literary_teacher
 literary_infer
-zero_eval
+zero_eval  # binary only
 faculty_controller
 faculty_eval
 quantity_request_eval
@@ -15,7 +15,8 @@ bpe_tokenizer
 
 # Model artifacts (large binaries)
 *.ckpt
-*.teacher
+zero_eval  # binary only
+!teachers/*.teacher
 *.litq8
 
 # Generated corpus files
