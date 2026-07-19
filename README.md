@@ -164,14 +164,17 @@ cumulative direct functional budget. See the machine-readable
 [`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer),
 and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
 
-Q2.4 is that preregistered cumulative follow-up. Every candidate is evaluated
+Q2.4 is that cumulative follow-up. Every candidate is evaluated
 on the fixed validation window of all six replay sources and compared with the
 same composite evaluated by immutable ZERO.3. A candidate above the frozen
 1.5% cumulative budget is rolled back, leaving 0.5 percentage points of reserve
-below the 2% public balanced-replay ceiling. Seed 2 is the only admitted first
-run; promotion and seeds 1 and 3 remain sealed. See
+below the 2% public balanced-replay ceiling. The prospective seed-2 run was a
+no-go: 66 candidates committed, then attempts 67–74 all exceeded the hard
+budget and rolled back. The frozen eight-rejection fallback stopped the run
+before its first 100-commit public checkpoint. Promotion was never evaluated,
+and seeds 1 and 3 remain sealed. See
 [`contract.json`](benchmarks/zero4-q24-v1/contract.json) and
-[`PREREGISTRATION.md`](benchmarks/zero4-q24-v1/PREREGISTRATION.md).
+[`RESULTS.md`](benchmarks/zero4-q24-v1/seed2/RESULTS.md).
 
 ## Measure channel behavior
 
