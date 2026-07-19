@@ -171,7 +171,8 @@ typedef struct {
 enum {
     TRANSACTION_DISABLED = 0,
     TRANSACTION_OBSERVER = 1,
-    TRANSACTION_GUARD = 2
+    TRANSACTION_GUARD = 2,
+    TRANSACTION_CUMULATIVE_GUARD = 3
 };
 
 typedef struct {
@@ -184,6 +185,10 @@ typedef struct {
     double *group_displacement_norm;
     double *group_fisher_drift;
     unsigned char *probe_mask;
+    float *cumulative_baseline_losses;
+    float *cumulative_candidate_losses;
+    int cumulative_replay_count;
+    double cumulative_baseline_mean;
     FILE *log;
     uint64_t attempts;
     uint64_t source_mask;
@@ -2388,7 +2393,17 @@ static void transaction_state_destroy(TransactionState *state)
     free(state->group_displacement_norm);
     free(state->group_fisher_drift);
     free(state->probe_mask);
+    free(state->cumulative_baseline_losses);
+    free(state->cumulative_candidate_losses);
     memset(state, 0, sizeof(*state));
+}
+
+static const char *transaction_mode_name(int mode)
+{
+    if (mode == TRANSACTION_GUARD) return "guard";
+    if (mode == TRANSACTION_CUMULATIVE_GUARD) return "cumulative-guard";
+    if (mode == TRANSACTION_OBSERVER) return "observer";
+    return "disabled";
 }
 
 static const CorpusRange *transaction_select_replay_range(
@@ -2444,6 +2459,66 @@ static float transaction_probe_loss(Model *model, const Corpus *corpus,
     start = range->validation_start;
     return model_forward(model, corpus->data + start,
                          corpus->data + start + 1, 0.0f, NULL);
+}
+
+static void transaction_initialize_cumulative_baseline(
+    TransactionState *state, Model *reference, const Corpus *corpus,
+    const CorpusRange *ranges, int range_count, int artifact_weight)
+{
+    double total = 0.0;
+    int eligible_count = 0;
+    int range_index;
+    int probe_index = 0;
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        if (ranges[range_index].teacher_eligible) ++eligible_count;
+    }
+    if (eligible_count == 0) {
+        fail("cumulative guard requires replay data");
+    }
+    state->cumulative_baseline_losses =
+        zero_alloc((size_t)eligible_count, sizeof(float));
+    state->cumulative_candidate_losses =
+        zero_alloc((size_t)eligible_count, sizeof(float));
+    state->cumulative_replay_count = eligible_count;
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        float loss;
+        if (!ranges[range_index].teacher_eligible) continue;
+        loss = transaction_probe_loss(reference, corpus, &ranges[range_index],
+                                      state->probe_mask, artifact_weight);
+        if (!isfinite(loss) || loss <= 0.0f) {
+            fail("cumulative guard baseline probe is not finite and positive");
+        }
+        state->cumulative_baseline_losses[probe_index++] = loss;
+        total += loss;
+    }
+    state->cumulative_baseline_mean = total / eligible_count;
+}
+
+static double transaction_cumulative_candidate_change(
+    TransactionState *state, Model *model, const Corpus *corpus,
+    const CorpusRange *ranges, int range_count, int artifact_weight,
+    double *candidate_mean)
+{
+    double total = 0.0;
+    int all_finite = 1;
+    int range_index;
+    int probe_index = 0;
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        float loss;
+        if (!ranges[range_index].teacher_eligible) continue;
+        loss = transaction_probe_loss(model, corpus, &ranges[range_index],
+                                      state->probe_mask, artifact_weight);
+        state->cumulative_candidate_losses[probe_index++] = loss;
+        if (isfinite(loss)) total += loss;
+        else all_finite = 0;
+    }
+    if (probe_index != state->cumulative_replay_count) {
+        fail("cumulative replay range count changed");
+    }
+    *candidate_mean = all_finite ? total / probe_index : NAN;
+    if (!all_finite) return NAN;
+    return (*candidate_mean - state->cumulative_baseline_mean) /
+           state->cumulative_baseline_mean;
 }
 
 static float transaction_prepare_attempt(
@@ -2505,6 +2580,7 @@ static float transaction_prepare_attempt(
 
 static int transaction_decide_attempt(
     TransactionState *state, Model *model, const Corpus *corpus,
+    const CorpusRange *ranges, int range_count,
     const CorpusRange *replay_range, int replay_range_index,
     const Options *options, uint64_t proposed_update, float learning_rate,
     float gradient_norm, float gradient_cosine, int functional_probe,
@@ -2517,6 +2593,8 @@ static int transaction_decide_attempt(
     double total_fisher_drift = 0.0;
     float probe_after = NAN;
     double relative_change = NAN;
+    double cumulative_candidate_mean = NAN;
+    double cumulative_relative_change = NAN;
     uint64_t before_digest;
     uint64_t rollback_digest = 0;
     int accepted = 1;
@@ -2524,6 +2602,9 @@ static int transaction_decide_attempt(
     char probe_before_buffer[32];
     char probe_after_buffer[32];
     char relative_change_buffer[32];
+    char cumulative_baseline_buffer[32];
+    char cumulative_candidate_buffer[32];
+    char cumulative_relative_buffer[32];
     char gradient_cosine_buffer[32];
     char source_ids[256];
     size_t source_ids_length = 0;
@@ -2568,6 +2649,11 @@ static int transaction_decide_attempt(
                                     probe_before
                               : 0.0;
     }
+    if (options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+        cumulative_relative_change = transaction_cumulative_candidate_change(
+            state, model, corpus, ranges, range_count,
+            options->artifact_weight, &cumulative_candidate_mean);
+    }
     if (options->transaction_mode == TRANSACTION_GUARD) {
         if (!functional_probe) {
             reason = "functional-probe-not-due";
@@ -2578,6 +2664,18 @@ static int transaction_decide_attempt(
                                             : "replay-budget-exceeded";
         } else {
             reason = "within-replay-budget";
+        }
+    } else if (options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+        if (!isfinite(cumulative_candidate_mean) ||
+            !isfinite(cumulative_relative_change)) {
+            accepted = 0;
+            reason = "non-finite-cumulative-replay-probe";
+        } else if (cumulative_relative_change >
+                   options->transaction_guard_budget) {
+            accepted = 0;
+            reason = "cumulative-replay-budget-exceeded";
+        } else {
+            reason = "within-cumulative-replay-budget";
         }
     }
     if (!accepted) {
@@ -2608,7 +2706,7 @@ static int transaction_decide_attempt(
     source_ids[source_ids_length] = '\0';
     if (state->log != NULL) {
         fprintf(state->log,
-                "{\"schema\":\"zero.optimizer_attempt.v1\","
+                "{\"schema\":\"%s\","
                 "\"attempt\":%llu,\"proposed_committed_update\":%llu,"
                 "\"committed_update\":%llu,\"phase\":\"%s\","
                 "\"mode\":\"%s\","
@@ -2623,14 +2721,16 @@ static int transaction_decide_attempt(
                 "\"predicted_replay_drift\":%.17g,"
                 "\"fisher_weighted_drift\":%.17g,"
                 "\"decision\":\"%s\",\"reason\":\"%s\","
-                "\"rollback_digest\":\"%016llx\",\"groups\":[",
+                "\"rollback_digest\":\"%016llx\"",
+                options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD
+                    ? "zero.optimizer_attempt.v2"
+                    : "zero.optimizer_attempt.v1",
                 (unsigned long long)state->attempts,
                 (unsigned long long)proposed_update,
                 (unsigned long long)(accepted ? proposed_update
                                                : proposed_update - 1),
                 options->transaction_phase,
-                options->transaction_mode == TRANSACTION_GUARD ? "guard"
-                                                               : "observer",
+                transaction_mode_name(options->transaction_mode),
                 (unsigned long long)state->source_mask, source_ids,
                 replay_range_index,
                 learning_rate,
@@ -2644,6 +2744,46 @@ static int transaction_decide_attempt(
                 sqrt(total_displacement_norm), total_drift,
                 total_fisher_drift, accepted ? "accept" : "reject", reason,
                 (unsigned long long)rollback_digest);
+        if (options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+            int range_index;
+            int probe_index = 0;
+            fprintf(state->log,
+                    ",\"cumulative_probe_baseline\":%s,"
+                    "\"cumulative_probe_after\":%s,"
+                    "\"cumulative_relative_change\":%s,"
+                    "\"cumulative_ranges\":[",
+                    json_number(state->cumulative_baseline_mean,
+                                cumulative_baseline_buffer),
+                    json_number(cumulative_candidate_mean,
+                                cumulative_candidate_buffer),
+                    json_number(cumulative_relative_change,
+                                cumulative_relative_buffer));
+            for (range_index = 0; range_index < range_count; ++range_index) {
+                char baseline_buffer[32];
+                char candidate_buffer[32];
+                char range_relative_buffer[32];
+                double range_relative;
+                if (!ranges[range_index].teacher_eligible) continue;
+                range_relative =
+                    (state->cumulative_candidate_losses[probe_index] -
+                     state->cumulative_baseline_losses[probe_index]) /
+                    state->cumulative_baseline_losses[probe_index];
+                fprintf(state->log,
+                        "%s{\"replay_range\":%d,\"baseline\":%s,"
+                        "\"candidate\":%s,\"relative_change\":%s}",
+                        probe_index == 0 ? "" : ",", range_index,
+                        json_number(
+                            state->cumulative_baseline_losses[probe_index],
+                            baseline_buffer),
+                        json_number(
+                            state->cumulative_candidate_losses[probe_index],
+                            candidate_buffer),
+                        json_number(range_relative, range_relative_buffer));
+                ++probe_index;
+            }
+            fputc(']', state->log);
+        }
+        fputs(",\"groups\":[", state->log);
         for (parameter_index = 0; parameter_index < model->parameter_count;
              ++parameter_index) {
             const Parameter *parameter = model->parameters[parameter_index];
@@ -3003,11 +3143,11 @@ static void print_usage(const char *program)
     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
     printf("  --gradient-cosine N  report fixed faculty/replay probe cosine every N updates\n");
-    printf("  --transaction-mode M disabled, observer, or guard (default: disabled)\n");
-    printf("  --transaction-log F  append zero.optimizer_attempt.v1 JSONL\n");
+    printf("  --transaction-mode M disabled, observer, guard, or cumulative-guard (default: disabled)\n");
+    printf("  --transaction-log F  append zero.optimizer_attempt.v1/v2 JSONL\n");
     printf("  --transaction-phase P observer, acquisition, consolidation, recovery, or smoke\n");
     printf("  --transaction-probe N functional replay probe cadence, 1..5 (default: 5)\n");
-    printf("  --transaction-budget X maximum local relative replay loss increase\n");
+    printf("  --transaction-budget X maximum relative replay loss increase\n");
     printf("  --transaction-max-rejections N stop after consecutive rejects (default: 8)\n");
     printf("  --best FILE          save each new best-validation checkpoint\n");
     printf("  --patience N         early-stop after N stale validation reports\n");
@@ -3474,8 +3614,10 @@ int main(int argc, char **argv)
                 options.transaction_mode = TRANSACTION_OBSERVER;
             } else if (strcmp(mode, "guard") == 0) {
                 options.transaction_mode = TRANSACTION_GUARD;
+            } else if (strcmp(mode, "cumulative-guard") == 0) {
+                options.transaction_mode = TRANSACTION_CUMULATIVE_GUARD;
             } else {
-                fail("--transaction-mode must be disabled, observer, or guard");
+                fail("--transaction-mode must be disabled, observer, guard, or cumulative-guard");
             }
         } else if (strcmp(argv[i], "--transaction-log") == 0 &&
                    i + 1 < argc) {
@@ -3620,6 +3762,8 @@ int main(int argc, char **argv)
         options.gradient_cosine_every < 0 ||
         options.transaction_probe_every < 1 ||
         options.transaction_probe_every > 5 ||
+        (options.transaction_mode == TRANSACTION_CUMULATIVE_GUARD &&
+         options.transaction_probe_every != 1) ||
         options.transaction_guard_budget < 0.0f ||
         options.transaction_max_rejections < 1 ||
         (options.schedule_total > 0 &&
@@ -3739,8 +3883,7 @@ int main(int argc, char **argv)
         transaction.attempts = checkpoint_attempts;
         transaction.consecutive_rejections = checkpoint_rejections;
         printf("transaction mode=%s attempt=%llu committed=%llu probe-every=%ld budget=%.6g max-rejections=%ld reference=%s\n",
-               options.transaction_mode == TRANSACTION_GUARD ? "guard"
-                                                              : "observer",
+               transaction_mode_name(options.transaction_mode),
                (unsigned long long)transaction.attempts,
                (unsigned long long)update,
                options.transaction_probe_every,
@@ -3834,6 +3977,15 @@ int main(int argc, char **argv)
                cfg.context * options.batch,
                text_count > 0 ? "weighted-files-and-channel-records"
                               : "uniform-bytes");
+
+        if (options.transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+            transaction_initialize_cumulative_baseline(
+                &transaction, &teacher_models[options.teacher_count - 1],
+                &corpus, text_ranges, text_count, options.artifact_weight);
+            printf("cumulative replay baseline=%.9g ranges=%d\n",
+                   transaction.cumulative_baseline_mean,
+                   transaction.cumulative_replay_count);
+        }
 
         if (options.eval_only) {
             float validation_loss;
@@ -4007,7 +4159,8 @@ int main(int argc, char **argv)
                 1.0f / options.batch);
             if (options.transaction_mode != TRANSACTION_DISABLED) {
                 accepted = transaction_decide_attempt(
-                    &transaction, &model, &corpus, replay_range,
+                    &transaction, &model, &corpus, text_ranges, text_count,
+                    replay_range,
                     replay_range_index, &options, update + 1, current_lr,
                     gradient_norm, gradient_cosine, functional_probe,
                     probe_before);

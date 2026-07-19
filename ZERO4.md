@@ -677,3 +677,27 @@ remained sealed. Seeds 1 and 3 therefore remain closed. This rejects the v1
 local-budget hypothesis, not the transactional mechanics; the next proposal
 must account for cumulative direct functional drift. The executable work and
 acceptance criteria are tracked in `ZERO4-BACKLOG.md`.
+
+## 19. Preregistered experiment — ZERO.4-Q2.4 cumulative replay guard
+
+Q2.4 retains Q2.3's student, immutable teachers, corpora, optimizer,
+transactional rollback, attempt budgets, public gates, and sealed promotion
+policy. It changes one authority rule: the rotating one-step loss delta no
+longer decides whether an AdamW candidate commits.
+
+Before every commit, the candidate and immutable ZERO.3 initialization are
+evaluated on the same fixed validation window from each of the six replay
+sources. The authoritative quantity is the relative change in the arithmetic
+mean of those six losses. Non-finite candidates and candidates above 1.5% are
+rolled back atomically. The frozen threshold leaves a 0.5 percentage-point
+reserve below the unchanged 2% public balanced-replay gate; no outcome from
+Q2.4 may tune it. The rotating local delta, gradient cosine, first-order drift,
+and tensor decomposition remain diagnostics only.
+
+The candidate composite, immutable baseline, per-source values, decision, and
+rollback digest are recorded in `zero.optimizer_attempt.v2`. Checkpoint v4
+records cumulative-guard mode separately from the Q2.3 local guard and refuses
+cross-mode resume. Eight consecutive rejections end the active phase. Seed 2
+is the sole diagnostic run; seeds 1 and 3 and the promotion split stay sealed
+unless the frozen prospective gates open them. The full preregistration is in
+`benchmarks/zero4-q24-v1/contract.json`.
