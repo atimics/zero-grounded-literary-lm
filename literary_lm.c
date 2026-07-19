@@ -26,7 +26,7 @@
 
 #define DEFAULT_VOCAB_SIZE 256
 #define MAX_VOCAB_SIZE 2048
-#define CHECKPOINT_VERSION 3U
+#define CHECKPOINT_VERSION 4U
 #define RMS_EPSILON 1.0e-5f
 #define BPE_BASE_TOKENS 128
 #define BPE_MAX_MERGES (MAX_VOCAB_SIZE - BPE_BASE_TOKENS)
@@ -168,6 +168,28 @@ typedef struct {
     size_t validation_record_count;
 } CorpusRange;
 
+enum {
+    TRANSACTION_DISABLED = 0,
+    TRANSACTION_OBSERVER = 1,
+    TRANSACTION_GUARD = 2
+};
+
+typedef struct {
+    size_t parameter_total;
+    float *learned_before;
+    float *batch_gradient;
+    float *replay_gradient;
+    float *start_weights;
+    double *group_drift;
+    double *group_displacement_norm;
+    double *group_fisher_drift;
+    unsigned char *probe_mask;
+    FILE *log;
+    uint64_t attempts;
+    uint64_t source_mask;
+    uint32_t consecutive_rejections;
+} TransactionState;
+
 typedef struct {
     long steps;
     int batch;
@@ -205,6 +227,12 @@ typedef struct {
     int teacher_count;
     const char *zero1_teacher_path;
     float zero1_weight;
+    int transaction_mode;
+    const char *transaction_log_path;
+    const char *transaction_phase;
+    long transaction_probe_every;
+    float transaction_guard_budget;
+    long transaction_max_rejections;
 } Options;
 
 static volatile sig_atomic_t interrupted = 0;
@@ -1596,6 +1624,12 @@ typedef struct {
     uint64_t rng_state;
 } CheckpointHeader;
 
+typedef struct {
+    uint64_t attempts;
+    uint32_t consecutive_rejections;
+    uint32_t transaction_mode;
+} CheckpointOrchestration;
+
 static const char CHECKPOINT_MAGIC[8] = {'Z', 'E', 'R', 'O', 'L', 'M', '2', '\0'};
 static const char TEACHER_MAGIC[8] = {'Z', 'E', 'R', 'O', 'T', 'C', 'H', '1'};
 
@@ -1617,6 +1651,7 @@ static CheckpointHeader checkpoint_read_header(FILE *file, const char *path)
     }
     if (memcmp(header.magic, CHECKPOINT_MAGIC, sizeof(header.magic)) != 0 ||
         (header.version != 1U && header.version != 2U &&
+         header.version != 3U &&
          header.version != CHECKPOINT_VERSION) ||
         header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
         fail("unsupported or corrupt checkpoint");
@@ -1641,6 +1676,7 @@ static CheckpointHeader artifact_read_header(FILE *file, const char *path,
     } else if (memcmp(header.magic, CHECKPOINT_MAGIC,
                       sizeof(header.magic)) != 0 ||
                (header.version != 1U && header.version != 2U &&
+                header.version != 3U &&
                 header.version != CHECKPOINT_VERSION) ||
                header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
         fail("unsupported or corrupt model artifact");
@@ -1698,9 +1734,12 @@ static Config artifact_peek(const char *path)
 }
 
 static void checkpoint_save(const char *path, const Model *model, uint64_t step,
-                            const Rng *rng)
+                            const Rng *rng, uint64_t attempts,
+                            uint32_t consecutive_rejections,
+                            uint32_t transaction_mode)
 {
     CheckpointHeader header;
+    CheckpointOrchestration orchestration;
     char *temporary;
     FILE *file;
     int parameter_index;
@@ -1726,8 +1765,12 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
     header.reserved = model->cfg.rotary ? 1U : 0U;
     header.step = step;
     header.rng_state = rng->state;
+    orchestration.attempts = attempts;
+    orchestration.consecutive_rejections = consecutive_rejections;
+    orchestration.transaction_mode = transaction_mode;
 
-    if (!write_items(file, &header, sizeof(header), 1)) {
+    if (!write_items(file, &header, sizeof(header), 1) ||
+        !write_items(file, &orchestration, sizeof(orchestration), 1)) {
         fclose(file);
         remove(temporary);
         free(temporary);
@@ -1760,9 +1803,13 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
     free(temporary);
 }
 
-static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng)
+static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng,
+                                uint64_t *attempts,
+                                uint32_t *consecutive_rejections,
+                                uint32_t *transaction_mode)
 {
     CheckpointHeader header;
+    CheckpointOrchestration orchestration = {0, 0, 0};
     FILE *file = fopen(path, "rb");
     int parameter_index;
     if (file == NULL) {
@@ -1779,6 +1826,11 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng)
          model->cfg.rotary) ||
         (int)header.parameter_count != model->parameter_count) {
         fail("checkpoint architecture does not match model");
+    }
+    if (header.version >= 4U &&
+        !read_items(file, &orchestration, sizeof(orchestration), 1)) {
+        fclose(file);
+        fail("checkpoint orchestration state is corrupt or incomplete");
     }
     for (parameter_index = 0; parameter_index < model->parameter_count;
          ++parameter_index) {
@@ -1802,6 +1854,9 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng)
         fail_path("close", path);
     }
     rng->state = header.rng_state;
+    *attempts = header.version >= 4U ? orchestration.attempts : header.step;
+    *consecutive_rejections = orchestration.consecutive_rejections;
+    *transaction_mode = orchestration.transaction_mode;
     return header.step;
 }
 
@@ -1825,6 +1880,13 @@ static uint64_t artifact_load_weights(const char *path, Model *model)
         (int)header.parameter_count != model->parameter_count) {
         fclose(file);
         fail("model artifact architecture does not match model");
+    }
+    if (!weight_only && header.version >= 4U) {
+        CheckpointOrchestration orchestration;
+        if (!read_items(file, &orchestration, sizeof(orchestration), 1)) {
+            fclose(file);
+            fail("model artifact orchestration state is corrupt");
+        }
     }
     for (parameter_index = 0; parameter_index < model->parameter_count;
          ++parameter_index) {
@@ -2175,6 +2237,431 @@ static float faculty_replay_gradient_cosine(
     return (float)(dot / sqrt(faculty_norm * replay_norm));
 }
 
+static uint64_t hash_bytes(uint64_t hash, const void *data, size_t size)
+{
+    const unsigned char *bytes = data;
+    size_t i;
+    for (i = 0; i < size; ++i) {
+        hash ^= bytes[i];
+        hash *= UINT64_C(1099511628211);
+    }
+    return hash;
+}
+
+static const char *json_number(double value, char buffer[32])
+{
+    if (!isfinite(value)) return "null";
+    snprintf(buffer, 32, "%.17g", value);
+    return buffer;
+}
+
+static uint64_t model_learned_state_digest(const Model *model)
+{
+    uint64_t hash = UINT64_C(1469598103934665603);
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        const Parameter *parameter = model->parameters[parameter_index];
+        size_t bytes = parameter->count * sizeof(float);
+        hash = hash_bytes(hash, parameter->w, bytes);
+        hash = hash_bytes(hash, parameter->m, bytes);
+        hash = hash_bytes(hash, parameter->v, bytes);
+    }
+    return hash;
+}
+
+static void transaction_copy_learned_from_model(TransactionState *state,
+                                                const Model *model)
+{
+    size_t offset = 0;
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        const Parameter *parameter = model->parameters[parameter_index];
+        size_t bytes = parameter->count * sizeof(float);
+        memcpy(state->learned_before + offset, parameter->w, bytes);
+        offset += parameter->count;
+        memcpy(state->learned_before + offset, parameter->m, bytes);
+        offset += parameter->count;
+        memcpy(state->learned_before + offset, parameter->v, bytes);
+        offset += parameter->count;
+    }
+}
+
+static void transaction_restore_learned(Model *model,
+                                        const TransactionState *state)
+{
+    size_t offset = 0;
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        size_t bytes = parameter->count * sizeof(float);
+        memcpy(parameter->w, state->learned_before + offset, bytes);
+        offset += parameter->count;
+        memcpy(parameter->m, state->learned_before + offset, bytes);
+        offset += parameter->count;
+        memcpy(parameter->v, state->learned_before + offset, bytes);
+        offset += parameter->count;
+    }
+}
+
+static void transaction_copy_gradient(float *destination,
+                                      const Model *model)
+{
+    size_t offset = 0;
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        const Parameter *parameter = model->parameters[parameter_index];
+        memcpy(destination + offset, parameter->g,
+               parameter->count * sizeof(float));
+        offset += parameter->count;
+    }
+}
+
+static void transaction_restore_gradient(Model *model, const float *source)
+{
+    size_t offset = 0;
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        memcpy(parameter->g, source + offset,
+               parameter->count * sizeof(float));
+        offset += parameter->count;
+    }
+}
+
+static void transaction_copy_reference_weights(TransactionState *state,
+                                               const Model *reference)
+{
+    size_t offset = 0;
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < reference->parameter_count;
+         ++parameter_index) {
+        const Parameter *parameter = reference->parameters[parameter_index];
+        memcpy(state->start_weights + offset, parameter->w,
+               parameter->count * sizeof(float));
+        offset += parameter->count;
+    }
+}
+
+static void transaction_state_create(TransactionState *state,
+                                     const Model *model,
+                                     const Model *reference,
+                                     const Options *options)
+{
+    size_t total = model_parameter_total(model);
+    memset(state, 0, sizeof(*state));
+    state->parameter_total = total;
+    state->learned_before = zero_alloc(3 * total, sizeof(float));
+    state->batch_gradient = zero_alloc(total, sizeof(float));
+    state->replay_gradient = zero_alloc(total, sizeof(float));
+    state->start_weights = zero_alloc(total, sizeof(float));
+    state->group_drift = zero_alloc((size_t)model->parameter_count,
+                                    sizeof(double));
+    state->group_displacement_norm =
+        zero_alloc((size_t)model->parameter_count, sizeof(double));
+    state->group_fisher_drift = zero_alloc((size_t)model->parameter_count,
+                                           sizeof(double));
+    state->probe_mask = zero_alloc((size_t)model->cfg.context, 1);
+    transaction_copy_reference_weights(state, reference);
+    if (options->transaction_log_path != NULL) {
+        state->log = fopen(options->transaction_log_path, "a");
+        if (state->log == NULL) {
+            fail_path("open transaction log", options->transaction_log_path);
+        }
+    }
+}
+
+static void transaction_state_destroy(TransactionState *state)
+{
+    if (state->log != NULL && fclose(state->log) != 0) {
+        fail("could not close transaction log");
+    }
+    free(state->learned_before);
+    free(state->batch_gradient);
+    free(state->replay_gradient);
+    free(state->start_weights);
+    free(state->group_drift);
+    free(state->group_displacement_norm);
+    free(state->group_fisher_drift);
+    free(state->probe_mask);
+    memset(state, 0, sizeof(*state));
+}
+
+static const CorpusRange *transaction_select_replay_range(
+    const CorpusRange *ranges, int range_count, uint64_t attempt,
+    int *replay_range_index)
+{
+    int eligible_count = 0;
+    int chosen;
+    int range_index;
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        if (ranges[range_index].teacher_eligible) ++eligible_count;
+    }
+    if (eligible_count == 0) return NULL;
+    chosen = (int)((attempt - 1) % (uint64_t)eligible_count);
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        if (ranges[range_index].teacher_eligible && chosen-- == 0) {
+            *replay_range_index = range_index;
+            return &ranges[range_index];
+        }
+    }
+    return NULL;
+}
+
+static const CorpusRange *transaction_select_faculty_range(
+    const CorpusRange *ranges, int range_count)
+{
+    int range_index;
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        if (ranges[range_index].channel &&
+            !ranges[range_index].teacher_eligible) {
+            return &ranges[range_index];
+        }
+    }
+    return NULL;
+}
+
+static float transaction_probe_loss(Model *model, const Corpus *corpus,
+                                    const CorpusRange *range,
+                                    unsigned char *mask, int artifact_weight)
+{
+    size_t start;
+    if (range->channel) {
+        start = range->record_starts[range->validation_record_index];
+        if (channel_loss_mask(corpus->data + start, corpus->data + start + 1,
+                              mask, model->cfg.context,
+                              artifact_weight) == 0) {
+            fail("transaction replay probe has no target");
+        }
+        return model_forward_masked(model, corpus->data + start,
+                                    corpus->data + start + 1, 0.0f, NULL,
+                                    mask);
+    }
+    start = range->validation_start;
+    return model_forward(model, corpus->data + start,
+                         corpus->data + start + 1, 0.0f, NULL);
+}
+
+static float transaction_prepare_attempt(
+    TransactionState *state, Model *model, const Corpus *corpus,
+    const CorpusRange *ranges, int range_count, int artifact_weight,
+    const CorpusRange **replay_range, int *replay_range_index,
+    int functional_probe, float *probe_before)
+{
+    const CorpusRange *faculty = transaction_select_faculty_range(
+        ranges, range_count);
+    size_t offset = 0;
+    double dot = 0.0;
+    double faculty_norm = 0.0;
+    double replay_norm = 0.0;
+    int parameter_index;
+    *replay_range = transaction_select_replay_range(
+        ranges, range_count, state->attempts, replay_range_index);
+    if (faculty == NULL || *replay_range == NULL) {
+        fail("transaction mode requires a hard faculty channel and replay data");
+    }
+    transaction_copy_gradient(state->batch_gradient, model);
+    if (functional_probe) {
+        *probe_before = transaction_probe_loss(
+            model, corpus, *replay_range, state->probe_mask, artifact_weight);
+    } else {
+        *probe_before = NAN;
+    }
+    probe_range_gradient(model, corpus, *replay_range, state->probe_mask,
+                         artifact_weight);
+    transaction_copy_gradient(state->replay_gradient, model);
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double value = parameter->g[element];
+            replay_norm += value * value;
+        }
+    }
+    probe_range_gradient(model, corpus, faculty, state->probe_mask,
+                         artifact_weight);
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double faculty_value = parameter->g[element];
+            double replay_value = state->replay_gradient[offset + element];
+            dot += faculty_value * replay_value;
+            faculty_norm += faculty_value * faculty_value;
+        }
+        offset += parameter->count;
+    }
+    transaction_restore_gradient(model, state->batch_gradient);
+    transaction_copy_learned_from_model(state, model);
+    if (faculty_norm == 0.0 || replay_norm == 0.0) return NAN;
+    return (float)(dot / sqrt(faculty_norm * replay_norm));
+}
+
+static int transaction_decide_attempt(
+    TransactionState *state, Model *model, const Corpus *corpus,
+    const CorpusRange *replay_range, int replay_range_index,
+    const Options *options, uint64_t proposed_update, float learning_rate,
+    float gradient_norm, float gradient_cosine, int functional_probe,
+    float probe_before)
+{
+    size_t gradient_offset = 0;
+    size_t learned_offset = 0;
+    double total_drift = 0.0;
+    double total_displacement_norm = 0.0;
+    double total_fisher_drift = 0.0;
+    float probe_after = NAN;
+    double relative_change = NAN;
+    uint64_t before_digest;
+    uint64_t rollback_digest = 0;
+    int accepted = 1;
+    const char *reason = "observer-only";
+    char probe_before_buffer[32];
+    char probe_after_buffer[32];
+    char relative_change_buffer[32];
+    char gradient_cosine_buffer[32];
+    char source_ids[256];
+    size_t source_ids_length = 0;
+    int parameter_index;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        double group_drift = 0.0;
+        double group_norm = 0.0;
+        double group_fisher = 0.0;
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double displacement =
+                parameter->w[element] - state->learned_before[learned_offset + element];
+            double replay_gradient =
+                state->replay_gradient[gradient_offset + element];
+            double from_start =
+                parameter->w[element] - state->start_weights[gradient_offset + element];
+            group_drift += replay_gradient * displacement;
+            group_norm += displacement * displacement;
+            group_fisher += replay_gradient * replay_gradient *
+                            from_start * from_start;
+        }
+        state->group_drift[parameter_index] = group_drift;
+        state->group_displacement_norm[parameter_index] = group_norm;
+        state->group_fisher_drift[parameter_index] = group_fisher;
+        total_drift += group_drift;
+        total_displacement_norm += group_norm;
+        total_fisher_drift += group_fisher;
+        gradient_offset += parameter->count;
+        learned_offset += 3 * parameter->count;
+    }
+    before_digest = UINT64_C(1469598103934665603);
+    before_digest = hash_bytes(before_digest, state->learned_before,
+                               3 * state->parameter_total * sizeof(float));
+    if (functional_probe) {
+        probe_after = transaction_probe_loss(
+            model, corpus, replay_range, state->probe_mask,
+            options->artifact_weight);
+        relative_change = probe_before > 0.0f
+                              ? ((double)probe_after - probe_before) /
+                                    probe_before
+                              : 0.0;
+    }
+    if (options->transaction_mode == TRANSACTION_GUARD) {
+        if (!functional_probe) {
+            reason = "functional-probe-not-due";
+        } else if (!isfinite(probe_after) ||
+                   relative_change > options->transaction_guard_budget) {
+            accepted = 0;
+            reason = !isfinite(probe_after) ? "non-finite-replay-probe"
+                                            : "replay-budget-exceeded";
+        } else {
+            reason = "within-replay-budget";
+        }
+    }
+    if (!accepted) {
+        transaction_restore_learned(model, state);
+        rollback_digest = model_learned_state_digest(model);
+        if (rollback_digest != before_digest) {
+            fail("transaction rollback digest mismatch");
+        }
+        ++state->consecutive_rejections;
+    } else {
+        state->consecutive_rejections = 0;
+    }
+    source_ids[source_ids_length++] = '[';
+    for (parameter_index = 0; parameter_index < 64; ++parameter_index) {
+        if ((state->source_mask & (UINT64_C(1) << parameter_index)) != 0) {
+            int written = snprintf(
+                source_ids + source_ids_length,
+                sizeof(source_ids) - source_ids_length, "%s%d",
+                source_ids_length == 1 ? "" : ",", parameter_index);
+            if (written < 0 ||
+                (size_t)written >= sizeof(source_ids) - source_ids_length) {
+                fail("transaction source id buffer overflow");
+            }
+            source_ids_length += (size_t)written;
+        }
+    }
+    source_ids[source_ids_length++] = ']';
+    source_ids[source_ids_length] = '\0';
+    if (state->log != NULL) {
+        fprintf(state->log,
+                "{\"schema\":\"zero.optimizer_attempt.v1\","
+                "\"attempt\":%llu,\"proposed_committed_update\":%llu,"
+                "\"committed_update\":%llu,\"phase\":\"%s\","
+                "\"mode\":\"%s\","
+                "\"source_mask\":\"%016llx\",\"source_ids\":%s,"
+                "\"replay_range\":%d,"
+                "\"learning_rate\":%.9g,"
+                "\"guard_budget\":%.9g,\"functional_probe\":%s,"
+                "\"probe_before\":%s,\"probe_after\":%s,"
+                "\"relative_probe_change\":%s,"
+                "\"faculty_replay_gradient_cosine\":%s,"
+                "\"gradient_norm\":%.9g,\"displacement_norm\":%.9g,"
+                "\"predicted_replay_drift\":%.17g,"
+                "\"fisher_weighted_drift\":%.17g,"
+                "\"decision\":\"%s\",\"reason\":\"%s\","
+                "\"rollback_digest\":\"%016llx\",\"groups\":[",
+                (unsigned long long)state->attempts,
+                (unsigned long long)proposed_update,
+                (unsigned long long)(accepted ? proposed_update
+                                               : proposed_update - 1),
+                options->transaction_phase,
+                options->transaction_mode == TRANSACTION_GUARD ? "guard"
+                                                               : "observer",
+                (unsigned long long)state->source_mask, source_ids,
+                replay_range_index,
+                learning_rate,
+                options->transaction_guard_budget,
+                functional_probe ? "true" : "false",
+                json_number(probe_before, probe_before_buffer),
+                json_number(probe_after, probe_after_buffer),
+                json_number(relative_change, relative_change_buffer),
+                json_number(gradient_cosine, gradient_cosine_buffer),
+                gradient_norm,
+                sqrt(total_displacement_norm), total_drift,
+                total_fisher_drift, accepted ? "accept" : "reject", reason,
+                (unsigned long long)rollback_digest);
+        for (parameter_index = 0; parameter_index < model->parameter_count;
+             ++parameter_index) {
+            const Parameter *parameter = model->parameters[parameter_index];
+            fprintf(state->log,
+                    "%s{\"id\":\"%s\",\"replay_drift\":%.17g,"
+                    "\"displacement_norm\":%.17g,"
+                    "\"fisher_weighted_drift\":%.17g}",
+                    parameter_index == 0 ? "" : ",", parameter->name,
+                    state->group_drift[parameter_index],
+                    sqrt(state->group_displacement_norm[parameter_index]),
+                    state->group_fisher_drift[parameter_index]);
+        }
+        fputs("]}\n", state->log);
+        fflush(state->log);
+    }
+    return accepted;
+}
+
 typedef struct {
     int token;
     float weight;
@@ -2516,6 +3003,12 @@ static void print_usage(const char *program)
     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
     printf("  --gradient-cosine N  report fixed faculty/replay probe cosine every N updates\n");
+    printf("  --transaction-mode M disabled, observer, or guard (default: disabled)\n");
+    printf("  --transaction-log F  append zero.optimizer_attempt.v1 JSONL\n");
+    printf("  --transaction-phase P observer, acquisition, consolidation, recovery, or smoke\n");
+    printf("  --transaction-probe N functional replay probe cadence, 1..5 (default: 5)\n");
+    printf("  --transaction-budget X maximum local relative replay loss increase\n");
+    printf("  --transaction-max-rejections N stop after consecutive rejects (default: 8)\n");
     printf("  --best FILE          save each new best-validation checkpoint\n");
     printf("  --patience N         early-stop after N stale validation reports\n");
     printf("  --seed N             deterministic seed (default: 0)\n\n");
@@ -2746,6 +3239,45 @@ static int run_self_test(void)
             ++failures;
         }
     }
+    {
+        Options transaction_options;
+        TransactionState transaction_state;
+        uint64_t before_digest;
+        uint64_t candidate_digest;
+        uint64_t restored_digest;
+        uint64_t rng_before = rng.state;
+        int index;
+        memset(&transaction_options, 0, sizeof(transaction_options));
+        transaction_state_create(&transaction_state, &model, &model,
+                                 &transaction_options);
+        model_zero_grad(&model);
+        for (index = 0; index < model.parameter_count; ++index) {
+            Parameter *parameter = model.parameters[index];
+            size_t element;
+            for (element = 0; element < parameter->count; ++element) {
+                parameter->g[element] =
+                    0.001f * (float)(1 + (element + (size_t)index) % 7);
+            }
+        }
+        transaction_copy_learned_from_model(&transaction_state, &model);
+        before_digest = model_learned_state_digest(&model);
+        (void)rng_next(&rng);
+        (void)optimizer_update(&model, 1, 0.001f, 0.01f, 1.0f, 1.0f);
+        candidate_digest = model_learned_state_digest(&model);
+        transaction_restore_learned(&model, &transaction_state);
+        restored_digest = model_learned_state_digest(&model);
+        ++checks;
+        if (candidate_digest == before_digest ||
+            restored_digest != before_digest || rng.state == rng_before) {
+            fprintf(stderr,
+                    "transaction rollback self-test failed: before=%016llx candidate=%016llx restored=%016llx\n",
+                    (unsigned long long)before_digest,
+                    (unsigned long long)candidate_digest,
+                    (unsigned long long)restored_digest);
+            ++failures;
+        }
+        transaction_state_destroy(&transaction_state);
+    }
     model_destroy(&model);
     if (failures == 0) {
         printf("self-test: %d finite-difference gradient checks passed\n", checks);
@@ -2788,6 +3320,10 @@ int main(int argc, char **argv)
     float best_validation = INFINITY;
     long stale_reports = 0;
     int stop_training = 0;
+    uint64_t checkpoint_attempts = 0;
+    uint32_t checkpoint_rejections = 0;
+    uint32_t checkpoint_transaction_mode = 0;
+    TransactionState transaction = {0};
 
     memset(&options, 0, sizeof(options));
     options.steps = 1000;
@@ -2811,6 +3347,10 @@ int main(int argc, char **argv)
     options.foundation_weight = 2.0f;
     options.artifact_weight = 1;
     options.zero1_weight = 0.25f;
+    options.transaction_probe_every = 5;
+    options.transaction_phase = "observer";
+    options.transaction_guard_budget = 0.0f;
+    options.transaction_max_rejections = 8;
     text_paths = zero_alloc((size_t)(argc > 1 ? argc : 1), sizeof(*text_paths));
     text_ranges = zero_alloc((size_t)(argc > 1 ? argc : 1), sizeof(*text_ranges));
     text_channel = zero_alloc((size_t)(argc > 1 ? argc : 1),
@@ -2925,6 +3465,44 @@ int main(int argc, char **argv)
                    i + 1 < argc) {
             options.gradient_cosine_every =
                 parse_long(argv[++i], "--gradient-cosine");
+        } else if (strcmp(argv[i], "--transaction-mode") == 0 &&
+                   i + 1 < argc) {
+            const char *mode = argv[++i];
+            if (strcmp(mode, "disabled") == 0) {
+                options.transaction_mode = TRANSACTION_DISABLED;
+            } else if (strcmp(mode, "observer") == 0) {
+                options.transaction_mode = TRANSACTION_OBSERVER;
+            } else if (strcmp(mode, "guard") == 0) {
+                options.transaction_mode = TRANSACTION_GUARD;
+            } else {
+                fail("--transaction-mode must be disabled, observer, or guard");
+            }
+        } else if (strcmp(argv[i], "--transaction-log") == 0 &&
+                   i + 1 < argc) {
+            options.transaction_log_path = argv[++i];
+        } else if (strcmp(argv[i], "--transaction-phase") == 0 &&
+                   i + 1 < argc) {
+            const char *phase = argv[++i];
+            if (strcmp(phase, "observer") != 0 &&
+                strcmp(phase, "acquisition") != 0 &&
+                strcmp(phase, "consolidation") != 0 &&
+                strcmp(phase, "recovery") != 0 &&
+                strcmp(phase, "smoke") != 0) {
+                fail("unsupported --transaction-phase");
+            }
+            options.transaction_phase = phase;
+        } else if (strcmp(argv[i], "--transaction-probe") == 0 &&
+                   i + 1 < argc) {
+            options.transaction_probe_every =
+                parse_long(argv[++i], "--transaction-probe");
+        } else if (strcmp(argv[i], "--transaction-budget") == 0 &&
+                   i + 1 < argc) {
+            options.transaction_guard_budget =
+                parse_float(argv[++i], "--transaction-budget");
+        } else if (strcmp(argv[i], "--transaction-max-rejections") == 0 &&
+                   i + 1 < argc) {
+            options.transaction_max_rejections =
+                parse_long(argv[++i], "--transaction-max-rejections");
         } else if (strcmp(argv[i], "--best") == 0 && i + 1 < argc) {
             options.best_path = argv[++i];
         } else if (strcmp(argv[i], "--patience") == 0 && i + 1 < argc) {
@@ -3040,9 +3618,18 @@ int main(int argc, char **argv)
         options.artifact_weight < 1 || options.artifact_weight > 32 ||
         options.zero1_weight < 0.0f || options.zero1_weight > 1.0f ||
         options.gradient_cosine_every < 0 ||
+        options.transaction_probe_every < 1 ||
+        options.transaction_probe_every > 5 ||
+        options.transaction_guard_budget < 0.0f ||
+        options.transaction_max_rejections < 1 ||
         (options.schedule_total > 0 &&
          options.schedule_offset + options.steps > options.schedule_total)) {
         fail("invalid training or generation option");
+    }
+    if (options.transaction_mode != TRANSACTION_DISABLED &&
+        (options.teacher_count == 0 || text_count == 0 ||
+         options.transaction_log_path == NULL)) {
+        fail("transaction mode requires data, a final immutable reference teacher, and --transaction-log");
     }
     for (i = 0; i < text_count; ++i) {
         int teacher;
@@ -3107,9 +3694,23 @@ int main(int argc, char **argv)
     rng_seed(&rng, (uint64_t)options.seed);
     model_create(&model, cfg, &rng);
     if (options.resume_path != NULL) {
-        update = checkpoint_load(options.resume_path, &model, &rng);
-        printf("resumed %s at update %llu\n", options.resume_path,
-               (unsigned long long)update);
+        update = checkpoint_load(options.resume_path, &model, &rng,
+                                 &checkpoint_attempts,
+                                 &checkpoint_rejections,
+                                 &checkpoint_transaction_mode);
+        if (!options.eval_only && checkpoint_transaction_mode != 0U &&
+            checkpoint_transaction_mode !=
+                (uint32_t)options.transaction_mode) {
+            fail("resumed transaction checkpoint requires the same transaction mode");
+        }
+        if (checkpoint_transaction_mode == 0U &&
+            options.transaction_mode != TRANSACTION_DISABLED) {
+            checkpoint_attempts = update;
+            checkpoint_rejections = 0;
+        }
+        printf("resumed %s at update %llu attempt %llu\n",
+               options.resume_path, (unsigned long long)update,
+               (unsigned long long)checkpoint_attempts);
     } else if (options.init_path != NULL) {
         uint64_t source_update = artifact_load_weights(options.init_path,
                                                        &model);
@@ -3130,6 +3731,22 @@ int main(int argc, char **argv)
         zero1_teacher_load(&zero1_teacher, options.zero1_teacher_path);
         printf("ZERO.1 foundation distillation weight=%.3f\n",
                options.zero1_weight);
+    }
+    if (options.transaction_mode != TRANSACTION_DISABLED) {
+        transaction_state_create(
+            &transaction, &model,
+            &teacher_models[options.teacher_count - 1], &options);
+        transaction.attempts = checkpoint_attempts;
+        transaction.consecutive_rejections = checkpoint_rejections;
+        printf("transaction mode=%s attempt=%llu committed=%llu probe-every=%ld budget=%.6g max-rejections=%ld reference=%s\n",
+               options.transaction_mode == TRANSACTION_GUARD ? "guard"
+                                                              : "observer",
+               (unsigned long long)transaction.attempts,
+               (unsigned long long)update,
+               options.transaction_probe_every,
+               options.transaction_guard_budget,
+               options.transaction_max_rejections,
+               options.teacher_paths[options.teacher_count - 1]);
     }
 
 #ifdef USE_ACCELERATE
@@ -3250,7 +3867,14 @@ int main(int argc, char **argv)
             int batch;
             float gradient_norm;
             float current_lr;
+            int accepted = 1;
+            int functional_probe = 0;
+            int replay_range_index = -1;
+            float gradient_cosine = NAN;
+            float probe_before = NAN;
+            const CorpusRange *replay_range = NULL;
             model_zero_grad(&model);
+            transaction.source_mask = 0;
             for (batch = 0; batch < options.batch; ++batch) {
                 size_t choices;
                 size_t start;
@@ -3270,6 +3894,12 @@ int main(int argc, char **argv)
                     int range_index = choose_weighted_range(
                         text_ranges, text_count, &rng);
                     const CorpusRange *range = &text_ranges[range_index];
+                    if (options.transaction_mode != TRANSACTION_DISABLED) {
+                        if (range_index >= 64) {
+                            fail("transaction source mask supports at most 64 data ranges");
+                        }
+                        transaction.source_mask |= UINT64_C(1) << range_index;
+                    }
                     active_range = range;
                     foundation_sample = range->foundation;
                     teacher_sample = range->teacher_eligible;
@@ -3340,8 +3970,18 @@ int main(int argc, char **argv)
                 }
                 ++interval_sequences;
             }
-            ++update;
             ++completed_steps;
+            if (options.transaction_mode != TRANSACTION_DISABLED) {
+                ++transaction.attempts;
+                functional_probe =
+                    (transaction.attempts - 1) %
+                            (uint64_t)options.transaction_probe_every ==
+                        0;
+                gradient_cosine = transaction_prepare_attempt(
+                    &transaction, &model, &corpus, text_ranges, text_count,
+                    options.artifact_weight, &replay_range,
+                    &replay_range_index, functional_probe, &probe_before);
+            }
             current_lr = options.learning_rate;
             {
                 long schedule_step = options.schedule_offset + completed_steps;
@@ -3362,11 +4002,33 @@ int main(int argc, char **argv)
             }
             }
             gradient_norm = optimizer_update(
-                &model, update, current_lr, options.weight_decay, options.clip,
+                &model, update + 1, current_lr, options.weight_decay,
+                options.clip,
                 1.0f / options.batch);
+            if (options.transaction_mode != TRANSACTION_DISABLED) {
+                accepted = transaction_decide_attempt(
+                    &transaction, &model, &corpus, replay_range,
+                    replay_range_index, &options, update + 1, current_lr,
+                    gradient_norm, gradient_cosine, functional_probe,
+                    probe_before);
+                if (!accepted &&
+                    transaction.consecutive_rejections >=
+                        (uint32_t)options.transaction_max_rejections) {
+                    printf("transaction fallback: stopping after %u consecutive rejections\n",
+                           transaction.consecutive_rejections);
+                    stop_training = 1;
+                }
+                printf("attempt %8llu candidate-update %8llu %s replay-range %d cosine %.6f\n",
+                       (unsigned long long)transaction.attempts,
+                       (unsigned long long)(update + 1),
+                       accepted ? "accepted" : "rejected",
+                       replay_range_index, gradient_cosine);
+            }
+            if (accepted) ++update;
             interval_tokens += (uint64_t)cfg.context * options.batch;
 
-            if (options.gradient_cosine_every > 0 && text_count > 0 &&
+            if (options.transaction_mode == TRANSACTION_DISABLED &&
+                options.gradient_cosine_every > 0 && text_count > 0 &&
                 (options.schedule_offset + completed_steps) %
                         options.gradient_cosine_every ==
                     0) {
@@ -3384,8 +4046,8 @@ int main(int argc, char **argv)
                 fflush(stdout);
             }
 
-            if (update % (uint64_t)options.report_every == 0 ||
-                completed_steps == options.steps) {
+            if ((accepted && update % (uint64_t)options.report_every == 0) ||
+                completed_steps == options.steps || stop_training) {
                 double now = wall_seconds();
                 double elapsed = now - interval_start;
                 float validation_loss;
@@ -3417,7 +4079,16 @@ int main(int argc, char **argv)
                     best_validation = validation_loss;
                     stale_reports = 0;
                     if (options.best_path != NULL) {
-                        checkpoint_save(options.best_path, &model, update, &rng);
+                        checkpoint_save(
+                            options.best_path, &model, update, &rng,
+                            options.transaction_mode != TRANSACTION_DISABLED
+                                ? transaction.attempts
+                                : checkpoint_attempts +
+                                      (uint64_t)completed_steps,
+                            options.transaction_mode != TRANSACTION_DISABLED
+                                ? transaction.consecutive_rejections
+                                : 0,
+                            (uint32_t)options.transaction_mode);
                         printf("saved best %s (val %.4f)\n", options.best_path,
                                best_validation);
                     }
@@ -3432,8 +4103,16 @@ int main(int argc, char **argv)
                 }
             }
             if (options.save_path != NULL && options.save_every > 0 &&
-                update % (uint64_t)options.save_every == 0) {
-                checkpoint_save(options.save_path, &model, update, &rng);
+                accepted && update % (uint64_t)options.save_every == 0) {
+                checkpoint_save(
+                    options.save_path, &model, update, &rng,
+                    options.transaction_mode != TRANSACTION_DISABLED
+                        ? transaction.attempts
+                        : checkpoint_attempts + (uint64_t)completed_steps,
+                    options.transaction_mode != TRANSACTION_DISABLED
+                        ? transaction.consecutive_rejections
+                        : 0,
+                    (uint32_t)options.transaction_mode);
                 printf("saved %s\n", options.save_path);
             }
             }
@@ -3446,7 +4125,15 @@ int main(int argc, char **argv)
             printf("interrupted after update %llu\n", (unsigned long long)update);
         }
         if (options.save_path != NULL && completed_steps > 0) {
-            checkpoint_save(options.save_path, &model, update, &rng);
+            checkpoint_save(
+                options.save_path, &model, update, &rng,
+                options.transaction_mode != TRANSACTION_DISABLED
+                    ? transaction.attempts
+                    : checkpoint_attempts + (uint64_t)completed_steps,
+                options.transaction_mode != TRANSACTION_DISABLED
+                    ? transaction.consecutive_rejections
+                    : 0,
+                (uint32_t)options.transaction_mode);
             printf("saved %s\n", options.save_path);
         }
         }
@@ -3459,6 +4146,9 @@ int main(int argc, char **argv)
     }
 
     corpus_destroy(&corpus);
+    if (options.transaction_mode != TRANSACTION_DISABLED) {
+        transaction_state_destroy(&transaction);
+    }
     model_destroy(&model);
     for (i = 0; i < options.teacher_count; ++i) {
         if (teacher_loaded[i]) model_destroy(&teacher_models[i]);

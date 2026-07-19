@@ -21,6 +21,12 @@ typedef struct {
     uint64_t rng_state;
 } ArtifactHeader;
 
+typedef struct {
+    uint64_t attempts;
+    uint32_t consecutive_rejections;
+    uint32_t transaction_mode;
+} CheckpointOrchestration;
+
 static const char CHECKPOINT_MAGIC[8] =
     {'Z', 'E', 'R', 'O', 'L', 'M', '2', '\0'};
 static const char TEACHER_MAGIC[8] =
@@ -100,12 +106,21 @@ int main(int argc, char **argv)
     if (fread(&header, sizeof(header), 1, input) != 1 ||
         memcmp(header.magic, CHECKPOINT_MAGIC, sizeof(header.magic)) != 0 ||
         (header.version != 1U && header.version != 2U &&
-         header.version != 3U) ||
+         header.version != 3U && header.version != 4U) ||
         header.parameter_count == 0) {
         fclose(input);
         fprintf(stderr, "error: unsupported or corrupt checkpoint '%s'\n",
                 input_path);
         return EXIT_FAILURE;
+    }
+    if (header.version >= 4U) {
+        CheckpointOrchestration orchestration;
+        if (fread(&orchestration, sizeof(orchestration), 1, input) != 1) {
+            fclose(input);
+            fprintf(stderr, "error: corrupt checkpoint orchestration '%s'\n",
+                    input_path);
+            return EXIT_FAILURE;
+        }
     }
 
     temporary_length = strlen(output_path) + 5;

@@ -622,8 +622,10 @@ training commands, exact evaluators, and multi-seed results exist.
 Q2.2 showed that more frequent frontier checkpoints avoid a late promotion
 surprise, but they still observe damage only after a block of updates. Q2.3
 moves measurement to the optimizer boundary while preserving Q2.2's student,
-teachers, corpora, authority split, and promotion sets. It is not frozen until
-the observer and rollback tests below pass.
+teachers, corpora, authority split, and promotion sets. Its machine-readable
+v1 contract is preregistered in `benchmarks/zero4-q23-v1/contract.json`;
+intervention remains closed until the full observer-equivalence trajectory and
+rollback implementation pass CI.
 
 The unit of atomicity is a complete optimizer attempt, not an individual
 scalar weight. Every attempt computes separate faculty and replay-probe
@@ -640,7 +642,8 @@ projections, each feed-forward matrix, RMS gains, and final normalization.
 These measurements identify where interference occurs without pretending that
 one weight has an invariant semantic interpretation.
 
-Candidate weights and AdamW moments live in preallocated shadow storage. A
+The candidate is evaluated inside the transaction while the complete prior
+weights and AdamW moments live in preallocated rollback storage. A
 local replay budget may project or backtrack the candidate; a small functional
 probe then decides whether the entire learned state commits. Rejection restores
 weights, both moment arrays, and the committed-update count. Attempt count,
