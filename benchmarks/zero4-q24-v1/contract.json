@@ -1,0 +1,103 @@
+{
+  "schema": "zero.zero4_q24_contract.v1",
+  "id": "zero4-q24-v1",
+  "status": "preregistered",
+  "question": "Can an immutable-baseline cumulative replay guard preserve the public replay ceiling while retaining the Q2.3 quantity acquisition path?",
+  "independent_variable": "transactional AdamW with an all-slice cumulative functional replay guard",
+  "diagnostic_seed": 2,
+  "sealed_replication_seeds": [1, 3],
+  "lineage": {
+    "parent_experiment": "zero4-q23-v1",
+    "parent_commit": "0ab274c577074eaa7d519dc3fda20d8a86acfc63",
+    "parent_contract_sha256": "85121e552c3012be24b51b28b007acc1a52a70ef48dd1b76a40a74f93e54d9dd",
+    "parent_observer_result_sha256": "25ff0c243e6a1cee9e2ebab565f444dc5818508e1d662658a6fddd47d59edee3",
+    "parent_guard_result_sha256": "0a517bd404224c5b3ff586497c9bc5541c895a60d1e3776651e98f52be6cde60",
+    "parent_attempt_log_sha256": "a2f4b368e9a674e5b568cc5b68a290f6e34f3825cc7a97d8cc24c7fe5d2e0b70",
+    "diagnosis": "Q2.3's rotating local delta guard accepted all 200 attempts while the public balanced replay regression reached 0.026854690374003717. The local delta is not cumulative authority."
+  },
+  "student": {
+    "parameters": 4852992,
+    "architecture": "unchanged from Q2.3",
+    "initialization": "teachers/zero3-balanced-final.teacher"
+  },
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "quantity_corpus": {
+    "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35",
+    "tokens_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+    "sentinel_sha256": "02c6908142f7affb035d606a02994c3ee15ef3bd6ecb8915f8f64f86c9aa2be3",
+    "public_sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "promotion_sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "promotion_inaccessible_during_training": true
+  },
+  "replay_corpus": {
+    "corpus/literary.bpe": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+    "corpus/bpe/zero-foundation.tok": "87b039e5d4645ebf2a521454a13b1a912cbd1c53ff8fbcfb26baf9da1f5e638b",
+    "corpus/bpe/shakespeare.tok": "ffa36c4890ca07d403e8d76fab47026e1b6d46b1fb2b9d2dc1c31c206ff9351d",
+    "corpus/bpe/blake.tok": "329bf291a5842897b59151640a57d2a2270a451e31c99adbf7d3d6f684d2576c",
+    "corpus/bpe/crowley.tok": "68decb62cbd4f1efaff34067eb5a533406d99a6bc0e60ca219846b39306177da",
+    "corpus/bpe/bible-kjv.tok": "0c387e697fbe339712a62efb75d27c788365ce90911895dbf66e732deee44ed9",
+    "corpus/channel/literary-dialogue.tok": "d401868f33f2ac318315b167dd2bc6850edb3a8b0aaf5b18c1b2fa8cba42c379"
+  },
+  "source_order": [
+    "corpus/bpe/zero-foundation.tok",
+    "corpus/bpe/shakespeare.tok",
+    "corpus/bpe/blake.tok",
+    "corpus/bpe/crowley.tok",
+    "corpus/bpe/bible-kjv.tok",
+    "corpus/channel/literary-dialogue.tok",
+    "corpus/faculty/q22/quantity-request.tok"
+  ],
+  "guard": {
+    "mode": "cumulative-guard",
+    "probe_every_attempts": 1,
+    "baseline": "arithmetic mean of the six frozen replay validation-window losses evaluated by the immutable ZERO.3 initialization",
+    "candidate": "arithmetic mean of those same six losses after the candidate AdamW update and before commit",
+    "decision": "reject non-finite candidates and candidates whose (candidate_mean - baseline_mean) / baseline_mean exceeds 0.015",
+    "warning_relative_increase": 0.01,
+    "hard_relative_increase": 0.015,
+    "threshold_rationale": "The hard limit reserves 25% of the frozen 0.02 public replay allowance for fixed-window-to-balanced-evaluation mismatch. It is chosen before Q2.4 training; the reconstructed Q2.3 trace is diagnostic only and cannot change it.",
+    "all_replay_ranges_required": 6,
+    "maximum_consecutive_rejections": 8,
+    "fallback": "end the active phase",
+    "projection_enabled": false,
+    "public_replay_ceiling": 0.02
+  },
+  "budget": {
+    "acquisition_attempts": 1000,
+    "consolidation_attempts": 400,
+    "batch": 2,
+    "acquisition_learning_rate": 0.00002,
+    "consolidation_learning_rate": 0.000005,
+    "recovery_checkpoint_every_committed_updates": 25,
+    "full_evaluation_every_committed_updates": 100
+  },
+  "gates": {
+    "closed_minimum": 0.99,
+    "syntax_minimum": 0.99,
+    "operation_minimum": 0.95,
+    "arguments_minimum": 0.95,
+    "exact_request_minimum": 0.95,
+    "oracle_arithmetic_minimum": 1.0,
+    "committed_minimum": 0.95,
+    "exact_artifact_minimum": 0.95,
+    "rejected_state_mutations_maximum": 0,
+    "replay_relative_regression_maximum": 0.02
+  },
+  "outcomes": {
+    "go": "a public checkpoint satisfies every quantity gate and replay regression <= 0.02, then the sealed promotion split also satisfies every quantity gate",
+    "no_go": "no jointly feasible public checkpoint exists before a frozen stop condition, with promotion remaining sealed"
+  },
+  "stop_conditions": [
+    "replay exceeds 0.02 on two consecutive full evaluations",
+    "eight consecutive cumulative guard rejections end the active phase",
+    "no Pareto improvement for 200 committed updates",
+    "the frozen 1000 acquisition plus 400 consolidation attempt budget is exhausted"
+  ],
+  "promotion_policy": "open the disjoint promotion split exactly once only after a jointly feasible public checkpoint; otherwise record no-go",
+  "replication_policy": "run seeds 1 and 3 only if diagnostic seed 2 passes"
+}

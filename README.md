@@ -102,6 +102,9 @@ make zero4-q23-check
 make zero4-q23-observer ZERO4_Q23_SEED=2
 # Only after the observer result passes:
 make zero4-q23-train ZERO4_Q23_SEED=2
+make zero4-q24-check
+# Only from the merged preregistered implementation:
+make zero4-q24-train ZERO4_Q24_SEED=2
 ```
 
 The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
@@ -160,6 +163,15 @@ cumulative direct functional budget. See the machine-readable
 [`contract.json`](benchmarks/zero4-q23-v1/contract.json),
 [`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer),
 and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
+
+Q2.4 is that preregistered cumulative follow-up. Every candidate is evaluated
+on the fixed validation window of all six replay sources and compared with the
+same composite evaluated by immutable ZERO.3. A candidate above the frozen
+1.5% cumulative budget is rolled back, leaving 0.5 percentage points of reserve
+below the 2% public balanced-replay ceiling. Seed 2 is the only admitted first
+run; promotion and seeds 1 and 3 remain sealed. See
+[`contract.json`](benchmarks/zero4-q24-v1/contract.json) and
+[`PREREGISTRATION.md`](benchmarks/zero4-q24-v1/PREREGISTRATION.md).
 
 ## Measure channel behavior
 
