@@ -100,10 +100,10 @@ bottleneck — proceed to SAT-2.
 ### P2: BACKLOG P0–P3 — Training infrastructure (active priority)
 
 **Source**: `ZERO4-BACKLOG.md`.
-**Status**: Active. P0 failed, so this is the current highest-priority work.
-The v1 contract, schemas, observer diagnostics, transactional checkpoint, and
-rollback guard are implemented on an unmerged branch; the full seed-2 observer
-trajectory and CI remain acceptance gates.
+**Status**: Complete for the Q2.3 v1 diagnostic. The contract, schemas,
+transactional checkpoint, rollback guard, and CI are merged. The full seed-2
+observer passed learned-state equivalence and calibrated the direct functional
+guard; its first-order drift estimate was non-predictive and remains diagnostic.
 **Depends on**: Q2.2-R replication failure (satisfied).
 **Cost**: Unmeasured compute time plus engineering time (transactional AdamW,
 replay guard implementation).
@@ -166,8 +166,9 @@ coordinate solving). Train as second faculty after quantity is solid.
 ### P5: BACKLOG P4–P5 — Q2.3 diagnostic and replication
 
 **Source**: `ZERO4-BACKLOG.md`.
-**Status**: Preregistered. Seed 2 is sealed behind the P0–P3 implementation,
-observer-equivalence, and CI gates; seeds 1 and 3 remain closed.
+**Status**: Active. The P0–P3 implementation, CI, and observer-equivalence
+gates passed, opening the single guarded seed-2 diagnostic. Seeds 1 and 3
+remain closed.
 **Depends on**: BACKLOG P0–P3 passing.
 
 **Design**:

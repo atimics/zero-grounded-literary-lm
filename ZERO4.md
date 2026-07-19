@@ -624,8 +624,8 @@ surprise, but they still observe damage only after a block of updates. Q2.3
 moves measurement to the optimizer boundary while preserving Q2.2's student,
 teachers, corpora, authority split, and promotion sets. Its machine-readable
 v1 contract is preregistered in `benchmarks/zero4-q23-v1/contract.json`;
-intervention remains closed until the full observer-equivalence trajectory and
-rollback implementation pass CI.
+the rollback implementation has passed CI and the full seed-2 observer has
+passed exact learned-state equivalence, opening the guarded seed-2 diagnostic.
 
 The unit of atomicity is a complete optimizer attempt, not an individual
 scalar weight. Every attempt computes separate faculty and replay-probe
@@ -657,11 +657,13 @@ existing 25-update recovery / 100-update full frontier evaluations. The local
 guard has a nonzero budget; it does not require monotonically improving replay
 loss. The frozen 2% replay ceiling remains the final feasibility constraint.
 
-Implementation is staged. First run an observer-only trajectory and establish
-whether the first-order signal predicts measured replay changes. Then enable
-atomic rollback without projection. Only after both are validated may the
-projection or adaptive budget change training. Q2.3 begins with diagnostic
-seed 2, and seeds 1 and 3 remain closed until seed 2 produces a jointly feasible
-public-validation checkpoint. The promotion panel remains sealed until a
-feasible checkpoint is selected. The executable work and acceptance criteria
-are tracked in `ZERO4-BACKLOG.md`.
+The full seed-2 observer completed 200 attempts with 200 commits and was
+byte-identical to its unguarded reference at every recovery. It calibrated a
+0.1641% warning band and a 0.25% hard direct functional-probe band. The
+first-order signal did not predict measured replay changes (Pearson 0.0076),
+so it remains a diagnostic and projection remains disabled. Atomic rollback
+with the functional probe is therefore the sole v1 intervention. Q2.3 begins
+with guarded diagnostic seed 2, and seeds 1 and 3 remain closed until seed 2
+produces a jointly feasible public-validation checkpoint. The promotion panel
+remains sealed until a feasible checkpoint is selected. The executable work
+and acceptance criteria are tracked in `ZERO4-BACKLOG.md`.

@@ -85,13 +85,14 @@ function pearson(pairs) {
 function resultMarkdown(result) {
   const rows = (result.frontier ?? []).map((entry) => `| ${entry.committed} | ${entry.totalAttempts} | ${entry.phase} | ${entry.quantityPass ? "yes" : "no"} | ${(100 * entry.minimumFacultyMargin).toFixed(3)}% | ${(100 * entry.replayRegression).toFixed(3)}% | ${entry.feasible ? "yes" : "no"} |`).join("\n");
   const promotion = result.promotion?.evaluatedOnceAtEnd ? `Promotion was evaluated exactly once; quantity pass: ${result.promotion.quantityPass ? "yes" : "no"}.` : `Promotion remained sealed: ${result.promotion?.reason ?? "observer stage"}.`;
-  return `# ZERO.4-Q2.3 seed 2 ${result.stage ?? "observer"}\n\nDecision: **${result.decision}**. Stop: ${result.stoppedReason}.\n\n${promotion}\n\n| Committed | Attempts | Phase | Quantity pass | Minimum gate margin | Replay regression | Feasible |\n| ---: | ---: | --- | :---: | ---: | ---: | :---: |\n${rows || "| — | — | — | — | — | — | — |"}\n`;
+  const modelHash = result.decision === "go" ? `\nModel SHA-256: \`${result.artifacts.quantizedSha256}\`.\n` : "";
+  return `# ZERO.4-Q2.3 seed 2 ${result.stage ?? "observer"}\n\nDecision: **${result.decision}**. Stop: ${result.stoppedReason}.\n\n${promotion}${modelHash}\n| Committed | Attempts | Phase | Quantity pass | Minimum gate margin | Replay regression | Feasible |\n| ---: | ---: | --- | :---: | ---: | ---: | :---: |\n${rows || "| — | — | — | — | — | — | — |"}\n`;
 }
 function writeResultArtifacts(result) {
   atomicWrite(path.join(options.out, "result.json"), `${JSON.stringify(result, null, 2)}\n`);
   atomicWrite(path.join(options.out, "manifest.json"), `${JSON.stringify(result, null, 2)}\n`);
   atomicWrite(path.join(options.out, "selection.json"), `${JSON.stringify({ schema: "zero.zero4_q23_selection.v1", seed: 2, stage: result.stage, decision: result.decision, stoppedReason: result.stoppedReason, attempts: result.attempts, committed: result.committed, guardBudget: result.guardBudget, frontier: result.frontier, selected: result.selected ?? null, promotion: result.promotion }, null, 2)}\n`);
-  atomicWrite(path.join(options.out, "RESULTS.md"), resultMarkdown(result));
+  atomicWrite(path.join(options.out, result.stage === "observer" ? "OBSERVER.md" : "RESULTS.md"), resultMarkdown(result));
 }
 function selfTest() {
   const buffer = Buffer.alloc(80); buffer.write("ZEROLM2\0", 0, "ascii"); buffer.writeUInt32LE(4, 8); buffer.writeBigUInt64LE(7n, 48); buffer.writeBigUInt64LE(9n, 64); buffer.writeUInt32LE(2, 72); buffer.writeUInt32LE(2, 76);
@@ -219,10 +220,10 @@ if (options.stage === "observer") {
 }
 const feasible = frontier.filter((entry) => entry.feasible).sort((a, b) => b.minimumFacultyMargin - a.minimumFacultyMargin || a.replayLoss - b.replayLoss || a.committed - b.committed);
 if (!feasible.length) {
-  const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutableTeachers: contract.immutable_teachers, quantityCorpus: contract.quantity_corpus, frontier, selected: null, promotion: { evaluatedOnceAtEnd: false, reason: "no jointly feasible public checkpoint" } };
+  const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, frontier, selected: null, promotion: { evaluatedOnceAtEnd: false, reason: "no jointly feasible public checkpoint" } };
   writeResultArtifacts(result); event("complete", { decision: "no-go", stoppedReason }); console.error("Q2.3 seed 2 no-go; promotion remained sealed"); process.exit(0);
 }
 const selected = feasible[0]; fs.copyFileSync(selected.checkpoint, files.selected); run(tools.export, [files.selected, files.selectedQ8], { quiet: true });
 const promotionJson = path.join(options.out, "seed2-promotion.json"); run(tools.quantity, [files.selectedQ8, files.promotion, "--json", promotionJson, "--limit", "500"], { quiet: true }); const promotion = quantityMetrics(JSON.parse(fs.readFileSync(promotionJson, "utf8")));
-const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: promotion.quantityPass ? "go" : "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutableTeachers: contract.immutable_teachers, quantityCorpus: contract.quantity_corpus, selected, frontier, promotion: { evaluatedOnceAtEnd: true, quantityPass: promotion.quantityPass, rates: promotion.rates, gates: promotion.gates }, artifacts: { checkpoint: files.selected, checkpointSha256: sha256(files.selected), quantized: files.selectedQ8, quantizedSha256: sha256(files.selectedQ8) } };
+const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: promotion.quantityPass ? "go" : "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, selected, frontier, promotion: { evaluatedOnceAtEnd: true, quantityPass: promotion.quantityPass, rates: promotion.rates, gates: promotion.gates }, artifacts: { checkpoint: files.selected, checkpointSha256: sha256(files.selected), quantized: files.selectedQ8, quantizedSha256: sha256(files.selectedQ8) } };
 writeResultArtifacts(result); event("complete", { decision: result.decision, selectedCommitted: selected.committed, promotionQuantityPass: promotion.quantityPass }); console.log(`Q2.3 seed 2 ${result.decision}; promotion evaluated exactly once`);
