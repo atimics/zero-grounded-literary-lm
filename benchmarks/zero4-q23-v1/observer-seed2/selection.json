@@ -1,0 +1,49 @@
+{
+  "schema": "zero.zero4_q23_selection.v1",
+  "seed": 2,
+  "stage": "observer",
+  "decision": "pass",
+  "stoppedReason": "replay exceeded 2% on two consecutive full evaluations",
+  "attempts": 200,
+  "committed": 200,
+  "guardBudget": null,
+  "frontier": [
+    {
+      "committed": 200,
+      "totalAttempts": 200,
+      "phase": "acquisition",
+      "quantityPass": true,
+      "minimumFacultyMargin": 0,
+      "replayLoss": 1.6748,
+      "replayRegression": 0.026854690374003717,
+      "feasible": false,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.95,
+        "arguments": 1,
+        "exact_request": 0.95,
+        "oracle_arithmetic": 1,
+        "committed": 0.95,
+        "exact_artifact": 0.95
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q23-v1/observer-seed2/recovery/u000200.ckpt"
+    }
+  ],
+  "selected": null,
+  "promotion": {
+    "evaluatedOnceAtEnd": false,
+    "reason": "observer stage never accesses promotion"
+  }
+}

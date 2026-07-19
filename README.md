@@ -148,10 +148,12 @@ commits or rejects weights and optimizer moments together. Checkpoint v4 keeps
 the committed counter separate from attempt, RNG, and rejection state. The
 observer command runs a matching unguarded trajectory and requires the learned
 checkpoint payload to remain byte-identical; its frozen calibration rule then
-sets the nonzero guard band. Guard training cannot start without that observer
-result. Diagnostic seed 2 is the only open seed, promotion remains sealed until
-a public-feasible checkpoint exists, and seeds 1 and 3 remain closed. See the
-machine-readable
+sets the nonzero guard band. The full seed-2 observer passed: 200/200 attempts
+committed with byte-identical learned state, calibrating a 0.25% hard direct
+functional-probe budget. Its first-order replay predictor was non-predictive,
+so projection remains disabled. Diagnostic seed 2 is now the only open guarded
+run; promotion remains sealed until a public-feasible checkpoint exists, and
+seeds 1 and 3 remain closed. See the machine-readable
 [`contract.json`](benchmarks/zero4-q23-v1/contract.json),
 [`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer),
 and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
