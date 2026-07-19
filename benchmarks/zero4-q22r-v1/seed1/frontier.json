@@ -1,0 +1,37 @@
+{
+  "schema": "zero.zero4_q22_frontier.v1",
+  "baselineFull": 1.631,
+  "frontier": [
+    {
+      "update": 200,
+      "phase": "acquisition",
+      "minimumFacultyMargin": -0.132,
+      "quantityPass": false,
+      "replayLoss": 1.6748,
+      "replayRegression": 0.026854690374003717,
+      "feasible": false,
+      "rates": {
+        "closed": 0.996,
+        "syntax": 0.996,
+        "operation": 0.818,
+        "arguments": 1,
+        "exact_request": 0.818,
+        "oracle_arithmetic": 1,
+        "committed": 0.818,
+        "exact_artifact": 0.818
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": false,
+        "arguments": true,
+        "exact_request": false,
+        "oracle_arithmetic": true,
+        "committed": false,
+        "exact_artifact": false,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22r-v1/seed1/frontier/u000200.ckpt"
+    }
+  ]
+}

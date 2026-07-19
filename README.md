@@ -126,9 +126,14 @@ baseline.
 
 Q2.2-R repaired retained updates 400 and 300 using replay only. Seed 2 selected
 update 400 plus 100 repair updates and passed: 488/500 promotion operations and
-commits (97.6%), zero state mutations, and 1.919% replay regression. This is a
-seed-level go, not promotion; seeds 1 and 3 remain required. Results are in
-[`benchmarks/zero4-q22r-v1/seed2/RESULTS.md`](benchmarks/zero4-q22r-v1/seed2/RESULTS.md).
+commits (97.6%), zero state mutations, and 1.919% replay regression. Seeds 1 and
+3 then completed under the frozen acquisition policy and both stopped after
+replay exceeded 2% on two consecutive full evaluations. Their strongest
+retained diagnostics also missed the operation, exact-request, commit, and
+exact-artifact gates. The final family decision is therefore **no-go** (one go,
+two no-go); the failed seeds never touched the disjoint promotion split and no
+ZERO.4 checkpoint replaces ZERO.3. The multi-seed report is in
+[`benchmarks/zero4-q22r-v1/AGGREGATE.md`](benchmarks/zero4-q22r-v1/AGGREGATE.md).
 Every Q2.2-R seed-level go directory also publishes its selected `selected.litq8`
 model. The results-integrity check fails closed if that model is absent, has the
 wrong byte count, or does not match the SHA-256 frozen in `manifest.json`.

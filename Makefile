@@ -78,6 +78,7 @@ endif
 	zero4-q21-train zero4-q21-consolidate zero4-q21-eval zero4-q21 \
 	zero4-q22-data zero4-q22-check zero4-q22-train zero4-q22-eval zero4-q22 \
 	zero4-q22r-check zero4-q22r-train zero4-q22r-eval zero4-q22r \
+	zero4-q22r-aggregate \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -647,6 +648,9 @@ zero4-q22r: zero4-q22r-train
 		ZERO4_Q22R_SEED=$(ZERO4_Q22R_SEED) \
 		ZERO4_Q22R_PREFIX=$(ZERO4_Q22R_PREFIX) \
 		ZERO4_Q22R_RESULTS=$(ZERO4_Q22R_RESULTS)
+
+zero4-q22r-aggregate:
+	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
 
 corpus/brainfuck/.generated: brainfuck_corpus
 	mkdir -p corpus/brainfuck

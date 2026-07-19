@@ -1,0 +1,118 @@
+{
+  "schema": "zero.zero4_q22r_result.v1",
+  "id": "zero4-q22r-seed3",
+  "decision": "no-go",
+  "promotion_eligible": false,
+  "promotion_blocker": "No checkpoint jointly passed public quantity and replay; three declared seeds are required for promotion",
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "corpus": {
+    "manifest": "corpus/faculty/q22/manifest.json",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35"
+  },
+  "checkpoint_selection": {
+    "schema": "zero.zero4_q22_selection.v1",
+    "experiment": "q22r",
+    "seed": 3,
+    "decision": "no-go",
+    "stoppedReason": "replay exceeded 2% on two consecutive full evaluations",
+    "updates": {
+      "total": 200,
+      "acquisition": 200,
+      "consolidation": 0
+    },
+    "baselines": {
+      "sentinelReplayLoss": 1.6694,
+      "fullReplayLoss": 1.631
+    },
+    "policy": {
+      "trainingLossEvery": 10,
+      "gradientCosineEvery": 10,
+      "gradientCosineProbe": "fixed faculty validation record against one deterministic rotating historical replay source, hard loss only",
+      "quantitySentinelEvery": 25,
+      "quantitySentinelCases": 64,
+      "fullEvaluationEvery": 100,
+      "publicQuantityCases": 500,
+      "replayPressureAt": 0.015,
+      "replayPressureAction": "ratchet quantity sampling weight 4 to 3 to 2, increasing replay share from 60% to 66.7% to 75%",
+      "replayStopAt": 0.02,
+      "replayStopConsecutive": 2,
+      "noParetoImprovementUpdates": 200,
+      "selection": "feasibility first, then maximum minimum learned faculty-gate margin, then lower replay loss",
+      "promotion": "disjoint 500-case split evaluated once after feasible selection"
+    },
+    "frontier": [
+      {
+        "update": 200,
+        "phase": "acquisition",
+        "minimumFacultyMargin": -0.18599999999999994,
+        "quantityPass": false,
+        "replayLoss": 1.6732,
+        "replayRegression": 0.02587369711833232,
+        "feasible": false,
+        "rates": {
+          "closed": 0.998,
+          "syntax": 0.998,
+          "operation": 0.764,
+          "arguments": 1,
+          "exact_request": 0.764,
+          "oracle_arithmetic": 1,
+          "committed": 0.764,
+          "exact_artifact": 0.764
+        },
+        "gates": {
+          "closed": true,
+          "syntax": true,
+          "operation": false,
+          "arguments": true,
+          "exact_request": false,
+          "oracle_arithmetic": true,
+          "committed": false,
+          "exact_artifact": false,
+          "rejected_state_mutations": true
+        },
+        "checkpoint": "benchmarks/zero4-q22r-v1/seed3/frontier/u000200.ckpt"
+      }
+    ],
+    "selected": null,
+    "diagnosticBest": {
+      "update": 200,
+      "phase": "acquisition",
+      "minimumFacultyMargin": -0.18599999999999994,
+      "quantityPass": false,
+      "replayLoss": 1.6732,
+      "replayRegression": 0.02587369711833232,
+      "feasible": false,
+      "rates": {
+        "closed": 0.998,
+        "syntax": 0.998,
+        "operation": 0.764,
+        "arguments": 1,
+        "exact_request": 0.764,
+        "oracle_arithmetic": 1,
+        "committed": 0.764,
+        "exact_artifact": 0.764
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": false,
+        "arguments": true,
+        "exact_request": false,
+        "oracle_arithmetic": true,
+        "committed": false,
+        "exact_artifact": false,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22r-v1/seed3/frontier/u000200.ckpt"
+    },
+    "selectedFromFeasibleFrontier": false,
+    "promotion": {
+      "evaluatedOnceAtEnd": false,
+      "reason": "no jointly feasible public-validation checkpoint"
+    }
+  }
+}

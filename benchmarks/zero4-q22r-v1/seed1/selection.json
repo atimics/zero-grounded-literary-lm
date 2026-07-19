@@ -1,0 +1,102 @@
+{
+  "schema": "zero.zero4_q22_selection.v1",
+  "experiment": "q22r",
+  "seed": 1,
+  "decision": "no-go",
+  "stoppedReason": "replay exceeded 2% on two consecutive full evaluations",
+  "updates": {
+    "total": 200,
+    "acquisition": 200,
+    "consolidation": 0
+  },
+  "baselines": {
+    "sentinelReplayLoss": 1.6694,
+    "fullReplayLoss": 1.631
+  },
+  "policy": {
+    "trainingLossEvery": 10,
+    "gradientCosineEvery": 10,
+    "gradientCosineProbe": "fixed faculty validation record against one deterministic rotating historical replay source, hard loss only",
+    "quantitySentinelEvery": 25,
+    "quantitySentinelCases": 64,
+    "fullEvaluationEvery": 100,
+    "publicQuantityCases": 500,
+    "replayPressureAt": 0.015,
+    "replayPressureAction": "ratchet quantity sampling weight 4 to 3 to 2, increasing replay share from 60% to 66.7% to 75%",
+    "replayStopAt": 0.02,
+    "replayStopConsecutive": 2,
+    "noParetoImprovementUpdates": 200,
+    "selection": "feasibility first, then maximum minimum learned faculty-gate margin, then lower replay loss",
+    "promotion": "disjoint 500-case split evaluated once after feasible selection"
+  },
+  "frontier": [
+    {
+      "update": 200,
+      "phase": "acquisition",
+      "minimumFacultyMargin": -0.132,
+      "quantityPass": false,
+      "replayLoss": 1.6748,
+      "replayRegression": 0.026854690374003717,
+      "feasible": false,
+      "rates": {
+        "closed": 0.996,
+        "syntax": 0.996,
+        "operation": 0.818,
+        "arguments": 1,
+        "exact_request": 0.818,
+        "oracle_arithmetic": 1,
+        "committed": 0.818,
+        "exact_artifact": 0.818
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": false,
+        "arguments": true,
+        "exact_request": false,
+        "oracle_arithmetic": true,
+        "committed": false,
+        "exact_artifact": false,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q22r-v1/seed1/frontier/u000200.ckpt"
+    }
+  ],
+  "selected": null,
+  "diagnosticBest": {
+    "update": 200,
+    "phase": "acquisition",
+    "minimumFacultyMargin": -0.132,
+    "quantityPass": false,
+    "replayLoss": 1.6748,
+    "replayRegression": 0.026854690374003717,
+    "feasible": false,
+    "rates": {
+      "closed": 0.996,
+      "syntax": 0.996,
+      "operation": 0.818,
+      "arguments": 1,
+      "exact_request": 0.818,
+      "oracle_arithmetic": 1,
+      "committed": 0.818,
+      "exact_artifact": 0.818
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": false,
+      "arguments": true,
+      "exact_request": false,
+      "oracle_arithmetic": true,
+      "committed": false,
+      "exact_artifact": false,
+      "rejected_state_mutations": true
+    },
+    "checkpoint": "benchmarks/zero4-q22r-v1/seed1/frontier/u000200.ckpt"
+  },
+  "selectedFromFeasibleFrontier": false,
+  "promotion": {
+    "evaluatedOnceAtEnd": false,
+    "reason": "no jointly feasible public-validation checkpoint"
+  }
+}
