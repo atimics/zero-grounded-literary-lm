@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -38,6 +39,50 @@ def decision_from_manifest(manifest: dict) -> str | None:
     return decision if decision in {"go", "no-go"} else None
 
 
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_published_q22r_model(
+    manifest_path: Path, manifest: dict, decision: str
+) -> None:
+    if manifest.get("schema") != "zero.zero4_q22r_result.v1" or decision != "go":
+        return
+
+    model = manifest.get("model")
+    if not isinstance(model, dict):
+        raise SystemExit(f"FAIL: {manifest_path} has no model object for Q2.2-R go")
+    relative_value = model.get("path")
+    expected_hash = model.get("sha256")
+    expected_bytes = model.get("bytes")
+    if not isinstance(relative_value, str) or not relative_value:
+        raise SystemExit(f"FAIL: {manifest_path} has no model path for Q2.2-R go")
+    if not isinstance(expected_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_hash):
+        raise SystemExit(f"FAIL: {manifest_path} has no valid model SHA-256")
+
+    relative_path = Path(relative_value)
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise SystemExit(f"FAIL: unsafe model path in {manifest_path}: {relative_value}")
+    model_path = manifest_path.parent / relative_path
+    if not model_path.is_file():
+        raise SystemExit(f"FAIL: published Q2.2-R model is missing: {model_path}")
+    if isinstance(expected_bytes, int) and model_path.stat().st_size != expected_bytes:
+        raise SystemExit(
+            f"FAIL: model byte count mismatch for {model_path}: "
+            f"{model_path.stat().st_size} != {expected_bytes}"
+        )
+    actual_hash = sha256(model_path)
+    if actual_hash != expected_hash:
+        raise SystemExit(
+            f"FAIL: model SHA-256 mismatch for {model_path}: "
+            f"{actual_hash} != {expected_hash}"
+        )
+
+
 def verify_result(result_path: Path, expected_teachers: dict[str, str]) -> None:
     text = result_path.read_text(encoding="utf-8")
     match = DECISION_RE.search(text)
@@ -59,6 +104,7 @@ def verify_result(result_path: Path, expected_teachers: dict[str, str]) -> None:
         raise SystemExit(
             f"FAIL: decision mismatch between {result_path} and {manifest_path}"
         )
+    verify_published_q22r_model(manifest_path, manifest, decision)
 
     hashes = manifest.get("immutable_teachers")
     if hashes is not None:
