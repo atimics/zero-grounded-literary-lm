@@ -34,6 +34,6 @@ The benchmark is public and small. Use it to catch regressions and to compare th
 
 - Cases SHA-256: `7656119216740edead8d432919fa37be1e3623cc5dee45a2bd6a75849f4b8c49`
 - Holo SHA-256: `e0b6db9e5692e55f07a022cad4941b0af2be587ead0d1a2743de9380d0f18981`
-- Baseline model SHA-256: `63ccb24611e851aafc14905f8ca01cded5336a4cd755a420248e87abdf9bde89`
+- Baseline model SHA-256: `05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24`
 - Result model FNV-1a-64: `893902e1eb27be4d`
 

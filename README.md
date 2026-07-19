@@ -129,6 +129,9 @@ update 400 plus 100 repair updates and passed: 488/500 promotion operations and
 commits (97.6%), zero state mutations, and 1.919% replay regression. This is a
 seed-level go, not promotion; seeds 1 and 3 remain required. Results are in
 [`benchmarks/zero4-q22r-v1/seed2/RESULTS.md`](benchmarks/zero4-q22r-v1/seed2/RESULTS.md).
+Every Q2.2-R seed-level go directory also publishes its selected `selected.litq8`
+model. The results-integrity check fails closed if that model is absent, has the
+wrong byte count, or does not match the SHA-256 frozen in `manifest.json`.
 
 Q2.3 is the proposed lower-level follow-up. It makes each AdamW attempt a
 transaction, measures faculty/replay conflict globally and by tensor, evaluates

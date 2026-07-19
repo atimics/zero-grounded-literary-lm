@@ -18,6 +18,7 @@ bpe_tokenizer
 zero_eval  # binary only
 !teachers/*.teacher
 *.litq8
+!benchmarks/zero4-q22r-v1/seed*/selected.litq8
 
 # Generated corpus files
 corpus/bpe/
