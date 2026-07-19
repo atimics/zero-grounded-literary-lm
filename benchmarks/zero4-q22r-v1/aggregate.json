@@ -1,0 +1,54 @@
+{
+  "schema": "zero.zero4_q22r_multiseed.v1",
+  "id": "zero4-q22r-multiseed",
+  "decision": "no-go",
+  "promotion_eligible": false,
+  "promotion_blocker": "declared seeds 1, 3 did not pass jointly frozen quantity and replay gates",
+  "declared_seeds": [
+    1,
+    2,
+    3
+  ],
+  "completed_seeds": [
+    1,
+    2,
+    3
+  ],
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "results": {
+    "1": {
+      "decision": "no-go",
+      "stopped_reason": "replay exceeded 2% on two consecutive full evaluations",
+      "selected_model": null,
+      "operation_rate": 0.818,
+      "exact_artifact_rate": 0.818,
+      "replay_relative_regression": 0.026854690374003717,
+      "promotion_evaluated": false
+    },
+    "2": {
+      "decision": "go",
+      "stopped_reason": null,
+      "selected_model": {
+        "update": 100,
+        "sha256": "0fe6e507f8d8ae5bc51e615be79b72425410664976ecc4fbeebb594319f67e8d"
+      },
+      "operation_rate": 0.976,
+      "exact_artifact_rate": 0.976,
+      "replay_relative_regression": 0.019190680564071187,
+      "promotion_evaluated": true
+    },
+    "3": {
+      "decision": "no-go",
+      "stopped_reason": "replay exceeded 2% on two consecutive full evaluations",
+      "selected_model": null,
+      "operation_rate": 0.764,
+      "exact_artifact_rate": 0.764,
+      "replay_relative_regression": 0.02587369711833232,
+      "promotion_evaluated": false
+    }
+  }
+}
