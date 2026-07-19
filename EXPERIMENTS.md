@@ -18,7 +18,7 @@ Schema: `zero.experiment_registry.v1`.
 | **q21** | `benchmarks/zero4-q21-v1` | 2026-07-17 | Q2 RESULTS.md recommendation | Model emits only operation type (e.g., `quantity.add`). Controller independently parses source, binds arguments, rejects mismatches. Kernel computes. Seeds 1 and 2. | Can one faculty with operation-only routing pass all gates on multiple seeds? | Seed 1: 499/500 exact (99.8%), replay 1.864%. Seed 2: 500/500 exact (100%), replay **2.011%**. Seed 3 not run. | **No-go.** Operation-only routing passed quantity gates in two tested seeds; replay was seed-variable and seed 2 missed the frozen gate by 0.011 percentage points. | Q2.2: larger curriculum and joint checkpoint evaluation |
 | **q22** | `benchmarks/zero4-q22-v1` | 2026-07-17 | Q2.1 AGGREGATE.md recommendation | Expanded quantity curriculum. Sentinel evaluations during training. Structured promotion/public/sentinel split. Constraint-aware training stopped at 400 updates (300 acquisition + 100 consolidation). Seed 2 only. | Can a larger curriculum and better measurement produce feasible checkpoints? | Quantity passed at updates 300 and 400. The replay adapter incorrectly stripped `--sample-weight`, restoring default 2x foundation weight. | **No-go due to invalid evaluation.** The trajectory is retained, but its recorded replay values are inadmissible. | Q2.2-R: correct and repeat the evaluation |
 | **q22r** | `benchmarks/zero4-q22r-v1` | 2026-07-17–19 | Q2.2 EVALUATION-NOTICE.md | Corrected eval adapter (preserve `--sample-weight 1`, remove only `--distill`). Measured replay-only repair branches from retained Q2.2 frontiers. Frontier selection: feasibility → max margin → min replay. Seeds 1, 2, and 3. | Can corrected evaluation, with measured repair branches, produce a jointly feasible checkpoint on all three declared seeds? | Seed 1: no-go, 81.8% exact and 2.685% replay. Seed 2: go, 97.6% exact and 1.919% replay. Seed 3: no-go, 76.4% exact and 2.587% replay. Rejected state mutations: 0. Teacher hashes unchanged. | **No promotion: one go, two no-go.** ZERO.3 remains current. Activate optimizer-boundary interference controls instead of scaling quantity. | Q2.3 observer → transactional AdamW → local replay guard, diagnostic seed 2 |
-| **q23** | `benchmarks/zero4-q23-v1` | 2026-07-19 | `ZERO4-BACKLOG.md` P0–P4 | Preregistered checkpoint-v4 transactional AdamW, per-attempt faculty/replay diagnostics, exact learned-state rollback, observer-derived guard calibration, and seed/promotion sealing. Student, teachers, corpora, routing, and public thresholds remain fixed from Q2.2. | Can optimizer-boundary observation and rollback prevent replay interference without weakening the quantity or 2% replay gates? | Full observer seed 2 passed: 200 attempts / 200 commits and byte-identical learned state at every recovery. It calibrated a 0.25% hard direct functional-probe budget. First-order drift was non-predictive (Pearson 0.0076). The final observer checkpoint passed quantity exactly at threshold but had 2.685% replay regression, so it was not feasible. | **Observer mechanics pass only.** No capability result and no promotion claim. Guarded diagnostic seed 2 is open; seeds 1 and 3 and promotion remain sealed. | Run the single guarded seed-2 diagnostic under the frozen 0.25% budget |
+| **q23** | `benchmarks/zero4-q23-v1` | 2026-07-19 | `ZERO4-BACKLOG.md` P0–P4 | Preregistered checkpoint-v4 transactional AdamW, per-attempt faculty/replay diagnostics, exact learned-state rollback, observer-derived guard calibration, and seed/promotion sealing. Student, teachers, corpora, routing, and public thresholds remained fixed from Q2.2. | Can optimizer-boundary observation and rollback prevent replay interference without weakening the quantity or 2% replay gates? | Observer seed 2 passed mechanics and calibrated a 0.25% hard band. Guarded seed 2 accepted all 200 attempts: 5 exceeded the warning band, none exceeded the hard band, and the maximum local increase was 0.2013%. Update 200 passed quantity exactly at threshold but replay regressed 2.685%. | **No-go.** The per-attempt local budget did not bind or control cumulative replay. Promotion and replication seeds 1 and 3 remained sealed; ZERO.3 remains current. | Q2.4 design: preregister a cumulative direct functional replay budget |
 
 ---
 
@@ -52,6 +52,10 @@ q22r (corrected eval, measured repair branches, 3 seeds)
 q23 observer (transactional instrumentation, seed 2)
   "Learned state identical; direct guard calibrated; first-order signal non-predictive."
   → Q2.3 guarded seed 2 under the frozen 0.25% functional budget
+
+q23 guard (local direct functional budget, seed 2)
+  "200 accepts, 0 rejects; quantity passed; cumulative replay +2.685%."
+  → Q2.4: budget direct functional drift cumulatively, not independently per attempt
 ```
 
 ---
@@ -76,6 +80,12 @@ not capability scope or model size.
 The learned state remained byte-identical while observation was enabled, but
 predicted and realized replay changes had Pearson 0.0076. The guarded run must
 therefore rely on its direct functional probe, not the first-order estimate.
+
+8. **A safe-looking local step does not imply a safe trajectory.** Q2.3's
+largest local replay-probe increase was 0.2013%, below its 0.25% hard band, so
+all 200 attempts committed. Public replay nevertheless accumulated to 2.685%.
+The next guard must track cumulative direct drift rather than independent
+per-attempt quantiles.
 
 ---
 
@@ -102,7 +112,7 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 - **Deployed browser baseline**: `docs/model.litq8`, update 14,500. This is distinct from the frozen ZERO.3 training teacher.
 - **Student initialization and frozen teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
-- **Latest experiment**: Q2.3 observer seed 2 (mechanics pass; no capability claim)
-- **Next experiment**: Q2.3 guarded diagnostic seed 2 under the frozen 0.25% functional-probe budget
+- **Latest experiment**: Q2.3 guarded seed 2 (no-go; 200 accepts / 0 rejects, replay +2.685%)
+- **Next experiment**: None preregistered; design Q2.4 cumulative direct functional replay budget
 - **Active proposals**: See `PROPOSALS.md`
-- **Promotion status**: Not promoted. Quantity faculty passes only one of three declared seeds.
+- **Promotion status**: Not promoted. Q2.3 seed 2 was no-go; replication seeds remain sealed.

@@ -86,12 +86,14 @@ function resultMarkdown(result) {
   const rows = (result.frontier ?? []).map((entry) => `| ${entry.committed} | ${entry.totalAttempts} | ${entry.phase} | ${entry.quantityPass ? "yes" : "no"} | ${(100 * entry.minimumFacultyMargin).toFixed(3)}% | ${(100 * entry.replayRegression).toFixed(3)}% | ${entry.feasible ? "yes" : "no"} |`).join("\n");
   const promotion = result.promotion?.evaluatedOnceAtEnd ? `Promotion was evaluated exactly once; quantity pass: ${result.promotion.quantityPass ? "yes" : "no"}.` : `Promotion remained sealed: ${result.promotion?.reason ?? "observer stage"}.`;
   const modelHash = result.decision === "go" ? `\nModel SHA-256: \`${result.artifacts.quantizedSha256}\`.\n` : "";
-  return `# ZERO.4-Q2.3 seed 2 ${result.stage ?? "observer"}\n\nDecision: **${result.decision}**. Stop: ${result.stoppedReason}.\n\n${promotion}${modelHash}\n| Committed | Attempts | Phase | Quantity pass | Minimum gate margin | Replay regression | Feasible |\n| ---: | ---: | --- | :---: | ---: | ---: | :---: |\n${rows || "| — | — | — | — | — | — | — |"}\n`;
+  const lastFrontier = result.frontier?.at(-1);
+  const diagnostics = result.guardDiagnostics ? `\nGuard decisions: ${result.guardDiagnostics.accepted} accepted, ${result.guardDiagnostics.rejected} rejected. The maximum local replay-probe\nincrease was ${(100 * result.guardDiagnostics.maxRelativeProbeIncrease).toFixed(4)}%; ${result.guardDiagnostics.warningExceedances} attempts exceeded the ${(100 * result.guardDiagnostics.warningRelativeIncrease).toFixed(4)}% warning band and ${result.guardDiagnostics.hardExceedances === 0 ? "none" : result.guardDiagnostics.hardExceedances}\nexceeded the ${(100 * result.guardDiagnostics.hardRelativeIncrease).toFixed(2)}% hard band. The guard therefore made no intervention${lastFrontier ? `, while\nthe update-${lastFrontier.committed} public replay regression reached ${(100 * lastFrontier.replayRegression).toFixed(3)}% cumulatively` : ""}.\n` : "";
+  return `# ZERO.4-Q2.3 seed 2 ${result.stage ?? "observer"}\n\nDecision: **${result.decision}**. Stop: ${result.stoppedReason}.\n\n${promotion}${modelHash}${diagnostics}\n| Committed | Attempts | Phase | Quantity pass | Minimum gate margin | Replay regression | Feasible |\n| ---: | ---: | --- | :---: | ---: | ---: | :---: |\n${rows || "| — | — | — | — | — | — | — |"}\n`;
 }
 function writeResultArtifacts(result) {
   atomicWrite(path.join(options.out, "result.json"), `${JSON.stringify(result, null, 2)}\n`);
   atomicWrite(path.join(options.out, "manifest.json"), `${JSON.stringify(result, null, 2)}\n`);
-  atomicWrite(path.join(options.out, "selection.json"), `${JSON.stringify({ schema: "zero.zero4_q23_selection.v1", seed: 2, stage: result.stage, decision: result.decision, stoppedReason: result.stoppedReason, attempts: result.attempts, committed: result.committed, guardBudget: result.guardBudget, frontier: result.frontier, selected: result.selected ?? null, promotion: result.promotion }, null, 2)}\n`);
+  atomicWrite(path.join(options.out, "selection.json"), `${JSON.stringify({ schema: "zero.zero4_q23_selection.v1", seed: 2, stage: result.stage, decision: result.decision, stoppedReason: result.stoppedReason, attempts: result.attempts, committed: result.committed, guardBudget: result.guardBudget, ...(result.guardDiagnostics ? { guardDiagnostics: result.guardDiagnostics } : {}), frontier: result.frontier, selected: result.selected ?? null, promotion: result.promotion }, null, 2)}\n`);
   atomicWrite(path.join(options.out, result.stage === "observer" ? "OBSERVER.md" : "RESULTS.md"), resultMarkdown(result));
 }
 function selfTest() {
@@ -102,6 +104,8 @@ function selfTest() {
   const feasible = { feasible: true, minimumFacultyMargin: 0, replayLoss: 1.02 };
   const infeasible = { feasible: false, minimumFacultyMargin: 0.1, replayLoss: 1.01 };
   assert(updateFrontier([feasible], infeasible).frontier.length === 2, "feasibility frontier self-test failed");
+  const report = resultMarkdown({ stage: "guard", decision: "no-go", stoppedReason: "test", promotion: { evaluatedOnceAtEnd: false, reason: "test" }, guardDiagnostics: { accepted: 2, rejected: 0, warningRelativeIncrease: 0.001641, hardRelativeIncrease: 0.0025, warningExceedances: 1, hardExceedances: 0, maxRelativeProbeIncrease: 0.002013 }, frontier: [{ committed: 200, totalAttempts: 200, phase: "acquisition", quantityPass: true, minimumFacultyMargin: 0, replayRegression: 0.026854, feasible: false }] });
+  assert(report.includes("0.25% hard band") && report.includes("2.685% cumulatively"), "guard result report self-test failed");
   let rejected = false; try { parseArgs(["node", "script", "--seed", "1"]); } catch { rejected = true; }
   assert(rejected, "sealed seed self-test failed");
   console.log("Q2.3 driver self-test passed");
@@ -204,8 +208,19 @@ while (!stoppedReason) {
   if (executedAttempts < requestedAttempts || progress.consecutiveRejections >= contract.guard.maximum_consecutive_rejections) stoppedReason = "transaction rejection fallback ended the phase";
 }
 run("node", [tools.check, "benchmarks/zero4-q23-v1/contract.json", files.attempts], { quiet: true });
+const recordedAttempts = fs.readFileSync(files.attempts, "utf8").trim().split("\n").filter(Boolean).map(JSON.parse);
+const guardDiagnostics = options.stage === "guard" ? {
+  accepted: recordedAttempts.filter((attempt) => attempt.decision === "accept").length,
+  rejected: recordedAttempts.filter((attempt) => attempt.decision === "reject").length,
+  warningRelativeIncrease: observerGate.calibration.warningRelativeIncrease,
+  hardRelativeIncrease: guardBudget,
+  warningExceedances: recordedAttempts.filter((attempt) => attempt.relative_probe_change > observerGate.calibration.warningRelativeIncrease).length,
+  hardExceedances: recordedAttempts.filter((attempt) => attempt.relative_probe_change > guardBudget).length,
+  maxRelativeProbeIncrease: Math.max(...recordedAttempts.map((attempt) => attempt.relative_probe_change)),
+  minRelativeProbeChange: Math.min(...recordedAttempts.map((attempt) => attempt.relative_probe_change)),
+} : null;
 if (options.stage === "observer") {
-  const observedAttempts = fs.readFileSync(files.attempts, "utf8").trim().split("\n").filter(Boolean).map(JSON.parse);
+  const observedAttempts = recordedAttempts;
   const positiveChanges = observedAttempts.map((attempt) => attempt.relative_probe_change).filter((value) => typeof value === "number" && value > 0);
   const warningRelativeIncrease = Math.max(contract.guard.warning_relative_increase_floor, quantile(positiveChanges, contract.guard.calibration.warning_quantile));
   const hardRelativeIncrease = Math.min(contract.guard.hard_relative_increase_cap, Math.max(contract.guard.hard_relative_increase_floor, quantile(positiveChanges, contract.guard.calibration.hard_quantile) + contract.guard.calibration.hard_margin));
@@ -220,10 +235,10 @@ if (options.stage === "observer") {
 }
 const feasible = frontier.filter((entry) => entry.feasible).sort((a, b) => b.minimumFacultyMargin - a.minimumFacultyMargin || a.replayLoss - b.replayLoss || a.committed - b.committed);
 if (!feasible.length) {
-  const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, frontier, selected: null, promotion: { evaluatedOnceAtEnd: false, reason: "no jointly feasible public checkpoint" } };
+  const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, guardDiagnostics, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, frontier, selected: null, promotion: { evaluatedOnceAtEnd: false, reason: "no jointly feasible public checkpoint" } };
   writeResultArtifacts(result); event("complete", { decision: "no-go", stoppedReason }); console.error("Q2.3 seed 2 no-go; promotion remained sealed"); process.exit(0);
 }
 const selected = feasible[0]; fs.copyFileSync(selected.checkpoint, files.selected); run(tools.export, [files.selected, files.selectedQ8], { quiet: true });
 const promotionJson = path.join(options.out, "seed2-promotion.json"); run(tools.quantity, [files.selectedQ8, files.promotion, "--json", promotionJson, "--limit", "500"], { quiet: true }); const promotion = quantityMetrics(JSON.parse(fs.readFileSync(promotionJson, "utf8")));
-const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: promotion.quantityPass ? "go" : "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, selected, frontier, promotion: { evaluatedOnceAtEnd: true, quantityPass: promotion.quantityPass, rates: promotion.rates, gates: promotion.gates }, artifacts: { checkpoint: files.selected, checkpointSha256: sha256(files.selected), quantized: files.selectedQ8, quantizedSha256: sha256(files.selectedQ8) } };
+const result = { schema: "zero.zero4_q23_result.v1", seed: 2, stage: "guard", decision: promotion.quantityPass ? "go" : "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, guardDiagnostics, contractSha256: sha256("benchmarks/zero4-q23-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, selected, frontier, promotion: { evaluatedOnceAtEnd: true, quantityPass: promotion.quantityPass, rates: promotion.rates, gates: promotion.gates }, artifacts: { checkpoint: files.selected, checkpointSha256: sha256(files.selected), quantized: files.selectedQ8, quantizedSha256: sha256(files.selectedQ8) } };
 writeResultArtifacts(result); event("complete", { decision: result.decision, selectedCommitted: selected.committed, promotionQuantityPass: promotion.quantityPass }); console.log(`Q2.3 seed 2 ${result.decision}; promotion evaluated exactly once`);

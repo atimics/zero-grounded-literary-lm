@@ -665,5 +665,15 @@ so it remains a diagnostic and projection remains disabled. Atomic rollback
 with the functional probe is therefore the sole v1 intervention. Q2.3 begins
 with guarded diagnostic seed 2, and seeds 1 and 3 remain closed until seed 2
 produces a jointly feasible public-validation checkpoint. The promotion panel
-remains sealed until a feasible checkpoint is selected. The executable work
-and acceptance criteria are tracked in `ZERO4-BACKLOG.md`.
+remains sealed until a feasible checkpoint is selected.
+
+The guarded seed-2 diagnostic was a **no-go**. All 200 attempts committed; five
+exceeded the 0.1641% warning band, none exceeded the 0.25% hard band, and the
+largest local increase was 0.2013%. Those individually sub-threshold changes
+still accumulated to 2.685% public replay regression at update 200. Quantity
+passed exactly at its minimum gates, but the checkpoint was not jointly
+feasible, the declared two-full-evaluation replay stop fired, and promotion
+remained sealed. Seeds 1 and 3 therefore remain closed. This rejects the v1
+local-budget hypothesis, not the transactional mechanics; the next proposal
+must account for cumulative direct functional drift. The executable work and
+acceptance criteria are tracked in `ZERO4-BACKLOG.md`.

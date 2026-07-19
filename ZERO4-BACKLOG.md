@@ -2,8 +2,9 @@
 
 Status: Q2.2-R seed 2 is a measured go and seeds 1 and 3 are measured no-go.
 The Q2.3 v1 contract and transactional optimizer are merged. The full seed-2
-observer passed its exact learned-state equivalence gate and calibrated a
-0.25% hard functional-probe budget; the guarded seed-2 diagnostic is now open.
+observer passed its exact learned-state equivalence gate, but the guarded
+diagnostic was a measured no-go: its local 0.25% budget rejected no attempts
+and public replay regressed 2.685%. Seeds 1 and 3 remain sealed.
 ZERO.3 remains the deployed default. Geometry, art, and physics remain closed.
 
 **This document is one of three proposal sources.** The authoritative
@@ -92,22 +93,28 @@ The observer calibrated a 0.1641% warning band and a 0.25% hard band. Direct
 functional replay evaluation has final authority; projection remains disabled
 in v1 because the first-order diagnostic did not demonstrate predictive value.
 
-## P4 — ZERO.4-Q2.3 diagnostic seed 2  [STATUS: open — observer gate passed]
+## P4 — ZERO.4-Q2.3 diagnostic seed 2  [STATUS: complete — no-go]
 
 - [x] Freeze Q2.3 after P0–P3 pass without looking at promotion data.
-- [ ] Keep Q2.2 architecture, teachers, routing, corpus, initialization, and
+- [x] Keep Q2.2 architecture, teachers, routing, corpus, initialization, and
   public thresholds fixed; the transactional guard is the independent variable.
-- [ ] Retain exact recovery checkpoints every 25 committed updates and run the
+- [x] Retain exact recovery checkpoints every 25 committed updates and run the
   full feasibility/Pareto evaluation every 100 committed updates.
-- [ ] Stop on the declared compute, rejection, plateau, or replay conditions.
-- [ ] Open promotion exactly once only if a public-validation checkpoint is
+- [x] Stop on the declared compute, rejection, plateau, or replay conditions.
+- [x] Open promotion exactly once only if a public-validation checkpoint is
   jointly feasible.
 
 Acceptance: seed 2 must pass quantity, controller/kernel safety, and replay at
 one checkpoint. A no-go is recorded without seed substitution or threshold
 changes.
 
-## P5 — Replication and faculty expansion  [STATUS: proposed — blocked on P4]
+Measured result: 200 attempts / 200 commits, with zero rejections. Five local
+probe changes exceeded the 0.1641% warning band, but none exceeded the 0.25%
+hard band; the maximum was 0.2013%. Update 200 passed quantity exactly at the
+minimum gates but had 2.685% public replay regression. The run stopped after
+two consecutive full replay violations and never accessed promotion.
+
+## P5 — Replication and faculty expansion  [STATUS: closed — P4 no-go]
 
 - [ ] Run seeds 1 and 3 only after the diagnostic seed-2 gate passes.
 - [ ] Promote ZERO.4 only if all three seeds satisfy the frozen contract.
@@ -116,6 +123,16 @@ changes.
 
 Acceptance: every seed and channel is reported separately; one failed mandatory
 gate blocks promotion; ZERO.1, ZERO.2, and ZERO.3 hashes remain unchanged.
+
+## Next design question — cumulative functional replay budget
+
+Q2.3 falsified the assumption that an observer-quantile per-attempt budget is
+sufficient to control cumulative public replay. Any Q2.4 proposal must retain
+direct functional authority but budget drift relative to a frozen baseline or
+explicitly account for spent replay budget across accepted attempts. It must
+be preregistered as a new independent variable and pass synthetic rollback and
+resume tests before another capability run. Projection remains inadmissible
+until a predictor demonstrates measured validity.
 
 ## Deferred
 

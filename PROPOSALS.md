@@ -78,8 +78,8 @@ promotion outcome.
 ### P1: SAT-1 — Single-faculty ops scaling
 
 **Source**: `SATURATION.md` §3.1.
-**Status**: Deferred. P0 failed its three-seed gate; scaling is blocked until
-Q2.3 establishes replay-safe quantity training.
+**Status**: Deferred. P0 failed its three-seed gate and Q2.3's local guard was
+a no-go; scaling is blocked until replay-safe quantity training is established.
 **Depends on**: P0 passing.
 **Cost**: Unmeasured. Estimate in instance-hours only after P0 establishes an
 observed per-update and evaluation rate on the declared backend.
@@ -97,13 +97,13 @@ bottleneck — proceed to SAT-2.
 
 ---
 
-### P2: BACKLOG P0–P3 — Training infrastructure (active priority)
+### P2: BACKLOG P0–P3 — Training infrastructure (resolved)
 
 **Source**: `ZERO4-BACKLOG.md`.
-**Status**: Complete for the Q2.3 v1 diagnostic. The contract, schemas,
-transactional checkpoint, rollback guard, and CI are merged. The full seed-2
-observer passed learned-state equivalence and calibrated the direct functional
-guard; its first-order drift estimate was non-predictive and remains diagnostic.
+**Status**: Resolved — mechanics accepted, local-guard hypothesis rejected.
+The contract, schemas, transactional checkpoint, rollback guard, and CI are
+merged. The observer passed learned-state equivalence, but the guarded run
+accepted all 200 attempts and missed the public replay gate.
 **Depends on**: Q2.2-R replication failure (satisfied).
 **Cost**: Unmeasured compute time plus engineering time (transactional AdamW,
 replay guard implementation).
@@ -166,9 +166,9 @@ coordinate solving). Train as second faculty after quantity is solid.
 ### P5: BACKLOG P4–P5 — Q2.3 diagnostic and replication
 
 **Source**: `ZERO4-BACKLOG.md`.
-**Status**: Active. The P0–P3 implementation, CI, and observer-equivalence
-gates passed, opening the single guarded seed-2 diagnostic. Seeds 1 and 3
-remain closed.
+**Status**: Resolved — rejected. Guarded seed 2 was a no-go: quantity reached
+the frozen threshold at update 200, replay regressed 2.685%, and the local
+0.25% guard rejected no attempts. Seeds 1 and 3 remain closed.
 **Depends on**: BACKLOG P0–P3 passing.
 
 **Design**:
@@ -177,6 +177,27 @@ remain closed.
   quantity training. Prove seed 2 passes with guard enabled.
 - **P5**: Run seeds 1 and 3 with guard. Promote ZERO.4 only if all three
   seeds satisfy the frozen contract.
+
+---
+
+### P6: Q2.4 cumulative functional replay budget
+
+**Source**: Q2.3 seed-2 `RESULTS.md`.
+**Status**: Proposed — design and preregistration required before execution.
+**Depends on**: Q2.3 no-go (satisfied).
+
+**Design**:
+
+Keep the Q2.3 transaction and direct functional probe, but replace the
+independent per-attempt hard threshold with an explicitly cumulative replay
+budget relative to a frozen reference. Define how accepted attempts consume
+and may recover budget, then pass mixed accept/reject rollback and resume tests
+before opening one diagnostic seed. Do not use the non-predictive first-order
+signal for authority, change public thresholds, or open promotion during
+calibration.
+
+**Question**: Can a cumulative direct functional constraint bind before many
+sub-threshold local increases compound past the public 2% replay ceiling?
 
 ---
 
@@ -224,10 +245,9 @@ A proposal becomes RESOLVED when:
 
 ## Current state
 
-- **Active proposals**: P2 (transactional optimizer infrastructure)
-- **Preregistered next experiment**: P5 / ZERO.4-Q2.3 diagnostic seed 2
+- **Active proposal**: P6 / Q2.4 cumulative functional replay budget design
+- **Preregistered next experiment**: None; Q2.4 must be frozen before execution
 - **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: merge and pass CI for P2, then complete the full
-  observer-equivalence trajectory. Only a passing observer gate opens the
-  guarded Q2.3 seed-2 diagnostic.
+- **Next decision point**: freeze Q2.4 cumulative budget semantics and its
+  synthetic acceptance, rollback, resume, and promotion-sealing gates.
