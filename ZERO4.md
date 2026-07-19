@@ -701,3 +701,19 @@ cross-mode resume. Eight consecutive rejections end the active phase. Seed 2
 is the sole diagnostic run; seeds 1 and 3 and the promotion split stay sealed
 unless the frozen prospective gates open them. The full preregistration is in
 `benchmarks/zero4-q24-v1/contract.json`.
+
+### Q2.4 seed-2 result
+
+The prospective ilXyr execution resolved **no-go**. Attempts 1–66 committed;
+attempts 67–74 exceeded the 1.5% cumulative ceiling and rolled back, triggering
+the frozen eight-rejection fallback. The maximum accepted composite increase
+was 1.4253%, while the largest rejected candidate reached 1.5463%. Sentinel
+quantity still failed at commits 25 and 50, and the run stopped before the
+first 100-commit public evaluation. Promotion was therefore never opened, and
+replication seeds 1 and 3 remain sealed.
+
+This result supports the guard as an enforcement mechanism but rejects the v1
+learning-path hypothesis. Any Q2.5 proposal must alter or scale a candidate
+after the budget binds—for example through a prospectively specified
+backtracking rule—without loosening the 1.5% authority or the public quantity
+and replay gates. No Q2.5 experiment is registered yet.

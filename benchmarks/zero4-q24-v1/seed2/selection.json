@@ -1,0 +1,27 @@
+{
+  "schema": "zero.zero4_q24_selection.v1",
+  "seed": 2,
+  "stage": "cumulative-guard",
+  "decision": "no-go",
+  "stoppedReason": "transaction rejection fallback ended the phase",
+  "attempts": 74,
+  "committed": 66,
+  "guardBudget": 0.015,
+  "guardDiagnostics": {
+    "accepted": 66,
+    "rejected": 8,
+    "warningRelativeIncrease": 0.01,
+    "hardRelativeIncrease": 0.015,
+    "warningExceedances": 14,
+    "hardExceedances": 8,
+    "maxCumulativeRelativeIncrease": 0.015463133728703652,
+    "minCumulativeRelativeChange": -0.00004086775933103695,
+    "transactionSeconds": 61.767
+  },
+  "frontier": [],
+  "selected": null,
+  "promotion": {
+    "evaluatedOnceAtEnd": false,
+    "reason": "no jointly feasible public checkpoint"
+  }
+}
