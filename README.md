@@ -98,6 +98,10 @@ make zero4-q2
 make zero4-q21
 make zero4-q22 ZERO4_Q22_SEED=2
 make zero4-q22r ZERO4_Q22R_SEED=2
+make zero4-q23-check
+make zero4-q23-observer ZERO4_Q23_SEED=2
+# Only after the observer result passes:
+make zero4-q23-train ZERO4_Q23_SEED=2
 ```
 
 The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
@@ -138,11 +142,18 @@ Every Q2.2-R seed-level go directory also publishes its selected `selected.litq8
 model. The results-integrity check fails closed if that model is absent, has the
 wrong byte count, or does not match the SHA-256 frozen in `manifest.json`.
 
-Q2.3 is the proposed lower-level follow-up. It makes each AdamW attempt a
-transaction, measures faculty/replay conflict globally and by tensor, evaluates
-candidate weights in shadow state, and commits or rejects weights and optimizer
-moments together. It is a design and backlog, not an implemented or promoted
-experiment. See [`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer)
+Q2.3 is the preregistered lower-level follow-up. It makes each AdamW attempt a
+transaction, measures faculty/replay conflict globally and by tensor, and
+commits or rejects weights and optimizer moments together. Checkpoint v4 keeps
+the committed counter separate from attempt, RNG, and rejection state. The
+observer command runs a matching unguarded trajectory and requires the learned
+checkpoint payload to remain byte-identical; its frozen calibration rule then
+sets the nonzero guard band. Guard training cannot start without that observer
+result. Diagnostic seed 2 is the only open seed, promotion remains sealed until
+a public-feasible checkpoint exists, and seeds 1 and 3 remain closed. See the
+machine-readable
+[`contract.json`](benchmarks/zero4-q23-v1/contract.json),
+[`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer),
 and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
 
 ## Measure channel behavior

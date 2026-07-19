@@ -42,6 +42,11 @@ ZERO4_Q22R_STARTS ?= 400,300
 ZERO4_Q22R_SOURCE ?= benchmarks/zero4-q22-v1/seed$(ZERO4_Q22R_SEED)/selection.json
 ZERO4_Q22R_PREFIX ?= /tmp/zero4-q22r-seed$(ZERO4_Q22R_SEED)
 ZERO4_Q22R_RESULTS ?= benchmarks/zero4-q22r-v1/seed$(ZERO4_Q22R_SEED)
+ZERO4_Q23_SEED ?= 2
+ZERO4_Q23_PREFIX ?= /tmp/zero4-q23-seed$(ZERO4_Q23_SEED)
+ZERO4_Q23_RESULTS ?= benchmarks/zero4-q23-v1/seed$(ZERO4_Q23_SEED)
+ZERO4_Q23_OBSERVER_PREFIX ?= /tmp/zero4-q23-observer-seed$(ZERO4_Q23_SEED)
+ZERO4_Q23_OBSERVER_RESULTS ?= benchmarks/zero4-q23-v1/observer-seed$(ZERO4_Q23_SEED)
 MONKEY_PREFIX ?= infinite-monkey-v1
 MONKEY_BF_EXAMPLES ?= 30000
 MONKEY_LOGIC_EXAMPLES ?= 100000
@@ -79,6 +84,7 @@ endif
 	zero4-q22-data zero4-q22-check zero4-q22-train zero4-q22-eval zero4-q22 \
 	zero4-q22r-check zero4-q22r-train zero4-q22r-eval zero4-q22r \
 	zero4-q22r-aggregate \
+	zero4-q23-check zero4-q23-observer zero4-q23-train zero4-q23 \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -649,6 +655,123 @@ zero4-q22r: zero4-q22r-train
 		ZERO4_Q22R_PREFIX=$(ZERO4_Q22R_PREFIX) \
 		ZERO4_Q22R_RESULTS=$(ZERO4_Q22R_RESULTS)
 
+zero4-q23-check: literary_lm channel_corpus freeze_literary_teacher \
+		scripts/check_zero4_q23.mjs scripts/train_zero4_q23.mjs \
+		benchmarks/zero4-q23-v1/contract.json \
+		tests/fixtures/q23-channel.tsv
+	rm -f /tmp/q23-ci-observer.jsonl /tmp/q23-ci-guard.jsonl \
+		/tmp/q23-ci-resume-full.jsonl /tmp/q23-ci-resume-chunk.jsonl
+	node scripts/check_zero4_q23.mjs --self-test
+	node scripts/train_zero4_q23.mjs --self-test
+	./literary_lm --context 256 --dim 16 --heads 2 --layers 1 --ff 32 \
+		--text corpus/zero-foundation.txt --steps 1 --batch 1 \
+		--report 1 --validation 1 --seed 5 --save /tmp/q23-ci-init.ckpt \
+		--tokens 0 >/dev/null
+	./freeze_literary_teacher /tmp/q23-ci-init.ckpt \
+		/tmp/q23-ci.teacher >/dev/null
+	./channel_corpus --chat H tests/fixtures/q23-channel.tsv \
+		--out /tmp/q23-ci-channel.tok >/dev/null
+	./literary_lm --init /tmp/q23-ci.teacher \
+		--teacher /tmp/q23-ci.teacher --teacher-weight 0.15 \
+		--text corpus/zero-foundation.txt \
+		--hard-channel /tmp/q23-ci-channel.tok --sample-weight 2 \
+		--steps 2 --batch 1 --lr 0.001 --warmup 1 --dropout 0.02 \
+		--cosine --schedule-total 2 --report 2 --validation 2 --seed 77 \
+		--save /tmp/q23-ci-disabled.ckpt --tokens 0 >/dev/null
+	./literary_lm --init /tmp/q23-ci.teacher \
+		--teacher /tmp/q23-ci.teacher --teacher-weight 0.15 \
+		--text corpus/zero-foundation.txt \
+		--hard-channel /tmp/q23-ci-channel.tok --sample-weight 2 \
+		--steps 2 --batch 1 --lr 0.001 --warmup 1 --dropout 0.02 \
+		--cosine --schedule-total 2 --report 2 --validation 2 --seed 77 \
+		--save /tmp/q23-ci-observer.ckpt --transaction-mode observer \
+		--transaction-log /tmp/q23-ci-observer.jsonl \
+		--transaction-phase smoke --transaction-probe 1 --tokens 0 >/dev/null
+	cmp -i 80:80 /tmp/q23-ci-disabled.ckpt /tmp/q23-ci-observer.ckpt
+	node scripts/check_zero4_q23.mjs benchmarks/zero4-q23-v1/contract.json \
+		/tmp/q23-ci-observer.jsonl
+	./literary_lm --init /tmp/q23-ci.teacher \
+		--teacher /tmp/q23-ci.teacher --teacher-weight 0.15 \
+		--text corpus/zero-foundation.txt \
+		--hard-channel /tmp/q23-ci-channel.tok --sample-weight 100 \
+		--steps 2 --batch 1 --lr 0.1 --warmup 0 --dropout 0 \
+		--report 1 --validation 2 --seed 77 --save /tmp/q23-ci-guard.ckpt \
+		--transaction-mode guard --transaction-log /tmp/q23-ci-guard.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0 --transaction-max-rejections 1 \
+		--tokens 0 >/dev/null
+	node scripts/check_zero4_q23.mjs benchmarks/zero4-q23-v1/contract.json \
+		/tmp/q23-ci-guard.jsonl --require-rejection
+	./literary_lm --init /tmp/q23-ci.teacher \
+		--teacher /tmp/q23-ci.teacher --teacher-weight 0.15 \
+		--text corpus/zero-foundation.txt \
+		--hard-channel /tmp/q23-ci-channel.tok --sample-weight 100 \
+		--steps 6 --batch 1 --lr 0.1 --warmup 0 --dropout 0 --cosine \
+		--schedule-total 6 --report 100 --validation 2 --seed 77 \
+		--save /tmp/q23-ci-resume-full.ckpt --transaction-mode guard \
+		--transaction-log /tmp/q23-ci-resume-full.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0 --transaction-max-rejections 8 \
+		--tokens 0 >/dev/null
+	./literary_lm --init /tmp/q23-ci.teacher \
+		--teacher /tmp/q23-ci.teacher --teacher-weight 0.15 \
+		--text corpus/zero-foundation.txt \
+		--hard-channel /tmp/q23-ci-channel.tok --sample-weight 100 \
+		--steps 3 --batch 1 --lr 0.1 --warmup 0 --dropout 0 --cosine \
+		--schedule-total 6 --report 100 --validation 2 --seed 77 \
+		--save /tmp/q23-ci-resume-chunk.ckpt --transaction-mode guard \
+		--transaction-log /tmp/q23-ci-resume-chunk.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0 --transaction-max-rejections 8 \
+		--tokens 0 >/dev/null
+	./literary_lm --resume /tmp/q23-ci-resume-chunk.ckpt \
+		--teacher /tmp/q23-ci.teacher --teacher-weight 0.15 \
+		--text corpus/zero-foundation.txt \
+		--hard-channel /tmp/q23-ci-channel.tok --sample-weight 100 \
+		--steps 3 --batch 1 --lr 0.1 --warmup 0 --dropout 0 --cosine \
+		--schedule-offset 3 --schedule-total 6 --report 100 \
+		--validation 2 --seed 77 --save /tmp/q23-ci-resume-chunk.ckpt \
+		--transaction-mode guard \
+		--transaction-log /tmp/q23-ci-resume-chunk.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0 --transaction-max-rejections 8 \
+		--tokens 0 >/dev/null
+	cmp /tmp/q23-ci-resume-full.ckpt /tmp/q23-ci-resume-chunk.ckpt
+	node scripts/check_zero4_q23.mjs benchmarks/zero4-q23-v1/contract.json \
+		/tmp/q23-ci-resume-full.jsonl --require-mixed
+
+zero4-q23-observer: literary_lm export_literary quantity_request_eval \
+		zero4-q23-check zero4-q22-data corpus/bpe/.zero3.stamp channel-data \
+		scripts/train_zero4_q23.mjs
+	test -f teachers/zero1-foundation.teacher
+	test -f teachers/zero2-literary.teacher
+	test -f teachers/zero3-balanced-final.teacher
+	node scripts/train_zero4_q23.mjs --stage observer \
+		--prefix $(ZERO4_Q23_OBSERVER_PREFIX) \
+		--out $(ZERO4_Q23_OBSERVER_RESULTS) --data corpus/faculty/q22 \
+		--steps 1000 --consolidation-steps 400 --batch 2 \
+		--seed $(ZERO4_Q23_SEED) --recovery-every 25 --full-every 100 \
+		--sentinel-replay-batches 12 --full-replay-batches 48
+
+zero4-q23-train: literary_lm export_literary quantity_request_eval \
+		zero4-q23-check zero4-q22-data corpus/bpe/.zero3.stamp channel-data \
+		scripts/train_zero4_q23.mjs
+	test -f $(ZERO4_Q23_OBSERVER_RESULTS)/result.json
+	node scripts/train_zero4_q23.mjs --stage guard \
+		--prefix $(ZERO4_Q23_PREFIX) --out $(ZERO4_Q23_RESULTS) \
+		--data corpus/faculty/q22 \
+		--observer-result $(ZERO4_Q23_OBSERVER_RESULTS)/result.json \
+		--steps 1000 --consolidation-steps 400 --batch 2 \
+		--seed $(ZERO4_Q23_SEED) --recovery-every 25 --full-every 100 \
+		--sentinel-replay-batches 12 --full-replay-batches 48
+
+zero4-q23: zero4-q23-observer
+	$(MAKE) zero4-q23-train \
+		ZERO4_Q23_SEED=$(ZERO4_Q23_SEED) \
+		ZERO4_Q23_PREFIX=$(ZERO4_Q23_PREFIX) \
+		ZERO4_Q23_RESULTS=$(ZERO4_Q23_RESULTS) \
+		ZERO4_Q23_OBSERVER_RESULTS=$(ZERO4_Q23_OBSERVER_RESULTS)
+
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
 
@@ -1010,6 +1133,7 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		--tokens 0 >/dev/null
 	cmp /tmp/q22-full.ckpt /tmp/q22-chunk.ckpt
 	node scripts/train_zero4_q22.mjs --self-test >/dev/null
+	$(MAKE) zero4-q23-check >/dev/null
 	python3 scripts/compile_result.py --self-test >/dev/null
 	./logic_corpus --self-test >/dev/null
 	./brainfuck_corpus --self-test >/dev/null

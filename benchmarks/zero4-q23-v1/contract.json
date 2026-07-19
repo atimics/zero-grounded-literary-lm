@@ -1,0 +1,101 @@
+{
+  "schema": "zero.zero4_q23_contract.v1",
+  "id": "zero4-q23-v1",
+  "status": "preregistered",
+  "independent_variable": "transactional AdamW with a local functional replay guard",
+  "diagnostic_seed": 2,
+  "sealed_replication_seeds": [1, 3],
+  "student": {
+    "parameters": 4852992,
+    "architecture": "unchanged from Q2.2",
+    "initialization": "teachers/zero3-balanced-final.teacher"
+  },
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "quantity_corpus": {
+    "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35",
+    "tokens_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+    "sentinel_sha256": "02c6908142f7affb035d606a02994c3ee15ef3bd6ecb8915f8f64f86c9aa2be3",
+    "public_sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "promotion_sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "promotion_inaccessible_during_training": true
+  },
+  "replay_corpus": {
+    "corpus/literary.bpe": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+    "corpus/bpe/zero-foundation.tok": "87b039e5d4645ebf2a521454a13b1a912cbd1c53ff8fbcfb26baf9da1f5e638b",
+    "corpus/bpe/shakespeare.tok": "ffa36c4890ca07d403e8d76fab47026e1b6d46b1fb2b9d2dc1c31c206ff9351d",
+    "corpus/bpe/blake.tok": "329bf291a5842897b59151640a57d2a2270a451e31c99adbf7d3d6f684d2576c",
+    "corpus/bpe/crowley.tok": "68decb62cbd4f1efaff34067eb5a533406d99a6bc0e60ca219846b39306177da",
+    "corpus/bpe/bible-kjv.tok": "0c387e697fbe339712a62efb75d27c788365ce90911895dbf66e732deee44ed9",
+    "corpus/channel/literary-dialogue.tok": "d401868f33f2ac318315b167dd2bc6850edb3a8b0aaf5b18c1b2fa8cba42c379"
+  },
+  "source_order": [
+    "corpus/bpe/zero-foundation.tok",
+    "corpus/bpe/shakespeare.tok",
+    "corpus/bpe/blake.tok",
+    "corpus/bpe/crowley.tok",
+    "corpus/bpe/bible-kjv.tok",
+    "corpus/channel/literary-dialogue.tok",
+    "corpus/faculty/q22/quantity-request.tok"
+  ],
+  "learned_state": ["weights", "adamw_first_moments", "adamw_second_moments", "committed_update"],
+  "orchestration_state": ["attempt", "sampler_rng", "consecutive_rejections", "transaction_mode"],
+  "parameter_groups": [
+    "token_embedding",
+    "layer.0.norm1", "layer.0.wq", "layer.0.wk", "layer.0.wv", "layer.0.wo", "layer.0.norm2", "layer.0.w1", "layer.0.w2",
+    "layer.1.norm1", "layer.1.wq", "layer.1.wk", "layer.1.wv", "layer.1.wo", "layer.1.norm2", "layer.1.w1", "layer.1.w2",
+    "layer.2.norm1", "layer.2.wq", "layer.2.wk", "layer.2.wv", "layer.2.wo", "layer.2.norm2", "layer.2.w1", "layer.2.w2",
+    "layer.3.norm1", "layer.3.wq", "layer.3.wk", "layer.3.wv", "layer.3.wo", "layer.3.norm2", "layer.3.w1", "layer.3.w2",
+    "layer.4.norm1", "layer.4.wq", "layer.4.wk", "layer.4.wv", "layer.4.wo", "layer.4.norm2", "layer.4.w1", "layer.4.w2",
+    "layer.5.norm1", "layer.5.wq", "layer.5.wk", "layer.5.wv", "layer.5.wo", "layer.5.norm2", "layer.5.w1", "layer.5.w2",
+    "final_norm"
+  ],
+  "stages": [
+    { "id": "observer", "intervention": false, "must_be_learned_state_equivalent_to_unguarded": true },
+    { "id": "guard", "intervention": true, "requires_observer_acceptance": true }
+  ],
+  "guard": {
+    "functional_probe_every_attempts": 1,
+    "calibration": {
+      "source": "completed observer seed-2 attempt log",
+      "statistic": "positive relative functional replay-probe increase",
+      "warning_quantile": 0.95,
+      "hard_quantile": 0.99,
+      "hard_margin": 0.0005
+    },
+    "warning_relative_increase_floor": 0.0005,
+    "hard_relative_increase_floor": 0.0025,
+    "hard_relative_increase_cap": 0.01,
+    "maximum_consecutive_rejections": 8,
+    "fallback": "end the active phase",
+    "projection_enabled": false,
+    "public_replay_ceiling": 0.02
+  },
+  "budget": {
+    "acquisition_attempts": 1000,
+    "consolidation_attempts": 400,
+    "batch": 2,
+    "acquisition_learning_rate": 0.00002,
+    "consolidation_learning_rate": 0.000005,
+    "recovery_checkpoint_every_committed_updates": 25,
+    "full_evaluation_every_committed_updates": 100
+  },
+  "gates": {
+    "closed_minimum": 0.99,
+    "syntax_minimum": 0.99,
+    "operation_minimum": 0.95,
+    "arguments_minimum": 0.95,
+    "exact_request_minimum": 0.95,
+    "oracle_arithmetic_minimum": 1.0,
+    "committed_minimum": 0.95,
+    "exact_artifact_minimum": 0.95,
+    "rejected_state_mutations_maximum": 0,
+    "replay_relative_regression_maximum": 0.02
+  },
+  "promotion_policy": "open the disjoint promotion split exactly once only after a jointly feasible public checkpoint; otherwise record no-go",
+  "replication_policy": "run seeds 1 and 3 only if diagnostic seed 2 passes"
+}

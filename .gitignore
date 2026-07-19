@@ -7,7 +7,7 @@ channel_corpus
 export_literary
 freeze_literary_teacher
 literary_infer
-zero_eval  # binary only
+zero_eval
 faculty_controller
 faculty_eval
 quantity_request_eval
@@ -15,7 +15,6 @@ bpe_tokenizer
 
 # Model artifacts (large binaries)
 *.ckpt
-zero_eval  # binary only
 !teachers/*.teacher
 *.litq8
 !benchmarks/zero4-q22r-v1/seed*/selected.litq8

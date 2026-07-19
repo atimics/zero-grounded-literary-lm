@@ -32,11 +32,12 @@ When proposals conflict, the tiebreaker is:
 
 ## Active proposals (ordered by priority)
 
-### P0: Q2.2-R seeds 1 and 3 replication
+### P0: Q2.2-R seeds 1 and 3 replication (resolved)
 
 **Source**: Q2.2-R seed 2 RESULTS.md, EXPERIMENTS.md decision trace.
-**Status**: Proposed. Not started.
-**Blocks**: All other proposals. Until three-seed quantity passes, nothing else matters.
+**Status**: Resolved — rejected. Seeds 1 and 3 were measured no-go; only seed
+2 passed. Quantity is not promoted and ZERO.3 remains current.
+**Blocks**: Resolved by activating transactional training infrastructure.
 **Depends on**: Nothing.
 **Cost**: To be reported in `c6i.4xlarge` instance-hours after the first seed.
 The current runner is CPU-only; no GPU-day estimate has been measured.
@@ -77,7 +78,8 @@ promotion outcome.
 ### P1: SAT-1 — Single-faculty ops scaling
 
 **Source**: `SATURATION.md` §3.1.
-**Status**: Proposed. Blocked on P0 (three-seed quantity pass).
+**Status**: Deferred. P0 failed its three-seed gate; scaling is blocked until
+Q2.3 establishes replay-safe quantity training.
 **Depends on**: P0 passing.
 **Cost**: Unmeasured. Estimate in instance-hours only after P0 establishes an
 observed per-update and evaluation rate on the declared backend.
@@ -95,12 +97,14 @@ bottleneck — proceed to SAT-2.
 
 ---
 
-### P2: BACKLOG P0–P3 — Training infrastructure
+### P2: BACKLOG P0–P3 — Training infrastructure (active priority)
 
 **Source**: `ZERO4-BACKLOG.md`.
-**Status**: Proposed. Lower priority than P0 and P1 if P0 passes; elevated
-to P0 if P0 fails.
-**Depends on**: P0 outcome.
+**Status**: Active. P0 failed, so this is the current highest-priority work.
+The v1 contract, schemas, observer diagnostics, transactional checkpoint, and
+rollback guard are implemented on an unmerged branch; the full seed-2 observer
+trajectory and CI remain acceptance gates.
+**Depends on**: Q2.2-R replication failure (satisfied).
 **Cost**: Unmeasured compute time plus engineering time (transactional AdamW,
 replay guard implementation).
 
@@ -162,8 +166,8 @@ coordinate solving). Train as second faculty after quantity is solid.
 ### P5: BACKLOG P4–P5 — Q2.3 diagnostic and replication
 
 **Source**: `ZERO4-BACKLOG.md`.
-**Status**: Proposed. Subsumed by SAT-2 if replay guard works; elevated if
-P0 fails and BACKLOG P0–P3 succeeds.
+**Status**: Preregistered. Seed 2 is sealed behind the P0–P3 implementation,
+observer-equivalence, and CI gates; seeds 1 and 3 remain closed.
 **Depends on**: BACKLOG P0–P3 passing.
 
 **Design**:
@@ -219,8 +223,10 @@ A proposal becomes RESOLVED when:
 
 ## Current state
 
-- **Active proposals**: P0 (seeds 1 & 3 replication)
-- **Blocked proposals**: P1–P5 (all depend on P0)
+- **Active proposals**: P2 (transactional optimizer infrastructure)
+- **Preregistered next experiment**: P5 / ZERO.4-Q2.3 diagnostic seed 2
+- **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: When P0 completes. If all three seeds pass, P1
-  (ops scaling) activates. If not, BACKLOG P0–P3 activates.
+- **Next decision point**: merge and pass CI for P2, then complete the full
+  observer-equivalence trajectory. Only a passing observer gate opens the
+  guarded Q2.3 seed-2 diagnostic.

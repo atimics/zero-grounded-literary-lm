@@ -13,6 +13,12 @@ typedef struct {
 } CheckpointHeader;
 
 typedef struct {
+    uint64_t attempts;
+    uint32_t consecutive_rejections;
+    uint32_t transaction_mode;
+} CheckpointOrchestration;
+
+typedef struct {
     char magic[8];
     uint32_t version, vocab, context, dim, heads, layers, ff;
     uint32_t parameter_count;
@@ -150,12 +156,17 @@ int main(int argc, char **argv)
     weight_only = memcmp(checkpoint.magic, teacher_magic, 8) == 0;
     if ((!weight_only && memcmp(checkpoint.magic, checkpoint_magic, 8) != 0) ||
         (weight_only ? checkpoint.version != 1U
-                     : (checkpoint.version < 2 || checkpoint.version > 3)) ||
+                     : (checkpoint.version < 2 || checkpoint.version > 4)) ||
         (checkpoint.reserved & 1U) == 0 || checkpoint.vocab < 2 ||
         checkpoint.vocab > 2048 || checkpoint.context < 2 ||
         checkpoint.parameter_count != 2 + checkpoint.layers * 8) {
         fclose(input);
         fail("checkpoint is not a supported rotary literary model");
+    }
+    if (!weight_only && checkpoint.version >= 4U) {
+        CheckpointOrchestration orchestration;
+        read_exact(input, &orchestration, sizeof(orchestration), 1,
+                   input_path);
     }
 
     temporary = checked_alloc(strlen(output_path) + 5, 1);

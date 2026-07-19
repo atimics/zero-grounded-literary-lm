@@ -1,0 +1,12 @@
+guard	1		alice	Name the operation for two and three.	transactional optimizer smoke test	Alice asks for an operation.
+guard	2	1	bob	Use quantity add and preserve the replay state.		Bob selects addition.
+guard	3	2	alice	Return the exact artifact five.		The result is five.
+guard	4	3	bob	Close the request without mutation.		The request closes safely.
+guard	5	4	alice	Name the operation for seven and four.		Alice asks a second operation.
+guard	6	5	bob	Use quantity subtract and bind both arguments.		Bob selects subtraction.
+guard	7	6	alice	Return the exact artifact three.		The result is three.
+guard	8	7	bob	Close the request without mutation.		The second request closes safely.
+guard	9	8	alice	Name the operation for six and five.		Alice asks a third operation.
+guard	10	9	bob	Use quantity multiply and preserve replay.		Bob selects multiplication.
+guard	11	10	alice	Return the exact artifact thirty.		The result is thirty.
+guard	12	11	bob	Close the request without mutation.		The third request closes safely.
