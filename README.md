@@ -151,9 +151,12 @@ checkpoint payload to remain byte-identical; its frozen calibration rule then
 sets the nonzero guard band. The full seed-2 observer passed: 200/200 attempts
 committed with byte-identical learned state, calibrating a 0.25% hard direct
 functional-probe budget. Its first-order replay predictor was non-predictive,
-so projection remains disabled. Diagnostic seed 2 is now the only open guarded
-run; promotion remains sealed until a public-feasible checkpoint exists, and
-seeds 1 and 3 remain closed. See the machine-readable
+so projection remains disabled. The guarded seed-2 run was a no-go: all 200
+attempts committed, quantity reached the frozen threshold, and public replay
+regressed 2.685%. No local probe increase reached the hard band, demonstrating
+that the per-attempt budget did not control cumulative drift. Promotion and
+seeds 1 and 3 remain sealed; the next design target is a preregistered
+cumulative direct functional budget. See the machine-readable
 [`contract.json`](benchmarks/zero4-q23-v1/contract.json),
 [`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer),
 and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
