@@ -2466,7 +2466,6 @@ static void transaction_initialize_cumulative_baseline(
     const CorpusRange *ranges, int range_count, int artifact_weight)
 {
     double total = 0.0;
-    int all_finite = 1;
     int eligible_count = 0;
     int range_index;
     int probe_index = 0;
@@ -2501,6 +2500,7 @@ static double transaction_cumulative_candidate_change(
     double *candidate_mean)
 {
     double total = 0.0;
+    int all_finite = 1;
     int range_index;
     int probe_index = 0;
     for (range_index = 0; range_index < range_count; ++range_index) {
