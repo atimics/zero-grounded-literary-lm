@@ -82,10 +82,22 @@ cat > "$GITHUB_POLICY" <<EOF
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "UseLaunchInfrastructure",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:${REGION}::image/*",
+        "arn:aws:ec2:${REGION}:${ACCOUNT_ID}:subnet/*",
+        "arn:aws:ec2:${REGION}:${ACCOUNT_ID}:security-group/*",
+        "arn:aws:ec2:${REGION}:${ACCOUNT_ID}:network-interface/*",
+        "arn:aws:ec2:${REGION}:${ACCOUNT_ID}:volume/*"
+      ]
+    },
+    {
       "Sid": "LaunchTaggedTrainingInstances",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
-      "Resource": "*",
+      "Resource": "arn:aws:ec2:${REGION}:${ACCOUNT_ID}:instance/*",
       "Condition": {"StringEquals": {"aws:RequestTag/Project": "zero"}}
     },
     {
