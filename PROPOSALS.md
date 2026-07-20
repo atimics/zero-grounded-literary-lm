@@ -221,7 +221,8 @@ learning path without weakening the cumulative or public gates?
 **Source**: Q2.5 seed-2 `RESULTS.md` and terminal attempt trace.
 **Status**: Diagnostic accepted. Seed 2 resolved go after 700/700 commits,
 selected update 500 passed public and promotion, and no frozen gate changed.
-Family promotion remains pending replication seeds 1 and 3.
+The Q2.6-R source adapter and all-three-seeds family rule are now prospectively
+frozen; seeds 1 and 3 remain unobserved pending downstream registration.
 **Depends on**: Q2.5 no-go (satisfied).
 
 **Design**:
@@ -283,8 +284,9 @@ A proposal becomes RESOLVED when:
 ## Current state
 
 - **Active proposal**: P8 / Q2.6 replication seeds 1 and 3
-- **Preregistered next experiment**: Freeze a replication adapter that reuses the accepted Q2.6 design without changing seed-2 evidence
+- **Preregistered next experiment**: Q2.6-R seeds 1 and 3, reusing the accepted Q2.6 design without changing seed-2 evidence
 - **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: prospectively bind seeds 1 and 3 to the unchanged
-  Q2.6 source, metrics, gates, and family aggregation rule before execution.
+- **Next decision point**: merge the two downstream prospective registrations,
+  then execute both seeds under the unchanged Q2.6 source, metrics, gates, and
+  family aggregation rule.

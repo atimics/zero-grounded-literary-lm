@@ -1,8 +1,8 @@
 # ZERO.4 — Three Teachers, Many Channels
 
-Status: teacher stable frozen; controller and pilot corpora implemented;
-Q2.2-R seed 2 passed its joint gate, while seeds 1 and 3 and full ZERO.4
-promotion remain pending, 2026-07-18.
+Status: teacher stable frozen; Q2.6 diagnostic seed 2 passed its public and
+promotion gates; Q2.6-R seeds 1 and 3 are prospectively registered and full
+ZERO.4 promotion remains pending, 2026-07-19.
 
 ZERO.4 has exactly three teacher models: ZERO.1, ZERO.2, and ZERO.3.
 Every faculty channel owns a channel-specific policy for consulting those same

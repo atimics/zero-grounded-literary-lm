@@ -1,0 +1,40 @@
+{
+  "schema": "zero.zero4_q26_replication_contract.v1",
+  "id": "zero4-q26r-v1",
+  "status": "preregistered",
+  "question": "Does the accepted Q2.6 global replay-tangent intervention reproduce on seeds 1 and 3 under the unchanged gates?",
+  "authorized_seeds": [1, 3],
+  "declared_family_seeds": [1, 2, 3],
+  "execution_policy": {
+    "independent_runs": true,
+    "execute_both_authorized_seeds": true,
+    "abort_after_first_no_go": false,
+    "duplicate_execution_forbidden": true,
+    "result_publication_required_before_aggregation": true
+  },
+  "design_lock": {
+    "diagnostic_contract": "benchmarks/zero4-q26-v1/contract.json",
+    "diagnostic_contract_sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80",
+    "diagnostic_result": "benchmarks/zero4-q26-v1/seed2/result.json",
+    "diagnostic_result_sha256": "6fba7b46a00c881ab129ea706125fee0924d897836784274275ae9517805eb5f",
+    "diagnostic_model": "benchmarks/zero4-q26-v1/seed2/selected.litq8",
+    "diagnostic_model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "diagnostic_driver_sha256": "15112a37bc951290b99e63bea9e64dc85a143a12cabaa6223c42628d99714f88",
+    "diagnostic_checker_sha256": "85681beb4eed9f1ae632d7a258629727015baea62ed0415b7bdbab40a17ef269",
+    "diagnostic_execution_commit": "412ab70a7922a8f964a3ab7429dd601ba0250383",
+    "diagnostic_result_commit": "94c7e1d0f45f49d6893922d32d985761d502e79b",
+    "permitted_change": "authorize seed identity and route outputs into zero4-q26r-v1; the cumulative-tangent intervention, initialization, teachers, corpora, optimizer, budgets, scales, cadence, stop rules, direct authorities, thresholds, and promotion split are inherited byte-for-byte from the diagnostic contract"
+  },
+  "seed_outcomes": {
+    "go": "the seed has a jointly feasible public checkpoint and its exactly-once disjoint promotion evaluation passes every quantity gate",
+    "no_go": "the run completes validly without the public-and-promotion conjunction before a frozen stop condition",
+    "execution_failure": "the run exits unsuccessfully, times out, duplicates a result, or violates the frozen metric or source envelope"
+  },
+  "family_rule": {
+    "decision": "go if and only if seeds 1, 2, and 3 each resolve go; otherwise no-go after all three declared results exist",
+    "promotion_eligible": "true if and only if the family decision is go",
+    "promoted_model_selection": "the prospectively selected seed-2 model remains the ZERO.4 candidate; replication seed models are evidence and cannot replace it post hoc",
+    "promoted_model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "failed_family_current_model": "ZERO.3"
+  }
+}

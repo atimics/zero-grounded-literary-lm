@@ -214,6 +214,15 @@ See
 [`contract.json`](benchmarks/zero4-q26-v1/contract.json) and
 [`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
 
+Q2.6-R prospectively authorizes those two replications without altering the
+diagnostic record. Seeds 1 and 3 inherit the exact Q2.6 intervention,
+initialization, corpora, optimizer, budgets, direct replay authorities, public
+gates, disjoint promotion split, and stop rules. Both seeds must execute even
+if the first is no-go. Family promotion requires seeds 1, 2, and 3 all to pass;
+the selected seed-2 model is the only frozen promotion candidate. No Q2.6-R
+result has been observed. See the
+[`replication contract`](benchmarks/zero4-q26r-v1/contract.json).
+
 ## Measure channel behavior
 
 The frozen [`zero-channel-v1`](benchmarks/zero-channel-v1/README.md) benchmark

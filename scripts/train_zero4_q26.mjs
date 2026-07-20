@@ -20,8 +20,8 @@ function run(command, args, { quiet = false } = {}) {
 }
 function parseArgs(argv) {
   if (argv.includes("--self-test")) return { selfTest: true };
-  const options = { prefix: "/tmp/zero4-q26-seed2", out: "benchmarks/zero4-q26-v1/seed2", data: "corpus/faculty/q22", steps: 1000, consolidationSteps: 400, batch: 2, seed: 2, recoveryEvery: 25, fullEvery: 100, sentinelReplayBatches: 12, fullReplayBatches: 48 };
-  const strings = new Set(["prefix", "out", "data"]);
+  const options = { prefix: "/tmp/zero4-q26-seed2", out: "benchmarks/zero4-q26-v1/seed2", data: "corpus/faculty/q22", replicationContract: null, steps: 1000, consolidationSteps: 400, batch: 2, seed: 2, recoveryEvery: 25, fullEvery: 100, sentinelReplayBatches: 12, fullReplayBatches: 48 };
+  const strings = new Set(["prefix", "out", "data", "replicationContract"]);
   for (let index = 2; index < argv.length; ++index) {
     const option = argv[index];
     if (!option.startsWith("--") || index + 1 >= argv.length) fail(`unknown or incomplete option ${option}`);
@@ -30,7 +30,9 @@ function parseArgs(argv) {
     const value = argv[++index];
     options[key] = strings.has(key) ? value : Number(value);
   }
-  assert(options.seed === 2, "Q2.6 v1 permits diagnostic seed 2 only; seeds 1 and 3 are sealed");
+  const diagnostic = options.seed === 2 && options.replicationContract === null;
+  const replication = [1, 3].includes(options.seed) && options.replicationContract === "benchmarks/zero4-q26r-v1/contract.json";
+  assert(diagnostic || replication, "Q2.6 permits diagnostic seed 2 or prospectively authorized Q2.6-R seeds 1 and 3 only");
   for (const key of ["steps", "consolidationSteps", "batch", "recoveryEvery", "fullEvery", "sentinelReplayBatches", "fullReplayBatches"]) assert(Number.isInteger(options[key]) && options[key] > 0, `${key} must be a positive integer`);
   assert(options.recoveryEvery === 25 && options.fullEvery === 100, "Q2.6 recovery/full cadences are frozen at 25/100 committed updates");
   return options;
@@ -66,12 +68,12 @@ function resultMarkdown(result) {
   const promotion = result.promotion?.evaluatedOnceAtEnd ? `Promotion was evaluated exactly once; quantity pass: ${result.promotion.quantityPass ? "yes" : "no"}.` : `Promotion remained sealed: ${result.promotion?.reason}.`;
   const modelHash = result.decision === "go" ? `\nModel SHA-256: \`${result.artifacts.quantizedSha256}\`.\n` : "";
   const diagnostics = result.guardDiagnostics ? `\nTangent decisions: ${result.guardDiagnostics.projectedTrials} projected trials and ${result.guardDiagnostics.projectedAccepted} projected commits; ${result.guardDiagnostics.fullScaleAccepted} full-scale commits, ${result.guardDiagnostics.backtrackedAccepted} scaled commits, and ${result.guardDiagnostics.exhausted} exhausted outer attempts across ${result.guardDiagnostics.trialEvaluations} candidate trials. The minimum accepted scale was ${result.guardDiagnostics.minAcceptedScale}; the maximum committed composite replay increase was ${(100 * result.guardDiagnostics.maxCommittedRelativeIncrease).toFixed(3)}%.\n` : "";
-  return `# ZERO.4-Q2.6 seed 2 cumulative tangent projection\n\nDecision: **${result.decision}**. Stop: ${result.stoppedReason}.\n\n${promotion}${modelHash}${diagnostics}\n| Committed | Attempts | Phase | Quantity pass | Minimum gate margin | Replay regression | Feasible |\n| ---: | ---: | --- | :---: | ---: | ---: | :---: |\n${rows || "| — | — | — | — | — | — | — |"}\n`;
+  return `# ZERO.4-Q2.6 seed ${result.seed} cumulative tangent projection\n\nDecision: **${result.decision}**. Stop: ${result.stoppedReason}.\n\n${promotion}${modelHash}${diagnostics}\n| Committed | Attempts | Phase | Quantity pass | Minimum gate margin | Replay regression | Feasible |\n| ---: | ---: | --- | :---: | ---: | ---: | :---: |\n${rows || "| — | — | — | — | — | — | — |"}\n`;
 }
 function writeResultArtifacts(result) {
   atomicWrite(path.join(options.out, "result.json"), `${JSON.stringify(result, null, 2)}\n`);
   atomicWrite(path.join(options.out, "manifest.json"), `${JSON.stringify(result, null, 2)}\n`);
-  atomicWrite(path.join(options.out, "selection.json"), `${JSON.stringify({ schema: "zero.zero4_q26_selection.v1", seed: 2, stage: result.stage, decision: result.decision, stoppedReason: result.stoppedReason, attempts: result.attempts, committed: result.committed, guardBudget: result.guardBudget, guardDiagnostics: result.guardDiagnostics, frontier: result.frontier, selected: result.selected ?? null, promotion: result.promotion }, null, 2)}\n`);
+  atomicWrite(path.join(options.out, "selection.json"), `${JSON.stringify({ schema: "zero.zero4_q26_selection.v1", seed: result.seed, stage: result.stage, decision: result.decision, stoppedReason: result.stoppedReason, attempts: result.attempts, committed: result.committed, guardBudget: result.guardBudget, guardDiagnostics: result.guardDiagnostics, frontier: result.frontier, selected: result.selected ?? null, promotion: result.promotion }, null, 2)}\n`);
   atomicWrite(path.join(options.out, "RESULTS.md"), resultMarkdown(result));
 }
 function selfTest() {
@@ -83,13 +85,30 @@ function selfTest() {
   const infeasible = { feasible: false, minimumFacultyMargin: 0.1, replayLoss: 1.01 };
   assert(updateFrontier([feasible], infeasible).frontier.length === 2, "feasibility frontier self-test failed");
   let rejected = false; try { parseArgs(["node", "script", "--seed", "1"]); } catch { rejected = true; }
-  assert(rejected, "sealed seed self-test failed");
+  assert(rejected, "unregistered replication seed self-test failed");
+  const replication = parseArgs(["node", "script", "--seed", "1", "--replication-contract", "benchmarks/zero4-q26r-v1/contract.json"]);
+  assert(replication.seed === 1 && replication.replicationContract, "registered replication seed self-test failed");
   console.log("Q2.6 driver self-test passed");
 }
 
 const options = parseArgs(process.argv);
 if (options.selfTest) { selfTest(); process.exit(0); }
-const contract = JSON.parse(fs.readFileSync("benchmarks/zero4-q26-v1/contract.json", "utf8"));
+const diagnosticContractPath = "benchmarks/zero4-q26-v1/contract.json";
+const contract = JSON.parse(fs.readFileSync(diagnosticContractPath, "utf8"));
+let replicationContract = null;
+if (options.replicationContract) {
+  replicationContract = JSON.parse(fs.readFileSync(options.replicationContract, "utf8"));
+  const diagnosticResultPath = "benchmarks/zero4-q26-v1/seed2/result.json";
+  const diagnosticModelPath = "benchmarks/zero4-q26-v1/seed2/selected.litq8";
+  assert(replicationContract.schema === "zero.zero4_q26_replication_contract.v1" && replicationContract.status === "preregistered", "Q2.6-R contract identity drifted");
+  assert(JSON.stringify(replicationContract.authorized_seeds) === "[1,3]" && replicationContract.authorized_seeds.includes(options.seed), "Q2.6-R seed is not authorized");
+  assert(replicationContract.design_lock.diagnostic_contract_sha256 === sha256(diagnosticContractPath), "Q2.6-R diagnostic contract drifted");
+  assert(replicationContract.design_lock.diagnostic_result_sha256 === sha256(diagnosticResultPath), "Q2.6-R diagnostic result drifted");
+  assert(replicationContract.design_lock.diagnostic_model_sha256 === sha256(diagnosticModelPath), "Q2.6-R diagnostic model drifted");
+  const diagnosticResult = JSON.parse(fs.readFileSync(diagnosticResultPath, "utf8"));
+  assert(diagnosticResult.seed === 2 && diagnosticResult.decision === "go" && diagnosticResult.promotion?.quantityPass === true, "Q2.6-R authorization lacks the seed-2 go");
+}
+const resultContractFields = replicationContract ? { replicationContractSha256: sha256(options.replicationContract), diagnosticContractSha256: sha256(diagnosticContractPath) } : { contractSha256: sha256(diagnosticContractPath) };
 const tools = { lm: "./literary_lm", export: "./export_literary", quantity: "./quantity_request_eval", check: "scripts/check_zero4_q26.mjs" };
 const files = { tokens: path.join(options.data, "quantity-request.tok"), sentinel: path.join(options.data, "quantity-request.sentinel.tsv"), public: path.join(options.data, "quantity-request.public.tsv"), promotion: path.join(options.data, "quantity-request.promotion.tsv"), active: `${options.prefix}-active.ckpt`, attempts: path.join(options.out, "optimizer-attempts.jsonl"), events: path.join(options.out, "events.jsonl"), selected: path.join(options.out, "selected.ckpt"), selectedQ8: path.join(options.out, "selected.litq8") };
 const teachers = { zero1: "teachers/zero1-foundation.teacher", zero2: "teachers/zero2-literary.teacher", zero3: "teachers/zero3-balanced-final.teacher" };
@@ -197,10 +216,10 @@ const guardDiagnostics = {
 };
 const feasible = frontier.filter((entry) => entry.feasible).sort((a, b) => b.minimumFacultyMargin - a.minimumFacultyMargin || a.replayLoss - b.replayLoss || a.committed - b.committed);
 if (!feasible.length) {
-  const result = { schema: "zero.zero4_q26_result.v1", seed: 2, stage: "cumulative-tangent", decision: "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, guardDiagnostics, contractSha256: sha256("benchmarks/zero4-q26-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, frontier, selected: null, promotion: { evaluatedOnceAtEnd: false, reason: "no jointly feasible public checkpoint" } };
-  writeResultArtifacts(result); event("complete", { decision: "no-go", stoppedReason }); console.error("Q2.6 seed 2 no-go; promotion remained sealed"); process.exit(0);
+  const result = { schema: "zero.zero4_q26_result.v1", seed: options.seed, stage: "cumulative-tangent", decision: "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, guardDiagnostics, ...resultContractFields, immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, frontier, selected: null, promotion: { evaluatedOnceAtEnd: false, reason: "no jointly feasible public checkpoint" } };
+  writeResultArtifacts(result); event("complete", { decision: "no-go", stoppedReason }); console.error(`Q2.6 seed ${options.seed} no-go; promotion remained sealed`); process.exit(0);
 }
 const selected = feasible[0]; fs.copyFileSync(selected.checkpoint, files.selected); run(tools.export, [files.selected, files.selectedQ8], { quiet: true });
-const promotionJson = path.join(options.out, "seed2-promotion.json"); run(tools.quantity, [files.selectedQ8, files.promotion, "--json", promotionJson, "--limit", "500"], { quiet: true }); const promotion = quantityMetrics(JSON.parse(fs.readFileSync(promotionJson, "utf8")));
-const result = { schema: "zero.zero4_q26_result.v1", seed: 2, stage: "cumulative-tangent", decision: promotion.quantityPass ? "go" : "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, guardDiagnostics, contractSha256: sha256("benchmarks/zero4-q26-v1/contract.json"), immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, selected, frontier, promotion: { evaluatedOnceAtEnd: true, quantityPass: promotion.quantityPass, rates: promotion.rates, gates: promotion.gates }, artifacts: { checkpoint: files.selected, checkpointSha256: sha256(files.selected), quantized: files.selectedQ8, quantizedSha256: sha256(files.selectedQ8) } };
-writeResultArtifacts(result); event("complete", { decision: result.decision, selectedCommitted: selected.committed, promotionQuantityPass: promotion.quantityPass }); console.log(`Q2.6 seed 2 ${result.decision}; promotion evaluated exactly once`);
+const promotionJson = path.join(options.out, `seed${options.seed}-promotion.json`); run(tools.quantity, [files.selectedQ8, files.promotion, "--json", promotionJson, "--limit", "500"], { quiet: true }); const promotion = quantityMetrics(JSON.parse(fs.readFileSync(promotionJson, "utf8")));
+const result = { schema: "zero.zero4_q26_result.v1", seed: options.seed, stage: "cumulative-tangent", decision: promotion.quantityPass ? "go" : "no-go", stoppedReason, attempts: totalAttempts, committed, guardBudget, guardDiagnostics, ...resultContractFields, immutable_teachers: contract.immutable_teachers, quantity_corpus: contract.quantity_corpus, selected, frontier, promotion: { evaluatedOnceAtEnd: true, quantityPass: promotion.quantityPass, rates: promotion.rates, gates: promotion.gates }, artifacts: { checkpoint: files.selected, checkpointSha256: sha256(files.selected), quantized: files.selectedQ8, quantizedSha256: sha256(files.selectedQ8) } };
+writeResultArtifacts(result); event("complete", { decision: result.decision, selectedCommitted: selected.committed, promotionQuantityPass: promotion.quantityPass }); console.log(`Q2.6 seed ${options.seed} ${result.decision}; promotion evaluated exactly once`);
