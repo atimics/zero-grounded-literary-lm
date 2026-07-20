@@ -204,10 +204,15 @@ of the candidate weight displacement that points uphill on that mean replay
 surface, then submits the projected candidate to the unchanged direct 1.5%
 cumulative functional guard. Candidate moments commit with selected weights;
 weights and both moment arrays restore together before retries or rejection.
-The gradient is candidate construction, never authority. Seed 2 is
-preregistered; promotion and seeds 1 and 3 remain sealed. See
+The gradient is candidate construction, never authority. The prospective
+seed-2 run resolved **go**: 700/700 attempts committed, 423 selected candidates
+were projected, and six of seven public checkpoints were jointly feasible.
+Update 500 was selected with 99.8% limiting quantity rates and 1.1833% replay
+regression; the one-time promotion evaluation passed at 99.6%. The quantized
+model is published, but ZERO.3 remains current until seeds 1 and 3 replicate.
+See
 [`contract.json`](benchmarks/zero4-q26-v1/contract.json) and
-[`PREREGISTRATION.md`](benchmarks/zero4-q26-v1/PREREGISTRATION.md).
+[`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
 
 ## Measure channel behavior
 

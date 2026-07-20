@@ -219,8 +219,9 @@ learning path without weakening the cumulative or public gates?
 ### P8: Q2.6 global replay-tangent projection
 
 **Source**: Q2.5 seed-2 `RESULTS.md` and terminal attempt trace.
-**Status**: Active — preregistered; implementation mechanics green; seed 2
-sealed until the implementation and contract merge.
+**Status**: Diagnostic accepted. Seed 2 resolved go after 700/700 commits,
+selected update 500 passed public and promotion, and no frozen gate changed.
+Family promotion remains pending replication seeds 1 and 3.
 **Depends on**: Q2.5 no-go (satisfied).
 
 **Design**:
@@ -281,9 +282,9 @@ A proposal becomes RESOLVED when:
 
 ## Current state
 
-- **Active proposal**: P8 / Q2.6 global replay-tangent projection
-- **Preregistered next experiment**: Q2.6 diagnostic seed 2
+- **Active proposal**: P8 / Q2.6 replication seeds 1 and 3
+- **Preregistered next experiment**: Freeze a replication adapter that reuses the accepted Q2.6 design without changing seed-2 evidence
 - **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: merge the frozen Q2.6 implementation and contract,
-  then execute only diagnostic seed 2 through the prospective ilXyr gate.
+- **Next decision point**: prospectively bind seeds 1 and 3 to the unchanged
+  Q2.6 source, metrics, gates, and family aggregation rule before execution.

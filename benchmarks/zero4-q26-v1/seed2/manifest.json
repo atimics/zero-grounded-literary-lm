@@ -1,0 +1,142 @@
+{
+  "schema": "zero.zero4_q26_result.v1",
+  "seed": 2,
+  "stage": "cumulative-tangent",
+  "decision": "go",
+  "stoppedReason": "no Pareto improvement for 200 committed updates",
+  "attempts": 700,
+  "committed": 700,
+  "guardBudget": 0.015,
+  "guardDiagnostics": {
+    "fullScaleAccepted": 700,
+    "backtrackedAccepted": 0,
+    "exhausted": 0,
+    "trialEvaluations": 700,
+    "maxTrialsUsed": 1,
+    "minAcceptedScale": 1,
+    "warningTrialExceedances": 0,
+    "hardTrialExceedances": 0,
+    "maxTrialRelativeIncrease": 0.0005089199641196096,
+    "maxCommittedRelativeIncrease": 0.0005089199641196096,
+    "projectedTrials": 423,
+    "projectedAccepted": 423,
+    "unprojectedTrials": 277,
+    "maxProjectionRemovedFraction": 0.14337323665418025,
+    "meanProjectionRemovedFraction": 0.036731164347065866,
+    "maxProjectionPreDot": 0.0017079639087356257,
+    "maxAbsoluteProjectionPostDot": 6.218345195680731e-7,
+    "transactionSeconds": 934.698
+  },
+  "contractSha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80",
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "quantity_corpus": {
+    "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35",
+    "tokens_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+    "sentinel_sha256": "02c6908142f7affb035d606a02994c3ee15ef3bd6ecb8915f8f64f86c9aa2be3",
+    "public_sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "promotion_sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "promotion_inaccessible_during_training": true
+  },
+  "selected": {
+    "committed": 500,
+    "totalAttempts": 500,
+    "phase": "consolidation",
+    "quantityPass": true,
+    "minimumFacultyMargin": 0.010000000000000009,
+    "replayLoss": 1.6503,
+    "replayRegression": 0.011833231146535925,
+    "feasible": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.998,
+      "arguments": 1,
+      "exact_request": 0.998,
+      "oracle_arithmetic": 1,
+      "committed": 0.998,
+      "exact_artifact": 0.998
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    },
+    "checkpoint": "benchmarks/zero4-q26-v1/seed2/recovery/u000500.ckpt"
+  },
+  "frontier": [
+    {
+      "committed": 500,
+      "totalAttempts": 500,
+      "phase": "consolidation",
+      "quantityPass": true,
+      "minimumFacultyMargin": 0.010000000000000009,
+      "replayLoss": 1.6503,
+      "replayRegression": 0.011833231146535925,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.998,
+        "arguments": 1,
+        "exact_request": 0.998,
+        "oracle_arithmetic": 1,
+        "committed": 0.998,
+        "exact_artifact": 0.998
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "benchmarks/zero4-q26-v1/seed2/recovery/u000500.ckpt"
+    }
+  ],
+  "promotion": {
+    "evaluatedOnceAtEnd": true,
+    "quantityPass": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.996,
+      "arguments": 1,
+      "exact_request": 0.996,
+      "oracle_arithmetic": 1,
+      "committed": 0.996,
+      "exact_artifact": 0.996
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    }
+  },
+  "artifacts": {
+    "checkpoint": "benchmarks/zero4-q26-v1/seed2/selected.ckpt",
+    "checkpointSha256": "203235c98ded02a220976c2565c85dc4963cd625479c7993302e64452ca9e2d9",
+    "quantized": "benchmarks/zero4-q26-v1/seed2/selected.litq8",
+    "quantizedSha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+  }
+}

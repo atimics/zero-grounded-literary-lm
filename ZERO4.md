@@ -765,7 +765,7 @@ direction, objective, or optimization geometry rather than merely shrink the
 same direction; it must not relax the cumulative replay authority, public
 replay ceiling, quantity gates, or seed seals.
 
-## 21. Preregistered experiment — ZERO.4-Q2.6 replay-tangent projection
+## 21. Experiment — ZERO.4-Q2.6 replay-tangent projection
 
 Q2.6 changes the candidate direction while leaving experimental authority
 fixed. At the committed pre-attempt state it computes the arithmetic mean
@@ -794,3 +794,29 @@ uninterrupted and 4+4 recovery outputs, and exact learned-state restoration.
 Only diagnostic seed 2 may execute after merge; promotion and seeds 1 and 3
 remain sealed. The authoritative contract is
 `benchmarks/zero4-q26-v1/contract.json`.
+
+### Q2.6 seed-2 result
+
+The sole prospective ilXyr execution resolved **go**. All 700 outer attempts
+committed at full scale; none backtracked or rejected. The global tangent
+projection applied to 423 selected candidates and left 277 non-conflicting
+candidates unchanged. Across every commit, the maximum direct composite replay
+increase against immutable ZERO.3 was 0.05089%, far below the unchanged 1.5%
+authority. The largest removed displacement fraction was 14.34%, and the
+largest absolute post-projection tangent dot product was
+`6.218345195680731e-7`.
+
+The run reached seven public checkpoints. Updates 200 through 700 satisfied
+the conjunctive public quantity and 2% replay gates. Update 500 dominated the
+final frontier: its limiting quantity rates were 99.8%, its replay regression
+was 1.1833%, and its minimum gate margin was +1.0 percentage point. After 200
+committed updates without a further Pareto improvement, the frozen stop rule
+selected update 500. The disjoint promotion split then opened exactly once and
+passed with 99.6% limiting quantity rates and zero rejected state mutations.
+
+This result accepts the direction-changing projection hypothesis for
+diagnostic seed 2. It does not by itself promote ZERO.4: the quantized seed-2
+model is published at SHA-256
+`44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50`,
+while seeds 1 and 3 still require prospective replication under the unchanged
+design. ZERO.3 remains current until that family decision is complete.
