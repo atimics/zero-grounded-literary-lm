@@ -764,3 +764,33 @@ updates but cannot reopen it. A Q2.6 proposal must change the candidate
 direction, objective, or optimization geometry rather than merely shrink the
 same direction; it must not relax the cumulative replay authority, public
 replay ceiling, quantity gates, or seed seals.
+
+## 21. Preregistered experiment — ZERO.4-Q2.6 replay-tangent projection
+
+Q2.6 changes the candidate direction while leaving experimental authority
+fixed. At the committed pre-attempt state it computes the arithmetic mean
+gradient of the same six immutable replay validation windows used by the
+cumulative guard. That global gradient is frozen across the outer attempt.
+
+For each learning-rate scale from 1 through 1/128, Q2.6 restores the complete
+learned state, forms the scaled AdamW candidate, and measures the dot product
+between the mean replay gradient and candidate weight displacement. A positive
+dot product is removed by one global Euclidean tangent projection; a
+non-positive displacement is unchanged. The selected trial retains its scaled
+AdamW moments. Rejected trials restore weights and both moment arrays exactly.
+
+Projection is candidate construction only. Q2.3 showed that first-order replay
+signals are not reliable outcome predictors, so every projected trial still
+evaluates all six slices directly against immutable ZERO.3. The first finite
+trial at or below the unchanged 1.5% cumulative ceiling commits; eight fully
+exhausted outer attempts still stop the phase. `zero.optimizer_attempt.v4`
+records the gradient norm, trigger, coefficient, pre/post dot products,
+removed displacement fraction, all six losses, selection, and rollback proof.
+
+Student, teachers, corpora, optimizer, attempt budgets, public and promotion
+gates, cadence, and seed seals are identical to Q2.5. The mechanics gate
+requires exact tangent math, full-scale and backtracked commits, byte-identical
+uninterrupted and 4+4 recovery outputs, and exact learned-state restoration.
+Only diagnostic seed 2 may execute after merge; promotion and seeds 1 and 3
+remain sealed. The authoritative contract is
+`benchmarks/zero4-q26-v1/contract.json`.

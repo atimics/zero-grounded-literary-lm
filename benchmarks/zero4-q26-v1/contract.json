@@ -1,0 +1,116 @@
+{
+  "schema": "zero.zero4_q26_contract.v1",
+  "id": "zero4-q26-v1",
+  "status": "preregistered",
+  "question": "Can a global all-slice replay-tangent projection change the AdamW update direction enough to preserve the cumulative replay ceiling and reopen the quantity-learning path?",
+  "independent_variable": "transactional AdamW whose candidate weight displacement is projected onto the tangent plane of the mean six-slice replay loss before first-feasible geometric backtracking and direct cumulative-guard evaluation",
+  "diagnostic_seed": 2,
+  "sealed_replication_seeds": [1, 3],
+  "lineage": {
+    "parent_experiment": "zero4-q25-v1",
+    "parent_commit": "16b1fc9ffe7d7c4f611e9b850f0d33b3a6339718",
+    "parent_contract_sha256": "37f84ce9be603e71af01edffbb745f224611dfa1695df047947b33c0a74595ca",
+    "parent_result_sha256": "66ddb479c9f65e7c1b4b6b4d6dc5a578f1097d506ebb56e3358285ca216b507b",
+    "parent_attempt_log_sha256": "84192c759d8b54ae1c3785f532c59798104838dc79b7e66461a985cae0f33ca2",
+    "diagnosis": "Q2.5 preserved the 0.015 authority and admitted five scaled commits beyond Q2.4, but stopped at 71 commits after eight outer attempts exhausted every scale. The terminal 1/128 trials missed the hard boundary by only 0.00000151 to 0.00000238 relative loss, so step length alone is insufficient and the next intervention must change direction."
+  },
+  "student": {
+    "parameters": 4852992,
+    "architecture": "unchanged from Q2.5",
+    "initialization": "teachers/zero3-balanced-final.teacher"
+  },
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "quantity_corpus": {
+    "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35",
+    "tokens_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+    "sentinel_sha256": "02c6908142f7affb035d606a02994c3ee15ef3bd6ecb8915f8f64f86c9aa2be3",
+    "public_sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "promotion_sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "promotion_inaccessible_during_training": true
+  },
+  "replay_corpus": {
+    "corpus/literary.bpe": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+    "corpus/bpe/zero-foundation.tok": "87b039e5d4645ebf2a521454a13b1a912cbd1c53ff8fbcfb26baf9da1f5e638b",
+    "corpus/bpe/shakespeare.tok": "ffa36c4890ca07d403e8d76fab47026e1b6d46b1fb2b9d2dc1c31c206ff9351d",
+    "corpus/bpe/blake.tok": "329bf291a5842897b59151640a57d2a2270a451e31c99adbf7d3d6f684d2576c",
+    "corpus/bpe/crowley.tok": "68decb62cbd4f1efaff34067eb5a533406d99a6bc0e60ca219846b39306177da",
+    "corpus/bpe/bible-kjv.tok": "0c387e697fbe339712a62efb75d27c788365ce90911895dbf66e732deee44ed9",
+    "corpus/channel/literary-dialogue.tok": "d401868f33f2ac318315b167dd2bc6850edb3a8b0aaf5b18c1b2fa8cba42c379"
+  },
+  "source_order": [
+    "corpus/bpe/zero-foundation.tok",
+    "corpus/bpe/shakespeare.tok",
+    "corpus/bpe/blake.tok",
+    "corpus/bpe/crowley.tok",
+    "corpus/bpe/bible-kjv.tok",
+    "corpus/channel/literary-dialogue.tok",
+    "corpus/faculty/q22/quantity-request.tok"
+  ],
+  "guard": {
+    "mode": "cumulative-tangent",
+    "probe_every_attempts": 1,
+    "baseline": "arithmetic mean of the six frozen replay validation-window losses evaluated by the immutable ZERO.3 initialization",
+    "candidate": "arithmetic mean of those same six losses after each candidate AdamW trial and before commit",
+    "decision": "for each scale, form the AdamW candidate, project its weight displacement only when its dot product with the frozen pre-attempt mean six-slice replay gradient is positive, then commit the first projected finite trial whose directly evaluated cumulative relative increase is at most 0.015; reject the outer attempt if all trials fail",
+    "warning_relative_increase": 0.01,
+    "hard_relative_increase": 0.015,
+    "public_replay_ceiling": 0.02,
+    "all_replay_ranges_required_per_trial": 6,
+    "trial_scales": [1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625, 0.0078125],
+    "maximum_trials_per_outer_attempt": 8,
+    "trial_budget_accounting": "all trials reuse one frozen minibatch, clipped gradient, proposed committed-update index, and pre-attempt AdamW state; only the outer attempt consumes the attempt budget",
+    "moment_policy": "weights and AdamW moments are restored before every retry; the same moment update is reapplied with only the learning rate scaled; the resulting moments are retained when the projected weight trial commits",
+    "selection_policy": "first feasible trial in descending scale order",
+    "maximum_consecutive_exhausted_attempts": 8,
+    "fallback": "end the active phase",
+    "projection": {
+      "enabled": true,
+      "gradient": "arithmetic mean gradient of the same six frozen replay validation-window losses at the committed pre-attempt state",
+      "scope": "one global Euclidean projection over all trainable weights",
+      "trigger": "project only when the replay-gradient dot candidate weight displacement is positive",
+      "formula": "d_projected = d - max(0, dot(r,d) / dot(r,r)) * r",
+      "gradient_refresh": "once per outer attempt before any trial; identical for all eight scales",
+      "moment_policy": "retain the AdamW moments produced by the scaled trial; project weights only; restore weights and moments together before every retry or outer rejection",
+      "authority": "diagnostic candidate construction only; the unchanged direct six-slice functional evaluation is the sole commit authority"
+    },
+    "threshold_rationale": "Q2.6 inherits Q2.5's preregistered 0.015 hard authority and 0.005 reserve below the public ceiling; no Q2.5 outcome changes either gate."
+  },
+  "budget": {
+    "acquisition_attempts": 1000,
+    "consolidation_attempts": 400,
+    "batch": 2,
+    "acquisition_learning_rate": 0.00002,
+    "consolidation_learning_rate": 0.000005,
+    "recovery_checkpoint_every_committed_updates": 25,
+    "full_evaluation_every_committed_updates": 100
+  },
+  "gates": {
+    "closed_minimum": 0.99,
+    "syntax_minimum": 0.99,
+    "operation_minimum": 0.95,
+    "arguments_minimum": 0.95,
+    "exact_request_minimum": 0.95,
+    "oracle_arithmetic_minimum": 1.0,
+    "committed_minimum": 0.95,
+    "exact_artifact_minimum": 0.95,
+    "rejected_state_mutations_maximum": 0,
+    "replay_relative_regression_maximum": 0.02
+  },
+  "outcomes": {
+    "go": "a public checkpoint satisfies every quantity gate and replay regression <= 0.02, then the sealed promotion split also satisfies every quantity gate",
+    "no_go": "no jointly feasible public checkpoint exists before a frozen stop condition, with promotion remaining sealed"
+  },
+  "stop_conditions": [
+    "replay exceeds 0.02 on two consecutive full evaluations",
+    "eight consecutive outer attempts exhaust all eight tangent-projected backtracking trials",
+    "no Pareto improvement for 200 committed updates",
+    "the frozen 1000 acquisition plus 400 consolidation outer-attempt budget is exhausted"
+  ],
+  "promotion_policy": "open the disjoint promotion split exactly once only after a jointly feasible public checkpoint; otherwise record no-go",
+  "replication_policy": "run seeds 1 and 3 only if diagnostic seed 2 passes"
+}

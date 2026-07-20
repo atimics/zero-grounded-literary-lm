@@ -183,7 +183,9 @@ the frozen threshold at update 200, replay regressed 2.685%, and the local
 ### P6: Q2.4 cumulative functional replay budget
 
 **Source**: Q2.3 seed-2 `RESULTS.md`.
-**Status**: Proposed — design and preregistration required before execution.
+**Status**: Resolved — safety mechanism accepted, learning-path hypothesis
+rejected. Q2.4 committed 66 updates and stopped after eight cumulative-guard
+rejections before a public checkpoint.
 **Depends on**: Q2.3 no-go (satisfied).
 
 **Design**:
@@ -198,6 +200,40 @@ calibration.
 
 **Question**: Can a cumulative direct functional constraint bind before many
 sub-threshold local increases compound past the public 2% replay ceiling?
+
+---
+
+### P7: Q2.5 deterministic scalar continuation
+
+**Source**: Q2.4 seed-2 `RESULTS.md`.
+**Status**: Resolved — rejected. Backtracking committed five additional
+updates, including one at 1/128, then eight outer attempts exhausted every
+scale. No public checkpoint was reached.
+**Depends on**: Q2.4 no-go (satisfied).
+
+**Question**: Can first-feasible scalar backtracking reopen the constrained
+learning path without weakening the cumulative or public gates?
+
+---
+
+### P8: Q2.6 global replay-tangent projection
+
+**Source**: Q2.5 seed-2 `RESULTS.md` and terminal attempt trace.
+**Status**: Active — preregistered; implementation mechanics green; seed 2
+sealed until the implementation and contract merge.
+**Depends on**: Q2.5 no-go (satisfied).
+
+**Design**:
+
+At each committed pre-attempt state, compute the arithmetic-mean gradient of
+the same six replay validation windows used by the cumulative authority. For
+each registered AdamW scale, remove only the replay-increasing component of
+the candidate weight displacement with one global Euclidean projection, then
+submit the candidate to the unchanged direct six-slice 1.5% guard. The
+first-order gradient constructs candidates but never decides commits.
+
+**Question**: Can a direction-changing tangent projection reach a jointly
+feasible public checkpoint while preserving the exact Q2.5 authority?
 
 ---
 
@@ -245,9 +281,9 @@ A proposal becomes RESOLVED when:
 
 ## Current state
 
-- **Active proposal**: P6 / Q2.4 cumulative functional replay budget design
-- **Preregistered next experiment**: None; Q2.4 must be frozen before execution
+- **Active proposal**: P8 / Q2.6 global replay-tangent projection
+- **Preregistered next experiment**: Q2.6 diagnostic seed 2
 - **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: freeze Q2.4 cumulative budget semantics and its
-  synthetic acceptance, rollback, resume, and promotion-sealing gates.
+- **Next decision point**: merge the frozen Q2.6 implementation and contract,
+  then execute only diagnostic seed 2 through the prospective ilXyr gate.

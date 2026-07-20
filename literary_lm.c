@@ -174,7 +174,8 @@ enum {
     TRANSACTION_OBSERVER = 1,
     TRANSACTION_GUARD = 2,
     TRANSACTION_CUMULATIVE_GUARD = 3,
-    TRANSACTION_CUMULATIVE_BACKTRACK = 4
+    TRANSACTION_CUMULATIVE_BACKTRACK = 4,
+    TRANSACTION_CUMULATIVE_TANGENT = 5
 };
 
 typedef struct {
@@ -193,6 +194,12 @@ typedef struct {
     double backtrack_candidate_means[TRANSACTION_MAX_BACKTRACK_TRIALS];
     double backtrack_relative_changes[TRANSACTION_MAX_BACKTRACK_TRIALS];
     float backtrack_scales[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    double tangent_projection_coefficients[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    double tangent_projection_pre_dots[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    double tangent_projection_post_dots[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    double tangent_projection_removed_fractions[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    int tangent_projection_applied[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    double cumulative_replay_gradient_norm;
     int backtrack_trial_count;
     int cumulative_replay_count;
     double cumulative_baseline_mean;
@@ -2413,6 +2420,9 @@ static const char *transaction_mode_name(int mode)
     if (mode == TRANSACTION_CUMULATIVE_BACKTRACK) {
         return "cumulative-backtracking";
     }
+    if (mode == TRANSACTION_CUMULATIVE_TANGENT) {
+        return "cumulative-tangent";
+    }
     if (mode == TRANSACTION_OBSERVER) return "observer";
     return "disabled";
 }
@@ -2420,7 +2430,8 @@ static const char *transaction_mode_name(int mode)
 static int transaction_mode_uses_cumulative_guard(int mode)
 {
     return mode == TRANSACTION_CUMULATIVE_GUARD ||
-           mode == TRANSACTION_CUMULATIVE_BACKTRACK;
+           mode == TRANSACTION_CUMULATIVE_BACKTRACK ||
+           mode == TRANSACTION_CUMULATIVE_TANGENT;
 }
 
 static const CorpusRange *transaction_select_replay_range(
@@ -2541,11 +2552,142 @@ static double transaction_cumulative_candidate_change(
            state->cumulative_baseline_mean;
 }
 
+static void transaction_prepare_cumulative_replay_gradient(
+    TransactionState *state, Model *model, const Corpus *corpus,
+    const CorpusRange *ranges, int range_count, int artifact_weight)
+{
+    int range_index;
+    int eligible_count = 0;
+    size_t offset;
+    double norm = 0.0;
+    memset(state->replay_gradient, 0,
+           state->parameter_total * sizeof(*state->replay_gradient));
+    for (range_index = 0; range_index < range_count; ++range_index) {
+        int parameter_index;
+        if (!ranges[range_index].teacher_eligible) continue;
+        probe_range_gradient(model, corpus, &ranges[range_index],
+                             state->probe_mask, artifact_weight);
+        offset = 0;
+        for (parameter_index = 0;
+             parameter_index < model->parameter_count;
+             ++parameter_index) {
+            const Parameter *parameter = model->parameters[parameter_index];
+            size_t element;
+            for (element = 0; element < parameter->count; ++element) {
+                state->replay_gradient[offset + element] +=
+                    parameter->g[element];
+            }
+            offset += parameter->count;
+        }
+        ++eligible_count;
+    }
+    if (eligible_count != state->cumulative_replay_count) {
+        fail("cumulative replay gradient range count changed");
+    }
+    for (offset = 0; offset < state->parameter_total; ++offset) {
+        double value = state->replay_gradient[offset] / eligible_count;
+        if (!isfinite(value)) {
+            fail("cumulative replay gradient is not finite");
+        }
+        state->replay_gradient[offset] = (float)value;
+        norm += value * value;
+    }
+    if (!isfinite(norm) || norm <= 0.0) {
+        fail("cumulative replay gradient norm is not finite and positive");
+    }
+    state->cumulative_replay_gradient_norm = sqrt(norm);
+}
+
+static void transaction_project_tangent_candidate(
+    const TransactionState *state, Model *model, int *applied,
+    double *coefficient, double *pre_dot, double *post_dot,
+    double *removed_fraction)
+{
+    size_t gradient_offset = 0;
+    size_t learned_offset = 0;
+    double replay_norm = 0.0;
+    double displacement_norm = 0.0;
+    double removed_norm = 0.0;
+    int parameter_index;
+    *pre_dot = 0.0;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        const Parameter *parameter = model->parameters[parameter_index];
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double replay = state->replay_gradient[gradient_offset + element];
+            double displacement =
+                parameter->w[element] -
+                state->learned_before[learned_offset + element];
+            *pre_dot += replay * displacement;
+            replay_norm += replay * replay;
+            displacement_norm += displacement * displacement;
+        }
+        gradient_offset += parameter->count;
+        learned_offset += 3 * parameter->count;
+    }
+    if (!isfinite(*pre_dot) || !isfinite(replay_norm) || replay_norm <= 0.0 ||
+        !isfinite(displacement_norm)) {
+        fail("tangent projection inputs are not finite");
+    }
+    *applied = *pre_dot > 0.0;
+    *coefficient = *applied ? *pre_dot / replay_norm : 0.0;
+    if (*applied) {
+        gradient_offset = 0;
+        for (parameter_index = 0;
+             parameter_index < model->parameter_count;
+             ++parameter_index) {
+            Parameter *parameter = model->parameters[parameter_index];
+            size_t element;
+            for (element = 0; element < parameter->count; ++element) {
+                double before = parameter->w[element];
+                double projected = before -
+                    *coefficient *
+                        state->replay_gradient[gradient_offset + element];
+                if (!isfinite(projected)) {
+                    fail("tangent-projected candidate is not finite");
+                }
+                parameter->w[element] = (float)projected;
+                {
+                    double removed = before - parameter->w[element];
+                    removed_norm += removed * removed;
+                }
+            }
+            gradient_offset += parameter->count;
+        }
+    }
+    *post_dot = 0.0;
+    gradient_offset = 0;
+    learned_offset = 0;
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        const Parameter *parameter = model->parameters[parameter_index];
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double displacement =
+                parameter->w[element] -
+                state->learned_before[learned_offset + element];
+            *post_dot +=
+                state->replay_gradient[gradient_offset + element] *
+                displacement;
+        }
+        gradient_offset += parameter->count;
+        learned_offset += 3 * parameter->count;
+    }
+    *removed_fraction = displacement_norm > 0.0
+                            ? sqrt(removed_norm / displacement_norm)
+                            : 0.0;
+    if (!isfinite(*coefficient) || !isfinite(*post_dot) ||
+        !isfinite(*removed_fraction)) {
+        fail("tangent projection diagnostics are not finite");
+    }
+}
+
 static float transaction_prepare_attempt(
     TransactionState *state, Model *model, const Corpus *corpus,
     const CorpusRange *ranges, int range_count, int artifact_weight,
     const CorpusRange **replay_range, int *replay_range_index,
-    int functional_probe, float *probe_before)
+    int functional_probe, float *probe_before, const Options *options)
 {
     const CorpusRange *faculty = transaction_select_faculty_range(
         ranges, range_count);
@@ -2593,6 +2735,11 @@ static float transaction_prepare_attempt(
         offset += parameter->count;
     }
     transaction_restore_gradient(model, state->batch_gradient);
+    if (options->transaction_mode == TRANSACTION_CUMULATIVE_TANGENT) {
+        transaction_prepare_cumulative_replay_gradient(
+            state, model, corpus, ranges, range_count, artifact_weight);
+        transaction_restore_gradient(model, state->batch_gradient);
+    }
     transaction_copy_learned_from_model(state, model);
     if (faculty_norm == 0.0 || replay_norm == 0.0) return NAN;
     return (float)(dot / sqrt(faculty_norm * replay_norm));
@@ -2641,7 +2788,9 @@ static int transaction_decide_attempt(
             state, model, corpus, ranges, range_count,
             options->artifact_weight, &cumulative_candidate_mean);
     } else if (options->transaction_mode ==
-               TRANSACTION_CUMULATIVE_BACKTRACK) {
+                   TRANSACTION_CUMULATIVE_BACKTRACK ||
+               options->transaction_mode ==
+                   TRANSACTION_CUMULATIVE_TANGENT) {
         int trial_index;
         accepted = 0;
         accepted_scale = NAN;
@@ -2656,6 +2805,21 @@ static int transaction_decide_attempt(
                     model, proposed_update, learning_rate * scale,
                     options->weight_decay, options->clip,
                     1.0f / options->batch);
+            }
+            state->tangent_projection_applied[trial_index] = 0;
+            state->tangent_projection_coefficients[trial_index] = 0.0;
+            state->tangent_projection_pre_dots[trial_index] = 0.0;
+            state->tangent_projection_post_dots[trial_index] = 0.0;
+            state->tangent_projection_removed_fractions[trial_index] = 0.0;
+            if (options->transaction_mode ==
+                TRANSACTION_CUMULATIVE_TANGENT) {
+                transaction_project_tangent_candidate(
+                    state, model,
+                    &state->tangent_projection_applied[trial_index],
+                    &state->tangent_projection_coefficients[trial_index],
+                    &state->tangent_projection_pre_dots[trial_index],
+                    &state->tangent_projection_post_dots[trial_index],
+                    &state->tangent_projection_removed_fractions[trial_index]);
             }
             cumulative_relative_change =
                 transaction_cumulative_candidate_change(
@@ -2679,13 +2843,25 @@ static int transaction_decide_attempt(
                     options->transaction_guard_budget) {
                 accepted = 1;
                 accepted_scale = scale;
-                reason = trial_index == 0
-                             ? "within-cumulative-replay-budget"
-                             : "backtracked-within-cumulative-replay-budget";
+                if (options->transaction_mode ==
+                    TRANSACTION_CUMULATIVE_TANGENT) {
+                    reason = trial_index == 0
+                                 ? "tangent-within-cumulative-replay-budget"
+                                 : "tangent-backtracked-within-cumulative-replay-budget";
+                } else {
+                    reason = trial_index == 0
+                                 ? "within-cumulative-replay-budget"
+                                 : "backtracked-within-cumulative-replay-budget";
+                }
                 break;
             }
         }
-        if (!accepted) reason = "cumulative-backtracking-exhausted";
+        if (!accepted) {
+            reason = options->transaction_mode ==
+                             TRANSACTION_CUMULATIVE_TANGENT
+                         ? "cumulative-tangent-exhausted"
+                         : "cumulative-backtracking-exhausted";
+        }
     }
     if (functional_probe) {
         probe_after = transaction_probe_loss(
@@ -2795,12 +2971,15 @@ static int transaction_decide_attempt(
                 "\"decision\":\"%s\",\"reason\":\"%s\","
                 "\"rollback_digest\":\"%016llx\"",
                 options->transaction_mode ==
-                        TRANSACTION_CUMULATIVE_BACKTRACK
-                    ? "zero.optimizer_attempt.v3"
+                        TRANSACTION_CUMULATIVE_TANGENT
+                    ? "zero.optimizer_attempt.v4"
+                    : (options->transaction_mode ==
+                               TRANSACTION_CUMULATIVE_BACKTRACK
+                           ? "zero.optimizer_attempt.v3"
                     : (options->transaction_mode ==
                                TRANSACTION_CUMULATIVE_GUARD
                            ? "zero.optimizer_attempt.v2"
-                           : "zero.optimizer_attempt.v1"),
+                           : "zero.optimizer_attempt.v1")),
                 (unsigned long long)state->attempts,
                 (unsigned long long)proposed_update,
                 (unsigned long long)(accepted ? proposed_update
@@ -2821,7 +3000,9 @@ static int transaction_decide_attempt(
                 total_fisher_drift, accepted ? "accept" : "reject", reason,
                 (unsigned long long)rollback_digest);
         if (options->transaction_mode ==
-            TRANSACTION_CUMULATIVE_BACKTRACK) {
+                TRANSACTION_CUMULATIVE_BACKTRACK ||
+            options->transaction_mode ==
+                TRANSACTION_CUMULATIVE_TANGENT) {
             int trial_index;
             fprintf(state->log,
                     ",\"base_learning_rate\":%.9g,"
@@ -2847,7 +3028,7 @@ static int transaction_decide_attempt(
                         "\"learning_rate\":%.9g,"
                         "\"candidate_mean\":%s,"
                         "\"relative_change\":%s,"
-                        "\"decision\":\"%s\",\"ranges\":[",
+                        "\"decision\":\"%s\"",
                         trial_index == 0 ? "" : ",", trial_index,
                         state->backtrack_scales[trial_index],
                         learning_rate *
@@ -2859,6 +3040,36 @@ static int transaction_decide_attempt(
                             state->backtrack_relative_changes[trial_index],
                             trial_relative_buffer),
                         trial_decision);
+                if (options->transaction_mode ==
+                    TRANSACTION_CUMULATIVE_TANGENT) {
+                    char coefficient_buffer[32];
+                    char pre_dot_buffer[32];
+                    char post_dot_buffer[32];
+                    char removed_fraction_buffer[32];
+                    fprintf(
+                        state->log,
+                        ",\"projection_applied\":%s,"
+                        "\"projection_coefficient\":%s,"
+                        "\"projection_pre_dot\":%s,"
+                        "\"projection_post_dot\":%s,"
+                        "\"projection_removed_fraction\":%s",
+                        state->tangent_projection_applied[trial_index]
+                            ? "true"
+                            : "false",
+                        json_number(
+                            state->tangent_projection_coefficients[trial_index],
+                            coefficient_buffer),
+                        json_number(
+                            state->tangent_projection_pre_dots[trial_index],
+                            pre_dot_buffer),
+                        json_number(
+                            state->tangent_projection_post_dots[trial_index],
+                            post_dot_buffer),
+                        json_number(
+                            state->tangent_projection_removed_fractions[trial_index],
+                            removed_fraction_buffer));
+                }
+                fputs(",\"ranges\":[", state->log);
                 for (range_index = 0; range_index < range_count;
                      ++range_index) {
                     char candidate_buffer[32];
@@ -2878,6 +3089,40 @@ static int transaction_decide_attempt(
                 fputs("]}", state->log);
             }
             fputc(']', state->log);
+            if (options->transaction_mode ==
+                TRANSACTION_CUMULATIVE_TANGENT) {
+                int selected_trial = state->backtrack_trial_count - 1;
+                char gradient_norm_buffer[32];
+                char coefficient_buffer[32];
+                char pre_dot_buffer[32];
+                char post_dot_buffer[32];
+                char removed_fraction_buffer[32];
+                fprintf(
+                    state->log,
+                    ",\"cumulative_replay_gradient_norm\":%s,"
+                    "\"projection_applied\":%s,"
+                    "\"projection_coefficient\":%s,"
+                    "\"projection_pre_dot\":%s,"
+                    "\"projection_post_dot\":%s,"
+                    "\"projection_removed_fraction\":%s",
+                    json_number(state->cumulative_replay_gradient_norm,
+                                gradient_norm_buffer),
+                    state->tangent_projection_applied[selected_trial]
+                        ? "true"
+                        : "false",
+                    json_number(
+                        state->tangent_projection_coefficients[selected_trial],
+                        coefficient_buffer),
+                    json_number(
+                        state->tangent_projection_pre_dots[selected_trial],
+                        pre_dot_buffer),
+                    json_number(
+                        state->tangent_projection_post_dots[selected_trial],
+                        post_dot_buffer),
+                    json_number(
+                        state->tangent_projection_removed_fractions[selected_trial],
+                        removed_fraction_buffer));
+            }
         }
         if (transaction_mode_uses_cumulative_guard(
                 options->transaction_mode)) {
@@ -3279,8 +3524,8 @@ static void print_usage(const char *program)
     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
     printf("  --gradient-cosine N  report fixed faculty/replay probe cosine every N updates\n");
-    printf("  --transaction-mode M disabled, observer, guard, cumulative-guard, or cumulative-backtracking (default: disabled)\n");
-    printf("  --transaction-log F  append zero.optimizer_attempt.v1/v2 JSONL\n");
+    printf("  --transaction-mode M disabled, observer, guard, cumulative-guard, cumulative-backtracking, or cumulative-tangent (default: disabled)\n");
+    printf("  --transaction-log F  append zero.optimizer_attempt.v1-v4 JSONL\n");
     printf("  --transaction-phase P observer, acquisition, consolidation, recovery, or smoke\n");
     printf("  --transaction-probe N functional replay probe cadence, 1..5 (default: 5)\n");
     printf("  --transaction-budget X maximum relative replay loss increase\n");
@@ -3522,6 +3767,8 @@ static int run_self_test(void)
         uint64_t candidate_digest;
         uint64_t restored_digest;
         uint64_t rng_before = rng.state;
+        size_t gradient_offset = 0;
+        int projected_trials = 0;
         int index;
         int trial_index;
         memset(&transaction_options, 0, sizeof(transaction_options));
@@ -3534,7 +3781,10 @@ static int run_self_test(void)
             for (element = 0; element < parameter->count; ++element) {
                 parameter->g[element] =
                     0.001f * (float)(1 + (element + (size_t)index) % 7);
+                transaction_state.replay_gradient[
+                    gradient_offset + element] = -parameter->g[element];
             }
+            gradient_offset += parameter->count;
         }
         transaction_copy_learned_from_model(&transaction_state, &model);
         before_digest = model_learned_state_digest(&model);
@@ -3548,13 +3798,33 @@ static int run_self_test(void)
             (void)optimizer_update(
                 &model, 1, ldexpf(0.001f, -trial_index),
                 0.01f, 1.0f, 1.0f);
+            {
+                int projection_applied;
+                double coefficient;
+                double pre_dot;
+                double post_dot;
+                double removed_fraction;
+                transaction_project_tangent_candidate(
+                    &transaction_state, &model, &projection_applied,
+                    &coefficient, &pre_dot, &post_dot,
+                    &removed_fraction);
+                if (projection_applied) ++projected_trials;
+                if (!projection_applied || coefficient <= 0.0 ||
+                    pre_dot <= 0.0 ||
+                    fabs(post_dot) > 1.0e-5 * (1.0 + fabs(pre_dot)) ||
+                    removed_fraction <= 0.0 ||
+                    removed_fraction > 1.00001) {
+                    fail("tangent projection self-test failed");
+                }
+            }
         }
         candidate_digest = model_learned_state_digest(&model);
         transaction_restore_learned(&model, &transaction_state);
         restored_digest = model_learned_state_digest(&model);
         ++checks;
         if (candidate_digest == before_digest ||
-            restored_digest != before_digest || rng.state == rng_before) {
+            restored_digest != before_digest || rng.state == rng_before ||
+            projected_trials != TRANSACTION_MAX_BACKTRACK_TRIALS) {
             fprintf(stderr,
                     "transaction rollback self-test failed: before=%016llx candidate=%016llx restored=%016llx\n",
                     (unsigned long long)before_digest,
@@ -3764,8 +4034,10 @@ int main(int argc, char **argv)
                 options.transaction_mode = TRANSACTION_CUMULATIVE_GUARD;
             } else if (strcmp(mode, "cumulative-backtracking") == 0) {
                 options.transaction_mode = TRANSACTION_CUMULATIVE_BACKTRACK;
+            } else if (strcmp(mode, "cumulative-tangent") == 0) {
+                options.transaction_mode = TRANSACTION_CUMULATIVE_TANGENT;
             } else {
-                fail("--transaction-mode must be disabled, observer, guard, cumulative-guard, or cumulative-backtracking");
+                fail("--transaction-mode must be disabled, observer, guard, cumulative-guard, cumulative-backtracking, or cumulative-tangent");
             }
         } else if (strcmp(argv[i], "--transaction-log") == 0 &&
                    i + 1 < argc) {
@@ -4281,7 +4553,8 @@ int main(int argc, char **argv)
                 gradient_cosine = transaction_prepare_attempt(
                     &transaction, &model, &corpus, text_ranges, text_count,
                     options.artifact_weight, &replay_range,
-                    &replay_range_index, functional_probe, &probe_before);
+                    &replay_range_index, functional_probe, &probe_before,
+                    &options);
             }
             current_lr = options.learning_rate;
             {
