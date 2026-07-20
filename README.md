@@ -108,6 +108,9 @@ make zero4-q24-train ZERO4_Q24_SEED=2
 make zero4-q25-check
 # Only from the merged preregistered implementation:
 make zero4-q25-train ZERO4_Q25_SEED=2
+make zero4-q26-check
+# Only from the merged preregistered implementation:
+make zero4-q26-train ZERO4_Q26_SEED=2
 ```
 
 The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
@@ -193,6 +196,18 @@ insufficient; the next proposal must change update direction or optimization
 geometry without weakening the gates. See
 [`contract.json`](benchmarks/zero4-q25-v1/contract.json) and
 [`RESULTS.md`](benchmarks/zero4-q25-v1/seed2/RESULTS.md).
+
+Q2.6 is the direction-changing follow-up. At each committed pre-attempt state
+it forms the arithmetic-mean gradient of the same six frozen replay windows.
+For every registered Q2.5 learning-rate scale, it removes only the component
+of the candidate weight displacement that points uphill on that mean replay
+surface, then submits the projected candidate to the unchanged direct 1.5%
+cumulative functional guard. Candidate moments commit with selected weights;
+weights and both moment arrays restore together before retries or rejection.
+The gradient is candidate construction, never authority. Seed 2 is
+preregistered; promotion and seeds 1 and 3 remain sealed. See
+[`contract.json`](benchmarks/zero4-q26-v1/contract.json) and
+[`PREREGISTRATION.md`](benchmarks/zero4-q26-v1/PREREGISTRATION.md).
 
 ## Measure channel behavior
 
