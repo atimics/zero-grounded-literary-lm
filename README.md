@@ -179,15 +179,20 @@ and seeds 1 and 3 remain sealed. See
 [`contract.json`](benchmarks/zero4-q24-v1/contract.json) and
 [`RESULTS.md`](benchmarks/zero4-q24-v1/seed2/RESULTS.md).
 
-Q2.5 keeps every Q2.4 authority and gate fixed, but retries a rejected outer
+Q2.5 kept every Q2.4 authority and gate fixed, but retried a rejected outer
 attempt at deterministic learning-rate scales from 1 through 1/128. Each retry
-restores the same pre-attempt weights and AdamW moments, reuses the frozen
-minibatch and clipped gradient, and commits the first trial at or below the
-unchanged 1.5% cumulative replay ceiling. Only outer attempts consume the
-attempt budget; eight fully exhausted outer attempts still stop the phase.
-Seed 2 is preregistered, while promotion and seeds 1 and 3 remain sealed. See
+restored the same pre-attempt weights and AdamW moments, reused the frozen
+minibatch and clipped gradient, and committed the first trial at or below the
+unchanged 1.5% cumulative replay ceiling. The prospective seed-2 run was a
+**no-go**: 66 full-scale updates and five backtracked updates committed, with a
+minimum accepted scale of 1/128 and a maximum committed replay increase of
+1.49944%. Attempts 72–79 then exhausted every scale, stopping at 71 commits
+before the first 100-commit public checkpoint. Promotion was never evaluated,
+and seeds 1 and 3 remain sealed. Scalar step reduction was therefore
+insufficient; the next proposal must change update direction or optimization
+geometry without weakening the gates. See
 [`contract.json`](benchmarks/zero4-q25-v1/contract.json) and
-[`PREREGISTRATION.md`](benchmarks/zero4-q25-v1/PREREGISTRATION.md).
+[`RESULTS.md`](benchmarks/zero4-q25-v1/seed2/RESULTS.md).
 
 ## Measure channel behavior
 

@@ -1,0 +1,44 @@
+{
+  "schema": "zero.zero4_q25_result.v1",
+  "seed": 2,
+  "stage": "cumulative-backtracking",
+  "decision": "no-go",
+  "stoppedReason": "backtracking exhaustion fallback ended the phase",
+  "attempts": 79,
+  "committed": 71,
+  "guardBudget": 0.015,
+  "guardDiagnostics": {
+    "fullScaleAccepted": 66,
+    "backtrackedAccepted": 5,
+    "exhausted": 8,
+    "trialEvaluations": 156,
+    "maxTrialsUsed": 8,
+    "minAcceptedScale": 0.0078125,
+    "warningTrialExceedances": 96,
+    "hardTrialExceedances": 85,
+    "maxTrialRelativeIncrease": 0.016056362685935577,
+    "maxCommittedRelativeIncrease": 0.014994441233621297,
+    "transactionSeconds": 87.325
+  },
+  "contractSha256": "37f84ce9be603e71af01edffbb745f224611dfa1695df047947b33c0a74595ca",
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "quantity_corpus": {
+    "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35",
+    "tokens_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+    "sentinel_sha256": "02c6908142f7affb035d606a02994c3ee15ef3bd6ecb8915f8f64f86c9aa2be3",
+    "public_sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "promotion_sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "promotion_inaccessible_during_training": true
+  },
+  "frontier": [],
+  "selected": null,
+  "promotion": {
+    "evaluatedOnceAtEnd": false,
+    "reason": "no jointly feasible public checkpoint"
+  }
+}
