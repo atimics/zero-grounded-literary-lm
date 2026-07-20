@@ -16,6 +16,12 @@ ZERO_GITHUB_REPOSITORY=atimics/zero-grounded-literary-lm \
 ./scripts/aws/provision.sh
 ```
 
+The default repository also pins its stable, ID-qualified GitHub OIDC identity
+(`atimics@210085965/zero-grounded-literary-lm@1303249204`). This is the subject
+GitHub currently places in AWS web-identity tokens. For a different repository,
+set both `ZERO_GITHUB_REPOSITORY` and `ZERO_GITHUB_REPOSITORY_SUBJECT`; the
+latter must use GitHub's `owner@owner_id/repository@repository_id` form.
+
 If the account has no default VPC, also set `ZERO_VPC_ID` and
 `ZERO_SUBNET_ID`. Copy the five printed values into the GitHub `aws`
 environment secrets.

@@ -7,7 +7,17 @@ REGION="${AWS_REGION:-us-east-1}"
 export AWS_DEFAULT_REGION="$REGION"
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 BUCKET_NAME="${ZERO_BUCKET:-zero-training-${ACCOUNT_ID}}"
-GITHUB_REPOSITORY="${ZERO_GITHUB_REPOSITORY:-atimics/zero-grounded-literary-lm}"
+DEFAULT_GITHUB_REPOSITORY=atimics/zero-grounded-literary-lm
+DEFAULT_GITHUB_REPOSITORY_SUBJECT=atimics@210085965/zero-grounded-literary-lm@1303249204
+GITHUB_REPOSITORY="${ZERO_GITHUB_REPOSITORY:-$DEFAULT_GITHUB_REPOSITORY}"
+GITHUB_REPOSITORY_SUBJECT="${ZERO_GITHUB_REPOSITORY_SUBJECT:-}"
+if [ -z "$GITHUB_REPOSITORY_SUBJECT" ]; then
+  if [ "$GITHUB_REPOSITORY" != "$DEFAULT_GITHUB_REPOSITORY" ]; then
+    echo "Set ZERO_GITHUB_REPOSITORY_SUBJECT to the ID-qualified GitHub OIDC repository identity" >&2
+    exit 1
+  fi
+  GITHUB_REPOSITORY_SUBJECT="$DEFAULT_GITHUB_REPOSITORY_SUBJECT"
+fi
 EC2_ROLE_NAME=zero-training-ec2
 GITHUB_ROLE_NAME=zero-training-github-actions
 
@@ -46,7 +56,7 @@ cat > "$GITHUB_TRUST_POLICY" <<EOF
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
       "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
-      "StringLike": {"token.actions.githubusercontent.com:sub": "repo:${GITHUB_REPOSITORY}:*"}
+      "StringLike": {"token.actions.githubusercontent.com:sub": "repo:${GITHUB_REPOSITORY_SUBJECT}:*"}
     }
   }]
 }
