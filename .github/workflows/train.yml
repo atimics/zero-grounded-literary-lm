@@ -147,6 +147,20 @@ jobs:
             esac
           done
 
+      - name: Capture EC2 console
+        if: always() && steps.launch.outputs.instance_id != ''
+        continue-on-error: true
+        env:
+          INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+        run: |
+          mkdir -p training-diagnostics
+          aws ec2 get-console-output \
+            --instance-id "$INSTANCE_ID" \
+            --latest \
+            --query Output \
+            --output text \
+            --no-cli-pager > training-diagnostics/ec2-console.log
+
       - name: Collect training status and results
         run: |
           results_root="benchmarks/zero4-${ZERO_EXPERIMENT}-v1"
@@ -155,10 +169,15 @@ jobs:
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/status.json" \
             training-diagnostics/status.json \
             --no-cli-pager
-          aws s3 cp \
-            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-train.log" \
-            training-diagnostics/zero-train.log \
-            --no-cli-pager
+          if ! aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-train.log" \
+              training-diagnostics/zero-train.log \
+              --no-cli-pager; then
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-bootstrap.log" \
+              training-diagnostics/zero-bootstrap.log \
+              --no-cli-pager
+          fi
           aws s3 sync \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/results/" \
             "$results_root/" \

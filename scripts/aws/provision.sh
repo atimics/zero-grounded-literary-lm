@@ -110,7 +110,11 @@ cat > "$GITHUB_POLICY" <<EOF
     {
       "Sid": "ReadInstanceState",
       "Effect": "Allow",
-      "Action": ["ec2:DescribeInstances", "ec2:DescribeInstanceStatus"],
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:GetConsoleOutput"
+      ],
       "Resource": "*"
     },
     {
