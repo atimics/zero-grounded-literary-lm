@@ -1,0 +1,8 @@
+{"type":"baseline","at":"2026-07-20T01:42:58.801Z","sentinelReplayLoss":1.6694,"fullReplayLoss":1.631}
+{"type":"recovery","at":"2026-07-20T01:43:20.284Z","phase":"acquisition","committed":25,"totalAttempts":25,"consecutiveExhaustedAttempts":0}
+{"type":"sentinel","at":"2026-07-20T01:43:58.850Z","phase":"acquisition","committed":25,"totalAttempts":25,"quantityPass":false,"minimumFacultyMargin":-0.99,"replayLoss":1.6711,"replayRegression":0.0010183299389002246}
+{"type":"recovery","at":"2026-07-20T01:44:19.794Z","phase":"acquisition","committed":50,"totalAttempts":50,"consecutiveExhaustedAttempts":0}
+{"type":"sentinel","at":"2026-07-20T01:44:59.043Z","phase":"acquisition","committed":50,"totalAttempts":50,"quantityPass":false,"minimumFacultyMargin":-0.99,"replayLoss":1.6762,"replayRegression":0.004073319755600765}
+{"type":"recovery","at":"2026-07-20T01:45:31.882Z","phase":"acquisition","committed":71,"totalAttempts":75,"consecutiveExhaustedAttempts":4}
+{"type":"recovery","at":"2026-07-20T01:45:43.976Z","phase":"acquisition","committed":71,"totalAttempts":79,"consecutiveExhaustedAttempts":8}
+{"type":"complete","at":"2026-07-20T01:45:44.010Z","decision":"no-go","stoppedReason":"backtracking exhaustion fallback ended the phase"}

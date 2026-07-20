@@ -20,7 +20,7 @@ Schema: `zero.experiment_registry.v1`.
 | **q22r** | `benchmarks/zero4-q22r-v1` | 2026-07-17–19 | Q2.2 EVALUATION-NOTICE.md | Corrected eval adapter (preserve `--sample-weight 1`, remove only `--distill`). Measured replay-only repair branches from retained Q2.2 frontiers. Frontier selection: feasibility → max margin → min replay. Seeds 1, 2, and 3. | Can corrected evaluation, with measured repair branches, produce a jointly feasible checkpoint on all three declared seeds? | Seed 1: no-go, 81.8% exact and 2.685% replay. Seed 2: go, 97.6% exact and 1.919% replay. Seed 3: no-go, 76.4% exact and 2.587% replay. Rejected state mutations: 0. Teacher hashes unchanged. | **No promotion: one go, two no-go.** ZERO.3 remains current. Activate optimizer-boundary interference controls instead of scaling quantity. | Q2.3 observer → transactional AdamW → local replay guard, diagnostic seed 2 |
 | **q23** | `benchmarks/zero4-q23-v1` | 2026-07-19 | `ZERO4-BACKLOG.md` P0–P4 | Preregistered checkpoint-v4 transactional AdamW, per-attempt faculty/replay diagnostics, exact learned-state rollback, observer-derived guard calibration, and seed/promotion sealing. Student, teachers, corpora, routing, and public thresholds remained fixed from Q2.2. | Can optimizer-boundary observation and rollback prevent replay interference without weakening the quantity or 2% replay gates? | Observer seed 2 passed mechanics and calibrated a 0.25% hard band. Guarded seed 2 accepted all 200 attempts: 5 exceeded the warning band, none exceeded the hard band, and the maximum local increase was 0.2013%. Update 200 passed quantity exactly at threshold but replay regressed 2.685%. | **No-go.** The per-attempt local budget did not bind or control cumulative replay. Promotion and replication seeds 1 and 3 remained sealed; ZERO.3 remains current. | Q2.4 design: preregister a cumulative direct functional replay budget |
 | **q24** | `benchmarks/zero4-q24-v1` | 2026-07-19 | Q2.3 no-go and `benchmarks/zero4-q24-v1/PREREGISTRATION.md` | Replaces the local one-step guard authority with an immutable ZERO.3 baseline over all six fixed replay slices. Every candidate is checked before commit; the 1.5% cumulative ceiling leaves 0.5 percentage points of reserve below the public gate. All other Q2.3 design choices remain fixed. | Can direct cumulative replay authority preserve the 2% public replay ceiling without closing the quantity-learning path? | Seed 2 committed 66 of 74 attempts. The first reject was attempt 67; eight consecutive candidates exceeded the hard budget and rolled back. No 100-commit public checkpoint was reached. | **No-go.** The guard bound before the first public quantity evaluation, so promotion and seeds 1 and 3 remained sealed. ZERO.3 remains current. | Q2.5 proposal: budget-aware continuation without weakening the replay or quantity gates |
-| **q25** | `benchmarks/zero4-q25-v1` | 2026-07-19 | Q2.4 no-go and `benchmarks/zero4-q25-v1/PREREGISTRATION.md` | Keeps the immutable six-slice baseline and 1.5% authority, but retries each outer attempt at frozen scales 1, 1/2, …, 1/128. Every retry restores weights and AdamW moments and reuses the same minibatch, gradient, and proposed update. | Can deterministic first-feasible backtracking preserve replay safety while reopening the quantity-learning path? | **Preregistered; not executed.** The implementation gate proves full-scale and backtracked commits, exact 4+4 recovery, and exact learned-state restoration across all eight trial scales. | **Pending prospective seed 2.** Promotion and seeds 1 and 3 remain sealed. | Merge the frozen implementation, then execute seed 2 from that commit |
+| **q25** | `benchmarks/zero4-q25-v1` | 2026-07-19 | Q2.4 no-go and `benchmarks/zero4-q25-v1/PREREGISTRATION.md` | Keeps the immutable six-slice baseline and 1.5% authority, but retries each outer attempt at frozen scales 1, 1/2, …, 1/128. Every retry restores weights and AdamW moments and reuses the same minibatch, gradient, and proposed update. | Can deterministic first-feasible backtracking preserve replay safety while reopening the quantity-learning path? | Seed 2 committed 66 full-scale and 5 backtracked updates, then exhausted all eight scales on attempts 72–79. The smallest accepted scale was 1/128 and the maximum committed replay increase was 1.49944%. No 100-commit public checkpoint was reached. | **No-go.** Scalar continuation bought five updates but did not reopen the learning path. Promotion and seeds 1 and 3 remained sealed; ZERO.3 remains current. | Q2.6 proposal: change update direction or optimization geometry without weakening the frozen gates |
 
 ---
 
@@ -64,8 +64,8 @@ q24 (immutable six-slice cumulative budget)
   → Q2.5: change the candidate update when the budget binds; do not relax the gate
 
 q25 (deterministic cumulative-guard backtracking)
-  "Preregistered: first feasible scale from 1 through 1/128; gates unchanged."
-  → Prospective seed-2 diagnostic after merge
+  "66 full-scale + 5 backtracked commits; then 8 exhausted attempts, no public checkpoint."
+  → Q2.6: change update direction or optimization geometry; do not relax the gates
 ```
 
 ---
@@ -105,6 +105,14 @@ checkpoint, so promotion and replication correctly stayed sealed. A follow-up
 must change how a rejected candidate is constructed or scaled, not weaken the
 frozen replay or quantity gates.
 
+10. **Scalar continuation did not resolve the constrained optimization
+boundary.** Q2.5 accepted five additional updates by shrinking the same
+candidate direction, including one at 1/128, and held every commit below the
+1.5% authority. It then exhausted all eight scales on eight consecutive outer
+attempts. The next proposal must change the update direction, objective, or
+optimization geometry rather than only reduce step length; the frozen replay
+and quantity gates remain unchanged.
+
 ---
 
 ## Schema
@@ -130,7 +138,7 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 - **Deployed browser baseline**: `docs/model.litq8`, update 14,500. This is distinct from the frozen ZERO.3 training teacher.
 - **Student initialization and frozen teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
-- **Latest completed experiment**: Q2.4 seed 2 (no-go; 66 accepts / 8 rejects, no public checkpoint)
-- **Next experiment**: Q2.5 is preregistered; merge its frozen implementation, then execute diagnostic seed 2
+- **Latest completed experiment**: Q2.5 seed 2 (no-go; 71 commits / 79 attempts, no public checkpoint)
+- **Next experiment**: Q2.6 is not yet preregistered; its proposal must change update direction or optimization geometry without relaxing the frozen gates
 - **Active proposals**: See `PROPOSALS.md`
-- **Promotion status**: Not promoted. Q2.4 seed 2 was no-go; promotion and replication seeds remain sealed.
+- **Promotion status**: Not promoted. Q2.5 seed 2 was no-go; promotion and replication seeds remain sealed.

@@ -1,0 +1,29 @@
+{
+  "schema": "zero.zero4_q25_selection.v1",
+  "seed": 2,
+  "stage": "cumulative-backtracking",
+  "decision": "no-go",
+  "stoppedReason": "backtracking exhaustion fallback ended the phase",
+  "attempts": 79,
+  "committed": 71,
+  "guardBudget": 0.015,
+  "guardDiagnostics": {
+    "fullScaleAccepted": 66,
+    "backtrackedAccepted": 5,
+    "exhausted": 8,
+    "trialEvaluations": 156,
+    "maxTrialsUsed": 8,
+    "minAcceptedScale": 0.0078125,
+    "warningTrialExceedances": 96,
+    "hardTrialExceedances": 85,
+    "maxTrialRelativeIncrease": 0.016056362685935577,
+    "maxCommittedRelativeIncrease": 0.014994441233621297,
+    "transactionSeconds": 87.325
+  },
+  "frontier": [],
+  "selected": null,
+  "promotion": {
+    "evaluatedOnceAtEnd": false,
+    "reason": "no jointly feasible public checkpoint"
+  }
+}

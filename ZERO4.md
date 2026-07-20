@@ -718,7 +718,7 @@ after the budget binds—for example through a prospectively specified
 backtracking rule—without loosening the 1.5% authority or the public quantity
 and replay gates.
 
-## 20. Preregistered experiment — ZERO.4-Q2.5 deterministic backtracking
+## 20. Experiment — ZERO.4-Q2.5 deterministic backtracking
 
 Q2.5 changes candidate construction, not experimental authority. Its student,
 teachers, corpora, source order, optimizer, attempt budgets, quantity gates,
@@ -745,3 +745,22 @@ exactly after all eight retry scales. Only diagnostic seed 2 may run after the
 implementation and contract merge. Promotion and seeds 1 and 3 remain sealed
 until the frozen prospective gates open them. The authoritative contract is
 `benchmarks/zero4-q25-v1/contract.json`.
+
+### Q2.5 seed-2 result
+
+The prospective ilXyr execution resolved **no-go**. Attempts 1–66 committed at
+full scale; attempts 67–71 committed only after backtracking, including a
+minimum accepted scale of 1/128. Across 79 outer attempts the controller
+evaluated 156 trials. The maximum committed composite replay increase was
+1.49944%, below the unchanged 1.5% authority, and no rejected state mutation
+was admitted.
+
+Attempts 72–79 exhausted all eight registered scales and triggered the frozen
+fallback at 71 committed updates. The run therefore never reached its first
+100-commit public checkpoint: quantity/public feasibility and promotion were
+not evaluated, and replication seeds 1 and 3 remain sealed. The result shows
+that deterministic scalar continuation can extend the safe trajectory by five
+updates but cannot reopen it. A Q2.6 proposal must change the candidate
+direction, objective, or optimization geometry rather than merely shrink the
+same direction; it must not relax the cumulative replay authority, public
+replay ceiling, quantity gates, or seed seals.
