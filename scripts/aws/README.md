@@ -61,3 +61,8 @@ Q2.2-R also retains its legacy `1,3` combined-dispatch option. The workflow:
 A scientific no-go has exit status zero because it is a completed experiment.
 Missing assets, invalid schemas, failed commands, or absent status records are
 infrastructure errors and fail the workflow.
+
+The GitHub role can use regional AMIs, subnets, security groups, network
+interfaces, and volumes only as resources of `RunInstances`. The separately
+authorized instance resource must carry `Project=zero` at launch, and the role
+can terminate only instances carrying that tag.
