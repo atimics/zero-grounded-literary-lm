@@ -76,6 +76,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
         with:
           role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          role-duration-seconds: 43200
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Publish immutable job inputs

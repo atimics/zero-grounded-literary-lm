@@ -1,0 +1,229 @@
+name: Recover AWS training result
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Original Train workflow run ID'
+        required: true
+        type: string
+      instance_id:
+        description: 'Existing EC2 training instance ID'
+        required: true
+        type: string
+      seed:
+        description: 'Q2.6-R seed attached to the source instance'
+        required: true
+        type: choice
+        options:
+          - '1'
+          - '3'
+      source_orchestrator_commit:
+        description: 'Commit that launched the source instance'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+
+concurrency:
+  group: zero-training-q26r
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    name: q26r · recover seed=${{ inputs.seed }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 720
+    environment: aws
+    env:
+      ZERO_EXPERIMENT: q26r
+      ZERO_SEEDS: ${{ inputs.seed }}
+      ZERO_COMMIT: 3ee802c29ddf47982477a6b6dd635eaedede7bb7
+      ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ZERO_SOURCE_ORCHESTRATOR_COMMIT: ${{ inputs.source_orchestrator_commit }}
+      ZERO_COLLECTOR_COMMIT: ${{ github.sha }}
+      ZERO_COLLECTOR_RUN_ID: ${{ github.run_id }}
+      ZERO_INSTANCE_ID: ${{ inputs.instance_id }}
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate recovery inputs
+        run: |
+          [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$ZERO_INSTANCE_ID" =~ ^i-[0-9a-f]+$ ]]
+          [[ "$ZERO_SEEDS" =~ ^(1|3)$ ]]
+          [[ "$ZERO_SOURCE_ORCHESTRATOR_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          test ! -e "benchmarks/zero4-q26r-v1/seed${ZERO_SEEDS}/result.json"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          role-duration-seconds: 43200
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify immutable source instance
+        run: |
+          instance_type=$(aws ec2 describe-instances \
+            --instance-ids "$ZERO_INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].InstanceType' \
+            --output text \
+            --no-cli-pager)
+          test "$instance_type" = c6i.4xlarge
+
+          expect_tag() {
+            key=$1
+            expected=$2
+            actual=$(aws ec2 describe-instances \
+              --instance-ids "$ZERO_INSTANCE_ID" \
+              --query "Reservations[0].Instances[0].Tags[?Key=='${key}']|[0].Value" \
+              --output text \
+              --no-cli-pager)
+            if [ "$actual" != "$expected" ]; then
+              echo "Instance tag $key mismatch: expected $expected, got $actual" >&2
+              exit 1
+            fi
+          }
+
+          expect_tag Project zero
+          expect_tag Experiment "$ZERO_EXPERIMENT"
+          expect_tag Seeds "$ZERO_SEEDS"
+          expect_tag Commit "$ZERO_COMMIT"
+          expect_tag RunId "$ZERO_SOURCE_RUN_ID"
+
+      - name: Wait for source instance completion
+        run: |
+          while true; do
+            state=$(aws ec2 describe-instances \
+              --instance-ids "$ZERO_INSTANCE_ID" \
+              --query 'Reservations[0].Instances[0].State.Name' \
+              --output text \
+              --no-cli-pager)
+            echo "$(date -u +%H:%M:%S) source instance state: $state"
+            case "$state" in
+              terminated|stopped|stopping|shutting-down) break ;;
+              pending|running) sleep 30 ;;
+              *) echo "Unexpected EC2 state: $state" >&2; exit 1 ;;
+            esac
+          done
+
+      - name: Capture EC2 console
+        if: always()
+        continue-on-error: true
+        run: |
+          mkdir -p training-diagnostics
+          aws ec2 get-console-output \
+            --instance-id "$ZERO_INSTANCE_ID" \
+            --latest \
+            --query Output \
+            --output text \
+            --no-cli-pager > training-diagnostics/ec2-console.log
+
+      - name: Collect training status and results
+        run: |
+          results_root="benchmarks/zero4-${ZERO_EXPERIMENT}-v1"
+          mkdir -p training-diagnostics "$results_root"
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/status.json" \
+            training-diagnostics/status.json \
+            --no-cli-pager
+          if ! aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/zero-train.log" \
+              training-diagnostics/zero-train.log \
+              --no-cli-pager; then
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/zero-bootstrap.log" \
+              training-diagnostics/zero-bootstrap.log \
+              --no-cli-pager
+          fi
+          aws s3 sync \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/results/" \
+            "$results_root/" \
+            --no-cli-pager
+          python3 - <<'PY'
+          import json
+          import os
+
+          status = json.load(open("training-diagnostics/status.json", encoding="utf-8"))
+          if status.get("schema") != "zero.aws_training_status.v1":
+              raise SystemExit("invalid training status schema")
+          if status.get("status") != "complete" or status.get("exit_code") != 0:
+              raise SystemExit(f"remote training failed: {status}")
+          expected = {
+              "experiment": os.environ["ZERO_EXPERIMENT"],
+              "seeds": os.environ["ZERO_SEEDS"],
+              "git_commit": os.environ["ZERO_COMMIT"],
+          }
+          for key, value in expected.items():
+              if str(status.get(key)) != value:
+                  raise SystemExit(
+                      f"remote status {key} mismatch: expected {value}, got {status.get(key)}"
+                  )
+          print("Remote training completed without infrastructure errors")
+          PY
+
+      - name: Verify recovered seed result
+        run: |
+          seed_root="benchmarks/zero4-q26r-v1/seed${ZERO_SEEDS}"
+          test -f "$seed_root/RESULTS.md"
+          test -f "$seed_root/manifest.json"
+          node scripts/check_zero4_q26r.mjs \
+            benchmarks/zero4-q26r-v1/contract.json \
+            "$seed_root/optimizer-attempts.jsonl" \
+            "$seed_root/result.json"
+
+      - name: Record recovery provenance
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          record = {
+              "schema": "zero.training_provenance.v1",
+              "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "experiment": os.environ["ZERO_EXPERIMENT"],
+              "seeds": os.environ["ZERO_SEEDS"],
+              "git_commit": os.environ["ZERO_COMMIT"],
+              "orchestrator_commit": os.environ["ZERO_SOURCE_ORCHESTRATOR_COMMIT"],
+              "ci_run_id": os.environ["ZERO_SOURCE_RUN_ID"],
+              "recovery": {
+                  "collector_run_id": os.environ["ZERO_COLLECTOR_RUN_ID"],
+                  "collector_commit": os.environ["ZERO_COLLECTOR_COMMIT"],
+                  "reason": "source GitHub OIDC session expired while the EC2 computation continued",
+                  "new_training_started": False,
+              },
+              "aws": {
+                  "instance_id": os.environ["ZERO_INSTANCE_ID"],
+                  "instance_type": "c6i.4xlarge",
+                  "region": os.environ["ZERO_REGION"],
+              },
+          }
+          path = Path("benchmarks/zero4-q26r-v1") / f"provenance-{os.environ['ZERO_SOURCE_RUN_ID']}.json"
+          path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zero-training-recovery-${{ github.run_id }}
+          path: training-diagnostics/
+          if-no-files-found: warn
+
+      - name: Commit recovered result
+        uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
+        with:
+          commit_message: 'results: q26r recovered seed=${{ inputs.seed }} [source run ${{ inputs.source_run_id }}]'
+          file_pattern: 'benchmarks/zero4-q26r-v1/**'
+          commit_user_name: zero-ci
+          commit_user_email: ci@zero.local

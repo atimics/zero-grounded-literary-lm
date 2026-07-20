@@ -25,3 +25,22 @@ Two laptop attempts on 2026-07-19 are quarantined as infrastructure incidents:
 Neither attempt is a valid Q2.6-R observation, neither enters the family
 aggregate, and neither authorizes a result claim. Seeds 1 and 3 remain
 unobserved until their AWS executions complete.
+
+## Seed-1 observer recovery freeze
+
+GitHub Actions run `29781044890` launched seed 1 on instance
+`i-091c1816db3c758a4` from orchestration commit
+`b6ee1a1ec20bb06ec37a92d073c3bbd970484387`. At 2026-07-20 22:40:25 UTC,
+the Actions observer's default one-hour OIDC session expired while the EC2
+instance was still running. At the time this recovery rule was frozen, S3
+contained only the immutable source archive and training script: no status,
+metric, decision, or result artifact had been observed.
+
+Seed 1 must not be rerun. A recovery collector may wait on that exact instance
+and source run, but it must verify the instance's Project, Experiment, Seeds,
+Commit, and RunId tags before reading artifacts. It may accept the computation
+only if the instance uploads a successful structured status, the frozen Q2.6-R
+checker accepts the seed result, and provenance records both the failed
+observer and recovery collector. The collector starts no training. Any remote
+failure, missing artifact, tag mismatch, or checker failure resolves as an
+execution failure rather than scientific go or no-go evidence.
