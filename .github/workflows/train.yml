@@ -9,8 +9,9 @@ on:
         type: choice
         options:
           - q22r
+          - q26r
       seeds:
-        description: 'Outstanding replication seeds (1, 3, or 1,3)'
+        description: 'Seed 1 or 3 (q22r also permits 1,3)'
         required: true
         type: string
         default: '1,3'
@@ -46,16 +47,24 @@ jobs:
       ZERO_INSTANCE_AMI: ${{ inputs.instance_ami }}
       ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
       ZERO_REGION: ${{ secrets.AWS_REGION }}
-      ZERO_COMMIT: ${{ github.sha }}
+      # Q2.6-R keeps its scientific source pinned while orchestration evolves.
+      ZERO_COMMIT: ${{ inputs.experiment == 'q26r' && '3ee802c29ddf47982477a6b6dd635eaedede7bb7' || github.sha }}
+      ZERO_ORCHESTRATOR_COMMIT: ${{ github.sha }}
       ZERO_RUN_ID: ${{ github.run_id }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
 
       - name: Validate dispatch inputs
         shell: bash
         run: |
-          test "$ZERO_EXPERIMENT" = q22r
-          [[ "$ZERO_SEEDS" =~ ^(1|3|1,3|3,1)$ ]]
+          [[ "$ZERO_EXPERIMENT" =~ ^(q22r|q26r)$ ]]
+          if [ "$ZERO_EXPERIMENT" = q26r ]; then
+            [[ "$ZERO_SEEDS" =~ ^(1|3)$ ]]
+          else
+            [[ "$ZERO_SEEDS" =~ ^(1|3|1,3|3,1)$ ]]
+          fi
           [[ "$ZERO_INSTANCE_TYPE" =~ ^[a-z0-9.-]+$ ]]
           if [ -n "$ZERO_INSTANCE_AMI" ]; then
             [[ "$ZERO_INSTANCE_AMI" =~ ^ami-[0-9a-f]+$ ]]
@@ -140,7 +149,8 @@ jobs:
 
       - name: Collect training status and results
         run: |
-          mkdir -p training-diagnostics benchmarks/zero4-q22r-v1
+          results_root="benchmarks/zero4-${ZERO_EXPERIMENT}-v1"
+          mkdir -p training-diagnostics "$results_root"
           aws s3 cp \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/status.json" \
             training-diagnostics/status.json \
@@ -151,7 +161,7 @@ jobs:
             --no-cli-pager
           aws s3 sync \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/results/" \
-            benchmarks/zero4-q22r-v1/ \
+            "$results_root/" \
             --no-cli-pager
           python3 - <<'PY'
           import json
@@ -166,14 +176,24 @@ jobs:
 
       - name: Verify requested seed results
         run: |
+          results_root="benchmarks/zero4-${ZERO_EXPERIMENT}-v1"
           IFS=',' read -ra seed_array <<< "$ZERO_SEEDS"
           for seed in "${seed_array[@]}"; do
-            test -f "benchmarks/zero4-q22r-v1/seed${seed}/RESULTS.md"
-            test -f "benchmarks/zero4-q22r-v1/seed${seed}/manifest.json"
+            seed_root="$results_root/seed${seed}"
+            test -f "$seed_root/RESULTS.md"
+            test -f "$seed_root/manifest.json"
+            if [ "$ZERO_EXPERIMENT" = q26r ]; then
+              node scripts/check_zero4_q26r.mjs \
+                benchmarks/zero4-q26r-v1/contract.json \
+                "$seed_root/optimizer-attempts.jsonl" \
+                "$seed_root/result.json"
+            fi
           done
-          python3 scripts/verify_results.py \
-            --results-root benchmarks/zero4-q22r-v1 \
-            --skip-registry
+          if [ "$ZERO_EXPERIMENT" = q22r ]; then
+            python3 scripts/verify_results.py \
+              --results-root "$results_root" \
+              --skip-registry
+          fi
 
       - name: Record training provenance
         env:
@@ -191,6 +211,7 @@ jobs:
               "experiment": os.environ["ZERO_EXPERIMENT"],
               "seeds": os.environ["ZERO_SEEDS"],
               "git_commit": os.environ["ZERO_COMMIT"],
+              "orchestrator_commit": os.environ["ZERO_ORCHESTRATOR_COMMIT"],
               "ci_run_id": os.environ["ZERO_RUN_ID"],
               "aws": {
                   "instance_id": os.environ["ZERO_INSTANCE_ID"],
@@ -198,7 +219,7 @@ jobs:
                   "region": os.environ["ZERO_REGION"],
               },
           }
-          path = Path("benchmarks/zero4-q22r-v1") / f"provenance-{os.environ['ZERO_RUN_ID']}.json"
+          path = Path(f"benchmarks/zero4-{os.environ['ZERO_EXPERIMENT']}-v1") / f"provenance-{os.environ['ZERO_RUN_ID']}.json"
           path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
           PY
 
@@ -213,8 +234,8 @@ jobs:
       - name: Commit results
         uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
         with:
-          commit_message: 'results: q22r seeds=${{ inputs.seeds }} [ci run ${{ github.run_id }}]'
-          file_pattern: 'benchmarks/zero4-q22r-v1/**'
+          commit_message: 'results: ${{ inputs.experiment }} seeds=${{ inputs.seeds }} [ci run ${{ github.run_id }}]'
+          file_pattern: 'benchmarks/zero4-${{ inputs.experiment }}-v1/**'
           commit_user_name: zero-ci
           commit_user_email: ci@zero.local
 

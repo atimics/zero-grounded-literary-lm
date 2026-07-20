@@ -6,6 +6,10 @@ Frozen before seeds 1 and 3 are executed. The source contract, checker,
 aggregation rule, and both downstream experiment registrations must merge before
 either result is observed.
 
+The [execution-venue addendum](AWS-EXECUTION.md) requires one ephemeral AWS
+`c6i.4xlarge` per seed and quarantines laptop attempts as invalid infrastructure
+incidents. It changes no scientific parameter or decision rule.
+
 ## Authorization earned by seed 2
 
 Q2.6 seed 2 resolved go from frozen execution commit
