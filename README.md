@@ -105,6 +105,9 @@ make zero4-q23-train ZERO4_Q23_SEED=2
 make zero4-q24-check
 # Only from the merged preregistered implementation:
 make zero4-q24-train ZERO4_Q24_SEED=2
+make zero4-q25-check
+# Only from the merged preregistered implementation:
+make zero4-q25-train ZERO4_Q25_SEED=2
 ```
 
 The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
@@ -175,6 +178,16 @@ before its first 100-commit public checkpoint. Promotion was never evaluated,
 and seeds 1 and 3 remain sealed. See
 [`contract.json`](benchmarks/zero4-q24-v1/contract.json) and
 [`RESULTS.md`](benchmarks/zero4-q24-v1/seed2/RESULTS.md).
+
+Q2.5 keeps every Q2.4 authority and gate fixed, but retries a rejected outer
+attempt at deterministic learning-rate scales from 1 through 1/128. Each retry
+restores the same pre-attempt weights and AdamW moments, reuses the frozen
+minibatch and clipped gradient, and commits the first trial at or below the
+unchanged 1.5% cumulative replay ceiling. Only outer attempts consume the
+attempt budget; eight fully exhausted outer attempts still stop the phase.
+Seed 2 is preregistered, while promotion and seeds 1 and 3 remain sealed. See
+[`contract.json`](benchmarks/zero4-q25-v1/contract.json) and
+[`PREREGISTRATION.md`](benchmarks/zero4-q25-v1/PREREGISTRATION.md).
 
 ## Measure channel behavior
 

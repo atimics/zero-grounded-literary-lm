@@ -716,4 +716,32 @@ This result supports the guard as an enforcement mechanism but rejects the v1
 learning-path hypothesis. Any Q2.5 proposal must alter or scale a candidate
 after the budget binds—for example through a prospectively specified
 backtracking rule—without loosening the 1.5% authority or the public quantity
-and replay gates. No Q2.5 experiment is registered yet.
+and replay gates.
+
+## 20. Preregistered experiment — ZERO.4-Q2.5 deterministic backtracking
+
+Q2.5 changes candidate construction, not experimental authority. Its student,
+teachers, corpora, source order, optimizer, attempt budgets, quantity gates,
+1.5% cumulative replay authority, 2% public replay ceiling, public cadence,
+promotion policy, and seed seals are identical to Q2.4.
+
+Each outer attempt freezes its minibatch, clipped faculty gradient, proposed
+committed-update index, and complete pre-attempt weights and AdamW moments. It
+evaluates the full AdamW candidate first, then deterministically tries learning
+rate scales `1/2`, `1/4`, `1/8`, `1/16`, `1/32`, `1/64`, and `1/128`. Before
+each retry it restores the complete learned state and reapplies the same moment
+update with only the learning rate scaled. Every trial evaluates all six fixed
+replay slices against the immutable ZERO.3 composite. The first finite trial
+at or below 1.5% commits; if all eight fail, the outer attempt rolls back and
+counts as one rejected attempt. Eight consecutive exhausted outer attempts
+still end the phase. Projection remains disabled.
+
+`zero.optimizer_attempt.v3` records every scale, per-slice candidate loss,
+composite change, selection, and rollback digest. Checkpoint v4 gives this mode
+a distinct identity and refuses cross-mode recovery. The smoke gate requires a
+full-scale commit, a backtracked commit, and byte-identical uninterrupted and
+4+4 recovery outputs; the C self-test restores weights and both moment arrays
+exactly after all eight retry scales. Only diagnostic seed 2 may run after the
+implementation and contract merge. Promotion and seeds 1 and 3 remain sealed
+until the frozen prospective gates open them. The authoritative contract is
+`benchmarks/zero4-q25-v1/contract.json`.

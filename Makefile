@@ -51,6 +51,10 @@ ZERO4_Q24_SEED ?= 2
 ZERO4_Q24_PREFIX ?= /tmp/zero4-q24-seed$(ZERO4_Q24_SEED)
 ZERO4_Q24_RESULTS ?= benchmarks/zero4-q24-v1/seed$(ZERO4_Q24_SEED)
 Q24_CI_REPLAY_ARGS = --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt
+ZERO4_Q25_SEED ?= 2
+ZERO4_Q25_PREFIX ?= /tmp/zero4-q25-seed$(ZERO4_Q25_SEED)
+ZERO4_Q25_RESULTS ?= benchmarks/zero4-q25-v1/seed$(ZERO4_Q25_SEED)
+Q25_CI_REPLAY_ARGS = --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt
 MONKEY_PREFIX ?= infinite-monkey-v1
 MONKEY_BF_EXAMPLES ?= 30000
 MONKEY_LOGIC_EXAMPLES ?= 100000
@@ -90,6 +94,7 @@ endif
 	zero4-q22r-aggregate \
 	zero4-q23-check zero4-q23-observer zero4-q23-train zero4-q23 \
 	zero4-q24-check zero4-q24-train zero4-q24 \
+	zero4-q25-check zero4-q25-train zero4-q25 \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -847,6 +852,77 @@ zero4-q24-train: literary_lm export_literary quantity_request_eval \
 
 zero4-q24: zero4-q24-train
 
+zero4-q25-check: literary_lm channel_corpus freeze_literary_teacher \
+		scripts/check_zero4_q25.mjs scripts/train_zero4_q25.mjs \
+		benchmarks/zero4-q25-v1/contract.json \
+		tests/fixtures/q23-channel.tsv
+	rm -f /tmp/q25-ci-full.jsonl /tmp/q25-ci-chunk.jsonl \
+		/tmp/q25-ci-full.ckpt /tmp/q25-ci-chunk.ckpt
+	./literary_lm --self-test >/dev/null
+	node scripts/check_zero4_q25.mjs --self-test
+	node scripts/train_zero4_q25.mjs --self-test
+	./literary_lm --context 256 --dim 8 --heads 2 --layers 1 --ff 16 \
+		--text corpus/zero-foundation.txt --steps 1 --batch 1 \
+		--report 1 --validation 1 --seed 5 --save /tmp/q25-ci-init.ckpt \
+		--tokens 0 >/dev/null
+	./freeze_literary_teacher /tmp/q25-ci-init.ckpt \
+		/tmp/q25-ci.teacher >/dev/null
+	./channel_corpus --chat H tests/fixtures/q23-channel.tsv \
+		--out /tmp/q25-ci-channel.tok >/dev/null
+	./literary_lm --init /tmp/q25-ci.teacher \
+		--teacher /tmp/q25-ci.teacher --teacher-weight 0.15 \
+		$(Q25_CI_REPLAY_ARGS) \
+		--hard-channel /tmp/q25-ci-channel.tok --sample-weight 100 \
+		--steps 8 --batch 1 --lr 1 --warmup 0 --dropout 0 --cosine \
+		--schedule-total 8 --report 100 --validation 1 --seed 77 \
+		--save /tmp/q25-ci-full.ckpt \
+		--transaction-mode cumulative-backtracking \
+		--transaction-log /tmp/q25-ci-full.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0.015 --transaction-max-rejections 8 \
+		--tokens 0 >/dev/null
+	./literary_lm --init /tmp/q25-ci.teacher \
+		--teacher /tmp/q25-ci.teacher --teacher-weight 0.15 \
+		$(Q25_CI_REPLAY_ARGS) \
+		--hard-channel /tmp/q25-ci-channel.tok --sample-weight 100 \
+		--steps 4 --batch 1 --lr 1 --warmup 0 --dropout 0 --cosine \
+		--schedule-total 8 --report 100 --validation 1 --seed 77 \
+		--save /tmp/q25-ci-chunk.ckpt \
+		--transaction-mode cumulative-backtracking \
+		--transaction-log /tmp/q25-ci-chunk.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0.015 --transaction-max-rejections 8 \
+		--tokens 0 >/dev/null
+	./literary_lm --resume /tmp/q25-ci-chunk.ckpt \
+		--teacher /tmp/q25-ci.teacher --teacher-weight 0.15 \
+		$(Q25_CI_REPLAY_ARGS) \
+		--hard-channel /tmp/q25-ci-channel.tok --sample-weight 100 \
+		--steps 4 --batch 1 --lr 1 --warmup 0 --dropout 0 --cosine \
+		--schedule-offset 4 --schedule-total 8 --report 100 \
+		--validation 1 --seed 77 --save /tmp/q25-ci-chunk.ckpt \
+		--transaction-mode cumulative-backtracking \
+		--transaction-log /tmp/q25-ci-chunk.jsonl \
+		--transaction-phase smoke --transaction-probe 1 \
+		--transaction-budget 0.015 --transaction-max-rejections 8 \
+		--tokens 0 >/dev/null
+	cmp /tmp/q25-ci-full.ckpt /tmp/q25-ci-chunk.ckpt
+	cmp /tmp/q25-ci-full.jsonl /tmp/q25-ci-chunk.jsonl
+	node scripts/check_zero4_q25.mjs \
+		benchmarks/zero4-q25-v1/contract.json /tmp/q25-ci-full.jsonl \
+		--require-backtrack --require-full-scale
+
+zero4-q25-train: literary_lm export_literary quantity_request_eval \
+		zero4-q25-check zero4-q22-data corpus/bpe/.zero3.stamp channel-data \
+		scripts/train_zero4_q25.mjs
+	node scripts/train_zero4_q25.mjs \
+		--prefix $(ZERO4_Q25_PREFIX) --out $(ZERO4_Q25_RESULTS) \
+		--data corpus/faculty/q22 \
+		--steps 1000 --consolidation-steps 400 --batch 2 \
+		--seed $(ZERO4_Q25_SEED) --recovery-every 25 --full-every 100 \
+		--sentinel-replay-batches 12 --full-replay-batches 48
+
+zero4-q25: zero4-q25-train
+
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
 
@@ -1210,6 +1286,7 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 	node scripts/train_zero4_q22.mjs --self-test >/dev/null
 	$(MAKE) zero4-q23-check >/dev/null
 	$(MAKE) zero4-q24-check >/dev/null
+	$(MAKE) zero4-q25-check >/dev/null
 	python3 scripts/compile_result.py --self-test >/dev/null
 	./logic_corpus --self-test >/dev/null
 	./brainfuck_corpus --self-test >/dev/null

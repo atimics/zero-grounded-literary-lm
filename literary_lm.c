@@ -32,6 +32,7 @@
 #define BPE_MAX_MERGES (MAX_VOCAB_SIZE - BPE_BASE_TOKENS)
 #define MAX_FACULTY_TEACHERS 3
 #define MAX_SAME_ARCH_TEACHERS (MAX_FACULTY_TEACHERS - 1)
+#define TRANSACTION_MAX_BACKTRACK_TRIALS 8
 
 typedef uint16_t Token;
 
@@ -172,7 +173,8 @@ enum {
     TRANSACTION_DISABLED = 0,
     TRANSACTION_OBSERVER = 1,
     TRANSACTION_GUARD = 2,
-    TRANSACTION_CUMULATIVE_GUARD = 3
+    TRANSACTION_CUMULATIVE_GUARD = 3,
+    TRANSACTION_CUMULATIVE_BACKTRACK = 4
 };
 
 typedef struct {
@@ -187,6 +189,11 @@ typedef struct {
     unsigned char *probe_mask;
     float *cumulative_baseline_losses;
     float *cumulative_candidate_losses;
+    float *backtrack_candidate_losses;
+    double backtrack_candidate_means[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    double backtrack_relative_changes[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    float backtrack_scales[TRANSACTION_MAX_BACKTRACK_TRIALS];
+    int backtrack_trial_count;
     int cumulative_replay_count;
     double cumulative_baseline_mean;
     FILE *log;
@@ -2395,6 +2402,7 @@ static void transaction_state_destroy(TransactionState *state)
     free(state->probe_mask);
     free(state->cumulative_baseline_losses);
     free(state->cumulative_candidate_losses);
+    free(state->backtrack_candidate_losses);
     memset(state, 0, sizeof(*state));
 }
 
@@ -2402,8 +2410,17 @@ static const char *transaction_mode_name(int mode)
 {
     if (mode == TRANSACTION_GUARD) return "guard";
     if (mode == TRANSACTION_CUMULATIVE_GUARD) return "cumulative-guard";
+    if (mode == TRANSACTION_CUMULATIVE_BACKTRACK) {
+        return "cumulative-backtracking";
+    }
     if (mode == TRANSACTION_OBSERVER) return "observer";
     return "disabled";
+}
+
+static int transaction_mode_uses_cumulative_guard(int mode)
+{
+    return mode == TRANSACTION_CUMULATIVE_GUARD ||
+           mode == TRANSACTION_CUMULATIVE_BACKTRACK;
 }
 
 static const CorpusRange *transaction_select_replay_range(
@@ -2479,6 +2496,9 @@ static void transaction_initialize_cumulative_baseline(
         zero_alloc((size_t)eligible_count, sizeof(float));
     state->cumulative_candidate_losses =
         zero_alloc((size_t)eligible_count, sizeof(float));
+    state->backtrack_candidate_losses = zero_alloc(
+        (size_t)TRANSACTION_MAX_BACKTRACK_TRIALS * eligible_count,
+        sizeof(float));
     state->cumulative_replay_count = eligible_count;
     for (range_index = 0; range_index < range_count; ++range_index) {
         float loss;
@@ -2595,6 +2615,8 @@ static int transaction_decide_attempt(
     double relative_change = NAN;
     double cumulative_candidate_mean = NAN;
     double cumulative_relative_change = NAN;
+    float actual_learning_rate = learning_rate;
+    float accepted_scale = 1.0f;
     uint64_t before_digest;
     uint64_t rollback_digest = 0;
     int accepted = 1;
@@ -2606,40 +2628,65 @@ static int transaction_decide_attempt(
     char cumulative_candidate_buffer[32];
     char cumulative_relative_buffer[32];
     char gradient_cosine_buffer[32];
+    char accepted_scale_buffer[32];
     char source_ids[256];
     size_t source_ids_length = 0;
     int parameter_index;
-    for (parameter_index = 0; parameter_index < model->parameter_count;
-         ++parameter_index) {
-        Parameter *parameter = model->parameters[parameter_index];
-        double group_drift = 0.0;
-        double group_norm = 0.0;
-        double group_fisher = 0.0;
-        size_t element;
-        for (element = 0; element < parameter->count; ++element) {
-            double displacement =
-                parameter->w[element] - state->learned_before[learned_offset + element];
-            double replay_gradient =
-                state->replay_gradient[gradient_offset + element];
-            double from_start =
-                parameter->w[element] - state->start_weights[gradient_offset + element];
-            group_drift += replay_gradient * displacement;
-            group_norm += displacement * displacement;
-            group_fisher += replay_gradient * replay_gradient *
-                            from_start * from_start;
-        }
-        state->group_drift[parameter_index] = group_drift;
-        state->group_displacement_norm[parameter_index] = group_norm;
-        state->group_fisher_drift[parameter_index] = group_fisher;
-        total_drift += group_drift;
-        total_displacement_norm += group_norm;
-        total_fisher_drift += group_fisher;
-        gradient_offset += parameter->count;
-        learned_offset += 3 * parameter->count;
-    }
     before_digest = UINT64_C(1469598103934665603);
     before_digest = hash_bytes(before_digest, state->learned_before,
                                3 * state->parameter_total * sizeof(float));
+    state->backtrack_trial_count = 0;
+    if (options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+        cumulative_relative_change = transaction_cumulative_candidate_change(
+            state, model, corpus, ranges, range_count,
+            options->artifact_weight, &cumulative_candidate_mean);
+    } else if (options->transaction_mode ==
+               TRANSACTION_CUMULATIVE_BACKTRACK) {
+        int trial_index;
+        accepted = 0;
+        accepted_scale = NAN;
+        for (trial_index = 0;
+             trial_index < TRANSACTION_MAX_BACKTRACK_TRIALS;
+             ++trial_index) {
+            float scale = ldexpf(1.0f, -trial_index);
+            if (trial_index > 0) {
+                transaction_restore_learned(model, state);
+                transaction_restore_gradient(model, state->batch_gradient);
+                (void)optimizer_update(
+                    model, proposed_update, learning_rate * scale,
+                    options->weight_decay, options->clip,
+                    1.0f / options->batch);
+            }
+            cumulative_relative_change =
+                transaction_cumulative_candidate_change(
+                    state, model, corpus, ranges, range_count,
+                    options->artifact_weight, &cumulative_candidate_mean);
+            state->backtrack_scales[trial_index] = scale;
+            state->backtrack_candidate_means[trial_index] =
+                cumulative_candidate_mean;
+            state->backtrack_relative_changes[trial_index] =
+                cumulative_relative_change;
+            memcpy(
+                state->backtrack_candidate_losses +
+                    (size_t)trial_index * state->cumulative_replay_count,
+                state->cumulative_candidate_losses,
+                (size_t)state->cumulative_replay_count * sizeof(float));
+            state->backtrack_trial_count = trial_index + 1;
+            actual_learning_rate = learning_rate * scale;
+            if (isfinite(cumulative_candidate_mean) &&
+                isfinite(cumulative_relative_change) &&
+                cumulative_relative_change <=
+                    options->transaction_guard_budget) {
+                accepted = 1;
+                accepted_scale = scale;
+                reason = trial_index == 0
+                             ? "within-cumulative-replay-budget"
+                             : "backtracked-within-cumulative-replay-budget";
+                break;
+            }
+        }
+        if (!accepted) reason = "cumulative-backtracking-exhausted";
+    }
     if (functional_probe) {
         probe_after = transaction_probe_loss(
             model, corpus, replay_range, state->probe_mask,
@@ -2648,11 +2695,6 @@ static int transaction_decide_attempt(
                               ? ((double)probe_after - probe_before) /
                                     probe_before
                               : 0.0;
-    }
-    if (options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
-        cumulative_relative_change = transaction_cumulative_candidate_change(
-            state, model, corpus, ranges, range_count,
-            options->artifact_weight, &cumulative_candidate_mean);
     }
     if (options->transaction_mode == TRANSACTION_GUARD) {
         if (!functional_probe) {
@@ -2677,6 +2719,36 @@ static int transaction_decide_attempt(
         } else {
             reason = "within-cumulative-replay-budget";
         }
+    }
+    for (parameter_index = 0; parameter_index < model->parameter_count;
+         ++parameter_index) {
+        Parameter *parameter = model->parameters[parameter_index];
+        double group_drift = 0.0;
+        double group_norm = 0.0;
+        double group_fisher = 0.0;
+        size_t element;
+        for (element = 0; element < parameter->count; ++element) {
+            double displacement =
+                parameter->w[element] -
+                state->learned_before[learned_offset + element];
+            double replay_gradient =
+                state->replay_gradient[gradient_offset + element];
+            double from_start =
+                parameter->w[element] -
+                state->start_weights[gradient_offset + element];
+            group_drift += replay_gradient * displacement;
+            group_norm += displacement * displacement;
+            group_fisher += replay_gradient * replay_gradient *
+                            from_start * from_start;
+        }
+        state->group_drift[parameter_index] = group_drift;
+        state->group_displacement_norm[parameter_index] = group_norm;
+        state->group_fisher_drift[parameter_index] = group_fisher;
+        total_drift += group_drift;
+        total_displacement_norm += group_norm;
+        total_fisher_drift += group_fisher;
+        gradient_offset += parameter->count;
+        learned_offset += 3 * parameter->count;
     }
     if (!accepted) {
         transaction_restore_learned(model, state);
@@ -2722,9 +2794,13 @@ static int transaction_decide_attempt(
                 "\"fisher_weighted_drift\":%.17g,"
                 "\"decision\":\"%s\",\"reason\":\"%s\","
                 "\"rollback_digest\":\"%016llx\"",
-                options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD
-                    ? "zero.optimizer_attempt.v2"
-                    : "zero.optimizer_attempt.v1",
+                options->transaction_mode ==
+                        TRANSACTION_CUMULATIVE_BACKTRACK
+                    ? "zero.optimizer_attempt.v3"
+                    : (options->transaction_mode ==
+                               TRANSACTION_CUMULATIVE_GUARD
+                           ? "zero.optimizer_attempt.v2"
+                           : "zero.optimizer_attempt.v1"),
                 (unsigned long long)state->attempts,
                 (unsigned long long)proposed_update,
                 (unsigned long long)(accepted ? proposed_update
@@ -2733,7 +2809,7 @@ static int transaction_decide_attempt(
                 transaction_mode_name(options->transaction_mode),
                 (unsigned long long)state->source_mask, source_ids,
                 replay_range_index,
-                learning_rate,
+                actual_learning_rate,
                 options->transaction_guard_budget,
                 functional_probe ? "true" : "false",
                 json_number(probe_before, probe_before_buffer),
@@ -2744,7 +2820,67 @@ static int transaction_decide_attempt(
                 sqrt(total_displacement_norm), total_drift,
                 total_fisher_drift, accepted ? "accept" : "reject", reason,
                 (unsigned long long)rollback_digest);
-        if (options->transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+        if (options->transaction_mode ==
+            TRANSACTION_CUMULATIVE_BACKTRACK) {
+            int trial_index;
+            fprintf(state->log,
+                    ",\"base_learning_rate\":%.9g,"
+                    "\"accepted_scale\":%s,"
+                    "\"backtrack_trial_count\":%d,"
+                    "\"backtrack_trials\":[",
+                    learning_rate,
+                    json_number(accepted_scale, accepted_scale_buffer),
+                    state->backtrack_trial_count);
+            for (trial_index = 0;
+                 trial_index < state->backtrack_trial_count;
+                 ++trial_index) {
+                char trial_mean_buffer[32];
+                char trial_relative_buffer[32];
+                int range_index;
+                int probe_index = 0;
+                const char *trial_decision =
+                    trial_index + 1 < state->backtrack_trial_count
+                        ? "retry"
+                        : (accepted ? "accept" : "reject");
+                fprintf(state->log,
+                        "%s{\"index\":%d,\"scale\":%.9g,"
+                        "\"learning_rate\":%.9g,"
+                        "\"candidate_mean\":%s,"
+                        "\"relative_change\":%s,"
+                        "\"decision\":\"%s\",\"ranges\":[",
+                        trial_index == 0 ? "" : ",", trial_index,
+                        state->backtrack_scales[trial_index],
+                        learning_rate *
+                            state->backtrack_scales[trial_index],
+                        json_number(
+                            state->backtrack_candidate_means[trial_index],
+                            trial_mean_buffer),
+                        json_number(
+                            state->backtrack_relative_changes[trial_index],
+                            trial_relative_buffer),
+                        trial_decision);
+                for (range_index = 0; range_index < range_count;
+                     ++range_index) {
+                    char candidate_buffer[32];
+                    if (!ranges[range_index].teacher_eligible) continue;
+                    fprintf(
+                        state->log,
+                        "%s{\"replay_range\":%d,\"candidate\":%s}",
+                        probe_index == 0 ? "" : ",", range_index,
+                        json_number(
+                            state->backtrack_candidate_losses[
+                                (size_t)trial_index *
+                                    state->cumulative_replay_count +
+                                probe_index],
+                            candidate_buffer));
+                    ++probe_index;
+                }
+                fputs("]}", state->log);
+            }
+            fputc(']', state->log);
+        }
+        if (transaction_mode_uses_cumulative_guard(
+                options->transaction_mode)) {
             int range_index;
             int probe_index = 0;
             fprintf(state->log,
@@ -3143,7 +3279,7 @@ static void print_usage(const char *program)
     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
     printf("  --gradient-cosine N  report fixed faculty/replay probe cosine every N updates\n");
-    printf("  --transaction-mode M disabled, observer, guard, or cumulative-guard (default: disabled)\n");
+    printf("  --transaction-mode M disabled, observer, guard, cumulative-guard, or cumulative-backtracking (default: disabled)\n");
     printf("  --transaction-log F  append zero.optimizer_attempt.v1/v2 JSONL\n");
     printf("  --transaction-phase P observer, acquisition, consolidation, recovery, or smoke\n");
     printf("  --transaction-probe N functional replay probe cadence, 1..5 (default: 5)\n");
@@ -3387,6 +3523,7 @@ static int run_self_test(void)
         uint64_t restored_digest;
         uint64_t rng_before = rng.state;
         int index;
+        int trial_index;
         memset(&transaction_options, 0, sizeof(transaction_options));
         transaction_state_create(&transaction_state, &model, &model,
                                  &transaction_options);
@@ -3402,7 +3539,16 @@ static int run_self_test(void)
         transaction_copy_learned_from_model(&transaction_state, &model);
         before_digest = model_learned_state_digest(&model);
         (void)rng_next(&rng);
-        (void)optimizer_update(&model, 1, 0.001f, 0.01f, 1.0f, 1.0f);
+        for (trial_index = 0;
+             trial_index < TRANSACTION_MAX_BACKTRACK_TRIALS;
+             ++trial_index) {
+            if (trial_index > 0) {
+                transaction_restore_learned(&model, &transaction_state);
+            }
+            (void)optimizer_update(
+                &model, 1, ldexpf(0.001f, -trial_index),
+                0.01f, 1.0f, 1.0f);
+        }
         candidate_digest = model_learned_state_digest(&model);
         transaction_restore_learned(&model, &transaction_state);
         restored_digest = model_learned_state_digest(&model);
@@ -3616,8 +3762,10 @@ int main(int argc, char **argv)
                 options.transaction_mode = TRANSACTION_GUARD;
             } else if (strcmp(mode, "cumulative-guard") == 0) {
                 options.transaction_mode = TRANSACTION_CUMULATIVE_GUARD;
+            } else if (strcmp(mode, "cumulative-backtracking") == 0) {
+                options.transaction_mode = TRANSACTION_CUMULATIVE_BACKTRACK;
             } else {
-                fail("--transaction-mode must be disabled, observer, guard, or cumulative-guard");
+                fail("--transaction-mode must be disabled, observer, guard, cumulative-guard, or cumulative-backtracking");
             }
         } else if (strcmp(argv[i], "--transaction-log") == 0 &&
                    i + 1 < argc) {
@@ -3762,7 +3910,7 @@ int main(int argc, char **argv)
         options.gradient_cosine_every < 0 ||
         options.transaction_probe_every < 1 ||
         options.transaction_probe_every > 5 ||
-        (options.transaction_mode == TRANSACTION_CUMULATIVE_GUARD &&
+        (transaction_mode_uses_cumulative_guard(options.transaction_mode) &&
          options.transaction_probe_every != 1) ||
         options.transaction_guard_budget < 0.0f ||
         options.transaction_max_rejections < 1 ||
@@ -3978,7 +4126,8 @@ int main(int argc, char **argv)
                text_count > 0 ? "weighted-files-and-channel-records"
                               : "uniform-bytes");
 
-        if (options.transaction_mode == TRANSACTION_CUMULATIVE_GUARD) {
+        if (transaction_mode_uses_cumulative_guard(
+                options.transaction_mode)) {
             transaction_initialize_cumulative_baseline(
                 &transaction, &teacher_models[options.teacher_count - 1],
                 &corpus, text_ranges, text_count, options.artifact_weight);
