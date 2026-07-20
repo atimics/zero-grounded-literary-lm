@@ -58,6 +58,10 @@ Q25_CI_REPLAY_ARGS = --text corpus/zero-foundation.txt --text corpus/zero-founda
 ZERO4_Q26_SEED ?= 2
 ZERO4_Q26_PREFIX ?= /tmp/zero4-q26-seed$(ZERO4_Q26_SEED)
 ZERO4_Q26_RESULTS ?= benchmarks/zero4-q26-v1/seed$(ZERO4_Q26_SEED)
+ZERO4_Q26R_SEED ?= 1
+ZERO4_Q26R_PREFIX ?= /tmp/zero4-q26r-seed$(ZERO4_Q26R_SEED)
+ZERO4_Q26R_RESULTS ?= benchmarks/zero4-q26r-v1/seed$(ZERO4_Q26R_SEED)
+ZERO4_Q26R_CONTRACT ?= benchmarks/zero4-q26r-v1/contract.json
 Q26_CI_REPLAY_ARGS = --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt
 MONKEY_PREFIX ?= infinite-monkey-v1
 MONKEY_BF_EXAMPLES ?= 30000
@@ -100,6 +104,7 @@ endif
 	zero4-q24-check zero4-q24-train zero4-q24 \
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
+	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -999,6 +1004,30 @@ zero4-q26-train: literary_lm export_literary quantity_request_eval \
 
 zero4-q26: zero4-q26-train
 
+zero4-q26r-check: zero4-q26-check \
+		scripts/check_zero4_q26r.mjs scripts/aggregate_zero4_q26r.mjs \
+		benchmarks/zero4-q26r-v1/contract.json \
+		benchmarks/zero4-q26-v1/seed2/result.json \
+		benchmarks/zero4-q26-v1/seed2/selected.litq8
+	node scripts/check_zero4_q26r.mjs --self-test
+	node scripts/aggregate_zero4_q26r.mjs --self-test
+
+zero4-q26r-train: literary_lm export_literary quantity_request_eval \
+		zero4-q26r-check zero4-q22-data corpus/bpe/.zero3.stamp channel-data \
+		scripts/train_zero4_q26.mjs
+	node scripts/train_zero4_q26.mjs \
+		--prefix $(ZERO4_Q26R_PREFIX) --out $(ZERO4_Q26R_RESULTS) \
+		--data corpus/faculty/q22 \
+		--replication-contract $(ZERO4_Q26R_CONTRACT) \
+		--steps 1000 --consolidation-steps 400 --batch 2 \
+		--seed $(ZERO4_Q26R_SEED) --recovery-every 25 --full-every 100 \
+		--sentinel-replay-batches 12 --full-replay-batches 48
+
+zero4-q26r: zero4-q26r-train
+
+zero4-q26r-aggregate:
+	node scripts/aggregate_zero4_q26r.mjs benchmarks/zero4-q26r-v1
+
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
 
@@ -1364,6 +1393,7 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 	$(MAKE) zero4-q24-check >/dev/null
 	$(MAKE) zero4-q25-check >/dev/null
 	$(MAKE) zero4-q26-check >/dev/null
+	$(MAKE) zero4-q26r-check >/dev/null
 	python3 scripts/compile_result.py --self-test >/dev/null
 	./logic_corpus --self-test >/dev/null
 	./brainfuck_corpus --self-test >/dev/null
