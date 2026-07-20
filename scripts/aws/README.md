@@ -1,7 +1,10 @@
 # AWS training runner
 
-The AWS runner executes only the frozen Q2.2-R replication for outstanding
-seeds 1 and 3. It does not expose unfinished saturation experiments.
+The AWS runner executes only frozen Q2.2-R or Q2.6-R replications for
+outstanding seeds 1 and 3. It does not expose unfinished saturation
+experiments. Q2.6-R always archives science commit
+`3ee802c29ddf47982477a6b6dd635eaedede7bb7`; later workflow commits may change
+orchestration, but cannot change the experiment source.
 
 ## Provision once
 
@@ -34,12 +37,14 @@ The instance downloads those paths and verifies every frozen teacher against
 
 ## Dispatch and lifecycle
 
-Dispatch `.github/workflows/train.yml` with experiment `q22r`, seeds `1`, `3`,
-or `1,3`, and a declared EC2 instance type. The workflow:
+Dispatch `.github/workflows/train.yml` with experiment `q22r` or `q26r` and
+the declared `c6i.4xlarge` instance type. Q2.6-R requires one dispatch each for
+seed `1` and seed `3`, giving each prospective run its own ephemeral instance;
+Q2.2-R also retains its legacy `1,3` combined-dispatch option. The workflow:
 
 1. uploads an immutable source archive and training script for the dispatched commit;
 2. launches a tagged instance with the `zero-training-ec2` profile;
-3. runs the existing Q2.2 sentinel/public/Pareto pipeline;
+3. runs the selected frozen replication pipeline on EC2;
 4. evaluates promotion once only when public validation selected a feasible
    checkpoint;
 5. uploads both seed-level go and no-go results plus an explicit infrastructure
