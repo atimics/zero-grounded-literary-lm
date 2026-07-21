@@ -100,4 +100,6 @@ aws s3 cp \
   /opt/zero/train.sh \
   --no-cli-pager
 chmod 0755 /opt/zero/train.sh
-exec /opt/zero/train.sh
+# AWS owns the long-running phase. Keep its wall-clock cap independent of the
+# short GitHub dispatch and collection workflows.
+exec timeout --signal=TERM --kill-after=5m 11h /opt/zero/train.sh
