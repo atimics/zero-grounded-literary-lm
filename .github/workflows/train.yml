@@ -108,14 +108,13 @@ jobs:
         env:
           ZERO_AMI: ${{ steps.ami.outputs.ami }}
         run: |
-          user_data=$(base64 -w0 scripts/aws/user-data.sh)
           instance_id=$(aws ec2 run-instances \
             --image-id "$ZERO_AMI" \
             --instance-type "$ZERO_INSTANCE_TYPE" \
             --iam-instance-profile Name=zero-training-ec2 \
             --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
             --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
-            --user-data "$user_data" \
+            --user-data file://scripts/aws/user-data.sh \
             --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
             --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":64,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
             --instance-initiated-shutdown-behavior terminate \
