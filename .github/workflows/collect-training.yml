@@ -1,4 +1,4 @@
-name: Recover AWS training result
+name: Collect AWS training result
 
 on:
   workflow_dispatch:
@@ -22,6 +22,13 @@ on:
         description: 'Commit that launched the source instance'
         required: true
         type: string
+      source_dispatch_conclusion:
+        description: 'Conclusion of the short source dispatch workflow'
+        required: true
+        type: choice
+        options:
+          - success
+          - failure
 
 permissions:
   id-token: write
@@ -32,10 +39,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  recover:
-    name: q26r · recover seed=${{ inputs.seed }}
+  collect:
+    name: q26r · collect seed=${{ inputs.seed }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 720
+    timeout-minutes: 30
     environment: aws
     env:
       ZERO_EXPERIMENT: q26r
@@ -43,6 +50,7 @@ jobs:
       ZERO_COMMIT: 3ee802c29ddf47982477a6b6dd635eaedede7bb7
       ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
       ZERO_SOURCE_ORCHESTRATOR_COMMIT: ${{ inputs.source_orchestrator_commit }}
+      ZERO_SOURCE_DISPATCH_CONCLUSION: ${{ inputs.source_dispatch_conclusion }}
       ZERO_COLLECTOR_COMMIT: ${{ github.sha }}
       ZERO_COLLECTOR_RUN_ID: ${{ github.run_id }}
       ZERO_INSTANCE_ID: ${{ inputs.instance_id }}
@@ -53,7 +61,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate recovery inputs
+      - name: Validate collection inputs
         run: |
           [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
           [[ "$ZERO_INSTANCE_ID" =~ ^i-[0-9a-f]+$ ]]
@@ -67,7 +75,6 @@ jobs:
         uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
         with:
           role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
-          role-duration-seconds: 43200
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Verify immutable source instance
@@ -99,21 +106,21 @@ jobs:
           expect_tag Commit "$ZERO_COMMIT"
           expect_tag RunId "$ZERO_SOURCE_RUN_ID"
 
-      - name: Wait for source instance completion
+      - name: Require AWS completion
         run: |
-          while true; do
-            state=$(aws ec2 describe-instances \
-              --instance-ids "$ZERO_INSTANCE_ID" \
-              --query 'Reservations[0].Instances[0].State.Name' \
-              --output text \
-              --no-cli-pager)
-            echo "$(date -u +%H:%M:%S) source instance state: $state"
-            case "$state" in
-              terminated|stopped|stopping|shutting-down) break ;;
-              pending|running) sleep 30 ;;
-              *) echo "Unexpected EC2 state: $state" >&2; exit 1 ;;
-            esac
-          done
+          state=$(aws ec2 describe-instances \
+            --instance-ids "$ZERO_INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text \
+            --no-cli-pager)
+          case "$state" in
+            terminated|stopped|stopping|shutting-down) ;;
+            pending|running)
+              echo "AWS computation is not complete; collector will not wait: $state" >&2
+              exit 1
+              ;;
+            *) echo "Unexpected EC2 state: $state" >&2; exit 1 ;;
+          esac
 
       - name: Capture EC2 console
         if: always()
@@ -170,7 +177,7 @@ jobs:
           print("Remote training completed without infrastructure errors")
           PY
 
-      - name: Verify recovered seed result
+      - name: Verify collected seed result
         run: |
           seed_root="benchmarks/zero4-q26r-v1/seed${ZERO_SEEDS}"
           test -f "$seed_root/RESULTS.md"
@@ -180,7 +187,7 @@ jobs:
             "$seed_root/optimizer-attempts.jsonl" \
             "$seed_root/result.json"
 
-      - name: Record recovery provenance
+      - name: Record collection provenance
         run: |
           python3 - <<'PY'
           import json
@@ -196,10 +203,10 @@ jobs:
               "git_commit": os.environ["ZERO_COMMIT"],
               "orchestrator_commit": os.environ["ZERO_SOURCE_ORCHESTRATOR_COMMIT"],
               "ci_run_id": os.environ["ZERO_SOURCE_RUN_ID"],
-              "recovery": {
+              "source_dispatch_conclusion": os.environ["ZERO_SOURCE_DISPATCH_CONCLUSION"],
+              "collection": {
                   "collector_run_id": os.environ["ZERO_COLLECTOR_RUN_ID"],
                   "collector_commit": os.environ["ZERO_COLLECTOR_COMMIT"],
-                  "reason": "source GitHub OIDC session expired while the EC2 computation continued",
                   "new_training_started": False,
               },
               "aws": {
@@ -216,14 +223,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: zero-training-recovery-${{ github.run_id }}
+          name: zero-training-collection-${{ github.run_id }}
           path: training-diagnostics/
           if-no-files-found: warn
 
-      - name: Commit recovered result
+      - name: Commit collected result
         uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
         with:
-          commit_message: 'results: q26r recovered seed=${{ inputs.seed }} [source run ${{ inputs.source_run_id }}]'
+          commit_message: 'results: q26r collected seed=${{ inputs.seed }} [source run ${{ inputs.source_run_id }}]'
           file_pattern: 'benchmarks/zero4-q26r-v1/**'
           commit_user_name: zero-ci
           commit_user_email: ci@zero.local

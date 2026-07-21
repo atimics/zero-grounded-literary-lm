@@ -38,7 +38,7 @@ jobs:
   train:
     name: ${{ inputs.experiment }} · seeds=${{ inputs.seeds }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 720
+    timeout-minutes: 30
     environment: aws
     env:
       ZERO_EXPERIMENT: ${{ inputs.experiment }}
@@ -76,7 +76,6 @@ jobs:
         uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
         with:
           role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
-          role-duration-seconds: 43200
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Publish immutable job inputs
@@ -130,94 +129,10 @@ jobs:
           echo "instance_id=$instance_id" >> "$GITHUB_OUTPUT"
           echo "Launched $instance_id"
 
-      - name: Wait for instance completion
-        env:
-          INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
-        run: |
-          while true; do
-            state=$(aws ec2 describe-instances \
-              --instance-ids "$INSTANCE_ID" \
-              --query 'Reservations[0].Instances[0].State.Name' \
-              --output text \
-              --no-cli-pager)
-            echo "$(date -u +%H:%M:%S) instance state: $state"
-            case "$state" in
-              terminated|stopped|stopping|shutting-down) break ;;
-              pending|running) sleep 30 ;;
-              *) echo "Unexpected EC2 state: $state" >&2; exit 1 ;;
-            esac
-          done
-
-      - name: Capture EC2 console
-        if: always() && steps.launch.outputs.instance_id != ''
-        continue-on-error: true
-        env:
-          INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
-        run: |
-          mkdir -p training-diagnostics
-          aws ec2 get-console-output \
-            --instance-id "$INSTANCE_ID" \
-            --latest \
-            --query Output \
-            --output text \
-            --no-cli-pager > training-diagnostics/ec2-console.log
-
-      - name: Collect training status and results
-        run: |
-          results_root="benchmarks/zero4-${ZERO_EXPERIMENT}-v1"
-          mkdir -p training-diagnostics "$results_root"
-          aws s3 cp \
-            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/status.json" \
-            training-diagnostics/status.json \
-            --no-cli-pager
-          if ! aws s3 cp \
-              "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-train.log" \
-              training-diagnostics/zero-train.log \
-              --no-cli-pager; then
-            aws s3 cp \
-              "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-bootstrap.log" \
-              training-diagnostics/zero-bootstrap.log \
-              --no-cli-pager
-          fi
-          aws s3 sync \
-            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/results/" \
-            "$results_root/" \
-            --no-cli-pager
-          python3 - <<'PY'
-          import json
-
-          status = json.load(open("training-diagnostics/status.json", encoding="utf-8"))
-          if status.get("schema") != "zero.aws_training_status.v1":
-              raise SystemExit("invalid training status schema")
-          if status.get("status") != "complete" or status.get("exit_code") != 0:
-              raise SystemExit(f"remote training failed: {status}")
-          print("Remote training completed without infrastructure errors")
-          PY
-
-      - name: Verify requested seed results
-        run: |
-          results_root="benchmarks/zero4-${ZERO_EXPERIMENT}-v1"
-          IFS=',' read -ra seed_array <<< "$ZERO_SEEDS"
-          for seed in "${seed_array[@]}"; do
-            seed_root="$results_root/seed${seed}"
-            test -f "$seed_root/RESULTS.md"
-            test -f "$seed_root/manifest.json"
-            if [ "$ZERO_EXPERIMENT" = q26r ]; then
-              node scripts/check_zero4_q26r.mjs \
-                benchmarks/zero4-q26r-v1/contract.json \
-                "$seed_root/optimizer-attempts.jsonl" \
-                "$seed_root/result.json"
-            fi
-          done
-          if [ "$ZERO_EXPERIMENT" = q22r ]; then
-            python3 scripts/verify_results.py \
-              --results-root "$results_root" \
-              --skip-registry
-          fi
-
-      - name: Record training provenance
+      - name: Record AWS launch receipt
         env:
           ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
         run: |
           python3 - <<'PY'
           import json
@@ -226,7 +141,8 @@ jobs:
           from pathlib import Path
 
           record = {
-              "schema": "zero.training_provenance.v1",
+              "schema": "zero.training_launch.v1",
+              "status": "dispatched",
               "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "experiment": os.environ["ZERO_EXPERIMENT"],
               "seeds": os.environ["ZERO_SEEDS"],
@@ -236,40 +152,30 @@ jobs:
               "aws": {
                   "instance_id": os.environ["ZERO_INSTANCE_ID"],
                   "instance_type": os.environ["ZERO_INSTANCE_TYPE"],
+                  "ami": os.environ["ZERO_AMI"],
                   "region": os.environ["ZERO_REGION"],
               },
           }
-          path = Path(f"benchmarks/zero4-{os.environ['ZERO_EXPERIMENT']}-v1") / f"provenance-{os.environ['ZERO_RUN_ID']}.json"
+          root = Path(f"benchmarks/zero4-{os.environ['ZERO_EXPERIMENT']}-v1")
+          root.mkdir(parents=True, exist_ok=True)
+          path = root / f"launch-{os.environ['ZERO_RUN_ID']}.json"
           path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
           PY
+          {
+            echo "### AWS training dispatched"
+            echo
+            echo "- Instance: \`$ZERO_INSTANCE_ID\`"
+            echo "- Science commit: \`$ZERO_COMMIT\`"
+            echo "- Experiment: \`$ZERO_EXPERIMENT\`"
+            echo "- Seeds: \`$ZERO_SEEDS\`"
+            echo
+            echo "The EC2 instance now owns execution, S3 publication, and self-termination."
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload diagnostics
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: zero-training-${{ github.run_id }}
-          path: training-diagnostics/
-          if-no-files-found: warn
-
-      - name: Commit results
+      - name: Commit launch receipt
         uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5
         with:
-          commit_message: 'results: ${{ inputs.experiment }} seeds=${{ inputs.seeds }} [ci run ${{ github.run_id }}]'
+          commit_message: 'aws: dispatch ${{ inputs.experiment }} seeds=${{ inputs.seeds }} [ci run ${{ github.run_id }}]'
           file_pattern: 'benchmarks/zero4-${{ inputs.experiment }}-v1/**'
           commit_user_name: zero-ci
           commit_user_email: ci@zero.local
-
-      - name: Terminate instance after workflow failure
-        if: always() && steps.launch.outputs.instance_id != ''
-        env:
-          INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
-        run: |
-          state=$(aws ec2 describe-instances \
-            --instance-ids "$INSTANCE_ID" \
-            --query 'Reservations[0].Instances[0].State.Name' \
-            --output text \
-            --no-cli-pager 2>/dev/null || true)
-          case "$state" in
-            terminated|shutting-down|None|'') ;;
-            *) aws ec2 terminate-instances --instance-ids "$INSTANCE_ID" --no-cli-pager ;;
-          esac

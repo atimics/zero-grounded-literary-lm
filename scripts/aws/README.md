@@ -46,17 +46,23 @@ The instance downloads those paths and verifies every frozen teacher against
 Dispatch `.github/workflows/train.yml` with experiment `q22r` or `q26r` and
 the declared `c6i.4xlarge` instance type. Q2.6-R requires one dispatch each for
 seed `1` and seed `3`, giving each prospective run its own ephemeral instance;
-Q2.2-R also retains its legacy `1,3` combined-dispatch option. The workflow:
+Q2.2-R also retains its legacy `1,3` combined-dispatch option. The dispatch
+workflow is intentionally short-lived:
 
 1. uploads an immutable source archive and training script for the dispatched commit;
 2. launches a tagged instance with the `zero-training-ec2` profile;
-3. runs the selected frozen replication pipeline on EC2;
-4. evaluates promotion once only when public validation selected a feasible
-   checkpoint;
-5. uploads both seed-level go and no-go results plus an explicit infrastructure
-   status record;
-6. shuts down and terminates the instance, with a workflow cleanup fallback;
-7. validates and commits the collected result records.
+3. commits a launch receipt and exits.
+
+AWS then owns the long-running phase. The instance executes the frozen
+pipeline, evaluates promotion only when authorized, uploads both scientific
+results and an explicit infrastructure status to S3, and terminates itself.
+Its independent 11-hour wall-clock limit prevents an orphaned training process.
+
+After the instance is terminal, dispatch
+`.github/workflows/collect-training.yml` with the launch receipt values. This
+short collection workflow refuses to wait on a running instance, validates the
+immutable instance tags and remote status, runs the frozen result checker,
+records source and collection provenance, and commits the result records.
 
 A scientific no-go has exit status zero because it is a completed experiment.
 Missing assets, invalid schemas, failed commands, or absent status records are

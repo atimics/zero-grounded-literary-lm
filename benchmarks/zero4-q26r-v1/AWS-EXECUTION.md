@@ -36,11 +36,12 @@ instance was still running. At the time this recovery rule was frozen, S3
 contained only the immutable source archive and training script: no status,
 metric, decision, or result artifact had been observed.
 
-Seed 1 must not be rerun. A recovery collector may wait on that exact instance
-and source run, but it must verify the instance's Project, Experiment, Seeds,
-Commit, and RunId tags before reading artifacts. It may accept the computation
-only if the instance uploads a successful structured status, the frozen Q2.6-R
-checker accepts the seed result, and provenance records both the failed
-observer and recovery collector. The collector starts no training. Any remote
-failure, missing artifact, tag mismatch, or checker failure resolves as an
-execution failure rather than scientific go or no-go evidence.
+Seed 1 must not be rerun. After that exact instance reaches a terminal state, a
+short collection workflow may read its source-run prefix, but it must verify
+the instance's Project, Experiment, Seeds, Commit, and RunId tags first. It may
+accept the computation only if the instance uploaded a successful structured
+status, the frozen Q2.6-R checker accepts the seed result, and provenance
+records both the failed dispatch observer and collection workflow. Collection
+starts no training and never waits on a running instance. Any remote failure,
+missing artifact, tag mismatch, or checker failure resolves as an execution
+failure rather than scientific go or no-go evidence.

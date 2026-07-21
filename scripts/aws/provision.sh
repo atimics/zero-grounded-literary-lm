@@ -71,9 +71,6 @@ else
     --role-name "$GITHUB_ROLE_NAME" \
     --assume-role-policy-document "file://${GITHUB_TRUST_POLICY}" >/dev/null
 fi
-aws iam update-role \
-  --role-name "$GITHUB_ROLE_NAME" \
-  --max-session-duration 43200
 GITHUB_ROLE_ARN=$(aws iam get-role \
   --role-name "$GITHUB_ROLE_NAME" \
   --query Role.Arn \
