@@ -240,7 +240,17 @@ the output outside the frozen Q2.6-R scientific record. The one-time run
 completed 100/100 accepted optimizer updates and all four sentinel evaluations,
 then exhausted the budget during the first 500-case full evaluation. Its
 component timings project about 7h46m/$5.28 per seed before contingency, making
-the serial quantity evaluator the next engineering bottleneck. No compute
+the serial quantity evaluator the next engineering bottleneck.
+
+Quantity JSON evaluation now uses deterministic worker processes, defaulting
+to the machine's online CPU count (capped at 32). Workers inherit the loaded
+model through copy-on-write, evaluate independent cases, and return per-case
+records that the parent reduces in original corpus order; serial and parallel
+JSON therefore remain byte-identical. Use `--jobs N` for an individual
+evaluation or `ZERO_QUANTITY_JOBS=N` for existing drivers; `--jobs 1` selects
+the serial reference path. Sample-printing mode remains serial.
+
+This is an execution optimization, not new scientific evidence, and no compute
 workflow is currently authorized. Run the local contract checks with:
 
 ```sh
