@@ -1,0 +1,16 @@
+{
+  "schema": "zero.q26_e2e_calibration_launch.v1",
+  "experiment": "openblas-e2e-calibration-v1",
+  "instance_id": "i-0f132bf708d66708f",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "c5dc800e2ee9b8830807b6cfbccbae39b4db6a45",
+  "ci_run_id": "30023119249",
+  "budget_file": "benchmarks/openblas-e2e-calibration-v1/budget.json",
+  "budget_sha256": "931d38f8ae29faf38a1f92689a5dbdf538d3be55ab3399936af0b6618cde07d3",
+  "launch_epoch": 1784822428,
+  "max_instance_seconds": 1500,
+  "max_compute_usd": 0.29,
+  "max_optimizer_attempts": 100
+}

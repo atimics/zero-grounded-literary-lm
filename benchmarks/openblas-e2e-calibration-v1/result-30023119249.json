@@ -1,0 +1,55 @@
+{
+  "schema": "zero.q26_e2e_calibration_result.v1",
+  "id": "openblas-e2e-calibration-v1",
+  "status": "budget-exhausted",
+  "started_at": "2026-07-23T16:01:52Z",
+  "finished_at": "2026-07-23T16:24:53Z",
+  "git_commit": "c5dc800e2ee9b8830807b6cfbccbae39b4db6a45",
+  "budget_sha256": "931d38f8ae29faf38a1f92689a5dbdf538d3be55ab3399936af0b6618cde07d3",
+  "scientific_inference_allowed": false,
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "backend": "OpenBLAS",
+    "openblas_threads": 16,
+    "on_demand_usd_per_hour": 0.68
+  },
+  "budget": {
+    "max_instance_seconds": 1500,
+    "workload_timeout_seconds": 1440,
+    "max_compute_usd": 0.29
+  },
+  "measurement": {
+    "seed": 89,
+    "attempt_cap": 100,
+    "completed_optimizer_attempts": 100,
+    "completed_committed_updates": 100,
+    "acceptance_rate": 1.0,
+    "sentinel_evaluations": 4,
+    "full_evaluations": 0,
+    "promotion_evaluations": 0,
+    "cold_start_build_and_assets_seconds": 92,
+    "driver_wall_seconds": 1373,
+    "total_observed_instance_seconds": 1465,
+    "driver_exit_code": 124,
+    "timing_seconds": {
+      "driver_total": 1373,
+      "baseline_sentinel_replay": 2.801,
+      "baseline_full_replay": 10.366,
+      "optimizer_transactions": 705.3820000000001,
+      "recovery_checkpoints": 0.536,
+      "sentinel_quantity": 407.543,
+      "sentinel_replay": 11.104,
+      "full_quantity": 0,
+      "full_replay": 0,
+      "attempt_log_verification": 0
+    }
+  },
+  "projection": {
+    "target_optimizer_attempts_per_seed": 1400,
+    "target_seed_count": 2,
+    "method": "component extrapolation from diagnostic acquisition attempts; committed-update evaluation counts use the observed acceptance rate; finalization allowance equals one observed full quantity evaluation",
+    "available": false
+  }
+}
