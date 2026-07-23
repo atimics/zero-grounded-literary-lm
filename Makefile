@@ -1057,6 +1057,8 @@ experiment-budget-check:
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_experiment_budget.mjs \
 		benchmarks/openblas-calibration-v1/budget.json --stage calibration
+	node scripts/check_experiment_budget.mjs \
+		benchmarks/openblas-pilot-v1/budget.json --stage pilot
 	node scripts/check_openblas_calibration_result.mjs --self-test
 	node scripts/check_openblas_calibration_result.mjs \
 		benchmarks/openblas-calibration-v1/retry-1-budget.json \

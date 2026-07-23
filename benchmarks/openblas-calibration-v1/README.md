@@ -73,6 +73,5 @@ Run the local contract check with:
 make experiment-budget-check
 ```
 
-The AWS workflow is `.github/workflows/openblas-calibration.yml`. It performs
-only short orchestration and observation in GitHub Actions; all measured
-computation runs on EC2.
+The calibration workflow is retired. Its measured result now supports the
+separately budgeted [`openblas-pilot-v1`](../openblas-pilot-v1/README.md).

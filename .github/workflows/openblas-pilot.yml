@@ -1,4 +1,4 @@
-name: OpenBLAS calibration
+name: OpenBLAS pilot
 
 on:
   workflow_dispatch:
@@ -8,14 +8,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: zero-openblas-calibration
+  group: zero-openblas-pilot
   cancel-in-progress: false
 
 jobs:
-  calibrate:
-    name: AWS · retry ≤190 seconds
+  pilot:
+    name: AWS · pilot ≤15 minutes
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 22
     environment: aws
     env:
       ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
@@ -23,7 +23,7 @@ jobs:
       ZERO_COMMIT: ${{ github.sha }}
       ZERO_RUN_ID: ${{ github.run_id }}
       ZERO_INSTANCE_TYPE: c6i.4xlarge
-      ZERO_BUDGET_FILE: benchmarks/openblas-calibration-v1/retry-1-budget.json
+      ZERO_BUDGET_FILE: benchmarks/openblas-pilot-v1/budget.json
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -36,13 +36,13 @@ jobs:
 
       - name: Validate immutable budget
         run: |
-          test ! -e benchmarks/openblas-calibration-v1/result-30003995100.json || {
-            echo "Calibration authorization was consumed by run 30003995100"
+          test ! -e benchmarks/openblas-pilot-v1/COMPLETED || {
+            echo "Pilot authorization has already been consumed"
             exit 1
           }
           node scripts/check_experiment_budget.mjs \
             "$ZERO_BUDGET_FILE" \
-            --stage calibration
+            --stage pilot
           budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
           max_instance_seconds=$(jq -r \
             '.execution.max_instance_seconds' "$ZERO_BUDGET_FILE")
@@ -50,17 +50,21 @@ jobs:
             '.execution.workload_timeout_seconds' "$ZERO_BUDGET_FILE")
           max_compute_usd=$(jq -r \
             '.execution.max_compute_usd' "$ZERO_BUDGET_FILE")
+          max_optimizer_attempts=$(jq -r \
+            '.workload.maximum_optimizer_attempts' "$ZERO_BUDGET_FILE")
           hourly_rate_usd=$(jq -r '.venue.on_demand_usd_per_hour' \
             "$ZERO_BUDGET_FILE")
-          test "$max_instance_seconds" = 190
-          test "$workload_timeout_seconds" = 130
-          test "$max_compute_usd" = 0.04
+          test "$max_instance_seconds" = 900
+          test "$workload_timeout_seconds" = 840
+          test "$max_compute_usd" = 0.17
+          test "$max_optimizer_attempts" = 100
           test "$hourly_rate_usd" = 0.68
           {
             echo "ZERO_BUDGET_SHA256=$budget_sha256"
             echo "ZERO_MAX_INSTANCE_SECONDS=$max_instance_seconds"
             echo "ZERO_WORKLOAD_TIMEOUT_SECONDS=$workload_timeout_seconds"
             echo "ZERO_MAX_COMPUTE_USD=$max_compute_usd"
+            echo "ZERO_MAX_ATTEMPTS=$max_optimizer_attempts"
             echo "ZERO_HOURLY_RATE_USD=$hourly_rate_usd"
           } >> "$GITHUB_ENV"
 
@@ -93,8 +97,8 @@ jobs:
           test -n "$ZERO_BUCKET"
           test -n "$ZERO_REGION"
           git archive --format=tar.gz --output=/tmp/zero-source.tar.gz "$ZERO_COMMIT"
-          aws s3 cp scripts/aws/openblas-calibration.sh \
-            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/openblas-calibration.sh" \
+          aws s3 cp scripts/aws/openblas-pilot.sh \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/openblas-pilot.sh" \
             --no-cli-pager
           aws s3 cp /tmp/zero-source.tar.gz \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/source.tar.gz" \
@@ -111,6 +115,28 @@ jobs:
           [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
           echo "ami=$ami" >> "$GITHUB_OUTPUT"
 
+      - name: Acquire one-time execution lock
+        run: |
+          jq -n \
+            --arg experiment openblas-pilot-v1 \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '{
+              schema: "zero.aws_execution_lock.v1",
+              experiment: $experiment,
+              ci_run_id: $run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256
+            }' > /tmp/openblas-pilot-execution-lock.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key experiments/openblas-pilot-v1/execution.lock \
+            --body /tmp/openblas-pilot-execution-lock.json \
+            --content-type application/json \
+            --if-none-match '*' \
+            --no-cli-pager
+
       - name: Launch budgeted EC2 instance
         id: launch
         env:
@@ -123,12 +149,12 @@ jobs:
             --iam-instance-profile Name=zero-training-ec2 \
             --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
             --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
-            --user-data file://scripts/aws/openblas-calibration-user-data.sh \
+            --user-data file://scripts/aws/openblas-pilot-user-data.sh \
             --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
             --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":32,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
             --instance-initiated-shutdown-behavior terminate \
             --tag-specifications \
-              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-openblas-calibration},{Key=Experiment,Value=openblas-calibration-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
+              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-openblas-pilot},{Key=Experiment,Value=openblas-pilot-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxOptimizerAttempts,Value=${ZERO_MAX_ATTEMPTS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
               "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
             --query 'Instances[0].InstanceId' \
             --output text \
@@ -138,7 +164,7 @@ jobs:
             echo "instance_id=$instance_id"
             echo "launch_epoch=$launch_epoch"
           } >> "$GITHUB_OUTPUT"
-          echo "Launched $instance_id with an absolute 190-second retry cap"
+          echo "Launched $instance_id with an absolute 900-second pilot cap"
 
       - name: Record launch provenance
         env:
@@ -158,9 +184,10 @@ jobs:
             --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
             --argjson max_instance_seconds "$ZERO_MAX_INSTANCE_SECONDS" \
             --argjson max_compute_usd "$ZERO_MAX_COMPUTE_USD" \
+            --argjson max_optimizer_attempts "$ZERO_MAX_ATTEMPTS" \
             '{
-              schema: "zero.openblas_calibration_launch.v1",
-              experiment: "openblas-calibration-v1",
+              schema: "zero.openblas_pilot_launch.v1",
+              experiment: "openblas-pilot-v1",
               instance_id: $instance_id,
               instance_type: $instance_type,
               ami: $ami,
@@ -171,7 +198,8 @@ jobs:
               budget_sha256: $budget_sha256,
               launch_epoch: $launch_epoch,
               max_instance_seconds: $max_instance_seconds,
-              max_compute_usd: $max_compute_usd
+              max_compute_usd: $max_compute_usd,
+              max_optimizer_attempts: $max_optimizer_attempts
             }' > /tmp/openblas-launch.json
           aws s3 cp /tmp/openblas-launch.json \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/launch.json" \
@@ -193,7 +221,7 @@ jobs:
             fi
             now=$(date +%s)
             if [ "$now" -ge "$deadline" ]; then
-              echo "Launch-relative 190-second retry deadline reached"
+              echo "Launch-relative 900-second pilot deadline reached"
               break
             fi
             if aws s3 cp \
@@ -224,54 +252,54 @@ jobs:
         env:
           ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
         run: |
-          mkdir -p calibration-artifact
+          mkdir -p pilot-artifact
           if [ -n "$ZERO_INSTANCE_ID" ]; then
             aws ec2 get-console-output \
               --instance-id "$ZERO_INSTANCE_ID" \
               --latest \
               --query Output \
               --output text \
-              --no-cli-pager > calibration-artifact/ec2-console.log
+              --no-cli-pager > pilot-artifact/ec2-console.log
           fi
           aws s3 sync \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/results/" \
-            calibration-artifact/results/ \
+            pilot-artifact/results/ \
             --no-cli-pager
           aws s3 cp \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/status.json" \
-            calibration-artifact/status.json \
+            pilot-artifact/status.json \
             --no-cli-pager
           aws s3 cp \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/launch.json" \
-            calibration-artifact/launch.json \
+            pilot-artifact/launch.json \
             --no-cli-pager || true
           aws s3 cp \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/heartbeat.json" \
-            calibration-artifact/heartbeat.json \
+            pilot-artifact/heartbeat.json \
             --no-cli-pager || true
           aws s3 cp \
-            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-calibration.log" \
-            calibration-artifact/workload.log \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-pilot.log" \
+            pilot-artifact/workload.log \
             --no-cli-pager || true
           aws s3 cp \
-            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-bootstrap.log" \
-            calibration-artifact/bootstrap.log \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-pilot-bootstrap.log" \
+            pilot-artifact/bootstrap.log \
             --no-cli-pager || true
 
-      - name: Verify bounded calibration result
+      - name: Verify bounded pilot result
         run: |
           node scripts/check_openblas_calibration_result.mjs \
             "$ZERO_BUDGET_FILE" \
-            calibration-artifact/results/result.json \
-            calibration-artifact/status.json \
+            pilot-artifact/results/result.json \
+            pilot-artifact/status.json \
             --commit "$ZERO_COMMIT" \
             --budget-sha256 "$ZERO_BUDGET_SHA256"
-          jq . calibration-artifact/results/result.json >> "$GITHUB_STEP_SUMMARY"
+          jq . pilot-artifact/results/result.json >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload calibration artifact
+      - name: Upload pilot artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: openblas-calibration-${{ github.run_id }}
-          path: calibration-artifact/
+          name: openblas-pilot-${{ github.run_id }}
+          path: pilot-artifact/
           if-no-files-found: warn

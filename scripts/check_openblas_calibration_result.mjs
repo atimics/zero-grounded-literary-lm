@@ -16,16 +16,32 @@ function sha256(file) {
 }
 
 function executableBudget(budget) {
-  if (budget.schema === "zero.experiment_retry_budget.v1") return budget.execution;
+  if (["zero.experiment_retry_budget.v1", "zero.experiment_pilot_budget.v1"].includes(budget.schema)) {
+    return budget.execution;
+  }
   return budget.stages.find((stage) => stage.id === "calibration");
 }
 
+function expectedSchemas(budget) {
+  if (budget.schema === "zero.experiment_pilot_budget.v1") {
+    return {
+      result: "zero.openblas_pilot_result.v1",
+      status: "zero.aws_openblas_pilot_status.v1",
+    };
+  }
+  return {
+    result: "zero.openblas_calibration_result.v1",
+    status: "zero.aws_openblas_calibration_status.v1",
+  };
+}
+
 export function validateResult(budget, result, status, expected = {}) {
-  assert(result?.schema === "zero.openblas_calibration_result.v1", "invalid calibration result schema");
-  assert(result.id === budget.id, "calibration result id drifted");
-  assert(["complete", "budget-exhausted"].includes(result.status), "calibration did not complete within its budget boundary");
-  assert(result.scientific_inference_allowed === false, "calibration result cannot support scientific inference");
-  assert(status?.schema === "zero.aws_openblas_calibration_status.v1", "invalid remote status schema");
+  const schemas = expectedSchemas(budget);
+  assert(result?.schema === schemas.result, "invalid OpenBLAS result schema");
+  assert(result.id === budget.id, "OpenBLAS result id drifted");
+  assert(["complete", "budget-exhausted"].includes(result.status), "OpenBLAS run did not complete within its budget boundary");
+  assert(result.scientific_inference_allowed === false, "OpenBLAS result cannot support scientific inference");
+  assert(status?.schema === schemas.status, "invalid remote status schema");
   assert(status.status === result.status, "remote status/result mismatch");
   assert(status.scientific_inference_allowed === false, "remote status cannot support scientific inference");
   assert(status.git_commit === result.git_commit, "remote status commit mismatch");
@@ -83,13 +99,15 @@ function selfTest() {
   const paths = [
     new URL("../benchmarks/openblas-calibration-v1/budget.json", import.meta.url),
     new URL("../benchmarks/openblas-calibration-v1/retry-1-budget.json", import.meta.url),
+    new URL("../benchmarks/openblas-pilot-v1/budget.json", import.meta.url),
   ];
   for (const budgetPath of paths) {
     const budget = JSON.parse(fs.readFileSync(budgetPath, "utf8"));
     const budgetSha256 = sha256(budgetPath);
     const execution = executableBudget(budget);
+    const schemas = expectedSchemas(budget);
     const result = {
-      schema: "zero.openblas_calibration_result.v1",
+      schema: schemas.result,
       id: budget.id,
       status: "budget-exhausted",
       git_commit: "a".repeat(40),
@@ -110,7 +128,7 @@ function selfTest() {
       },
       measurement: {
         seed: 89,
-        attempt_cap: 8,
+        attempt_cap: budget.workload.maximum_optimizer_attempts,
         completed_optimizer_attempts: 2,
         total_observed_instance_seconds: execution.max_instance_seconds - 10,
         training_exit_code: 124,
@@ -122,7 +140,7 @@ function selfTest() {
       },
     };
     const status = {
-      schema: "zero.aws_openblas_calibration_status.v1",
+      schema: schemas.status,
       status: result.status,
       exit_code: 124,
       git_commit: result.git_commit,
