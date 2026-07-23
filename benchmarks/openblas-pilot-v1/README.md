@@ -1,6 +1,6 @@
 # OpenBLAS pilot v1
 
-Status: **preregistered; one AWS execution authorized**.
+Status: **pilot complete; execution authorization consumed**.
 
 This pilot tests whether the short OpenBLAS calibration extrapolates over a
 longer diagnostic window. It runs the real Q2.6 cumulative-tangent acquisition
@@ -26,9 +26,30 @@ the workload keeps a separate publication reserve. An atomic S3 execution
 lock is acquired before EC2 launch, so duplicate dispatches cannot spend the
 one-time authorization twice.
 
-A complete or budget-exhausted pilot is a valid diagnostic outcome. Neither
-outcome authorizes the 1,400-attempt run. That requires a new explicit budget,
-manual authorization, and scientific preregistration.
+GitHub Actions run
+[`30005889393`](https://github.com/atimics/zero-grounded-literary-lm/actions/runs/30005889393)
+consumed the authorization. Its immutable
+[`launch`](launch-30005889393.json),
+[`status`](status-30005889393.json), and
+[`result`](result-30005889393.json) records show:
+
+| Measurement | Observed |
+| --- | ---: |
+| backend | OpenBLAS, 16 threads |
+| cold start | 89 seconds |
+| optimizer attempts | 97 of 100 |
+| measured training wall | 776 seconds |
+| sustained throughput | 0.125 attempts/second |
+| projected 1,400-attempt wall | 11,200 seconds (3h 6m 40s) |
+| projected 1,400-attempt compute | $2.1156 |
+
+The `budget-exhausted` status is the expected bounded outcome. The result was
+published at 865 seconds, termination was requested at 877 seconds, and AWS
+confirmed the instance terminated inside the 900-second authorization. The
+`COMPLETED` sentinel and S3 execution lock close the one-time launch path.
+
+This result is diagnostic only. A 1,400-attempt run still requires a new
+explicit budget, manual authorization, and scientific preregistration.
 
 Run the local contract checks with:
 

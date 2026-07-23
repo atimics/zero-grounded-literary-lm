@@ -1,0 +1,39 @@
+{
+  "schema": "zero.openblas_pilot_result.v1",
+  "id": "openblas-pilot-v1",
+  "status": "budget-exhausted",
+  "started_at": "2026-07-23T12:11:36Z",
+  "finished_at": "2026-07-23T12:24:41Z",
+  "git_commit": "39f6ec843c98a301a4450c55fcee73d93923c908",
+  "budget_sha256": "6af80f465e9431331affdfdefd7c0af41488d6514b3d871cff0c2242c3ac79d2",
+  "scientific_inference_allowed": false,
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "backend": "OpenBLAS",
+    "openblas_threads": 16,
+    "on_demand_usd_per_hour": 0.68
+  },
+  "budget": {
+    "max_instance_seconds": 900,
+    "workload_timeout_seconds": 840,
+    "max_compute_usd": 0.17
+  },
+  "measurement": {
+    "seed": 89,
+    "attempt_cap": 100,
+    "completed_optimizer_attempts": 97,
+    "training_wall_seconds": 776,
+    "cold_start_seconds": 89,
+    "total_observed_instance_seconds": 865,
+    "training_exit_code": 124,
+    "attempts_per_second": 0.125
+  },
+  "projection": {
+    "target_optimizer_attempts": 1400,
+    "estimated_wall_seconds": 11200.0,
+    "estimated_compute_usd": 2.115555555555556,
+    "method": "linear extrapolation from completed diagnostic attempts; excludes cold start"
+  }
+}

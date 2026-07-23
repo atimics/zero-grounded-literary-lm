@@ -1,0 +1,16 @@
+{
+  "schema": "zero.openblas_pilot_launch.v1",
+  "experiment": "openblas-pilot-v1",
+  "instance_id": "i-0968ecaca57beb36c",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "39f6ec843c98a301a4450c55fcee73d93923c908",
+  "ci_run_id": "30005889393",
+  "budget_file": "benchmarks/openblas-pilot-v1/budget.json",
+  "budget_sha256": "6af80f465e9431331affdfdefd7c0af41488d6514b3d871cff0c2242c3ac79d2",
+  "launch_epoch": 1784808616,
+  "max_instance_seconds": 900,
+  "max_compute_usd": 0.17,
+  "max_optimizer_attempts": 100
+}

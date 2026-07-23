@@ -1,12 +1,12 @@
 # AWS experiment runner
 
-The only authorized compute workflow is the one-time diagnostic
-`openblas-pilot-v1`. Its 100-attempt, 15-minute, $0.17 bounds are derived from
-the completed `openblas-calibration-v1` result. The former unbudgeted
-Q2.2-R/Q2.6-R launcher is retired after a frozen portable-C Q2.6-R seed reached
-its 11-hour limit without producing a result. Historical `train.sh`,
-`user-data.sh`, and the collection workflow remain for provenance and
-diagnostics; they are not launch paths.
+There is currently no authorized compute workflow. The one-time diagnostic
+`openblas-pilot-v1` completed 97 attempts inside its 15-minute/$0.17 boundary,
+and its `COMPLETED` sentinel plus S3 lock prevent another launch. The former
+unbudgeted Q2.2-R/Q2.6-R launcher is retired after a frozen portable-C Q2.6-R
+seed reached its 11-hour limit without producing a result. Historical
+`train.sh`, `user-data.sh`, and the collection workflow remain for provenance
+and diagnostics; they are not launch paths.
 
 ## Provision once
 
@@ -43,7 +43,7 @@ aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 The instance downloads those paths and verifies every frozen teacher against
 `teachers/registry.json` before training.
 
-## Budgeted pilot lifecycle
+## Completed pilot lifecycle
 
 The pilot has no mutable experiment, seed, instance-type, duration, attempt, or
 price inputs. Those values come from the checked
@@ -61,11 +61,11 @@ The measured computation runs on EC2. EC2 user data starts an independent
 900-second shutdown watchdog, while the workload owns a third shorter
 deadline. The schema sets `scientific_inference_allowed` to false.
 
-Dispatch `.github/workflows/openblas-pilot.yml`. After the result is committed,
-the `COMPLETED` sentinel closes this one-time launch path. An atomic S3 lock
-also prevents duplicate dispatches from launching a second instance before
-that commit lands. A full run requires a new authorization and executable
-budget.
+Run `30005889393` completed 97 attempts in 776 seconds after an 89-second cold
+start. Sustained throughput was 0.125 attempts/second, projecting the full
+1,400-attempt workload at 11,200 seconds and $2.1156, excluding cold start.
+The `COMPLETED` sentinel and atomic S3 lock close this workflow. A full run
+requires a new authorization and executable budget.
 
 Run the validators before dispatch:
 
