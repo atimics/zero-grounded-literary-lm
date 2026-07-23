@@ -236,8 +236,12 @@ The authorized
 [`openblas-e2e-calibration-v1`](benchmarks/openblas-e2e-calibration-v1/README.md)
 measures that missing baseline, recovery, and full-evaluation overhead on AWS
 under a 25-minute/$0.29 ceiling. Seed 89 and a separate diagnostic driver keep
-the output outside the frozen Q2.6-R scientific record. Run the local contract
-checks with:
+the output outside the frozen Q2.6-R scientific record. The one-time run
+completed 100/100 accepted optimizer updates and all four sentinel evaluations,
+then exhausted the budget during the first 500-case full evaluation. Its
+component timings project about 7h46m/$5.28 per seed before contingency, making
+the serial quantity evaluator the next engineering bottleneck. No compute
+workflow is currently authorized. Run the local contract checks with:
 
 ```sh
 make experiment-budget-check

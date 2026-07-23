@@ -1,11 +1,13 @@
 # AWS experiment runner
 
-The one-time diagnostic `openblas-e2e-calibration-v1` is authorized under a
-25-minute/$0.29 ceiling. It measures the frozen Q2.6 baseline, recovery, and
-full-evaluation operations around a 100-attempt seed-89 acquisition slice.
-It cannot invoke the scientific driver or evaluate the promotion split. The
-prior `openblas-pilot-v1` completed 97 attempts inside its 15-minute/$0.17
-boundary, and its `COMPLETED` sentinel plus S3 lock prevent another launch.
+There is currently no authorized compute workflow. The one-time diagnostic
+`openblas-e2e-calibration-v1` consumed its 25-minute/$0.29 authorization after
+100 accepted optimizer updates and four sentinel evaluations, during the first
+500-case full evaluation. Its `COMPLETED` sentinel and S3 lock prevent another
+launch. It did not invoke the scientific driver or evaluate the promotion
+split. The prior `openblas-pilot-v1` completed 97 attempts inside its
+15-minute/$0.17 boundary, and its `COMPLETED` sentinel plus S3 lock likewise
+prevent another launch.
 The former unbudgeted Q2.2-R/Q2.6-R launcher is retired after a frozen
 portable-C Q2.6-R seed reached its 11-hour limit without producing a result.
 Historical `train.sh`, `user-data.sh`, and the collection workflow remain for
@@ -46,7 +48,7 @@ aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 The instance downloads those paths and verifies every frozen teacher against
 `teachers/registry.json` before training.
 
-## Authorized end-to-end calibration
+## Completed end-to-end calibration
 
 The calibration has no mutable experiment, seed, instance-type, duration,
 attempt, cadence, or price inputs. Those values come from the checked
@@ -59,8 +61,9 @@ to one execution.
 The diagnostic driver records separate timings for cold start and build,
 baseline replay evaluations, optimizer transactions, four recovery/sentinel
 evaluations, one full evaluation, checkpoint copies, and verification. A
-complete result projects the end-to-end budget for both Q2.6-R seeds together.
-Q2.6-R still requires a new budget and manual authorization.
+bounded result shows the serial quantity evaluator dominates end-to-end cost.
+The planning estimate is about 7h46m/$5.28 per seed before contingency. Q2.6-R
+still requires a new combined budget and manual authorization.
 
 ## Completed pilot lifecycle
 

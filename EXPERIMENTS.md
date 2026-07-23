@@ -165,7 +165,7 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Deployed browser baseline**: `docs/model.litq8`, update 14,500. This is distinct from the frozen ZERO.3 training teacher.
 - **Student initialization and frozen teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
 - **Latest completed experiment**: Q2.6 seed 2 (go; selected update 500, public and promotion pass)
-- **Latest execution outcome**: Q2.6-R seed 1 timed out after 11 hours without a valid result; seed 3 was cancelled before launch
-- **Next experiment**: diagnostic-only `openblas-e2e-calibration-v1`, capped at 25 EC2 minutes and $0.29; it prices the frozen driver's evaluation overhead before a combined two-seed Q2.6-R budget
+- **Latest execution outcome**: `openblas-e2e-calibration-v1` completed 100/100 optimizer updates and four sentinel evaluations, then exhausted its 25-minute/$0.29 cap during the first 500-case full evaluation
+- **Next experiment**: none authorized; optimize or parallelize the serial quantity evaluator before approving a combined two-seed Q2.6-R budget
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: Seed-2 promotion passed, but family promotion is unresolved because seeds 1 and 3 remain unobserved. ZERO.3 remains current.

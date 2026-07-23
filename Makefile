@@ -1059,6 +1059,12 @@ experiment-budget-check:
 	node scripts/check_q26_e2e_calibration_budget.mjs \
 		benchmarks/openblas-e2e-calibration-v1/budget.json
 	node scripts/check_q26_e2e_calibration_result.mjs --self-test
+	node scripts/check_q26_e2e_calibration_result.mjs \
+		benchmarks/openblas-e2e-calibration-v1/budget.json \
+		benchmarks/openblas-e2e-calibration-v1/result-30023119249.json \
+		benchmarks/openblas-e2e-calibration-v1/status-30023119249.json \
+		--commit c5dc800e2ee9b8830807b6cfbccbae39b4db6a45 \
+		--budget-sha256 931d38f8ae29faf38a1f92689a5dbdf538d3be55ab3399936af0b6618cde07d3
 	node scripts/calibrate_zero4_q26_e2e.mjs --self-test
 	node scripts/check_experiment_budget.mjs \
 		benchmarks/openblas-calibration-v1/budget.json --stage calibration
