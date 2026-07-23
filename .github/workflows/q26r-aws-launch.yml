@@ -94,15 +94,13 @@ jobs:
             exit 1
           }
           for key in \
-            assets/teachers/zero1-foundation.teacher \
-            assets/teachers/zero2-literary.teacher \
-            assets/teachers/zero3-balanced-final.teacher \
             assets/corpus/bpe/zero-foundation.tok \
             assets/corpus/bpe/shakespeare.tok \
             assets/corpus/bpe/blake.tok \
             assets/corpus/bpe/crowley.tok \
             assets/corpus/bpe/bible-kjv.tok \
             assets/corpus/channel/literary-dialogue.tok; do
+            echo "Checking s3://${ZERO_BUCKET}/${key}"
             aws s3api head-object \
               --bucket "$ZERO_BUCKET" --key "$key" --no-cli-pager >/dev/null
           done
