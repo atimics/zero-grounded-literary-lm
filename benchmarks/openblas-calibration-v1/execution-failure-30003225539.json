@@ -1,0 +1,29 @@
+{
+  "schema": "zero.openblas_calibration_execution_failure.v1",
+  "id": "openblas-calibration-v1",
+  "scientific_inference_allowed": false,
+  "github_run_id": "30003225539",
+  "git_commit": "c09b73332cade92e87e0af4a8b3ab0e2ace9071f",
+  "instance_id": "i-0d2cb2e3bb0ad5dbe",
+  "instance_type": "c6i.4xlarge",
+  "region": "us-east-1",
+  "status": "infrastructure-error",
+  "phase": "measurement",
+  "failure": "literary_lm rejected the unsupported --transaction-phase calibration argument before any optimizer attempt",
+  "backend_observed": "OpenBLAS",
+  "completed_optimizer_attempts": 0,
+  "launch_request_at": "2026-07-23T11:28:21Z",
+  "instance_launch_at": "2026-07-23T11:28:23Z",
+  "instance_terminated_at": "2026-07-23T11:30:08Z",
+  "request_to_termination_seconds": 107,
+  "ec2_launch_to_termination_seconds": 105,
+  "on_demand_usd_per_hour": 0.68,
+  "request_window_compute_usd": 0.02021111111111111,
+  "ec2_running_compute_usd": 0.019833333333333335,
+  "original_budget": {
+    "path": "benchmarks/openblas-calibration-v1/budget.json",
+    "sha256": "6036e379a9da0d05081d443e3c71074583ca0f976cfc14aab870d4cfd613fbc3",
+    "max_instance_seconds": 300,
+    "max_compute_usd": 0.06
+  }
+}

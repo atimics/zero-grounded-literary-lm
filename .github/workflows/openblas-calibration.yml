@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   calibrate:
-    name: AWS · 5-minute hard cap
+    name: AWS · retry ≤190 seconds
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     environment: aws
@@ -23,6 +23,7 @@ jobs:
       ZERO_COMMIT: ${{ github.sha }}
       ZERO_RUN_ID: ${{ github.run_id }}
       ZERO_INSTANCE_TYPE: c6i.4xlarge
+      ZERO_BUDGET_FILE: benchmarks/openblas-calibration-v1/retry-1-budget.json
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -36,25 +37,26 @@ jobs:
       - name: Validate immutable budget
         run: |
           node scripts/check_experiment_budget.mjs \
-            benchmarks/openblas-calibration-v1/budget.json \
+            "$ZERO_BUDGET_FILE" \
             --stage calibration
-          budget_sha256=$(sha256sum \
-            benchmarks/openblas-calibration-v1/budget.json | awk '{print $1}')
+          budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
           max_instance_seconds=$(jq -r \
-            '.stages[] | select(.id == "calibration") | .max_instance_seconds' \
-            benchmarks/openblas-calibration-v1/budget.json)
+            '.execution.max_instance_seconds' "$ZERO_BUDGET_FILE")
           workload_timeout_seconds=$(jq -r \
-            '.stages[] | select(.id == "calibration") | .workload_timeout_seconds' \
-            benchmarks/openblas-calibration-v1/budget.json)
+            '.execution.workload_timeout_seconds' "$ZERO_BUDGET_FILE")
+          max_compute_usd=$(jq -r \
+            '.execution.max_compute_usd' "$ZERO_BUDGET_FILE")
           hourly_rate_usd=$(jq -r '.venue.on_demand_usd_per_hour' \
-            benchmarks/openblas-calibration-v1/budget.json)
-          test "$max_instance_seconds" = 300
-          test "$workload_timeout_seconds" = 240
+            "$ZERO_BUDGET_FILE")
+          test "$max_instance_seconds" = 190
+          test "$workload_timeout_seconds" = 130
+          test "$max_compute_usd" = 0.04
           test "$hourly_rate_usd" = 0.68
           {
             echo "ZERO_BUDGET_SHA256=$budget_sha256"
             echo "ZERO_MAX_INSTANCE_SECONDS=$max_instance_seconds"
             echo "ZERO_WORKLOAD_TIMEOUT_SECONDS=$workload_timeout_seconds"
+            echo "ZERO_MAX_COMPUTE_USD=$max_compute_usd"
             echo "ZERO_HOURLY_RATE_USD=$hourly_rate_usd"
           } >> "$GITHUB_ENV"
 
@@ -122,7 +124,7 @@ jobs:
             --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":32,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
             --instance-initiated-shutdown-behavior terminate \
             --tag-specifications \
-              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-openblas-calibration},{Key=Experiment,Value=openblas-calibration-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
+              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-openblas-calibration},{Key=Experiment,Value=openblas-calibration-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
               "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
             --query 'Instances[0].InstanceId' \
             --output text \
@@ -132,7 +134,7 @@ jobs:
             echo "instance_id=$instance_id"
             echo "launch_epoch=$launch_epoch"
           } >> "$GITHUB_OUTPUT"
-          echo "Launched $instance_id with an absolute five-minute cap"
+          echo "Launched $instance_id with an absolute 190-second retry cap"
 
       - name: Record launch provenance
         env:
@@ -147,9 +149,11 @@ jobs:
             --arg region "$ZERO_REGION" \
             --arg git_commit "$ZERO_COMMIT" \
             --arg run_id "$ZERO_RUN_ID" \
+            --arg budget_file "$ZERO_BUDGET_FILE" \
             --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
             --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
             --argjson max_instance_seconds "$ZERO_MAX_INSTANCE_SECONDS" \
+            --argjson max_compute_usd "$ZERO_MAX_COMPUTE_USD" \
             '{
               schema: "zero.openblas_calibration_launch.v1",
               experiment: "openblas-calibration-v1",
@@ -159,9 +163,11 @@ jobs:
               region: $region,
               git_commit: $git_commit,
               ci_run_id: $run_id,
+              budget_file: $budget_file,
               budget_sha256: $budget_sha256,
               launch_epoch: $launch_epoch,
-              max_instance_seconds: $max_instance_seconds
+              max_instance_seconds: $max_instance_seconds,
+              max_compute_usd: $max_compute_usd
             }' > /tmp/openblas-launch.json
           aws s3 cp /tmp/openblas-launch.json \
             "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/launch.json" \
@@ -183,7 +189,7 @@ jobs:
             fi
             now=$(date +%s)
             if [ "$now" -ge "$deadline" ]; then
-              echo "Launch-relative five-minute deadline reached"
+              echo "Launch-relative 190-second retry deadline reached"
               break
             fi
             if aws s3 cp \
@@ -251,7 +257,7 @@ jobs:
       - name: Verify bounded calibration result
         run: |
           node scripts/check_openblas_calibration_result.mjs \
-            benchmarks/openblas-calibration-v1/budget.json \
+            "$ZERO_BUDGET_FILE" \
             calibration-artifact/results/result.json \
             calibration-artifact/status.json \
             --commit "$ZERO_COMMIT" \

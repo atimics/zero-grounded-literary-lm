@@ -1,10 +1,10 @@
 #!/bin/bash
-# Five-minute EC2 bootstrap for the budgeted OpenBLAS calibration.
+# EC2 bootstrap for the cumulative-budget OpenBLAS calibration retry.
 
 set -Eeuo pipefail
 
-HARD_INSTANCE_SECONDS=300
-HARD_WORKLOAD_SECONDS=240
+HARD_INSTANCE_SECONDS=190
+HARD_WORKLOAD_SECONDS=130
 BOOTSTRAP_LOG=/var/log/zero-openblas-bootstrap.log
 BOOTSTRAP_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
@@ -100,19 +100,23 @@ tag() {
 ZERO_BUCKET="$(tag Bucket)"
 ZERO_RUN_ID="$(tag RunId)"
 ZERO_COMMIT="$(tag Commit)"
+ZERO_BUDGET_FILE="$(tag BudgetFile)"
 ZERO_BUDGET_SHA256="$(tag BudgetSha256)"
 ZERO_LAUNCH_EPOCH="$(tag LaunchEpoch)"
 ZERO_MAX_INSTANCE_SECONDS="$(tag MaxInstanceSeconds)"
 ZERO_WORKLOAD_TIMEOUT_SECONDS="$(tag WorkloadTimeoutSeconds)"
+ZERO_MAX_COMPUTE_USD="$(tag MaxComputeUsd)"
 ZERO_HOURLY_RATE_USD="$(tag HourlyRateUsd)"
 AWS_DEFAULT_REGION="$(tag Region)"
-export ZERO_BUCKET ZERO_RUN_ID ZERO_COMMIT ZERO_BUDGET_SHA256
+export ZERO_BUCKET ZERO_RUN_ID ZERO_COMMIT ZERO_BUDGET_FILE ZERO_BUDGET_SHA256
 export ZERO_LAUNCH_EPOCH ZERO_MAX_INSTANCE_SECONDS
-export ZERO_WORKLOAD_TIMEOUT_SECONDS ZERO_HOURLY_RATE_USD
+export ZERO_WORKLOAD_TIMEOUT_SECONDS ZERO_MAX_COMPUTE_USD ZERO_HOURLY_RATE_USD
 export AWS_DEFAULT_REGION
 
 test "$ZERO_MAX_INSTANCE_SECONDS" = "$HARD_INSTANCE_SECONDS"
 test "$ZERO_WORKLOAD_TIMEOUT_SECONDS" = "$HARD_WORKLOAD_SECONDS"
+test "$ZERO_BUDGET_FILE" = "benchmarks/openblas-calibration-v1/retry-1-budget.json"
+test "$ZERO_MAX_COMPUTE_USD" = "0.04"
 [[ "$ZERO_LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
 
 install -d -m 0755 /opt/zero
@@ -131,7 +135,7 @@ if [ "$remaining" -gt "$HARD_WORKLOAD_SECONDS" ]; then
   remaining=$HARD_WORKLOAD_SECONDS
 fi
 if [ "$remaining" -le 15 ]; then
-  echo "Cold start exhausted the five-minute budget before workload launch"
+  echo "Cold start exhausted the retry budget before workload launch"
   mkdir -p /tmp/zero-openblas-cold-start
   finished_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   finished_epoch=$(date +%s)
@@ -164,7 +168,7 @@ result = {
     "budget": {
         "max_instance_seconds": int(os.environ["ZERO_MAX_INSTANCE_SECONDS"]),
         "workload_timeout_seconds": int(os.environ["ZERO_WORKLOAD_TIMEOUT_SECONDS"]),
-        "max_compute_usd": 0.06,
+        "max_compute_usd": float(os.environ["ZERO_MAX_COMPUTE_USD"]),
     },
     "measurement": {
         "seed": 89,
