@@ -250,8 +250,12 @@ JSON therefore remain byte-identical. Use `--jobs N` for an individual
 evaluation or `ZERO_QUANTITY_JOBS=N` for existing drivers; `--jobs 1` selects
 the serial reference path. Sample-printing mode remains serial.
 
-This is an execution optimization, not new scientific evidence, and no compute
-workflow is currently authorized. Run the local contract checks with:
+This is an execution optimization, not new scientific evidence. The
+[`parallel-quantity-eval-calibration-v1`](benchmarks/parallel-quantity-eval-calibration-v1/README.md)
+contract authorizes one diagnostic AWS execution under the same
+25-minute/$0.29 ceiling. It measures 64- and 500-case serial/parallel pairs,
+requires byte-identical outputs, and cannot train, open promotion data, or
+authorize Q2.6-R. Run the local contract checks with:
 
 ```sh
 make experiment-budget-check

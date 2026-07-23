@@ -1,0 +1,90 @@
+{
+  "schema": "zero.quantity_eval_calibration_budget.v1",
+  "id": "parallel-quantity-eval-calibration-v1",
+  "status": "preregistered",
+  "purpose": "Measure serial and deterministic process-parallel quantity evaluation on the same AWS venue used by the Q2.6 end-to-end calibration before budgeting Q2.6-R.",
+  "scientific_inference_allowed": false,
+  "authorization": {
+    "authorized_at": "2026-07-23",
+    "scope": "one AWS execution of quantity-eval-calibration-1 only",
+    "one_execution_only": true
+  },
+  "source_lock": {
+    "evaluator_path": "quantity_request_eval.c",
+    "evaluator_sha256": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902",
+    "generator_path": "scripts/generate_zero4_q2.mjs",
+    "generator_sha256": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded",
+    "model_path": "benchmarks/zero4-q26-v1/seed2/selected.litq8",
+    "model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "model_bytes": 4920400
+  },
+  "prior_evidence": {
+    "result_path": "benchmarks/openblas-e2e-calibration-v1/result-30023119249.json",
+    "result_sha256": "a52a5a31a5da37658cf9658252b21e1e723aeddcde2d2c29a90af11067e40c21",
+    "serial_sentinel_cases": 64,
+    "serial_sentinel_evaluations": 4,
+    "serial_sentinel_total_seconds": 407.543,
+    "serial_sentinel_mean_seconds": 101.88575,
+    "serial_public_cases": 500,
+    "serial_public_planning_estimate_seconds": 795.982
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "cpu_architecture": "x86_64",
+    "online_vcpus": 16,
+    "quantity_backend": "portable-quantized-inference",
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-23",
+    "price_source": "https://aws.amazon.com/ec2/pricing/on-demand/"
+  },
+  "workload": {
+    "corpus_quantity": 10000,
+    "corpus_seed": 5,
+    "request_mode": "operation",
+    "sentinel_cases": 64,
+    "public_cases": 500,
+    "serial_jobs": 1,
+    "parallel_jobs": 16,
+    "measurement_order": [
+      "sentinel_serial",
+      "sentinel_parallel",
+      "public_serial",
+      "public_parallel"
+    ],
+    "repetitions": 1,
+    "warmup_cases": 1,
+    "json_output_must_match": true,
+    "promotion_evaluations": 0,
+    "optimizer_attempts": 0,
+    "outputs_are_diagnostic_only": true
+  },
+  "execution": {
+    "id": "quantity-eval-calibration-1",
+    "max_instance_seconds": 1500,
+    "workload_timeout_seconds": 1440,
+    "max_compute_usd": 0.29,
+    "requires_manual_approval": true,
+    "manual_approval_observed": true,
+    "authorized_for_execution": true
+  },
+  "budget_projection": {
+    "cold_start_build_and_generation_seconds": 180,
+    "sentinel_serial_seconds": 120,
+    "sentinel_parallel_seconds": 120,
+    "public_serial_seconds": 900,
+    "public_parallel_seconds": 120,
+    "publication_seconds": 60,
+    "hard_instance_headroom_seconds": 0
+  },
+  "completion_gate": {
+    "all_four_measurements_required": true,
+    "sentinel_json_parity_required": true,
+    "public_json_parity_required": true,
+    "structured_status_required": true,
+    "result_is_diagnostic_only": true,
+    "q26r_requires_new_combined_two_seed_budget": true,
+    "q26r_requires_separate_manual_authorization": true
+  }
+}
