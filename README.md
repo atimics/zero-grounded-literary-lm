@@ -23,8 +23,10 @@ small browser runtime:
   lossy-memory transitions.
 
 Both are written in C11. On macOS, `literary_lm` automatically uses Apple's
-built-in Accelerate framework for matrix multiplication. Other platforms use a
-portable C fallback.
+built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
+when its development package is installed and otherwise retains the portable C
+fallback. Set `LITERARY_BACKEND=portable`, `openblas`, or `accelerate` to make
+the intended build explicit where supported.
 
 The `docs/` directory contains a static chat interface for GitHub Pages. It
 runs a mixed-format export—row-wise int8 matrices with floating-point scales
@@ -215,13 +217,24 @@ See
 [`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
 
 Q2.6-R prospectively authorizes those two replications without altering the
-diagnostic record. Seeds 1 and 3 inherit the exact Q2.6 intervention,
-initialization, corpora, optimizer, budgets, direct replay authorities, public
-gates, disjoint promotion split, and stop rules. Both seeds must execute even
-if the first is no-go. Family promotion requires seeds 1, 2, and 3 all to pass;
-the selected seed-2 model is the only frozen promotion candidate. No Q2.6-R
-result has been observed. See the
-[`replication contract`](benchmarks/zero4-q26r-v1/contract.json).
+diagnostic record. Its scientific contract remains frozen, but execution is
+cancelled for cost: AWS seed 1 used the frozen portable-C Linux source and
+reached its 11-hour wall limit without publishing a valid result; seed 3 was
+not launched. This changes no scientific evidence. Seeds 1 and 3 remain
+unobserved, family promotion remains unresolved, and ZERO.3 remains current.
+See the [`replication contract`](benchmarks/zero4-q26r-v1/contract.json) and
+[`execution cancellation`](benchmarks/zero4-q26r-v1/CANCELLATION.md).
+
+The only executable next experiment is
+[`openblas-calibration-v1`](benchmarks/openblas-calibration-v1/README.md).
+It runs the real Q2.6 optimizer path on AWS with OpenBLAS but uses diagnostic
+seed 89, accepts at most eight attempts, and has independent five-minute /
+$0.06 caps. Its output can estimate runtime and cost only; it cannot support a
+scientific decision. Run its local contract checks with:
+
+```sh
+make experiment-budget-check
+```
 
 ## Measure channel behavior
 

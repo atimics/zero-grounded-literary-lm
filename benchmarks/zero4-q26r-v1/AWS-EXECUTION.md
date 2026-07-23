@@ -1,6 +1,7 @@
 # Q2.6-R execution-venue addendum
 
-Status: **frozen before a valid seed-1 or seed-3 result is observed**.
+Status: **execution cancelled before a valid seed-1 or seed-3 result was
+observed**, 2026-07-23.
 
 The scientific source remains commit
 `3ee802c29ddf47982477a6b6dd635eaedede7bb7`. Its contract, trainer, checker,
@@ -23,8 +24,8 @@ Two laptop attempts on 2026-07-19 are quarantined as infrastructure incidents:
   identified.
 
 Neither attempt is a valid Q2.6-R observation, neither enters the family
-aggregate, and neither authorizes a result claim. Seeds 1 and 3 remain
-unobserved until their AWS executions complete.
+aggregate, and neither authorizes a result claim. Seeds 1 and 3 remained
+unobserved; their final execution disposition is recorded below.
 
 ## Seed-1 observer recovery freeze
 
@@ -36,12 +37,32 @@ instance was still running. At the time this recovery rule was frozen, S3
 contained only the immutable source archive and training script: no status,
 metric, decision, or result artifact had been observed.
 
-Seed 1 must not be rerun. After that exact instance reaches a terminal state, a
-short collection workflow may read its source-run prefix, but it must verify
-the instance's Project, Experiment, Seeds, Commit, and RunId tags first. It may
-accept the computation only if the instance uploaded a successful structured
-status, the frozen Q2.6-R checker accepts the seed result, and provenance
-records both the failed dispatch observer and collection workflow. Collection
-starts no training and never waits on a running instance. Any remote failure,
-missing artifact, tag mismatch, or checker failure resolves as an execution
-failure rather than scientific go or no-go evidence.
+At that point seed 1 could not be rerun. After that exact instance reached a
+terminal state, a short collection workflow could read its source-run prefix,
+but first had to verify the instance's Project, Experiment, Seeds, Commit, and
+RunId tags. It could accept the computation only if the instance uploaded a
+successful structured status, the frozen Q2.6-R checker accepted the seed
+result, and provenance recorded both the failed dispatch observer and
+collection workflow. Collection started no training and never waited on a
+running instance. Any remote failure, missing artifact, tag mismatch, or
+checker failure resolved as an execution failure rather than scientific go or
+no-go evidence.
+
+## Final execution outcome
+
+A corrected dispatch, GitHub Actions run `29837585360`, launched seed 1 on
+instance `i-01ea4ddc5f8238ef2`. The frozen science source built the portable C
+Linux path because commit `3ee802c` predates OpenBLAS support. The instance
+reached its independent 11-hour limit at 2026-07-22 01:07:57 UTC before
+publishing a structured seed result and then shut down. The later collection
+attempt could recover console diagnostics but no valid scientific artifact.
+
+The exact failure is frozen in
+`execution-failure-29837585360.json`. It leaves seed 1 scientifically
+unobserved. Seed 3 was not launched.
+
+On 2026-07-23 the remaining Q2.6-R execution was cancelled for cost. The
+unbudgeted long-run workflow was retired. Further scientific execution now
+requires measured OpenBLAS throughput and a separately authorized budget; the
+only executable next stage is the five-minute diagnostic calibration in
+`benchmarks/openblas-calibration-v1/budget.json`.

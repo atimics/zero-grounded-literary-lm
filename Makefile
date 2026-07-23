@@ -1,5 +1,6 @@
 CC ?= cc
 CFLAGS ?= -O2 -std=c11 -Wall -Wextra -Wpedantic
+LITERARY_BACKEND ?= auto
 EMCC ?= emcc
 UNAME_S := $(shell uname -s)
 KJV_URL := https://www.gutenberg.org/ebooks/30.txt.utf-8
@@ -84,11 +85,34 @@ MONKEY_TRACE_BATCH ?= 2
 MONKEY_TRACE_RESULTS ?= benchmarks/infinite-monkey-trace10m-v2
 
 ifeq ($(UNAME_S),Darwin)
+ifneq ($(filter $(LITERARY_BACKEND),auto accelerate portable),$(LITERARY_BACKEND))
+$(error unsupported LITERARY_BACKEND=$(LITERARY_BACKEND))
+endif
+ifeq ($(LITERARY_BACKEND),portable)
+LITERARY_CFLAGS :=
+LITERARY_LDLIBS := -lm
+else
 LITERARY_CFLAGS := -DUSE_ACCELERATE -DACCELERATE_NEW_LAPACK
 LITERARY_LDLIBS := -framework Accelerate -lm
+endif
+else
+ifneq ($(filter $(LITERARY_BACKEND),auto openblas portable),$(LITERARY_BACKEND))
+$(error unsupported LITERARY_BACKEND=$(LITERARY_BACKEND))
+endif
+OPENBLAS_CFLAGS := $(shell pkg-config --cflags openblas 2>/dev/null)
+OPENBLAS_LDLIBS := $(shell pkg-config --libs openblas 2>/dev/null)
+ifeq ($(LITERARY_BACKEND),portable)
+LITERARY_CFLAGS :=
+LITERARY_LDLIBS := -lm
+else ifneq ($(strip $(OPENBLAS_LDLIBS)),)
+LITERARY_CFLAGS := -DUSE_CBLAS $(OPENBLAS_CFLAGS)
+LITERARY_LDLIBS := $(OPENBLAS_LDLIBS) -lm
+else ifeq ($(LITERARY_BACKEND),openblas)
+$(error OpenBLAS requested but pkg-config could not find openblas)
 else
 LITERARY_CFLAGS :=
 LITERARY_LDLIBS := -lm
+endif
 endif
 
 .PHONY: all check clean web channel-data zero3-data zero3-stage1 \
@@ -105,6 +129,7 @@ endif
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
+	experiment-budget-check \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -1028,6 +1053,12 @@ zero4-q26r: zero4-q26r-train
 zero4-q26r-aggregate:
 	node scripts/aggregate_zero4_q26r.mjs benchmarks/zero4-q26r-v1
 
+experiment-budget-check:
+	node scripts/check_experiment_budget.mjs --self-test
+	node scripts/check_experiment_budget.mjs \
+		benchmarks/openblas-calibration-v1/budget.json --stage calibration
+	node scripts/check_openblas_calibration_result.mjs --self-test
+
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
 
@@ -1394,6 +1425,7 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 	$(MAKE) zero4-q25-check >/dev/null
 	$(MAKE) zero4-q26-check >/dev/null
 	$(MAKE) zero4-q26r-check >/dev/null
+	$(MAKE) experiment-budget-check >/dev/null
 	python3 scripts/compile_result.py --self-test >/dev/null
 	./logic_corpus --self-test >/dev/null
 	./brainfuck_corpus --self-test >/dev/null

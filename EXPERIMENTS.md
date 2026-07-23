@@ -22,7 +22,7 @@ Schema: `zero.experiment_registry.v1`.
 | **q24** | `benchmarks/zero4-q24-v1` | 2026-07-19 | Q2.3 no-go and `benchmarks/zero4-q24-v1/PREREGISTRATION.md` | Replaces the local one-step guard authority with an immutable ZERO.3 baseline over all six fixed replay slices. Every candidate is checked before commit; the 1.5% cumulative ceiling leaves 0.5 percentage points of reserve below the public gate. All other Q2.3 design choices remain fixed. | Can direct cumulative replay authority preserve the 2% public replay ceiling without closing the quantity-learning path? | Seed 2 committed 66 of 74 attempts. The first reject was attempt 67; eight consecutive candidates exceeded the hard budget and rolled back. No 100-commit public checkpoint was reached. | **No-go.** The guard bound before the first public quantity evaluation, so promotion and seeds 1 and 3 remained sealed. ZERO.3 remains current. | Q2.5 proposal: budget-aware continuation without weakening the replay or quantity gates |
 | **q25** | `benchmarks/zero4-q25-v1` | 2026-07-19 | Q2.4 no-go and `benchmarks/zero4-q25-v1/PREREGISTRATION.md` | Keeps the immutable six-slice baseline and 1.5% authority, but retries each outer attempt at frozen scales 1, 1/2, …, 1/128. Every retry restores weights and AdamW moments and reuses the same minibatch, gradient, and proposed update. | Can deterministic first-feasible backtracking preserve replay safety while reopening the quantity-learning path? | Seed 2 committed 66 full-scale and 5 backtracked updates, then exhausted all eight scales on attempts 72–79. The smallest accepted scale was 1/128 and the maximum committed replay increase was 1.49944%. No 100-commit public checkpoint was reached. | **No-go.** Scalar continuation bought five updates but did not reopen the learning path. Promotion and seeds 1 and 3 remained sealed; ZERO.3 remains current. | Q2.6 proposal: change update direction or optimization geometry without weakening the frozen gates |
 | **q26** | `benchmarks/zero4-q26-v1` | 2026-07-19 | Q2.5 no-go and `benchmarks/zero4-q26-v1/PREREGISTRATION.md` | Computes the mean gradient of the same six frozen replay slices at the pre-attempt state, projects only the replay-increasing component out of each scaled AdamW weight displacement, and retains the unchanged direct cumulative evaluation as sole commit authority. | Can a global replay-tangent projection change update direction enough to reopen the quantity-learning path under the same gates? | Seed 2 committed all 700 attempts at full scale; projection applied on 423. Six of seven public checkpoints were jointly feasible. Update 500 was selected with 99.8% limiting quantity rates and 1.1833% replay regression; the one-time promotion evaluation passed at 99.6%. | **Go.** Direction-changing projection reopened the constrained path without weakening any gate. The seed-2 model is published; ZERO.3 remains current pending the preregistered seed-1/3 replication decision. | Freeze the Q2.6 replication adapter and execute seeds 1 and 3 without changing the seed-2 contract |
-| **q26r** | `benchmarks/zero4-q26r-v1` | 2026-07-19 | Q2.6 seed-2 go and `benchmarks/zero4-q26r-v1/PREREGISTRATION.md` | Authorizes only seeds 1 and 3 through the Q2.6 driver while inheriting its intervention, initialization, corpora, optimizer, budgets, scales, authorities, gates, promotion split, and stop rules. Freezes an all-three-seeds family conjunction and the seed-2 model as the only promotion candidate. | Does the accepted Q2.6 intervention reproduce on both remaining declared seeds without post-hoc selection or optional stopping? | Unobserved. Both replication seeds remain unexecuted until the source and downstream registrations merge. | **Preregistered.** No family inference yet; ZERO.3 remains current. | Merge the ilXyr seed-1/3 registrations, then execute both seeds even if the first is no-go |
+| **q26r** | `benchmarks/zero4-q26r-v1` | 2026-07-19–23 | Q2.6 seed-2 go and `benchmarks/zero4-q26r-v1/PREREGISTRATION.md` | Authorizes only seeds 1 and 3 through the frozen Q2.6 driver while inheriting its intervention, initialization, corpora, optimizer, budgets, scales, authorities, gates, promotion split, and stop rules. | Does the accepted Q2.6 intervention reproduce on both remaining declared seeds without post-hoc selection or optional stopping? | No valid result. AWS seed 1 used the frozen portable-C Linux source and reached its 11-hour execution limit without publishing a result. Seed 3 was not launched. | **Execution cancelled for cost; no scientific inference.** Both replication seeds remain unobserved, family promotion remains unresolved, and ZERO.3 remains current. | Run the five-minute, $0.06 OpenBLAS calibration before authorizing any pilot or scientific workload |
 
 ---
 
@@ -72,6 +72,10 @@ q25 (deterministic cumulative-guard backtracking)
 q26 (global all-slice replay-tangent projection)
   "700/700 commits; 423 projected; update 500 public + promotion pass."
   → Q2.6 replication seeds 1 and 3 under the unchanged contract
+
+q26r AWS execution
+  "Portable-C seed 1 reached the 11-hour cap with no result; seed 3 was never launched."
+  → Cancel unbudgeted replication; calibrate OpenBLAS for 5 minutes / $0.06
 ```
 
 ---
@@ -126,7 +130,14 @@ the largest committed composite increase was only 0.05089%. Six public
 checkpoints were jointly feasible, update 500 dominated the frontier with
 99.8% limiting quantity rates and 1.1833% replay regression, and the one-time
 promotion evaluation passed at 99.6%. This is a seed-2 go, not yet a family
-promotion: seeds 1 and 3 must now replicate under the frozen design.
+promotion: seeds 1 and 3 remain scientifically unobserved.
+
+12. **Runtime and cost are preregistration inputs.** The first AWS Q2.6-R
+execution reached an 11-hour cap without a result because its frozen Linux
+source used the portable backend. That is an execution failure, not a no-go.
+The replacement OpenBLAS calibration is diagnostic-only, capped at five EC2
+minutes and $0.06, and must publish throughput before a larger budget can be
+authorized.
 
 ---
 
@@ -149,11 +160,12 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 ---
 
-## Current state (2026-07-19)
+## Current state (2026-07-23)
 
 - **Deployed browser baseline**: `docs/model.litq8`, update 14,500. This is distinct from the frozen ZERO.3 training teacher.
 - **Student initialization and frozen teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
 - **Latest completed experiment**: Q2.6 seed 2 (go; selected update 500, public and promotion pass)
-- **Next experiment**: Q2.6-R seeds 1 and 3 under the merged unchanged-design replication contract
+- **Latest execution outcome**: Q2.6-R seed 1 timed out after 11 hours without a valid result; seed 3 was cancelled before launch
+- **Next experiment**: diagnostic-only `openblas-calibration-v1`, capped at five EC2 minutes and $0.06
 - **Active proposals**: See `PROPOSALS.md`
-- **Promotion status**: Seed-2 promotion passed, but family promotion remains pending seeds 1 and 3. ZERO.3 remains current.
+- **Promotion status**: Seed-2 promotion passed, but family promotion is unresolved because seeds 1 and 3 remain unobserved. ZERO.3 remains current.

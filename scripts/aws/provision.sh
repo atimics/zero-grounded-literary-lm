@@ -256,5 +256,6 @@ echo "  AWS_SUBNET_ID:         $SUBNET_ID"
 echo
 echo "Upload ignored, hash-verified training assets before dispatch:"
 echo "  aws s3 sync teachers/ s3://${BUCKET_NAME}/assets/teachers/ --exclude registry.json"
+echo "  aws s3 cp corpus/literary.bpe s3://${BUCKET_NAME}/assets/corpus/literary.bpe"
 echo "  aws s3 sync corpus/bpe/ s3://${BUCKET_NAME}/assets/corpus/bpe/"
 echo "  aws s3 sync corpus/channel/ s3://${BUCKET_NAME}/assets/corpus/channel/"

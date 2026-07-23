@@ -1,10 +1,11 @@
-# AWS training runner
+# AWS experiment runner
 
-The AWS runner executes only frozen Q2.2-R or Q2.6-R replications for
-outstanding seeds 1 and 3. It does not expose unfinished saturation
-experiments. Q2.6-R always archives science commit
-`3ee802c29ddf47982477a6b6dd635eaedede7bb7`; later workflow commits may change
-orchestration, but cannot change the experiment source.
+The only executable compute workflow is now the five-minute
+`openblas-calibration-v1` performance experiment. The former unbudgeted
+Q2.2-R/Q2.6-R launcher is retired after a frozen portable-C Q2.6-R seed reached
+its 11-hour limit without producing a result. Historical `train.sh`,
+`user-data.sh`, and the collection workflow remain for provenance and
+diagnostics; they are not launch paths.
 
 ## Provision once
 
@@ -34,6 +35,7 @@ Git. Upload them to the private artifact bucket before dispatch:
 ```sh
 python3 scripts/verify_teacher_artifacts.py
 aws s3 sync teachers/ "s3://$AWS_BUCKET/assets/teachers/" --exclude registry.json
+aws s3 cp corpus/literary.bpe "s3://$AWS_BUCKET/assets/corpus/literary.bpe"
 aws s3 sync corpus/bpe/ "s3://$AWS_BUCKET/assets/corpus/bpe/"
 aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 ```
@@ -41,32 +43,40 @@ aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 The instance downloads those paths and verifies every frozen teacher against
 `teachers/registry.json` before training.
 
-## Dispatch and lifecycle
+## Budgeted calibration lifecycle
 
-Dispatch `.github/workflows/train.yml` with experiment `q22r` or `q26r` and
-the declared `c6i.4xlarge` instance type. Q2.6-R requires one dispatch each for
-seed `1` and seed `3`, giving each prospective run its own ephemeral instance;
-Q2.2-R also retains its legacy `1,3` combined-dispatch option. The dispatch
-workflow is intentionally short-lived:
+Dispatch `.github/workflows/openblas-calibration.yml`. It has no mutable
+experiment, seed, instance-type, duration, or price inputs. Those values come
+from the checked
+`benchmarks/openblas-calibration-v1/budget.json` contract:
 
-1. uploads an immutable source archive and training script for the dispatched commit;
-2. launches a tagged instance with the `zero-training-ec2` profile;
-3. commits a launch receipt and exits.
+- one `c6i.4xlarge` in `us-east-1`;
+- OpenBLAS with 16 threads;
+- diagnostic seed 89 and no more than eight optimizer attempts;
+- 300 seconds and $0.06 maximum instance compute; and
+- 240 seconds maximum workload time, preserving publication time.
 
-AWS then owns the long-running phase. The instance executes the frozen
-pipeline, evaluates promotion only when authorized, uploads both scientific
-results and an explicit infrastructure status to S3, and terminates itself.
-Its independent 11-hour wall-clock limit prevents an orphaned training process.
+GitHub Actions only archives inputs, launches EC2, observes S3, enforces the
+launch-relative deadline, downloads the result, and terminates the instance.
+The measured computation runs on EC2. EC2 user data also starts an independent
+five-minute shutdown watchdog, while the workload owns a third shorter
+deadline. A complete or budget-exhausted result is valid calibration evidence,
+but the schema sets `scientific_inference_allowed` to false.
 
-After the instance is terminal, dispatch
-`.github/workflows/collect-training.yml` with the launch receipt values. This
-short collection workflow refuses to wait on a running instance, validates the
-immutable instance tags and remote status, runs the frozen result checker,
-records source and collection provenance, and commits the result records.
+The result reports cold-start time, complete optimizer attempts, attempt
+throughput, and a linear 1,400-attempt runtime/cost projection. A zero-attempt
+result still says that cold start does not fit the budget. The 15-minute pilot
+and two-hour ceiling are documented cost stages only and cannot be dispatched
+without a new authorization.
 
-A scientific no-go has exit status zero because it is a completed experiment.
-Missing assets, invalid schemas, failed commands, or absent status records are
-infrastructure errors and fail the workflow.
+Run the validators before dispatch:
+
+```sh
+make experiment-budget-check
+```
+
+The collection workflow is retained only for already-launched historical
+instances. It never starts compute.
 
 The GitHub role can use regional AMIs, subnets, security groups, network
 interfaces, and volumes only as resources of `RunInstances`. The separately

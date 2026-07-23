@@ -221,8 +221,10 @@ learning path without weakening the cumulative or public gates?
 **Source**: Q2.5 seed-2 `RESULTS.md` and terminal attempt trace.
 **Status**: Diagnostic accepted. Seed 2 resolved go after 700/700 commits,
 selected update 500 passed public and promotion, and no frozen gate changed.
-The Q2.6-R source adapter and all-three-seeds family rule are now prospectively
-frozen; seeds 1 and 3 remain unobserved pending downstream registration.
+The Q2.6-R source adapter and all-three-seeds family rule remain frozen, but
+the first AWS seed-1 execution reached its 11-hour limit without a result and
+the unbudgeted replication was cancelled. Seeds 1 and 3 remain scientifically
+unobserved.
 **Depends on**: Q2.5 no-go (satisfied).
 
 **Design**:
@@ -283,10 +285,10 @@ A proposal becomes RESOLVED when:
 
 ## Current state
 
-- **Active proposal**: P8 / Q2.6 replication seeds 1 and 3
-- **Preregistered next experiment**: Q2.6-R seeds 1 and 3, reusing the accepted Q2.6 design without changing seed-2 evidence
+- **Active proposal**: Budgeted OpenBLAS performance calibration before any P8 replication
+- **Preregistered next experiment**: `openblas-calibration-v1`, diagnostic only, five EC2 minutes and $0.06 maximum
 - **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: merge the two downstream prospective registrations,
-  then execute both seeds under the unchanged Q2.6 source, metrics, gates, and
-  family aggregation rule.
+- **Next decision point**: use measured OpenBLAS attempt throughput to decide
+  whether to authorize the 15-minute pilot. The pilot and two-hour ceiling
+  remain non-executable until explicitly approved.

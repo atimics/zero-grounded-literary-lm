@@ -1,0 +1,16 @@
+{
+  "schema": "zero.training_launch.v1",
+  "status": "dispatched",
+  "timestamp": "2026-07-21T14:07:17Z",
+  "experiment": "q26r",
+  "seeds": "1",
+  "git_commit": "3ee802c29ddf47982477a6b6dd635eaedede7bb7",
+  "orchestrator_commit": "9c61ac68ae545660b6bd4c5bdc9d6268f89efbf9",
+  "ci_run_id": "29837585360",
+  "aws": {
+    "instance_id": "i-01ea4ddc5f8238ef2",
+    "instance_type": "c6i.4xlarge",
+    "ami": "ami-052355af2a014bd2c",
+    "region": "us-east-1"
+  }
+}
