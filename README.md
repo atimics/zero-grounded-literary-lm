@@ -225,12 +225,14 @@ unobserved, family promotion remains unresolved, and ZERO.3 remains current.
 See the [`replication contract`](benchmarks/zero4-q26r-v1/contract.json) and
 [`execution cancellation`](benchmarks/zero4-q26r-v1/CANCELLATION.md).
 
-The only executable next experiment is
-[`openblas-calibration-v1`](benchmarks/openblas-calibration-v1/README.md).
-It runs the real Q2.6 optimizer path on AWS with OpenBLAS but uses diagnostic
-seed 89, accepts at most eight attempts, and has independent five-minute /
-$0.06 caps. Its output can estimate runtime and cost only; it cannot support a
-scientific decision. Run its local contract checks with:
+The calibration completed eight OpenBLAS attempts in 59 seconds and projected
+the full 1,400-attempt workload at 2h52m and $1.95, excluding cold start. The
+only executable next experiment is the one-time
+[`openblas-pilot-v1`](benchmarks/openblas-pilot-v1/README.md). It runs the real
+Q2.6 optimizer path on AWS with diagnostic seed 89, accepts at most 100
+attempts, and has independent 15-minute / $0.17 caps. Its output can validate
+sustained runtime and cost only; it cannot support a scientific decision. Run
+its local contract checks with:
 
 ```sh
 make experiment-budget-check

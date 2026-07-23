@@ -1,11 +1,12 @@
 #!/bin/bash
-# EC2 bootstrap for the cumulative-budget OpenBLAS calibration retry.
+# EC2 bootstrap for the bounded OpenBLAS pilot.
 
 set -Eeuo pipefail
 
-HARD_INSTANCE_SECONDS=190
-HARD_WORKLOAD_SECONDS=130
-BOOTSTRAP_LOG=/var/log/zero-openblas-bootstrap.log
+HARD_INSTANCE_SECONDS=900
+HARD_WORKLOAD_SECONDS=840
+HARD_MAX_ATTEMPTS=100
+BOOTSTRAP_LOG=/var/log/zero-openblas-pilot-bootstrap.log
 BOOTSTRAP_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 exec > >(tee -a "$BOOTSTRAP_LOG" >/dev/console) 2>&1
@@ -15,7 +16,7 @@ set -x
 # GitHub observer independently enforces the same cap from launch-request time.
 (
   sleep "$HARD_INSTANCE_SECONDS"
-  echo "OpenBLAS calibration local instance deadline reached"
+  echo "OpenBLAS pilot local instance deadline reached"
   shutdown -h now
 ) &
 
@@ -28,7 +29,7 @@ finish() {
       && [ -n "${ZERO_BUCKET:-}" ] \
       && [ -n "${ZERO_RUN_ID:-}" ]; then
     aws s3 cp "$BOOTSTRAP_LOG" \
-      "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-bootstrap.log" \
+      "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-pilot-bootstrap.log" \
       --no-cli-pager
     if [ "$exit_code" -ne 0 ] \
         && ! aws s3api head-object \
@@ -42,7 +43,7 @@ import json
 import os
 
 record = {
-    "schema": "zero.aws_openblas_calibration_status.v1",
+    "schema": "zero.aws_openblas_pilot_status.v1",
     "status": "infrastructure-error",
     "phase": "bootstrap-or-workload-hard-limit",
     "exit_code": int(os.environ["ZERO_EXIT_CODE"]),
@@ -105,26 +106,29 @@ ZERO_BUDGET_SHA256="$(tag BudgetSha256)"
 ZERO_LAUNCH_EPOCH="$(tag LaunchEpoch)"
 ZERO_MAX_INSTANCE_SECONDS="$(tag MaxInstanceSeconds)"
 ZERO_WORKLOAD_TIMEOUT_SECONDS="$(tag WorkloadTimeoutSeconds)"
+ZERO_MAX_ATTEMPTS="$(tag MaxOptimizerAttempts)"
 ZERO_MAX_COMPUTE_USD="$(tag MaxComputeUsd)"
 ZERO_HOURLY_RATE_USD="$(tag HourlyRateUsd)"
 AWS_DEFAULT_REGION="$(tag Region)"
 export ZERO_BUCKET ZERO_RUN_ID ZERO_COMMIT ZERO_BUDGET_FILE ZERO_BUDGET_SHA256
 export ZERO_LAUNCH_EPOCH ZERO_MAX_INSTANCE_SECONDS
-export ZERO_WORKLOAD_TIMEOUT_SECONDS ZERO_MAX_COMPUTE_USD ZERO_HOURLY_RATE_USD
+export ZERO_WORKLOAD_TIMEOUT_SECONDS ZERO_MAX_ATTEMPTS
+export ZERO_MAX_COMPUTE_USD ZERO_HOURLY_RATE_USD
 export AWS_DEFAULT_REGION
 
 test "$ZERO_MAX_INSTANCE_SECONDS" = "$HARD_INSTANCE_SECONDS"
 test "$ZERO_WORKLOAD_TIMEOUT_SECONDS" = "$HARD_WORKLOAD_SECONDS"
-test "$ZERO_BUDGET_FILE" = "benchmarks/openblas-calibration-v1/retry-1-budget.json"
-test "$ZERO_MAX_COMPUTE_USD" = "0.04"
+test "$ZERO_MAX_ATTEMPTS" = "$HARD_MAX_ATTEMPTS"
+test "$ZERO_BUDGET_FILE" = "benchmarks/openblas-pilot-v1/budget.json"
+test "$ZERO_MAX_COMPUTE_USD" = "0.17"
 [[ "$ZERO_LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
 
 install -d -m 0755 /opt/zero
 aws s3 cp \
-  "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/openblas-calibration.sh" \
-  /opt/zero/openblas-calibration.sh \
+  "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/openblas-pilot.sh" \
+  /opt/zero/openblas-pilot.sh \
   --no-cli-pager
-chmod 0755 /opt/zero/openblas-calibration.sh
+chmod 0755 /opt/zero/openblas-pilot.sh
 
 # Leave 20 seconds before the launch-relative deadline for S3 publication and
 # shutdown. A slow cold start therefore consumes benchmark time instead of
@@ -135,7 +139,7 @@ if [ "$remaining" -gt "$HARD_WORKLOAD_SECONDS" ]; then
   remaining=$HARD_WORKLOAD_SECONDS
 fi
 if [ "$remaining" -le 15 ]; then
-  echo "Cold start exhausted the retry budget before workload launch"
+  echo "Cold start exhausted the pilot budget before workload launch"
   mkdir -p /tmp/zero-openblas-cold-start
   finished_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   finished_epoch=$(date +%s)
@@ -148,8 +152,8 @@ elapsed = max(
     0, int(os.environ["ZERO_FINISHED_EPOCH"]) - int(os.environ["ZERO_LAUNCH_EPOCH"])
 )
 result = {
-    "schema": "zero.openblas_calibration_result.v1",
-    "id": "openblas-calibration-v1",
+    "schema": "zero.openblas_pilot_result.v1",
+    "id": "openblas-pilot-v1",
     "status": "budget-exhausted",
     "phase": "cold-start",
     "started_at": "",
@@ -172,7 +176,7 @@ result = {
     },
     "measurement": {
         "seed": 89,
-        "attempt_cap": 8,
+        "attempt_cap": int(os.environ["ZERO_MAX_ATTEMPTS"]),
         "completed_optimizer_attempts": 0,
         "training_wall_seconds": 0,
         "cold_start_seconds": elapsed,
@@ -184,11 +188,11 @@ result = {
         "target_optimizer_attempts": 1400,
         "estimated_wall_seconds": None,
         "estimated_compute_usd": None,
-        "method": "unavailable because cold start exhausted the calibration budget",
+        "method": "unavailable because cold start exhausted the pilot budget",
     },
 }
 status = {
-    "schema": "zero.aws_openblas_calibration_status.v1",
+    "schema": "zero.aws_openblas_pilot_status.v1",
     "status": "budget-exhausted",
     "exit_code": 124,
     "started_at": "",
@@ -217,4 +221,4 @@ ZERO_WORKLOAD_DEADLINE_EPOCH=$((now + remaining - 15))
 export ZERO_WORKLOAD_DEADLINE_EPOCH
 
 timeout --signal=TERM --kill-after=10s \
-  "${remaining}s" /opt/zero/openblas-calibration.sh
+  "${remaining}s" /opt/zero/openblas-pilot.sh

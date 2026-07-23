@@ -137,6 +137,74 @@ export function validateRetryBudget(
   return true;
 }
 
+export function validatePilotBudget(
+  budget,
+  requestedStage = null,
+  baseBudgetPath = budget?.base_budget?.path,
+) {
+  assert(budget && typeof budget === "object" && !Array.isArray(budget), "budget must be an object");
+  assert(budget.schema === "zero.experiment_pilot_budget.v1", "unsupported pilot budget schema");
+  assert(budget.id === "openblas-pilot-v1", "unexpected pilot budget id");
+  assert(budget.status === "preregistered", "pilot budget must be preregistered");
+  assert(budget.scientific_inference_allowed === false, "pilot must forbid scientific inference");
+  assert(budget.authorization?.scope === "one AWS execution of pilot-1 only", "pilot authorization scope drifted");
+  assert(budget.authorization.one_execution_only === true, "pilot must be single-execution");
+  validateVenueAndWorkload(budget);
+  assert(budget.workload.transaction_phase === "acquisition", "pilot must use the acquisition transaction phase");
+  assert(budget.workload.maximum_optimizer_attempts === 100, "pilot attempt cap must be 100");
+
+  const base = budget.base_budget;
+  assert(base?.path === "benchmarks/openblas-calibration-v1/budget.json", "pilot base budget path drifted");
+  assert(base.sha256 === "6036e379a9da0d05081d443e3c71074583ca0f976cfc14aab870d4cfd613fbc3", "pilot base budget hash drifted");
+  assert(base.stage === "pilot", "pilot base stage drifted");
+  assert(baseBudgetPath && fs.existsSync(baseBudgetPath), "pilot base budget is unavailable");
+  assert(sha256(baseBudgetPath) === base.sha256, "pilot base budget file hash mismatch");
+  const baseBudget = JSON.parse(fs.readFileSync(baseBudgetPath, "utf8"));
+  validateBudget(baseBudget);
+  const basePilot = baseBudget.stages.find((stage) => stage.id === "pilot");
+  assert(base.max_instance_seconds === basePilot.max_instance_seconds, "pilot instance authorization differs from base");
+  assert(base.max_compute_usd === basePilot.max_compute_usd, "pilot cost authorization differs from base");
+  assert(JSON.stringify(budget.venue) === JSON.stringify(baseBudget.venue), "pilot venue differs from base budget");
+
+  const evidence = budget.calibration_evidence;
+  assert(evidence?.result_path === "benchmarks/openblas-calibration-v1/result-30003995100.json", "calibration evidence path drifted");
+  assert(evidence.result_sha256 === "e362819bfdcb2e0bd588deb8466ac150ef60e1c32419be7bbb36a343fdce29e1", "calibration evidence hash drifted");
+  assert(fs.existsSync(evidence.result_path), "calibration evidence is unavailable");
+  assert(sha256(evidence.result_path) === evidence.result_sha256, "calibration evidence file hash mismatch");
+  const calibration = JSON.parse(fs.readFileSync(evidence.result_path, "utf8"));
+  assert(calibration.status === "budget-exhausted", "calibration status drifted");
+  assert(calibration.scientific_inference_allowed === false, "calibration evidence became scientific");
+  assert(calibration.venue?.backend === evidence.backend_observed, "calibration backend evidence drifted");
+  assert(calibration.measurement?.completed_optimizer_attempts === evidence.completed_optimizer_attempts, "calibration attempt evidence drifted");
+  assert(calibration.measurement?.training_wall_seconds === evidence.training_wall_seconds, "calibration training time evidence drifted");
+  assert(calibration.measurement?.cold_start_seconds === evidence.cold_start_seconds, "calibration cold-start evidence drifted");
+  assert(calibration.measurement?.attempts_per_second === evidence.attempts_per_second, "calibration throughput evidence drifted");
+
+  const execution = budget.execution;
+  assert(execution?.id === "pilot-1", "pilot execution id drifted");
+  assert(execution.max_instance_seconds === 900, "pilot instance cap must be 900 seconds");
+  assert(execution.workload_timeout_seconds === 840, "pilot workload cap must be 840 seconds");
+  assert(execution.max_compute_usd === roundedCents(900 * budget.venue.on_demand_usd_per_hour / 3600), "pilot compute cap drifted");
+  assert(execution.requires_manual_approval === true, "pilot must require manual approval");
+  assert(execution.manual_approval_observed === true, "pilot manual approval is missing");
+  assert(execution.authorized_for_execution === true, "pilot is not authorized for execution");
+
+  const projection = budget.calibration_projection;
+  const expectedTraining = budget.workload.maximum_optimizer_attempts / evidence.attempts_per_second;
+  const expectedTotal = expectedTraining + evidence.cold_start_seconds;
+  const expectedHeadroom = execution.max_instance_seconds - expectedTotal;
+  assert(Math.abs(projection.expected_training_seconds_for_attempt_cap - expectedTraining) < 1e-12, "pilot training projection drifted");
+  assert(Math.abs(projection.expected_total_seconds_including_cold_start - expectedTotal) < 1e-12, "pilot total projection drifted");
+  assert(Math.abs(projection.hard_instance_headroom_seconds - expectedHeadroom) < 1e-12, "pilot headroom projection drifted");
+  assert(expectedTotal < execution.max_instance_seconds, "pilot projection does not fit the instance cap");
+
+  if (requestedStage) {
+    assert(["pilot", "pilot-1"].includes(requestedStage), `unknown requested stage: ${requestedStage}`);
+    assert(execution.authorized_for_execution === true, "pilot is not authorized for execution");
+  }
+  return true;
+}
+
 function selfTest() {
   const basePath = new URL("../benchmarks/openblas-calibration-v1/budget.json", import.meta.url);
   const valid = JSON.parse(fs.readFileSync(basePath, "utf8"));
@@ -184,6 +252,30 @@ function selfTest() {
       }
       assert(rejected, `self-test failed to reject ${name} mutation`);
     }
+
+    const pilot = JSON.parse(fs.readFileSync(
+      "benchmarks/openblas-pilot-v1/budget.json",
+      "utf8",
+    ));
+    validatePilotBudget(pilot, "pilot", "benchmarks/openblas-calibration-v1/budget.json");
+    const pilotMutations = [
+      ["pilot wall cap", (copy) => { copy.execution.max_instance_seconds = 901; }],
+      ["pilot attempts", (copy) => { copy.workload.maximum_optimizer_attempts = 101; }],
+      ["pilot approval", (copy) => { copy.execution.manual_approval_observed = false; }],
+      ["pilot scientific inference", (copy) => { copy.scientific_inference_allowed = true; }],
+      ["pilot evidence", (copy) => { copy.calibration_evidence.training_wall_seconds = 60; }],
+    ];
+    for (const [name, mutate] of pilotMutations) {
+      const copy = structuredClone(pilot);
+      mutate(copy);
+      let rejected = false;
+      try {
+        validatePilotBudget(copy, "pilot", "benchmarks/openblas-calibration-v1/budget.json");
+      } catch {
+        rejected = true;
+      }
+      assert(rejected, `self-test failed to reject ${name} mutation`);
+    }
   } finally {
     process.chdir(originalCwd);
   }
@@ -201,7 +293,9 @@ const stageIndex = args.indexOf("--stage");
 const requestedStage = stageIndex >= 0 ? args[stageIndex + 1] : null;
 if (stageIndex >= 0 && !requestedStage) fail("--stage requires a value");
 const budget = JSON.parse(fs.readFileSync(budgetPath, "utf8"));
-if (budget.schema === "zero.experiment_retry_budget.v1") {
+if (budget.schema === "zero.experiment_pilot_budget.v1") {
+  validatePilotBudget(budget, requestedStage);
+} else if (budget.schema === "zero.experiment_retry_budget.v1") {
   validateRetryBudget(budget, requestedStage);
 } else {
   validateBudget(budget, requestedStage);

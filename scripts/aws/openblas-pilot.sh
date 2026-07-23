@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run a diagnostic-only Q2.6 optimizer throughput sample under OpenBLAS.
+# Run the diagnostic-only Q2.6 OpenBLAS pilot.
 
 set -Eeuo pipefail
 
@@ -12,14 +12,15 @@ set -Eeuo pipefail
 : "${ZERO_WORKLOAD_DEADLINE_EPOCH:?ZERO_WORKLOAD_DEADLINE_EPOCH is required}"
 : "${ZERO_HOURLY_RATE_USD:?ZERO_HOURLY_RATE_USD is required}"
 : "${ZERO_MAX_COMPUTE_USD:?ZERO_MAX_COMPUTE_USD is required}"
+: "${ZERO_MAX_ATTEMPTS:?ZERO_MAX_ATTEMPTS is required}"
 
-RESULTS_ROOT=/tmp/zero-openblas-calibration
+RESULTS_ROOT=/tmp/zero-openblas-pilot
 STATUS_FILE="$RESULTS_ROOT/status.json"
 RESULT_FILE="$RESULTS_ROOT/result.json"
 TRAIN_LOG="$RESULTS_ROOT/training.log"
 BACKEND_LOG="$RESULTS_ROOT/backend.log"
 ATTEMPT_LOG="$RESULTS_ROOT/optimizer-attempts.jsonl"
-WORKLOAD_LOG=/var/log/zero-openblas-calibration.log
+WORKLOAD_LOG=/var/log/zero-openblas-pilot.log
 STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 PHASE=initializing
 
@@ -37,8 +38,8 @@ import json
 import os
 
 record = {
-    "schema": "zero.openblas_calibration_result.v1",
-    "id": "openblas-calibration-v1",
+    "schema": "zero.openblas_pilot_result.v1",
+    "id": "openblas-pilot-v1",
     "status": "infrastructure-error",
     "phase": os.environ["ZERO_PHASE"],
     "exit_code": int(os.environ["ZERO_EXIT_CODE"]),
@@ -52,7 +53,7 @@ with open(os.environ["ZERO_RESULT_FILE"], "w", encoding="utf-8") as handle:
     json.dump(record, handle, indent=2)
     handle.write("\n")
 status = {
-    "schema": "zero.aws_openblas_calibration_status.v1",
+    "schema": "zero.aws_openblas_pilot_status.v1",
     **{key: value for key, value in record.items() if key != "schema"},
 }
 with open(os.environ["ZERO_STATUS_FILE"], "w", encoding="utf-8") as handle:
@@ -72,7 +73,7 @@ finish() {
     "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/results/" \
     --no-cli-pager
   aws s3 cp "$WORKLOAD_LOG" \
-    "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-calibration.log" \
+    "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-openblas-pilot.log" \
     --no-cli-pager
   # Publish root status last. The observer treats its presence as permission to
   # terminate the instance, so every required result must already be durable.
@@ -92,7 +93,7 @@ import json
 import os
 
 record = {
-    "schema": "zero.aws_openblas_calibration_heartbeat.v1",
+    "schema": "zero.aws_openblas_pilot_heartbeat.v1",
     "status": "running",
     "phase": os.environ["ZERO_PHASE"],
     "at": os.environ["ZERO_HEARTBEAT_AT"],
@@ -128,7 +129,7 @@ cd /tmp/zero
 actual_budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
 test "$actual_budget_sha256" = "$ZERO_BUDGET_SHA256"
 node scripts/check_experiment_budget.mjs \
-  "$ZERO_BUDGET_FILE" --stage calibration
+  "$ZERO_BUDGET_FILE" --stage pilot
 
 PHASE=assets
 publish_heartbeat
@@ -212,7 +213,7 @@ if [ "$remaining" -gt 0 ]; then
         --sample-weight 1 --distill 0,0.10,0.20 \
       --hard-channel corpus/faculty/q22/quantity-request.tok \
         --sample-weight 4 \
-      --steps 8 --batch 2 --lr 0.00002 --warmup 100 --dropout 0.02 \
+      --steps "$ZERO_MAX_ATTEMPTS" --batch 2 --lr 0.00002 --warmup 100 --dropout 0.02 \
       --cosine --schedule-total 1000 --report 8 --validation 56 \
       --patience 0 --seed 89 --save "$RESULTS_ROOT/active.ckpt" \
       --tokens 0 --transaction-mode cumulative-tangent \
@@ -269,8 +270,8 @@ projected_seconds = measurement_seconds * 1400 / attempts if attempts else None
 projected_cost = projected_seconds * hourly_rate / 3600 if projected_seconds else None
 
 result = {
-    "schema": "zero.openblas_calibration_result.v1",
-    "id": "openblas-calibration-v1",
+    "schema": "zero.openblas_pilot_result.v1",
+    "id": "openblas-pilot-v1",
     "status": os.environ["ZERO_STATUS"],
     "started_at": os.environ["ZERO_STARTED_AT"],
     "finished_at": os.environ["ZERO_FINISHED_AT"],
@@ -292,7 +293,7 @@ result = {
     },
     "measurement": {
         "seed": 89,
-        "attempt_cap": 8,
+        "attempt_cap": int(os.environ["ZERO_MAX_ATTEMPTS"]),
         "completed_optimizer_attempts": attempts,
         "training_wall_seconds": measurement_seconds,
         "cold_start_seconds": max(0, training_started - launch_epoch),
@@ -313,7 +314,7 @@ with open(os.environ["ZERO_RESULT_FILE"], "w", encoding="utf-8") as handle:
     json.dump(result, handle, indent=2)
     handle.write("\n")
 status = {
-    "schema": "zero.aws_openblas_calibration_status.v1",
+    "schema": "zero.aws_openblas_pilot_status.v1",
     "status": result["status"],
     "exit_code": int(os.environ["ZERO_TRAIN_EXIT"]),
     "started_at": result["started_at"],
@@ -331,4 +332,4 @@ PY
 if [ "$status" = infrastructure-error ]; then
   exit 1
 fi
-echo "OpenBLAS calibration $status after $attempts completed optimizer attempts"
+echo "OpenBLAS pilot $status after $attempts completed optimizer attempts"

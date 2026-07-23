@@ -62,7 +62,8 @@ The exact failure is frozen in
 unobserved. Seed 3 was not launched.
 
 On 2026-07-23 the remaining Q2.6-R execution was cancelled for cost. The
-unbudgeted long-run workflow was retired. Further scientific execution now
-requires measured OpenBLAS throughput and a separately authorized budget; the
-only executable next stage is the five-minute diagnostic calibration in
-`benchmarks/openblas-calibration-v1/budget.json`.
+unbudgeted long-run workflow was retired. The diagnostic calibration then
+measured OpenBLAS throughput, and its only executable successor is the
+separately authorized 100-attempt pilot in
+`benchmarks/openblas-pilot-v1/budget.json`. Further scientific execution still
+requires a new budget and authorization.

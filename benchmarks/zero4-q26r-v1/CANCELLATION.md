@@ -14,11 +14,11 @@ all-three-seeds family conjunction therefore remains unresolved and ZERO.3
 remains current.
 
 The long unbudgeted dispatch workflow is retired. No Q2.6-R seed may be
-launched through it. The next executable experiment is the diagnostic-only
-[`openblas-calibration-v1`](../openblas-calibration-v1/README.md), capped at
-five EC2 minutes and $0.06. A pilot or full replication requires a new,
-explicitly approved budget after that calibration publishes measured
-throughput.
+launched through it. The diagnostic calibration completed, and the next
+executable experiment is the diagnostic-only
+[`openblas-pilot-v1`](../openblas-pilot-v1/README.md), capped at 15 EC2 minutes,
+100 optimizer attempts, and $0.17. A full replication requires a new,
+explicitly approved budget after that pilot publishes sustained throughput.
 
 The machine-readable execution record is
 [`execution-failure-29837585360.json`](execution-failure-29837585360.json).

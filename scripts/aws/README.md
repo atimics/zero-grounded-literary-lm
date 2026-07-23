@@ -1,12 +1,12 @@
 # AWS experiment runner
 
-There is currently no authorized compute workflow. The bounded
-`openblas-calibration-v1` performance experiment completed in run
-`30003995100`, and its workflow refuses a second launch while the committed
-result record exists. The former unbudgeted Q2.2-R/Q2.6-R launcher is retired
-after a frozen portable-C Q2.6-R seed reached its 11-hour limit without
-producing a result. Historical `train.sh`, `user-data.sh`, and the collection
-workflow remain for provenance and diagnostics; they are not launch paths.
+The only authorized compute workflow is the one-time diagnostic
+`openblas-pilot-v1`. Its 100-attempt, 15-minute, $0.17 bounds are derived from
+the completed `openblas-calibration-v1` result. The former unbudgeted
+Q2.2-R/Q2.6-R launcher is retired after a frozen portable-C Q2.6-R seed reached
+its 11-hour limit without producing a result. Historical `train.sh`,
+`user-data.sh`, and the collection workflow remain for provenance and
+diagnostics; they are not launch paths.
 
 ## Provision once
 
@@ -43,30 +43,29 @@ aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 The instance downloads those paths and verifies every frozen teacher against
 `teachers/registry.json` before training.
 
-## Budgeted calibration lifecycle
+## Budgeted pilot lifecycle
 
-The consumed retry had no mutable experiment, seed, instance-type, duration,
-or price inputs. Those values came from the checked
-`benchmarks/openblas-calibration-v1/retry-1-budget.json` contract:
+The pilot has no mutable experiment, seed, instance-type, duration, attempt, or
+price inputs. Those values come from the checked
+`benchmarks/openblas-pilot-v1/budget.json` contract:
 
 - one `c6i.4xlarge` in `us-east-1`;
 - OpenBLAS with 16 threads;
-- diagnostic seed 89 and no more than eight optimizer attempts;
-- 190 seconds and $0.04 maximum retry compute; and
-- 130 seconds maximum workload time, preserving publication time.
+- diagnostic seed 89 and no more than 100 optimizer attempts;
+- 900 seconds and $0.17 maximum instance compute; and
+- 840 seconds maximum workload time, preserving publication time.
 
 GitHub Actions only archives inputs, launches EC2, observes S3, enforces the
 launch-relative deadline, downloads the result, and terminates the instance.
-The measured computation ran on EC2. EC2 user data also started an independent
-190-second shutdown watchdog, while the workload owned a third shorter
-deadline. The verified `budget-exhausted` result completed all eight diagnostic
-attempts in 59 seconds after a 96-second cold start. It projects 10,325 seconds
-and $1.9503 for 1,400 attempts, excluding cold start. The schema sets
-`scientific_inference_allowed` to false.
+The measured computation runs on EC2. EC2 user data starts an independent
+900-second shutdown watchdog, while the workload owns a third shorter
+deadline. The schema sets `scientific_inference_allowed` to false.
 
-The launch, status, and result are committed under
-`benchmarks/openblas-calibration-v1/`. A pilot or full run cannot be dispatched
-without a new authorization and executable budget.
+Dispatch `.github/workflows/openblas-pilot.yml`. After the result is committed,
+the `COMPLETED` sentinel closes this one-time launch path. An atomic S3 lock
+also prevents duplicate dispatches from launching a second instance before
+that commit lands. A full run requires a new authorization and executable
+budget.
 
 Run the validators before dispatch:
 
