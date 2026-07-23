@@ -143,8 +143,6 @@ test "$(nproc)" = 16
 
 PHASE=assets
 publish_heartbeat
-aws s3 sync "s3://${ZERO_BUCKET}/assets/teachers/" teachers/ \
-  --exclude registry.json --no-cli-pager
 aws s3 sync "s3://${ZERO_BUCKET}/assets/corpus/" corpus/ --no-cli-pager
 python3 scripts/verify_teacher_artifacts.py
 node scripts/generate_zero4_q2.mjs \
