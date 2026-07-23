@@ -1,0 +1,11 @@
+{
+  "schema": "zero.aws_openblas_pilot_status.v1",
+  "status": "budget-exhausted",
+  "exit_code": 124,
+  "started_at": "2026-07-23T12:11:36Z",
+  "finished_at": "2026-07-23T12:24:41Z",
+  "git_commit": "39f6ec843c98a301a4450c55fcee73d93923c908",
+  "budget_sha256": "6af80f465e9431331affdfdefd7c0af41488d6514b3d871cff0c2242c3ac79d2",
+  "scientific_inference_allowed": false,
+  "result": "results/result.json"
+}

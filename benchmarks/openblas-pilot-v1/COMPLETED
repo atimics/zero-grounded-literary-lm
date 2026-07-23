@@ -1,0 +1,10 @@
+{
+  "schema": "zero.experiment_completion.v1",
+  "id": "openblas-pilot-v1",
+  "github_run_id": "30005889393",
+  "git_commit": "39f6ec843c98a301a4450c55fcee73d93923c908",
+  "status": "budget-exhausted",
+  "result": "result-30005889393.json",
+  "authorization_consumed": true,
+  "scientific_inference_allowed": false
+}

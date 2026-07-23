@@ -1066,6 +1066,12 @@ experiment-budget-check:
 		benchmarks/openblas-calibration-v1/status-30003995100.json \
 		--commit 96cf43afa8e8bc4d958ad96a6da304994ed85b39 \
 		--budget-sha256 19800e5c9b8ca36c31f03de54364b22e7f462c4ed3a444bd17fd62d7794577d9
+	node scripts/check_openblas_calibration_result.mjs \
+		benchmarks/openblas-pilot-v1/budget.json \
+		benchmarks/openblas-pilot-v1/result-30005889393.json \
+		benchmarks/openblas-pilot-v1/status-30005889393.json \
+		--commit 39f6ec843c98a301a4450c55fcee73d93923c908 \
+		--budget-sha256 6af80f465e9431331affdfdefd7c0af41488d6514b3d871cff0c2242c3ac79d2
 
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
