@@ -66,17 +66,19 @@ jobs:
 
       - name: Preflight private assets without compute
         run: |
+          # corpus/literary.bpe is tracked in the immutable source archive.
+          # Only ignored private artifacts belong in the S3 preflight.
           for key in \
             assets/teachers/zero1-foundation.teacher \
             assets/teachers/zero2-literary.teacher \
             assets/teachers/zero3-balanced-final.teacher \
-            assets/corpus/literary.bpe \
             assets/corpus/bpe/zero-foundation.tok \
             assets/corpus/bpe/shakespeare.tok \
             assets/corpus/bpe/blake.tok \
             assets/corpus/bpe/crowley.tok \
             assets/corpus/bpe/bible-kjv.tok \
             assets/corpus/channel/literary-dialogue.tok; do
+            echo "Checking s3://${ZERO_BUCKET}/${key}"
             aws s3api head-object \
               --bucket "$ZERO_BUCKET" \
               --key "$key" \

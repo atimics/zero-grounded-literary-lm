@@ -35,7 +35,6 @@ Git. Upload them to the private artifact bucket before dispatch:
 ```sh
 python3 scripts/verify_teacher_artifacts.py
 aws s3 sync teachers/ "s3://$AWS_BUCKET/assets/teachers/" --exclude registry.json
-aws s3 cp corpus/literary.bpe "s3://$AWS_BUCKET/assets/corpus/literary.bpe"
 aws s3 sync corpus/bpe/ "s3://$AWS_BUCKET/assets/corpus/bpe/"
 aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 ```
