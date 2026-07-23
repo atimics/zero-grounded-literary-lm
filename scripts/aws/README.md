@@ -29,12 +29,12 @@ environment secrets.
 
 ## Restore ignored assets
 
-Teacher binaries and generated replay streams are intentionally not stored in
-Git. Upload them to the private artifact bucket before dispatch:
+Teacher binaries, their registry, and `corpus/literary.bpe` are tracked and
+arrive in the immutable source archive. Generated replay streams are ignored
+and must be uploaded to the private artifact bucket before dispatch:
 
 ```sh
 python3 scripts/verify_teacher_artifacts.py
-aws s3 sync teachers/ "s3://$AWS_BUCKET/assets/teachers/" --exclude registry.json
 aws s3 sync corpus/bpe/ "s3://$AWS_BUCKET/assets/corpus/bpe/"
 aws s3 sync corpus/channel/ "s3://$AWS_BUCKET/assets/corpus/channel/"
 ```
