@@ -1,0 +1,82 @@
+{
+  "schema": "zero.experiment_e2e_calibration_budget.v1",
+  "id": "openblas-e2e-calibration-v1",
+  "status": "preregistered",
+  "purpose": "Measure the end-to-end wall-time components of the frozen Q2.6 driver over 100 diagnostic acquisition attempts, including baseline, recovery, and full evaluations, before budgeting Q2.6-R.",
+  "scientific_inference_allowed": false,
+  "authorization": {
+    "authorized_at": "2026-07-23",
+    "scope": "one AWS execution of e2e-calibration-1 only",
+    "one_execution_only": true
+  },
+  "source_driver_lock": {
+    "driver_path": "scripts/train_zero4_q26.mjs",
+    "driver_sha256": "8891760ad60d74ec796290d082849ddf2b6910c839cb0cb1b300e3b37f87bb90",
+    "scientific_contract_path": "benchmarks/zero4-q26-v1/contract.json",
+    "scientific_contract_sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80",
+    "calibration_may_not_invoke_or_modify_scientific_driver": true
+  },
+  "pilot_evidence": {
+    "budget_path": "benchmarks/openblas-pilot-v1/budget.json",
+    "budget_sha256": "6af80f465e9431331affdfdefd7c0af41488d6514b3d871cff0c2242c3ac79d2",
+    "result_path": "benchmarks/openblas-pilot-v1/result-30005889393.json",
+    "result_sha256": "a2a9b3d6ea5e416a9f2acd056e9d91b8f97858acf3b3f2b662f0b70adfa99dc4",
+    "github_run_id": "30005889393",
+    "backend_observed": "OpenBLAS",
+    "completed_optimizer_attempts": 97,
+    "training_wall_seconds": 776,
+    "cold_start_seconds": 89,
+    "attempts_per_second": 0.125
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "backend": "openblas",
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-23",
+    "price_source": "https://aws.amazon.com/ec2/pricing/on-demand/"
+  },
+  "workload": {
+    "driver": "scripts/calibrate_zero4_q26_e2e.mjs",
+    "optimizer": "ZERO.4-Q2.6 cumulative-tangent acquisition path",
+    "transaction_phase": "acquisition",
+    "seed": 89,
+    "maximum_optimizer_attempts": 100,
+    "batch": 2,
+    "recovery_every_committed_updates": 25,
+    "full_every_committed_updates": 100,
+    "sentinel_replay_batches": 12,
+    "full_replay_batches": 48,
+    "baseline_sentinel_evaluations": 1,
+    "baseline_full_evaluations": 1,
+    "maximum_sentinel_evaluations": 4,
+    "maximum_full_evaluations": 1,
+    "promotion_evaluations": 0,
+    "openblas_threads": 16,
+    "outputs_are_diagnostic_only": true
+  },
+  "execution": {
+    "id": "e2e-calibration-1",
+    "max_instance_seconds": 1500,
+    "workload_timeout_seconds": 1440,
+    "max_compute_usd": 0.29,
+    "requires_manual_approval": true,
+    "manual_approval_observed": true,
+    "authorized_for_execution": true
+  },
+  "budget_projection": {
+    "optimizer_seconds": 800,
+    "cold_start_seconds": 89,
+    "evaluation_and_publication_allowance_seconds": 611,
+    "hard_instance_headroom_seconds": 0
+  },
+  "completion_gate": {
+    "backend_must_be": "OpenBLAS",
+    "structured_status_required": true,
+    "result_is_diagnostic_only": true,
+    "full_evaluation_required_for_complete_status": true,
+    "q26r_requires_new_combined_two_seed_budget": true,
+    "q26r_requires_separate_manual_authorization": true
+  }
+}

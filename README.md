@@ -229,9 +229,15 @@ The one-time
 [`openblas-pilot-v1`](benchmarks/openblas-pilot-v1/README.md) completed 97
 diagnostic attempts in 776 seconds at a sustained 0.125 attempts/second. It
 projects the full 1,400-attempt workload at 3h06m40s and $2.12, excluding an
-89-second cold start. The pilot is consumed, no compute workflow is currently
-authorized, and its output cannot support a scientific decision. Run the local
-contract checks with:
+89-second cold start and driver evaluation overhead. The pilot is consumed and
+its output cannot support a scientific decision.
+
+The authorized
+[`openblas-e2e-calibration-v1`](benchmarks/openblas-e2e-calibration-v1/README.md)
+measures that missing baseline, recovery, and full-evaluation overhead on AWS
+under a 25-minute/$0.29 ceiling. Seed 89 and a separate diagnostic driver keep
+the output outside the frozen Q2.6-R scientific record. Run the local contract
+checks with:
 
 ```sh
 make experiment-budget-check
