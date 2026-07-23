@@ -217,11 +217,11 @@ See
 [`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
 
 Q2.6-R prospectively authorizes those two replications without altering the
-diagnostic record. Its scientific contract remains frozen, but execution is
-cancelled for cost: AWS seed 1 used the frozen portable-C Linux source and
-reached its 11-hour wall limit without publishing a valid result; seed 3 was
-not launched. This changes no scientific evidence. Seeds 1 and 3 remain
-unobserved, family promotion remains unresolved, and ZERO.3 remains current.
+diagnostic record. Its first execution route was cancelled for cost: AWS seed
+1 used the frozen portable-C Linux source and reached its 11-hour wall limit
+without publishing a valid result; seed 3 was not launched. This changes no
+scientific evidence. Seeds 1 and 3 remain unobserved, family promotion remains
+unresolved, and ZERO.3 remains current.
 See the [`replication contract`](benchmarks/zero4-q26r-v1/contract.json) and
 [`execution cancellation`](benchmarks/zero4-q26r-v1/CANCELLATION.md).
 
@@ -257,7 +257,10 @@ The 16-worker evaluator was 13.52× faster on 64 cases and 13.62× faster on 500
 with byte-identical serial/parallel JSON. The component projection is now
 3h09m08s/$2.14 per seed before contingency, or 7h34m/$5.16 for both remaining
 seeds with 20% contingency. The run did not train or open promotion data, and
-Q2.6-R remains unauthorized. Run the local contract checks with:
+the [`combined Q2.6-R AWS budget`](benchmarks/zero4-q26r-v1/aws-v1/README.md)
+now authorizes one bounded execution. Seeds 1 and 3 receive independent
+3h47m/$2.58 caps on separate instances; GitHub Actions only launches and later
+collects the AWS computation. Run the local contract checks with:
 
 ```sh
 make experiment-budget-check

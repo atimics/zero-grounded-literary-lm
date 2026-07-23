@@ -1,0 +1,129 @@
+{
+  "schema": "zero.q26r_combined_execution_budget.v1",
+  "id": "zero4-q26r-aws-v1",
+  "status": "preregistered",
+  "purpose": "Execute the two outstanding Q2.6-R scientific replications on independent bounded AWS instances after measuring the OpenBLAS training path and deterministic process-parallel quantity evaluator.",
+  "scientific_inference_allowed": true,
+  "authorization": {
+    "authorized_at": "2026-07-23",
+    "scope": "one combined AWS execution of Q2.6-R seeds 1 and 3",
+    "one_combined_execution_only": true,
+    "requires_manual_approval": true,
+    "manual_approval_observed": true,
+    "authorized_for_execution": true
+  },
+  "scientific_source_lock": {
+    "replication_contract_path": "benchmarks/zero4-q26r-v1/contract.json",
+    "replication_contract_sha256": "f966485a209d21ef54b56601fb2d91ebcf318d4da646b5572c0a432996140318",
+    "diagnostic_contract_path": "benchmarks/zero4-q26-v1/contract.json",
+    "diagnostic_contract_sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80",
+    "diagnostic_result_path": "benchmarks/zero4-q26-v1/seed2/result.json",
+    "diagnostic_result_sha256": "6fba7b46a00c881ab129ea706125fee0924d897836784274275ae9517805eb5f",
+    "diagnostic_model_path": "benchmarks/zero4-q26-v1/seed2/selected.litq8",
+    "diagnostic_model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "trainer_path": "scripts/train_zero4_q26.mjs",
+    "trainer_sha256": "8891760ad60d74ec796290d082849ddf2b6910c839cb0cb1b300e3b37f87bb90",
+    "replication_checker_path": "scripts/check_zero4_q26r.mjs",
+    "replication_checker_sha256": "a32242a4bae7d22481d8739326552187f36bde070d3c4b05aba274530b84b1eb",
+    "diagnostic_checker_path": "scripts/check_zero4_q26.mjs",
+    "diagnostic_checker_sha256": "85681beb4eed9f1ae632d7a258629727015baea62ed0415b7bdbab40a17ef269",
+    "family_aggregator_path": "scripts/aggregate_zero4_q26r.mjs",
+    "family_aggregator_sha256": "0a4af7877a10dd99aac2a3005cd5c91ca151666cb0ff3ac75b7d8621b28b884b",
+    "quantity_generator_path": "scripts/generate_zero4_q2.mjs",
+    "quantity_generator_sha256": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded",
+    "teacher_registry_path": "teachers/registry.json",
+    "teacher_registry_sha256": "f5a06d56a68698c1dd6a7a19c8ff97615f1d734ac08f4f1a187c98f90f25e21c",
+    "frozen_science_commit": "3ee802c29ddf47982477a6b6dd635eaedede7bb7",
+    "trainer_and_checkers_match_frozen_science_commit": true
+  },
+  "execution_runtime_lock": {
+    "literary_lm_path": "literary_lm.c",
+    "literary_lm_sha256": "29f330f2c9e3e4d66ce2019291996c3c231cc2662eba1ba72be96330bf5ae4e9",
+    "literary_infer_path": "literary_infer.c",
+    "literary_infer_sha256": "7a0d0156587647881e8b18108b8a1265117ddee5827e42c5ece37d066f852f76",
+    "quantity_evaluator_path": "quantity_request_eval.c",
+    "quantity_evaluator_sha256": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902",
+    "permitted_runtime_changes": [
+      "OpenBLAS dispatch for the existing literary_lm matrix operations",
+      "deterministic process-parallel quantity evaluation with byte-identical JSON output"
+    ],
+    "scientific_contract_change_allowed": false
+  },
+  "prior_evidence": {
+    "parallel_calibration_result_path": "benchmarks/parallel-quantity-eval-calibration-v1/result-30044123890.json",
+    "parallel_calibration_result_sha256": "23e734764abb4ad34af05997313746e8a24923e83d6d935b9c2be00506b030d3",
+    "parallel_calibration_status_path": "benchmarks/parallel-quantity-eval-calibration-v1/status-30044123890.json",
+    "parallel_calibration_status_sha256": "b9a86ba27a960c66a94cbc863af1fa4a6e06c88cc0e87037bf3c5be4568cf5fd",
+    "measured_sentinel_speedup": 13.515023816492455,
+    "measured_public_speedup": 13.621416134887047,
+    "projected_seconds_per_seed": 11347.596972936002,
+    "projected_compute_usd_per_seed": 2.1434349837768005,
+    "contingency_fraction": 0.2
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "cpu_architecture": "x86_64",
+    "online_vcpus": 16,
+    "training_backend": "OpenBLAS",
+    "openblas_threads": 16,
+    "omp_threads": 16,
+    "quantity_evaluator_jobs": 16,
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-23",
+    "price_source": "https://aws.amazon.com/ec2/pricing/on-demand/"
+  },
+  "workload": {
+    "authorized_seeds": [
+      1,
+      3
+    ],
+    "independent_instances": true,
+    "launch_both_seeds": true,
+    "abort_after_first_no_go": false,
+    "optimizer_attempts_per_seed": 1400,
+    "acquisition_attempts": 1000,
+    "consolidation_attempts": 400,
+    "batch": 2,
+    "recovery_every_committed_updates": 25,
+    "full_every_committed_updates": 100,
+    "sentinel_replay_batches": 12,
+    "full_replay_batches": 48,
+    "quantity_corpus_size": 10000,
+    "quantity_corpus_seed": 5,
+    "quantity_request_mode": "operation",
+    "promotion_policy": "exactly once at finalization only when public feasibility is achieved, as frozen by the scientific driver"
+  },
+  "per_seed_execution": {
+    "max_instance_seconds": 13620,
+    "workload_timeout_seconds": 13500,
+    "publication_reserve_seconds": 120,
+    "max_compute_usd": 2.58,
+    "budget_is_independent": true,
+    "unused_budget_transfer_forbidden": true
+  },
+  "combined_execution": {
+    "max_concurrent_instances": 2,
+    "max_instance_seconds_sum": 27240,
+    "max_compute_usd": 5.16,
+    "both_seed_statuses_required": true,
+    "one_seed_cannot_extend_the_other": true
+  },
+  "budget_projection": {
+    "estimated_seconds_per_seed": 11347.596972936002,
+    "estimated_seconds_two_seeds": 22695.193945872004,
+    "contingency_seconds_per_seed": 2272.403027063998,
+    "capped_seconds_per_seed": 13620,
+    "capped_seconds_two_seeds": 27240
+  },
+  "completion_gate": {
+    "seed_1_result_required": true,
+    "seed_3_result_required": true,
+    "frozen_replication_checker_required_for_each_seed": true,
+    "family_aggregation_only_after_both_valid_results": true,
+    "structured_status_required_for_each_seed": true,
+    "duplicate_execution_forbidden": true,
+    "execution_failure_is_not_scientific_no_go": true
+  }
+}

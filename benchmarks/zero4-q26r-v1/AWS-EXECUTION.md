@@ -1,7 +1,7 @@
 # Q2.6-R execution-venue addendum
 
-Status: **execution cancelled before a valid seed-1 or seed-3 result was
-observed**, 2026-07-23.
+Status: **historical execution cancelled; bounded successor authorized before
+a valid seed-1 or seed-3 result was observed**, 2026-07-23.
 
 The scientific source remains commit
 `3ee802c29ddf47982477a6b6dd635eaedede7bb7`. Its contract, trainer, checker,
@@ -62,8 +62,13 @@ The exact failure is frozen in
 unobserved. Seed 3 was not launched.
 
 On 2026-07-23 the remaining Q2.6-R execution was cancelled for cost. The
-unbudgeted long-run workflow was retired. The diagnostic calibration then
-measured OpenBLAS throughput, and its only executable successor is the
-separately authorized 100-attempt pilot in
-`benchmarks/openblas-pilot-v1/budget.json`. Further scientific execution still
-requires a new budget and authorization.
+unbudgeted long-run workflow was retired. The later end-to-end and parallel
+evaluator calibrations measured the OpenBLAS execution path without making
+scientific claims.
+
+The cancelled execution route is superseded by the separately authorized,
+combined two-seed budget in `aws-v1/budget.json`. It gives seeds 1 and 3
+independent 13,620-second/$2.58 caps on separate AWS instances, with a combined
+27,240-second/$5.16 ceiling. It changes the execution runtime only: the
+scientific contract, trainer, checker, seed identities, stop rules, gates, and
+family rule remain byte-locked.
