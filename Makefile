@@ -130,6 +130,7 @@ endif
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	experiment-budget-check \
+	quantity-request-eval-check \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -185,6 +186,23 @@ faculty_eval: faculty_eval.c literary_infer.c literary_infer.h channel_protocol.
 
 quantity_request_eval: quantity_request_eval.c literary_infer.c literary_infer.h faculty_controller.c faculty_protocol.h quantity_oracle.c quantity_oracle.h channel_protocol.h
 	$(CC) $(CFLAGS) -DLITERARY_INFER_NO_MAIN -DFACULTY_CONTROLLER_NO_MAIN quantity_request_eval.c literary_infer.c faculty_controller.c quantity_oracle.c -o $@ -lm
+
+quantity-request-eval-check: quantity_request_eval scripts/generate_zero4_q2.mjs
+	test -f docs/model.litq8
+	rm -rf /tmp/zero-quantity-eval-check
+	node scripts/generate_zero4_q2.mjs \
+		--out /tmp/zero-quantity-eval-check --quantity 100 --seed 5 \
+		--request-mode operation >/dev/null
+	./quantity_request_eval docs/model.litq8 \
+		/tmp/zero-quantity-eval-check/quantity-request.sentinel.tsv \
+		--json /tmp/zero-quantity-serial.json --limit 4 --jobs 1 >/dev/null
+	./quantity_request_eval docs/model.litq8 \
+		/tmp/zero-quantity-eval-check/quantity-request.sentinel.tsv \
+		--json /tmp/zero-quantity-parallel.json --jobs 2 --limit 4 >/dev/null
+	cmp /tmp/zero-quantity-serial.json /tmp/zero-quantity-parallel.json
+	! ZERO_QUANTITY_JOBS=invalid ./quantity_request_eval docs/model.litq8 \
+		/tmp/zero-quantity-eval-check/quantity-request.sentinel.tsv \
+		--json /tmp/zero-quantity-invalid.json --limit 1 >/dev/null 2>&1
 
 corpus/literary.bpe corpus/bpe/shakespeare.tok corpus/bpe/blake.tok corpus/bpe/crowley.tok: bpe_tokenizer corpus/shakespeare.txt corpus/blake.txt corpus/crowley.txt
 	mkdir -p corpus/bpe
@@ -1404,7 +1422,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

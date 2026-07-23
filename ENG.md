@@ -70,7 +70,7 @@ Every engineering decision follows from this bet:
 | `faculty_controller.c` | 400 | Atomic channel state machine (IDLE→EMITTING→CLOSED→COMMIT/REJECT) |
 | `faculty_eval.c` | 683 | Quantized model evaluator: runs promotion samples through `literary_infer` + validators |
 | `zero_eval.c` | 662 | Channel benchmark evaluation (transcript, recurrent, Holo modes) |
-| `quantity_request_eval.c` | 411 | Operation-selection, controller binding, kernel, and atomic-commit evaluator |
+| `quantity_request_eval.c` | 653 | Deterministic parallel operation-selection, controller binding, kernel, and atomic-commit evaluator |
 | `export_literary.c` | 223 | Row-wise int8 quantization and weight-only export |
 | `freeze_literary_teacher.c` | 162 | Extract weights from checkpoint (strip optimizer state) |
 

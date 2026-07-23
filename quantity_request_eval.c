@@ -1,10 +1,14 @@
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include "channel_protocol.h"
 #include "faculty_protocol.h"
@@ -20,7 +24,8 @@ enum {
     MAX_REQUEST = 160,
     MAX_ARTIFACT = 320,
     MAX_OUTPUT = 512,
-    MAX_GENERATED = 128
+    MAX_GENERATED = 128,
+    MAX_JOBS = 32
 };
 
 typedef struct {
@@ -48,6 +53,11 @@ typedef struct {
     int operation_only;
     double bits;
 } RequestResult;
+
+typedef struct {
+    int index;
+    RequestResult result;
+} CasePacket;
 
 static unsigned char *read_binary(const char *path, size_t *length)
 {
@@ -318,6 +328,211 @@ static void evaluate_case(const RequestCase *item, RequestResult *result,
     }
 }
 
+static void add_result(RequestResult *total, const RequestResult *item)
+{
+    total->cases += item->cases;
+    total->closed += item->closed;
+    total->syntax += item->syntax;
+    total->operation += item->operation;
+    total->arguments += item->arguments;
+    total->exact_request += item->exact_request;
+    total->oracle_arithmetic += item->oracle_arithmetic;
+    total->committed += item->committed;
+    total->exact_artifact += item->exact_artifact;
+    total->rejected += item->rejected;
+    total->rejected_state_mutations += item->rejected_state_mutations;
+    total->operation_only |= item->operation_only;
+    total->bits += item->bits;
+}
+
+static int write_all(int descriptor, const void *data, size_t length)
+{
+    const unsigned char *cursor = data;
+    while (length > 0) {
+        ssize_t written = write(descriptor, cursor, length);
+        if (written < 0 && errno == EINTR) continue;
+        if (written <= 0) return 0;
+        cursor += written;
+        length -= (size_t)written;
+    }
+    return 1;
+}
+
+static int read_packet(int descriptor, CasePacket *packet)
+{
+    unsigned char *cursor = (unsigned char *)packet;
+    size_t remaining = sizeof(*packet);
+    while (remaining > 0) {
+        ssize_t count = read(descriptor, cursor, remaining);
+        if (count < 0 && errno == EINTR) continue;
+        if (count < 0 || (count == 0 && remaining != sizeof(*packet))) {
+            return -1;
+        }
+        if (count == 0) return 0;
+        cursor += count;
+        remaining -= (size_t)count;
+    }
+    return 1;
+}
+
+static void close_worker_pipes(int pipes[MAX_JOBS][2], int workers)
+{
+    int worker;
+    for (worker = 0; worker < workers; ++worker) {
+        if (pipes[worker][0] >= 0) {
+            close(pipes[worker][0]);
+            pipes[worker][0] = -1;
+        }
+        if (pipes[worker][1] >= 0) {
+            close(pipes[worker][1]);
+            pipes[worker][1] = -1;
+        }
+    }
+}
+
+static int evaluate_parallel(const RequestCase *cases, int limit, int workers,
+                             RequestResult *total)
+{
+    int pipes[MAX_JOBS][2];
+    pid_t pids[MAX_JOBS];
+    RequestResult per_case[MAX_CASES];
+    unsigned char seen[MAX_CASES];
+    int worker;
+    int index;
+    int spawned = 0;
+    int ok = 1;
+    memset(pipes, -1, sizeof(pipes));
+    memset(pids, 0, sizeof(pids));
+    memset(per_case, 0, sizeof(per_case));
+    memset(seen, 0, sizeof(seen));
+
+    for (worker = 0; worker < workers; ++worker) {
+        if (pipe(pipes[worker]) != 0) {
+            ok = 0;
+            break;
+        }
+    }
+    if (!ok) {
+        close_worker_pipes(pipes, workers);
+        return 0;
+    }
+
+    for (worker = 0; worker < workers; ++worker) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            int other;
+            for (other = 0; other < workers; ++other) {
+                close(pipes[other][0]);
+                if (other != worker) close(pipes[other][1]);
+            }
+            for (index = worker; index < limit; index += workers) {
+                CasePacket packet;
+                memset(&packet, 0, sizeof(packet));
+                packet.index = index;
+                evaluate_case(&cases[index], &packet.result, 0);
+                if (!write_all(pipes[worker][1], &packet, sizeof(packet))) {
+                    close(pipes[worker][1]);
+                    _exit(EXIT_FAILURE);
+                }
+            }
+            close(pipes[worker][1]);
+            _exit(EXIT_SUCCESS);
+        }
+        if (pid < 0) {
+            ok = 0;
+            break;
+        }
+        pids[worker] = pid;
+        ++spawned;
+    }
+
+    for (worker = 0; worker < workers; ++worker) {
+        if (pipes[worker][1] >= 0) {
+            close(pipes[worker][1]);
+            pipes[worker][1] = -1;
+        }
+    }
+    if (!ok) {
+        for (worker = 0; worker < spawned; ++worker) {
+            kill(pids[worker], SIGTERM);
+        }
+    } else {
+        for (worker = 0; worker < workers; ++worker) {
+            CasePacket packet;
+            int status;
+            while ((status = read_packet(pipes[worker][0], &packet)) > 0) {
+                index = packet.index;
+                if (index < 0 || index >= limit ||
+                    index % workers != worker || seen[index] ||
+                    packet.result.cases != 1) {
+                    ok = 0;
+                    break;
+                }
+                seen[index] = 1;
+                per_case[index] = packet.result;
+            }
+            if (status < 0) ok = 0;
+            close(pipes[worker][0]);
+            pipes[worker][0] = -1;
+            if (!ok) {
+                int other;
+                for (other = 0; other < spawned; ++other) {
+                    kill(pids[other], SIGTERM);
+                }
+                break;
+            }
+        }
+    }
+    close_worker_pipes(pipes, workers);
+
+    for (worker = 0; worker < spawned; ++worker) {
+        int status;
+        pid_t waited;
+        do {
+            waited = waitpid(pids[worker], &status, 0);
+        } while (waited < 0 && errno == EINTR);
+        if (waited != pids[worker] || !WIFEXITED(status) ||
+            WEXITSTATUS(status) != EXIT_SUCCESS) {
+            ok = 0;
+        }
+    }
+    if (!ok || spawned != workers) return 0;
+    for (index = 0; index < limit; ++index) {
+        if (!seen[index]) return 0;
+        add_result(total, &per_case[index]);
+    }
+    return 1;
+}
+
+static int parse_integer(const char *text, int minimum, int maximum,
+                         int *value)
+{
+    char *end;
+    long parsed;
+    errno = 0;
+    parsed = strtol(text, &end, 10);
+    if (errno != 0 || end == text || *end != '\0' ||
+        parsed < minimum || parsed > maximum) {
+        return 0;
+    }
+    *value = (int)parsed;
+    return 1;
+}
+
+static int automatic_jobs(int *jobs)
+{
+    const char *configured = getenv("ZERO_QUANTITY_JOBS");
+    long online;
+    if (configured != NULL) {
+        return parse_integer(configured, 1, MAX_JOBS, jobs);
+    }
+    online = sysconf(_SC_NPROCESSORS_ONLN);
+    if (online < 1) online = 1;
+    if (online > MAX_JOBS) online = MAX_JOBS;
+    *jobs = (int)online;
+    return 1;
+}
+
 static int write_json(const char *path, const char *model,
                       const RequestResult *result)
 {
@@ -353,31 +568,49 @@ int main(int argc, char **argv)
     int case_count = 0;
     int limit = MAX_CASES;
     int samples = 0;
+    int jobs = 0;
+    int jobs_configured = 0;
     int index;
-    if ((argc != 5 && argc != 7) ||
+    if (argc < 5 ||
         (strcmp(argv[3], "--json") != 0 &&
-         strcmp(argv[3], "--samples") != 0) ||
-        (argc == 7 && strcmp(argv[5], "--limit") != 0)) {
+         strcmp(argv[3], "--samples") != 0)) {
+usage:
         fprintf(stderr, "usage: %s MODEL quantity-request.tsv --json OUTPUT\n"
-                        "       %s MODEL quantity-request.tsv --json OUTPUT --limit N\n"
+                        "       %s MODEL quantity-request.tsv --json OUTPUT "
+                        "[--limit N] [--jobs N]\n"
                         "       %s MODEL quantity-request.tsv --samples N\n",
                 argv[0], argv[0], argv[0]);
         return EXIT_FAILURE;
     }
     if (strcmp(argv[3], "--samples") == 0) {
-        char *end;
-        long requested = strtol(argv[4], &end, 10);
-        if (end == argv[4] || *end != '\0' || requested < 1 ||
-            requested > 100) return EXIT_FAILURE;
-        limit = (int)requested;
+        if (argc != 5 || !parse_integer(argv[4], 1, 100, &limit)) goto usage;
         samples = 1;
-    }
-    if (argc == 7) {
-        char *end;
-        long requested = strtol(argv[6], &end, 10);
-        if (end == argv[6] || *end != '\0' || requested < 1 ||
-            requested > MAX_CASES) return EXIT_FAILURE;
-        limit = (int)requested;
+        jobs = 1;
+    } else {
+        int limit_configured = 0;
+        if (argc % 2 == 0) goto usage;
+        for (index = 5; index < argc; index += 2) {
+            if (strcmp(argv[index], "--limit") == 0 && !limit_configured) {
+                if (!parse_integer(argv[index + 1], 1, MAX_CASES, &limit)) {
+                    goto usage;
+                }
+                limit_configured = 1;
+            } else if (strcmp(argv[index], "--jobs") == 0 &&
+                       !jobs_configured) {
+                if (!parse_integer(argv[index + 1], 1, MAX_JOBS, &jobs)) {
+                    goto usage;
+                }
+                jobs_configured = 1;
+            } else {
+                goto usage;
+            }
+        }
+        if (!jobs_configured && !automatic_jobs(&jobs)) {
+            fprintf(stderr,
+                    "error: ZERO_QUANTITY_JOBS must be an integer from 1 to %d\n",
+                    MAX_JOBS);
+            return EXIT_FAILURE;
+        }
     }
     if (!read_tsv(argv[2], cases, &case_count)) {
         fprintf(stderr, "error: cannot parse %s\n", argv[2]);
@@ -392,8 +625,17 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     if (limit > case_count) limit = case_count;
-    for (index = 0; index < limit; ++index) {
-        evaluate_case(&cases[index], &result, samples);
+    if (jobs > limit && limit > 0) jobs = limit;
+    if (samples || jobs == 1 || limit == 0) {
+        for (index = 0; index < limit; ++index) {
+            RequestResult item = {0};
+            evaluate_case(&cases[index], &item, samples);
+            add_result(&result, &item);
+        }
+    } else if (!evaluate_parallel(cases, limit, jobs, &result)) {
+        free(model_data);
+        fprintf(stderr, "error: parallel quantity evaluation failed\n");
+        return EXIT_FAILURE;
     }
     printf("quantity request exact %d/%d operation %d/%d arguments %d/%d "
            "commit %d/%d oracle %d/%d mutations %d bits %.4f\n",
