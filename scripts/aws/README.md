@@ -1,7 +1,13 @@
 # AWS experiment runner
 
-There is currently no authorized compute workflow. The one-time diagnostic
-`openblas-e2e-calibration-v1` consumed its 25-minute/$0.29 authorization after
+The bounded `zero4-q26r-aws-v1` workflow is authorized for one combined launch
+of seeds 1 and 3. Each seed receives an independent `c6i.4xlarge` instance
+with a 13,620-second/$2.58 hard cap; the combined ceiling is 27,240 seconds and
+$5.16. GitHub Actions launches and later collects, but never hosts or waits
+through the long computation.
+
+The one-time diagnostic `openblas-e2e-calibration-v1` consumed its
+25-minute/$0.29 authorization after
 100 accepted optimizer updates and four sentinel evaluations, during the first
 500-case full evaluation. Its `COMPLETED` sentinel and S3 lock prevent another
 launch. It did not invoke the scientific driver or evaluate the promotion
@@ -10,6 +16,10 @@ split. The prior `openblas-pilot-v1` completed 97 attempts inside its
 prevent another launch.
 The former unbudgeted Q2.2-R/Q2.6-R launcher is retired after a frozen
 portable-C Q2.6-R seed reached its 11-hour limit without producing a result.
+The replacement Q2.6-R route is `q26r-seed-user-data.sh` plus
+`q26r-seed.sh`, launched by the short-lived `q26r-aws-launch.yml` workflow.
+It runs seeds 1 and 3 on separate AWS instances with independent hard caps;
+GitHub Actions does not wait for the long computation.
 Historical `train.sh`, `user-data.sh`, and the collection workflow remain for
 provenance and diagnostics; they are not launch paths.
 
@@ -62,8 +72,9 @@ The diagnostic driver records separate timings for cold start and build,
 baseline replay evaluations, optimizer transactions, four recovery/sentinel
 evaluations, one full evaluation, checkpoint copies, and verification. A
 bounded result shows the serial quantity evaluator dominates end-to-end cost.
-The planning estimate is about 7h46m/$5.28 per seed before contingency. Q2.6-R
-still requires a new combined budget and manual authorization.
+The planning estimate was about 7h46m/$5.28 per seed before contingency. The
+later parallel-evaluator calibration removed that bottleneck and supplied the
+projection used by the authorized combined Q2.6-R budget.
 
 ## Completed pilot lifecycle
 
@@ -95,8 +106,9 @@ Run the validators before dispatch:
 make experiment-budget-check
 ```
 
-The collection workflow is retained only for already-launched historical
-instances. It never starts compute.
+The historical collection workflow is retained only for already-launched
+historical instances. The bounded Q2.6-R collector is separate and also never
+starts compute.
 
 The GitHub role can use regional AMIs, subnets, security groups, network
 interfaces, and volumes only as resources of `RunInstances`. The separately

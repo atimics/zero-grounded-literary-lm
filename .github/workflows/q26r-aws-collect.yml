@@ -1,0 +1,250 @@
+name: Collect bounded Q2.6-R AWS results
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Q2.6-R AWS launch workflow run ID'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: zero-q26r-aws-v1
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: AWS · collect Q2.6-R seeds 1 and 3
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ZERO_COLLECTOR_RUN_ID: ${{ github.run_id }}
+      ZERO_COLLECTOR_COMMIT: ${{ github.sha }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q26r-v1/aws-v1/budget.json
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate collector inputs
+        run: |
+          [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          test ! -e benchmarks/zero4-q26r-v1/aws-v1/COMPLETED
+          test ! -e benchmarks/zero4-q26r-v1/seed1/result.json
+          test ! -e benchmarks/zero4-q26r-v1/seed3/result.json
+          node scripts/check_q26r_aws_budget.mjs "$ZERO_BUDGET_FILE"
+          echo "ZERO_BUDGET_SHA256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" \
+            >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Read and verify launch receipt
+        run: |
+          mkdir -p training-diagnostics
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/launch.json" \
+            training-diagnostics/launch.json \
+            --no-cli-pager
+          jq -e \
+            --arg run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '.schema == "zero.q26r_aws_launch.v1"
+             and .experiment == "zero4-q26r-aws-v1"
+             and .ci_run_id == $run_id
+             and .budget_sha256 == $budget_sha256
+             and .instance_type == "c6i.4xlarge"
+             and ([.instances[].seed] == [1, 3])
+             and (.instances | length == 2)' \
+            training-diagnostics/launch.json >/dev/null
+          source_commit=$(jq -r '.git_commit' training-diagnostics/launch.json)
+          [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]]
+          git cat-file -e "${source_commit}^{commit}"
+          git switch --detach "$source_commit"
+          node scripts/check_q26r_aws_budget.mjs "$ZERO_BUDGET_FILE"
+          test "$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" = \
+            "$ZERO_BUDGET_SHA256"
+          echo "ZERO_SOURCE_COMMIT=$source_commit" >> "$GITHUB_ENV"
+
+      - name: Require both immutable AWS instances to be terminal
+        run: |
+          for seed in 1 3; do
+            instance=$(jq -r \
+              --argjson seed "$seed" \
+              '.instances[] | select(.seed == $seed) | .instance_id' \
+              training-diagnostics/launch.json)
+            [[ "$instance" =~ ^i-[0-9a-f]+$ ]]
+            instance_type=$(aws ec2 describe-instances \
+              --instance-ids "$instance" \
+              --query 'Reservations[0].Instances[0].InstanceType' \
+              --output text --no-cli-pager)
+            test "$instance_type" = c6i.4xlarge
+            state=$(aws ec2 describe-instances \
+              --instance-ids "$instance" \
+              --query 'Reservations[0].Instances[0].State.Name' \
+              --output text --no-cli-pager)
+            case "$state" in
+              terminated|stopped|stopping|shutting-down) ;;
+              pending|running)
+                echo "Seed $seed is still running on $instance; collector will not wait"
+                exit 1
+                ;;
+              *) echo "Unexpected EC2 state for seed $seed: $state"; exit 1 ;;
+            esac
+            expect_tag() {
+              key=$1
+              expected=$2
+              actual=$(aws ec2 describe-instances \
+                --instance-ids "$instance" \
+                --query "Reservations[0].Instances[0].Tags[?Key=='${key}']|[0].Value" \
+                --output text --no-cli-pager)
+              test "$actual" = "$expected"
+            }
+            expect_tag Project zero
+            expect_tag Experiment zero4-q26r-aws-v1
+            expect_tag Seed "$seed"
+            expect_tag Commit "$ZERO_SOURCE_COMMIT"
+            expect_tag RunId "$ZERO_SOURCE_RUN_ID"
+            expect_tag BudgetSha256 "$ZERO_BUDGET_SHA256"
+            aws ec2 get-console-output \
+              --instance-id "$instance" --latest \
+              --query Output --output text --no-cli-pager \
+              > "training-diagnostics/seed${seed}-ec2-console.log" || true
+          done
+
+      - name: Collect and verify both scientific results
+        run: |
+          for seed in 1 3; do
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed${seed}/status.json" \
+              "training-diagnostics/seed${seed}-status.json" \
+              --no-cli-pager
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed${seed}/zero-q26r-seed${seed}.log" \
+              "training-diagnostics/seed${seed}-workload.log" \
+              --no-cli-pager || true
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed${seed}/zero-q26r-bootstrap.log" \
+              "training-diagnostics/seed${seed}-bootstrap.log" \
+              --no-cli-pager || true
+            jq -e \
+              --argjson seed "$seed" \
+              --arg commit "$ZERO_SOURCE_COMMIT" \
+              --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+              '.schema == "zero.aws_q26r_seed_status.v1"
+               and .experiment == "zero4-q26r-aws-v1"
+               and .seed == $seed
+               and .status == "complete"
+               and .exit_code == 0
+               and .git_commit == $commit
+               and .budget_sha256 == $budget_sha256
+               and .scientific_result_available == true
+               and (.decision == "go" or .decision == "no-go")
+               and .max_instance_seconds == 13620
+               and .max_compute_usd == 2.58
+               and .observed_instance_seconds <= 13620
+               and .training_backend == "OpenBLAS"
+               and .openblas_threads == 16
+               and .quantity_evaluator_jobs == 16' \
+              "training-diagnostics/seed${seed}-status.json" >/dev/null
+            seed_root="benchmarks/zero4-q26r-v1/seed${seed}"
+            mkdir -p "$seed_root"
+            aws s3 sync \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed${seed}/results/" \
+              "$seed_root/" \
+              --no-cli-pager
+            test "$(sha256sum "$seed_root/result.json" | awk '{print $1}')" = \
+              "$(jq -r '.result_sha256' "training-diagnostics/seed${seed}-status.json")"
+            node scripts/check_zero4_q26r.mjs \
+              benchmarks/zero4-q26r-v1/contract.json \
+              "$seed_root/optimizer-attempts.jsonl" \
+              "$seed_root/result.json"
+          done
+          node scripts/aggregate_zero4_q26r.mjs benchmarks/zero4-q26r-v1
+
+      - name: Freeze completion and provenance
+        run: |
+          cp training-diagnostics/launch.json \
+            "benchmarks/zero4-q26r-v1/aws-v1/launch-${ZERO_SOURCE_RUN_ID}.json"
+          cp training-diagnostics/seed1-status.json \
+            "benchmarks/zero4-q26r-v1/aws-v1/seed1-status-${ZERO_SOURCE_RUN_ID}.json"
+          cp training-diagnostics/seed3-status.json \
+            "benchmarks/zero4-q26r-v1/aws-v1/seed3-status-${ZERO_SOURCE_RUN_ID}.json"
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          root = Path("benchmarks/zero4-q26r-v1/aws-v1")
+          statuses = {}
+          for seed in (1, 3):
+              path = root / f"seed{seed}-status-{os.environ['ZERO_SOURCE_RUN_ID']}.json"
+              statuses[str(seed)] = {
+                  "path": str(path),
+                  "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+              }
+          completion = {
+              "schema": "zero.q26r_aws_completion.v1",
+              "experiment": "zero4-q26r-aws-v1",
+              "completed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "source_run_id": os.environ["ZERO_SOURCE_RUN_ID"],
+              "source_commit": os.environ["ZERO_SOURCE_COMMIT"],
+              "collector_run_id": os.environ["ZERO_COLLECTOR_RUN_ID"],
+              "collector_commit": os.environ["ZERO_COLLECTOR_COMMIT"],
+              "budget_file": os.environ["ZERO_BUDGET_FILE"],
+              "budget_sha256": os.environ["ZERO_BUDGET_SHA256"],
+              "seeds": [1, 3],
+              "statuses": statuses,
+              "new_training_started_by_collector": False,
+          }
+          (root / "COMPLETED").write_text(
+              json.dumps(completion, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          node scripts/check_q26r_aws_completion.mjs
+
+      - name: Upload collection diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zero-q26r-collection-${{ github.run_id }}
+          path: training-diagnostics/
+          if-no-files-found: warn
+
+      - name: Publish results branch and pull request
+        run: |
+          branch="results/q26r-aws-${ZERO_SOURCE_RUN_ID}"
+          git switch -c "$branch"
+          git config user.name zero-ci
+          git config user.email ci@zero.local
+          git add benchmarks/zero4-q26r-v1
+          git commit -m "results: collect bounded Q2.6-R seeds [run ${ZERO_SOURCE_RUN_ID}]"
+          git push origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "results: bounded Q2.6-R seeds 1 and 3" \
+            --body "Collects both independently capped AWS Q2.6-R seed results from launch workflow run ${ZERO_SOURCE_RUN_ID}, verifies each with the frozen checker, and records the family aggregate."

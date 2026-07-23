@@ -1073,6 +1073,12 @@ zero4-q26r-aggregate:
 
 experiment-budget-check:
 	node scripts/check_experiment_budget.mjs --self-test
+	node scripts/check_q26r_aws_budget.mjs --self-test
+	node scripts/check_q26r_aws_budget.mjs \
+		benchmarks/zero4-q26r-v1/aws-v1/budget.json
+	node scripts/check_q26r_aws_completion.mjs --self-test
+	test ! -e benchmarks/zero4-q26r-v1/aws-v1/COMPLETED || \
+		node scripts/check_q26r_aws_completion.mjs
 	node scripts/check_parallel_quantity_eval_budget.mjs --self-test
 	node scripts/check_parallel_quantity_eval_budget.mjs \
 		benchmarks/parallel-quantity-eval-calibration-v1/budget.json
