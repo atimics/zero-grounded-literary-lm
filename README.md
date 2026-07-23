@@ -252,10 +252,12 @@ the serial reference path. Sample-printing mode remains serial.
 
 This is an execution optimization, not new scientific evidence. The
 [`parallel-quantity-eval-calibration-v1`](benchmarks/parallel-quantity-eval-calibration-v1/README.md)
-contract authorizes one diagnostic AWS execution under the same
-25-minute/$0.29 ceiling. It measures 64- and 500-case serial/parallel pairs,
-requires byte-identical outputs, and cannot train, open promotion data, or
-authorize Q2.6-R. Run the local contract checks with:
+completed one diagnostic AWS execution under the same 25-minute/$0.29 ceiling.
+The 16-worker evaluator was 13.52× faster on 64 cases and 13.62× faster on 500,
+with byte-identical serial/parallel JSON. The component projection is now
+3h09m08s/$2.14 per seed before contingency, or 7h34m/$5.16 for both remaining
+seeds with 20% contingency. The run did not train or open promotion data, and
+Q2.6-R remains unauthorized. Run the local contract checks with:
 
 ```sh
 make experiment-budget-check

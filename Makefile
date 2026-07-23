@@ -1077,6 +1077,12 @@ experiment-budget-check:
 	node scripts/check_parallel_quantity_eval_budget.mjs \
 		benchmarks/parallel-quantity-eval-calibration-v1/budget.json
 	node scripts/check_parallel_quantity_eval_result.mjs --self-test
+	node scripts/check_parallel_quantity_eval_result.mjs \
+		benchmarks/parallel-quantity-eval-calibration-v1/budget.json \
+		benchmarks/parallel-quantity-eval-calibration-v1/result-30044123890.json \
+		benchmarks/parallel-quantity-eval-calibration-v1/status-30044123890.json \
+		--commit f849fe8c8c1a448dcb6b24783e7edfdf56a5e92b \
+		--budget-sha256 a8336e10316821c3420eaf9ad9a968319c4dc523302eec0300191259f7877962
 	node scripts/check_q26_e2e_calibration_budget.mjs --self-test
 	node scripts/check_q26_e2e_calibration_budget.mjs \
 		benchmarks/openblas-e2e-calibration-v1/budget.json

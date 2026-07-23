@@ -1,0 +1,11 @@
+{
+  "schema": "zero.aws_quantity_eval_calibration_status.v1",
+  "status": "complete",
+  "exit_code": 0,
+  "started_at": "2026-07-23T20:57:20Z",
+  "finished_at": "2026-07-23T21:09:53Z",
+  "git_commit": "f849fe8c8c1a448dcb6b24783e7edfdf56a5e92b",
+  "budget_sha256": "a8336e10316821c3420eaf9ad9a968319c4dc523302eec0300191259f7877962",
+  "scientific_inference_allowed": false,
+  "result": "results/result.json"
+}

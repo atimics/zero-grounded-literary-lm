@@ -1,0 +1,98 @@
+{
+  "schema": "zero.quantity_eval_calibration_result.v1",
+  "id": "parallel-quantity-eval-calibration-v1",
+  "status": "complete",
+  "started_at": "2026-07-23T20:57:20Z",
+  "finished_at": "2026-07-23T21:09:53Z",
+  "git_commit": "f849fe8c8c1a448dcb6b24783e7edfdf56a5e92b",
+  "budget_sha256": "a8336e10316821c3420eaf9ad9a968319c4dc523302eec0300191259f7877962",
+  "scientific_inference_allowed": false,
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "cpu_architecture": "x86_64",
+    "online_vcpus": 16,
+    "quantity_backend": "portable-quantized-inference",
+    "on_demand_usd_per_hour": 0.68
+  },
+  "budget": {
+    "max_instance_seconds": 1500,
+    "workload_timeout_seconds": 1440,
+    "max_compute_usd": 0.29
+  },
+  "measurement": {
+    "warmup_cases": 1,
+    "promotion_evaluations": 0,
+    "optimizer_attempts": 0,
+    "cold_start_build_and_generation_seconds": 93,
+    "total_observed_instance_seconds": 838,
+    "driver_exit_code": 0,
+    "evaluations": {
+      "sentinel_serial": {
+        "cases": 64,
+        "jobs": 1,
+        "wall_seconds": 78.358596784,
+        "cases_per_second": 0.8167578622728493,
+        "json_sha256": "9457e54429ae925bfc077969beb701d248af087d5fc47449ca5262eb47213381"
+      },
+      "sentinel_parallel": {
+        "cases": 64,
+        "jobs": 16,
+        "wall_seconds": 5.797888176,
+        "cases_per_second": 11.038501960925023,
+        "json_sha256": "9457e54429ae925bfc077969beb701d248af087d5fc47449ca5262eb47213381"
+      },
+      "public_serial": {
+        "cases": 500,
+        "jobs": 1,
+        "wall_seconds": 612.342802969,
+        "cases_per_second": 0.8165360931421164,
+        "json_sha256": "d6781c58aed0985bb4da3333de8579cc0f9970203cded061f3c8f67e4c6d098a"
+      },
+      "public_parallel": {
+        "cases": 500,
+        "jobs": 16,
+        "wall_seconds": 44.954415672,
+        "cases_per_second": 11.122377913843657,
+        "json_sha256": "d6781c58aed0985bb4da3333de8579cc0f9970203cded061f3c8f67e4c6d098a"
+      }
+    },
+    "parity": {
+      "sentinel": true,
+      "public": true
+    },
+    "speedup": {
+      "sentinel": 13.515023816492455,
+      "public": 13.621416134887047
+    }
+  },
+  "projection": {
+    "available": true,
+    "method": "component projection using the prior 100-attempt Q2.6 end-to-end calibration with measured parallel quantity evaluation substituted at 56 sentinel, 14 full, and one finalization evaluation per seed",
+    "target_optimizer_attempts_per_seed": 1400,
+    "target_seed_count": 2,
+    "projected_sentinel_evaluations_per_seed": 56,
+    "projected_full_evaluations_per_seed": 14,
+    "estimated_components_seconds_per_seed": {
+      "cold_start_build_and_assets": 92,
+      "baseline_replay_evaluations": 13.167,
+      "optimizer_transactions": 9875.348000000002,
+      "recovery_checkpoints": 7.5040000000000004,
+      "sentinel_quantity_evaluations": 324.681737856,
+      "sentinel_replay_evaluations": 155.456,
+      "full_quantity_evaluations": 629.3618194080001,
+      "full_replay_evaluations": 145.124,
+      "finalization_quantity_allowance": 44.954415672,
+      "fixed_driver_and_publication_allowance": 60
+    },
+    "estimated_total_seconds_per_seed": 11347.596972936002,
+    "estimated_compute_usd_per_seed": 2.1434349837768005,
+    "estimated_total_seconds_two_seeds": 22695.193945872004,
+    "estimated_compute_usd_two_seeds": 4.286869967553601,
+    "suggested_budget_seconds_per_seed_with_20_percent_contingency": 13620,
+    "suggested_budget_usd_per_seed_with_20_percent_contingency": 2.58,
+    "suggested_budget_seconds_two_seeds_with_20_percent_contingency": 27240,
+    "suggested_budget_usd_two_seeds_with_20_percent_contingency": 5.16
+  }
+}
