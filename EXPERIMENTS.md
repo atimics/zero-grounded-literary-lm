@@ -166,6 +166,6 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Student initialization and frozen teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
 - **Latest completed experiment**: Q2.6 seed 2 (go; selected update 500, public and promotion pass)
 - **Latest execution outcome**: Q2.6-R seed 1 timed out after 11 hours without a valid result; seed 3 was cancelled before launch
-- **Next experiment**: diagnostic-only `openblas-calibration-v1`, capped at five EC2 minutes and $0.06
+- **Next experiment**: diagnostic-only `openblas-e2e-calibration-v1`, capped at 25 EC2 minutes and $0.29; it prices the frozen driver's evaluation overhead before a combined two-seed Q2.6-R budget
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: Seed-2 promotion passed, but family promotion is unresolved because seeds 1 and 3 remain unobserved. ZERO.3 remains current.

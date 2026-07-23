@@ -1055,6 +1055,11 @@ zero4-q26r-aggregate:
 
 experiment-budget-check:
 	node scripts/check_experiment_budget.mjs --self-test
+	node scripts/check_q26_e2e_calibration_budget.mjs --self-test
+	node scripts/check_q26_e2e_calibration_budget.mjs \
+		benchmarks/openblas-e2e-calibration-v1/budget.json
+	node scripts/check_q26_e2e_calibration_result.mjs --self-test
+	node scripts/calibrate_zero4_q26_e2e.mjs --self-test
 	node scripts/check_experiment_budget.mjs \
 		benchmarks/openblas-calibration-v1/budget.json --stage calibration
 	node scripts/check_experiment_budget.mjs \
