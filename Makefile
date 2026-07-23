@@ -129,6 +129,7 @@ endif
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
+	experiment-budget-check \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
 	monkey-consolidate monkey-literary monkey-rebalance monkey-train \
@@ -1052,6 +1053,12 @@ zero4-q26r: zero4-q26r-train
 zero4-q26r-aggregate:
 	node scripts/aggregate_zero4_q26r.mjs benchmarks/zero4-q26r-v1
 
+experiment-budget-check:
+	node scripts/check_experiment_budget.mjs --self-test
+	node scripts/check_experiment_budget.mjs \
+		benchmarks/openblas-calibration-v1/budget.json --stage calibration
+	node scripts/check_openblas_calibration_result.mjs --self-test
+
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1
 
@@ -1418,6 +1425,7 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 	$(MAKE) zero4-q25-check >/dev/null
 	$(MAKE) zero4-q26-check >/dev/null
 	$(MAKE) zero4-q26r-check >/dev/null
+	$(MAKE) experiment-budget-check >/dev/null
 	python3 scripts/compile_result.py --self-test >/dev/null
 	./logic_corpus --self-test >/dev/null
 	./brainfuck_corpus --self-test >/dev/null

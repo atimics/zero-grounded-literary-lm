@@ -1,8 +1,9 @@
 # ZERO.4 — Three Teachers, Many Channels
 
 Status: teacher stable frozen; Q2.6 diagnostic seed 2 passed its public and
-promotion gates; Q2.6-R seeds 1 and 3 are prospectively registered and full
-ZERO.4 promotion remains pending, 2026-07-19.
+promotion gates; Q2.6-R execution is cancelled for cost with both replication
+seeds still scientifically unobserved; full ZERO.4 promotion remains
+unresolved, 2026-07-23.
 
 ZERO.4 has exactly three teacher models: ZERO.1, ZERO.2, and ZERO.3.
 Every faculty channel owns a channel-specific policy for consulting those same
@@ -820,3 +821,17 @@ model is published at SHA-256
 `44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50`,
 while seeds 1 and 3 still require prospective replication under the unchanged
 design. ZERO.3 remains current until that family decision is complete.
+
+### Q2.6-R execution outcome
+
+The first valid-venue attempt did not produce a scientific result. AWS seed 1
+ran the frozen source commit on a `c6i.4xlarge`, whose Linux build used the
+portable C backend, and reached the independent 11-hour execution limit.
+Seed 3 was never launched. The timeout is an execution failure: it does not
+enter the family conjunction and does not revise the Q2.6 seed-2 result.
+
+The unbudgeted long-run workflow is retired. Before any new replication budget
+is considered, `openblas-calibration-v1` must measure the current OpenBLAS
+optimizer path under a five-minute, $0.06 cap. That diagnostic uses seed 89 and
+cannot produce go, no-go, or promotion evidence. Pilot and full stages remain
+disabled until explicitly authorized from the measured projection.

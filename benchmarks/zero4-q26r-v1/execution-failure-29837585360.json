@@ -1,0 +1,37 @@
+{
+  "schema": "zero.aws_execution_failure.v1",
+  "experiment": "q26r",
+  "seed": 1,
+  "scientific_result_observed": false,
+  "scientific_result_accepted": false,
+  "family_inference": null,
+  "status": "execution-failure",
+  "reason": "The frozen scalar-Linux workload reached its independent 11-hour wall-clock limit before producing a seed result.",
+  "source": {
+    "git_commit": "3ee802c29ddf47982477a6b6dd635eaedede7bb7",
+    "orchestrator_commit": "9c61ac68ae545660b6bd4c5bdc9d6268f89efbf9",
+    "ci_run_id": "29837585360",
+    "launch_receipt": "launch-29837585360.json"
+  },
+  "aws": {
+    "instance_id": "i-01ea4ddc5f8238ef2",
+    "instance_type": "c6i.4xlarge",
+    "ami": "ami-052355af2a014bd2c",
+    "region": "us-east-1",
+    "backend": "portable-C",
+    "started_at": "2026-07-21T14:07:57Z",
+    "finished_at": "2026-07-22T01:07:57Z",
+    "wall_seconds": 39600,
+    "wall_limit_seconds": 39600,
+    "on_demand_usd_per_hour": 0.68,
+    "compute_cost_upper_bound_usd": 7.48
+  },
+  "follow_up": {
+    "q26r_seed1": "unobserved",
+    "q26r_seed3": "cancelled-before-launch",
+    "unbudgeted_training_workflow": "retired",
+    "next_experiment": "openblas-calibration-v1",
+    "next_experiment_max_instance_seconds": 300,
+    "next_experiment_max_compute_usd": 0.06
+  }
+}
