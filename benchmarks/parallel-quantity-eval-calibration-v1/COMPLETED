@@ -1,0 +1,10 @@
+{
+  "schema": "zero.experiment_completion.v1",
+  "id": "parallel-quantity-eval-calibration-v1",
+  "github_run_id": "30044123890",
+  "git_commit": "f849fe8c8c1a448dcb6b24783e7edfdf56a5e92b",
+  "status": "complete",
+  "result": "result-30044123890.json",
+  "authorization_consumed": true,
+  "scientific_inference_allowed": false
+}

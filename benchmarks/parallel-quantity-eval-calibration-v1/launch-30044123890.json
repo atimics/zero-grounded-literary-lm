@@ -1,0 +1,19 @@
+{
+  "schema": "zero.quantity_eval_calibration_launch.v1",
+  "experiment": "parallel-quantity-eval-calibration-v1",
+  "instance_id": "i-0fc7198a1994e99e9",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "f849fe8c8c1a448dcb6b24783e7edfdf56a5e92b",
+  "ci_run_id": "30044123890",
+  "budget_file": "benchmarks/parallel-quantity-eval-calibration-v1/budget.json",
+  "budget_sha256": "a8336e10316821c3420eaf9ad9a968319c4dc523302eec0300191259f7877962",
+  "launch_epoch": 1784840155,
+  "max_instance_seconds": 1500,
+  "max_compute_usd": 0.29,
+  "serial_jobs": 1,
+  "parallel_jobs": 16,
+  "optimizer_attempts": 0,
+  "promotion_evaluations": 0
+}
