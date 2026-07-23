@@ -6,10 +6,12 @@ set -Eeuo pipefail
 : "${ZERO_BUCKET:?ZERO_BUCKET is required}"
 : "${ZERO_RUN_ID:?ZERO_RUN_ID is required}"
 : "${ZERO_COMMIT:?ZERO_COMMIT is required}"
+: "${ZERO_BUDGET_FILE:?ZERO_BUDGET_FILE is required}"
 : "${ZERO_BUDGET_SHA256:?ZERO_BUDGET_SHA256 is required}"
 : "${ZERO_LAUNCH_EPOCH:?ZERO_LAUNCH_EPOCH is required}"
 : "${ZERO_WORKLOAD_DEADLINE_EPOCH:?ZERO_WORKLOAD_DEADLINE_EPOCH is required}"
 : "${ZERO_HOURLY_RATE_USD:?ZERO_HOURLY_RATE_USD is required}"
+: "${ZERO_MAX_COMPUTE_USD:?ZERO_MAX_COMPUTE_USD is required}"
 
 RESULTS_ROOT=/tmp/zero-openblas-calibration
 STATUS_FILE="$RESULTS_ROOT/status.json"
@@ -123,10 +125,10 @@ aws s3 cp \
 tar -xzf /tmp/zero-source.tar.gz -C /tmp/zero
 cd /tmp/zero
 
-actual_budget_sha256=$(sha256sum benchmarks/openblas-calibration-v1/budget.json | awk '{print $1}')
+actual_budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
 test "$actual_budget_sha256" = "$ZERO_BUDGET_SHA256"
 node scripts/check_experiment_budget.mjs \
-  benchmarks/openblas-calibration-v1/budget.json --stage calibration
+  "$ZERO_BUDGET_FILE" --stage calibration
 
 PHASE=assets
 publish_heartbeat
@@ -215,7 +217,7 @@ if [ "$remaining" -gt 0 ]; then
       --patience 0 --seed 89 --save "$RESULTS_ROOT/active.ckpt" \
       --tokens 0 --transaction-mode cumulative-tangent \
       --transaction-log "$ATTEMPT_LOG" \
-      --transaction-phase calibration --transaction-probe 1 \
+      --transaction-phase acquisition --transaction-probe 1 \
       --transaction-budget 0.015 --transaction-max-rejections 8 \
     2>&1 | tee "$TRAIN_LOG"
   train_exit=${PIPESTATUS[0]}
@@ -286,7 +288,7 @@ result = {
     "budget": {
         "max_instance_seconds": int(os.environ["ZERO_MAX_INSTANCE_SECONDS"]),
         "workload_timeout_seconds": int(os.environ["ZERO_WORKLOAD_TIMEOUT_SECONDS"]),
-        "max_compute_usd": 0.06,
+        "max_compute_usd": float(os.environ["ZERO_MAX_COMPUTE_USD"]),
     },
     "measurement": {
         "seed": 89,

@@ -15,6 +15,11 @@ function sha256(file) {
   return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
+function executableBudget(budget) {
+  if (budget.schema === "zero.experiment_retry_budget.v1") return budget.execution;
+  return budget.stages.find((stage) => stage.id === "calibration");
+}
+
 export function validateResult(budget, result, status, expected = {}) {
   assert(result?.schema === "zero.openblas_calibration_result.v1", "invalid calibration result schema");
   assert(result.id === budget.id, "calibration result id drifted");
@@ -29,7 +34,7 @@ export function validateResult(budget, result, status, expected = {}) {
   if (expected.commit) assert(result.git_commit === expected.commit, "result commit mismatch");
   if (expected.budgetSha256) assert(result.budget_sha256 === expected.budgetSha256, "result budget hash mismatch");
 
-  const calibration = budget.stages.find((stage) => stage.id === "calibration");
+  const calibration = executableBudget(budget);
   assert(result.budget?.max_instance_seconds === calibration.max_instance_seconds, "instance cap drifted");
   assert(result.budget?.workload_timeout_seconds === calibration.workload_timeout_seconds, "workload cap drifted");
   assert(result.budget?.max_compute_usd === calibration.max_compute_usd, "compute cap drifted");
@@ -75,63 +80,69 @@ export function validateResult(budget, result, status, expected = {}) {
 }
 
 function selfTest() {
-  const budgetPath = new URL("../benchmarks/openblas-calibration-v1/budget.json", import.meta.url);
-  const budget = JSON.parse(fs.readFileSync(budgetPath, "utf8"));
-  const budgetSha256 = sha256(budgetPath);
-  const result = {
-    schema: "zero.openblas_calibration_result.v1",
-    id: budget.id,
-    status: "budget-exhausted",
-    git_commit: "a".repeat(40),
-    budget_sha256: budgetSha256,
-    scientific_inference_allowed: false,
-    venue: {
-      provider: "aws",
-      region: budget.venue.region,
-      instance_type: budget.venue.instance_type,
-      backend: "OpenBLAS",
-      openblas_threads: 16,
-      on_demand_usd_per_hour: 0.68,
-    },
-    budget: {
-      max_instance_seconds: 300,
-      workload_timeout_seconds: 240,
-      max_compute_usd: 0.06,
-    },
-    measurement: {
-      seed: 89,
-      attempt_cap: 8,
-      completed_optimizer_attempts: 2,
-      total_observed_instance_seconds: 290,
-      training_exit_code: 124,
-    },
-    projection: {
-      target_optimizer_attempts: 1400,
-      estimated_wall_seconds: 70000,
-      estimated_compute_usd: 13.22,
-    },
-  };
-  const status = {
-    schema: "zero.aws_openblas_calibration_status.v1",
-    status: result.status,
-    exit_code: 124,
-    git_commit: result.git_commit,
-    budget_sha256: result.budget_sha256,
-    scientific_inference_allowed: false,
-  };
-  validateResult(budget, result, status, {
-    commit: result.git_commit,
-    budgetSha256,
-  });
-  const invalid = structuredClone(result);
-  invalid.measurement.total_observed_instance_seconds = 301;
-  let rejected = false;
-  try {
-    validateResult(budget, invalid, status);
-  } catch {
-    rejected = true;
+  const paths = [
+    new URL("../benchmarks/openblas-calibration-v1/budget.json", import.meta.url),
+    new URL("../benchmarks/openblas-calibration-v1/retry-1-budget.json", import.meta.url),
+  ];
+  for (const budgetPath of paths) {
+    const budget = JSON.parse(fs.readFileSync(budgetPath, "utf8"));
+    const budgetSha256 = sha256(budgetPath);
+    const execution = executableBudget(budget);
+    const result = {
+      schema: "zero.openblas_calibration_result.v1",
+      id: budget.id,
+      status: "budget-exhausted",
+      git_commit: "a".repeat(40),
+      budget_sha256: budgetSha256,
+      scientific_inference_allowed: false,
+      venue: {
+        provider: "aws",
+        region: budget.venue.region,
+        instance_type: budget.venue.instance_type,
+        backend: "OpenBLAS",
+        openblas_threads: 16,
+        on_demand_usd_per_hour: 0.68,
+      },
+      budget: {
+        max_instance_seconds: execution.max_instance_seconds,
+        workload_timeout_seconds: execution.workload_timeout_seconds,
+        max_compute_usd: execution.max_compute_usd,
+      },
+      measurement: {
+        seed: 89,
+        attempt_cap: 8,
+        completed_optimizer_attempts: 2,
+        total_observed_instance_seconds: execution.max_instance_seconds - 10,
+        training_exit_code: 124,
+      },
+      projection: {
+        target_optimizer_attempts: 1400,
+        estimated_wall_seconds: 70000,
+        estimated_compute_usd: 13.22,
+      },
+    };
+    const status = {
+      schema: "zero.aws_openblas_calibration_status.v1",
+      status: result.status,
+      exit_code: 124,
+      git_commit: result.git_commit,
+      budget_sha256: result.budget_sha256,
+      scientific_inference_allowed: false,
+    };
+    validateResult(budget, result, status, {
+      commit: result.git_commit,
+      budgetSha256,
+    });
+    const invalid = structuredClone(result);
+    invalid.measurement.total_observed_instance_seconds = execution.max_instance_seconds + 1;
+    let rejected = false;
+    try {
+      validateResult(budget, invalid, status);
+    } catch {
+      rejected = true;
+    }
+    assert(rejected, `self-test failed to reject an over-budget ${budget.schema} result`);
   }
-  assert(rejected, "self-test failed to reject an over-budget result");
   console.log("OpenBLAS calibration result self-test passed");
 }
 

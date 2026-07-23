@@ -1,0 +1,61 @@
+{
+  "schema": "zero.experiment_retry_budget.v1",
+  "id": "openblas-calibration-v1",
+  "status": "preregistered",
+  "purpose": "Retry the diagnostic OpenBLAS calibration after correcting an infrastructure-only transaction-phase error, while remaining inside the original cumulative authorization.",
+  "scientific_inference_allowed": false,
+  "base_budget": {
+    "path": "benchmarks/openblas-calibration-v1/budget.json",
+    "sha256": "6036e379a9da0d05081d443e3c71074583ca0f976cfc14aab870d4cfd613fbc3",
+    "max_instance_seconds": 300,
+    "max_compute_usd": 0.06
+  },
+  "prior_execution": {
+    "github_run_id": "30003225539",
+    "failure_record": "benchmarks/openblas-calibration-v1/execution-failure-30003225539.json",
+    "status": "infrastructure-error",
+    "backend_observed": "OpenBLAS",
+    "completed_optimizer_attempts": 0,
+    "request_to_termination_seconds": 107,
+    "request_window_compute_usd": 0.02021111111111111
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "backend": "openblas",
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-23",
+    "price_source": "https://aws.amazon.com/ec2/pricing/on-demand/"
+  },
+  "workload": {
+    "source": "current workflow commit",
+    "optimizer": "ZERO.4-Q2.6 cumulative-tangent acquisition path",
+    "transaction_phase": "acquisition",
+    "seed": 89,
+    "maximum_optimizer_attempts": 8,
+    "batch": 2,
+    "openblas_threads": 16,
+    "outputs_are_diagnostic_only": true
+  },
+  "execution": {
+    "id": "calibration-retry-1",
+    "max_instance_seconds": 190,
+    "workload_timeout_seconds": 130,
+    "max_compute_usd": 0.04,
+    "requires_manual_approval": false,
+    "authorized_for_execution": true
+  },
+  "aggregate_ceiling": {
+    "max_instance_seconds": 297,
+    "request_window_compute_usd": 0.0561,
+    "declared_max_compute_usd": 0.06
+  },
+  "promotion_gate": {
+    "retry_must_observe_backend": "OpenBLAS",
+    "retry_must_publish_structured_status": true,
+    "pilot_requires_new_manual_authorization": true,
+    "full_requires_new_manual_authorization": true,
+    "scientific_contract_requires_separate_preregistration": true
+  }
+}
