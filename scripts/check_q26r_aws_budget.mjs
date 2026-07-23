@@ -2,7 +2,7 @@
 
 import crypto from "node:crypto";
 import fs from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 function fail(message) {
@@ -66,7 +66,13 @@ export function validateBudget(budget) {
     science.trainer_and_checkers_match_frozen_science_commit === true,
     "frozen science byte-identity is not asserted",
   );
-  if (fs.existsSync(".git")) {
+  const frozenCommitAvailable = fs.existsSync(".git")
+    && spawnSync(
+      "git",
+      ["cat-file", "-e", `${science.frozen_science_commit}^{commit}`],
+      { stdio: "ignore" },
+    ).status === 0;
+  if (frozenCommitAvailable) {
     for (const path of [
       science.trainer_path,
       science.replication_checker_path,
