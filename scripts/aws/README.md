@@ -58,6 +58,12 @@ pipeline, evaluates promotion only when authorized, uploads both scientific
 results and an explicit infrastructure status to S3, and terminates itself.
 Its independent 11-hour wall-clock limit prevents an orphaned training process.
 
+New scientific commits build the Linux trainer against OpenBLAS and assign all
+instance vCPUs through `OPENBLAS_NUM_THREADS`. Frozen commits retain their
+original backend: in particular, Q2.6-R remains pinned to the scalar Linux
+implementation in `3ee802c` so an orchestration update cannot change its
+floating-point reduction order.
+
 After the instance is terminal, dispatch
 `.github/workflows/collect-training.yml` with the launch receipt values. This
 short collection workflow refuses to wait on a running instance, validates the

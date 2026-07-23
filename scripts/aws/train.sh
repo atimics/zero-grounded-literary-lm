@@ -71,7 +71,11 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq \
-  build-essential ca-certificates curl nodejs npm python3
+  build-essential ca-certificates curl libopenblas-dev nodejs npm pkg-config \
+  python3
+
+export LITERARY_BACKEND=openblas
+export OPENBLAS_NUM_THREADS="$(getconf _NPROCESSORS_ONLN)"
 
 install -d -m 0755 /tmp/zero
 aws s3 cp \

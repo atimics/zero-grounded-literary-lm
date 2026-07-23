@@ -1,5 +1,6 @@
 CC ?= cc
 CFLAGS ?= -O2 -std=c11 -Wall -Wextra -Wpedantic
+LITERARY_BACKEND ?= auto
 EMCC ?= emcc
 UNAME_S := $(shell uname -s)
 KJV_URL := https://www.gutenberg.org/ebooks/30.txt.utf-8
@@ -84,11 +85,34 @@ MONKEY_TRACE_BATCH ?= 2
 MONKEY_TRACE_RESULTS ?= benchmarks/infinite-monkey-trace10m-v2
 
 ifeq ($(UNAME_S),Darwin)
+ifneq ($(filter $(LITERARY_BACKEND),auto accelerate portable),$(LITERARY_BACKEND))
+$(error unsupported LITERARY_BACKEND=$(LITERARY_BACKEND))
+endif
+ifeq ($(LITERARY_BACKEND),portable)
+LITERARY_CFLAGS :=
+LITERARY_LDLIBS := -lm
+else
 LITERARY_CFLAGS := -DUSE_ACCELERATE -DACCELERATE_NEW_LAPACK
 LITERARY_LDLIBS := -framework Accelerate -lm
+endif
+else
+ifneq ($(filter $(LITERARY_BACKEND),auto openblas portable),$(LITERARY_BACKEND))
+$(error unsupported LITERARY_BACKEND=$(LITERARY_BACKEND))
+endif
+OPENBLAS_CFLAGS := $(shell pkg-config --cflags openblas 2>/dev/null)
+OPENBLAS_LDLIBS := $(shell pkg-config --libs openblas 2>/dev/null)
+ifeq ($(LITERARY_BACKEND),portable)
+LITERARY_CFLAGS :=
+LITERARY_LDLIBS := -lm
+else ifneq ($(strip $(OPENBLAS_LDLIBS)),)
+LITERARY_CFLAGS := -DUSE_CBLAS $(OPENBLAS_CFLAGS)
+LITERARY_LDLIBS := $(OPENBLAS_LDLIBS) -lm
+else ifeq ($(LITERARY_BACKEND),openblas)
+$(error OpenBLAS requested but pkg-config could not find openblas)
 else
 LITERARY_CFLAGS :=
 LITERARY_LDLIBS := -lm
+endif
 endif
 
 .PHONY: all check clean web channel-data zero3-data zero3-stage1 \

@@ -10,8 +10,10 @@
 #include "channel_protocol.h"
 #include "zero1_protocol.h"
 
-#ifdef USE_ACCELERATE
+#if defined(USE_ACCELERATE)
 #include <Accelerate/Accelerate.h>
+#elif defined(USE_CBLAS)
+#include <cblas.h>
 #endif
 
 /*
@@ -404,7 +406,7 @@ static void parameter_ones(Parameter *parameter)
 static void linear_forward(int rows, int input, int output, const float *x,
                            const float *w, float *y)
 {
-#ifdef USE_ACCELERATE
+#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows, output, input,
                 1.0f, x, input, w, input, 0.0f, y, output);
 #else
@@ -428,7 +430,7 @@ static void linear_backward(int rows, int input, int output, const float *x,
                             const float *w, const float *dy, float *gw,
                             float *dx)
 {
-#ifdef USE_ACCELERATE
+#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, output, input, rows,
                 1.0f, dy, output, x, input, 1.0f, gw, input);
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows, input, output,
@@ -806,7 +808,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
     int head_width = cfg->dim / cfg->heads;
     float scale = 1.0f / sqrtf((float)head_width);
 
-#ifdef USE_ACCELERATE
+#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     (void)i;
     for (head = 0; head < cfg->heads; ++head) {
         int offset = head * head_width;
@@ -887,7 +889,7 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
     int head_width = cfg->dim / cfg->heads;
     float scale = 1.0f / sqrtf((float)head_width);
 
-#ifdef USE_ACCELERATE
+#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     (void)i;
     for (head = 0; head < cfg->heads; ++head) {
         int offset = head * head_width;
@@ -4314,6 +4316,8 @@ int main(int argc, char **argv)
 
 #ifdef USE_ACCELERATE
     printf("literary_lm: backend=Accelerate");
+#elif defined(USE_CBLAS)
+    printf("literary_lm: backend=OpenBLAS");
 #else
     printf("literary_lm: backend=portable-C");
 #endif
