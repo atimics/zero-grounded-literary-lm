@@ -1058,6 +1058,12 @@ experiment-budget-check:
 	node scripts/check_experiment_budget.mjs \
 		benchmarks/openblas-calibration-v1/budget.json --stage calibration
 	node scripts/check_openblas_calibration_result.mjs --self-test
+	node scripts/check_openblas_calibration_result.mjs \
+		benchmarks/openblas-calibration-v1/retry-1-budget.json \
+		benchmarks/openblas-calibration-v1/result-30003995100.json \
+		benchmarks/openblas-calibration-v1/status-30003995100.json \
+		--commit 96cf43afa8e8bc4d958ad96a6da304994ed85b39 \
+		--budget-sha256 19800e5c9b8ca36c31f03de54364b22e7f462c4ed3a444bd17fd62d7794577d9
 
 zero4-q22r-aggregate:
 	node scripts/aggregate_zero4_q22r.mjs benchmarks/zero4-q22r-v1

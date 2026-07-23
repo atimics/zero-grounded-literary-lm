@@ -1,6 +1,6 @@
 # OpenBLAS calibration v1
 
-Status: **preregistered; bounded retry only**.
+Status: **calibration complete; execution authorization consumed**.
 
 This is the bounded performance experiment that must run before any further
 ZERO.4 replication. It asks whether the current Linux OpenBLAS build can
@@ -30,7 +30,7 @@ the unsupported transaction phase `calibration`. Its immutable
 full 107 seconds from launch request to termination against this calibration.
 It is an infrastructure failure, not a scientific result.
 
-The only executable retry is frozen in
+The one authorized retry is frozen in
 [`retry-1-budget.json`](retry-1-budget.json). It corrects the phase to
 `acquisition` and preserves the original cumulative authorization:
 
@@ -41,17 +41,31 @@ The only executable retry is frozen in
 | cumulative maximum | 297 seconds | $0.056100 |
 | original authorization | 300 seconds | $0.06 declared cap |
 
-Three independent limits protect the retry:
+GitHub Actions run
+[`30003995100`](https://github.com/atimics/zero-grounded-literary-lm/actions/runs/30003995100)
+consumed that retry. The immutable
+[`launch`](launch-30003995100.json),
+[`status`](status-30003995100.json), and
+[`result`](result-30003995100.json) records show:
 
-1. the GitHub observer terminates the instance 190 seconds after the launch
-   request began;
-2. EC2 user data starts a local 190-second shutdown watchdog; and
-3. the workload gets at most 130 seconds, reserving the balance for result
-   publication and shutdown.
+| Measurement | Observed |
+| --- | ---: |
+| backend | OpenBLAS, 16 threads |
+| cold start | 96 seconds |
+| optimizer attempts | 8 of 8 |
+| measured training wall | 59 seconds |
+| throughput | 0.135593 attempts/second |
+| projected 1,400-attempt wall | 10,325 seconds (2h 52m 5s) |
+| projected 1,400-attempt compute | $1.9503 |
 
-If bootstrap consumes the whole budget, that is a valid calibration outcome:
-the cold-start path is too expensive for this calibration and should
-be replaced by a baked AMI before requesting a pilot.
+The `budget-exhausted` status is the expected bounded outcome: all eight
+diagnostic attempts completed, and the measurement process was stopped at its
+publication deadline. AWS reported OpenBLAS, the result verifier passed, and
+the instance was terminated. These figures exclude cold start from the
+1,400-attempt projection and cannot support scientific inference.
+
+The workflow now refuses another launch when the committed result record is
+present. A pilot or full run requires a new explicit budget and authorization.
 
 Run the local contract check with:
 

@@ -1,0 +1,15 @@
+{
+  "schema": "zero.openblas_calibration_launch.v1",
+  "experiment": "openblas-calibration-v1",
+  "instance_id": "i-072d272760359a8d7",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "96cf43afa8e8bc4d958ad96a6da304994ed85b39",
+  "ci_run_id": "30003995100",
+  "budget_file": "benchmarks/openblas-calibration-v1/retry-1-budget.json",
+  "budget_sha256": "19800e5c9b8ca36c31f03de54364b22e7f462c4ed3a444bd17fd62d7794577d9",
+  "launch_epoch": 1784806830,
+  "max_instance_seconds": 190,
+  "max_compute_usd": 0.04
+}

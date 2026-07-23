@@ -1,0 +1,11 @@
+{
+  "schema": "zero.aws_openblas_calibration_status.v1",
+  "status": "budget-exhausted",
+  "exit_code": 124,
+  "started_at": "2026-07-23T11:41:57Z",
+  "finished_at": "2026-07-23T11:43:05Z",
+  "git_commit": "96cf43afa8e8bc4d958ad96a6da304994ed85b39",
+  "budget_sha256": "19800e5c9b8ca36c31f03de54364b22e7f462c4ed3a444bd17fd62d7794577d9",
+  "scientific_inference_allowed": false,
+  "result": "results/result.json"
+}
