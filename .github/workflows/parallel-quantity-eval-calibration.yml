@@ -1,0 +1,327 @@
+name: Parallel quantity-evaluator calibration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero-parallel-quantity-eval-calibration
+  cancel-in-progress: false
+
+jobs:
+  calibrate:
+    name: AWS · serial/parallel evaluator ≤25 minutes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_COMMIT: ${{ github.sha }}
+      ZERO_RUN_ID: ${{ github.run_id }}
+      ZERO_INSTANCE_TYPE: c6i.4xlarge
+      ZERO_BUDGET_FILE: benchmarks/parallel-quantity-eval-calibration-v1/budget.json
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate immutable budget
+        run: |
+          test ! -e benchmarks/parallel-quantity-eval-calibration-v1/COMPLETED || {
+            echo "Parallel evaluator calibration authorization is consumed"
+            exit 1
+          }
+          node scripts/check_parallel_quantity_eval_budget.mjs \
+            "$ZERO_BUDGET_FILE"
+          budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
+          max_instance_seconds=$(jq -r \
+            '.execution.max_instance_seconds' "$ZERO_BUDGET_FILE")
+          workload_timeout_seconds=$(jq -r \
+            '.execution.workload_timeout_seconds' "$ZERO_BUDGET_FILE")
+          max_compute_usd=$(jq -r \
+            '.execution.max_compute_usd' "$ZERO_BUDGET_FILE")
+          serial_jobs=$(jq -r '.workload.serial_jobs' "$ZERO_BUDGET_FILE")
+          parallel_jobs=$(jq -r '.workload.parallel_jobs' "$ZERO_BUDGET_FILE")
+          optimizer_attempts=$(jq -r \
+            '.workload.optimizer_attempts' "$ZERO_BUDGET_FILE")
+          promotion_evaluations=$(jq -r \
+            '.workload.promotion_evaluations' "$ZERO_BUDGET_FILE")
+          hourly_rate_usd=$(jq -r \
+            '.venue.on_demand_usd_per_hour' "$ZERO_BUDGET_FILE")
+          test "$max_instance_seconds" = 1500
+          test "$workload_timeout_seconds" = 1440
+          test "$max_compute_usd" = 0.29
+          test "$serial_jobs" = 1
+          test "$parallel_jobs" = 16
+          test "$optimizer_attempts" = 0
+          test "$promotion_evaluations" = 0
+          test "$hourly_rate_usd" = 0.68
+          {
+            echo "ZERO_BUDGET_SHA256=$budget_sha256"
+            echo "ZERO_MAX_INSTANCE_SECONDS=$max_instance_seconds"
+            echo "ZERO_WORKLOAD_TIMEOUT_SECONDS=$workload_timeout_seconds"
+            echo "ZERO_MAX_COMPUTE_USD=$max_compute_usd"
+            echo "ZERO_HOURLY_RATE_USD=$hourly_rate_usd"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Audit active ZERO instances before launch
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters \
+              Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text \
+            --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Publish immutable job inputs
+        run: |
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          git archive --format=tar.gz \
+            --output=/tmp/zero-source.tar.gz "$ZERO_COMMIT"
+          aws s3 cp scripts/aws/parallel-quantity-eval-calibration.sh \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/parallel-quantity-eval-calibration.sh" \
+            --no-cli-pager
+          aws s3 cp /tmp/zero-source.tar.gz \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/source.tar.gz" \
+            --no-cli-pager
+
+      - name: Resolve Ubuntu AMI
+        id: ami
+        run: |
+          ami=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value \
+            --output text \
+            --no-cli-pager)
+          [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
+          echo "ami=$ami" >> "$GITHUB_OUTPUT"
+
+      - name: Acquire one-time execution lock
+        run: |
+          jq -n \
+            --arg experiment parallel-quantity-eval-calibration-v1 \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '{
+              schema: "zero.aws_execution_lock.v1",
+              experiment: $experiment,
+              ci_run_id: $run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256
+            }' > /tmp/parallel-quantity-eval-execution-lock.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key experiments/parallel-quantity-eval-calibration-v1/execution.lock \
+            --body /tmp/parallel-quantity-eval-execution-lock.json \
+            --content-type application/json \
+            --if-none-match '*' \
+            --no-cli-pager
+
+      - name: Launch budgeted EC2 instance
+        id: launch
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          launch_epoch=$(date +%s)
+          instance_id=$(aws ec2 run-instances \
+            --image-id "$ZERO_AMI" \
+            --instance-type "$ZERO_INSTANCE_TYPE" \
+            --iam-instance-profile Name=zero-training-ec2 \
+            --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
+            --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
+            --user-data file://scripts/aws/parallel-quantity-eval-calibration-user-data.sh \
+            --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
+            --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":16,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
+            --instance-initiated-shutdown-behavior terminate \
+            --tag-specifications \
+              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-parallel-quantity-eval-calibration},{Key=Experiment,Value=parallel-quantity-eval-calibration-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
+              "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
+            --query 'Instances[0].InstanceId' \
+            --output text \
+            --no-cli-pager)
+          [[ "$instance_id" =~ ^i-[0-9a-f]+$ ]]
+          {
+            echo "instance_id=$instance_id"
+            echo "launch_epoch=$launch_epoch"
+          } >> "$GITHUB_OUTPUT"
+          echo "Launched $instance_id with an absolute 1,500-second cap"
+
+      - name: Record launch provenance
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          ZERO_LAUNCH_EPOCH: ${{ steps.launch.outputs.launch_epoch }}
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          jq -n \
+            --arg instance_id "$ZERO_INSTANCE_ID" \
+            --arg instance_type "$ZERO_INSTANCE_TYPE" \
+            --arg ami "$ZERO_AMI" \
+            --arg region "$ZERO_REGION" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg budget_file "$ZERO_BUDGET_FILE" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
+            --argjson max_instance_seconds "$ZERO_MAX_INSTANCE_SECONDS" \
+            --argjson max_compute_usd "$ZERO_MAX_COMPUTE_USD" \
+            '{
+              schema: "zero.quantity_eval_calibration_launch.v1",
+              experiment: "parallel-quantity-eval-calibration-v1",
+              instance_id: $instance_id,
+              instance_type: $instance_type,
+              ami: $ami,
+              region: $region,
+              git_commit: $git_commit,
+              ci_run_id: $run_id,
+              budget_file: $budget_file,
+              budget_sha256: $budget_sha256,
+              launch_epoch: $launch_epoch,
+              max_instance_seconds: $max_instance_seconds,
+              max_compute_usd: $max_compute_usd,
+              serial_jobs: 1,
+              parallel_jobs: 16,
+              optimizer_attempts: 0,
+              promotion_evaluations: 0
+            }' > /tmp/parallel-quantity-eval-launch.json
+          aws s3 cp /tmp/parallel-quantity-eval-launch.json \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/launch.json" \
+            --no-cli-pager
+
+      - name: Observe only until result or deadline
+        env:
+          ZERO_LAUNCH_EPOCH: ${{ steps.launch.outputs.launch_epoch }}
+        run: |
+          deadline=$((ZERO_LAUNCH_EPOCH + ZERO_MAX_INSTANCE_SECONDS))
+          while true; do
+            if aws s3api head-object \
+                --bucket "$ZERO_BUCKET" \
+                --key "jobs/${ZERO_RUN_ID}/status.json" \
+                --no-cli-pager >/dev/null 2>&1; then
+              echo "Structured status published"
+              break
+            fi
+            now=$(date +%s)
+            if [ "$now" -ge "$deadline" ]; then
+              echo "Launch-relative 1,500-second calibration deadline reached"
+              break
+            fi
+            if aws s3 cp \
+                "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/heartbeat.json" \
+                /tmp/heartbeat.json --no-cli-pager >/dev/null 2>&1; then
+              jq -c '{phase,elapsed_instance_seconds}' /tmp/heartbeat.json
+            fi
+            remaining=$((deadline - now))
+            if [ "$remaining" -gt 15 ]; then
+              sleep 15
+            else
+              sleep "$remaining"
+            fi
+          done
+
+      - name: Enforce termination
+        if: always() && steps.launch.outputs.instance_id != ''
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+        run: |
+          aws ec2 terminate-instances \
+            --instance-ids "$ZERO_INSTANCE_ID" \
+            --no-cli-pager
+          aws ec2 wait instance-terminated \
+            --instance-ids "$ZERO_INSTANCE_ID" \
+            --no-cli-pager
+
+      - name: Capture diagnostics and result
+        if: always()
+        continue-on-error: true
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+        run: |
+          mkdir -p calibration-artifact
+          if [ -n "$ZERO_INSTANCE_ID" ]; then
+            aws ec2 get-console-output \
+              --instance-id "$ZERO_INSTANCE_ID" \
+              --latest \
+              --query Output \
+              --output text \
+              --no-cli-pager > calibration-artifact/ec2-console.log
+          fi
+          aws s3 sync \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/results/" \
+            calibration-artifact/results/ \
+            --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/status.json" \
+            calibration-artifact/status.json \
+            --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/launch.json" \
+            calibration-artifact/launch.json \
+            --no-cli-pager || true
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/heartbeat.json" \
+            calibration-artifact/heartbeat.json \
+            --no-cli-pager || true
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-parallel-quantity-eval-calibration.log" \
+            calibration-artifact/workload.log \
+            --no-cli-pager || true
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_RUN_ID}/zero-parallel-quantity-eval-calibration-bootstrap.log" \
+            calibration-artifact/bootstrap.log \
+            --no-cli-pager || true
+
+      - name: Verify bounded calibration result
+        run: |
+          node scripts/check_parallel_quantity_eval_result.mjs \
+            "$ZERO_BUDGET_FILE" \
+            calibration-artifact/results/result.json \
+            calibration-artifact/status.json \
+            --commit "$ZERO_COMMIT" \
+            --budget-sha256 "$ZERO_BUDGET_SHA256"
+          jq . calibration-artifact/results/result.json \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Audit active ZERO instances after termination
+        if: always()
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters \
+              Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text \
+            --no-cli-pager)
+          test -z "$active" || {
+            echo "ZERO instances remain active: $active"
+            exit 1
+          }
+
+      - name: Upload calibration artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: parallel-quantity-eval-calibration-${{ github.run_id }}
+          path: calibration-artifact/
+          if-no-files-found: warn
