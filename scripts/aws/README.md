@@ -1,11 +1,12 @@
 # AWS experiment runner
 
-The only executable compute workflow is now the five-minute
-`openblas-calibration-v1` performance experiment. The former unbudgeted
-Q2.2-R/Q2.6-R launcher is retired after a frozen portable-C Q2.6-R seed reached
-its 11-hour limit without producing a result. Historical `train.sh`,
-`user-data.sh`, and the collection workflow remain for provenance and
-diagnostics; they are not launch paths.
+There is currently no authorized compute workflow. The bounded
+`openblas-calibration-v1` performance experiment completed in run
+`30003995100`, and its workflow refuses a second launch while the committed
+result record exists. The former unbudgeted Q2.2-R/Q2.6-R launcher is retired
+after a frozen portable-C Q2.6-R seed reached its 11-hour limit without
+producing a result. Historical `train.sh`, `user-data.sh`, and the collection
+workflow remain for provenance and diagnostics; they are not launch paths.
 
 ## Provision once
 
@@ -44,29 +45,28 @@ The instance downloads those paths and verifies every frozen teacher against
 
 ## Budgeted calibration lifecycle
 
-Dispatch `.github/workflows/openblas-calibration.yml`. It has no mutable
-experiment, seed, instance-type, duration, or price inputs. Those values come
-from the checked
-`benchmarks/openblas-calibration-v1/budget.json` contract:
+The consumed retry had no mutable experiment, seed, instance-type, duration,
+or price inputs. Those values came from the checked
+`benchmarks/openblas-calibration-v1/retry-1-budget.json` contract:
 
 - one `c6i.4xlarge` in `us-east-1`;
 - OpenBLAS with 16 threads;
 - diagnostic seed 89 and no more than eight optimizer attempts;
-- 300 seconds and $0.06 maximum instance compute; and
-- 240 seconds maximum workload time, preserving publication time.
+- 190 seconds and $0.04 maximum retry compute; and
+- 130 seconds maximum workload time, preserving publication time.
 
 GitHub Actions only archives inputs, launches EC2, observes S3, enforces the
 launch-relative deadline, downloads the result, and terminates the instance.
-The measured computation runs on EC2. EC2 user data also starts an independent
-five-minute shutdown watchdog, while the workload owns a third shorter
-deadline. A complete or budget-exhausted result is valid calibration evidence,
-but the schema sets `scientific_inference_allowed` to false.
+The measured computation ran on EC2. EC2 user data also started an independent
+190-second shutdown watchdog, while the workload owned a third shorter
+deadline. The verified `budget-exhausted` result completed all eight diagnostic
+attempts in 59 seconds after a 96-second cold start. It projects 10,325 seconds
+and $1.9503 for 1,400 attempts, excluding cold start. The schema sets
+`scientific_inference_allowed` to false.
 
-The result reports cold-start time, complete optimizer attempts, attempt
-throughput, and a linear 1,400-attempt runtime/cost projection. A zero-attempt
-result still says that cold start does not fit the budget. The 15-minute pilot
-and two-hour ceiling are documented cost stages only and cannot be dispatched
-without a new authorization.
+The launch, status, and result are committed under
+`benchmarks/openblas-calibration-v1/`. A pilot or full run cannot be dispatched
+without a new authorization and executable budget.
 
 Run the validators before dispatch:
 

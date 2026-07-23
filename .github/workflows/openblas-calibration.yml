@@ -36,6 +36,10 @@ jobs:
 
       - name: Validate immutable budget
         run: |
+          test ! -e benchmarks/openblas-calibration-v1/result-30003995100.json || {
+            echo "Calibration authorization was consumed by run 30003995100"
+            exit 1
+          }
           node scripts/check_experiment_budget.mjs \
             "$ZERO_BUDGET_FILE" \
             --stage calibration
