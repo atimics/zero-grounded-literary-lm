@@ -65,7 +65,11 @@ export function validateIdentity(
     `seed ${seed} identity budget path drifted`,
   );
   assert(hexadecimal(identity.budget_sha256, 64), `seed ${seed} identity budget hash is invalid`);
-  assert(identity.source === "aws-ec2-describe-instances", `seed ${seed} identity source drifted`);
+  assert(
+    identity.source
+      === "aws-ec2-describe-instances+describe-instance-attribute",
+    `seed ${seed} identity source drifted`,
+  );
   assert(isoTime(identity.captured_at), `seed ${seed} identity capture time is invalid`);
   assert(identity.instance_id === launchRecord.instance_id, `seed ${seed} instance id drifted`);
   assert(identity.instance_type === budget.venue.instance_type, `seed ${seed} instance type drifted`);
@@ -248,6 +252,16 @@ export function validateSeedProvenanceFiles(
   assert(launch.experiment === budget.id, "v2 launch experiment drifted");
   assert(launch.budget_file === budgetPath, "v2 launch budget path drifted");
   assert(launch.budget_sha256 === budgetSha256, "v2 launch budget hash drifted");
+  assert(
+    launch.recovery_of_launch_workflow_run_id === "30117320329"
+      && launch.original_execution_lock_key
+        === "experiments/zero4-q26r-aws-v2/execution.lock"
+      && launch.recovery_lock_key
+        === "experiments/zero4-q26r-aws-v2/recovery-1.lock"
+      && hexadecimal(launch.original_execution_lock_sha256, 64)
+      && hexadecimal(launch.recovery_lock_sha256, 64),
+    "v2 launch recovery binding drifted",
+  );
   assert(hexadecimal(launch.source_archive_sha256, 64), "v2 source archive hash is invalid");
   assert(hexadecimal(launch.seed_runner_sha256, 64), "v2 seed runner hash is invalid");
   assert(hexadecimal(launch.user_data_sha256, 64), "v2 user-data hash is invalid");
@@ -332,6 +346,16 @@ export function validateCompletion(
   assert(launch.ci_run_id === completion.source_run_id, "v2 launch run id drifted");
   assert(launch.budget_file === budgetPath, "v2 launch budget path drifted");
   assert(launch.budget_sha256 === completion.budget_sha256, "v2 launch budget hash drifted");
+  assert(
+    launch.recovery_of_launch_workflow_run_id === "30117320329"
+      && launch.original_execution_lock_key
+        === "experiments/zero4-q26r-aws-v2/execution.lock"
+      && launch.recovery_lock_key
+        === "experiments/zero4-q26r-aws-v2/recovery-1.lock"
+      && hexadecimal(launch.original_execution_lock_sha256, 64)
+      && hexadecimal(launch.recovery_lock_sha256, 64),
+    "v2 completion launch recovery binding drifted",
+  );
   assert(hexadecimal(launch.source_archive_sha256, 64), "v2 source archive hash is invalid");
   assert(hexadecimal(launch.seed_runner_sha256, 64), "v2 seed runner hash is invalid");
   assert(hexadecimal(launch.user_data_sha256, 64), "v2 user-data hash is invalid");
@@ -349,6 +373,48 @@ export function validateCompletion(
   assert(
     new Set(launch.instances.map((record) => record.instance_id)).size === 2,
     "v2 launch reused an instance",
+  );
+
+  const originalLockPath = `${executionRoot}/original-execution-lock-30117320329.json`;
+  const originalLock = requireFileRecord(
+    completion.original_execution_lock,
+    originalLockPath,
+    "v2 original execution lock",
+  );
+  assert(
+    completion.original_execution_lock.sha256
+      === launch.original_execution_lock_sha256
+      && originalLock.schema === "zero.aws_execution_lock.v2"
+      && originalLock.experiment === budget.id
+      && JSON.stringify(originalLock.seeds) === "[1,3]"
+      && originalLock.ci_run_id === "30117320329"
+      && originalLock.git_commit
+        === "5949e7bfc8d6f78d3eaef1ef86d7a488454d1243"
+      && originalLock.budget_sha256
+        === "580a74f1c5ad72e3f205b104d14c1b6d6f4fc0fe2f529a9308e38173925b990e",
+    "v2 original execution lock drifted",
+  );
+  const recoveryLockPath = `${executionRoot}/recovery-lock-${completion.source_run_id}.json`;
+  const recoveryLock = requireFileRecord(
+    completion.recovery_lock,
+    recoveryLockPath,
+    "v2 recovery lock",
+  );
+  assert(
+    completion.recovery_lock.sha256 === launch.recovery_lock_sha256
+      && recoveryLock.schema === "zero.aws_recovery_execution_lock.v2"
+      && recoveryLock.experiment === budget.id
+      && recoveryLock.recovery_ordinal === 1
+      && JSON.stringify(recoveryLock.seeds) === "[1,3]"
+      && recoveryLock.ci_run_id === completion.source_run_id
+      && recoveryLock.git_commit === completion.source_commit
+      && recoveryLock.budget_sha256 === completion.budget_sha256
+      && recoveryLock.failed_launch_workflow_run_id === "30117320329"
+      && recoveryLock.preflight_failure_sha256
+        === budget.recovery_basis.preflight_failure_sha256
+      && recoveryLock.original_execution_lock_sha256
+        === completion.original_execution_lock.sha256,
+    "v2 recovery lock drifted",
   );
 
   for (const launchRecord of launch.instances) {
@@ -458,8 +524,8 @@ function selfTest() {
     seed: 1,
     instance_id: "i-0123456789abcdef0",
     launch_epoch: 1784880000,
-    max_instance_seconds: 6300,
-    max_compute_usd: 1.19,
+    max_instance_seconds: 6240,
+    max_compute_usd: 1.18,
   };
   const sourceCommit = "a".repeat(40);
   const sourceRunId = "30000000000";
@@ -473,7 +539,7 @@ function selfTest() {
     budget_file: "benchmarks/zero4-q26r-v1/aws-v2/budget.json",
     budget_sha256: budgetSha256,
     captured_at: "2026-07-24T08:00:00Z",
-    source: "aws-ec2-describe-instances",
+    source: "aws-ec2-describe-instances+describe-instance-attribute",
     instance_id: launchRecord.instance_id,
     instance_type: "c6i.4xlarge",
     image_id: "ami-0123456789abcdef0",
@@ -496,9 +562,9 @@ function selfTest() {
       BudgetSha256: budgetSha256,
       SourceArchiveSha256: "f".repeat(64),
       LaunchEpoch: String(launchRecord.launch_epoch),
-      MaxInstanceSeconds: "6300",
+      MaxInstanceSeconds: "6240",
       WorkloadTimeoutSeconds: "6180",
-      MaxComputeUsd: "1.19",
+      MaxComputeUsd: "1.18",
       HourlyRateUsd: "0.68",
     },
   };
@@ -521,8 +587,8 @@ function selfTest() {
     result_sha256: "c".repeat(64),
     observed_instance_seconds: 5100,
     observed_compute_usd: 0.9633333333333334,
-    max_instance_seconds: 6300,
-    max_compute_usd: 1.19,
+    max_instance_seconds: 6240,
+    max_compute_usd: 1.18,
     training_backend: "OpenBLAS",
     openblas_threads: 16,
     quantity_evaluator_jobs: 16,

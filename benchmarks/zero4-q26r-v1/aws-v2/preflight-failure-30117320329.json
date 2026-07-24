@@ -1,0 +1,58 @@
+{
+  "schema": "zero.q26r_aws_preflight_failure.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "status": "execution-preflight-failure",
+  "recorded_at": "2026-07-24",
+  "source": {
+    "launch_workflow_run_id": "30117320329",
+    "launch_workflow_job_id": "89561069708",
+    "git_commit": "5949e7bfc8d6f78d3eaef1ef86d7a488454d1243",
+    "budget_sha256": "580a74f1c5ad72e3f205b104d14c1b6d6f4fc0fe2f529a9308e38173925b990e",
+    "failed_step": "Launch and freeze both AWS identities",
+    "failure_observed_at": "2026-07-24T18:33:03Z"
+  },
+  "failure": {
+    "classification": "identity-capture-implementation-error",
+    "cause": "the launch asserted InstanceInitiatedShutdownBehavior in DescribeInstances output, but AWS exposes that value through DescribeInstanceAttribute",
+    "execution_lock_acquired": true,
+    "launch_receipt_published": false,
+    "identity_receipts_published": false,
+    "seed_statuses_published": false,
+    "shutdown_intents_published": false
+  },
+  "partial_launch": {
+    "seed_1": {
+      "instance_id": "i-0664475f54bf9d71f",
+      "created": true,
+      "termination_requested": true,
+      "previous_state": "running",
+      "state_at_termination_response": "shutting-down"
+    },
+    "seed_3": {
+      "instance_id": null,
+      "created": false,
+      "termination_requested": false
+    }
+  },
+  "billing_reservation": {
+    "basis": "AWS per-second EC2 billing has a 60-second minimum",
+    "hourly_rate_usd": 0.68,
+    "reserved_instance_seconds": 60,
+    "reserved_compute_usd": 0.011333333333333334
+  },
+  "scientific_effect": {
+    "training_started": false,
+    "candidate_results_observed": false,
+    "scientific_result_observed": false,
+    "scientific_result_accepted": false,
+    "family_inference": null,
+    "recovery_may_not_change_science": true
+  },
+  "recovery": {
+    "eligible": true,
+    "requires_new_write_once_lock": true,
+    "prior_lock_must_remain_immutable": true,
+    "prior_job_artifacts_forbidden_as_execution_inputs": true,
+    "prior_billing_reservation_must_be_deducted": true
+  }
+}

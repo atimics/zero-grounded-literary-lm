@@ -3,9 +3,9 @@
 
 set -Eeuo pipefail
 
-HARD_INSTANCE_SECONDS=6300
+HARD_INSTANCE_SECONDS=6240
 HARD_WORKLOAD_SECONDS=6180
-PUBLICATION_RESERVE_SECONDS=120
+PUBLICATION_RESERVE_SECONDS=60
 BOOTSTRAP_LOG=/var/log/zero-q26r-v2-bootstrap.log
 BOOTSTRAP_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
@@ -218,7 +218,7 @@ test "$ZERO_EXECUTION_ID" = "zero4-q26r-aws-v2"
 test "$ZERO_MAX_INSTANCE_SECONDS" = "$HARD_INSTANCE_SECONDS"
 test "$ZERO_WORKLOAD_TIMEOUT_SECONDS" = "$HARD_WORKLOAD_SECONDS"
 test "$ZERO_BUDGET_FILE" = "benchmarks/zero4-q26r-v1/aws-v2/budget.json"
-test "$ZERO_MAX_COMPUTE_USD" = "1.19"
+test "$ZERO_MAX_COMPUTE_USD" = "1.18"
 [[ "$ZERO_LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
 test "$ZERO_LAUNCH_EPOCH" = "$BOOT_LAUNCH_EPOCH"
 
@@ -229,7 +229,7 @@ aws s3 cp \
   --no-cli-pager
 chmod 0755 /opt/zero/q26r-v2-seed.sh
 
-# Reserve 120 seconds for durable status, shutdown-intent publication, and
+# Reserve 60 seconds for durable status, shutdown-intent publication, and
 # instance-initiated termination within the absolute launch-relative cap.
 now=$(date +%s)
 remaining=$((ZERO_LAUNCH_EPOCH

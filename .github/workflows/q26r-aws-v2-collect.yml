@@ -76,15 +76,74 @@ jobs:
              and .budget_file == "benchmarks/zero4-q26r-v1/aws-v2/budget.json"
              and .budget_sha256 == $budget_sha256
              and .instance_type == "c6i.4xlarge"
-             and .max_instance_seconds_sum == 12600
-             and .max_compute_usd == 2.38
+             and .recovery_of_launch_workflow_run_id == "30117320329"
+             and .original_execution_lock_key
+               == "experiments/zero4-q26r-aws-v2/execution.lock"
+             and .recovery_lock_key
+               == "experiments/zero4-q26r-aws-v2/recovery-1.lock"
+             and (.original_execution_lock_sha256
+               | test("^[0-9a-f]{64}$"))
+             and (.recovery_lock_sha256 | test("^[0-9a-f]{64}$"))
+             and .max_instance_seconds_sum == 12480
+             and .max_compute_usd == 2.36
              and ([.instances[].seed] == [1, 3])
              and (.instances | length == 2)
              and (([.instances[].instance_id] | unique | length) == 2)
              and ([.instances[].identity_sha256
                    | test("^[0-9a-f]{64}$")] | all)' \
             training-diagnostics/launch.json >/dev/null
+          original_lock_key=$(jq -r \
+            '.original_execution_lock_key' training-diagnostics/launch.json)
+          recovery_lock_key=$(jq -r \
+            '.recovery_lock_key' training-diagnostics/launch.json)
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/${original_lock_key}" \
+            training-diagnostics/original-execution-lock.json \
+            --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/${recovery_lock_key}" \
+            training-diagnostics/recovery-lock.json \
+            --no-cli-pager
+          test "$(sha256sum training-diagnostics/original-execution-lock.json \
+            | awk '{print $1}')" = \
+            "$(jq -r '.original_execution_lock_sha256' \
+              training-diagnostics/launch.json)"
+          test "$(sha256sum training-diagnostics/recovery-lock.json \
+            | awk '{print $1}')" = \
+            "$(jq -r '.recovery_lock_sha256' training-diagnostics/launch.json)"
+          jq -e \
+            '.schema == "zero.aws_execution_lock.v2"
+             and .experiment == "zero4-q26r-aws-v2"
+             and .seeds == [1, 3]
+             and .ci_run_id == "30117320329"
+             and .git_commit
+               == "5949e7bfc8d6f78d3eaef1ef86d7a488454d1243"
+             and .budget_sha256
+               == "580a74f1c5ad72e3f205b104d14c1b6d6f4fc0fe2f529a9308e38173925b990e"' \
+            training-diagnostics/original-execution-lock.json >/dev/null
           source_commit=$(jq -r '.git_commit' training-diagnostics/launch.json)
+          preflight_failure_sha256=$(jq -r \
+            '.recovery_basis.preflight_failure_sha256' "$ZERO_BUDGET_FILE")
+          jq -e \
+            --arg run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg git_commit "$source_commit" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg preflight_failure_sha256 "$preflight_failure_sha256" \
+            --arg original_lock_sha256 \
+              "$(jq -r '.original_execution_lock_sha256' \
+                training-diagnostics/launch.json)" \
+            '.schema == "zero.aws_recovery_execution_lock.v2"
+             and .experiment == "zero4-q26r-aws-v2"
+             and .recovery_ordinal == 1
+             and .seeds == [1, 3]
+             and .ci_run_id == $run_id
+             and .git_commit == $git_commit
+             and .budget_sha256 == $budget_sha256
+             and .failed_launch_workflow_run_id == "30117320329"
+             and .preflight_failure_sha256 == $preflight_failure_sha256
+             and .original_execution_lock_sha256
+               == $original_lock_sha256' \
+            training-diagnostics/recovery-lock.json >/dev/null
           [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]]
           git cat-file -e "${source_commit}^{commit}"
           git switch --detach "$source_commit"
@@ -156,8 +215,6 @@ jobs:
                 | $i.InstanceId == $identity[0].instance_id
                   and $i.InstanceType == $identity[0].instance_type
                   and $i.ImageId == $identity[0].image_id
-                  and $i.InstanceInitiatedShutdownBehavior
-                    == $identity[0].instance_initiated_shutdown_behavior
                   and $t.Project == $identity[0].tags.Project
                   and $t.Name == $identity[0].tags.Name
                   and $t.Experiment == $identity[0].tags.Experiment
@@ -261,6 +318,10 @@ jobs:
           execution_root=benchmarks/zero4-q26r-v1/aws-v2
           cp training-diagnostics/launch.json \
             "${execution_root}/launch-${ZERO_SOURCE_RUN_ID}.json"
+          cp training-diagnostics/original-execution-lock.json \
+            "${execution_root}/original-execution-lock-30117320329.json"
+          cp training-diagnostics/recovery-lock.json \
+            "${execution_root}/recovery-lock-${ZERO_SOURCE_RUN_ID}.json"
           for seed in 1 3; do
             cp "training-diagnostics/seed${seed}-identity.json" \
               "${execution_root}/seed${seed}-identity-${ZERO_SOURCE_RUN_ID}.json"
@@ -309,6 +370,10 @@ jobs:
               "budget_sha256": os.environ["ZERO_BUDGET_SHA256"],
               "seeds": [1, 3],
               "launch": record(root / f"launch-{run_id}.json"),
+              "original_execution_lock": record(
+                  root / "original-execution-lock-30117320329.json"
+              ),
+              "recovery_lock": record(root / f"recovery-lock-{run_id}.json"),
               "records": records,
               "new_training_started_by_collector": False,
               "collector_waited_for_compute": False,

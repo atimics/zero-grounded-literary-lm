@@ -11,6 +11,15 @@
     "authorized_for_execution": true,
     "authorized_at": "2026-07-24"
   },
+  "recovery_authorization": {
+    "scope": "one recovery launch after infrastructure-only preflight failure 30117320329",
+    "failed_launch_workflow_run_id": "30117320329",
+    "one_recovery_launch_only": true,
+    "requires_manual_approval": true,
+    "manual_approval_observed": true,
+    "authorized_for_execution": true,
+    "authorized_at": "2026-07-24"
+  },
   "scientific_source_lock": {
     "base_execution_budget_path": "benchmarks/zero4-q26r-v1/aws-v1/budget.json",
     "base_execution_budget_sha256": "5d178e205335622d0c93f3fca517d166bc42ea286c008b23352a661e1d2aa272",
@@ -44,6 +53,21 @@
     "replacement_is_not_duplicate_accepted_evidence": true,
     "prior_outcomes_may_not_change_science_or_stopping": true,
     "prior_candidate_artifacts_forbidden_as_execution_inputs": true
+  },
+  "recovery_basis": {
+    "preflight_failure_path": "benchmarks/zero4-q26r-v1/aws-v2/preflight-failure-30117320329.json",
+    "preflight_failure_sha256": "e68ad85c614980a1ce5c2fe0b4e28ac7396c8e1f96e4364cead51116e4514b14",
+    "failed_launch_workflow_run_id": "30117320329",
+    "failed_launch_git_commit": "5949e7bfc8d6f78d3eaef1ef86d7a488454d1243",
+    "failed_launch_budget_sha256": "580a74f1c5ad72e3f205b104d14c1b6d6f4fc0fe2f529a9308e38173925b990e",
+    "partial_seed_1_instance_id": "i-0664475f54bf9d71f",
+    "seed_1_termination_requested": true,
+    "seed_3_instance_created": false,
+    "candidate_results_observed": false,
+    "scientific_result_observed": false,
+    "scientific_result_accepted": false,
+    "family_inference": null,
+    "recovery_may_not_change_science": true
   },
   "venue": {
     "provider": "aws",
@@ -90,29 +114,47 @@
     "scientific_decisions_used_for_budgeting": false
   },
   "per_seed_execution": {
-    "max_instance_seconds": 6300,
+    "max_instance_seconds": 6240,
     "workload_timeout_seconds": 6180,
-    "publication_reserve_seconds": 120,
-    "max_compute_usd": 1.19,
+    "publication_reserve_seconds": 60,
+    "max_compute_usd": 1.18,
     "budget_is_independent": true,
     "unused_budget_transfer_forbidden": true
   },
   "combined_execution": {
     "max_concurrent_instances": 2,
-    "max_instance_seconds_sum": 12600,
-    "max_compute_usd": 2.38,
+    "max_instance_seconds_sum": 12480,
+    "max_compute_usd": 2.36,
     "both_seed_statuses_required": true,
     "one_seed_cannot_extend_the_other": true
+  },
+  "all_in_authorization": {
+    "original_max_instance_seconds_sum": 12600,
+    "original_max_compute_usd": 2.38,
+    "preflight_reserved_instance_seconds": 60,
+    "preflight_reserved_compute_usd": 0.011333333333333334,
+    "recovery_max_instance_seconds_sum": 12480,
+    "recovery_max_compute_usd": 2.36,
+    "all_in_max_instance_seconds_sum": 12540,
+    "all_in_max_compute_usd": 2.3713333333333333,
+    "remaining_instance_seconds_headroom": 60,
+    "remaining_compute_usd_headroom": 0.0086666666666666,
+    "within_original_authorization": true
   },
   "budget_projection": {
     "basis_seconds_per_seed": 5143,
     "minimum_contingency_fraction": 0.2,
     "minimum_seconds_per_seed": 6171.599999999999,
-    "capped_seconds_per_seed": 6300,
-    "actual_contingency_fraction": 0.22496597316741201,
-    "capped_seconds_two_seeds": 12600
+    "capped_seconds_per_seed": 6240,
+    "actual_contingency_fraction": 0.2132996305658176,
+    "capped_seconds_two_seeds": 12480
   },
   "provenance_gate": {
+    "original_execution_lock_must_validate": true,
+    "failed_launch_receipts_must_be_absent": true,
+    "recovery_execution_lock_put_once": true,
+    "original_execution_lock_sha256_bound_into_launch_receipt": true,
+    "recovery_execution_lock_sha256_bound_into_launch_receipt": true,
     "launch_receipt_put_once": true,
     "canonical_aws_identity_receipt_required_for_each_seed": true,
     "identity_receipt_put_once": true,
