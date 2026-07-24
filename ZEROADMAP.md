@@ -13,7 +13,7 @@ The active faculty-training decision is tracked in `PROPOSALS.md`, with the
 completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 `ZERO4-BACKLOG.md` is subordinate engineering work.
 
-## State of the system — 2026-07-18
+## State of the system — 2026-07-24
 
 | Layer | Concrete artifact | State |
 | --- | --- | --- |
@@ -27,16 +27,16 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Logic and Brainfuck curricula | checked logic records plus trace/composition execution records | built, experimental |
 | State-composition curriculum | modality-neutral finite-state transition generator | built, experimental |
 | Modal curriculum | finite-world reachability and possibility records | built, experimental; follows state composition |
-| Quantity faculty | operation-only routing with controller-bound arguments | seed 2 go only; seeds 1 and 3 pending |
+| Quantity faculty | operation-only routing with controller-bound arguments | promoted after three-seed Q2.6 go |
 | Dialogue training ablation | fixed contract for A/B/C/D candidates | specified, not trained |
 | Hidden human channel evaluation | consented, channel-level split | not yet collected |
 
-The deployed browser baseline is `docs/model.litq8` at update 14,500. It is
-distinct from the frozen update-16,600 ZERO.3 teacher used for new training.
-The browser baseline wins 13/18 transcript-compatible contrasts and 17/24
-contrasts with memory targets included. Flat Holo passes 7/8 deterministic
-checks; the first partitioned router passes 5/8. Those numbers are a starting
-line, not a claim of general language understanding.
+The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
+update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
+initialized from the frozen update-16,600 ZERO.3 teacher and promoted only
+after seeds 1, 2, and 3 all passed the unchanged quantity and replay gates.
+The earlier channel benchmark remains historical evidence for its pinned
+ZERO.3 artifact; it has not been relabelled as a ZERO.4 measurement.
 
 ## The channel object
 

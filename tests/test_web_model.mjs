@@ -1,17 +1,24 @@
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import createLiteraryModule from "../docs/literary.js";
 
 const protocol = { channel: 1, message: 2, reply: 3, endMessage: 4, target: 6, summary: 7 };
 const wasmBinary = fs.readFileSync(new URL("../docs/literary.wasm", import.meta.url));
 const model = fs.readFileSync(new URL("../docs/model.litq8", import.meta.url));
+const modelMetadata = JSON.parse(fs.readFileSync(new URL("../docs/model.json", import.meta.url), "utf8"));
+const modelSha256 = createHash("sha256").update(model).digest("hex");
 const runtime = await createLiteraryModule({ wasmBinary });
 const pointer = runtime._malloc(model.length);
 runtime.HEAPU8.set(model, pointer);
 
 if (runtime._lm_load(pointer, model.length) !== 0) throw new Error("model failed to load");
-if (runtime._lm_get_parameters() !== 4_852_992) throw new Error("parameter count changed");
-if (runtime._lm_get_context() !== 512) throw new Error("context changed");
-if (runtime._lm_get_update() <= 11_600) throw new Error("channel checkpoint was not exported");
+if (modelMetadata.schema !== "zero.deployed_model.v1" ||
+    modelMetadata.id !== "zero4" ||
+    modelMetadata.status !== "promoted") throw new Error("ZERO.4 deployment metadata is invalid");
+if (modelSha256 !== modelMetadata.artifact.sha256) throw new Error(`unexpected ZERO.4 artifact: ${modelSha256}`);
+if (runtime._lm_get_parameters() !== modelMetadata.architecture.parameters) throw new Error("parameter count changed");
+if (runtime._lm_get_context() !== modelMetadata.architecture.context) throw new Error("context changed");
+if (runtime._lm_get_update() !== modelMetadata.architecture.runtime_update) throw new Error("ZERO.4 selected update was not deployed");
 if (runtime._lm_holo_set_mode(0) !== 0 || runtime._lm_holo_get_mode() !== 0) throw new Error("disabled memory mode failed");
 
 function feedToken(token) { runtime._lm_feed(token); }

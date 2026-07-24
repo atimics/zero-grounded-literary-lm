@@ -1,9 +1,8 @@
 # ZERO.4 — Three Teachers, Many Channels
 
-Status: teacher stable frozen; Q2.6 diagnostic seed 2 passed its public and
-promotion gates; Q2.6-R execution is cancelled for cost with both replication
-seeds still scientifically unobserved; full ZERO.4 promotion remains
-unresolved, 2026-07-23.
+Status: promoted. Q2.6 seed 2 and the frozen Q2.6-R replication seeds 1 and 3
+all passed their public and exactly-once promotion gates. The prospectively
+selected seed-2 update-500 artifact is current ZERO.4, 2026-07-24.
 
 ZERO.4 has exactly three teacher models: ZERO.1, ZERO.2, and ZERO.3.
 Every faculty channel owns a channel-specific policy for consulting those same
@@ -815,23 +814,29 @@ committed updates without a further Pareto improvement, the frozen stop rule
 selected update 500. The disjoint promotion split then opened exactly once and
 passed with 99.6% limiting quantity rates and zero rejected state mutations.
 
-This result accepts the direction-changing projection hypothesis for
-diagnostic seed 2. It does not by itself promote ZERO.4: the quantized seed-2
-model is published at SHA-256
+This result accepted the direction-changing projection hypothesis for
+diagnostic seed 2. The quantized seed-2 model was frozen as the only promotion
+candidate at SHA-256
 `44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50`,
-while seeds 1 and 3 still require prospective replication under the unchanged
-design. ZERO.3 remains current until that family decision is complete.
+pending prospective seeds 1 and 3 under the unchanged design. The completed
+family decision below promotes that candidate; replication checkpoints remain
+evidence and cannot replace it post hoc.
 
 ### Q2.6-R execution outcome
 
-The first valid-venue attempt did not produce a scientific result. AWS seed 1
-ran the frozen source commit on a `c6i.4xlarge`, whose Linux build used the
-portable C backend, and reached the independent 11-hour execution limit.
-Seed 3 was never launched. The timeout is an execution failure: it does not
-enter the family conjunction and does not revise the Q2.6 seed-2 result.
+The original portable-C route and the first three bounded AWS launch attempts
+are retained as execution history, not scientific outcomes. The final
+recovery-3 run used the frozen source and OpenBLAS path on one independently
+capped `c6i.4xlarge` per seed. Seed 1 completed in 4,962 observed instance
+seconds for $0.9373 and resolved **go**: 98.0% limiting public quantity rates,
+1.0423% replay regression, and a passing exactly-once promotion evaluation.
+Seed 3 completed in 5,000 seconds for $0.9444 and resolved **go**: 96.0%
+limiting rates, 1.2753% replay regression, and a passing promotion evaluation.
 
-The unbudgeted long-run workflow is retired. Before any new replication budget
-is considered, `openblas-calibration-v1` must measure the current OpenBLAS
-optimizer path under a five-minute, $0.06 cap. That diagnostic uses seed 89 and
-cannot produce go, no-go, or promotion evidence. Pilot and full stages remain
-disabled until explicitly authorized from the measured projection.
+All three declared seeds therefore satisfy the frozen conjunction. The family
+aggregate is **go**, and the prospectively selected seed-2 update-500 model is
+promoted as ZERO.4. Its checked-in deployment is `docs/model.litq8`; the
+content-pinned deployment record is `docs/model.json`. This claim is scoped to
+operation-only quantity routing with controller-bound arguments, deterministic
+kernel arithmetic, and the measured historical replay gates. It does not claim
+neural arithmetic or unmeasured faculty capability.

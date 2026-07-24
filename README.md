@@ -59,12 +59,12 @@ make web
 python3 -m http.server 8000 --directory docs
 ```
 
-`make web` expects the local weight source `literary-v8-last.ckpt`. That binary
-checkpoint is not stored in Git. The checked-in `docs/model.litq8` is the
-frozen browser baseline at update 14,500, SHA-256
-`63ccb24611e851aafc14905f8ca01cded5336a4cd755a420248e87abdf9bde89`.
-It is distinct from both the historical ZERO.3 training run and the frozen
-update-16,600 ZERO.3 teacher.
+The checked-in `docs/model.litq8` is the promoted ZERO.4 artifact selected
+prospectively from Q2.6 seed 2 at update 500, SHA-256
+`44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50`.
+`make web` reproduces it directly from the content-identical checked-in
+candidate. [`docs/model.json`](docs/model.json) binds the deployment to the
+three-seed aggregate, AWS completion record, and source result.
 
 Then open `http://localhost:8000`. The first visit downloads `model.litq8`;
 after that, inference and conversation memory remain within the page. The UI
@@ -210,20 +210,24 @@ The gradient is candidate construction, never authority. The prospective
 seed-2 run resolved **go**: 700/700 attempts committed, 423 selected candidates
 were projected, and six of seven public checkpoints were jointly feasible.
 Update 500 was selected with 99.8% limiting quantity rates and 1.1833% replay
-regression; the one-time promotion evaluation passed at 99.6%. The quantized
-model is published, but ZERO.3 remains current until seeds 1 and 3 replicate.
+regression; the one-time promotion evaluation passed at 99.6%. This
+prospectively selected quantized model became ZERO.4 only after seeds 1 and 3
+passed the unchanged replication contract.
 See
 [`contract.json`](benchmarks/zero4-q26-v1/contract.json) and
 [`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
 
-Q2.6-R prospectively authorizes those two replications without altering the
-diagnostic record. Its first execution route was cancelled for cost: AWS seed
-1 used the frozen portable-C Linux source and reached its 11-hour wall limit
-without publishing a valid result; seed 3 was not launched. This changes no
-scientific evidence. Seeds 1 and 3 remain unobserved, family promotion remains
-unresolved, and ZERO.3 remains current.
-See the [`replication contract`](benchmarks/zero4-q26r-v1/contract.json) and
-[`execution cancellation`](benchmarks/zero4-q26r-v1/CANCELLATION.md).
+Q2.6-R prospectively authorized those two replications without altering the
+diagnostic record. After the portable-backend cancellation and two
+infrastructure-only recovery failures, the bounded OpenBLAS recovery-3 run
+completed both declared seeds. Seed 1 resolved **go** with 98.0% limiting
+quantity rates and 1.0423% replay regression; seed 3 resolved **go** with
+96.0% limiting rates and 1.2753% replay regression. Both exactly-once
+promotion evaluations passed. Together with seed 2, the frozen conjunction is
+**go**, so the seed-2 candidate is promoted as ZERO.4. See the
+[`replication contract`](benchmarks/zero4-q26r-v1/contract.json),
+[`aggregate`](benchmarks/zero4-q26r-v1/AGGREGATE.md), and
+[`AWS completion record`](benchmarks/zero4-q26r-v1/aws-v2/COMPLETED).
 
 The one-time
 [`openblas-pilot-v1`](benchmarks/openblas-pilot-v1/README.md) completed 97
@@ -267,13 +271,15 @@ see the
 [`execution failure record`](benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json).
 The
 [`aws-v2 replacement registration`](benchmarks/zero4-q26r-v1/aws-v2/README.md)
-keeps the frozen science unchanged, reduces the proposed ceiling to
-6,300 seconds/$1.19 per seed, and makes launch-time EC2 identity durable.
-It is preregistered but remains launch-disabled pending a separate approval.
-Run the local contract checks with:
+kept the frozen science unchanged and made launch-time EC2 identity durable.
+Its recovery-3 execution finished seeds 1 and 3 for $1.8817 combined, below
+the $2.34 recovery ceiling; all execution attempts together cost about
+$1.9359, below the approved $2.3942 all-in cap. Run the contract and promotion
+checks with:
 
 ```sh
 make experiment-budget-check
+make zero4-promotion-check
 ```
 
 ## Measure channel behavior

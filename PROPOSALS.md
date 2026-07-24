@@ -78,9 +78,10 @@ promotion outcome.
 ### P1: SAT-1 — Single-faculty ops scaling
 
 **Source**: `SATURATION.md` §3.1.
-**Status**: Deferred. P0 failed its three-seed gate and Q2.3's local guard was
-a no-go; scaling is blocked until replay-safe quantity training is established.
-**Depends on**: P0 passing.
+**Status**: Proposed, unblocked but not authorized. Q2.6-R established the
+three-seed replay-safe quantity result; SAT-1 still requires a new frozen
+contract and explicit budget before compute.
+**Depends on**: Q2.6-R family promotion (satisfied).
 **Cost**: Unmeasured. Estimate in instance-hours only after P0 establishes an
 observed per-update and evaluation rate on the declared backend.
 
@@ -219,12 +220,11 @@ learning path without weakening the cumulative or public gates?
 ### P8: Q2.6 global replay-tangent projection
 
 **Source**: Q2.5 seed-2 `RESULTS.md` and terminal attempt trace.
-**Status**: Diagnostic accepted. Seed 2 resolved go after 700/700 commits,
-selected update 500 passed public and promotion, and no frozen gate changed.
-The Q2.6-R source adapter and all-three-seeds family rule remain frozen, but
-the first AWS seed-1 execution reached its 11-hour limit without a result and
-the unbudgeted replication was cancelled. Seeds 1 and 3 remain scientifically
-unobserved.
+**Status**: Resolved — accepted and promoted. Seed 2 resolved go after 700/700
+commits and prospectively selected update 500. Under the unchanged Q2.6-R
+contract, seeds 1 and 3 also passed their public and exactly-once promotion
+gates. The three-seed family resolved go, and the frozen seed-2 artifact is
+current ZERO.4.
 **Depends on**: Q2.5 no-go (satisfied).
 
 **Design**:
@@ -285,10 +285,11 @@ A proposal becomes RESOLVED when:
 
 ## Current state
 
-- **Active proposal**: Budgeted OpenBLAS performance calibration before any P8 replication
-- **Preregistered next experiment**: `openblas-calibration-v1`, diagnostic only, five EC2 minutes and $0.06 maximum
-- **Blocked proposals**: SAT-1, SAT-2, and faculty expansion
+- **Current model**: ZERO.4, promoted from the prospectively selected Q2.6 seed-2 update-500 artifact
+- **Active experiment**: none
+- **Next proposal**: SAT-1 single-faculty operation-count scaling
+- **Authorization**: no SAT-1 compute is authorized until its contract and budget are frozen
+- **Blocked proposals**: SAT-2 and faculty expansion remain downstream of SAT-1
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: use measured OpenBLAS attempt throughput to decide
-  whether to authorize the 15-minute pilot. The pilot and two-hour ceiling
-  remain non-executable until explicitly approved.
+- **Next decision point**: freeze SAT-1 operation counts, promotion rules,
+  AWS budget, and stop conditions before authorizing any compute.

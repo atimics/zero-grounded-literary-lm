@@ -1,6 +1,6 @@
 # Q2.6-R bounded AWS replacement
 
-Status: **corrective recovery-3 authorized once**, 2026-07-24.
+Status: **corrective recovery-3 complete**, 2026-07-24.
 
 This directory contains the replacement execution envelope for Q2.6-R. It
 exists because the first bounded AWS route lost its ephemeral EC2 identity
@@ -41,6 +41,14 @@ The approved corrective recovery-3:
 The short-lived launch workflow does not wait for training. Long computation
 remains on AWS. The collector is also short-lived, never waits, and never
 launches or restarts compute.
+
+Recovery-3 launch `30126034960` completed both frozen seeds. Seed 1 published
+`go` after 4,962 observed instance-seconds/$0.9373; seed 3 published `go`
+after 5,000 seconds/$0.9444. Both instances terminated after durable
+publication. The collector froze the identities, shutdown intents, terminal
+records, scientific results, completion record, and family aggregate without
+starting compute. The resulting three-seed decision is `go`, making the
+prospectively selected Q2.6 seed-2 artifact eligible for promotion as ZERO.4.
 
 Run the local registration checks with:
 
