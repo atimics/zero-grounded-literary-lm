@@ -2,7 +2,7 @@
 
 ## Status
 
-Frozen recovery design, **authorized once for launch** on 2026-07-24.
+Frozen final recovery design, **authorized once for launch** on 2026-07-24.
 
 The first v2 control-plane attempt, workflow run `30117320329`, failed before
 training because the launch checked an EC2 shutdown attribute in the wrong AWS
@@ -13,9 +13,20 @@ status, candidate result, or scientific observation was published. The
 immutable [`preflight failure record`](preflight-failure-30117320329.json)
 records that boundary.
 
-One reviewed recovery is authorized. It must validate the original lock and
-the absence of all failed-run receipts, then acquire the write-once
-`recovery-1.lock`. No subsequent recovery is authorized.
+Recovery workflow run `30118477546` then failed before training because the
+GitHub Actions role lacked `ec2:DescribeInstanceAttribute`. It validated the
+original lock, acquired `recovery-1.lock`, created only seed 1 instance
+`i-093224aa4a67fb5d7`, and terminated it immediately when AWS returned
+`UnauthorizedOperation`. Seed 3 was never created, and no launch, identity,
+status, shutdown, candidate, or scientific record was published. The immutable
+[`second preflight failure record`](preflight-failure-30118477546.json) freezes
+that boundary.
+
+One final reviewed recovery is authorized. It must first prove
+`ec2:DescribeInstanceAttribute` authorization using AWS `--dry-run`, which
+cannot start compute. It must then validate both prior locks and the absence of
+all receipts from both failed runs before acquiring write-once
+`recovery-2.lock`. No subsequent recovery is authorized.
 
 ## Why a replacement is admissible
 
@@ -52,18 +63,21 @@ The slower prior candidate completed in 5,143 launch-relative seconds. A 20%
 contingency requires 6,171.6 seconds. The original v2 authorization allowed
 6,300 seconds and $1.19 per seed, or 12,600 seconds and $2.38 combined.
 
-The failed preflight reserves AWS's 60-second billing minimum, or
-$0.011333333333333334 at $0.68/hour. The recovery deducts more than that amount
-while preserving the 6,180-second workload timeout:
+The two failed preflights each reserve AWS's 60-second billing minimum. Their
+cumulative reservation is 120 seconds, or $0.02266666666666667 at $0.68/hour.
+The final recovery deducts that amount:
 
-- per recovery seed: 6,240 instance-seconds and $1.18;
-- recovery combined: 12,480 instance-seconds and $2.36;
-- all-in maximum including failed preflight: 12,540 seconds and
-  $2.3713333333333333;
+- per recovery seed: 6,190 instance-seconds and $1.17;
+- workload timeout per seed: 6,130 seconds;
+- recovery combined: 12,380 instance-seconds and $2.34;
+- all-in maximum including both failed preflights: 12,500 seconds and
+  $2.3626666666666667;
+- headroom below the original authorization: 100 seconds and
+  $0.0173333333333332;
 - maximum concurrency: two `c6i.4xlarge` instances;
 - no budget transfer between seeds.
 
-The remaining 60 seconds per recovery seed are reserved for publication. Each
+The final 60 seconds per recovery seed are reserved for publication. Each
 instance retains a local launch-relative watchdog and terminates itself.
 
 ## Durable provenance
@@ -75,6 +89,11 @@ seed immediately after creation. Instance identity and tags come from
 contains the instance ID, type, AMI, launch time, state, selected identity
 tags, shutdown behavior, and source/budget bindings. It is written once to S3
 and its SHA-256 is bound into the immutable launch receipt.
+
+The IAM policy adds only `ec2:DescribeInstanceAttribute`. A dedicated manual
+workflow and the launcher both require `DryRunOperation` from the attribute
+API before the launcher may publish inputs, acquire `recovery-2.lock`, or call
+`RunInstances`.
 
 Each worker binds its instance ID into its structured status and publishes a
 write-once shutdown intent before requesting instance-initiated termination.

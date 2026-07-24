@@ -1,0 +1,41 @@
+name: Verify Q2.6-R AWS v2 IAM permission
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  preflight:
+    name: AWS · zero-compute DescribeInstanceAttribute dry run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: aws
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Prove permission without starting compute
+        run: |
+          set +e
+          aws ec2 describe-instance-attribute \
+            --instance-id i-093224aa4a67fb5d7 \
+            --attribute instanceInitiatedShutdownBehavior \
+            --dry-run \
+            --no-cli-pager \
+            >/tmp/q26r-v2-iam-preflight.out \
+            2>/tmp/q26r-v2-iam-preflight.err
+          dry_run_exit=$?
+          set -e
+          test "$dry_run_exit" -ne 0
+          grep -q 'DryRunOperation' /tmp/q26r-v2-iam-preflight.err
+          if grep -q 'UnauthorizedOperation' /tmp/q26r-v2-iam-preflight.err; then
+            cat /tmp/q26r-v2-iam-preflight.err
+            exit 1
+          fi
+          echo "Authorized: DescribeInstanceAttribute dry run returned DryRunOperation."

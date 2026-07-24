@@ -24,6 +24,8 @@ function excludes(text, fragments, name) {
 export function validateWorkflowText({
   launch,
   collect,
+  iamPreflight,
+  provision,
   runner,
   userData,
 }) {
@@ -57,12 +59,21 @@ export function validateWorkflowText({
   );
   assert(
     launch.includes("experiments/zero4-q26r-aws-v2/recovery-1.lock")
+      && launch.includes("experiments/zero4-q26r-aws-v2/recovery-2.lock")
       && launch.includes("zero.aws_recovery_execution_lock.v2")
-      && launch.includes("jobs/${ZERO_FAILED_LAUNCH_RUN_ID}/launch.json")
+      && launch.includes("ZERO_FAILED_LAUNCH_RUN_ID_1")
+      && launch.includes("ZERO_FAILED_LAUNCH_RUN_ID_2")
       && launch.includes("original_execution_lock_sha256")
-      && launch.includes("recovery_lock_sha256")
+      && launch.includes("recovery_1_lock_sha256")
+      && launch.includes("recovery_2_lock_sha256")
       && launch.includes("--client-token"),
     "v2 launch lacks one-time recovery safety",
+  );
+  assert(
+    launch.includes("--dry-run")
+      && launch.includes("DryRunOperation")
+      && launch.includes("UnauthorizedOperation"),
+    "v2 launch lacks zero-compute IAM permission preflight",
   );
   assert(
     (launch.match(/--if-none-match '\*'/g) ?? []).length >= 5,
@@ -73,8 +84,8 @@ export function validateWorkflowText({
     [
       "scripts/train_zero4_q26.mjs",
       "zero4-q26r-train",
-      "sleep 6240",
-      "sleep 6180",
+      "sleep 6190",
+      "sleep 6130",
       "$i.InstanceInitiatedShutdownBehavior",
     ],
     "v2 launch",
@@ -91,7 +102,8 @@ export function validateWorkflowText({
   );
   assert(
     collect.includes("original-execution-lock-30117320329.json")
-      && collect.includes('recovery-lock-${ZERO_SOURCE_RUN_ID}.json')
+      && collect.includes("recovery-1-lock-30118477546.json")
+      && collect.includes('recovery-2-lock-${ZERO_SOURCE_RUN_ID}.json')
       && collect.includes("zero.aws_recovery_execution_lock.v2"),
     "v2 collector does not freeze recovery locks",
   );
@@ -134,6 +146,30 @@ export function validateWorkflowText({
     "v2 collector",
   );
 
+  assert(iamPreflight.includes("workflow_dispatch:"), "v2 IAM preflight is not manual");
+  assert(
+    iamPreflight.includes("aws ec2 describe-instance-attribute")
+      && iamPreflight.includes("--dry-run")
+      && iamPreflight.includes("DryRunOperation")
+      && iamPreflight.includes("UnauthorizedOperation"),
+    "v2 IAM preflight does not prove DescribeInstanceAttribute authorization",
+  );
+  excludes(
+    iamPreflight,
+    [
+      "aws ec2 run-instances",
+      "aws ec2 start-instances",
+      "aws ec2 terminate-instances",
+      "aws ec2 wait",
+      "sleep ",
+    ],
+    "v2 IAM preflight",
+  );
+  assert(
+    provision.includes('"ec2:DescribeInstanceAttribute"'),
+    "v2 provision policy lacks DescribeInstanceAttribute",
+  );
+
   assert(runner.startsWith("#!/bin/bash"), "v2 runner has no shell identity");
   assert(runner.includes("set -Eeuo pipefail"), "v2 runner is not fail-closed");
   assert(
@@ -155,8 +191,8 @@ export function validateWorkflowText({
   );
 
   assert(userData.startsWith("#!/bin/bash"), "v2 user data has no shell identity");
-  assert(userData.includes("HARD_INSTANCE_SECONDS=6240"), "v2 watchdog cap drifted");
-  assert(userData.includes("HARD_WORKLOAD_SECONDS=6180"), "v2 workload cap drifted");
+  assert(userData.includes("HARD_INSTANCE_SECONDS=6190"), "v2 watchdog cap drifted");
+  assert(userData.includes("HARD_WORKLOAD_SECONDS=6130"), "v2 workload cap drifted");
   assert(
     userData.includes("PUBLICATION_RESERVE_SECONDS=60"),
     "v2 publication reserve drifted",
@@ -178,12 +214,16 @@ export function validateWorkflowText({
 export function validateWorkflowFiles(
   launchPath = ".github/workflows/q26r-aws-v2-launch.yml",
   collectPath = ".github/workflows/q26r-aws-v2-collect.yml",
+  iamPreflightPath = ".github/workflows/q26r-aws-v2-iam-preflight.yml",
+  provisionPath = "scripts/aws/provision.sh",
   runnerPath = "scripts/aws/q26r-v2-seed.sh",
   userDataPath = "scripts/aws/q26r-v2-seed-user-data.sh",
 ) {
   return validateWorkflowText({
     launch: read(launchPath),
     collect: read(collectPath),
+    iamPreflight: read(iamPreflightPath),
+    provision: read(provisionPath),
     runner: read(runnerPath),
     userData: read(userDataPath),
   });
@@ -193,6 +233,8 @@ function selfTest() {
   const fixtures = {
     launch: read(".github/workflows/q26r-aws-v2-launch.yml"),
     collect: read(".github/workflows/q26r-aws-v2-collect.yml"),
+    iamPreflight: read(".github/workflows/q26r-aws-v2-iam-preflight.yml"),
+    provision: read("scripts/aws/provision.sh"),
     runner: read("scripts/aws/q26r-v2-seed.sh"),
     userData: read("scripts/aws/q26r-v2-seed-user-data.sh"),
   };
@@ -206,6 +248,15 @@ function selfTest() {
     }],
     ["launch authorization", (copy) => {
       copy.launch = copy.launch.replace("--require-authorized", "--registration-only");
+    }],
+    ["IAM permission", (copy) => {
+      copy.provision = copy.provision.replace(
+        '"ec2:DescribeInstanceAttribute",',
+        "",
+      );
+    }],
+    ["IAM preflight compute", (copy) => {
+      copy.iamPreflight += "\naws ec2 run-instances\n";
     }],
     ["runner instance identity", (copy) => {
       copy.runner = copy.runner.replaceAll(
