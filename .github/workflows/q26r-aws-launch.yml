@@ -36,6 +36,11 @@ jobs:
 
       - name: Validate immutable combined budget
         run: |
+          test ! -e \
+            benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json || {
+            echo "Q2.6-R AWS v1 authorization ended in a recorded execution failure"
+            exit 1
+          }
           test ! -e benchmarks/zero4-q26r-v1/aws-v1/COMPLETED || {
             echo "Q2.6-R AWS authorization is consumed"
             exit 1
