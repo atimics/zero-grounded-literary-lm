@@ -1,0 +1,210 @@
+{
+  "schema": "zero.external_eval_contract.v1",
+  "id": "zero-eval-1",
+  "status": "preregistered_evaluation_only",
+  "frozen_at": "2026-07-24",
+  "purpose": "Measure the bare ZERO.3 and ZERO.4 generative cores on established language-model evaluations without training, controller execution, deterministic arithmetic, sampling, or post-hoc task selection.",
+  "scientific_unit": "one frozen model evaluated once on one frozen prepared dataset",
+  "training_allowed": false,
+  "model_scope": "bare quantized generative core only",
+  "controller_or_kernel_allowed": false,
+  "models": [
+    {
+      "id": "zero3",
+      "path": "benchmarks/zero-channel-v1/model.litq8",
+      "sha256": "05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24",
+      "bytes": 4920400,
+      "source_update": 16600,
+      "role": "frozen pre-faculty baseline"
+    },
+    {
+      "id": "zero4",
+      "path": "docs/model.litq8",
+      "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+      "bytes": 4920400,
+      "source_update": 500,
+      "role": "promoted Q2.6 seed-2 candidate"
+    }
+  ],
+  "harness_reference": {
+    "repository": "https://github.com/EleutherAI/lm-evaluation-harness",
+    "commit": "f4d4b3de3ee6741a7151a9fe74945ee515262f4c",
+    "role": "task-format and metric reference only; execution uses ZERO native inference"
+  },
+  "sources": [
+    {
+      "id": "blimp_zip",
+      "benchmark": "BLiMP",
+      "revision": "3e56b06fcabca9b30822fc66435fca6b1aa40bb1",
+      "url": "https://raw.githubusercontent.com/alexwarstadt/blimp/3e56b06fcabca9b30822fc66435fca6b1aa40bb1/BLiMP.zip",
+      "sha256": "172a1a714d72e72a89e8384dd531483f3d0f8a9aee3d33dccaf7992d8cecbb73",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "id": "hellaswag_validation",
+      "benchmark": "HellaSwag",
+      "revision": "a29ff8e9a04bba4bd6588223785ce105328adc57",
+      "url": "https://raw.githubusercontent.com/rowanz/hellaswag/a29ff8e9a04bba4bd6588223785ce105328adc57/data/hellaswag_val.jsonl",
+      "sha256": "0aa3b88843990f3f10a97b9575c94d7b71fb2205240ba04ae4884d9e9c992588",
+      "license": "MIT"
+    },
+    {
+      "id": "lambada_openai_test",
+      "benchmark": "LAMBADA OpenAI",
+      "revision": "900124bf3b8235c6daf21033af9948b3f07346c4",
+      "url": "https://huggingface.co/datasets/EleutherAI/lambada_openai/resolve/900124bf3b8235c6daf21033af9948b3f07346c4/data/lambada_test.jsonl",
+      "sha256": "4aa8d02cd17c719165fc8a7887fddd641f43fcafa4b1c806ca8abc31fabdb226",
+      "license": "MIT"
+    },
+    {
+      "id": "tinystories_validation",
+      "benchmark": "TinyStories",
+      "revision": "f54c09fd23315a6f9c86f9dc80f725de7d8f9c64",
+      "url": "https://huggingface.co/datasets/roneneldan/TinyStories/resolve/f54c09fd23315a6f9c86f9dc80f725de7d8f9c64/TinyStories-valid.txt",
+      "sha256": "94e431816c4cce81ff71e4408ff8d3bda9a42e8d2663986697c3954288cb38b4",
+      "license": "CDLA-Sharing-1.0"
+    }
+  ],
+  "normalization": {
+    "unicode_form": "NFKD",
+    "curly_quotes": "ASCII quote equivalents",
+    "en_and_em_dash": "ASCII hyphen",
+    "ellipsis": "three ASCII periods",
+    "combining_marks": "removed",
+    "remaining_non_ascii": "question mark",
+    "whitespace": "collapse to one ASCII space and trim",
+    "model_vocabulary": "128 normalized ASCII/control tokens"
+  },
+  "context_policy": {
+    "model_context_characters": 512,
+    "fixed_bos_surrogate": "one newline byte",
+    "maximum_prepared_context_characters": 511,
+    "overlength_context": "retain the rightmost 511 normalized characters",
+    "continuations": "score every normalized continuation byte while the native sliding context advances"
+  },
+  "scoring_policy": {
+    "likelihood": "negative base-2 log probability from the frozen native float-softmax API; exact zero underflow is bounded at FLT_MIN",
+    "greedy_token": "temperature-zero argmax from the frozen deployed generation API over printable ASCII, newline, and message-end tokens",
+    "argmax_ties": "generation API order",
+    "choice_ties": "lowest choice index",
+    "length_normalization": "sum of continuation bits divided by continuation bytes"
+  },
+  "tasks": [
+    {
+      "id": "blimp",
+      "cases": 67000,
+      "primary_metric": "raw full-sentence pair accuracy",
+      "secondary_metrics": [
+        "length-normalized pair accuracy",
+        "accuracy by paradigm"
+      ],
+      "chance_accuracy": 0.5,
+      "adaptation": "a fixed newline is fed as a BOS surrogate and a leading space is scored before each sentence"
+    },
+    {
+      "id": "hellaswag",
+      "cases": 10042,
+      "primary_metric": "byte-length-normalized four-choice accuracy",
+      "secondary_metrics": [
+        "raw four-choice accuracy",
+        "accuracy by split type"
+      ],
+      "chance_accuracy": 0.25,
+      "adaptation": "EleutherAI preprocessing and target delimiter are reproduced; contexts beyond 511 normalized characters are right-truncated"
+    },
+    {
+      "id": "lambada",
+      "cases": 5153,
+      "primary_metric": "greedy exact final-word accuracy",
+      "secondary_metrics": [
+        "target bits per byte"
+      ],
+      "chance_accuracy": null,
+      "adaptation": "rightmost 511 normalized context characters; result is explicitly not standard full-context LAMBADA"
+    },
+    {
+      "id": "tinystories",
+      "cases": 1000,
+      "primary_metric": "bits per byte",
+      "secondary_metrics": [],
+      "chance_accuracy": null,
+      "adaptation": "1000 deterministically hash-selected validation stories, one deterministic window of at most 512 normalized characters per story"
+    }
+  ],
+  "prepared_bundle": {
+    "status": "frozen",
+    "datasets": {
+      "blimp": {
+        "path": "blimp.tsv",
+        "sha256": "b69d5f829d23c648dbf7cfbfd64ba9d7b3cc9f1650e8041ada06c7e0e67da55c",
+        "bytes": 11897612,
+        "cases": 67000,
+        "groups": 67
+      },
+      "hellaswag": {
+        "path": "hellaswag.tsv",
+        "sha256": "188d66998285911fdf402ec291c088b91f1b373907d0d59fb6e3b1dd8b46f457",
+        "bytes": 8320357,
+        "cases": 10042,
+        "groups": 2
+      },
+      "lambada": {
+        "path": "lambada.tsv",
+        "sha256": "17886d1b0b1cf045d7014d363907dc9defb7a492d3764a78e7d90d5ce137b627",
+        "bytes": 1889043,
+        "cases": 5153,
+        "groups": 1
+      },
+      "tinystories": {
+        "path": "tinystories.tsv",
+        "sha256": "75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54",
+        "bytes": 568036,
+        "cases": 1000,
+        "groups": 1,
+        "source_stories": 21989,
+        "selection": "lowest sha256(index + NUL + normalized_story), first 1000",
+        "window_bytes": 512
+      }
+    },
+    "normalization_stats": {
+      "non_ascii_replaced": 259,
+      "combining_marks_removed": 132,
+      "contexts_truncated": 54,
+      "context_bytes_removed": 3467
+    }
+  },
+  "execution_policy": {
+    "venue": "AWS EC2 only for reportable measurements",
+    "instance_type": "c6i.4xlarge",
+    "region": "us-east-1",
+    "jobs": 16,
+    "repetitions": 1,
+    "evaluation_order": [
+      "zero3:blimp",
+      "zero4:blimp",
+      "zero3:tinystories",
+      "zero4:tinystories",
+      "zero3:hellaswag",
+      "zero4:hellaswag",
+      "zero3:lambada",
+      "zero4:lambada"
+    ],
+    "calibration_may_not_publish_metrics": true,
+    "full_execution_requires_separate_frozen_budget": true,
+    "full_execution_authorized": false
+  },
+  "interpretation": {
+    "permitted": [
+      "ZERO.4 versus ZERO.3 change under the exact same adapted benchmark",
+      "BLiMP and HellaSwag accuracy versus their chance baselines",
+      "language-model boundary diagnostics under the declared normalization and context policy"
+    ],
+    "forbidden": [
+      "claiming general LLM capability from this suite",
+      "claiming neural arithmetic",
+      "comparing token perplexity across tokenizers",
+      "reporting adapted LAMBADA as standard LAMBADA",
+      "using any score to alter ZERO.4 or select a replacement checkpoint"
+    ]
+  }
+}

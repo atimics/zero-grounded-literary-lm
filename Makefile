@@ -133,6 +133,7 @@ endif
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
+	external-eval-check \
 	experiment-budget-check \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
@@ -150,7 +151,7 @@ endif
 	$(MONKEY_PREFIX)-literary.ckpt $(MONKEY_PREFIX)-balanced.ckpt \
 	$(MONKEY_TRACE_PREFIX)-brainfuck.ckpt
 
-all: zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval
+all: zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm
@@ -190,6 +191,16 @@ faculty_eval: faculty_eval.c literary_infer.c literary_infer.h channel_protocol.
 
 quantity_request_eval: quantity_request_eval.c literary_infer.c literary_infer.h faculty_controller.c faculty_protocol.h quantity_oracle.c quantity_oracle.h channel_protocol.h
 	$(CC) $(CFLAGS) -DLITERARY_INFER_NO_MAIN -DFACULTY_CONTROLLER_NO_MAIN quantity_request_eval.c literary_infer.c faculty_controller.c quantity_oracle.c -o $@ -lm
+
+external_eval: external_eval.c literary_infer.c literary_infer.h channel_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) -DLITERARY_INFER_NO_MAIN \
+		external_eval.c literary_infer.c -o $@ $(LITERARY_LDLIBS)
+
+external-eval-check: external_eval
+	node scripts/prepare_zero_eval1.mjs --self-test
+	node scripts/sample_zero_eval1_calibration.mjs --self-test
+	node scripts/check_zero_eval1.mjs --self-test
+	node scripts/check_zero_eval1.mjs --mechanics ./external_eval
 
 quantity-request-eval-check: quantity_request_eval scripts/generate_zero4_q2.mjs
 	test -f docs/model.litq8
@@ -1099,6 +1110,12 @@ promote-zero4:
 	node scripts/check_zero4_promotion.mjs
 
 experiment-budget-check: zero4-q26r-aws-v2-check
+	node scripts/check_zero_eval1_calibration.mjs --self-test
+	node scripts/check_zero_eval1_calibration.mjs \
+		benchmarks/zero-eval-1/aws-calibration/budget.json
+	node scripts/compile_zero_eval1_calibration_result.mjs --self-test
+	bash -n scripts/aws/zero-eval1-calibration.sh
+	bash -n scripts/aws/zero-eval1-calibration-user-data.sh
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs \
@@ -1465,7 +1482,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
@@ -1528,5 +1545,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval
+	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval
 	rm -f docs/literary.js docs/literary.wasm

@@ -286,10 +286,10 @@ A proposal becomes RESOLVED when:
 ## Current state
 
 - **Current model**: ZERO.4, promoted from the prospectively selected Q2.6 seed-2 update-500 artifact
-- **Active experiment**: none
-- **Next proposal**: SAT-1 single-faculty operation-count scaling
-- **Authorization**: no SAT-1 compute is authorized until its contract and budget are frozen
+- **Active evaluation study**: ZERO-EVAL-1; only its score-sealed AWS timing calibration is authorized
+- **Next training proposal**: SAT-1 single-faculty operation-count scaling
+- **Authorization**: the full ZERO-EVAL-1 comparison and all SAT-1 compute remain unauthorized until each has a separate frozen budget and explicit approval
 - **Blocked proposals**: SAT-2 and faculty expansion remain downstream of SAT-1
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: freeze SAT-1 operation counts, promotion rules,
-  AWS budget, and stop conditions before authorizing any compute.
+- **Next decision point**: use the score-sealed ZERO-EVAL-1 timing result to
+  freeze its full-run budget without opening benchmark scores.

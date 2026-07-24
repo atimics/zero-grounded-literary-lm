@@ -229,6 +229,26 @@ promotion evaluations passed. Together with seed 2, the frozen conjunction is
 [`aggregate`](benchmarks/zero4-q26r-v1/AGGREGATE.md), and
 [`AWS completion record`](benchmarks/zero4-q26r-v1/aws-v2/COMPLETED).
 
+## Evaluate ZERO.4 on external language tasks
+
+[`ZERO-EVAL-1`](benchmarks/zero-eval-1/README.md) freezes an evaluation-only
+comparison of the bare ZERO.3 and ZERO.4 models on BLiMP, HellaSwag, adapted
+LAMBADA, and TinyStories bits per byte. Upstream revisions, source and prepared
+data hashes, ASCII normalization, the 512-character context policy, task order,
+models, metrics, and interpretation limits are all preregistered. The suite
+does not train or invoke the quantity controller.
+
+Only one score-sealed AWS timing calibration is currently authorized, under a
+600-second/$0.12 ceiling. It may publish runtimes and hashes but no benchmark
+scores. The full comparison remains disabled until that calibration supports a
+new frozen budget and the user separately authorizes it. Local commands test
+mechanics only:
+
+```sh
+make external-eval-check
+make experiment-budget-check
+```
+
 The one-time
 [`openblas-pilot-v1`](benchmarks/openblas-pilot-v1/README.md) completed 97
 diagnostic attempts in 776 seconds at a sustained 0.125 attempts/second. It
