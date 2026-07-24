@@ -265,6 +265,11 @@ venue identity checks. The candidates are therefore unaccepted, no family
 inference is made, and ZERO.3 remains current. The authorization is consumed;
 see the
 [`execution failure record`](benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json).
+The
+[`aws-v2 replacement registration`](benchmarks/zero4-q26r-v1/aws-v2/README.md)
+keeps the frozen science unchanged, reduces the proposed ceiling to
+6,300 seconds/$1.19 per seed, and makes launch-time EC2 identity durable.
+It is preregistered but remains launch-disabled pending a separate approval.
 Run the local contract checks with:
 
 ```sh

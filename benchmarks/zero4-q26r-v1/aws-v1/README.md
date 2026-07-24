@@ -66,3 +66,8 @@ explicitly not a scientific no-go. See the durable
 The one-time authorization is consumed. Any new Q2.6-R execution requires a
 new preregistration and budget with provenance captured before ephemeral EC2
 records expire.
+
+The original launch workflow now checks this failure record and refuses before
+AWS authentication. A separate, launch-disabled
+[`aws-v2` replacement registration](../aws-v2/README.md) captures that new
+budget and durable provenance design without reopening this authorization.

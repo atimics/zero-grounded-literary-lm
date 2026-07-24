@@ -1,0 +1,395 @@
+name: Launch bounded Q2.6-R AWS replacement
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero-q26r-aws-v2
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: AWS · launch replacement seeds 1 and 3 · ≤$2.38
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_COMMIT: ${{ github.sha }}
+      ZERO_RUN_ID: ${{ github.run_id }}
+      ZERO_INSTANCE_TYPE: c6i.4xlarge
+      ZERO_BUDGET_FILE: benchmarks/zero4-q26r-v1/aws-v2/budget.json
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Require reviewed authorization and immutable budget
+        run: |
+          test ! -e benchmarks/zero4-q26r-v1/aws-v2/COMPLETED || {
+            echo "Q2.6-R AWS v2 authorization is consumed"
+            exit 1
+          }
+          test -e \
+            benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json
+          test ! -e benchmarks/zero4-q26r-v1/seed1/result.json
+          test ! -e benchmarks/zero4-q26r-v1/seed3/result.json
+          node scripts/check_q26r_aws_v2_budget.mjs \
+            "$ZERO_BUDGET_FILE" --require-authorized
+          budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
+          max_instance_seconds=$(jq -r \
+            '.per_seed_execution.max_instance_seconds' "$ZERO_BUDGET_FILE")
+          workload_timeout_seconds=$(jq -r \
+            '.per_seed_execution.workload_timeout_seconds' "$ZERO_BUDGET_FILE")
+          max_compute_usd=$(jq -r \
+            '.per_seed_execution.max_compute_usd' "$ZERO_BUDGET_FILE")
+          combined_seconds=$(jq -r \
+            '.combined_execution.max_instance_seconds_sum' "$ZERO_BUDGET_FILE")
+          combined_usd=$(jq -r \
+            '.combined_execution.max_compute_usd' "$ZERO_BUDGET_FILE")
+          hourly_rate_usd=$(jq -r \
+            '.venue.on_demand_usd_per_hour' "$ZERO_BUDGET_FILE")
+          test "$max_instance_seconds" = 6300
+          test "$workload_timeout_seconds" = 6180
+          test "$max_compute_usd" = 1.19
+          test "$combined_seconds" = 12600
+          test "$combined_usd" = 2.38
+          test "$hourly_rate_usd" = 0.68
+          {
+            echo "ZERO_BUDGET_SHA256=$budget_sha256"
+            echo "ZERO_MAX_INSTANCE_SECONDS=$max_instance_seconds"
+            echo "ZERO_WORKLOAD_TIMEOUT_SECONDS=$workload_timeout_seconds"
+            echo "ZERO_MAX_COMPUTE_USD=$max_compute_usd"
+            echo "ZERO_COMBINED_SECONDS=$combined_seconds"
+            echo "ZERO_COMBINED_USD=$combined_usd"
+            echo "ZERO_HOURLY_RATE_USD=$hourly_rate_usd"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Audit venue and immutable assets
+        run: |
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          active=$(aws ec2 describe-instances \
+            --filters \
+              Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text \
+            --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+          for key in \
+            assets/corpus/bpe/zero-foundation.tok \
+            assets/corpus/bpe/shakespeare.tok \
+            assets/corpus/bpe/blake.tok \
+            assets/corpus/bpe/crowley.tok \
+            assets/corpus/bpe/bible-kjv.tok \
+            assets/corpus/channel/literary-dialogue.tok; do
+            aws s3api head-object \
+              --bucket "$ZERO_BUCKET" --key "$key" --no-cli-pager >/dev/null
+          done
+
+      - name: Publish immutable job inputs
+        run: |
+          git archive --format=tar.gz \
+            --output=/tmp/zero-source.tar.gz "$ZERO_COMMIT"
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/q26r-v2-seed.sh" \
+            --body scripts/aws/q26r-v2-seed.sh \
+            --content-type text/x-shellscript \
+            --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/source.tar.gz" \
+            --body /tmp/zero-source.tar.gz \
+            --content-type application/gzip \
+            --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          {
+            echo "ZERO_SOURCE_SHA256=$(sha256sum /tmp/zero-source.tar.gz | awk '{print $1}')"
+            echo "ZERO_RUNNER_SHA256=$(sha256sum scripts/aws/q26r-v2-seed.sh | awk '{print $1}')"
+            echo "ZERO_USER_DATA_SHA256=$(sha256sum scripts/aws/q26r-v2-seed-user-data.sh | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Resolve Ubuntu AMI
+        id: ami
+        run: |
+          ami=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value \
+            --output text \
+            --no-cli-pager)
+          [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
+          echo "ami=$ami" >> "$GITHUB_OUTPUT"
+
+      - name: Acquire one-time replacement execution lock
+        run: |
+          jq -n \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '{
+              schema: "zero.aws_execution_lock.v2",
+              experiment: "zero4-q26r-aws-v2",
+              seeds: [1, 3],
+              ci_run_id: $run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256
+            }' > /tmp/q26r-v2-execution-lock.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key experiments/zero4-q26r-aws-v2/execution.lock \
+            --body /tmp/q26r-v2-execution-lock.json \
+            --content-type application/json \
+            --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Launch and freeze both AWS identities
+        id: launch
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          launched=()
+          terminate_partial_launch() {
+            exit_code=$?
+            if [ "$exit_code" -ne 0 ] && [ "${#launched[@]}" -gt 0 ]; then
+              echo "Launch evidence failed; terminating partial execution"
+              aws ec2 terminate-instances \
+                --instance-ids "${launched[@]}" --no-cli-pager || true
+            fi
+            exit "$exit_code"
+          }
+          trap terminate_partial_launch EXIT
+          printf '[]\n' > /tmp/q26r-v2-instances.json
+          for seed in 1 3; do
+            launch_epoch=$(date +%s)
+            instance_id=$(aws ec2 run-instances \
+              --image-id "$ZERO_AMI" \
+              --instance-type "$ZERO_INSTANCE_TYPE" \
+              --iam-instance-profile Name=zero-training-ec2 \
+              --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
+              --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
+              --user-data file://scripts/aws/q26r-v2-seed-user-data.sh \
+              --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
+              --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":32,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
+              --instance-initiated-shutdown-behavior terminate \
+              --tag-specifications \
+                "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-q26r-v2-seed${seed}},{Key=Experiment,Value=zero4-q26r-aws-v2},{Key=Seed,Value=${seed}},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=SourceArchiveSha256,Value=${ZERO_SOURCE_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
+                "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=Experiment,Value=zero4-q26r-aws-v2},{Key=Seed,Value=${seed}},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
+              --query 'Instances[0].InstanceId' \
+              --output text \
+              --no-cli-pager)
+            [[ "$instance_id" =~ ^i-[0-9a-f]+$ ]]
+            launched+=("$instance_id")
+
+            aws ec2 wait instance-exists \
+              --instance-ids "$instance_id" --no-cli-pager
+            aws ec2 describe-instances \
+              --instance-ids "$instance_id" \
+              --output json \
+              --no-cli-pager > "/tmp/q26r-v2-seed${seed}-raw.json"
+            captured_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            jq -e \
+              --argjson seed "$seed" \
+              --arg instance_id "$instance_id" \
+              --arg ami "$ZERO_AMI" \
+              --arg commit "$ZERO_COMMIT" \
+              --arg run_id "$ZERO_RUN_ID" \
+              --arg region "$ZERO_REGION" \
+              --arg budget_file "$ZERO_BUDGET_FILE" \
+              --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+              --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+              --arg launch_epoch "$launch_epoch" \
+              --arg max_seconds "$ZERO_MAX_INSTANCE_SECONDS" \
+              --arg workload_seconds "$ZERO_WORKLOAD_TIMEOUT_SECONDS" \
+              --arg max_usd "$ZERO_MAX_COMPUTE_USD" \
+              --arg hourly_usd "$ZERO_HOURLY_RATE_USD" \
+              --arg captured_at "$captured_at" \
+              '
+              (.Reservations | length) == 1
+              and (.Reservations[0].Instances | length) == 1
+              and (
+                .Reservations[0].Instances[0] as $i
+                | ($i.Tags | map({key: .Key, value: .Value}) | from_entries) as $t
+                | $i.InstanceId == $instance_id
+                  and $i.InstanceType == "c6i.4xlarge"
+                  and $i.ImageId == $ami
+                  and $i.InstanceInitiatedShutdownBehavior == "terminate"
+                  and ($i.State.Name == "pending" or $i.State.Name == "running")
+                  and $t.Project == "zero"
+                  and $t.Name == ("zero-q26r-v2-seed" + ($seed | tostring))
+                  and $t.Experiment == "zero4-q26r-aws-v2"
+                  and $t.Seed == ($seed | tostring)
+                  and $t.Commit == $commit
+                  and $t.RunId == $run_id
+                  and $t.Region == $region
+                  and $t.BudgetFile == $budget_file
+                  and $t.BudgetSha256 == $budget_sha256
+                  and $t.SourceArchiveSha256 == $source_sha256
+                  and $t.LaunchEpoch == $launch_epoch
+                  and $t.MaxInstanceSeconds == $max_seconds
+                  and $t.WorkloadTimeoutSeconds == $workload_seconds
+                  and $t.MaxComputeUsd == $max_usd
+                  and $t.HourlyRateUsd == $hourly_usd
+              )
+              ' "/tmp/q26r-v2-seed${seed}-raw.json" >/dev/null
+            jq \
+              --argjson seed "$seed" \
+              --arg commit "$ZERO_COMMIT" \
+              --arg run_id "$ZERO_RUN_ID" \
+              --arg region "$ZERO_REGION" \
+              --arg budget_file "$ZERO_BUDGET_FILE" \
+              --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+              --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+              --arg captured_at "$captured_at" \
+              '
+              .Reservations[0].Instances[0] as $i
+              | ($i.Tags | map({key: .Key, value: .Value}) | from_entries) as $t
+              | {
+                  schema: "zero.aws_q26r_instance_identity.v2",
+                  experiment: "zero4-q26r-aws-v2",
+                  seed: $seed,
+                  ci_run_id: $run_id,
+                  git_commit: $commit,
+                  budget_file: $budget_file,
+                  budget_sha256: $budget_sha256,
+                  captured_at: $captured_at,
+                  source: "aws-ec2-describe-instances",
+                  instance_id: $i.InstanceId,
+                  instance_type: $i.InstanceType,
+                  image_id: $i.ImageId,
+                  launch_time: $i.LaunchTime,
+                  state_at_capture: $i.State.Name,
+                  availability_zone: $i.Placement.AvailabilityZone,
+                  region: $region,
+                  architecture: $i.Architecture,
+                  root_device_type: $i.RootDeviceType,
+                  instance_initiated_shutdown_behavior: $i.InstanceInitiatedShutdownBehavior,
+                  tags: {
+                    Project: $t.Project,
+                    Name: $t.Name,
+                    Experiment: $t.Experiment,
+                    Seed: $t.Seed,
+                    Commit: $t.Commit,
+                    RunId: $t.RunId,
+                    Region: $t.Region,
+                    BudgetFile: $t.BudgetFile,
+                    BudgetSha256: $t.BudgetSha256,
+                    SourceArchiveSha256: $t.SourceArchiveSha256,
+                    LaunchEpoch: $t.LaunchEpoch,
+                    MaxInstanceSeconds: $t.MaxInstanceSeconds,
+                    WorkloadTimeoutSeconds: $t.WorkloadTimeoutSeconds,
+                    MaxComputeUsd: $t.MaxComputeUsd,
+                    HourlyRateUsd: $t.HourlyRateUsd
+                  }
+                }
+              ' "/tmp/q26r-v2-seed${seed}-raw.json" \
+              > "/tmp/q26r-v2-seed${seed}-identity.json"
+            identity_sha256=$(sha256sum \
+              "/tmp/q26r-v2-seed${seed}-identity.json" | awk '{print $1}')
+            identity_key="jobs/${ZERO_RUN_ID}/identity/seed${seed}.json"
+            aws s3api put-object \
+              --bucket "$ZERO_BUCKET" \
+              --key "$identity_key" \
+              --body "/tmp/q26r-v2-seed${seed}-identity.json" \
+              --content-type application/json \
+              --if-none-match '*' \
+              --no-cli-pager >/dev/null
+            jq \
+              --argjson seed "$seed" \
+              --arg instance_id "$instance_id" \
+              --argjson launch_epoch "$launch_epoch" \
+              --arg identity_key "$identity_key" \
+              --arg identity_sha256 "$identity_sha256" \
+              '. + [{
+                seed: $seed,
+                instance_id: $instance_id,
+                launch_epoch: $launch_epoch,
+                max_instance_seconds: 6300,
+                max_compute_usd: 1.19,
+                identity_key: $identity_key,
+                identity_sha256: $identity_sha256
+              }]' /tmp/q26r-v2-instances.json \
+              > /tmp/q26r-v2-instances.next.json
+            mv /tmp/q26r-v2-instances.next.json /tmp/q26r-v2-instances.json
+          done
+
+          jq -n \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg budget_file "$ZERO_BUDGET_FILE" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg ami "$ZERO_AMI" \
+            --arg region "$ZERO_REGION" \
+            --arg instance_type "$ZERO_INSTANCE_TYPE" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg runner_sha256 "$ZERO_RUNNER_SHA256" \
+            --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --slurpfile instances /tmp/q26r-v2-instances.json \
+            '{
+              schema: "zero.q26r_aws_launch.v2",
+              experiment: "zero4-q26r-aws-v2",
+              git_commit: $git_commit,
+              ci_run_id: $run_id,
+              budget_file: $budget_file,
+              budget_sha256: $budget_sha256,
+              region: $region,
+              ami: $ami,
+              instance_type: $instance_type,
+              source_archive_sha256: $source_sha256,
+              seed_runner_sha256: $runner_sha256,
+              user_data_sha256: $user_data_sha256,
+              max_instance_seconds_sum: 12600,
+              max_compute_usd: 2.38,
+              instances: $instances[0]
+            }' > /tmp/q26r-v2-launch.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/launch.json" \
+            --body /tmp/q26r-v2-launch.json \
+            --content-type application/json \
+            --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          trap - EXIT
+          {
+            echo "seed1_instance=${launched[0]}"
+            echo "seed3_instance=${launched[1]}"
+          } >> "$GITHUB_OUTPUT"
+          jq . /tmp/q26r-v2-launch.json
+
+      - name: Confirm bounded launch handoff
+        run: |
+          echo "Seed 1: ${{ steps.launch.outputs.seed1_instance }}"
+          echo "Seed 3: ${{ steps.launch.outputs.seed3_instance }}"
+          echo "Identity receipts and launch receipt are immutable in S3."
+          echo "Long computation is running on AWS; this workflow will not wait."
+
+      - name: Upload compact launch provenance
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zero-q26r-v2-launch-${{ github.run_id }}
+          path: |
+            /tmp/q26r-v2-launch.json
+            /tmp/q26r-v2-seed1-identity.json
+            /tmp/q26r-v2-seed3-identity.json
+          if-no-files-found: error

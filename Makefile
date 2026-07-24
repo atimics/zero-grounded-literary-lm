@@ -129,6 +129,7 @@ endif
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
+	zero4-q26r-aws-v2-check \
 	experiment-budget-check \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
@@ -1075,7 +1076,19 @@ zero4-q26r: zero4-q26r-train
 zero4-q26r-aggregate:
 	node scripts/aggregate_zero4_q26r.mjs benchmarks/zero4-q26r-v1
 
-experiment-budget-check:
+zero4-q26r-aws-v2-check:
+	node scripts/check_q26r_aws_v2_budget.mjs --self-test
+	node scripts/check_q26r_aws_v2_budget.mjs \
+		benchmarks/zero4-q26r-v1/aws-v2/budget.json
+	node scripts/check_q26r_aws_v2_completion.mjs --self-test
+	node scripts/check_q26r_aws_v2_workflows.mjs --self-test
+	node scripts/check_q26r_aws_v2_workflows.mjs
+	bash -n scripts/aws/q26r-v2-seed.sh
+	bash -n scripts/aws/q26r-v2-seed-user-data.sh
+	test ! -e benchmarks/zero4-q26r-v1/aws-v2/COMPLETED || \
+		node scripts/check_q26r_aws_v2_completion.mjs
+
+experiment-budget-check: zero4-q26r-aws-v2-check
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs \

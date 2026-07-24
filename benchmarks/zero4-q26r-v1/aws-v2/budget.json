@@ -1,0 +1,136 @@
+{
+  "schema": "zero.q26r_replacement_execution_budget.v2",
+  "id": "zero4-q26r-aws-v2",
+  "status": "preregistered",
+  "scientific_inference_allowed": true,
+  "authorization": {
+    "scope": "one combined replacement AWS execution of Q2.6-R seeds 1 and 3",
+    "one_combined_execution_only": true,
+    "requires_manual_approval": true,
+    "manual_approval_observed": false,
+    "authorized_for_execution": false,
+    "authorized_at": null
+  },
+  "scientific_source_lock": {
+    "base_execution_budget_path": "benchmarks/zero4-q26r-v1/aws-v1/budget.json",
+    "base_execution_budget_sha256": "5d178e205335622d0c93f3fca517d166bc42ea286c008b23352a661e1d2aa272",
+    "replication_contract_path": "benchmarks/zero4-q26r-v1/contract.json",
+    "replication_contract_sha256": "f966485a209d21ef54b56601fb2d91ebcf318d4da646b5572c0a432996140318",
+    "scientific_design_unchanged": true,
+    "scientific_checker_unchanged": true,
+    "family_rule_unchanged": true
+  },
+  "replacement_basis": {
+    "prior_failure_path": "benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json",
+    "prior_failure_sha256": "e418b1045740ad29af8c500280bf16933ef01524f21dbd928bcef0510047b445",
+    "prior_launch_workflow_run_id": "30047634061",
+    "prior_status": "execution-failure",
+    "prior_candidate_results_observed": true,
+    "prior_scientific_result_observed": false,
+    "prior_scientific_result_accepted": false,
+    "prior_family_inference": null,
+    "prior_candidate_decisions_disclosed": [
+      {
+        "seed": 1,
+        "decision": "go",
+        "accepted": false
+      },
+      {
+        "seed": 3,
+        "decision": "go",
+        "accepted": false
+      }
+    ],
+    "replacement_is_not_duplicate_accepted_evidence": true,
+    "prior_outcomes_may_not_change_science_or_stopping": true,
+    "prior_candidate_artifacts_forbidden_as_execution_inputs": true
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "cpu_architecture": "x86_64",
+    "online_vcpus": 16,
+    "training_backend": "OpenBLAS",
+    "openblas_threads": 16,
+    "omp_threads": 16,
+    "quantity_evaluator_jobs": 16,
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-24",
+    "price_source": "https://aws.amazon.com/ec2/pricing/on-demand/"
+  },
+  "workload": {
+    "authorized_seeds": [
+      1,
+      3
+    ],
+    "independent_instances": true,
+    "launch_both_seeds": true,
+    "abort_after_first_no_go": false,
+    "optimizer_attempts_per_seed": 1400,
+    "acquisition_attempts": 1000,
+    "consolidation_attempts": 400,
+    "batch": 2,
+    "recovery_every_committed_updates": 25,
+    "full_every_committed_updates": 100,
+    "sentinel_replay_batches": 12,
+    "full_replay_batches": 48,
+    "quantity_corpus_size": 10000,
+    "quantity_corpus_seed": 5,
+    "quantity_request_mode": "operation",
+    "promotion_policy": "exactly once at finalization only when public feasibility is achieved, as frozen by the scientific driver"
+  },
+  "runtime_evidence": {
+    "source": "unaccepted candidates from failed execution 30047634061; timing and cost only",
+    "seed_1_observed_instance_seconds": 4993,
+    "seed_3_observed_instance_seconds": 5143,
+    "maximum_observed_instance_seconds": 5143,
+    "seed_1_observed_compute_usd": 0.9431222222222223,
+    "seed_3_observed_compute_usd": 0.9714555555555556,
+    "scientific_decisions_used_for_budgeting": false
+  },
+  "per_seed_execution": {
+    "max_instance_seconds": 6300,
+    "workload_timeout_seconds": 6180,
+    "publication_reserve_seconds": 120,
+    "max_compute_usd": 1.19,
+    "budget_is_independent": true,
+    "unused_budget_transfer_forbidden": true
+  },
+  "combined_execution": {
+    "max_concurrent_instances": 2,
+    "max_instance_seconds_sum": 12600,
+    "max_compute_usd": 2.38,
+    "both_seed_statuses_required": true,
+    "one_seed_cannot_extend_the_other": true
+  },
+  "budget_projection": {
+    "basis_seconds_per_seed": 5143,
+    "minimum_contingency_fraction": 0.2,
+    "minimum_seconds_per_seed": 6171.599999999999,
+    "capped_seconds_per_seed": 6300,
+    "actual_contingency_fraction": 0.22496597316741201,
+    "capped_seconds_two_seeds": 12600
+  },
+  "provenance_gate": {
+    "launch_receipt_put_once": true,
+    "canonical_aws_identity_receipt_required_for_each_seed": true,
+    "identity_receipt_put_once": true,
+    "identity_receipt_sha256_bound_into_launch_receipt": true,
+    "source_archive_sha256_bound_into_instance_identity": true,
+    "instance_id_bound_into_seed_status": true,
+    "shutdown_intent_required_for_each_seed": true,
+    "collector_live_state_policy": "accept an AWS-terminal state, or exact InvalidInstanceID.NotFound only after immutable launch identity and shutdown intent validate",
+    "collector_waits_for_compute": false,
+    "collector_starts_compute": false
+  },
+  "completion_gate": {
+    "seed_1_result_required": true,
+    "seed_3_result_required": true,
+    "frozen_replication_checker_required_for_each_seed": true,
+    "family_aggregation_only_after_both_valid_results": true,
+    "structured_status_required_for_each_seed": true,
+    "duplicate_accepted_result_forbidden": true,
+    "execution_failure_is_not_scientific_no_go": true
+  }
+}
