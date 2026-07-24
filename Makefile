@@ -1049,11 +1049,15 @@ zero4-q26: zero4-q26-train
 
 zero4-q26r-check: zero4-q26-check \
 		scripts/check_zero4_q26r.mjs scripts/aggregate_zero4_q26r.mjs \
+		scripts/plan_q26r_aws_rescue.mjs \
 		benchmarks/zero4-q26r-v1/contract.json \
 		benchmarks/zero4-q26-v1/seed2/result.json \
 		benchmarks/zero4-q26-v1/seed2/selected.litq8
 	node scripts/check_zero4_q26r.mjs --self-test
 	node scripts/aggregate_zero4_q26r.mjs --self-test
+	node scripts/plan_q26r_aws_rescue.mjs --self-test
+	node scripts/plan_q26r_aws_rescue.mjs --check-workflow \
+		.github/workflows/q26r-aws-rescue.yml
 
 zero4-q26r-train: literary_lm export_literary quantity_request_eval \
 		zero4-q26r-check zero4-q22-data corpus/bpe/.zero3.stamp channel-data \

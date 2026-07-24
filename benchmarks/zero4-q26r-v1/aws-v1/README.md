@@ -1,6 +1,6 @@
 # Q2.6-R bounded AWS execution
 
-Status: **authorized, not yet consumed**, 2026-07-23.
+Status: **authorization consumed; execution recovery pending**, 2026-07-24.
 
 This addendum supersedes only the cancelled execution route described in
 `../AWS-EXECUTION.md`. It does not change the preregistered Q2.6-R scientific
@@ -27,3 +27,21 @@ contingency.
 Both seeds must execute even if the first resolves no-go. A valid no-go is a
 scientific result; timeout, missing output, source drift, duplicate execution,
 or infrastructure failure is not.
+
+## Rescue path
+
+Launch workflow run `30047634061` consumed the authorization. Its original
+collector could not get past an opaque EC2 validation gate after the instance
+deadlines, so repeated collection retries were stopped.
+
+The manual `q26r-aws-rescue.yml` workflow is execution recovery only. It reads
+the immutable launch receipt, prints exact EC2 state and identity evidence,
+recovers S3 statuses and result files before remediation, and requests
+termination only for active instances that are both overdue and an exact match
+for the receipt's type and identity tags. It never starts training and never
+waits for compute.
+
+The rescue planner may classify the evidence as `execution-failure`, `pending`,
+or `scientific-candidate`. It never emits a scientific verdict. Candidate
+results still require the frozen collector, both seed checks, completion
+validation, the family aggregate, and green CI before merge.
