@@ -1,6 +1,6 @@
 # Q2.6-R bounded AWS replacement
 
-Status: **final bounded recovery authorized once**, 2026-07-24.
+Status: **corrective recovery-3 authorized once**, 2026-07-24.
 
 This directory contains the replacement execution envelope for Q2.6-R. It
 exists because the first bounded AWS route lost its ephemeral EC2 identity
@@ -21,14 +21,21 @@ the missing `ec2:DescribeInstanceAttribute` permission, the immediately
 terminated seed 1 instance, absent seed 3 instance, and second reserved
 60-second minimum.
 
-The approved final recovery:
+Recovery-2 then launched both instances but failed safely before training
+because its bootstrap still asserted the former `$1.18` cost cap. The
+[`bootstrap failure record`](bootstrap-failure-30119938666.json) freezes both
+infrastructure-error statuses, shutdown receipts, hashes, and 167 observed
+instance-seconds.
+
+The approved corrective recovery-3:
 
 - adds only `ec2:DescribeInstanceAttribute` to the GitHub Actions role;
 - proves that permission with a zero-compute AWS dry run;
-- validates both failed runs' write-once locks and missing receipts;
-- acquires exactly one `recovery-2.lock`;
+- regression-tests the bootstrap guards against the frozen budget;
+- validates all prior write-once locks and recovery-2 failure receipts;
+- acquires exactly one `recovery-3.lock`;
 - starts two independently capped AWS instances at 6,190 seconds/$1.17 each;
-- keeps all-in worst-case compute below the original $2.38 ceiling;
+- caps all-in worst-case compute at $2.394211111111111;
 - captures shutdown behavior from the correct EC2 attribute API.
 
 The short-lived launch workflow does not wait for training. Long computation

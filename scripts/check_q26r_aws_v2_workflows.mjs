@@ -26,9 +26,11 @@ export function validateWorkflowText({
   collect,
   iamPreflight,
   provision,
+  budget,
   runner,
   userData,
 }) {
+  const frozenBudget = JSON.parse(budget);
   assert(launch.includes("workflow_dispatch:"), "v2 launch is not manual");
   assert(
     launch.includes("benchmarks/zero4-q26r-v1/aws-v2/budget.json"),
@@ -60,12 +62,18 @@ export function validateWorkflowText({
   assert(
     launch.includes("experiments/zero4-q26r-aws-v2/recovery-1.lock")
       && launch.includes("experiments/zero4-q26r-aws-v2/recovery-2.lock")
+      && launch.includes("experiments/zero4-q26r-aws-v2/recovery-3.lock")
       && launch.includes("zero.aws_recovery_execution_lock.v2")
       && launch.includes("ZERO_FAILED_LAUNCH_RUN_ID_1")
       && launch.includes("ZERO_FAILED_LAUNCH_RUN_ID_2")
+      && launch.includes("ZERO_FAILED_LAUNCH_RUN_ID_3")
       && launch.includes("original_execution_lock_sha256")
       && launch.includes("recovery_1_lock_sha256")
       && launch.includes("recovery_2_lock_sha256")
+      && launch.includes("recovery_3_lock_sha256")
+      && launch.includes("bootstrap-failure-30119938666.json")
+      && launch.includes('.status == "infrastructure-error"')
+      && launch.includes("results/result.json")
       && launch.includes("--client-token"),
     "v2 launch lacks one-time recovery safety",
   );
@@ -103,7 +111,8 @@ export function validateWorkflowText({
   assert(
     collect.includes("original-execution-lock-30117320329.json")
       && collect.includes("recovery-1-lock-30118477546.json")
-      && collect.includes('recovery-2-lock-${ZERO_SOURCE_RUN_ID}.json')
+      && collect.includes("recovery-2-lock-30119938666.json")
+      && collect.includes('recovery-3-lock-${ZERO_SOURCE_RUN_ID}.json')
       && collect.includes("zero.aws_recovery_execution_lock.v2"),
     "v2 collector does not freeze recovery locks",
   );
@@ -191,8 +200,25 @@ export function validateWorkflowText({
   );
 
   assert(userData.startsWith("#!/bin/bash"), "v2 user data has no shell identity");
-  assert(userData.includes("HARD_INSTANCE_SECONDS=6190"), "v2 watchdog cap drifted");
-  assert(userData.includes("HARD_WORKLOAD_SECONDS=6130"), "v2 workload cap drifted");
+  assert(
+    userData.includes(
+      `HARD_INSTANCE_SECONDS=${frozenBudget.per_seed_execution.max_instance_seconds}`,
+    ),
+    "v2 watchdog cap differs from the frozen budget",
+  );
+  assert(
+    userData.includes(
+      `HARD_WORKLOAD_SECONDS=${frozenBudget.per_seed_execution.workload_timeout_seconds}`,
+    ),
+    "v2 workload cap differs from the frozen budget",
+  );
+  assert(
+    userData.includes(
+      `test "$ZERO_MAX_COMPUTE_USD" = "${frozenBudget.per_seed_execution.max_compute_usd}"`,
+    )
+      && !userData.includes('test "$ZERO_MAX_COMPUTE_USD" = "1.18"'),
+    "v2 bootstrap cost guard differs from the frozen budget",
+  );
   assert(
     userData.includes("PUBLICATION_RESERVE_SECONDS=60"),
     "v2 publication reserve drifted",
@@ -216,6 +242,7 @@ export function validateWorkflowFiles(
   collectPath = ".github/workflows/q26r-aws-v2-collect.yml",
   iamPreflightPath = ".github/workflows/q26r-aws-v2-iam-preflight.yml",
   provisionPath = "scripts/aws/provision.sh",
+  budgetPath = "benchmarks/zero4-q26r-v1/aws-v2/budget.json",
   runnerPath = "scripts/aws/q26r-v2-seed.sh",
   userDataPath = "scripts/aws/q26r-v2-seed-user-data.sh",
 ) {
@@ -224,6 +251,7 @@ export function validateWorkflowFiles(
     collect: read(collectPath),
     iamPreflight: read(iamPreflightPath),
     provision: read(provisionPath),
+    budget: read(budgetPath),
     runner: read(runnerPath),
     userData: read(userDataPath),
   });
@@ -235,6 +263,7 @@ function selfTest() {
     collect: read(".github/workflows/q26r-aws-v2-collect.yml"),
     iamPreflight: read(".github/workflows/q26r-aws-v2-iam-preflight.yml"),
     provision: read("scripts/aws/provision.sh"),
+    budget: read("benchmarks/zero4-q26r-v1/aws-v2/budget.json"),
     runner: read("scripts/aws/q26r-v2-seed.sh"),
     userData: read("scripts/aws/q26r-v2-seed-user-data.sh"),
   };
@@ -268,6 +297,12 @@ function selfTest() {
       copy.userData = copy.userData.replace(
         "zero.aws_q26r_shutdown_intent.v2",
         "zero.aws_q26r_shutdown_intent.removed",
+      );
+    }],
+    ["bootstrap cost contract", (copy) => {
+      copy.userData = copy.userData.replace(
+        'test "$ZERO_MAX_COMPUTE_USD" = "1.17"',
+        'test "$ZERO_MAX_COMPUTE_USD" = "1.18"',
       );
     }],
   ]) {

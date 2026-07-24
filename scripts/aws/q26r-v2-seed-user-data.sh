@@ -218,7 +218,7 @@ test "$ZERO_EXECUTION_ID" = "zero4-q26r-aws-v2"
 test "$ZERO_MAX_INSTANCE_SECONDS" = "$HARD_INSTANCE_SECONDS"
 test "$ZERO_WORKLOAD_TIMEOUT_SECONDS" = "$HARD_WORKLOAD_SECONDS"
 test "$ZERO_BUDGET_FILE" = "benchmarks/zero4-q26r-v1/aws-v2/budget.json"
-test "$ZERO_MAX_COMPUTE_USD" = "1.18"
+test "$ZERO_MAX_COMPUTE_USD" = "1.17"
 [[ "$ZERO_LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
 test "$ZERO_LAUNCH_EPOCH" = "$BOOT_LAUNCH_EPOCH"
 
