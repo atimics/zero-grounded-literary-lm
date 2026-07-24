@@ -302,15 +302,22 @@ function selfTest() {
   process.chdir(new URL("..", import.meta.url).pathname);
   try {
     validateV2Budget(budget);
+
+    const unapproved = structuredClone(budget);
+    unapproved.authorization.manual_approval_observed = false;
+    unapproved.authorization.authorized_for_execution = false;
+    unapproved.authorization.authorized_at = null;
+    validateV2Budget(unapproved);
+
     let authorizationRejected = false;
     try {
-      validateV2Budget(budget, { requireAuthorized: true });
+      validateV2Budget(unapproved, { requireAuthorized: true });
     } catch {
       authorizationRejected = true;
     }
     assert(authorizationRejected, "v2 launch accepted an unapproved budget");
 
-    const approved = structuredClone(budget);
+    const approved = structuredClone(unapproved);
     approved.authorization.manual_approval_observed = true;
     approved.authorization.authorized_for_execution = true;
     approved.authorization.authorized_at = "2026-07-24";
