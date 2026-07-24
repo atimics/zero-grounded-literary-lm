@@ -1,0 +1,143 @@
+{
+  "schema": "zero.zero4_q26_result.v1",
+  "seed": 1,
+  "stage": "cumulative-tangent",
+  "decision": "go",
+  "stoppedReason": "no Pareto improvement for 200 committed updates",
+  "attempts": 600,
+  "committed": 600,
+  "guardBudget": 0.015,
+  "guardDiagnostics": {
+    "fullScaleAccepted": 600,
+    "backtrackedAccepted": 0,
+    "exhausted": 0,
+    "trialEvaluations": 600,
+    "maxTrialsUsed": 1,
+    "minAcceptedScale": 1,
+    "warningTrialExceedances": 0,
+    "hardTrialExceedances": 0,
+    "maxTrialRelativeIncrease": 0.0005057062180562855,
+    "maxCommittedRelativeIncrease": 0.0005057062180562855,
+    "projectedTrials": 335,
+    "projectedAccepted": 335,
+    "unprojectedTrials": 265,
+    "maxProjectionRemovedFraction": 0.13849050770151,
+    "meanProjectionRemovedFraction": 0.032257099272542715,
+    "maxProjectionPreDot": 0.0013163977586623994,
+    "maxAbsoluteProjectionPostDot": 6.094828235827525e-7,
+    "transactionSeconds": 4250.36
+  },
+  "replicationContractSha256": "f966485a209d21ef54b56601fb2d91ebcf318d4da646b5572c0a432996140318",
+  "diagnosticContractSha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80",
+  "immutable_teachers": {
+    "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+    "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+    "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+  },
+  "quantity_corpus": {
+    "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+    "manifest_sha256": "8cb933994919a43f2cfab4cab8538a2481f08c8020dc602d26192c3b107ecb35",
+    "tokens_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+    "sentinel_sha256": "02c6908142f7affb035d606a02994c3ee15ef3bd6ecb8915f8f64f86c9aa2be3",
+    "public_sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "promotion_sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "promotion_inaccessible_during_training": true
+  },
+  "selected": {
+    "committed": 400,
+    "totalAttempts": 400,
+    "phase": "acquisition",
+    "quantityPass": true,
+    "minimumFacultyMargin": 0.010000000000000009,
+    "replayLoss": 1.648,
+    "replayRegression": 0.010423053341508219,
+    "feasible": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.98,
+      "arguments": 1,
+      "exact_request": 0.98,
+      "oracle_arithmetic": 1,
+      "committed": 0.98,
+      "exact_artifact": 0.98
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    },
+    "checkpoint": "/tmp/zero-results/zero4-q26r-v1/seed1/recovery/u000400.ckpt"
+  },
+  "frontier": [
+    {
+      "committed": 400,
+      "totalAttempts": 400,
+      "phase": "acquisition",
+      "quantityPass": true,
+      "minimumFacultyMargin": 0.010000000000000009,
+      "replayLoss": 1.648,
+      "replayRegression": 0.010423053341508219,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.98,
+        "arguments": 1,
+        "exact_request": 0.98,
+        "oracle_arithmetic": 1,
+        "committed": 0.98,
+        "exact_artifact": 0.98
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "/tmp/zero-results/zero4-q26r-v1/seed1/recovery/u000400.ckpt"
+    }
+  ],
+  "promotion": {
+    "evaluatedOnceAtEnd": true,
+    "quantityPass": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.984,
+      "arguments": 1,
+      "exact_request": 0.984,
+      "oracle_arithmetic": 1,
+      "committed": 0.984,
+      "exact_artifact": 0.984
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    }
+  },
+  "artifacts": {
+    "checkpoint": "/tmp/zero-results/zero4-q26r-v1/seed1/selected.ckpt",
+    "checkpointSha256": "8b16a71fa27e54c81d599d6e05b59a4eea388b842a1dd4996ca5909f2623cd9a",
+    "quantized": "/tmp/zero-results/zero4-q26r-v1/seed1/selected.litq8",
+    "quantizedSha256": "67a1d5bafd00164b158811fc99a6f9b558e7414ff604b6f513e26a196b1eb65e"
+  }
+}

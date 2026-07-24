@@ -1,0 +1,121 @@
+{
+  "schema": "zero.zero4_q26_selection.v1",
+  "seed": 1,
+  "stage": "cumulative-tangent",
+  "decision": "go",
+  "stoppedReason": "no Pareto improvement for 200 committed updates",
+  "attempts": 600,
+  "committed": 600,
+  "guardBudget": 0.015,
+  "guardDiagnostics": {
+    "fullScaleAccepted": 600,
+    "backtrackedAccepted": 0,
+    "exhausted": 0,
+    "trialEvaluations": 600,
+    "maxTrialsUsed": 1,
+    "minAcceptedScale": 1,
+    "warningTrialExceedances": 0,
+    "hardTrialExceedances": 0,
+    "maxTrialRelativeIncrease": 0.0005057062180562855,
+    "maxCommittedRelativeIncrease": 0.0005057062180562855,
+    "projectedTrials": 335,
+    "projectedAccepted": 335,
+    "unprojectedTrials": 265,
+    "maxProjectionRemovedFraction": 0.13849050770151,
+    "meanProjectionRemovedFraction": 0.032257099272542715,
+    "maxProjectionPreDot": 0.0013163977586623994,
+    "maxAbsoluteProjectionPostDot": 6.094828235827525e-7,
+    "transactionSeconds": 4250.36
+  },
+  "frontier": [
+    {
+      "committed": 400,
+      "totalAttempts": 400,
+      "phase": "acquisition",
+      "quantityPass": true,
+      "minimumFacultyMargin": 0.010000000000000009,
+      "replayLoss": 1.648,
+      "replayRegression": 0.010423053341508219,
+      "feasible": true,
+      "rates": {
+        "closed": 1,
+        "syntax": 1,
+        "operation": 0.98,
+        "arguments": 1,
+        "exact_request": 0.98,
+        "oracle_arithmetic": 1,
+        "committed": 0.98,
+        "exact_artifact": 0.98
+      },
+      "gates": {
+        "closed": true,
+        "syntax": true,
+        "operation": true,
+        "arguments": true,
+        "exact_request": true,
+        "oracle_arithmetic": true,
+        "committed": true,
+        "exact_artifact": true,
+        "rejected_state_mutations": true
+      },
+      "checkpoint": "/tmp/zero-results/zero4-q26r-v1/seed1/recovery/u000400.ckpt"
+    }
+  ],
+  "selected": {
+    "committed": 400,
+    "totalAttempts": 400,
+    "phase": "acquisition",
+    "quantityPass": true,
+    "minimumFacultyMargin": 0.010000000000000009,
+    "replayLoss": 1.648,
+    "replayRegression": 0.010423053341508219,
+    "feasible": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.98,
+      "arguments": 1,
+      "exact_request": 0.98,
+      "oracle_arithmetic": 1,
+      "committed": 0.98,
+      "exact_artifact": 0.98
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    },
+    "checkpoint": "/tmp/zero-results/zero4-q26r-v1/seed1/recovery/u000400.ckpt"
+  },
+  "promotion": {
+    "evaluatedOnceAtEnd": true,
+    "quantityPass": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 0.984,
+      "arguments": 1,
+      "exact_request": 0.984,
+      "oracle_arithmetic": 1,
+      "committed": 0.984,
+      "exact_artifact": 0.984
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true
+    }
+  }
+}

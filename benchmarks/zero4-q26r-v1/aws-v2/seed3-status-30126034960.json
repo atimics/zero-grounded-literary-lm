@@ -1,0 +1,23 @@
+{
+  "schema": "zero.aws_q26r_seed_status.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "seed": 3,
+  "instance_id": "i-052fd0735dfc27bda",
+  "status": "complete",
+  "phase": "publication",
+  "exit_code": 0,
+  "started_at": "2026-07-24T21:00:23Z",
+  "finished_at": "2026-07-24T22:22:20Z",
+  "git_commit": "e6e717a53d6903b71d8f563104ec9ce75c65ce11",
+  "budget_sha256": "0c90a8ede923f7afc131b3331f49528585416c17cf167a2c8478fa5b101e87a0",
+  "scientific_result_available": true,
+  "decision": "go",
+  "result_sha256": "38bda6500ddb1012cb0c37fe691b4803447e9f03e62d0a9c34f0b4c3f39f4537",
+  "observed_instance_seconds": 5000,
+  "observed_compute_usd": 0.9444444444444445,
+  "max_instance_seconds": 6190,
+  "max_compute_usd": 1.17,
+  "training_backend": "OpenBLAS",
+  "openblas_threads": 16,
+  "quantity_evaluator_jobs": 16
+}
