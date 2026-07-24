@@ -7,9 +7,9 @@
     "scope": "one combined replacement AWS execution of Q2.6-R seeds 1 and 3",
     "one_combined_execution_only": true,
     "requires_manual_approval": true,
-    "manual_approval_observed": false,
-    "authorized_for_execution": false,
-    "authorized_at": null
+    "manual_approval_observed": true,
+    "authorized_for_execution": true,
+    "authorized_at": "2026-07-24"
   },
   "scientific_source_lock": {
     "base_execution_budget_path": "benchmarks/zero4-q26r-v1/aws-v1/budget.json",
