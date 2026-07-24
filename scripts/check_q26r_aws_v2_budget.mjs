@@ -79,6 +79,47 @@ export function validateV2Budget(
     assert(authorization.authorized_for_execution === true, "v2 execution is not authorized");
   }
 
+  const recoveryAuthorization = budget.recovery_authorization;
+  assert(
+    recoveryAuthorization?.scope
+      === "one recovery launch after infrastructure-only preflight failure 30117320329",
+    "v2 recovery authorization scope drifted",
+  );
+  assert(
+    recoveryAuthorization.failed_launch_workflow_run_id === "30117320329",
+    "v2 recovery source run drifted",
+  );
+  assert(recoveryAuthorization.one_recovery_launch_only === true, "v2 recovery is not one-time");
+  assert(recoveryAuthorization.requires_manual_approval === true, "v2 recovery approval gate is absent");
+  assert(
+    recoveryAuthorization.manual_approval_observed
+      === recoveryAuthorization.authorized_for_execution,
+    "v2 recovery approval and execution authorization must change together",
+  );
+  if (recoveryAuthorization.authorized_for_execution) {
+    assert(
+      recoveryAuthorization.manual_approval_observed === true
+        && typeof recoveryAuthorization.authorized_at === "string"
+        && /^\d{4}-\d{2}-\d{2}$/.test(recoveryAuthorization.authorized_at),
+      "v2 recovery authorization is incomplete",
+    );
+  } else {
+    assert(
+      recoveryAuthorization.authorized_at === null,
+      "unapproved v2 recovery has an authorization date",
+    );
+  }
+  if (requireAuthorized) {
+    assert(
+      recoveryAuthorization.manual_approval_observed === true,
+      "v2 recovery manual approval is missing",
+    );
+    assert(
+      recoveryAuthorization.authorized_for_execution === true,
+      "v2 recovery execution is not authorized",
+    );
+  }
+
   const science = budget.scientific_source_lock;
   assert(
     science?.base_execution_budget_path
@@ -168,6 +209,90 @@ export function validateV2Budget(
     "v2 replacement would duplicate accepted evidence",
   );
 
+  const recovery = budget.recovery_basis;
+  assert(
+    recovery?.preflight_failure_path
+      === "benchmarks/zero4-q26r-v1/aws-v2/preflight-failure-30117320329.json",
+    "v2 preflight failure path drifted",
+  );
+  assert(fs.existsSync(recovery.preflight_failure_path), "v2 preflight failure is unavailable");
+  assert(
+    sha256(recovery.preflight_failure_path) === recovery.preflight_failure_sha256,
+    "v2 preflight failure hash mismatch",
+  );
+  const preflight = readJson(recovery.preflight_failure_path);
+  assert(
+    preflight.schema === "zero.q26r_aws_preflight_failure.v2"
+      && preflight.experiment === budget.id
+      && preflight.status === "execution-preflight-failure",
+    "v2 preflight failure classification drifted",
+  );
+  assert(
+    recovery.failed_launch_workflow_run_id === preflight.source.launch_workflow_run_id
+      && recovery.failed_launch_git_commit === preflight.source.git_commit
+      && recovery.failed_launch_budget_sha256 === preflight.source.budget_sha256,
+    "v2 failed launch identity drifted",
+  );
+  assert(
+    recovery.partial_seed_1_instance_id
+      === preflight.partial_launch.seed_1.instance_id
+      && recovery.seed_1_termination_requested
+        === preflight.partial_launch.seed_1.termination_requested
+      && recovery.seed_3_instance_created
+        === preflight.partial_launch.seed_3.created,
+    "v2 partial launch evidence drifted",
+  );
+  assert(
+    recovery.candidate_results_observed
+      === preflight.scientific_effect.candidate_results_observed
+      && recovery.scientific_result_observed
+        === preflight.scientific_effect.scientific_result_observed
+      && recovery.scientific_result_accepted
+        === preflight.scientific_effect.scientific_result_accepted
+      && recovery.family_inference === preflight.scientific_effect.family_inference
+      && recovery.recovery_may_not_change_science === true,
+    "v2 recovery scientific boundary drifted",
+  );
+  assert(
+    preflight.failure.execution_lock_acquired === true
+      && preflight.failure.launch_receipt_published === false
+      && preflight.failure.identity_receipts_published === false
+      && preflight.failure.seed_statuses_published === false
+      && preflight.failure.shutdown_intents_published === false
+      && preflight.scientific_effect.training_started === false
+      && preflight.recovery.eligible === true,
+    "v2 preflight failure does not permit recovery",
+  );
+  assert(
+    preflight.failure.classification
+      === "identity-capture-implementation-error"
+      && preflight.failure.cause
+        === "the launch asserted InstanceInitiatedShutdownBehavior in DescribeInstances output, but AWS exposes that value through DescribeInstanceAttribute"
+      && preflight.partial_launch.seed_1.created === true
+      && preflight.partial_launch.seed_1.state_at_termination_response
+        === "shutting-down"
+      && preflight.partial_launch.seed_3.created === false,
+    "v2 preflight implementation failure evidence drifted",
+  );
+  assert(
+    preflight.billing_reservation.hourly_rate_usd === 0.68
+      && preflight.billing_reservation.reserved_instance_seconds === 60
+      && Math.abs(
+        preflight.billing_reservation.reserved_compute_usd
+          - 60 * 0.68 / 3600,
+      ) < 1e-15,
+    "v2 preflight billing reservation drifted",
+  );
+  assert(
+    preflight.recovery.requires_new_write_once_lock === true
+      && preflight.recovery.prior_lock_must_remain_immutable === true
+      && preflight.recovery.prior_job_artifacts_forbidden_as_execution_inputs
+        === true
+      && preflight.recovery.prior_billing_reservation_must_be_deducted
+        === true,
+    "v2 preflight recovery safeguards drifted",
+  );
+
   const { price_checked_at: v2PriceDate, ...v2Venue } = budget.venue;
   const { price_checked_at: _basePriceDate, ...baseVenue } = base.venue;
   assert(same(v2Venue, baseVenue), "v2 venue differs from v1");
@@ -192,9 +317,9 @@ export function validateV2Budget(
   assert(evidence.scientific_decisions_used_for_budgeting === false, "v2 budget uses outcomes");
 
   const perSeed = budget.per_seed_execution;
-  assert(perSeed?.max_instance_seconds === 6300, "v2 per-seed cap drifted");
+  assert(perSeed?.max_instance_seconds === 6240, "v2 per-seed cap drifted");
   assert(perSeed.workload_timeout_seconds === 6180, "v2 workload timeout drifted");
-  assert(perSeed.publication_reserve_seconds === 120, "v2 publication reserve drifted");
+  assert(perSeed.publication_reserve_seconds === 60, "v2 publication reserve drifted");
   assert(
     perSeed.workload_timeout_seconds + perSeed.publication_reserve_seconds
       === perSeed.max_instance_seconds,
@@ -227,6 +352,56 @@ export function validateV2Budget(
     combined.both_seed_statuses_required === true
       && combined.one_seed_cannot_extend_the_other === true,
     "v2 combined budget safeguards drifted",
+  );
+
+  const allIn = budget.all_in_authorization;
+  assert(
+    allIn?.original_max_instance_seconds_sum === 12600
+      && allIn.original_max_compute_usd === 2.38,
+    "v2 original authorization drifted",
+  );
+  assert(
+    allIn.preflight_reserved_instance_seconds
+      === preflight.billing_reservation.reserved_instance_seconds
+      && allIn.preflight_reserved_compute_usd
+        === preflight.billing_reservation.reserved_compute_usd,
+    "v2 preflight billing reservation drifted",
+  );
+  assert(
+    allIn.recovery_max_instance_seconds_sum
+      === combined.max_instance_seconds_sum
+      && allIn.recovery_max_compute_usd === combined.max_compute_usd,
+    "v2 recovery authorization cap drifted",
+  );
+  assert(
+    allIn.all_in_max_instance_seconds_sum
+      === allIn.preflight_reserved_instance_seconds
+        + allIn.recovery_max_instance_seconds_sum
+      && Math.abs(
+        allIn.all_in_max_compute_usd
+          - (
+            allIn.preflight_reserved_compute_usd
+              + allIn.recovery_max_compute_usd
+          ),
+      ) < 1e-12,
+    "v2 all-in recovery cap does not reconcile",
+  );
+  assert(
+    allIn.remaining_instance_seconds_headroom
+      === allIn.original_max_instance_seconds_sum
+        - allIn.all_in_max_instance_seconds_sum
+      && Math.abs(
+        allIn.remaining_compute_usd_headroom
+          - (
+            allIn.original_max_compute_usd
+              - allIn.all_in_max_compute_usd
+          ),
+      ) < 1e-12
+      && allIn.all_in_max_instance_seconds_sum
+        <= allIn.original_max_instance_seconds_sum
+      && allIn.all_in_max_compute_usd < allIn.original_max_compute_usd
+      && allIn.within_original_authorization === true,
+    "v2 recovery exceeds the original authorization",
   );
 
   const projection = budget.budget_projection;
@@ -263,7 +438,14 @@ export function validateV2Budget(
 
   const provenance = budget.provenance_gate;
   assert(
-    provenance?.launch_receipt_put_once === true
+    provenance?.original_execution_lock_must_validate === true
+      && provenance.failed_launch_receipts_must_be_absent === true
+      && provenance.recovery_execution_lock_put_once === true
+      && provenance.original_execution_lock_sha256_bound_into_launch_receipt
+        === true
+      && provenance.recovery_execution_lock_sha256_bound_into_launch_receipt
+        === true
+      && provenance.launch_receipt_put_once === true
       && provenance.canonical_aws_identity_receipt_required_for_each_seed === true
       && provenance.identity_receipt_put_once === true
       && provenance.identity_receipt_sha256_bound_into_launch_receipt === true
@@ -307,6 +489,9 @@ function selfTest() {
     unapproved.authorization.manual_approval_observed = false;
     unapproved.authorization.authorized_for_execution = false;
     unapproved.authorization.authorized_at = null;
+    unapproved.recovery_authorization.manual_approval_observed = false;
+    unapproved.recovery_authorization.authorized_for_execution = false;
+    unapproved.recovery_authorization.authorized_at = null;
     validateV2Budget(unapproved);
 
     let authorizationRejected = false;
@@ -321,6 +506,9 @@ function selfTest() {
     approved.authorization.manual_approval_observed = true;
     approved.authorization.authorized_for_execution = true;
     approved.authorization.authorized_at = "2026-07-24";
+    approved.recovery_authorization.manual_approval_observed = true;
+    approved.recovery_authorization.authorized_for_execution = true;
+    approved.recovery_authorization.authorized_at = "2026-07-24";
     validateV2Budget(approved, { requireAuthorized: true });
 
     for (const [name, mutate] of [
@@ -334,10 +522,16 @@ function selfTest() {
         copy.workload.authorized_seeds = [1];
       }],
       ["wall cap", (copy) => {
-        copy.per_seed_execution.max_instance_seconds = 6301;
+        copy.per_seed_execution.max_instance_seconds = 6241;
       }],
       ["cost cap", (copy) => {
-        copy.per_seed_execution.max_compute_usd = 1.2;
+        copy.per_seed_execution.max_compute_usd = 1.19;
+      }],
+      ["recovery approval", (copy) => {
+        copy.recovery_authorization.authorized_for_execution = false;
+      }],
+      ["all-in cost", (copy) => {
+        copy.all_in_authorization.all_in_max_compute_usd = 2.39;
       }],
       ["identity receipt", (copy) => {
         copy.provenance_gate.identity_receipt_put_once = false;

@@ -37,15 +37,32 @@ export function validateWorkflowText({
     "v2 launch does not require explicit authorization",
   );
   assert(launch.includes("zero4-q26r-aws-v2"), "v2 launch identity drifted");
-  assert(launch.includes("max_instance_seconds_sum: 12600"), "v2 launch time cap drifted");
-  assert(launch.includes("max_compute_usd: 2.38"), "v2 launch cost cap drifted");
+  assert(
+    launch.includes("max_instance_seconds_sum: $max_instance_seconds_sum"),
+    "v2 launch time cap drifted",
+  );
+  assert(
+    launch.includes("max_compute_usd: $max_compute_usd"),
+    "v2 launch cost cap drifted",
+  );
   assert(launch.includes("aws ec2 run-instances"), "v2 launch cannot create instances");
   assert(
     launch.includes("zero.aws_q26r_instance_identity.v2")
       && launch.includes("identity_sha256")
       && launch.includes("SourceArchiveSha256")
-      && launch.includes("aws-ec2-describe-instances"),
+      && launch.includes("aws-ec2-describe-instances+describe-instance-attribute")
+      && launch.includes("aws ec2 describe-instance-attribute")
+      && launch.includes(".InstanceInitiatedShutdownBehavior.Value"),
     "v2 launch does not freeze AWS identity",
+  );
+  assert(
+    launch.includes("experiments/zero4-q26r-aws-v2/recovery-1.lock")
+      && launch.includes("zero.aws_recovery_execution_lock.v2")
+      && launch.includes("jobs/${ZERO_FAILED_LAUNCH_RUN_ID}/launch.json")
+      && launch.includes("original_execution_lock_sha256")
+      && launch.includes("recovery_lock_sha256")
+      && launch.includes("--client-token"),
+    "v2 launch lacks one-time recovery safety",
   );
   assert(
     (launch.match(/--if-none-match '\*'/g) ?? []).length >= 5,
@@ -56,8 +73,9 @@ export function validateWorkflowText({
     [
       "scripts/train_zero4_q26.mjs",
       "zero4-q26r-train",
-      "sleep 6300",
+      "sleep 6240",
       "sleep 6180",
+      "$i.InstanceInitiatedShutdownBehavior",
     ],
     "v2 launch",
   );
@@ -70,6 +88,12 @@ export function validateWorkflowText({
   assert(
     collect.includes("--verify-seed-provenance"),
     "v2 collector does not verify seed provenance",
+  );
+  assert(
+    collect.includes("original-execution-lock-30117320329.json")
+      && collect.includes('recovery-lock-${ZERO_SOURCE_RUN_ID}.json')
+      && collect.includes("zero.aws_recovery_execution_lock.v2"),
+    "v2 collector does not freeze recovery locks",
   );
   assert(
     collect.includes("InvalidInstanceID.NotFound")
@@ -105,6 +129,7 @@ export function validateWorkflowText({
       "timeout --signal",
       'training-diagnostics/seed${seed}-live.json',
       'training-diagnostics/seed${seed}-live.err',
+      "$i.InstanceInitiatedShutdownBehavior",
     ],
     "v2 collector",
   );
@@ -130,8 +155,12 @@ export function validateWorkflowText({
   );
 
   assert(userData.startsWith("#!/bin/bash"), "v2 user data has no shell identity");
-  assert(userData.includes("HARD_INSTANCE_SECONDS=6300"), "v2 watchdog cap drifted");
+  assert(userData.includes("HARD_INSTANCE_SECONDS=6240"), "v2 watchdog cap drifted");
   assert(userData.includes("HARD_WORKLOAD_SECONDS=6180"), "v2 workload cap drifted");
+  assert(
+    userData.includes("PUBLICATION_RESERVE_SECONDS=60"),
+    "v2 publication reserve drifted",
+  );
   assert(
     userData.includes("zero.aws_q26r_shutdown_intent.v2")
       && userData.includes("--if-none-match '*'")
