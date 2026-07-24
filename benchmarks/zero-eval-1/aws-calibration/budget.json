@@ -1,0 +1,131 @@
+{
+  "schema": "zero.external_eval_calibration_budget.v1",
+  "id": "zero-eval-1-aws-calibration",
+  "status": "authorized",
+  "purpose": "Measure deterministic 16-process native inference throughput for the four frozen ZERO-EVAL-1 task shapes without publishing or interpreting any benchmark score.",
+  "scientific_inference_allowed": false,
+  "training_allowed": false,
+  "authorization": {
+    "authorized_at": "2026-07-24",
+    "authority": "user instruction: do it",
+    "scope": "one AWS execution of ZERO-EVAL-1 timing calibration only",
+    "one_execution_only": true,
+    "full_evaluation_authorized": false
+  },
+  "source_lock": {
+    "contract_path": "benchmarks/zero-eval-1/contract.json",
+    "contract_sha256": "a14261cd4b48ed04f8e89d162e20cbe1e019e1d02537be1ad06b83196aebac05",
+    "evaluator_path": "external_eval.c",
+    "evaluator_sha256": "6fcbbbfc2b017c817d830057b284f323597e0aba55f4ab9908635b9d4da7f95b",
+    "inference_path": "literary_infer.c",
+    "inference_sha256": "7a0d0156587647881e8b18108b8a1265117ddee5827e42c5ece37d066f852f76",
+    "inference_header_path": "literary_infer.h",
+    "inference_header_sha256": "f947d132d2ca5b9bdfe9a44fdea00f339850efe91fb26c673f0f6a1a6b004453",
+    "channel_protocol_path": "channel_protocol.h",
+    "channel_protocol_sha256": "0b382e315c8acd369973bb9377305d5ceae9ec387e7dbbc4e91ae670ef6f74e2",
+    "makefile_path": "Makefile",
+    "makefile_sha256": "02142f2138888e947b81ac37a3a07876db29c07e16a86ed45fea3da50cd9a932",
+    "preparer_path": "scripts/prepare_zero_eval1.mjs",
+    "preparer_sha256": "a5447261eba07e9e2266b1a774499632a82344634be285296bd50119d0ef99ed",
+    "sampler_path": "scripts/sample_zero_eval1_calibration.mjs",
+    "sampler_sha256": "6e672df78bba42c4bc93e7dd7ca917491b0fe92e6bec20c83397b8587d26f839",
+    "runner_path": "scripts/run_zero_eval1.mjs",
+    "runner_sha256": "7621ce5219cfc3cb68f7b00c4c0d2bfbcc839907b5bed03ac061e84e6a86ef9d",
+    "result_compiler_path": "scripts/compile_zero_eval1_calibration_result.mjs",
+    "result_compiler_sha256": "1ae31887863ccc2e21b706919e8f4087fc43b52fb0c3a66b5269a2d9746a62d3",
+    "contract_checker_path": "scripts/check_zero_eval1.mjs",
+    "contract_checker_sha256": "f416fc491a44c2509a81a792abcfe0442c632c9f5a279b63ba04fdea94957abc",
+    "calibration_checker_path": "scripts/check_zero_eval1_calibration.mjs",
+    "calibration_checker_sha256": "8710bba08b1a727bb65352d5447365e4d729f45324d8a8d9573512e918ab83c1",
+    "workload_path": "scripts/aws/zero-eval1-calibration.sh",
+    "workload_sha256": "eab9901b773a0533552a448347b18149e200379205bddf2f18d69fd3588e19fd",
+    "user_data_path": "scripts/aws/zero-eval1-calibration-user-data.sh",
+    "user_data_sha256": "7b6d15139ca303b3ff3dcdbe2158af5292ab3133033cf2a53c21ab1cbc2f6806",
+    "workflow_path": ".github/workflows/zero-eval1-calibration.yml",
+    "workflow_sha256": "bb330a62aacf9ba0fa5e840db6a736b843bf63134aa038ae6e3ed8086a34ef22",
+    "model_path": "docs/model.litq8",
+    "model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "model_bytes": 4920400
+  },
+  "calibration_datasets": {
+    "blimp": {
+      "source_sha256": "b69d5f829d23c648dbf7cfbfd64ba9d7b3cc9f1650e8041ada06c7e0e67da55c",
+      "sample_sha256": "324a87a45eecf5c1a9e53d0183307c87e396be3217485642f815d1c90ec9fab5",
+      "sample_bytes": 11582,
+      "cases": 64
+    },
+    "hellaswag": {
+      "source_sha256": "188d66998285911fdf402ec291c088b91f1b373907d0d59fb6e3b1dd8b46f457",
+      "sample_sha256": "f27471821e974b581a6363c866bc38328cf19d8ba085494046d538c9c0131e3a",
+      "sample_bytes": 52859,
+      "cases": 64
+    },
+    "lambada": {
+      "source_sha256": "17886d1b0b1cf045d7014d363907dc9defb7a492d3764a78e7d90d5ce137b627",
+      "sample_sha256": "0baaa9bb2d06676880507d0042fda9fa8f29b343d78e743c5a8b1e8564d24d34",
+      "sample_bytes": 23515,
+      "cases": 64
+    },
+    "tinystories": {
+      "source_sha256": "75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54",
+      "sample_sha256": "187538eddc3788c87eaa9679d2494ebe78eb19bc8a4a2895ada4eeee4c6675e5",
+      "sample_bytes": 36442,
+      "cases": 64
+    }
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "cpu_architecture": "x86_64",
+    "online_vcpus": 16,
+    "inference_backend": "portable quantized C with 16 deterministic processes",
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-24",
+    "price_source": "AWS Price List API SKU E8ZFW5VX39K37SVF"
+  },
+  "workload": {
+    "model": "zero4",
+    "jobs": 16,
+    "cases_per_task": 64,
+    "task_order": [
+      "blimp",
+      "tinystories",
+      "hellaswag",
+      "lambada"
+    ],
+    "repetitions": 1,
+    "optimizer_attempts": 0,
+    "training_updates": 0,
+    "controller_or_kernel_calls": 0,
+    "metrics_must_be_absent": true,
+    "outputs_are_timing_only": true
+  },
+  "execution": {
+    "id": "zero-eval-1-calibration-1",
+    "max_instance_seconds": 600,
+    "workload_timeout_seconds": 540,
+    "publication_reserve_seconds": 60,
+    "max_compute_usd": 0.12,
+    "requires_manual_approval": true,
+    "manual_approval_observed": true,
+    "authorized_for_execution": true
+  },
+  "budget_projection": {
+    "cold_start_and_dependencies_seconds": 210,
+    "source_download_and_bundle_preparation_seconds": 90,
+    "build_seconds": 30,
+    "four_parallel_measurements_seconds": 120,
+    "publication_seconds": 60,
+    "hard_instance_headroom_seconds": 90
+  },
+  "completion_gate": {
+    "all_four_timings_required": true,
+    "all_sample_hashes_required": true,
+    "all_case_result_hashes_required": true,
+    "score_fields_forbidden": true,
+    "structured_status_required": true,
+    "full_evaluation_requires_new_budget": true,
+    "full_evaluation_requires_separate_manual_authorization": true
+  }
+}

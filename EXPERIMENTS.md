@@ -175,6 +175,7 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
 - **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
 - **Latest execution outcome**: bounded AWS recovery-3 completed seeds 1 and 3 for $1.8817 combined; both instances terminated after durable publication
-- **Next experiment**: none authorized; SAT-1 operation-count scaling remains a proposal requiring its own preregistration and budget
+- **Active evaluation study**: ZERO-EVAL-1 is preregistered; one score-sealed AWS timing calibration is authorized, while the full external evaluation is not
+- **Next training experiment**: none authorized; SAT-1 operation-count scaling remains a proposal requiring its own preregistration and budget
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`
