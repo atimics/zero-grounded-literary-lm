@@ -1,0 +1,66 @@
+{
+  "schema": "zero.q26r_aws_preflight_failure.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "status": "execution-preflight-failure",
+  "recorded_at": "2026-07-24",
+  "source": {
+    "launch_workflow_run_id": "30118477546",
+    "launch_workflow_job_id": "89564902117",
+    "git_commit": "87a2b2164bc426ae427b8a6434bf9be6477b38a7",
+    "budget_sha256": "69268b595a325fd6e9cbbed752abb5d34cecfa2f5df70ac1b68e5328d7d1ddf8",
+    "failed_step": "Launch and freeze both AWS identities",
+    "failure_observed_at": "2026-07-24T18:51:00Z"
+  },
+  "failure": {
+    "classification": "iam-permission-error",
+    "cause": "the GitHub Actions role lacked ec2:DescribeInstanceAttribute",
+    "aws_error_code": "UnauthorizedOperation",
+    "original_execution_lock_acquired": true,
+    "recovery_1_lock_acquired": true,
+    "original_execution_lock_sha256": "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7",
+    "recovery_1_lock_sha256": "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9",
+    "launch_receipt_published": false,
+    "identity_receipts_published": false,
+    "seed_statuses_published": false,
+    "shutdown_intents_published": false
+  },
+  "partial_launch": {
+    "seed_1": {
+      "instance_id": "i-093224aa4a67fb5d7",
+      "created": true,
+      "termination_requested": true,
+      "previous_state": "running",
+      "state_at_termination_response": "shutting-down"
+    },
+    "seed_3": {
+      "instance_id": null,
+      "created": false,
+      "termination_requested": false
+    }
+  },
+  "billing_reservation": {
+    "basis": "AWS per-second EC2 billing has a 60-second minimum",
+    "hourly_rate_usd": 0.68,
+    "reserved_instance_seconds": 60,
+    "reserved_compute_usd": 0.011333333333333334,
+    "cumulative_preflight_instance_seconds": 120,
+    "cumulative_preflight_compute_usd": 0.02266666666666667
+  },
+  "scientific_effect": {
+    "training_started": false,
+    "candidate_results_observed": false,
+    "scientific_result_observed": false,
+    "scientific_result_accepted": false,
+    "family_inference": null,
+    "recovery_may_not_change_science": true
+  },
+  "recovery": {
+    "eligible": true,
+    "requires_iam_permission": "ec2:DescribeInstanceAttribute",
+    "requires_zero_compute_permission_preflight": true,
+    "requires_new_write_once_lock": true,
+    "prior_locks_must_remain_immutable": true,
+    "prior_job_artifacts_forbidden_as_execution_inputs": true,
+    "cumulative_preflight_billing_must_be_deducted": true
+  }
+}

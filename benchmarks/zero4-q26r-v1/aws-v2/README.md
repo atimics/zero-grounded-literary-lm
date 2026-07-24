@@ -1,6 +1,6 @@
 # Q2.6-R bounded AWS replacement
 
-Status: **bounded recovery authorized once**, 2026-07-24.
+Status: **final bounded recovery authorized once**, 2026-07-24.
 
 This directory contains the replacement execution envelope for Q2.6-R. It
 exists because the first bounded AWS route lost its ephemeral EC2 identity
@@ -15,11 +15,19 @@ The original v2 launch failed safely before training. Its immutable
 control-plane defect, the immediately terminated seed 1 instance, the absent
 seed 3 instance, and the reserved 60-second minimum bill.
 
-The approved recovery:
+The first recovery also failed safely before training. Its immutable
+[`second preflight failure record`](preflight-failure-30118477546.json) records
+the missing `ec2:DescribeInstanceAttribute` permission, the immediately
+terminated seed 1 instance, absent seed 3 instance, and second reserved
+60-second minimum.
 
-- validates the failed run's original write-once lock and missing receipts;
-- acquires exactly one `recovery-1.lock`;
-- starts two independently capped AWS instances at 6,240 seconds/$1.18 each;
+The approved final recovery:
+
+- adds only `ec2:DescribeInstanceAttribute` to the GitHub Actions role;
+- proves that permission with a zero-compute AWS dry run;
+- validates both failed runs' write-once locks and missing receipts;
+- acquires exactly one `recovery-2.lock`;
+- starts two independently capped AWS instances at 6,190 seconds/$1.17 each;
 - keeps all-in worst-case compute below the original $2.38 ceiling;
 - captures shutdown behavior from the correct EC2 attribute API.
 

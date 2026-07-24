@@ -120,6 +120,50 @@ export function validateV2Budget(
     );
   }
 
+  const recovery2Authorization = budget.recovery_2_authorization;
+  assert(
+    recovery2Authorization?.scope
+      === "one final recovery launch after IAM preflight failure 30118477546",
+    "v2 recovery-2 authorization scope drifted",
+  );
+  assert(
+    recovery2Authorization.failed_launch_workflow_run_id === "30118477546",
+    "v2 recovery-2 source run drifted",
+  );
+  assert(
+    recovery2Authorization.one_recovery_launch_only === true,
+    "v2 recovery-2 is not one-time",
+  );
+  assert(
+    recovery2Authorization.requires_manual_approval === true,
+    "v2 recovery-2 approval gate is absent",
+  );
+  assert(
+    recovery2Authorization.manual_approval_observed
+      === recovery2Authorization.authorized_for_execution,
+    "v2 recovery-2 approval and execution authorization must change together",
+  );
+  if (recovery2Authorization.authorized_for_execution) {
+    assert(
+      recovery2Authorization.manual_approval_observed === true
+        && typeof recovery2Authorization.authorized_at === "string"
+        && /^\d{4}-\d{2}-\d{2}$/.test(recovery2Authorization.authorized_at),
+      "v2 recovery-2 authorization is incomplete",
+    );
+  } else {
+    assert(
+      recovery2Authorization.authorized_at === null,
+      "unapproved v2 recovery-2 has an authorization date",
+    );
+  }
+  if (requireAuthorized) {
+    assert(
+      recovery2Authorization.manual_approval_observed === true
+        && recovery2Authorization.authorized_for_execution === true,
+      "v2 recovery-2 execution is not authorized",
+    );
+  }
+
   const science = budget.scientific_source_lock;
   assert(
     science?.base_execution_budget_path
@@ -293,6 +337,107 @@ export function validateV2Budget(
     "v2 preflight recovery safeguards drifted",
   );
 
+  const recovery2 = budget.recovery_2_basis;
+  assert(
+    recovery2?.preflight_failure_path
+      === "benchmarks/zero4-q26r-v1/aws-v2/preflight-failure-30118477546.json",
+    "v2 recovery-2 failure path drifted",
+  );
+  assert(
+    fs.existsSync(recovery2.preflight_failure_path),
+    "v2 recovery-2 failure is unavailable",
+  );
+  assert(
+    sha256(recovery2.preflight_failure_path)
+      === recovery2.preflight_failure_sha256,
+    "v2 recovery-2 failure hash mismatch",
+  );
+  const preflight2 = readJson(recovery2.preflight_failure_path);
+  assert(
+    preflight2.schema === "zero.q26r_aws_preflight_failure.v2"
+      && preflight2.experiment === budget.id
+      && preflight2.status === "execution-preflight-failure",
+    "v2 recovery-2 failure classification drifted",
+  );
+  assert(
+    recovery2.failed_launch_workflow_run_id
+      === preflight2.source.launch_workflow_run_id
+      && recovery2.failed_launch_git_commit === preflight2.source.git_commit
+      && recovery2.failed_launch_budget_sha256
+        === preflight2.source.budget_sha256,
+    "v2 recovery-2 launch identity drifted",
+  );
+  assert(
+    recovery2.partial_seed_1_instance_id
+      === preflight2.partial_launch.seed_1.instance_id
+      && recovery2.seed_1_termination_requested
+        === preflight2.partial_launch.seed_1.termination_requested
+      && recovery2.seed_3_instance_created
+        === preflight2.partial_launch.seed_3.created,
+    "v2 recovery-2 partial launch evidence drifted",
+  );
+  assert(
+    recovery2.required_iam_permission === "ec2:DescribeInstanceAttribute"
+      && recovery2.zero_compute_permission_preflight_required === true
+      && preflight2.failure.classification === "iam-permission-error"
+      && preflight2.failure.cause
+        === "the GitHub Actions role lacked ec2:DescribeInstanceAttribute"
+      && preflight2.failure.aws_error_code === "UnauthorizedOperation"
+      && preflight2.failure.original_execution_lock_acquired === true
+      && preflight2.failure.recovery_1_lock_acquired === true
+      && preflight2.failure.original_execution_lock_sha256
+        === "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7"
+      && preflight2.failure.recovery_1_lock_sha256
+        === "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9"
+      && preflight2.failure.launch_receipt_published === false
+      && preflight2.failure.identity_receipts_published === false
+      && preflight2.failure.seed_statuses_published === false
+      && preflight2.failure.shutdown_intents_published === false,
+    "v2 recovery-2 IAM failure evidence drifted",
+  );
+  assert(
+    recovery2.candidate_results_observed
+      === preflight2.scientific_effect.candidate_results_observed
+      && recovery2.scientific_result_observed
+        === preflight2.scientific_effect.scientific_result_observed
+      && recovery2.scientific_result_accepted
+        === preflight2.scientific_effect.scientific_result_accepted
+      && recovery2.family_inference
+        === preflight2.scientific_effect.family_inference
+      && recovery2.recovery_may_not_change_science === true
+      && preflight2.scientific_effect.training_started === false,
+    "v2 recovery-2 scientific boundary drifted",
+  );
+  assert(
+    preflight2.billing_reservation.hourly_rate_usd === 0.68
+      && preflight2.billing_reservation.reserved_instance_seconds === 60
+      && Math.abs(
+        preflight2.billing_reservation.reserved_compute_usd
+          - 60 * 0.68 / 3600,
+      ) < 1e-15
+      && preflight2.billing_reservation.cumulative_preflight_instance_seconds
+        === 120
+      && Math.abs(
+        preflight2.billing_reservation.cumulative_preflight_compute_usd
+          - 120 * 0.68 / 3600,
+      ) < 1e-15,
+    "v2 recovery-2 billing reservation drifted",
+  );
+  assert(
+    preflight2.recovery.eligible === true
+      && preflight2.recovery.requires_iam_permission
+        === "ec2:DescribeInstanceAttribute"
+      && preflight2.recovery.requires_zero_compute_permission_preflight
+        === true
+      && preflight2.recovery.requires_new_write_once_lock === true
+      && preflight2.recovery.prior_locks_must_remain_immutable === true
+      && preflight2.recovery.prior_job_artifacts_forbidden_as_execution_inputs
+        === true
+      && preflight2.recovery.cumulative_preflight_billing_must_be_deducted
+        === true,
+    "v2 recovery-2 safeguards drifted",
+  );
+
   const { price_checked_at: v2PriceDate, ...v2Venue } = budget.venue;
   const { price_checked_at: _basePriceDate, ...baseVenue } = base.venue;
   assert(same(v2Venue, baseVenue), "v2 venue differs from v1");
@@ -317,8 +462,8 @@ export function validateV2Budget(
   assert(evidence.scientific_decisions_used_for_budgeting === false, "v2 budget uses outcomes");
 
   const perSeed = budget.per_seed_execution;
-  assert(perSeed?.max_instance_seconds === 6240, "v2 per-seed cap drifted");
-  assert(perSeed.workload_timeout_seconds === 6180, "v2 workload timeout drifted");
+  assert(perSeed?.max_instance_seconds === 6190, "v2 per-seed cap drifted");
+  assert(perSeed.workload_timeout_seconds === 6130, "v2 workload timeout drifted");
   assert(perSeed.publication_reserve_seconds === 60, "v2 publication reserve drifted");
   assert(
     perSeed.workload_timeout_seconds + perSeed.publication_reserve_seconds
@@ -361,10 +506,14 @@ export function validateV2Budget(
     "v2 original authorization drifted",
   );
   assert(
-    allIn.preflight_reserved_instance_seconds
-      === preflight.billing_reservation.reserved_instance_seconds
+    allIn.preflight_failure_count === 2
+      && allIn.preflight_reserved_instance_seconds
+        === preflight.billing_reservation.reserved_instance_seconds
+          + preflight2.billing_reservation.reserved_instance_seconds
       && allIn.preflight_reserved_compute_usd
-        === preflight.billing_reservation.reserved_compute_usd,
+        === preflight2.billing_reservation.cumulative_preflight_compute_usd
+      && allIn.preflight_reserved_instance_seconds
+        === preflight2.billing_reservation.cumulative_preflight_instance_seconds,
     "v2 preflight billing reservation drifted",
   );
   assert(
@@ -441,9 +590,13 @@ export function validateV2Budget(
     provenance?.original_execution_lock_must_validate === true
       && provenance.failed_launch_receipts_must_be_absent === true
       && provenance.recovery_execution_lock_put_once === true
+      && provenance.recovery_2_execution_lock_put_once === true
+      && provenance.zero_compute_iam_permission_preflight_required === true
       && provenance.original_execution_lock_sha256_bound_into_launch_receipt
         === true
       && provenance.recovery_execution_lock_sha256_bound_into_launch_receipt
+        === true
+      && provenance.recovery_2_execution_lock_sha256_bound_into_launch_receipt
         === true
       && provenance.launch_receipt_put_once === true
       && provenance.canonical_aws_identity_receipt_required_for_each_seed === true
@@ -492,6 +645,9 @@ function selfTest() {
     unapproved.recovery_authorization.manual_approval_observed = false;
     unapproved.recovery_authorization.authorized_for_execution = false;
     unapproved.recovery_authorization.authorized_at = null;
+    unapproved.recovery_2_authorization.manual_approval_observed = false;
+    unapproved.recovery_2_authorization.authorized_for_execution = false;
+    unapproved.recovery_2_authorization.authorized_at = null;
     validateV2Budget(unapproved);
 
     let authorizationRejected = false;
@@ -509,6 +665,9 @@ function selfTest() {
     approved.recovery_authorization.manual_approval_observed = true;
     approved.recovery_authorization.authorized_for_execution = true;
     approved.recovery_authorization.authorized_at = "2026-07-24";
+    approved.recovery_2_authorization.manual_approval_observed = true;
+    approved.recovery_2_authorization.authorized_for_execution = true;
+    approved.recovery_2_authorization.authorized_at = "2026-07-24";
     validateV2Budget(approved, { requireAuthorized: true });
 
     for (const [name, mutate] of [
@@ -522,13 +681,16 @@ function selfTest() {
         copy.workload.authorized_seeds = [1];
       }],
       ["wall cap", (copy) => {
-        copy.per_seed_execution.max_instance_seconds = 6241;
+        copy.per_seed_execution.max_instance_seconds = 6191;
       }],
       ["cost cap", (copy) => {
-        copy.per_seed_execution.max_compute_usd = 1.19;
+        copy.per_seed_execution.max_compute_usd = 1.18;
       }],
       ["recovery approval", (copy) => {
         copy.recovery_authorization.authorized_for_execution = false;
+      }],
+      ["recovery-2 approval", (copy) => {
+        copy.recovery_2_authorization.authorized_for_execution = false;
       }],
       ["all-in cost", (copy) => {
         copy.all_in_authorization.all_in_max_compute_usd = 2.39;
