@@ -1,0 +1,244 @@
+name: Rescue bounded Q2.6-R AWS execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Q2.6-R AWS launch workflow run ID'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero-q26r-aws-v1
+  cancel-in-progress: false
+
+jobs:
+  rescue:
+    name: AWS · diagnose, cap, and recover Q2.6-R
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q26r-v1/aws-v1/budget.json
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate rescue implementation and inputs
+        run: |
+          [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          node scripts/check_q26r_aws_budget.mjs "$ZERO_BUDGET_FILE"
+          node scripts/plan_q26r_aws_rescue.mjs --self-test
+          echo "ZERO_BUDGET_SHA256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" \
+            >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Read and verify immutable launch receipt
+        run: |
+          mkdir -p training-diagnostics
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/launch.json" \
+            training-diagnostics/launch.json \
+            --no-cli-pager
+          jq -e \
+            --arg run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '.schema == "zero.q26r_aws_launch.v1"
+             and .experiment == "zero4-q26r-aws-v1"
+             and .ci_run_id == $run_id
+             and .budget_sha256 == $budget_sha256
+             and .instance_type == "c6i.4xlarge"
+             and .max_instance_seconds_sum == 27240
+             and .max_compute_usd == 5.16
+             and ([.instances[].seed] == [1, 3])
+             and ([.instances[].max_instance_seconds] == [13620, 13620])
+             and ([.instances[].max_compute_usd] == [2.58, 2.58])' \
+            training-diagnostics/launch.json >/dev/null
+          source_commit=$(jq -r '.git_commit' training-diagnostics/launch.json)
+          [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]]
+          git cat-file -e "${source_commit}^{commit}"
+          test "$(git show "${source_commit}:${ZERO_BUDGET_FILE}" | sha256sum | awk '{print $1}')" = \
+            "$ZERO_BUDGET_SHA256"
+          echo "ZERO_SOURCE_COMMIT=$source_commit" >> "$GITHUB_ENV"
+
+      - name: Snapshot exact EC2 state and recover S3 evidence
+        run: |
+          for seed in 1 3; do
+            instance=$(jq -r \
+              --argjson seed "$seed" \
+              '.instances[] | select(.seed == $seed) | .instance_id' \
+              training-diagnostics/launch.json)
+            [[ "$instance" =~ ^i-[0-9a-f]+$ ]]
+            aws ec2 describe-instances \
+              --instance-ids "$instance" \
+              --output json --no-cli-pager \
+              > "/tmp/seed${seed}-ec2-raw.json"
+            jq \
+              '{
+                 Reservations: [
+                   .Reservations[]? | {
+                     Instances: [
+                       .Instances[]? | {
+                         InstanceId,
+                         InstanceType,
+                         State,
+                         LaunchTime,
+                         Tags: ((.Tags // []) | map(select(
+                           .Key == "Project"
+                           or .Key == "Experiment"
+                           or .Key == "Seed"
+                           or .Key == "Commit"
+                           or .Key == "RunId"
+                           or .Key == "BudgetSha256"
+                           or .Key == "Name"
+                           or .Key == "Region"
+                           or .Key == "BudgetFile"
+                           or .Key == "LaunchEpoch"
+                           or .Key == "MaxInstanceSeconds"
+                           or .Key == "WorkloadTimeoutSeconds"
+                           or .Key == "MaxComputeUsd"
+                           or .Key == "HourlyRateUsd"
+                         )))
+                       }
+                     ]
+                   }
+                 ]
+               }' \
+              "/tmp/seed${seed}-ec2-raw.json" \
+              > "training-diagnostics/seed${seed}-ec2.json"
+            jq -r \
+              --argjson seed "$seed" \
+              '.Reservations[0].Instances[0] as $instance
+               | "seed=\($seed) instance=\($instance.InstanceId // "not-found")
+                  type=\($instance.InstanceType // "not-found")
+                  state=\($instance.State.Name // "not-found")"' \
+              "training-diagnostics/seed${seed}-ec2.json"
+            jq -r \
+              '.Reservations[0].Instances[0].Tags // []
+               | sort_by(.Key)[]
+               | "tag \(.Key)=\(.Value)"' \
+              "training-diagnostics/seed${seed}-ec2.json"
+            if aws ec2 get-console-output \
+                --instance-id "$instance" --latest \
+                --output json --no-cli-pager \
+                > "/tmp/seed${seed}-ec2-console-raw.json"; then
+              jq --arg bucket "$ZERO_BUCKET" \
+                'if .Output then
+                   .Output |= gsub($bucket; "[redacted-bucket]")
+                 else . end' \
+                "/tmp/seed${seed}-ec2-console-raw.json" \
+                > "training-diagnostics/seed${seed}-ec2-console.json"
+            else
+              printf '{}\n' > "training-diagnostics/seed${seed}-ec2-console.json"
+            fi
+            if aws s3 cp \
+                "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed${seed}/status.json" \
+                "training-diagnostics/seed${seed}-status.json" \
+                --no-cli-pager; then
+              echo "Recovered seed ${seed} status"
+            else
+              echo "Seed ${seed} status is missing"
+            fi
+            mkdir -p "training-diagnostics/seed${seed}-results"
+            aws s3 sync \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed${seed}/results/" \
+              "training-diagnostics/seed${seed}-results/" \
+              --no-cli-pager || true
+          done
+
+      - name: Build fail-closed rescue plan
+        run: |
+          observed_epoch=$(date +%s)
+          node scripts/plan_q26r_aws_rescue.mjs \
+            --launch training-diagnostics/launch.json \
+            --ec2-dir training-diagnostics \
+            --evidence-dir training-diagnostics \
+            --out training-diagnostics/rescue-plan.json \
+            --source-run-id "$ZERO_SOURCE_RUN_ID" \
+            --source-commit "$ZERO_SOURCE_COMMIT" \
+            --budget-sha256 "$ZERO_BUDGET_SHA256" \
+            --now-epoch "$observed_epoch"
+          jq . training-diagnostics/rescue-plan.json
+
+      - name: Request termination for verified overdue instances
+        run: |
+          mapfile -t instances < <(
+            jq -r '.termination_requests[].instance_id' \
+              training-diagnostics/rescue-plan.json
+          )
+          if [ "${#instances[@]}" -eq 0 ]; then
+            printf '[]\n' > training-diagnostics/termination-response.json
+            echo "No verified overdue active instances require termination"
+          else
+            echo "Requesting termination for verified overdue instances: ${instances[*]}"
+            aws ec2 terminate-instances \
+              --instance-ids "${instances[@]}" \
+              --output json --no-cli-pager \
+              > training-diagnostics/termination-response.json
+            jq . training-diagnostics/termination-response.json
+            echo "Termination requested; rescue will not wait"
+          fi
+
+      - name: Summarize execution-only classification
+        run: |
+          classification=$(jq -r '.classification.status' \
+            training-diagnostics/rescue-plan.json)
+          {
+            echo "### Q2.6-R AWS rescue"
+            echo
+            echo "- Source run: \`${ZERO_SOURCE_RUN_ID}\`"
+            echo "- Source commit: \`${ZERO_SOURCE_COMMIT}\`"
+            echo "- Classification: **${classification}**"
+            echo "- Scientific verdict: **none**"
+            echo "- Rescue launched training: **false**"
+            echo "- Rescue waited for compute: **false**"
+            echo
+            jq -r \
+              '.instances[]
+               | "- Seed \(.seed): state=\(.state), identity_verified=\(.identity_verified), termination=\(.termination_action)"' \
+              training-diagnostics/rescue-plan.json
+            jq -r \
+              '.seed_evidence[]
+               | "- Seed \(.seed) evidence: \(.classification) (\(.status))"' \
+              training-diagnostics/rescue-plan.json
+          } >> "$GITHUB_STEP_SUMMARY"
+          case "$classification" in
+            scientific-candidate)
+              echo "::notice title=Q2.6-R rescue::Both seeds are candidates; frozen collection is still required."
+              ;;
+            execution-failure)
+              echo "::error title=Q2.6-R execution failure::Rescue found execution failure evidence; this is not a scientific no-go."
+              ;;
+            pending)
+              echo "::warning title=Q2.6-R rescue pending::Evidence remains incomplete."
+              ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Upload rescue diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: zero-q26r-rescue-${{ github.run_id }}
+          path: training-diagnostics/
+          if-no-files-found: error

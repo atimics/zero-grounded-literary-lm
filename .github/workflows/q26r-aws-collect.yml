@@ -103,6 +103,7 @@ jobs:
               --instance-ids "$instance" \
               --query 'Reservations[0].Instances[0].State.Name' \
               --output text --no-cli-pager)
+            echo "Seed $seed instance=$instance type=$instance_type state=$state"
             case "$state" in
               terminated|stopped|stopping|shutting-down) ;;
               pending|running)
@@ -118,7 +119,10 @@ jobs:
                 --instance-ids "$instance" \
                 --query "Reservations[0].Instances[0].Tags[?Key=='${key}']|[0].Value" \
                 --output text --no-cli-pager)
-              test "$actual" = "$expected"
+              if [ "$actual" != "$expected" ]; then
+                echo "Seed $seed tag mismatch: $key actual=$actual expected=$expected"
+                return 1
+              fi
             }
             expect_tag Project zero
             expect_tag Experiment zero4-q26r-aws-v1
