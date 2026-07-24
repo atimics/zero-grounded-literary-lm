@@ -1,0 +1,75 @@
+{
+  "schema": "zero.q26r_aws_completion.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "completed_at": "2026-07-24T22:30:44Z",
+  "source_run_id": "30126034960",
+  "source_commit": "e6e717a53d6903b71d8f563104ec9ce75c65ce11",
+  "collector_run_id": "30131123238",
+  "collector_commit": "e6e717a53d6903b71d8f563104ec9ce75c65ce11",
+  "budget_file": "benchmarks/zero4-q26r-v1/aws-v2/budget.json",
+  "budget_sha256": "0c90a8ede923f7afc131b3331f49528585416c17cf167a2c8478fa5b101e87a0",
+  "seeds": [
+    1,
+    3
+  ],
+  "launch": {
+    "path": "benchmarks/zero4-q26r-v1/aws-v2/launch-30126034960.json",
+    "sha256": "1c8dcab38f6a5fe336605bfe166fc8bce665cafc30565b61a2695894eb488f21"
+  },
+  "original_execution_lock": {
+    "path": "benchmarks/zero4-q26r-v1/aws-v2/original-execution-lock-30117320329.json",
+    "sha256": "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7"
+  },
+  "recovery_1_lock": {
+    "path": "benchmarks/zero4-q26r-v1/aws-v2/recovery-1-lock-30118477546.json",
+    "sha256": "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9"
+  },
+  "recovery_2_lock": {
+    "path": "benchmarks/zero4-q26r-v1/aws-v2/recovery-2-lock-30119938666.json",
+    "sha256": "79a7b826f7b669fa2ceb7ef117ca8f0f0ef5a0b494903a736f2b0e3b110c57a6"
+  },
+  "recovery_3_lock": {
+    "path": "benchmarks/zero4-q26r-v1/aws-v2/recovery-3-lock-30126034960.json",
+    "sha256": "2cd59491f2263f1f79a9737169e9d7f0d7e045af1708adf42d1b3377bec91b78"
+  },
+  "records": {
+    "1": {
+      "identity": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed1-identity-30126034960.json",
+        "sha256": "c34e8be9b461c1157678bac7a6b53ecca82d72610304a2fd934aac166b376a1d"
+      },
+      "status": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed1-status-30126034960.json",
+        "sha256": "14146f2458571b0c177df76197827b3f0caa33be30dd7285cd5dd619612cc2de"
+      },
+      "shutdown_intent": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed1-shutdown-intent-30126034960.json",
+        "sha256": "22503f76a129215409eb5baf24473b2b9ac72d5b2515caa576b027cb998a98cb"
+      },
+      "terminal": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed1-terminal-30126034960.json",
+        "sha256": "3ccaf25935c872c5c86bcfcc3e0cc6a8483b4e9ca3230fd725d67abfd721a940"
+      }
+    },
+    "3": {
+      "identity": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed3-identity-30126034960.json",
+        "sha256": "81e554091327d0aee58f8c71c9ab81ba6be10bf578fc03aa14db01fa3e3824ac"
+      },
+      "status": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed3-status-30126034960.json",
+        "sha256": "a12d99788e2aaed592da70dd7843dec28fcb23b1374c0ec82d4831283451b865"
+      },
+      "shutdown_intent": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed3-shutdown-intent-30126034960.json",
+        "sha256": "9634ad0a7fd5725c4de1cb69e95003626d6eabc19cab66e09b55bc597ab6abdb"
+      },
+      "terminal": {
+        "path": "benchmarks/zero4-q26r-v1/aws-v2/seed3-terminal-30126034960.json",
+        "sha256": "2d3f2bc4ca8d88a7b8d8fb6b3d3345c1fe22c566bd9fd391c132aea61c1d8f2a"
+      }
+    }
+  },
+  "new_training_started_by_collector": false,
+  "collector_waited_for_compute": false
+}

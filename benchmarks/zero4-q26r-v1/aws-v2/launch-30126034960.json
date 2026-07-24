@@ -1,0 +1,50 @@
+{
+  "schema": "zero.q26r_aws_launch.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "git_commit": "e6e717a53d6903b71d8f563104ec9ce75c65ce11",
+  "ci_run_id": "30126034960",
+  "budget_file": "benchmarks/zero4-q26r-v1/aws-v2/budget.json",
+  "budget_sha256": "0c90a8ede923f7afc131b3331f49528585416c17cf167a2c8478fa5b101e87a0",
+  "region": "us-east-1",
+  "ami": "ami-052355af2a014bd2c",
+  "instance_type": "c6i.4xlarge",
+  "source_archive_sha256": "1e40f91ed1b3b726ae848f4e1097558b75503cafbeb35f567c9eb94577347e1f",
+  "seed_runner_sha256": "ed5f91ece89f43049ae9a823453d9fe23d44596238b539fc2a189f59fd0326bc",
+  "user_data_sha256": "a451a427431d03fae92f2710a5d2bf094ac187a982f9864abae49df1bb64ba4f",
+  "recovery_ordinal": 3,
+  "recovery_of_launch_workflow_run_ids": [
+    "30117320329",
+    "30118477546",
+    "30119938666"
+  ],
+  "original_execution_lock_key": "experiments/zero4-q26r-aws-v2/execution.lock",
+  "original_execution_lock_sha256": "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7",
+  "recovery_1_lock_key": "experiments/zero4-q26r-aws-v2/recovery-1.lock",
+  "recovery_1_lock_sha256": "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9",
+  "recovery_2_lock_key": "experiments/zero4-q26r-aws-v2/recovery-2.lock",
+  "recovery_2_lock_sha256": "79a7b826f7b669fa2ceb7ef117ca8f0f0ef5a0b494903a736f2b0e3b110c57a6",
+  "recovery_3_lock_key": "experiments/zero4-q26r-aws-v2/recovery-3.lock",
+  "recovery_3_lock_sha256": "2cd59491f2263f1f79a9737169e9d7f0d7e045af1708adf42d1b3377bec91b78",
+  "max_instance_seconds_sum": 12380,
+  "max_compute_usd": 2.34,
+  "instances": [
+    {
+      "seed": 1,
+      "instance_id": "i-0d200ad47abb808c4",
+      "launch_epoch": 1784926734,
+      "max_instance_seconds": 6190,
+      "max_compute_usd": 1.17,
+      "identity_key": "jobs/30126034960/identity/seed1.json",
+      "identity_sha256": "c34e8be9b461c1157678bac7a6b53ecca82d72610304a2fd934aac166b376a1d"
+    },
+    {
+      "seed": 3,
+      "instance_id": "i-052fd0735dfc27bda",
+      "launch_epoch": 1784926740,
+      "max_instance_seconds": 6190,
+      "max_compute_usd": 1.17,
+      "identity_key": "jobs/30126034960/identity/seed3.json",
+      "identity_sha256": "81e554091327d0aee58f8c71c9ab81ba6be10bf578fc03aa14db01fa3e3824ac"
+    }
+  ]
+}

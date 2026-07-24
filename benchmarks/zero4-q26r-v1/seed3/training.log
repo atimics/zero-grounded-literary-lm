@@ -1,0 +1,912 @@
+loaded tokenizer corpus/literary.bpe
+initialized weights from teachers/zero3-balanced-final.teacher source-update=16600; optimizer and RNG are fresh
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=0 committed=0 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt        1 candidate-update        1 accepted replay-range 0 cosine 0.024003
+attempt        2 candidate-update        2 accepted replay-range 1 cosine -0.012077
+attempt        3 candidate-update        3 accepted replay-range 2 cosine 0.013360
+attempt        4 candidate-update        4 accepted replay-range 3 cosine -0.040722
+attempt        5 candidate-update        5 accepted replay-range 4 cosine 0.003112
+attempt        6 candidate-update        6 accepted replay-range 5 cosine 0.052530
+attempt        7 candidate-update        7 accepted replay-range 0 cosine 0.023376
+attempt        8 candidate-update        8 accepted replay-range 1 cosine -0.012381
+attempt        9 candidate-update        9 accepted replay-range 2 cosine 0.012172
+attempt       10 candidate-update       10 accepted replay-range 3 cosine -0.042967
+attempt       11 candidate-update       11 accepted replay-range 4 cosine 0.001985
+attempt       12 candidate-update       12 accepted replay-range 5 cosine 0.051144
+attempt       13 candidate-update       13 accepted replay-range 0 cosine 0.021352
+attempt       14 candidate-update       14 accepted replay-range 1 cosine -0.013271
+attempt       15 candidate-update       15 accepted replay-range 2 cosine 0.009603
+attempt       16 candidate-update       16 accepted replay-range 3 cosine -0.047637
+attempt       17 candidate-update       17 accepted replay-range 4 cosine -0.000153
+attempt       18 candidate-update       18 accepted replay-range 5 cosine 0.049062
+attempt       19 candidate-update       19 accepted replay-range 0 cosine 0.018273
+attempt       20 candidate-update       20 accepted replay-range 1 cosine -0.014565
+attempt       21 candidate-update       21 accepted replay-range 2 cosine 0.005835
+attempt       22 candidate-update       22 accepted replay-range 3 cosine -0.054888
+attempt       23 candidate-update       23 accepted replay-range 4 cosine -0.003219
+attempt       24 candidate-update       24 accepted replay-range 5 cosine 0.046571
+attempt       25 candidate-update       25 accepted replay-range 0 cosine 0.014704
+update       25 train 2.3665 val 2.3346 grad 0.828 lr 5e-06 tok/s 158
+training time 173.66 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 25 attempt 25
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=25 committed=25 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt       26 candidate-update       26 accepted replay-range 1 cosine -0.016029
+attempt       27 candidate-update       27 accepted replay-range 2 cosine 0.001623
+attempt       28 candidate-update       28 accepted replay-range 3 cosine -0.063090
+attempt       29 candidate-update       29 accepted replay-range 4 cosine -0.006479
+attempt       30 candidate-update       30 accepted replay-range 5 cosine 0.044663
+attempt       31 candidate-update       31 accepted replay-range 0 cosine 0.010502
+attempt       32 candidate-update       32 accepted replay-range 1 cosine -0.017774
+attempt       33 candidate-update       33 accepted replay-range 2 cosine -0.002925
+attempt       34 candidate-update       34 accepted replay-range 3 cosine -0.073413
+attempt       35 candidate-update       35 accepted replay-range 4 cosine -0.010360
+attempt       36 candidate-update       36 accepted replay-range 5 cosine 0.042477
+attempt       37 candidate-update       37 accepted replay-range 0 cosine 0.005137
+attempt       38 candidate-update       38 accepted replay-range 1 cosine -0.020227
+attempt       39 candidate-update       39 accepted replay-range 2 cosine -0.009942
+attempt       40 candidate-update       40 accepted replay-range 3 cosine -0.088576
+attempt       41 candidate-update       41 accepted replay-range 4 cosine -0.016033
+attempt       42 candidate-update       42 accepted replay-range 5 cosine 0.040537
+attempt       43 candidate-update       43 accepted replay-range 0 cosine -0.002182
+attempt       44 candidate-update       44 accepted replay-range 1 cosine -0.022643
+attempt       45 candidate-update       45 accepted replay-range 2 cosine -0.018928
+attempt       46 candidate-update       46 accepted replay-range 3 cosine -0.102254
+attempt       47 candidate-update       47 accepted replay-range 4 cosine -0.021453
+attempt       48 candidate-update       48 accepted replay-range 5 cosine 0.039958
+attempt       49 candidate-update       49 accepted replay-range 0 cosine -0.009145
+attempt       50 candidate-update       50 accepted replay-range 1 cosine -0.023149
+update       50 train 1.8346 val 1.9857 grad 3.361 lr 1e-05 tok/s 157
+training time 175.35 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 50 attempt 50
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=50 committed=50 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt       51 candidate-update       51 accepted replay-range 2 cosine -0.028428
+attempt       52 candidate-update       52 accepted replay-range 3 cosine -0.108022
+attempt       53 candidate-update       53 accepted replay-range 4 cosine -0.027392
+attempt       54 candidate-update       54 accepted replay-range 5 cosine 0.040660
+attempt       55 candidate-update       55 accepted replay-range 0 cosine -0.019160
+attempt       56 candidate-update       56 accepted replay-range 1 cosine -0.023859
+attempt       57 candidate-update       57 accepted replay-range 2 cosine -0.041878
+attempt       58 candidate-update       58 accepted replay-range 3 cosine -0.100932
+attempt       59 candidate-update       59 accepted replay-range 4 cosine -0.035016
+attempt       60 candidate-update       60 accepted replay-range 5 cosine 0.035789
+attempt       61 candidate-update       61 accepted replay-range 0 cosine -0.033594
+attempt       62 candidate-update       62 accepted replay-range 1 cosine -0.025319
+attempt       63 candidate-update       63 accepted replay-range 2 cosine -0.054403
+attempt       64 candidate-update       64 accepted replay-range 3 cosine -0.083951
+attempt       65 candidate-update       65 accepted replay-range 4 cosine -0.043166
+attempt       66 candidate-update       66 accepted replay-range 5 cosine 0.026729
+attempt       67 candidate-update       67 accepted replay-range 0 cosine -0.050176
+attempt       68 candidate-update       68 accepted replay-range 1 cosine -0.027161
+attempt       69 candidate-update       69 accepted replay-range 2 cosine -0.060563
+attempt       70 candidate-update       70 accepted replay-range 3 cosine -0.058831
+attempt       71 candidate-update       71 accepted replay-range 4 cosine -0.048539
+attempt       72 candidate-update       72 accepted replay-range 5 cosine 0.018756
+attempt       73 candidate-update       73 accepted replay-range 0 cosine -0.064049
+attempt       74 candidate-update       74 accepted replay-range 1 cosine -0.029142
+attempt       75 candidate-update       75 accepted replay-range 2 cosine -0.060429
+update       75 train 1.5441 val 1.5498 grad 2.477 lr 1.5e-05 tok/s 157
+training time 175.17 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 75 attempt 75
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=75 committed=75 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt       76 candidate-update       76 accepted replay-range 3 cosine -0.030406
+attempt       77 candidate-update       77 accepted replay-range 4 cosine -0.050500
+attempt       78 candidate-update       78 accepted replay-range 5 cosine 0.013909
+attempt       79 candidate-update       79 accepted replay-range 0 cosine -0.068185
+attempt       80 candidate-update       80 accepted replay-range 1 cosine -0.029459
+attempt       81 candidate-update       81 accepted replay-range 2 cosine -0.053028
+attempt       82 candidate-update       82 accepted replay-range 3 cosine 0.003697
+attempt       83 candidate-update       83 accepted replay-range 4 cosine -0.047771
+attempt       84 candidate-update       84 accepted replay-range 5 cosine 0.002179
+attempt       85 candidate-update       85 accepted replay-range 0 cosine -0.065731
+attempt       86 candidate-update       86 accepted replay-range 1 cosine -0.028503
+attempt       87 candidate-update       87 accepted replay-range 2 cosine -0.050652
+attempt       88 candidate-update       88 accepted replay-range 3 cosine 0.022135
+attempt       89 candidate-update       89 accepted replay-range 4 cosine -0.049637
+attempt       90 candidate-update       90 accepted replay-range 5 cosine -0.001433
+attempt       91 candidate-update       91 accepted replay-range 0 cosine -0.063590
+attempt       92 candidate-update       92 accepted replay-range 1 cosine -0.028733
+attempt       93 candidate-update       93 accepted replay-range 2 cosine -0.062226
+attempt       94 candidate-update       94 accepted replay-range 3 cosine 0.002274
+attempt       95 candidate-update       95 accepted replay-range 4 cosine -0.060532
+attempt       96 candidate-update       96 accepted replay-range 5 cosine 0.008213
+attempt       97 candidate-update       97 accepted replay-range 0 cosine -0.071369
+attempt       98 candidate-update       98 accepted replay-range 1 cosine -0.030515
+attempt       99 candidate-update       99 accepted replay-range 2 cosine -0.076878
+attempt      100 candidate-update      100 accepted replay-range 3 cosine -0.011226
+update      100 train 1.1224 val 1.2857 grad 1.625 lr 2e-05 tok/s 155
+training time 176.56 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 100 attempt 100
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=100 committed=100 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      101 candidate-update      101 accepted replay-range 4 cosine -0.061517
+attempt      102 candidate-update      102 accepted replay-range 5 cosine -0.008639
+attempt      103 candidate-update      103 accepted replay-range 0 cosine -0.075526
+attempt      104 candidate-update      104 accepted replay-range 1 cosine -0.028655
+attempt      105 candidate-update      105 accepted replay-range 2 cosine -0.076813
+attempt      106 candidate-update      106 accepted replay-range 3 cosine 0.002155
+attempt      107 candidate-update      107 accepted replay-range 4 cosine -0.055410
+attempt      108 candidate-update      108 accepted replay-range 5 cosine -0.019080
+attempt      109 candidate-update      109 accepted replay-range 0 cosine -0.072106
+attempt      110 candidate-update      110 accepted replay-range 1 cosine -0.024333
+attempt      111 candidate-update      111 accepted replay-range 2 cosine -0.070173
+attempt      112 candidate-update      112 accepted replay-range 3 cosine -0.007384
+attempt      113 candidate-update      113 accepted replay-range 4 cosine -0.050090
+attempt      114 candidate-update      114 accepted replay-range 5 cosine -0.021264
+attempt      115 candidate-update      115 accepted replay-range 0 cosine -0.070082
+attempt      116 candidate-update      116 accepted replay-range 1 cosine -0.022461
+attempt      117 candidate-update      117 accepted replay-range 2 cosine -0.054877
+attempt      118 candidate-update      118 accepted replay-range 3 cosine -0.035063
+attempt      119 candidate-update      119 accepted replay-range 4 cosine -0.033775
+attempt      120 candidate-update      120 accepted replay-range 5 cosine -0.015654
+attempt      121 candidate-update      121 accepted replay-range 0 cosine -0.042884
+attempt      122 candidate-update      122 accepted replay-range 1 cosine -0.013680
+attempt      123 candidate-update      123 accepted replay-range 2 cosine -0.013357
+attempt      124 candidate-update      124 accepted replay-range 3 cosine -0.037563
+attempt      125 candidate-update      125 accepted replay-range 4 cosine -0.008642
+update      125 train 0.8222 val 1.1306 grad 1.257 lr 1.99619e-05 tok/s 156
+training time 175.54 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 125 attempt 125
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=125 committed=125 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      126 candidate-update      126 accepted replay-range 5 cosine -0.006216
+attempt      127 candidate-update      127 accepted replay-range 0 cosine -0.018130
+attempt      128 candidate-update      128 accepted replay-range 1 cosine -0.005981
+attempt      129 candidate-update      129 accepted replay-range 2 cosine -0.006852
+attempt      130 candidate-update      130 accepted replay-range 3 cosine -0.008069
+attempt      131 candidate-update      131 accepted replay-range 4 cosine -0.017276
+attempt      132 candidate-update      132 accepted replay-range 5 cosine 0.003991
+attempt      133 candidate-update      133 accepted replay-range 0 cosine -0.023475
+attempt      134 candidate-update      134 accepted replay-range 1 cosine -0.002410
+attempt      135 candidate-update      135 accepted replay-range 2 cosine -0.011495
+attempt      136 candidate-update      136 accepted replay-range 3 cosine 0.010040
+attempt      137 candidate-update      137 accepted replay-range 4 cosine -0.020463
+attempt      138 candidate-update      138 accepted replay-range 5 cosine -0.000683
+attempt      139 candidate-update      139 accepted replay-range 0 cosine -0.018735
+attempt      140 candidate-update      140 accepted replay-range 1 cosine -0.007864
+attempt      141 candidate-update      141 accepted replay-range 2 cosine -0.007625
+attempt      142 candidate-update      142 accepted replay-range 3 cosine -0.008149
+attempt      143 candidate-update      143 accepted replay-range 4 cosine -0.021498
+attempt      144 candidate-update      144 accepted replay-range 5 cosine -0.004963
+attempt      145 candidate-update      145 accepted replay-range 0 cosine -0.017730
+attempt      146 candidate-update      146 accepted replay-range 1 cosine -0.009777
+attempt      147 candidate-update      147 accepted replay-range 2 cosine -0.017990
+attempt      148 candidate-update      148 accepted replay-range 3 cosine -0.020816
+attempt      149 candidate-update      149 accepted replay-range 4 cosine -0.023999
+attempt      150 candidate-update      150 accepted replay-range 5 cosine -0.000993
+update      150 train 0.7636 val 1.0797 grad 1.566 lr 1.98481e-05 tok/s 158
+training time 173.70 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 150 attempt 150
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=150 committed=150 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      151 candidate-update      151 accepted replay-range 0 cosine -0.019024
+attempt      152 candidate-update      152 accepted replay-range 1 cosine -0.011462
+attempt      153 candidate-update      153 accepted replay-range 2 cosine -0.019555
+attempt      154 candidate-update      154 accepted replay-range 3 cosine -0.013055
+attempt      155 candidate-update      155 accepted replay-range 4 cosine -0.024495
+attempt      156 candidate-update      156 accepted replay-range 5 cosine 0.001144
+attempt      157 candidate-update      157 accepted replay-range 0 cosine -0.026838
+attempt      158 candidate-update      158 accepted replay-range 1 cosine -0.011231
+attempt      159 candidate-update      159 accepted replay-range 2 cosine -0.025034
+attempt      160 candidate-update      160 accepted replay-range 3 cosine 0.009524
+attempt      161 candidate-update      161 accepted replay-range 4 cosine -0.025314
+attempt      162 candidate-update      162 accepted replay-range 5 cosine 0.012184
+attempt      163 candidate-update      163 accepted replay-range 0 cosine -0.028665
+attempt      164 candidate-update      164 accepted replay-range 1 cosine -0.010365
+attempt      165 candidate-update      165 accepted replay-range 2 cosine -0.024450
+attempt      166 candidate-update      166 accepted replay-range 3 cosine 0.017937
+attempt      167 candidate-update      167 accepted replay-range 4 cosine -0.023000
+attempt      168 candidate-update      168 accepted replay-range 5 cosine 0.016950
+attempt      169 candidate-update      169 accepted replay-range 0 cosine -0.021591
+attempt      170 candidate-update      170 accepted replay-range 1 cosine -0.009559
+attempt      171 candidate-update      171 accepted replay-range 2 cosine -0.019578
+attempt      172 candidate-update      172 accepted replay-range 3 cosine 0.024320
+attempt      173 candidate-update      173 accepted replay-range 4 cosine -0.019550
+attempt      174 candidate-update      174 accepted replay-range 5 cosine 0.011805
+attempt      175 candidate-update      175 accepted replay-range 0 cosine -0.016852
+update      175 train 0.7182 val 1.0527 grad 1.032 lr 1.96593e-05 tok/s 158
+training time 173.42 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 175 attempt 175
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=175 committed=175 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      176 candidate-update      176 accepted replay-range 1 cosine -0.010361
+attempt      177 candidate-update      177 accepted replay-range 2 cosine -0.017427
+attempt      178 candidate-update      178 accepted replay-range 3 cosine 0.000992
+attempt      179 candidate-update      179 accepted replay-range 4 cosine -0.017436
+attempt      180 candidate-update      180 accepted replay-range 5 cosine 0.003227
+attempt      181 candidate-update      181 accepted replay-range 0 cosine -0.010670
+attempt      182 candidate-update      182 accepted replay-range 1 cosine -0.006062
+attempt      183 candidate-update      183 accepted replay-range 2 cosine -0.004836
+attempt      184 candidate-update      184 accepted replay-range 3 cosine -0.000911
+attempt      185 candidate-update      185 accepted replay-range 4 cosine -0.010644
+attempt      186 candidate-update      186 accepted replay-range 5 cosine -0.000319
+attempt      187 candidate-update      187 accepted replay-range 0 cosine -0.011230
+attempt      188 candidate-update      188 accepted replay-range 1 cosine -0.008461
+attempt      189 candidate-update      189 accepted replay-range 2 cosine -0.018876
+attempt      190 candidate-update      190 accepted replay-range 3 cosine 0.007062
+attempt      191 candidate-update      191 accepted replay-range 4 cosine -0.022121
+attempt      192 candidate-update      192 accepted replay-range 5 cosine 0.005483
+attempt      193 candidate-update      193 accepted replay-range 0 cosine -0.013409
+attempt      194 candidate-update      194 accepted replay-range 1 cosine -0.007366
+attempt      195 candidate-update      195 accepted replay-range 2 cosine -0.022655
+attempt      196 candidate-update      196 accepted replay-range 3 cosine 0.018964
+attempt      197 candidate-update      197 accepted replay-range 4 cosine -0.020987
+attempt      198 candidate-update      198 accepted replay-range 5 cosine 0.006450
+attempt      199 candidate-update      199 accepted replay-range 0 cosine -0.011613
+attempt      200 candidate-update      200 accepted replay-range 1 cosine -0.007279
+update      200 train 0.5883 val 1.0399 grad 0.918 lr 1.93969e-05 tok/s 159
+training time 173.09 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 200 attempt 200
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=200 committed=200 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      201 candidate-update      201 accepted replay-range 2 cosine -0.018254
+attempt      202 candidate-update      202 accepted replay-range 3 cosine 0.006822
+attempt      203 candidate-update      203 accepted replay-range 4 cosine -0.018469
+attempt      204 candidate-update      204 accepted replay-range 5 cosine 0.001111
+attempt      205 candidate-update      205 accepted replay-range 0 cosine -0.009635
+attempt      206 candidate-update      206 accepted replay-range 1 cosine -0.006568
+attempt      207 candidate-update      207 accepted replay-range 2 cosine -0.017828
+attempt      208 candidate-update      208 accepted replay-range 3 cosine 0.006298
+attempt      209 candidate-update      209 accepted replay-range 4 cosine -0.018238
+attempt      210 candidate-update      210 accepted replay-range 5 cosine 0.000627
+attempt      211 candidate-update      211 accepted replay-range 0 cosine -0.009460
+attempt      212 candidate-update      212 accepted replay-range 1 cosine -0.006421
+attempt      213 candidate-update      213 accepted replay-range 2 cosine -0.017086
+attempt      214 candidate-update      214 accepted replay-range 3 cosine 0.005414
+attempt      215 candidate-update      215 accepted replay-range 4 cosine -0.018181
+attempt      216 candidate-update      216 accepted replay-range 5 cosine 0.000169
+attempt      217 candidate-update      217 accepted replay-range 0 cosine -0.009813
+attempt      218 candidate-update      218 accepted replay-range 1 cosine -0.006458
+attempt      219 candidate-update      219 accepted replay-range 2 cosine -0.017673
+attempt      220 candidate-update      220 accepted replay-range 3 cosine 0.005329
+attempt      221 candidate-update      221 accepted replay-range 4 cosine -0.018788
+attempt      222 candidate-update      222 accepted replay-range 5 cosine 0.000302
+attempt      223 candidate-update      223 accepted replay-range 0 cosine -0.010609
+attempt      224 candidate-update      224 accepted replay-range 1 cosine -0.006675
+attempt      225 candidate-update      225 accepted replay-range 2 cosine -0.018732
+update      225 train 1.0090 val 1.2728 grad 0.913 lr 2.5e-06 tok/s 153
+training time 179.04 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 225 attempt 225
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=225 committed=225 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      226 candidate-update      226 accepted replay-range 3 cosine 0.005516
+attempt      227 candidate-update      227 accepted replay-range 4 cosine -0.019284
+attempt      228 candidate-update      228 accepted replay-range 5 cosine 0.000443
+attempt      229 candidate-update      229 accepted replay-range 0 cosine -0.011643
+attempt      230 candidate-update      230 accepted replay-range 1 cosine -0.006914
+attempt      231 candidate-update      231 accepted replay-range 2 cosine -0.020416
+attempt      232 candidate-update      232 accepted replay-range 3 cosine 0.006433
+attempt      233 candidate-update      233 accepted replay-range 4 cosine -0.020493
+attempt      234 candidate-update      234 accepted replay-range 5 cosine 0.001374
+attempt      235 candidate-update      235 accepted replay-range 0 cosine -0.013061
+attempt      236 candidate-update      236 accepted replay-range 1 cosine -0.007171
+attempt      237 candidate-update      237 accepted replay-range 2 cosine -0.022652
+attempt      238 candidate-update      238 accepted replay-range 3 cosine 0.008126
+attempt      239 candidate-update      239 accepted replay-range 4 cosine -0.021525
+attempt      240 candidate-update      240 accepted replay-range 5 cosine 0.002960
+attempt      241 candidate-update      241 accepted replay-range 0 cosine -0.014234
+attempt      242 candidate-update      242 accepted replay-range 1 cosine -0.007153
+attempt      243 candidate-update      243 accepted replay-range 2 cosine -0.024059
+attempt      244 candidate-update      244 accepted replay-range 3 cosine 0.010318
+attempt      245 candidate-update      245 accepted replay-range 4 cosine -0.021931
+attempt      246 candidate-update      246 accepted replay-range 5 cosine 0.005681
+attempt      247 candidate-update      247 accepted replay-range 0 cosine -0.015019
+attempt      248 candidate-update      248 accepted replay-range 1 cosine -0.006867
+attempt      249 candidate-update      249 accepted replay-range 2 cosine -0.025108
+attempt      250 candidate-update      250 accepted replay-range 3 cosine 0.012307
+update      250 train 0.6662 val 1.2685 grad 0.664 lr 5e-06 tok/s 157
+training time 174.46 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 250 attempt 250
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=250 committed=250 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      251 candidate-update      251 accepted replay-range 4 cosine -0.022370
+attempt      252 candidate-update      252 accepted replay-range 5 cosine 0.007589
+attempt      253 candidate-update      253 accepted replay-range 0 cosine -0.015881
+attempt      254 candidate-update      254 accepted replay-range 1 cosine -0.006673
+attempt      255 candidate-update      255 accepted replay-range 2 cosine -0.024214
+attempt      256 candidate-update      256 accepted replay-range 3 cosine 0.008305
+attempt      257 candidate-update      257 accepted replay-range 4 cosine -0.022112
+attempt      258 candidate-update      258 accepted replay-range 5 cosine 0.006260
+attempt      259 candidate-update      259 accepted replay-range 0 cosine -0.016349
+attempt      260 candidate-update      260 accepted replay-range 1 cosine -0.006354
+attempt      261 candidate-update      261 accepted replay-range 2 cosine -0.023020
+attempt      262 candidate-update      262 accepted replay-range 3 cosine 0.006830
+attempt      263 candidate-update      263 accepted replay-range 4 cosine -0.021808
+attempt      264 candidate-update      264 accepted replay-range 5 cosine 0.006810
+attempt      265 candidate-update      265 accepted replay-range 0 cosine -0.016593
+attempt      266 candidate-update      266 accepted replay-range 1 cosine -0.006263
+attempt      267 candidate-update      267 accepted replay-range 2 cosine -0.024023
+attempt      268 candidate-update      268 accepted replay-range 3 cosine 0.008642
+attempt      269 candidate-update      269 accepted replay-range 4 cosine -0.022378
+attempt      270 candidate-update      270 accepted replay-range 5 cosine 0.008201
+attempt      271 candidate-update      271 accepted replay-range 0 cosine -0.016991
+attempt      272 candidate-update      272 accepted replay-range 1 cosine -0.006242
+attempt      273 candidate-update      273 accepted replay-range 2 cosine -0.024864
+attempt      274 candidate-update      274 accepted replay-range 3 cosine 0.009810
+attempt      275 candidate-update      275 accepted replay-range 4 cosine -0.022987
+update      275 train 0.7803 val 1.2653 grad 0.936 lr 4.93732e-06 tok/s 156
+training time 176.24 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 275 attempt 275
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=275 committed=275 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      276 candidate-update      276 accepted replay-range 5 cosine 0.008074
+attempt      277 candidate-update      277 accepted replay-range 0 cosine -0.017270
+attempt      278 candidate-update      278 accepted replay-range 1 cosine -0.006434
+attempt      279 candidate-update      279 accepted replay-range 2 cosine -0.024952
+attempt      280 candidate-update      280 accepted replay-range 3 cosine 0.008763
+attempt      281 candidate-update      281 accepted replay-range 4 cosine -0.022933
+attempt      282 candidate-update      282 accepted replay-range 5 cosine 0.005919
+attempt      283 candidate-update      283 accepted replay-range 0 cosine -0.017002
+attempt      284 candidate-update      284 accepted replay-range 1 cosine -0.006598
+attempt      285 candidate-update      285 accepted replay-range 2 cosine -0.024454
+attempt      286 candidate-update      286 accepted replay-range 3 cosine 0.006340
+attempt      287 candidate-update      287 accepted replay-range 4 cosine -0.022872
+attempt      288 candidate-update      288 accepted replay-range 5 cosine 0.004375
+attempt      289 candidate-update      289 accepted replay-range 0 cosine -0.017398
+attempt      290 candidate-update      290 accepted replay-range 1 cosine -0.006421
+attempt      291 candidate-update      291 accepted replay-range 2 cosine -0.023560
+attempt      292 candidate-update      292 accepted replay-range 3 cosine 0.004691
+attempt      293 candidate-update      293 accepted replay-range 4 cosine -0.022553
+attempt      294 candidate-update      294 accepted replay-range 5 cosine 0.003109
+attempt      295 candidate-update      295 accepted replay-range 0 cosine -0.017887
+attempt      296 candidate-update      296 accepted replay-range 1 cosine -0.006008
+attempt      297 candidate-update      297 accepted replay-range 2 cosine -0.022175
+attempt      298 candidate-update      298 accepted replay-range 3 cosine 0.003337
+attempt      299 candidate-update      299 accepted replay-range 4 cosine -0.022174
+attempt      300 candidate-update      300 accepted replay-range 5 cosine 0.002118
+update      300 train 0.8990 val 1.2632 grad 0.780 lr 4.75242e-06 tok/s 153
+training time 179.40 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 300 attempt 300
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=300 committed=300 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      301 candidate-update      301 accepted replay-range 0 cosine -0.018182
+attempt      302 candidate-update      302 accepted replay-range 1 cosine -0.005909
+attempt      303 candidate-update      303 accepted replay-range 2 cosine -0.021930
+attempt      304 candidate-update      304 accepted replay-range 3 cosine 0.003783
+attempt      305 candidate-update      305 accepted replay-range 4 cosine -0.022100
+attempt      306 candidate-update      306 accepted replay-range 5 cosine 0.002584
+attempt      307 candidate-update      307 accepted replay-range 0 cosine -0.017546
+attempt      308 candidate-update      308 accepted replay-range 1 cosine -0.006040
+attempt      309 candidate-update      309 accepted replay-range 2 cosine -0.022703
+attempt      310 candidate-update      310 accepted replay-range 3 cosine 0.005556
+attempt      311 candidate-update      311 accepted replay-range 4 cosine -0.022045
+attempt      312 candidate-update      312 accepted replay-range 5 cosine 0.003402
+attempt      313 candidate-update      313 accepted replay-range 0 cosine -0.017212
+attempt      314 candidate-update      314 accepted replay-range 1 cosine -0.006039
+attempt      315 candidate-update      315 accepted replay-range 2 cosine -0.023135
+attempt      316 candidate-update      316 accepted replay-range 3 cosine 0.006681
+attempt      317 candidate-update      317 accepted replay-range 4 cosine -0.021620
+attempt      318 candidate-update      318 accepted replay-range 5 cosine 0.002636
+attempt      319 candidate-update      319 accepted replay-range 0 cosine -0.016325
+attempt      320 candidate-update      320 accepted replay-range 1 cosine -0.005919
+attempt      321 candidate-update      321 accepted replay-range 2 cosine -0.022365
+attempt      322 candidate-update      322 accepted replay-range 3 cosine 0.006034
+attempt      323 candidate-update      323 accepted replay-range 4 cosine -0.020807
+attempt      324 candidate-update      324 accepted replay-range 5 cosine 0.001466
+attempt      325 candidate-update      325 accepted replay-range 0 cosine -0.015599
+update      325 train 0.7624 val 1.2642 grad 0.725 lr 4.45458e-06 tok/s 154
+training time 177.72 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 325 attempt 325
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=325 committed=325 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      326 candidate-update      326 accepted replay-range 1 cosine -0.005743
+attempt      327 candidate-update      327 accepted replay-range 2 cosine -0.021543
+attempt      328 candidate-update      328 accepted replay-range 3 cosine 0.005967
+attempt      329 candidate-update      329 accepted replay-range 4 cosine -0.020358
+attempt      330 candidate-update      330 accepted replay-range 5 cosine 0.001881
+attempt      331 candidate-update      331 accepted replay-range 0 cosine -0.015654
+attempt      332 candidate-update      332 accepted replay-range 1 cosine -0.005592
+attempt      333 candidate-update      333 accepted replay-range 2 cosine -0.022040
+attempt      334 candidate-update      334 accepted replay-range 3 cosine 0.007294
+attempt      335 candidate-update      335 accepted replay-range 4 cosine -0.020453
+attempt      336 candidate-update      336 accepted replay-range 5 cosine 0.001697
+attempt      337 candidate-update      337 accepted replay-range 0 cosine -0.015800
+attempt      338 candidate-update      338 accepted replay-range 1 cosine -0.005453
+attempt      339 candidate-update      339 accepted replay-range 2 cosine -0.022691
+attempt      340 candidate-update      340 accepted replay-range 3 cosine 0.008858
+attempt      341 candidate-update      341 accepted replay-range 4 cosine -0.020808
+attempt      342 candidate-update      342 accepted replay-range 5 cosine 0.002069
+attempt      343 candidate-update      343 accepted replay-range 0 cosine -0.016205
+attempt      344 candidate-update      344 accepted replay-range 1 cosine -0.005169
+attempt      345 candidate-update      345 accepted replay-range 2 cosine -0.023309
+attempt      346 candidate-update      346 accepted replay-range 3 cosine 0.010725
+attempt      347 candidate-update      347 accepted replay-range 4 cosine -0.021092
+attempt      348 candidate-update      348 accepted replay-range 5 cosine 0.003253
+attempt      349 candidate-update      349 accepted replay-range 0 cosine -0.016708
+attempt      350 candidate-update      350 accepted replay-range 1 cosine -0.005058
+update      350 train 0.8585 val 1.2621 grad 0.722 lr 4.05872e-06 tok/s 154
+training time 178.18 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 350 attempt 350
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=350 committed=350 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      351 candidate-update      351 accepted replay-range 2 cosine -0.023406
+attempt      352 candidate-update      352 accepted replay-range 3 cosine 0.010285
+attempt      353 candidate-update      353 accepted replay-range 4 cosine -0.021172
+attempt      354 candidate-update      354 accepted replay-range 5 cosine 0.002867
+attempt      355 candidate-update      355 accepted replay-range 0 cosine -0.017124
+attempt      356 candidate-update      356 accepted replay-range 1 cosine -0.004934
+attempt      357 candidate-update      357 accepted replay-range 2 cosine -0.023223
+attempt      358 candidate-update      358 accepted replay-range 3 cosine 0.008932
+attempt      359 candidate-update      359 accepted replay-range 4 cosine -0.021159
+attempt      360 candidate-update      360 accepted replay-range 5 cosine 0.002362
+attempt      361 candidate-update      361 accepted replay-range 0 cosine -0.017353
+attempt      362 candidate-update      362 accepted replay-range 1 cosine -0.005086
+attempt      363 candidate-update      363 accepted replay-range 2 cosine -0.022484
+attempt      364 candidate-update      364 accepted replay-range 3 cosine 0.007409
+attempt      365 candidate-update      365 accepted replay-range 4 cosine -0.021133
+attempt      366 candidate-update      366 accepted replay-range 5 cosine 0.002267
+attempt      367 candidate-update      367 accepted replay-range 0 cosine -0.017622
+attempt      368 candidate-update      368 accepted replay-range 1 cosine -0.005101
+attempt      369 candidate-update      369 accepted replay-range 2 cosine -0.023319
+attempt      370 candidate-update      370 accepted replay-range 3 cosine 0.008318
+attempt      371 candidate-update      371 accepted replay-range 4 cosine -0.021072
+attempt      372 candidate-update      372 accepted replay-range 5 cosine 0.002109
+attempt      373 candidate-update      373 accepted replay-range 0 cosine -0.017654
+attempt      374 candidate-update      374 accepted replay-range 1 cosine -0.005161
+attempt      375 candidate-update      375 accepted replay-range 2 cosine -0.022948
+update      375 train 0.8480 val 1.2607 grad 0.517 lr 3.58471e-06 tok/s 153
+training time 178.76 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 375 attempt 375
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=375 committed=375 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      376 candidate-update      376 accepted replay-range 3 cosine 0.007813
+attempt      377 candidate-update      377 accepted replay-range 4 cosine -0.020802
+attempt      378 candidate-update      378 accepted replay-range 5 cosine 0.002045
+attempt      379 candidate-update      379 accepted replay-range 0 cosine -0.018052
+attempt      380 candidate-update      380 accepted replay-range 1 cosine -0.005130
+attempt      381 candidate-update      381 accepted replay-range 2 cosine -0.023848
+attempt      382 candidate-update      382 accepted replay-range 3 cosine 0.008145
+attempt      383 candidate-update      383 accepted replay-range 4 cosine -0.021146
+attempt      384 candidate-update      384 accepted replay-range 5 cosine 0.002429
+attempt      385 candidate-update      385 accepted replay-range 0 cosine -0.018492
+attempt      386 candidate-update      386 accepted replay-range 1 cosine -0.004896
+attempt      387 candidate-update      387 accepted replay-range 2 cosine -0.024440
+attempt      388 candidate-update      388 accepted replay-range 3 cosine 0.008493
+attempt      389 candidate-update      389 accepted replay-range 4 cosine -0.021102
+attempt      390 candidate-update      390 accepted replay-range 5 cosine 0.002949
+attempt      391 candidate-update      391 accepted replay-range 0 cosine -0.018798
+attempt      392 candidate-update      392 accepted replay-range 1 cosine -0.004704
+attempt      393 candidate-update      393 accepted replay-range 2 cosine -0.024916
+attempt      394 candidate-update      394 accepted replay-range 3 cosine 0.008365
+attempt      395 candidate-update      395 accepted replay-range 4 cosine -0.020999
+attempt      396 candidate-update      396 accepted replay-range 5 cosine 0.002932
+attempt      397 candidate-update      397 accepted replay-range 0 cosine -0.018886
+attempt      398 candidate-update      398 accepted replay-range 1 cosine -0.004726
+attempt      399 candidate-update      399 accepted replay-range 2 cosine -0.024295
+attempt      400 candidate-update      400 accepted replay-range 3 cosine 0.006391
+update      400 train 0.8672 val 1.2590 grad 0.707 lr 3.0563e-06 tok/s 154
+training time 178.27 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 400 attempt 400
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=400 committed=400 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      401 candidate-update      401 accepted replay-range 4 cosine -0.020689
+attempt      402 candidate-update      402 accepted replay-range 5 cosine 0.002143
+attempt      403 candidate-update      403 accepted replay-range 0 cosine -0.019006
+attempt      404 candidate-update      404 accepted replay-range 1 cosine -0.004751
+attempt      405 candidate-update      405 accepted replay-range 2 cosine -0.023404
+attempt      406 candidate-update      406 accepted replay-range 3 cosine 0.004746
+attempt      407 candidate-update      407 accepted replay-range 4 cosine -0.020376
+attempt      408 candidate-update      408 accepted replay-range 5 cosine 0.001819
+attempt      409 candidate-update      409 accepted replay-range 0 cosine -0.019141
+attempt      410 candidate-update      410 accepted replay-range 1 cosine -0.004784
+attempt      411 candidate-update      411 accepted replay-range 2 cosine -0.023115
+attempt      412 candidate-update      412 accepted replay-range 3 cosine 0.004771
+attempt      413 candidate-update      413 accepted replay-range 4 cosine -0.020114
+attempt      414 candidate-update      414 accepted replay-range 5 cosine 0.001902
+attempt      415 candidate-update      415 accepted replay-range 0 cosine -0.018997
+attempt      416 candidate-update      416 accepted replay-range 1 cosine -0.004844
+attempt      417 candidate-update      417 accepted replay-range 2 cosine -0.023038
+attempt      418 candidate-update      418 accepted replay-range 3 cosine 0.005313
+attempt      419 candidate-update      419 accepted replay-range 4 cosine -0.019888
+attempt      420 candidate-update      420 accepted replay-range 5 cosine 0.001834
+attempt      421 candidate-update      421 accepted replay-range 0 cosine -0.019057
+attempt      422 candidate-update      422 accepted replay-range 1 cosine -0.004898
+attempt      423 candidate-update      423 accepted replay-range 2 cosine -0.023884
+attempt      424 candidate-update      424 accepted replay-range 3 cosine 0.006475
+attempt      425 candidate-update      425 accepted replay-range 4 cosine -0.020255
+update      425 train 0.9125 val 1.2572 grad 0.683 lr 2.5e-06 tok/s 153
+training time 179.10 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 425 attempt 425
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=425 committed=425 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      426 candidate-update      426 accepted replay-range 5 cosine 0.002298
+attempt      427 candidate-update      427 accepted replay-range 0 cosine -0.019470
+attempt      428 candidate-update      428 accepted replay-range 1 cosine -0.004994
+attempt      429 candidate-update      429 accepted replay-range 2 cosine -0.024521
+attempt      430 candidate-update      430 accepted replay-range 3 cosine 0.006838
+attempt      431 candidate-update      431 accepted replay-range 4 cosine -0.020594
+attempt      432 candidate-update      432 accepted replay-range 5 cosine 0.002524
+attempt      433 candidate-update      433 accepted replay-range 0 cosine -0.019792
+attempt      434 candidate-update      434 accepted replay-range 1 cosine -0.005071
+attempt      435 candidate-update      435 accepted replay-range 2 cosine -0.025137
+attempt      436 candidate-update      436 accepted replay-range 3 cosine 0.007619
+attempt      437 candidate-update      437 accepted replay-range 4 cosine -0.020935
+attempt      438 candidate-update      438 accepted replay-range 5 cosine 0.002815
+attempt      439 candidate-update      439 accepted replay-range 0 cosine -0.019892
+attempt      440 candidate-update      440 accepted replay-range 1 cosine -0.005064
+attempt      441 candidate-update      441 accepted replay-range 2 cosine -0.025545
+attempt      442 candidate-update      442 accepted replay-range 3 cosine 0.007964
+attempt      443 candidate-update      443 accepted replay-range 4 cosine -0.021069
+attempt      444 candidate-update      444 accepted replay-range 5 cosine 0.002709
+attempt      445 candidate-update      445 accepted replay-range 0 cosine -0.019797
+attempt      446 candidate-update      446 accepted replay-range 1 cosine -0.004963
+attempt      447 candidate-update      447 accepted replay-range 2 cosine -0.025378
+attempt      448 candidate-update      448 accepted replay-range 3 cosine 0.007794
+attempt      449 candidate-update      449 accepted replay-range 4 cosine -0.020800
+attempt      450 candidate-update      450 accepted replay-range 5 cosine 0.002426
+update      450 train 0.7364 val 1.2577 grad 0.602 lr 1.9437e-06 tok/s 155
+training time 177.37 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 450 attempt 450
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=450 committed=450 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      451 candidate-update      451 accepted replay-range 0 cosine -0.019650
+attempt      452 candidate-update      452 accepted replay-range 1 cosine -0.004814
+attempt      453 candidate-update      453 accepted replay-range 2 cosine -0.025192
+attempt      454 candidate-update      454 accepted replay-range 3 cosine 0.007503
+attempt      455 candidate-update      455 accepted replay-range 4 cosine -0.020582
+attempt      456 candidate-update      456 accepted replay-range 5 cosine 0.001957
+attempt      457 candidate-update      457 accepted replay-range 0 cosine -0.019376
+attempt      458 candidate-update      458 accepted replay-range 1 cosine -0.004762
+attempt      459 candidate-update      459 accepted replay-range 2 cosine -0.024456
+attempt      460 candidate-update      460 accepted replay-range 3 cosine 0.006077
+attempt      461 candidate-update      461 accepted replay-range 4 cosine -0.020236
+attempt      462 candidate-update      462 accepted replay-range 5 cosine 0.001228
+attempt      463 candidate-update      463 accepted replay-range 0 cosine -0.019088
+attempt      464 candidate-update      464 accepted replay-range 1 cosine -0.004794
+attempt      465 candidate-update      465 accepted replay-range 2 cosine -0.023558
+attempt      466 candidate-update      466 accepted replay-range 3 cosine 0.004525
+attempt      467 candidate-update      467 accepted replay-range 4 cosine -0.019793
+attempt      468 candidate-update      468 accepted replay-range 5 cosine 0.000432
+attempt      469 candidate-update      469 accepted replay-range 0 cosine -0.018662
+attempt      470 candidate-update      470 accepted replay-range 1 cosine -0.004811
+attempt      471 candidate-update      471 accepted replay-range 2 cosine -0.022530
+attempt      472 candidate-update      472 accepted replay-range 3 cosine 0.003489
+attempt      473 candidate-update      473 accepted replay-range 4 cosine -0.019487
+attempt      474 candidate-update      474 accepted replay-range 5 cosine 0.000071
+attempt      475 candidate-update      475 accepted replay-range 0 cosine -0.018488
+update      475 train 0.8622 val 1.2571 grad 2.494 lr 1.41529e-06 tok/s 155
+training time 177.49 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 475 attempt 475
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=475 committed=475 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      476 candidate-update      476 accepted replay-range 1 cosine -0.004780
+attempt      477 candidate-update      477 accepted replay-range 2 cosine -0.021863
+attempt      478 candidate-update      478 accepted replay-range 3 cosine 0.003054
+attempt      479 candidate-update      479 accepted replay-range 4 cosine -0.019407
+attempt      480 candidate-update      480 accepted replay-range 5 cosine 0.000184
+attempt      481 candidate-update      481 accepted replay-range 0 cosine -0.018564
+attempt      482 candidate-update      482 accepted replay-range 1 cosine -0.004720
+attempt      483 candidate-update      483 accepted replay-range 2 cosine -0.022685
+attempt      484 candidate-update      484 accepted replay-range 3 cosine 0.003519
+attempt      485 candidate-update      485 accepted replay-range 4 cosine -0.019695
+attempt      486 candidate-update      486 accepted replay-range 5 cosine 0.000566
+attempt      487 candidate-update      487 accepted replay-range 0 cosine -0.018850
+attempt      488 candidate-update      488 accepted replay-range 1 cosine -0.004640
+attempt      489 candidate-update      489 accepted replay-range 2 cosine -0.023282
+attempt      490 candidate-update      490 accepted replay-range 3 cosine 0.004297
+attempt      491 candidate-update      491 accepted replay-range 4 cosine -0.019874
+attempt      492 candidate-update      492 accepted replay-range 5 cosine 0.000947
+attempt      493 candidate-update      493 accepted replay-range 0 cosine -0.018940
+attempt      494 candidate-update      494 accepted replay-range 1 cosine -0.004615
+attempt      495 candidate-update      495 accepted replay-range 2 cosine -0.023597
+attempt      496 candidate-update      496 accepted replay-range 3 cosine 0.004799
+attempt      497 candidate-update      497 accepted replay-range 4 cosine -0.019815
+attempt      498 candidate-update      498 accepted replay-range 5 cosine 0.001022
+attempt      499 candidate-update      499 accepted replay-range 0 cosine -0.018852
+attempt      500 candidate-update      500 accepted replay-range 1 cosine -0.004653
+update      500 train 0.8133 val 1.2571 grad 0.945 lr 9.41275e-07 tok/s 154
+training time 178.29 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 500 attempt 500
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=500 committed=500 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      501 candidate-update      501 accepted replay-range 2 cosine -0.023721
+attempt      502 candidate-update      502 accepted replay-range 3 cosine 0.004924
+attempt      503 candidate-update      503 accepted replay-range 4 cosine -0.019813
+attempt      504 candidate-update      504 accepted replay-range 5 cosine 0.001015
+attempt      505 candidate-update      505 accepted replay-range 0 cosine -0.018864
+attempt      506 candidate-update      506 accepted replay-range 1 cosine -0.004702
+attempt      507 candidate-update      507 accepted replay-range 2 cosine -0.023778
+attempt      508 candidate-update      508 accepted replay-range 3 cosine 0.004935
+attempt      509 candidate-update      509 accepted replay-range 4 cosine -0.019881
+attempt      510 candidate-update      510 accepted replay-range 5 cosine 0.001243
+attempt      511 candidate-update      511 accepted replay-range 0 cosine -0.018999
+attempt      512 candidate-update      512 accepted replay-range 1 cosine -0.004723
+attempt      513 candidate-update      513 accepted replay-range 2 cosine -0.024073
+attempt      514 candidate-update      514 accepted replay-range 3 cosine 0.005000
+attempt      515 candidate-update      515 accepted replay-range 4 cosine -0.020112
+attempt      516 candidate-update      516 accepted replay-range 5 cosine 0.001494
+attempt      517 candidate-update      517 accepted replay-range 0 cosine -0.019264
+attempt      518 candidate-update      518 accepted replay-range 1 cosine -0.004743
+attempt      519 candidate-update      519 accepted replay-range 2 cosine -0.024680
+attempt      520 candidate-update      520 accepted replay-range 3 cosine 0.005531
+attempt      521 candidate-update      521 accepted replay-range 4 cosine -0.020447
+attempt      522 candidate-update      522 accepted replay-range 5 cosine 0.001914
+attempt      523 candidate-update      523 accepted replay-range 0 cosine -0.019511
+attempt      524 candidate-update      524 accepted replay-range 1 cosine -0.004724
+attempt      525 candidate-update      525 accepted replay-range 2 cosine -0.025113
+update      525 train 0.8769 val 1.2574 grad 0.761 lr 5.45421e-07 tok/s 155
+training time 176.80 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 525 attempt 525
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=525 committed=525 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      526 candidate-update      526 accepted replay-range 3 cosine 0.006104
+attempt      527 candidate-update      527 accepted replay-range 4 cosine -0.020544
+attempt      528 candidate-update      528 accepted replay-range 5 cosine 0.002121
+attempt      529 candidate-update      529 accepted replay-range 0 cosine -0.019563
+attempt      530 candidate-update      530 accepted replay-range 1 cosine -0.004707
+attempt      531 candidate-update      531 accepted replay-range 2 cosine -0.025320
+attempt      532 candidate-update      532 accepted replay-range 3 cosine 0.006405
+attempt      533 candidate-update      533 accepted replay-range 4 cosine -0.020562
+attempt      534 candidate-update      534 accepted replay-range 5 cosine 0.002185
+attempt      535 candidate-update      535 accepted replay-range 0 cosine -0.019563
+attempt      536 candidate-update      536 accepted replay-range 1 cosine -0.004687
+attempt      537 candidate-update      537 accepted replay-range 2 cosine -0.025476
+attempt      538 candidate-update      538 accepted replay-range 3 cosine 0.006585
+attempt      539 candidate-update      539 accepted replay-range 4 cosine -0.020562
+attempt      540 candidate-update      540 accepted replay-range 5 cosine 0.002197
+attempt      541 candidate-update      541 accepted replay-range 0 cosine -0.019541
+attempt      542 candidate-update      542 accepted replay-range 1 cosine -0.004675
+attempt      543 candidate-update      543 accepted replay-range 2 cosine -0.025478
+attempt      544 candidate-update      544 accepted replay-range 3 cosine 0.006616
+attempt      545 candidate-update      545 accepted replay-range 4 cosine -0.020548
+attempt      546 candidate-update      546 accepted replay-range 5 cosine 0.002194
+attempt      547 candidate-update      547 accepted replay-range 0 cosine -0.019546
+attempt      548 candidate-update      548 accepted replay-range 1 cosine -0.004656
+attempt      549 candidate-update      549 accepted replay-range 2 cosine -0.025496
+attempt      550 candidate-update      550 accepted replay-range 3 cosine 0.006688
+update      550 train 0.8779 val 1.2574 grad 0.812 lr 2.47578e-07 tok/s 153
+training time 178.82 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 550 attempt 550
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=550 committed=550 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      551 candidate-update      551 accepted replay-range 4 cosine -0.020551
+attempt      552 candidate-update      552 accepted replay-range 5 cosine 0.002276
+attempt      553 candidate-update      553 accepted replay-range 0 cosine -0.019582
+attempt      554 candidate-update      554 accepted replay-range 1 cosine -0.004637
+attempt      555 candidate-update      555 accepted replay-range 2 cosine -0.025641
+attempt      556 candidate-update      556 accepted replay-range 3 cosine 0.006819
+attempt      557 candidate-update      557 accepted replay-range 4 cosine -0.020621
+attempt      558 candidate-update      558 accepted replay-range 5 cosine 0.002370
+attempt      559 candidate-update      559 accepted replay-range 0 cosine -0.019645
+attempt      560 candidate-update      560 accepted replay-range 1 cosine -0.004633
+attempt      561 candidate-update      561 accepted replay-range 2 cosine -0.025712
+attempt      562 candidate-update      562 accepted replay-range 3 cosine 0.006843
+attempt      563 candidate-update      563 accepted replay-range 4 cosine -0.020655
+attempt      564 candidate-update      564 accepted replay-range 5 cosine 0.002370
+attempt      565 candidate-update      565 accepted replay-range 0 cosine -0.019665
+attempt      566 candidate-update      566 accepted replay-range 1 cosine -0.004640
+attempt      567 candidate-update      567 accepted replay-range 2 cosine -0.025686
+attempt      568 candidate-update      568 accepted replay-range 3 cosine 0.006786
+attempt      569 candidate-update      569 accepted replay-range 4 cosine -0.020651
+attempt      570 candidate-update      570 accepted replay-range 5 cosine 0.002357
+attempt      571 candidate-update      571 accepted replay-range 0 cosine -0.019662
+attempt      572 candidate-update      572 accepted replay-range 1 cosine -0.004642
+attempt      573 candidate-update      573 accepted replay-range 2 cosine -0.025678
+attempt      574 candidate-update      574 accepted replay-range 3 cosine 0.006788
+attempt      575 candidate-update      575 accepted replay-range 4 cosine -0.020646
+update      575 train 0.8433 val 1.2573 grad 1.541 lr 6.26802e-08 tok/s 154
+training time 178.38 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt
+loaded tokenizer corpus/literary.bpe
+resumed /tmp/zero4-q26r-seed3-active.ckpt at update 575 attempt 575
+loaded frozen faculty teacher 2 teachers/zero2-literary.teacher default-weight=0.200
+loaded frozen faculty teacher 3 teachers/zero3-balanced-final.teacher default-weight=0.200
+loaded ZERO.1 teacher teachers/zero1-foundation.teacher at update 20000
+ZERO.1 foundation distillation weight=0.250
+transaction mode=cumulative-tangent attempt=575 committed=575 probe-every=1 budget=0.015 max-rejections=8 reference=teachers/zero3-balanced-final.teacher
+literary_lm: backend=OpenBLAS context=512 vocab=128 dim=256 heads=8 layers=6 ff=1056 positions=rotary parameters=4852992
+corpus=39570752 tokens train=38001903 validation=1568837 tokens/update=1024 sampling=weighted-files-and-channel-records
+cumulative replay baseline=1.61356052 ranges=6
+attempt      576 candidate-update      576 accepted replay-range 5 cosine 0.002349
+attempt      577 candidate-update      577 accepted replay-range 0 cosine -0.019660
+attempt      578 candidate-update      578 accepted replay-range 1 cosine -0.004644
+attempt      579 candidate-update      579 accepted replay-range 2 cosine -0.025654
+attempt      580 candidate-update      580 accepted replay-range 3 cosine 0.006761
+attempt      581 candidate-update      581 accepted replay-range 4 cosine -0.020637
+attempt      582 candidate-update      582 accepted replay-range 5 cosine 0.002337
+attempt      583 candidate-update      583 accepted replay-range 0 cosine -0.019655
+attempt      584 candidate-update      584 accepted replay-range 1 cosine -0.004647
+attempt      585 candidate-update      585 accepted replay-range 2 cosine -0.025638
+attempt      586 candidate-update      586 accepted replay-range 3 cosine 0.006739
+attempt      587 candidate-update      587 accepted replay-range 4 cosine -0.020636
+attempt      588 candidate-update      588 accepted replay-range 5 cosine 0.002332
+attempt      589 candidate-update      589 accepted replay-range 0 cosine -0.019656
+attempt      590 candidate-update      590 accepted replay-range 1 cosine -0.004647
+attempt      591 candidate-update      591 accepted replay-range 2 cosine -0.025636
+attempt      592 candidate-update      592 accepted replay-range 3 cosine 0.006736
+attempt      593 candidate-update      593 accepted replay-range 4 cosine -0.020637
+attempt      594 candidate-update      594 accepted replay-range 5 cosine 0.002333
+attempt      595 candidate-update      595 accepted replay-range 0 cosine -0.019657
+attempt      596 candidate-update      596 accepted replay-range 1 cosine -0.004647
+attempt      597 candidate-update      597 accepted replay-range 2 cosine -0.025635
+attempt      598 candidate-update      598 accepted replay-range 3 cosine 0.006735
+attempt      599 candidate-update      599 accepted replay-range 4 cosine -0.020637
+attempt      600 candidate-update      600 accepted replay-range 5 cosine 0.002333
+update      600 train 0.8192 val 1.2573 grad 1.316 lr 0 tok/s 154
+training time 178.38 seconds
+saved /tmp/zero4-q26r-seed3-active.ckpt

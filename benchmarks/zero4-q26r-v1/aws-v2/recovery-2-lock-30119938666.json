@@ -1,0 +1,22 @@
+{
+  "schema": "zero.aws_recovery_execution_lock.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "recovery_ordinal": 2,
+  "seeds": [
+    1,
+    3
+  ],
+  "ci_run_id": "30119938666",
+  "git_commit": "a9e263c60d724372e7eca670fb1087d992a4b7ae",
+  "budget_sha256": "81742e40e9bd43309b5c8313003ff0ce79bae1b5441c8273101f44df9f37af0d",
+  "failed_launch_workflow_run_ids": [
+    "30117320329",
+    "30118477546"
+  ],
+  "preflight_failure_sha256s": [
+    "e68ad85c614980a1ce5c2fe0b4e28ac7396c8e1f96e4364cead51116e4514b14",
+    "9f353c68397af70bc317f6f4387d4aee0607ecc81cbeedbfad3c5a957b4eec1c"
+  ],
+  "original_execution_lock_sha256": "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7",
+  "recovery_1_lock_sha256": "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9"
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "zero.aws_q26r_terminal_observation.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "seed": 3,
+  "instance_id": "i-052fd0735dfc27bda",
+  "identity_sha256": "81e554091327d0aee58f8c71c9ab81ba6be10bf578fc03aa14db01fa3e3824ac",
+  "observed_at": "2026-07-24T22:30:39Z",
+  "policy": "live-terminal",
+  "aws_state": "terminated",
+  "aws_error_code": null
+}

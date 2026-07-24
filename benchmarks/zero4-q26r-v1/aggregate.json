@@ -1,0 +1,61 @@
+{
+  "schema": "zero.zero4_q26_multiseed.v1",
+  "id": "zero4-q26-multiseed",
+  "decision": "go",
+  "promotion_eligible": true,
+  "promotion_blocker": null,
+  "declared_seeds": [
+    1,
+    2,
+    3
+  ],
+  "completed_seeds": [
+    1,
+    2,
+    3
+  ],
+  "current_model": "ZERO.4",
+  "promoted_model": {
+    "source_seed": 2,
+    "path": "benchmarks/zero4-q26-v1/seed2/selected.litq8",
+    "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+  },
+  "results": {
+    "1": {
+      "decision": "go",
+      "stopped_reason": "no Pareto improvement for 200 committed updates",
+      "committed_updates": 600,
+      "selected_update": 400,
+      "operation_rate": 0.98,
+      "exact_artifact_rate": 0.98,
+      "replay_relative_regression": 0.010423053341508219,
+      "promotion_evaluated": true,
+      "promotion_passed": true,
+      "model_sha256": "67a1d5bafd00164b158811fc99a6f9b558e7414ff604b6f513e26a196b1eb65e"
+    },
+    "2": {
+      "decision": "go",
+      "stopped_reason": "no Pareto improvement for 200 committed updates",
+      "committed_updates": 700,
+      "selected_update": 500,
+      "operation_rate": 0.998,
+      "exact_artifact_rate": 0.998,
+      "replay_relative_regression": 0.011833231146535925,
+      "promotion_evaluated": true,
+      "promotion_passed": true,
+      "model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+    },
+    "3": {
+      "decision": "go",
+      "stopped_reason": "consolidation attempt budget completed",
+      "committed_updates": 600,
+      "selected_update": 500,
+      "operation_rate": 0.96,
+      "exact_artifact_rate": 0.96,
+      "replay_relative_regression": 0.012752912323727732,
+      "promotion_evaluated": true,
+      "promotion_passed": true,
+      "model_sha256": "817eb9b9dd5c1685fcf6e65f7e16f5ab2ec7f13933b2b73c749a557720e49603"
+    }
+  }
+}

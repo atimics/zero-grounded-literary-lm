@@ -1,0 +1,11 @@
+{
+  "schema": "zero.aws_execution_lock.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "seeds": [
+    1,
+    3
+  ],
+  "ci_run_id": "30117320329",
+  "git_commit": "5949e7bfc8d6f78d3eaef1ef86d7a488454d1243",
+  "budget_sha256": "580a74f1c5ad72e3f205b104d14c1b6d6f4fc0fe2f529a9308e38173925b990e"
+}

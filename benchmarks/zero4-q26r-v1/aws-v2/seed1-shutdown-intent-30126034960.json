@@ -1,0 +1,13 @@
+{
+  "schema": "zero.aws_q26r_shutdown_intent.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "seed": 1,
+  "instance_id": "i-0d200ad47abb808c4",
+  "ci_run_id": "30126034960",
+  "git_commit": "e6e717a53d6903b71d8f563104ec9ce75c65ce11",
+  "budget_sha256": "0c90a8ede923f7afc131b3331f49528585416c17cf167a2c8478fa5b101e87a0",
+  "status_sha256": "14146f2458571b0c177df76197827b3f0caa33be30dd7285cd5dd619612cc2de",
+  "requested_at": "2026-07-24T22:21:43Z",
+  "action": "instance-initiated-shutdown",
+  "configured_shutdown_behavior": "terminate"
+}
