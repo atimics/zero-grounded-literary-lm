@@ -164,6 +164,50 @@ export function validateV2Budget(
     );
   }
 
+  const recovery3Authorization = budget.recovery_3_authorization;
+  assert(
+    recovery3Authorization?.scope
+      === "one corrective recovery launch after deterministic bootstrap failure 30119938666",
+    "v2 recovery-3 authorization scope drifted",
+  );
+  assert(
+    recovery3Authorization.failed_launch_workflow_run_id === "30119938666",
+    "v2 recovery-3 source run drifted",
+  );
+  assert(
+    recovery3Authorization.one_recovery_launch_only === true,
+    "v2 recovery-3 is not one-time",
+  );
+  assert(
+    recovery3Authorization.requires_manual_approval === true
+      && recovery3Authorization.manual_approval_observed
+        === recovery3Authorization.authorized_for_execution,
+    "v2 recovery-3 approval gate drifted",
+  );
+  if (recovery3Authorization.authorized_for_execution) {
+    assert(
+      recovery3Authorization.manual_approval_observed === true
+        && recovery3Authorization.expanded_all_in_budget_approved === true
+        && typeof recovery3Authorization.authorized_at === "string"
+        && /^\d{4}-\d{2}-\d{2}$/.test(recovery3Authorization.authorized_at),
+      "v2 recovery-3 authorization is incomplete",
+    );
+  } else {
+    assert(
+      recovery3Authorization.authorized_at === null
+        && recovery3Authorization.expanded_all_in_budget_approved === false,
+      "unapproved v2 recovery-3 has expanded authorization",
+    );
+  }
+  if (requireAuthorized) {
+    assert(
+      recovery3Authorization.manual_approval_observed === true
+        && recovery3Authorization.authorized_for_execution === true
+        && recovery3Authorization.expanded_all_in_budget_approved === true,
+      "v2 recovery-3 execution is not authorized",
+    );
+  }
+
   const science = budget.scientific_source_lock;
   assert(
     science?.base_execution_budget_path
@@ -438,6 +482,117 @@ export function validateV2Budget(
     "v2 recovery-2 safeguards drifted",
   );
 
+  const recovery3 = budget.recovery_3_basis;
+  assert(
+    recovery3?.bootstrap_failure_path
+      === "benchmarks/zero4-q26r-v1/aws-v2/bootstrap-failure-30119938666.json",
+    "v2 recovery-3 failure path drifted",
+  );
+  assert(
+    fs.existsSync(recovery3.bootstrap_failure_path),
+    "v2 recovery-3 failure is unavailable",
+  );
+  assert(
+    sha256(recovery3.bootstrap_failure_path)
+      === recovery3.bootstrap_failure_sha256,
+    "v2 recovery-3 failure hash mismatch",
+  );
+  const bootstrapFailure = readJson(recovery3.bootstrap_failure_path);
+  assert(
+    bootstrapFailure.schema === "zero.q26r_aws_bootstrap_failure.v2"
+      && bootstrapFailure.experiment === budget.id
+      && bootstrapFailure.status === "execution-bootstrap-failure",
+    "v2 recovery-3 failure classification drifted",
+  );
+  assert(
+    recovery3.failed_launch_workflow_run_id
+      === bootstrapFailure.source.launch_workflow_run_id
+      && recovery3.failed_launch_git_commit
+        === bootstrapFailure.source.git_commit
+      && recovery3.failed_launch_budget_sha256
+        === bootstrapFailure.source.budget_sha256
+      && recovery3.failed_launch_receipt_sha256
+        === bootstrapFailure.source.launch_receipt_sha256,
+    "v2 recovery-3 launch identity drifted",
+  );
+  assert(
+    recovery3.seed_1_instance_id === bootstrapFailure.seeds[0].instance_id
+      && recovery3.seed_3_instance_id === bootstrapFailure.seeds[1].instance_id
+      && bootstrapFailure.seeds[0].seed === 1
+      && bootstrapFailure.seeds[1].seed === 3,
+    "v2 recovery-3 instance evidence drifted",
+  );
+  assert(
+    bootstrapFailure.failure.classification
+      === "deterministic-bootstrap-contract-error"
+      && bootstrapFailure.failure.failed_guard
+        === 'test "$ZERO_MAX_COMPUTE_USD" = "1.18"'
+      && bootstrapFailure.failure.expected_guard
+        === 'test "$ZERO_MAX_COMPUTE_USD" = "1.17"'
+      && bootstrapFailure.failure.training_started === false
+      && bootstrapFailure.failure.scientific_results_published === false
+      && recovery3.required_bootstrap_contract_regression_test === true,
+    "v2 recovery-3 bootstrap failure evidence drifted",
+  );
+  assert(
+    bootstrapFailure.provenance.original_execution_lock_sha256
+      === "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7"
+      && bootstrapFailure.provenance.recovery_1_lock_sha256
+        === "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9"
+      && bootstrapFailure.provenance.recovery_2_lock_sha256
+        === "79a7b826f7b669fa2ceb7ef117ca8f0f0ef5a0b494903a736f2b0e3b110c57a6"
+      && bootstrapFailure.provenance.launch_receipt_published === true
+      && bootstrapFailure.provenance.identity_receipts_published === true
+      && bootstrapFailure.provenance.seed_statuses_published === true
+      && bootstrapFailure.provenance.shutdown_intents_published === true,
+    "v2 recovery-3 provenance evidence drifted",
+  );
+  const failedSeed1 = bootstrapFailure.seeds[0];
+  const failedSeed3 = bootstrapFailure.seeds[1];
+  assert(
+    failedSeed1.status === "infrastructure-error"
+      && failedSeed1.exit_code === 1
+      && failedSeed1.observed_instance_seconds === 80
+      && failedSeed1.status_sha256
+        === "839400de52ce40ba9cb3a77b1588a76ec577de3b50c19bd2cda0d7a9984865c2"
+      && failedSeed3.status === "infrastructure-error"
+      && failedSeed3.exit_code === 1
+      && failedSeed3.observed_instance_seconds === 87
+      && failedSeed3.status_sha256
+        === "c0370ade643c4c9e258995fa319032909ecbe770b40dca630b307317ba805e94",
+    "v2 recovery-3 seed statuses drifted",
+  );
+  assert(
+    bootstrapFailure.billing.hourly_rate_usd === 0.68
+      && bootstrapFailure.billing.this_failure_instance_seconds === 167
+      && Math.abs(
+        bootstrapFailure.billing.this_failure_compute_usd
+          - 167 * 0.68 / 3600,
+      ) < 1e-15
+      && bootstrapFailure.billing.cumulative_failed_instance_seconds === 287
+      && Math.abs(
+        bootstrapFailure.billing.cumulative_failed_compute_usd
+          - 287 * 0.68 / 3600,
+      ) < 1e-15,
+    "v2 recovery-3 billing evidence drifted",
+  );
+  assert(
+    recovery3.candidate_results_observed
+      === bootstrapFailure.scientific_effect.candidate_results_observed
+      && recovery3.scientific_result_observed
+        === bootstrapFailure.scientific_effect.scientific_result_observed
+      && recovery3.scientific_result_accepted
+        === bootstrapFailure.scientific_effect.scientific_result_accepted
+      && recovery3.family_inference
+        === bootstrapFailure.scientific_effect.family_inference
+      && recovery3.recovery_may_not_change_science === true
+      && bootstrapFailure.recovery.eligible === true
+      && bootstrapFailure.recovery.requires_bootstrap_contract_regression_test
+        === true
+      && bootstrapFailure.recovery.requires_new_write_once_lock === true,
+    "v2 recovery-3 safeguards drifted",
+  );
+
   const { price_checked_at: v2PriceDate, ...v2Venue } = budget.venue;
   const { price_checked_at: _basePriceDate, ...baseVenue } = base.venue;
   assert(same(v2Venue, baseVenue), "v2 venue differs from v1");
@@ -507,6 +662,7 @@ export function validateV2Budget(
   );
   assert(
     allIn.preflight_failure_count === 2
+      && allIn.bootstrap_failure_count === 1
       && allIn.preflight_reserved_instance_seconds
         === preflight.billing_reservation.reserved_instance_seconds
           + preflight2.billing_reservation.reserved_instance_seconds
@@ -517,6 +673,27 @@ export function validateV2Budget(
     "v2 preflight billing reservation drifted",
   );
   assert(
+    allIn.bootstrap_failure_observed_instance_seconds
+      === bootstrapFailure.billing.this_failure_instance_seconds
+      && allIn.bootstrap_failure_observed_compute_usd
+        === bootstrapFailure.billing.this_failure_compute_usd
+      && allIn.cumulative_failed_instance_seconds
+        === bootstrapFailure.billing.cumulative_failed_instance_seconds
+      && allIn.cumulative_failed_compute_usd
+        === bootstrapFailure.billing.cumulative_failed_compute_usd
+      && allIn.cumulative_failed_instance_seconds
+        === allIn.preflight_reserved_instance_seconds
+          + allIn.bootstrap_failure_observed_instance_seconds
+      && Math.abs(
+        allIn.cumulative_failed_compute_usd
+          - (
+            allIn.preflight_reserved_compute_usd
+              + allIn.bootstrap_failure_observed_compute_usd
+          ),
+      ) < 1e-12,
+    "v2 cumulative failure billing drifted",
+  );
+  assert(
     allIn.recovery_max_instance_seconds_sum
       === combined.max_instance_seconds_sum
       && allIn.recovery_max_compute_usd === combined.max_compute_usd,
@@ -524,33 +701,37 @@ export function validateV2Budget(
   );
   assert(
     allIn.all_in_max_instance_seconds_sum
-      === allIn.preflight_reserved_instance_seconds
+      === allIn.cumulative_failed_instance_seconds
         + allIn.recovery_max_instance_seconds_sum
       && Math.abs(
         allIn.all_in_max_compute_usd
           - (
-            allIn.preflight_reserved_compute_usd
+            allIn.cumulative_failed_compute_usd
               + allIn.recovery_max_compute_usd
           ),
       ) < 1e-12,
     "v2 all-in recovery cap does not reconcile",
   );
   assert(
-    allIn.remaining_instance_seconds_headroom
-      === allIn.original_max_instance_seconds_sum
-        - allIn.all_in_max_instance_seconds_sum
+    allIn.additional_instance_seconds_authorized
+      === allIn.all_in_max_instance_seconds_sum
+        - allIn.original_max_instance_seconds_sum
       && Math.abs(
-        allIn.remaining_compute_usd_headroom
+        allIn.additional_compute_usd_authorized
           - (
-            allIn.original_max_compute_usd
-              - allIn.all_in_max_compute_usd
+            allIn.all_in_max_compute_usd
+              - allIn.original_max_compute_usd
           ),
       ) < 1e-12
       && allIn.all_in_max_instance_seconds_sum
-        <= allIn.original_max_instance_seconds_sum
-      && allIn.all_in_max_compute_usd < allIn.original_max_compute_usd
-      && allIn.within_original_authorization === true,
-    "v2 recovery exceeds the original authorization",
+        > allIn.original_max_instance_seconds_sum
+      && allIn.all_in_max_compute_usd > allIn.original_max_compute_usd
+      && allIn.additional_instance_seconds_authorized === 67
+      && allIn.additional_compute_usd_authorized > 0
+      && allIn.within_original_authorization === false
+      && allIn.expanded_authorization_observed
+        === recovery3Authorization.expanded_all_in_budget_approved,
+    "v2 expanded recovery authorization drifted",
   );
 
   const projection = budget.budget_projection;
@@ -591,12 +772,16 @@ export function validateV2Budget(
       && provenance.failed_launch_receipts_must_be_absent === true
       && provenance.recovery_execution_lock_put_once === true
       && provenance.recovery_2_execution_lock_put_once === true
+      && provenance.recovery_3_execution_lock_put_once === true
       && provenance.zero_compute_iam_permission_preflight_required === true
+      && provenance.bootstrap_contract_regression_test_required === true
       && provenance.original_execution_lock_sha256_bound_into_launch_receipt
         === true
       && provenance.recovery_execution_lock_sha256_bound_into_launch_receipt
         === true
       && provenance.recovery_2_execution_lock_sha256_bound_into_launch_receipt
+        === true
+      && provenance.recovery_3_execution_lock_sha256_bound_into_launch_receipt
         === true
       && provenance.launch_receipt_put_once === true
       && provenance.canonical_aws_identity_receipt_required_for_each_seed === true
@@ -648,6 +833,11 @@ function selfTest() {
     unapproved.recovery_2_authorization.manual_approval_observed = false;
     unapproved.recovery_2_authorization.authorized_for_execution = false;
     unapproved.recovery_2_authorization.authorized_at = null;
+    unapproved.recovery_3_authorization.manual_approval_observed = false;
+    unapproved.recovery_3_authorization.authorized_for_execution = false;
+    unapproved.recovery_3_authorization.authorized_at = null;
+    unapproved.recovery_3_authorization.expanded_all_in_budget_approved = false;
+    unapproved.all_in_authorization.expanded_authorization_observed = false;
     validateV2Budget(unapproved);
 
     let authorizationRejected = false;
@@ -668,6 +858,11 @@ function selfTest() {
     approved.recovery_2_authorization.manual_approval_observed = true;
     approved.recovery_2_authorization.authorized_for_execution = true;
     approved.recovery_2_authorization.authorized_at = "2026-07-24";
+    approved.recovery_3_authorization.manual_approval_observed = true;
+    approved.recovery_3_authorization.authorized_for_execution = true;
+    approved.recovery_3_authorization.authorized_at = "2026-07-24";
+    approved.recovery_3_authorization.expanded_all_in_budget_approved = true;
+    approved.all_in_authorization.expanded_authorization_observed = true;
     validateV2Budget(approved, { requireAuthorized: true });
 
     for (const [name, mutate] of [
@@ -691,6 +886,9 @@ function selfTest() {
       }],
       ["recovery-2 approval", (copy) => {
         copy.recovery_2_authorization.authorized_for_execution = false;
+      }],
+      ["recovery-3 approval", (copy) => {
+        copy.recovery_3_authorization.authorized_for_execution = false;
       }],
       ["all-in cost", (copy) => {
         copy.all_in_authorization.all_in_max_compute_usd = 2.39;

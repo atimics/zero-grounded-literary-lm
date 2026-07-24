@@ -253,18 +253,21 @@ export function validateSeedProvenanceFiles(
   assert(launch.budget_file === budgetPath, "v2 launch budget path drifted");
   assert(launch.budget_sha256 === budgetSha256, "v2 launch budget hash drifted");
   assert(
-    launch.recovery_ordinal === 2
+    launch.recovery_ordinal === 3
       && JSON.stringify(launch.recovery_of_launch_workflow_run_ids)
-        === '["30117320329","30118477546"]'
+        === '["30117320329","30118477546","30119938666"]'
       && launch.original_execution_lock_key
         === "experiments/zero4-q26r-aws-v2/execution.lock"
       && launch.recovery_1_lock_key
         === "experiments/zero4-q26r-aws-v2/recovery-1.lock"
       && launch.recovery_2_lock_key
         === "experiments/zero4-q26r-aws-v2/recovery-2.lock"
+      && launch.recovery_3_lock_key
+        === "experiments/zero4-q26r-aws-v2/recovery-3.lock"
       && hexadecimal(launch.original_execution_lock_sha256, 64)
       && hexadecimal(launch.recovery_1_lock_sha256, 64)
-      && hexadecimal(launch.recovery_2_lock_sha256, 64),
+      && hexadecimal(launch.recovery_2_lock_sha256, 64)
+      && hexadecimal(launch.recovery_3_lock_sha256, 64),
     "v2 launch recovery binding drifted",
   );
   assert(hexadecimal(launch.source_archive_sha256, 64), "v2 source archive hash is invalid");
@@ -352,18 +355,21 @@ export function validateCompletion(
   assert(launch.budget_file === budgetPath, "v2 launch budget path drifted");
   assert(launch.budget_sha256 === completion.budget_sha256, "v2 launch budget hash drifted");
   assert(
-    launch.recovery_ordinal === 2
+    launch.recovery_ordinal === 3
       && JSON.stringify(launch.recovery_of_launch_workflow_run_ids)
-        === '["30117320329","30118477546"]'
+        === '["30117320329","30118477546","30119938666"]'
       && launch.original_execution_lock_key
         === "experiments/zero4-q26r-aws-v2/execution.lock"
       && launch.recovery_1_lock_key
         === "experiments/zero4-q26r-aws-v2/recovery-1.lock"
       && launch.recovery_2_lock_key
         === "experiments/zero4-q26r-aws-v2/recovery-2.lock"
+      && launch.recovery_3_lock_key
+        === "experiments/zero4-q26r-aws-v2/recovery-3.lock"
       && hexadecimal(launch.original_execution_lock_sha256, 64)
       && hexadecimal(launch.recovery_1_lock_sha256, 64)
-      && hexadecimal(launch.recovery_2_lock_sha256, 64),
+      && hexadecimal(launch.recovery_2_lock_sha256, 64)
+      && hexadecimal(launch.recovery_3_lock_sha256, 64),
     "v2 completion launch recovery binding drifted",
   );
   assert(hexadecimal(launch.source_archive_sha256, 64), "v2 source archive hash is invalid");
@@ -428,7 +434,7 @@ export function validateCompletion(
         === completion.original_execution_lock.sha256,
     "v2 recovery-1 lock drifted",
   );
-  const recovery2LockPath = `${executionRoot}/recovery-2-lock-${completion.source_run_id}.json`;
+  const recovery2LockPath = `${executionRoot}/recovery-2-lock-30119938666.json`;
   const recovery2Lock = requireFileRecord(
     completion.recovery_2_lock,
     recovery2LockPath,
@@ -440,9 +446,11 @@ export function validateCompletion(
       && recovery2Lock.experiment === budget.id
       && recovery2Lock.recovery_ordinal === 2
       && JSON.stringify(recovery2Lock.seeds) === "[1,3]"
-      && recovery2Lock.ci_run_id === completion.source_run_id
-      && recovery2Lock.git_commit === completion.source_commit
-      && recovery2Lock.budget_sha256 === completion.budget_sha256
+      && recovery2Lock.ci_run_id === "30119938666"
+      && recovery2Lock.git_commit
+        === "a9e263c60d724372e7eca670fb1087d992a4b7ae"
+      && recovery2Lock.budget_sha256
+        === "81742e40e9bd43309b5c8313003ff0ce79bae1b5441c8273101f44df9f37af0d"
       && JSON.stringify(recovery2Lock.failed_launch_workflow_run_ids)
         === '["30117320329","30118477546"]'
       && JSON.stringify(recovery2Lock.preflight_failure_sha256s)
@@ -455,6 +463,38 @@ export function validateCompletion(
       && recovery2Lock.recovery_1_lock_sha256
         === completion.recovery_1_lock.sha256,
     "v2 recovery-2 lock drifted",
+  );
+  const recovery3LockPath = `${executionRoot}/recovery-3-lock-${completion.source_run_id}.json`;
+  const recovery3Lock = requireFileRecord(
+    completion.recovery_3_lock,
+    recovery3LockPath,
+    "v2 recovery-3 lock",
+  );
+  assert(
+    completion.recovery_3_lock.sha256 === launch.recovery_3_lock_sha256
+      && recovery3Lock.schema === "zero.aws_recovery_execution_lock.v2"
+      && recovery3Lock.experiment === budget.id
+      && recovery3Lock.recovery_ordinal === 3
+      && JSON.stringify(recovery3Lock.seeds) === "[1,3]"
+      && recovery3Lock.ci_run_id === completion.source_run_id
+      && recovery3Lock.git_commit === completion.source_commit
+      && recovery3Lock.budget_sha256 === completion.budget_sha256
+      && JSON.stringify(recovery3Lock.failed_launch_workflow_run_ids)
+        === '["30117320329","30118477546","30119938666"]'
+      && JSON.stringify(recovery3Lock.preflight_failure_sha256s)
+        === JSON.stringify([
+          budget.recovery_basis.preflight_failure_sha256,
+          budget.recovery_2_basis.preflight_failure_sha256,
+        ])
+      && recovery3Lock.bootstrap_failure_sha256
+        === budget.recovery_3_basis.bootstrap_failure_sha256
+      && recovery3Lock.original_execution_lock_sha256
+        === completion.original_execution_lock.sha256
+      && recovery3Lock.recovery_1_lock_sha256
+        === completion.recovery_1_lock.sha256
+      && recovery3Lock.recovery_2_lock_sha256
+        === completion.recovery_2_lock.sha256,
+    "v2 recovery-3 lock drifted",
   );
 
   for (const launchRecord of launch.instances) {

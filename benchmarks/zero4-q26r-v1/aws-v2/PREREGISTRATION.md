@@ -2,7 +2,8 @@
 
 ## Status
 
-Frozen final recovery design, **authorized once for launch** on 2026-07-24.
+Frozen corrective recovery-3 design, **authorized once for launch** on
+2026-07-24.
 
 The first v2 control-plane attempt, workflow run `30117320329`, failed before
 training because the launch checked an EC2 shutdown attribute in the wrong AWS
@@ -22,11 +23,21 @@ status, shutdown, candidate, or scientific record was published. The immutable
 [`second preflight failure record`](preflight-failure-30118477546.json) freezes
 that boundary.
 
-One final reviewed recovery is authorized. It must first prove
-`ec2:DescribeInstanceAttribute` authorization using AWS `--dry-run`, which
-cannot start compute. It must then validate both prior locks and the absence of
-all receipts from both failed runs before acquiring write-once
-`recovery-2.lock`. No subsequent recovery is authorized.
+Recovery-2 workflow run `30119938666` passed the IAM preflight, acquired
+`recovery-2.lock`, and froze both AWS identities. Both workers then failed
+before training because the bootstrap retained a stale literal assertion for
+the former `$1.18` cost cap after the frozen budget changed to `$1.17`. The
+instances terminated after 80 and 87 launch-relative seconds with immutable
+`infrastructure-error` statuses and shutdown intents. No candidate or
+scientific result was published. The immutable
+[`bootstrap failure record`](bootstrap-failure-30119938666.json) freezes the
+receipts, hashes, classification, and billing.
+
+One corrective recovery-3 is authorized. It must execute a regression check
+that binds every bootstrap cap guard to `budget.json`, validate all three prior
+locks and the recovery-2 failure receipts, prove both prior result objects are
+absent, and acquire write-once `recovery-3.lock`. No subsequent recovery is
+authorized.
 
 ## Why a replacement is admissible
 
@@ -63,17 +74,18 @@ The slower prior candidate completed in 5,143 launch-relative seconds. A 20%
 contingency requires 6,171.6 seconds. The original v2 authorization allowed
 6,300 seconds and $1.19 per seed, or 12,600 seconds and $2.38 combined.
 
-The two failed preflights each reserve AWS's 60-second billing minimum. Their
-cumulative reservation is 120 seconds, or $0.02266666666666667 at $0.68/hour.
-The final recovery deducts that amount:
+The two failed preflights reserve 120 seconds and $0.02266666666666667. The
+failed recovery-2 workers add 167 observed seconds and
+$0.031544444444444444. Cumulative failed execution is therefore 287 seconds
+and $0.05421111111111111. Recovery-3 keeps the existing per-seed cap:
 
 - per recovery seed: 6,190 instance-seconds and $1.17;
 - workload timeout per seed: 6,130 seconds;
 - recovery combined: 12,380 instance-seconds and $2.34;
-- all-in maximum including both failed preflights: 12,500 seconds and
-  $2.3626666666666667;
-- headroom below the original authorization: 100 seconds and
-  $0.0173333333333332;
+- all-in maximum including all three failed launches: 12,667 seconds and
+  $2.394211111111111;
+- explicitly approved expansion above the original envelope: 67 seconds and
+  $0.014211111111111241;
 - maximum concurrency: two `c6i.4xlarge` instances;
 - no budget transfer between seeds.
 
@@ -92,8 +104,9 @@ and its SHA-256 is bound into the immutable launch receipt.
 
 The IAM policy adds only `ec2:DescribeInstanceAttribute`. A dedicated manual
 workflow and the launcher both require `DryRunOperation` from the attribute
-API before the launcher may publish inputs, acquire `recovery-2.lock`, or call
-`RunInstances`.
+API before the launcher may publish inputs, acquire `recovery-3.lock`, or call
+`RunInstances`. The executable workflow checker also rejects any bootstrap
+cost guard that differs from the frozen `$1.17` budget value.
 
 Each worker binds its instance ID into its structured status and publishes a
 write-once shutdown intent before requesting instance-initiated termination.

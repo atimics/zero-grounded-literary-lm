@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   launch:
-    name: AWS · final recovery seeds 1 and 3 · ≤$2.34
+    name: AWS · corrective recovery-3 seeds 1 and 3 · ≤$2.34
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: aws
@@ -75,6 +75,16 @@ jobs:
             '.recovery_2_basis.failed_launch_budget_sha256' "$ZERO_BUDGET_FILE")
           preflight_failure_sha256_2=$(jq -r \
             '.recovery_2_basis.preflight_failure_sha256' "$ZERO_BUDGET_FILE")
+          failed_launch_run_id_3=$(jq -r \
+            '.recovery_3_basis.failed_launch_workflow_run_id' "$ZERO_BUDGET_FILE")
+          failed_launch_commit_3=$(jq -r \
+            '.recovery_3_basis.failed_launch_git_commit' "$ZERO_BUDGET_FILE")
+          failed_launch_budget_sha256_3=$(jq -r \
+            '.recovery_3_basis.failed_launch_budget_sha256' "$ZERO_BUDGET_FILE")
+          failed_launch_receipt_sha256_3=$(jq -r \
+            '.recovery_3_basis.failed_launch_receipt_sha256' "$ZERO_BUDGET_FILE")
+          bootstrap_failure_sha256=$(jq -r \
+            '.recovery_3_basis.bootstrap_failure_sha256' "$ZERO_BUDGET_FILE")
           test "$max_instance_seconds" = 6190
           test "$workload_timeout_seconds" = 6130
           test "$max_compute_usd" = 1.17
@@ -91,6 +101,13 @@ jobs:
             87a2b2164bc426ae427b8a6434bf9be6477b38a7
           test "$failed_launch_budget_sha256_2" = \
             69268b595a325fd6e9cbbed752abb5d34cecfa2f5df70ac1b68e5328d7d1ddf8
+          test "$failed_launch_run_id_3" = 30119938666
+          test "$failed_launch_commit_3" = \
+            a9e263c60d724372e7eca670fb1087d992a4b7ae
+          test "$failed_launch_budget_sha256_3" = \
+            81742e40e9bd43309b5c8313003ff0ce79bae1b5441c8273101f44df9f37af0d
+          test "$failed_launch_receipt_sha256_3" = \
+            de13725d42c964c7e9f1ddbde80762565d5e3cf68b17712e19c4c2038264f9dd
           {
             echo "ZERO_BUDGET_SHA256=$budget_sha256"
             echo "ZERO_MAX_INSTANCE_SECONDS=$max_instance_seconds"
@@ -107,6 +124,11 @@ jobs:
             echo "ZERO_FAILED_LAUNCH_COMMIT_2=$failed_launch_commit_2"
             echo "ZERO_FAILED_LAUNCH_BUDGET_SHA256_2=$failed_launch_budget_sha256_2"
             echo "ZERO_PREFLIGHT_FAILURE_SHA256_2=$preflight_failure_sha256_2"
+            echo "ZERO_FAILED_LAUNCH_RUN_ID_3=$failed_launch_run_id_3"
+            echo "ZERO_FAILED_LAUNCH_COMMIT_3=$failed_launch_commit_3"
+            echo "ZERO_FAILED_LAUNCH_BUDGET_SHA256_3=$failed_launch_budget_sha256_3"
+            echo "ZERO_FAILED_LAUNCH_RECEIPT_SHA256_3=$failed_launch_receipt_sha256_3"
+            echo "ZERO_BOOTSTRAP_FAILURE_SHA256=$bootstrap_failure_sha256"
           } >> "$GITHUB_ENV"
 
       - name: Configure AWS credentials
@@ -195,7 +217,7 @@ jobs:
           [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
           echo "ami=$ami" >> "$GITHUB_OUTPUT"
 
-      - name: Verify both failed preflights and acquire recovery-2 lock
+      - name: Verify prior failures and acquire recovery-3 lock
         run: |
           aws s3 cp \
             "s3://${ZERO_BUCKET}/experiments/zero4-q26r-aws-v2/execution.lock" \
@@ -244,6 +266,42 @@ jobs:
           test "$recovery_1_lock_sha256" = \
             2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9
 
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/experiments/zero4-q26r-aws-v2/recovery-2.lock" \
+            /tmp/q26r-v2-recovery-2-lock.json \
+            --no-cli-pager
+          jq -e \
+            --arg run_id "$ZERO_FAILED_LAUNCH_RUN_ID_3" \
+            --arg git_commit "$ZERO_FAILED_LAUNCH_COMMIT_3" \
+            --arg budget_sha256 "$ZERO_FAILED_LAUNCH_BUDGET_SHA256_3" \
+            --arg preflight_failure_sha256_1 \
+              "$ZERO_PREFLIGHT_FAILURE_SHA256_1" \
+            --arg preflight_failure_sha256_2 \
+              "$ZERO_PREFLIGHT_FAILURE_SHA256_2" \
+            --arg original_sha256 "$original_execution_lock_sha256" \
+            --arg recovery_1_sha256 "$recovery_1_lock_sha256" \
+            '.schema == "zero.aws_recovery_execution_lock.v2"
+             and .experiment == "zero4-q26r-aws-v2"
+             and .recovery_ordinal == 2
+             and .seeds == [1, 3]
+             and .ci_run_id == $run_id
+             and .git_commit == $git_commit
+             and .budget_sha256 == $budget_sha256
+             and .failed_launch_workflow_run_ids
+               == ["30117320329", "30118477546"]
+             and .preflight_failure_sha256s
+               == [
+                 $preflight_failure_sha256_1,
+                 $preflight_failure_sha256_2
+               ]
+             and .original_execution_lock_sha256 == $original_sha256
+             and .recovery_1_lock_sha256 == $recovery_1_sha256' \
+            /tmp/q26r-v2-recovery-2-lock.json >/dev/null
+          recovery_2_lock_sha256=$(sha256sum \
+            /tmp/q26r-v2-recovery-2-lock.json | awk '{print $1}')
+          test "$recovery_2_lock_sha256" = \
+            79a7b826f7b669fa2ceb7ef117ca8f0f0ef5a0b494903a736f2b0e3b110c57a6
+
           require_absent() {
             key=$1
             set +e
@@ -279,45 +337,148 @@ jobs:
             done
           done
 
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_FAILED_LAUNCH_RUN_ID_3}/launch.json" \
+            /tmp/q26r-v2-failed-launch-3.json \
+            --no-cli-pager
+          test "$(sha256sum /tmp/q26r-v2-failed-launch-3.json \
+            | awk '{print $1}')" = "$ZERO_FAILED_LAUNCH_RECEIPT_SHA256_3"
+          jq -e \
+            --arg run_id "$ZERO_FAILED_LAUNCH_RUN_ID_3" \
+            --arg git_commit "$ZERO_FAILED_LAUNCH_COMMIT_3" \
+            --arg budget_sha256 "$ZERO_FAILED_LAUNCH_BUDGET_SHA256_3" \
+            --arg original_sha256 "$original_execution_lock_sha256" \
+            --arg recovery_1_sha256 "$recovery_1_lock_sha256" \
+            --arg recovery_2_sha256 "$recovery_2_lock_sha256" \
+            '.schema == "zero.q26r_aws_launch.v2"
+             and .experiment == "zero4-q26r-aws-v2"
+             and .ci_run_id == $run_id
+             and .git_commit == $git_commit
+             and .budget_sha256 == $budget_sha256
+             and .recovery_ordinal == 2
+             and .recovery_of_launch_workflow_run_ids
+               == ["30117320329", "30118477546"]
+             and .original_execution_lock_sha256 == $original_sha256
+             and .recovery_1_lock_sha256 == $recovery_1_sha256
+             and .recovery_2_lock_sha256 == $recovery_2_sha256
+             and [.instances[].seed] == [1, 3]
+             and [.instances[].instance_id]
+               == ["i-0ce72363f432a770a", "i-003b61f2a0c4019fd"]' \
+            /tmp/q26r-v2-failed-launch-3.json >/dev/null
+
+          failure_file=benchmarks/zero4-q26r-v1/aws-v2/bootstrap-failure-30119938666.json
+          for seed in 1 3; do
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_FAILED_LAUNCH_RUN_ID_3}/identity/seed${seed}.json" \
+              "/tmp/q26r-v2-failed-seed${seed}-identity.json" \
+              --no-cli-pager
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_FAILED_LAUNCH_RUN_ID_3}/seed${seed}/status.json" \
+              "/tmp/q26r-v2-failed-seed${seed}-status.json" \
+              --no-cli-pager
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_FAILED_LAUNCH_RUN_ID_3}/seed${seed}/shutdown-intent.json" \
+              "/tmp/q26r-v2-failed-seed${seed}-shutdown-intent.json" \
+              --no-cli-pager
+            expected_instance=$(jq -r \
+              --argjson seed "$seed" \
+              '.seeds[] | select(.seed == $seed) | .instance_id' \
+              "$failure_file")
+            expected_status_sha256=$(jq -r \
+              --argjson seed "$seed" \
+              '.seeds[] | select(.seed == $seed) | .status_sha256' \
+              "$failure_file")
+            expected_intent_sha256=$(jq -r \
+              --argjson seed "$seed" \
+              '.seeds[] | select(.seed == $seed) | .shutdown_intent_sha256' \
+              "$failure_file")
+            expected_identity_sha256=$(jq -r \
+              --argjson seed "$seed" \
+              '.instances[] | select(.seed == $seed) | .identity_sha256' \
+              /tmp/q26r-v2-failed-launch-3.json)
+            test "$(sha256sum "/tmp/q26r-v2-failed-seed${seed}-identity.json" \
+              | awk '{print $1}')" = "$expected_identity_sha256"
+            test "$(sha256sum "/tmp/q26r-v2-failed-seed${seed}-status.json" \
+              | awk '{print $1}')" = "$expected_status_sha256"
+            test "$(sha256sum \
+              "/tmp/q26r-v2-failed-seed${seed}-shutdown-intent.json" \
+              | awk '{print $1}')" = "$expected_intent_sha256"
+            jq -e \
+              --argjson seed "$seed" \
+              --arg instance_id "$expected_instance" \
+              --arg git_commit "$ZERO_FAILED_LAUNCH_COMMIT_3" \
+              --arg budget_sha256 "$ZERO_FAILED_LAUNCH_BUDGET_SHA256_3" \
+              '.schema == "zero.aws_q26r_seed_status.v2"
+               and .experiment == "zero4-q26r-aws-v2"
+               and .seed == $seed
+               and .instance_id == $instance_id
+               and .status == "infrastructure-error"
+               and .exit_code == 1
+               and .git_commit == $git_commit
+               and .budget_sha256 == $budget_sha256
+               and .scientific_result_available == false' \
+              "/tmp/q26r-v2-failed-seed${seed}-status.json" >/dev/null
+            jq -e \
+              --argjson seed "$seed" \
+              --arg instance_id "$expected_instance" \
+              --arg status_sha256 "$expected_status_sha256" \
+              '.schema == "zero.aws_q26r_shutdown_intent.v2"
+               and .experiment == "zero4-q26r-aws-v2"
+               and .seed == $seed
+               and .instance_id == $instance_id
+               and .status_sha256 == $status_sha256
+               and .action == "instance-initiated-shutdown"
+               and .configured_shutdown_behavior == "terminate"' \
+              "/tmp/q26r-v2-failed-seed${seed}-shutdown-intent.json" >/dev/null
+            require_absent \
+              "jobs/${ZERO_FAILED_LAUNCH_RUN_ID_3}/seed${seed}/results/result.json"
+          done
+
           jq -n \
             --arg run_id "$ZERO_RUN_ID" \
             --arg git_commit "$ZERO_COMMIT" \
             --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
             --arg failed_launch_run_id_1 "$ZERO_FAILED_LAUNCH_RUN_ID_1" \
             --arg failed_launch_run_id_2 "$ZERO_FAILED_LAUNCH_RUN_ID_2" \
+            --arg failed_launch_run_id_3 "$ZERO_FAILED_LAUNCH_RUN_ID_3" \
             --arg preflight_failure_sha256_1 \
               "$ZERO_PREFLIGHT_FAILURE_SHA256_1" \
             --arg preflight_failure_sha256_2 \
               "$ZERO_PREFLIGHT_FAILURE_SHA256_2" \
+            --arg bootstrap_failure_sha256 "$ZERO_BOOTSTRAP_FAILURE_SHA256" \
             --arg original_execution_lock_sha256 \
               "$original_execution_lock_sha256" \
             --arg recovery_1_lock_sha256 "$recovery_1_lock_sha256" \
+            --arg recovery_2_lock_sha256 "$recovery_2_lock_sha256" \
             '{
               schema: "zero.aws_recovery_execution_lock.v2",
               experiment: "zero4-q26r-aws-v2",
-              recovery_ordinal: 2,
+              recovery_ordinal: 3,
               seeds: [1, 3],
               ci_run_id: $run_id,
               git_commit: $git_commit,
               budget_sha256: $budget_sha256,
               failed_launch_workflow_run_ids: [
                 $failed_launch_run_id_1,
-                $failed_launch_run_id_2
+                $failed_launch_run_id_2,
+                $failed_launch_run_id_3
               ],
               preflight_failure_sha256s: [
                 $preflight_failure_sha256_1,
                 $preflight_failure_sha256_2
               ],
+              bootstrap_failure_sha256: $bootstrap_failure_sha256,
               original_execution_lock_sha256:
                 $original_execution_lock_sha256,
-              recovery_1_lock_sha256: $recovery_1_lock_sha256
-            }' > /tmp/q26r-v2-recovery-2-lock.json
-          recovery_2_lock_sha256=$(sha256sum \
-            /tmp/q26r-v2-recovery-2-lock.json | awk '{print $1}')
+              recovery_1_lock_sha256: $recovery_1_lock_sha256,
+              recovery_2_lock_sha256: $recovery_2_lock_sha256
+            }' > /tmp/q26r-v2-recovery-3-lock.json
+          recovery_3_lock_sha256=$(sha256sum \
+            /tmp/q26r-v2-recovery-3-lock.json | awk '{print $1}')
           aws s3api put-object \
             --bucket "$ZERO_BUCKET" \
-            --key experiments/zero4-q26r-aws-v2/recovery-2.lock \
-            --body /tmp/q26r-v2-recovery-2-lock.json \
+            --key experiments/zero4-q26r-aws-v2/recovery-3.lock \
+            --body /tmp/q26r-v2-recovery-3-lock.json \
             --content-type application/json \
             --if-none-match '*' \
             --no-cli-pager >/dev/null
@@ -325,6 +486,7 @@ jobs:
             echo "ZERO_ORIGINAL_EXECUTION_LOCK_SHA256=$original_execution_lock_sha256"
             echo "ZERO_RECOVERY_1_LOCK_SHA256=$recovery_1_lock_sha256"
             echo "ZERO_RECOVERY_2_LOCK_SHA256=$recovery_2_lock_sha256"
+            echo "ZERO_RECOVERY_3_LOCK_SHA256=$recovery_3_lock_sha256"
           } >> "$GITHUB_ENV"
 
       - name: Launch and freeze both AWS identities
@@ -525,6 +687,7 @@ jobs:
             --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
             --arg failed_launch_run_id_1 "$ZERO_FAILED_LAUNCH_RUN_ID_1" \
             --arg failed_launch_run_id_2 "$ZERO_FAILED_LAUNCH_RUN_ID_2" \
+            --arg failed_launch_run_id_3 "$ZERO_FAILED_LAUNCH_RUN_ID_3" \
             --arg original_execution_lock_key \
               "experiments/zero4-q26r-aws-v2/execution.lock" \
             --arg original_execution_lock_sha256 \
@@ -535,6 +698,9 @@ jobs:
             --arg recovery_2_lock_key \
               "experiments/zero4-q26r-aws-v2/recovery-2.lock" \
             --arg recovery_2_lock_sha256 "$ZERO_RECOVERY_2_LOCK_SHA256" \
+            --arg recovery_3_lock_key \
+              "experiments/zero4-q26r-aws-v2/recovery-3.lock" \
+            --arg recovery_3_lock_sha256 "$ZERO_RECOVERY_3_LOCK_SHA256" \
             --argjson max_instance_seconds_sum "$ZERO_COMBINED_SECONDS" \
             --argjson max_compute_usd "$ZERO_COMBINED_USD" \
             --slurpfile instances /tmp/q26r-v2-instances.json \
@@ -551,10 +717,11 @@ jobs:
               source_archive_sha256: $source_sha256,
               seed_runner_sha256: $runner_sha256,
               user_data_sha256: $user_data_sha256,
-              recovery_ordinal: 2,
+              recovery_ordinal: 3,
               recovery_of_launch_workflow_run_ids: [
                 $failed_launch_run_id_1,
-                $failed_launch_run_id_2
+                $failed_launch_run_id_2,
+                $failed_launch_run_id_3
               ],
               original_execution_lock_key: $original_execution_lock_key,
               original_execution_lock_sha256:
@@ -563,6 +730,8 @@ jobs:
               recovery_1_lock_sha256: $recovery_1_lock_sha256,
               recovery_2_lock_key: $recovery_2_lock_key,
               recovery_2_lock_sha256: $recovery_2_lock_sha256,
+              recovery_3_lock_key: $recovery_3_lock_key,
+              recovery_3_lock_sha256: $recovery_3_lock_sha256,
               max_instance_seconds_sum: $max_instance_seconds_sum,
               max_compute_usd: $max_compute_usd,
               instances: $instances[0]

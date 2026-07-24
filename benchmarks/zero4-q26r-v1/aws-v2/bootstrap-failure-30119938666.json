@@ -1,0 +1,79 @@
+{
+  "schema": "zero.q26r_aws_bootstrap_failure.v2",
+  "experiment": "zero4-q26r-aws-v2",
+  "status": "execution-bootstrap-failure",
+  "recorded_at": "2026-07-24",
+  "source": {
+    "launch_workflow_run_id": "30119938666",
+    "launch_workflow_job_id": "89569762173",
+    "git_commit": "a9e263c60d724372e7eca670fb1087d992a4b7ae",
+    "budget_sha256": "81742e40e9bd43309b5c8313003ff0ce79bae1b5441c8273101f44df9f37af0d",
+    "launch_receipt_sha256": "de13725d42c964c7e9f1ddbde80762565d5e3cf68b17712e19c4c2038264f9dd",
+    "failure_observed_at": "2026-07-24T19:15:18Z"
+  },
+  "failure": {
+    "classification": "deterministic-bootstrap-contract-error",
+    "cause": "the worker bootstrap retained a stale literal cost assertion after the authorized cap changed from 1.18 to 1.17",
+    "failed_guard": "test \"$ZERO_MAX_COMPUTE_USD\" = \"1.18\"",
+    "expected_guard": "test \"$ZERO_MAX_COMPUTE_USD\" = \"1.17\"",
+    "training_started": false,
+    "scientific_results_published": false
+  },
+  "provenance": {
+    "original_execution_lock_sha256": "6223613dcc64e5352f5ced21ab294c8875956038f5883bb1885aea57d25d5ab7",
+    "recovery_1_lock_sha256": "2b70ef1f9459aa531e58818523747746b6d35a13c3f0102c22ea8f49039226c9",
+    "recovery_2_lock_sha256": "79a7b826f7b669fa2ceb7ef117ca8f0f0ef5a0b494903a736f2b0e3b110c57a6",
+    "launch_receipt_published": true,
+    "identity_receipts_published": true,
+    "seed_statuses_published": true,
+    "shutdown_intents_published": true
+  },
+  "seeds": [
+    {
+      "seed": 1,
+      "instance_id": "i-0ce72363f432a770a",
+      "state": "terminated",
+      "status": "infrastructure-error",
+      "exit_code": 1,
+      "observed_instance_seconds": 80,
+      "observed_compute_usd": 0.015111111111111112,
+      "status_sha256": "839400de52ce40ba9cb3a77b1588a76ec577de3b50c19bd2cda0d7a9984865c2",
+      "shutdown_intent_sha256": "567ae8a8cbfd46a5c0b911ee738273d284c0f628771f0975470b339701f2f441",
+      "bootstrap_log_sha256": "3ebcf6237d7bcf7eb0cbc2483ccc54c9d2bcb71f8ddc0ebcc27dcbc54adedef2"
+    },
+    {
+      "seed": 3,
+      "instance_id": "i-003b61f2a0c4019fd",
+      "state": "terminated",
+      "status": "infrastructure-error",
+      "exit_code": 1,
+      "observed_instance_seconds": 87,
+      "observed_compute_usd": 0.016433333333333335,
+      "status_sha256": "c0370ade643c4c9e258995fa319032909ecbe770b40dca630b307317ba805e94",
+      "shutdown_intent_sha256": "9159f634bdc0f6b902bc0aed442c36cf3a905de65b3c19da45c6a4344db2660d",
+      "bootstrap_log_sha256": "9f1b69b72b609197e8634b3a429b22fa734838ead5643d28f64fd9ac9c900a0d"
+    }
+  ],
+  "billing": {
+    "hourly_rate_usd": 0.68,
+    "this_failure_instance_seconds": 167,
+    "this_failure_compute_usd": 0.031544444444444444,
+    "cumulative_failed_instance_seconds": 287,
+    "cumulative_failed_compute_usd": 0.05421111111111111
+  },
+  "scientific_effect": {
+    "candidate_results_observed": false,
+    "scientific_result_observed": false,
+    "scientific_result_accepted": false,
+    "family_inference": null,
+    "recovery_may_not_change_science": true
+  },
+  "recovery": {
+    "eligible": true,
+    "requires_bootstrap_contract_regression_test": true,
+    "requires_new_write_once_lock": true,
+    "prior_locks_must_remain_immutable": true,
+    "prior_job_artifacts_forbidden_as_execution_inputs": true,
+    "cumulative_failed_compute_must_be_budgeted": true
+  }
+}
