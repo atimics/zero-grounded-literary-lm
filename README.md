@@ -258,9 +258,14 @@ with byte-identical serial/parallel JSON. The component projection is now
 3h09m08s/$2.14 per seed before contingency, or 7h34m/$5.16 for both remaining
 seeds with 20% contingency. The run did not train or open promotion data, and
 the [`combined Q2.6-R AWS budget`](benchmarks/zero4-q26r-v1/aws-v1/README.md)
-now authorizes one bounded execution. Seeds 1 and 3 receive independent
-3h47m/$2.58 caps on separate instances; GitHub Actions only launches and later
-collects the AWS computation. Run the local contract checks with:
+authorized one bounded execution. Both instances published complete,
+in-budget `go` candidates, but the frozen collector ran after AWS had purged
+the terminated instance records and could no longer reproduce the mandatory
+venue identity checks. The candidates are therefore unaccepted, no family
+inference is made, and ZERO.3 remains current. The authorization is consumed;
+see the
+[`execution failure record`](benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json).
+Run the local contract checks with:
 
 ```sh
 make experiment-budget-check

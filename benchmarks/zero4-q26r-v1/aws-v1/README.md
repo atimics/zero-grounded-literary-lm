@@ -1,6 +1,6 @@
 # Q2.6-R bounded AWS execution
 
-Status: **authorization consumed; execution recovery pending**, 2026-07-24.
+Status: **authorization consumed; execution/provenance failure**, 2026-07-24.
 
 This addendum supersedes only the cancelled execution route described in
 `../AWS-EXECUTION.md`. It does not change the preregistered Q2.6-R scientific
@@ -45,3 +45,24 @@ The rescue planner may classify the evidence as `execution-failure`, `pending`,
 or `scientific-candidate`. It never emits a scientific verdict. Candidate
 results still require the frozen collector, both seed checks, completion
 validation, the family aggregate, and green CI before merge.
+
+Rescue run
+[`30074006670`](https://github.com/atimics/zero-grounded-literary-lm/actions/runs/30074006670)
+recovered complete, in-budget `go` candidates for both seeds: seed 1 used
+4,993 seconds/$0.9431 and seed 3 used 5,143 seconds/$0.9715. No training was
+started and no termination was needed because both EC2 records were already
+absent.
+
+Frozen collector run
+[`30074369466`](https://github.com/atimics/zero-grounded-literary-lm/actions/runs/30074369466)
+then failed closed. AWS had already purged the terminated instance records, so
+the collector could no longer reproduce the mandatory instance-type,
+terminal-state, and identity-tag checks. The scientific acceptance rule will
+not be weakened after observing the candidate decisions. Both candidates
+therefore remain unaccepted, no family inference is made, and this is
+explicitly not a scientific no-go. See the durable
+[`execution failure record`](execution-failure-30047634061.json).
+
+The one-time authorization is consumed. Any new Q2.6-R execution requires a
+new preregistration and budget with provenance captured before ephemeral EC2
+records expire.

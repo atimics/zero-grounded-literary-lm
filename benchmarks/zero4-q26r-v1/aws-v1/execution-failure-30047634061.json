@@ -1,0 +1,72 @@
+{
+  "schema": "zero.q26r_aws_execution_failure.v1",
+  "experiment": "zero4-q26r-aws-v1",
+  "status": "execution-failure",
+  "candidate_results_observed": true,
+  "scientific_result_observed": false,
+  "scientific_result_accepted": false,
+  "family_inference": null,
+  "scientific_no_go": false,
+  "reason": "Both instances published complete candidate results within their independent budgets, but the frozen collector was not run before AWS purged the terminated EC2 records. Mandatory instance type, terminal-state, and identity-tag checks can no longer be reproduced, so neither candidate can enter the scientific record.",
+  "source": {
+    "git_commit": "6650108342d739d56856b5b57cfe0c63453fdf05",
+    "launch_workflow_run_id": "30047634061",
+    "rescue_workflow_run_id": "30074006670",
+    "failed_collector_run_id": "30074369466",
+    "launch_receipt_key": "zero4-q26r-aws-v1/launch-30047634061.json",
+    "launch_receipt_sha256": "5bb2436fee1c997417882bee2b8bcf1015079263071df57eb066ab38e0670835",
+    "rescue_plan_sha256": "ae79a6391841bbf654b927782c7b46c415f4bcee8ad2ff157e56d5bd2ebeccbf",
+    "rescue_classification": "scientific-candidate",
+    "collector_failure_phase": "mandatory EC2 provenance verification",
+    "budget_file": "benchmarks/zero4-q26r-v1/aws-v1/budget.json",
+    "budget_sha256": "5d178e205335622d0c93f3fca517d166bc42ea286c008b23352a661e1d2aa272"
+  },
+  "aws": {
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "ami": "ami-052355af2a014bd2c",
+    "combined_compute_cost_observed_usd": 1.914577777777778,
+    "combined_compute_cost_limit_usd": 5.16,
+    "instance_records_at_rescue": "not-found"
+  },
+  "candidate_results": [
+    {
+      "seed": 1,
+      "instance_id": "i-0a82dd52137a98169",
+      "status": "complete",
+      "decision": "go",
+      "started_at": "2026-07-23T21:50:52Z",
+      "finished_at": "2026-07-23T23:12:41Z",
+      "observed_instance_seconds": 4993,
+      "max_instance_seconds": 13620,
+      "observed_compute_usd": 0.9431222222222223,
+      "max_compute_usd": 2.58,
+      "status_sha256": "61623ba0585e403ac3a056c50afccc8cf0c769ea771fa84576637cd0d2604f15",
+      "result_sha256": "6888960eb49b74da253cb30cdb36ca33185dd14f2365942a18e34b87bc374746",
+      "accepted": false
+    },
+    {
+      "seed": 3,
+      "instance_id": "i-0efca4655ebfddb95",
+      "status": "complete",
+      "decision": "go",
+      "started_at": "2026-07-23T21:50:57Z",
+      "finished_at": "2026-07-23T23:15:14Z",
+      "observed_instance_seconds": 5143,
+      "max_instance_seconds": 13620,
+      "observed_compute_usd": 0.9714555555555556,
+      "max_compute_usd": 2.58,
+      "status_sha256": "03f5b130545af5655be3d5064bab543b3a0f2441baecb877e71cd55f55de7c32",
+      "result_sha256": "e531daa0557147c6abaf46fa952b7a4543a261d4af94fd950d5e624a24a66e34",
+      "accepted": false
+    }
+  ],
+  "recovery": {
+    "new_training_started": false,
+    "termination_requested": false,
+    "frozen_collector_completed": false,
+    "collection_retries_stopped": true,
+    "authorization_consumed": true,
+    "rerun_requires_new_preregistration_and_budget": true
+  }
+}
