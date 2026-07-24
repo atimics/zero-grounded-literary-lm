@@ -1,11 +1,10 @@
 # ZERO.4 Backlog
 
-Status: Q2.2-R seed 2 is a measured go and seeds 1 and 3 are measured no-go.
-The Q2.3 v1 contract and transactional optimizer are merged. The full seed-2
-observer passed its exact learned-state equivalence gate, but the guarded
-diagnostic was a measured no-go: its local 0.25% budget rejected no attempts
-and public replay regressed 2.685%. Seeds 1 and 3 remain sealed.
-ZERO.3 remains the deployed default. Geometry, art, and physics remain closed.
+Status: the optimizer-safety lineage is complete. Q2.3 localized the failure,
+Q2.4 established cumulative authority, Q2.5 showed scalar continuation was
+insufficient, and Q2.6's replay-tangent projection produced a three-seed go.
+The prospectively selected seed-2 artifact is promoted as ZERO.4. Geometry,
+art, and physics remain closed pending separately preregistered scaling work.
 
 **This document is one of three proposal sources.** The authoritative
 prioritized proposal document is [`PROPOSALS.md`](PROPOSALS.md). The
@@ -114,15 +113,19 @@ hard band; the maximum was 0.2013%. Update 200 passed quantity exactly at the
 minimum gates but had 2.685% public replay regression. The run stopped after
 two consecutive full replay violations and never accessed promotion.
 
-## P5 — Replication and faculty expansion  [STATUS: closed — P4 no-go]
+## P5 — Replication and faculty expansion  [STATUS: replication complete — promoted]
 
-- [ ] Run seeds 1 and 3 only after the diagnostic seed-2 gate passes.
-- [ ] Promote ZERO.4 only if all three seeds satisfy the frozen contract.
+- [x] Run seeds 1 and 3 only after the diagnostic seed-2 gate passes.
+- [x] Promote ZERO.4 only if all three seeds satisfy the frozen contract.
 - [ ] Open geometry next; keep art dependent on checked geometry and physics
   dependent on quantity, units, and geometry.
 
 Acceptance: every seed and channel is reported separately; one failed mandatory
 gate blocks promotion; ZERO.1, ZERO.2, and ZERO.3 hashes remain unchanged.
+
+Measured result: Q2.6 seeds 1, 2, and 3 all passed the frozen public and
+exactly-once promotion gates. The seed-2 update-500 candidate was selected
+prospectively and promoted without post-hoc seed substitution.
 
 ## Next design question — cumulative functional replay budget
 

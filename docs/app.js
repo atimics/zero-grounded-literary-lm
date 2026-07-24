@@ -53,6 +53,7 @@ const memoryModes = {
 
 let module;
 let modelPointer = 0;
+let modelMetadata;
 let generating = false;
 let shouldStop = false;
 let history = [];
@@ -256,8 +257,8 @@ function setReady() {
   ui.prompt.disabled = false;
   ui.send.disabled = false;
   ui.loadBar.style.width = "100%";
-  ui.modelStats.textContent = `${module._lm_get_parameters().toLocaleString()} parameters · ${module._lm_get_context()} character memory · update ${module._lm_get_update().toLocaleString()}`;
-  ui.trainingValue.textContent = `${module._lm_get_update().toLocaleString()} updates`;
+  ui.modelStats.textContent = `${modelMetadata.display_name} · ${module._lm_get_parameters().toLocaleString()} parameters · ${module._lm_get_context()} character memory · selected update ${module._lm_get_update().toLocaleString()}`;
+  ui.trainingValue.textContent = `${modelMetadata.display_name} · selected update ${module._lm_get_update().toLocaleString()}`;
   ui.prompt.focus();
 }
 
@@ -291,15 +292,34 @@ async function fetchWithProgress(url) {
   return bytes;
 }
 
+async function sha256(bytes) {
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .map(value => value.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 async function initialize() {
   try {
     module = await createLiteraryModule({ locateFile: file => new URL(file, import.meta.url).href });
+    const metadataResponse = await fetch("./model.json");
+    if (!metadataResponse.ok) throw new Error(`Could not load model metadata: ${metadataResponse.status}`);
+    modelMetadata = await metadataResponse.json();
     const bytes = await fetchWithProgress("./model.litq8");
+    const modelSha256 = await sha256(bytes);
+    if (modelSha256 !== modelMetadata.artifact.sha256) {
+      throw new Error(`Model integrity error: ${modelSha256}`);
+    }
     modelPointer = module._malloc(bytes.length);
     if (!modelPointer) throw new Error("WebAssembly memory allocation failed");
     module.HEAPU8.set(bytes, modelPointer);
     const result = module._lm_load(modelPointer, bytes.length);
     if (result !== 0) throw new Error(`Model format error ${result}`);
+    if (module._lm_get_parameters() !== modelMetadata.architecture.parameters ||
+        module._lm_get_context() !== modelMetadata.architecture.context ||
+        module._lm_get_update() !== modelMetadata.architecture.runtime_update) {
+      throw new Error("Model metadata does not match the loaded artifact");
+    }
     applyMemoryMode();
     module._lm_seed((Date.now() >>> 0) || 1);
     setReady();

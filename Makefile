@@ -59,10 +59,12 @@ Q25_CI_REPLAY_ARGS = --text corpus/zero-foundation.txt --text corpus/zero-founda
 ZERO4_Q26_SEED ?= 2
 ZERO4_Q26_PREFIX ?= /tmp/zero4-q26-seed$(ZERO4_Q26_SEED)
 ZERO4_Q26_RESULTS ?= benchmarks/zero4-q26-v1/seed$(ZERO4_Q26_SEED)
+ZERO4_PROMOTED_ARTIFACT ?= benchmarks/zero4-q26-v1/seed2/selected.litq8
 ZERO4_Q26R_SEED ?= 1
 ZERO4_Q26R_PREFIX ?= /tmp/zero4-q26r-seed$(ZERO4_Q26R_SEED)
 ZERO4_Q26R_RESULTS ?= benchmarks/zero4-q26r-v1/seed$(ZERO4_Q26R_SEED)
 ZERO4_Q26R_CONTRACT ?= benchmarks/zero4-q26r-v1/contract.json
+ZERO_CHANNEL_MODEL ?= benchmarks/zero-channel-v1/model.litq8
 Q26_CI_REPLAY_ARGS = --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt --text corpus/zero-foundation.txt
 MONKEY_PREFIX ?= infinite-monkey-v1
 MONKEY_BF_EXAMPLES ?= 30000
@@ -130,6 +132,7 @@ endif
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
+	zero4-promotion-check promote-zero4 \
 	experiment-budget-check \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
@@ -309,8 +312,8 @@ zero3-train: zero3-stage1
 	$(MAKE) zero3-consolidate
 	$(MAKE) zero3-balance
 
-docs/model.litq8: export_literary literary-v8-last.ckpt
-	./export_literary literary-v8-last.ckpt $@
+docs/model.litq8: $(ZERO4_PROMOTED_ARTIFACT)
+	cp $(ZERO4_PROMOTED_ARTIFACT) $@
 
 docs/literary.js: literary_infer.c literary_infer.h channel_protocol.h
 	$(EMCC) literary_infer.c -O3 -msimd128 --no-entry \
@@ -326,9 +329,9 @@ docs/literary.wasm: docs/literary.js
 
 web: docs/model.litq8 docs/literary.js docs/literary.wasm
 
-zero-benchmark: zero_eval docs/model.litq8 benchmarks/zero-channel-v1/manifest.json
+zero-benchmark: zero_eval $(ZERO_CHANNEL_MODEL) benchmarks/zero-channel-v1/manifest.json
 	mkdir -p benchmarks/zero-channel-v1/results
-	./zero_eval docs/model.litq8 \
+	./zero_eval $(ZERO_CHANNEL_MODEL) \
 		benchmarks/zero-channel-v1/cases.tsv \
 		benchmarks/zero-channel-v1/holo.tsv \
 		--json benchmarks/zero-channel-v1/results/baseline.json
@@ -1088,6 +1091,13 @@ zero4-q26r-aws-v2-check:
 	test ! -e benchmarks/zero4-q26r-v1/aws-v2/COMPLETED || \
 		node scripts/check_q26r_aws_v2_completion.mjs
 
+zero4-promotion-check:
+	node scripts/check_zero4_promotion.mjs
+
+promote-zero4:
+	cp $(ZERO4_PROMOTED_ARTIFACT) docs/model.litq8
+	node scripts/check_zero4_promotion.mjs
+
 experiment-budget-check: zero4-q26r-aws-v2-check
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs --self-test
@@ -1455,7 +1465,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

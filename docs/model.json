@@ -1,0 +1,41 @@
+{
+  "schema": "zero.deployed_model.v1",
+  "id": "zero4",
+  "display_name": "ZERO.4",
+  "status": "promoted",
+  "promoted_at": "2026-07-24",
+  "architecture": {
+    "parameters": 4852992,
+    "context": 512,
+    "runtime_update": 500,
+    "quantization": "signed 8-bit matrix rows with floating-point row scales"
+  },
+  "artifact": {
+    "path": "docs/model.litq8",
+    "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "bytes": 4920400,
+    "source_path": "benchmarks/zero4-q26-v1/seed2/selected.litq8",
+    "source_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "source_seed": 2,
+    "selected_update": 500
+  },
+  "promotion": {
+    "family_decision": "go",
+    "promotion_eligible": true,
+    "candidate_selection": "prospectively selected Q2.6 diagnostic seed 2",
+    "aggregate_path": "benchmarks/zero4-q26r-v1/aggregate.json",
+    "aggregate_sha256": "246274e15bcdcea7e337a01bdf415b72251f010fb411b8a1c0ac879d0ddc5d71",
+    "completion_path": "benchmarks/zero4-q26r-v1/aws-v2/COMPLETED",
+    "completion_sha256": "523e305d099aba1735f1cb72b2278ede72a873c840b798c37b9b51a2d8339509",
+    "source_result_path": "benchmarks/zero4-q26-v1/seed2/result.json",
+    "source_result_sha256": "6fba7b46a00c881ab129ea706125fee0924d897836784274275ae9517805eb5f",
+    "merged_results_commit": "bde7875bdc3947bb4203fe3b8eccc8fb6488bda6"
+  },
+  "scope": {
+    "validated_capability": "quantity operation routing with controller-bound arguments and deterministic kernel arithmetic",
+    "historical_replay_preserved": true,
+    "controller_owned_arithmetic": true,
+    "neural_arithmetic_claimed": false,
+    "browser_exposes": "the promoted generative core; the faculty controller and deterministic quantity kernel are not integrated into this page"
+  }
+}

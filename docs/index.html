@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#171612">
-  <meta name="description" content="A small literary transformer, written in C and running entirely in your browser.">
-  <title>ZERO — a literary language model in C</title>
+  <meta name="description" content="ZERO.4, a small faculty-trained transformer written in C and running entirely in your browser.">
+  <title>ZERO.4 — a faculty-trained language model in C</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
     <header class="masthead">
       <a class="wordmark" href="./" aria-label="Zero home">
         <span class="zero-mark">0</span>
-        <span>ZERO</span>
+        <span>ZERO.4</span>
       </a>
       <div class="status" id="status" role="status" aria-live="polite">
         <span class="status-dot"></span>
@@ -27,9 +27,9 @@
     </header>
 
     <section class="intro" aria-labelledby="pageTitle">
-      <p class="eyebrow">A 4,852,992-PARAMETER TRANSFORMER</p>
+      <p class="eyebrow">ZERO.4 · A 4,852,992-PARAMETER TRANSFORMER</p>
       <h1 id="pageTitle">Begin with a fragment.<br><em>Let the machine dream onward.</em></h1>
-      <p class="dek">Trained on Shakespeare, William Blake, and Aleister Crowley. Written in C. Running locally in this browser—your words are never sent anywhere.</p>
+      <p class="dek">Promoted after a preregistered three-seed faculty and replay evaluation. Written in C. Running locally in this browser—your words are never sent anywhere.</p>
     </section>
 
     <section class="chat" aria-label="Literary model chat">
@@ -121,9 +121,9 @@
     <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
     <p class="eyebrow">MODEL NOTE</p>
     <h2>A real, very small language model.</h2>
-    <p>ZERO is a decoder-only character transformer trained on three literary collections, then continued on structured multi-speaker channels. For this page, its matrix rows use 8-bit values with floating-point row scales, while normalization gains remain floating point.</p>
+    <p>ZERO.4 is a decoder-only character transformer initialized from frozen ZERO.3, then trained to route checked quantity operations while preserving its six-source historical replay budget. All three preregistered seeds passed the public and promotion gates; the prospectively selected seed-2 checkpoint is deployed here. Its matrix rows use 8-bit values with floating-point row scales, while normalization gains remain floating point.</p>
     <p>The C engine performs embeddings, RMS normalization, rotary attention, GELU feed-forward layers, and sampling inside WebAssembly. It uses no server and no machine-learning runtime.</p>
-    <p>It learned two related channel operations: answer a message, and compress old memory plus recent turns into new lossy memory. You can compare a recent transcript window, recurrent compression, flat holographic recall, and experimental partitioned recall without changing the 4.85M transformer. A small C holographic index—adapted from holostuff's deterministic encode-and-recall contract—can reintroduce one relevant older compressed episode. It still cannot retrieve outside facts or match a contemporary large language model. Oddness is part of its honest scale.</p>
+    <p>This page exposes the promoted generative core and its channel memory modes. The measured quantity capability uses a separate controller to bind arguments and a deterministic kernel to compute arithmetic; neither is simulated by free-form browser sampling. You can compare a recent transcript window, recurrent compression, flat holographic recall, and experimental partitioned recall without changing the 4.85M transformer. It still cannot retrieve outside facts or match a contemporary large language model. Oddness is part of its honest scale.</p>
     <dl>
       <div><dt>CONTEXT</dt><dd>512 characters</dd></div>
       <div><dt>LAYERS</dt><dd>6</dd></div>
