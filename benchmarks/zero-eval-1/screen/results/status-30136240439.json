@@ -1,0 +1,12 @@
+{
+  "schema": "zero.aws_external_eval_screen_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "exit_code": 0,
+  "started_at": "2026-07-25T00:27:30Z",
+  "finished_at": "2026-07-25T01:07:39Z",
+  "git_commit": "38e6b8454ed30b8e2cba6d10325d5c1fac4c7729",
+  "budget_sha256": "3d7fae80f1d247d5cf7fba349794c5e2963a25e509a09c234254da92466a0247",
+  "result_sha256": "b39788f286eab967569dbdf0b21cb769ebf22372a925e8ff57b0dc863b5f51dc",
+  "scientific_decision": "available-after-collector-validation"
+}
