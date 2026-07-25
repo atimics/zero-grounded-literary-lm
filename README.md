@@ -113,6 +113,8 @@ make zero4-q25-train ZERO4_Q25_SEED=2
 make zero4-q26-check
 # Only from the merged preregistered implementation:
 make zero4-q26-train ZERO4_Q26_SEED=2
+make zero4-q27-check
+# Q2.7 training remains unavailable until a separate AWS budget is frozen.
 ```
 
 The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
@@ -216,6 +218,16 @@ passed the unchanged replication contract.
 See
 [`contract.json`](benchmarks/zero4-q26-v1/contract.json) and
 [`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
+
+Q2.7 is the preregistered language-preservation repair. It starts from
+immutable ZERO.3 and changes only the trainable boundary: `layer.5.norm2`,
+`layer.5.w1`, `layer.5.w2`, and `final_norm`, totaling 541,184 parameters
+(11.151554%). The trainer computes clipping and tangent projection only in
+that subspace, protects every frozen weight and AdamW moment byte-for-byte,
+and binds the scope into checkpoints so mismatched resume fails closed.
+`make zero4-q27-check` validates those mechanics; it launches no scientific
+compute. See the frozen
+[`contract.json`](benchmarks/zero4-q27-v1/contract.json).
 
 Q2.6-R prospectively authorized those two replications without altering the
 diagnostic record. After the portable-backend cancellation and two

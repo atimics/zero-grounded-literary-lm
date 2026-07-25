@@ -840,3 +840,34 @@ content-pinned deployment record is `docs/model.json`. This claim is scoped to
 operation-only quantity routing with controller-bound arguments, deterministic
 kernel arithmetic, and the measured historical replay gates. It does not claim
 neural arithmetic or unmeasured faculty capability.
+
+## 22. Experiment — ZERO.4-Q2.7 top-FFN isolation
+
+The prospective language gate exposed a different boundary than the Q2.6
+quantity/replay conjunction. ZERO.4 improves the bounded BLiMP screen but
+worsens TinyStories bits/byte by 1.681%, exceeding the frozen 1% preservation
+ceiling. SAT-1 therefore cannot treat the promoted five-operation model as a
+language-preserving anchor.
+
+Q2.7 returns to immutable ZERO.3 and repeats Q2.6 with one changed variable:
+only `layer.5.norm2`, `layer.5.w1`, `layer.5.w2`, and `final_norm` are
+trainable. Those four groups contain 541,184 parameters, or 11.151554% of the
+model. The boundary was chosen prospectively from the already-completed Q2.6
+trace: the token embedding dominated aggregate replay-sensitive drift while
+the top FFN matrices carried the two largest displacement norms.
+
+Gradient clipping and the global replay-tangent projection are restricted to
+the declared trainable subspace. All other weights and both AdamW moment
+arrays are frozen byte-for-byte. Checkpoint metadata binds the scope, and
+resume under a different scope fails closed.
+
+Q2.7 inherits Q2.6's data, teachers, optimization schedule, direct 1.5%
+cumulative replay authority, 2% public ceiling, quantity and promotion gates,
+selection rule, and stop conditions. If a prospectively selected seed-2
+checkpoint passes quantity promotion, it then opens the candidate-only
+BLiMP/TinyStories gate exactly once. Any failure ends the experiment without
+adaptation, and seeds 1 and 3 remain sealed.
+
+The authoritative contract is
+`benchmarks/zero4-q27-v1/contract.json`. It authorizes zero attempts, zero
+instance-seconds, and zero dollars; no training workflow exists yet.

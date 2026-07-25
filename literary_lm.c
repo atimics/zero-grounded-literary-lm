@@ -35,6 +35,9 @@
 #define MAX_FACULTY_TEACHERS 3
 #define MAX_SAME_ARCH_TEACHERS (MAX_FACULTY_TEACHERS - 1)
 #define TRANSACTION_MAX_BACKTRACK_TRIALS 8
+#define CHECKPOINT_ROTARY_FLAG UINT32_C(1)
+#define CHECKPOINT_TRAINABLE_SCOPE_SHIFT 8U
+#define CHECKPOINT_TRAINABLE_SCOPE_MASK (UINT32_C(0xff) << CHECKPOINT_TRAINABLE_SCOPE_SHIFT)
 
 typedef uint16_t Token;
 
@@ -56,6 +59,7 @@ typedef struct {
     const char *name;
     size_t count;
     int decay;
+    int trainable;
     float *w;
     float *g;
     float *m;
@@ -107,6 +111,7 @@ typedef struct {
 
 typedef struct {
     Config cfg;
+    int trainable_scope;
     Parameter token_embedding;
     Parameter position_embedding;
     TransformerLayer *layer;
@@ -180,6 +185,11 @@ enum {
     TRANSACTION_CUMULATIVE_TANGENT = 5
 };
 
+enum {
+    TRAINABLE_SCOPE_ALL = 0,
+    TRAINABLE_SCOPE_TOP_FFN = 1
+};
+
 typedef struct {
     size_t parameter_total;
     float *learned_before;
@@ -233,6 +243,7 @@ typedef struct {
     int top_k;
     long seed;
     int self_test;
+    int trainable_scope;
     float dropout;
     const char *best_path;
     long patience;
@@ -372,6 +383,7 @@ static void parameter_create(Parameter *parameter, const char *name,
     parameter->name = name;
     parameter->count = count;
     parameter->decay = decay;
+    parameter->trainable = 1;
     parameter->w = zero_alloc(count, sizeof(float));
     parameter->g = zero_alloc(count, sizeof(float));
     parameter->m = zero_alloc(count, sizeof(float));
@@ -761,6 +773,46 @@ static size_t model_parameter_total(const Model *model)
     int i;
     for (i = 0; i < model->parameter_count; ++i) {
         total += model->parameters[i]->count;
+    }
+    return total;
+}
+
+static const char *trainable_scope_name(int scope)
+{
+    if (scope == TRAINABLE_SCOPE_TOP_FFN) return "top-ffn";
+    if (scope == TRAINABLE_SCOPE_ALL) return "all";
+    fail("unsupported trainable scope");
+    return NULL;
+}
+
+static void model_set_trainable_scope(Model *model, int scope)
+{
+    TransformerLayer *top;
+    int i;
+    if (scope != TRAINABLE_SCOPE_ALL &&
+        scope != TRAINABLE_SCOPE_TOP_FFN) {
+        fail("unsupported trainable scope");
+    }
+    top = &model->layer[model->cfg.layers - 1];
+    for (i = 0; i < model->parameter_count; ++i) {
+        Parameter *parameter = model->parameters[i];
+        parameter->trainable =
+            scope == TRAINABLE_SCOPE_ALL ||
+            parameter == &top->norm2 ||
+            parameter == &top->w1 ||
+            parameter == &top->w2 ||
+            parameter == &model->final_norm;
+    }
+    model->trainable_scope = scope;
+}
+
+static size_t model_trainable_parameter_total(const Model *model)
+{
+    size_t total = 0;
+    int i;
+    for (i = 0; i < model->parameter_count; ++i) {
+        const Parameter *parameter = model->parameters[i];
+        if (parameter->trainable) total += parameter->count;
     }
     return total;
 }
@@ -1330,6 +1382,7 @@ static float optimizer_update(Model *model, uint64_t step, float learning_rate,
          ++parameter_index) {
         Parameter *parameter = model->parameters[parameter_index];
         size_t i;
+        if (!parameter->trainable) continue;
         for (i = 0; i < parameter->count; ++i) {
             double gradient = parameter->g[i] * batch_scale;
             sum_squares += gradient * gradient;
@@ -1347,6 +1400,7 @@ static float optimizer_update(Model *model, uint64_t step, float learning_rate,
          ++parameter_index) {
         Parameter *parameter = model->parameters[parameter_index];
         size_t i;
+        if (!parameter->trainable) continue;
         for (i = 0; i < parameter->count; ++i) {
             float gradient = parameter->g[i] * batch_scale * clip_scale;
             parameter->m[i] = beta1 * parameter->m[i] + (1.0f - beta1) * gradient;
@@ -1722,7 +1776,8 @@ static Config checkpoint_peek(const char *path)
     cfg.heads = (int)header.heads;
     cfg.layers = (int)header.layers;
     cfg.ff = (int)header.ff;
-    cfg.rotary = header.version >= 2U && (header.reserved & 1U) != 0;
+    cfg.rotary = header.version >= 2U &&
+                 (header.reserved & CHECKPOINT_ROTARY_FLAG) != 0;
     cfg.vocab = (int)header.vocab;
     return cfg;
 }
@@ -1746,9 +1801,10 @@ static Config artifact_peek(const char *path)
     cfg.heads = (int)header.heads;
     cfg.layers = (int)header.layers;
     cfg.ff = (int)header.ff;
-    cfg.rotary = header.version >= 2U && (header.reserved & 1U) != 0;
+    cfg.rotary = header.version >= 2U &&
+                 (header.reserved & CHECKPOINT_ROTARY_FLAG) != 0;
     if (memcmp(header.magic, TEACHER_MAGIC, sizeof(header.magic)) == 0) {
-        cfg.rotary = (header.reserved & 1U) != 0;
+        cfg.rotary = (header.reserved & CHECKPOINT_ROTARY_FLAG) != 0;
     }
     cfg.vocab = (int)header.vocab;
     return cfg;
@@ -1783,7 +1839,10 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
     header.layers = (uint32_t)model->cfg.layers;
     header.ff = (uint32_t)model->cfg.ff;
     header.parameter_count = (uint32_t)model->parameter_count;
-    header.reserved = model->cfg.rotary ? 1U : 0U;
+    header.reserved =
+        (model->cfg.rotary ? CHECKPOINT_ROTARY_FLAG : 0U) |
+        ((uint32_t)model->trainable_scope <<
+         CHECKPOINT_TRAINABLE_SCOPE_SHIFT);
     header.step = step;
     header.rng_state = rng->state;
     orchestration.attempts = attempts;
@@ -1843,8 +1902,12 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng,
         (int)header.layers != model->cfg.layers ||
         (int)header.ff != model->cfg.ff ||
         (int)header.vocab != model->cfg.vocab ||
-        ((header.version >= 2U && (header.reserved & 1U) != 0) !=
+        ((header.version >= 2U &&
+          (header.reserved & CHECKPOINT_ROTARY_FLAG) != 0) !=
          model->cfg.rotary) ||
+        (int)((header.reserved & CHECKPOINT_TRAINABLE_SCOPE_MASK) >>
+              CHECKPOINT_TRAINABLE_SCOPE_SHIFT) !=
+            model->trainable_scope ||
         (int)header.parameter_count != model->parameter_count) {
         fail("checkpoint architecture does not match model");
     }
@@ -1897,7 +1960,8 @@ static uint64_t artifact_load_weights(const char *path, Model *model)
         (int)header.layers != model->cfg.layers ||
         (int)header.ff != model->cfg.ff ||
         (int)header.vocab != model->cfg.vocab ||
-        ((header.reserved & 1U) != 0) != model->cfg.rotary ||
+        ((header.reserved & CHECKPOINT_ROTARY_FLAG) != 0) !=
+            model->cfg.rotary ||
         (int)header.parameter_count != model->parameter_count) {
         fclose(file);
         fail("model artifact architecture does not match model");
@@ -2230,9 +2294,12 @@ static float faculty_replay_gradient_cosine(
     for (range_index = 0; range_index < model->parameter_count; ++range_index) {
         Parameter *parameter = model->parameters[range_index];
         size_t element;
-        memcpy(replay_gradient + offset, parameter->g,
-               parameter->count * sizeof(*parameter->g));
+        if (parameter->trainable) {
+            memcpy(replay_gradient + offset, parameter->g,
+                   parameter->count * sizeof(*parameter->g));
+        }
         for (element = 0; element < parameter->count; ++element) {
+            if (!parameter->trainable) continue;
             double value = parameter->g[element];
             replay_norm += value * value;
         }
@@ -2244,6 +2311,7 @@ static float faculty_replay_gradient_cosine(
         Parameter *parameter = model->parameters[range_index];
         size_t element;
         for (element = 0; element < parameter->count; ++element) {
+            if (!parameter->trainable) continue;
             double faculty_value = parameter->g[element];
             double replay_value = replay_gradient[offset + element];
             dot += faculty_value * replay_value;
@@ -2575,6 +2643,10 @@ static void transaction_prepare_cumulative_replay_gradient(
              ++parameter_index) {
             const Parameter *parameter = model->parameters[parameter_index];
             size_t element;
+            if (!parameter->trainable) {
+                offset += parameter->count;
+                continue;
+            }
             for (element = 0; element < parameter->count; ++element) {
                 state->replay_gradient[offset + element] +=
                     parameter->g[element];
@@ -2586,13 +2658,24 @@ static void transaction_prepare_cumulative_replay_gradient(
     if (eligible_count != state->cumulative_replay_count) {
         fail("cumulative replay gradient range count changed");
     }
-    for (offset = 0; offset < state->parameter_total; ++offset) {
-        double value = state->replay_gradient[offset] / eligible_count;
-        if (!isfinite(value)) {
-            fail("cumulative replay gradient is not finite");
+    offset = 0;
+    for (range_index = 0; range_index < model->parameter_count;
+         ++range_index) {
+        const Parameter *parameter = model->parameters[range_index];
+        size_t element;
+        if (parameter->trainable) {
+            for (element = 0; element < parameter->count; ++element) {
+                double value =
+                    state->replay_gradient[offset + element] /
+                    eligible_count;
+                if (!isfinite(value)) {
+                    fail("cumulative replay gradient is not finite");
+                }
+                state->replay_gradient[offset + element] = (float)value;
+                norm += value * value;
+            }
         }
-        state->replay_gradient[offset] = (float)value;
-        norm += value * value;
+        offset += parameter->count;
     }
     if (!isfinite(norm) || norm <= 0.0) {
         fail("cumulative replay gradient norm is not finite and positive");
@@ -2616,6 +2699,11 @@ static void transaction_project_tangent_candidate(
          ++parameter_index) {
         const Parameter *parameter = model->parameters[parameter_index];
         size_t element;
+        if (!parameter->trainable) {
+            gradient_offset += parameter->count;
+            learned_offset += 3 * parameter->count;
+            continue;
+        }
         for (element = 0; element < parameter->count; ++element) {
             double replay = state->replay_gradient[gradient_offset + element];
             double displacement =
@@ -2641,6 +2729,10 @@ static void transaction_project_tangent_candidate(
              ++parameter_index) {
             Parameter *parameter = model->parameters[parameter_index];
             size_t element;
+            if (!parameter->trainable) {
+                gradient_offset += parameter->count;
+                continue;
+            }
             for (element = 0; element < parameter->count; ++element) {
                 double before = parameter->w[element];
                 double projected = before -
@@ -2665,6 +2757,11 @@ static void transaction_project_tangent_candidate(
          ++parameter_index) {
         const Parameter *parameter = model->parameters[parameter_index];
         size_t element;
+        if (!parameter->trainable) {
+            gradient_offset += parameter->count;
+            learned_offset += 3 * parameter->count;
+            continue;
+        }
         for (element = 0; element < parameter->count; ++element) {
             double displacement =
                 parameter->w[element] -
@@ -2717,6 +2814,7 @@ static float transaction_prepare_attempt(
          ++parameter_index) {
         Parameter *parameter = model->parameters[parameter_index];
         size_t element;
+        if (!parameter->trainable) continue;
         for (element = 0; element < parameter->count; ++element) {
             double value = parameter->g[element];
             replay_norm += value * value;
@@ -2729,6 +2827,7 @@ static float transaction_prepare_attempt(
         Parameter *parameter = model->parameters[parameter_index];
         size_t element;
         for (element = 0; element < parameter->count; ++element) {
+            if (!parameter->trainable) continue;
             double faculty_value = parameter->g[element];
             double replay_value = state->replay_gradient[offset + element];
             dot += faculty_value * replay_value;
@@ -3524,6 +3623,7 @@ static void print_usage(const char *program)
     printf("  --report N           report interval (default: 100)\n");
     printf("  --validation N       validation sequences per report (default: 8)\n");
     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
+    printf("  --trainable-scope S  all (default) or top-ffn\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
     printf("  --gradient-cosine N  report fixed faculty/replay probe cosine every N updates\n");
     printf("  --transaction-mode M disabled, observer, guard, cumulative-guard, cumulative-backtracking, or cumulative-tangent (default: disabled)\n");
@@ -3770,10 +3870,15 @@ static int run_self_test(void)
         uint64_t restored_digest;
         uint64_t rng_before = rng.state;
         size_t gradient_offset = 0;
+        size_t learned_offset;
+        int frozen_changed = 0;
+        int trainable_changed = 0;
+        int trainable_groups = 0;
         int projected_trials = 0;
         int index;
         int trial_index;
         memset(&transaction_options, 0, sizeof(transaction_options));
+        model_set_trainable_scope(&model, TRAINABLE_SCOPE_TOP_FFN);
         transaction_state_create(&transaction_state, &model, &model,
                                  &transaction_options);
         model_zero_grad(&model);
@@ -3821,20 +3926,50 @@ static int run_self_test(void)
             }
         }
         candidate_digest = model_learned_state_digest(&model);
+        learned_offset = 0;
+        for (index = 0; index < model.parameter_count; ++index) {
+            Parameter *parameter = model.parameters[index];
+            size_t bytes = parameter->count * sizeof(float);
+            int changed =
+                memcmp(parameter->w,
+                       transaction_state.learned_before + learned_offset,
+                       bytes) != 0 ||
+                memcmp(parameter->m,
+                       transaction_state.learned_before + learned_offset +
+                           parameter->count,
+                       bytes) != 0 ||
+                memcmp(parameter->v,
+                       transaction_state.learned_before + learned_offset +
+                           2 * parameter->count,
+                       bytes) != 0;
+            if (parameter->trainable) {
+                ++trainable_groups;
+                if (changed) ++trainable_changed;
+            } else if (changed) {
+                frozen_changed = 1;
+            }
+            learned_offset += 3 * parameter->count;
+        }
         transaction_restore_learned(&model, &transaction_state);
         restored_digest = model_learned_state_digest(&model);
         ++checks;
         if (candidate_digest == before_digest ||
             restored_digest != before_digest || rng.state == rng_before ||
-            projected_trials != TRANSACTION_MAX_BACKTRACK_TRIALS) {
+            projected_trials != TRANSACTION_MAX_BACKTRACK_TRIALS ||
+            frozen_changed || trainable_groups != 4 ||
+            trainable_changed != trainable_groups ||
+            model_trainable_parameter_total(&model) !=
+                (size_t)(2 * cfg.dim * cfg.ff + 2 * cfg.dim)) {
             fprintf(stderr,
-                    "transaction rollback self-test failed: before=%016llx candidate=%016llx restored=%016llx\n",
+                    "transaction isolation self-test failed: before=%016llx candidate=%016llx restored=%016llx frozen=%d trainable=%d/%d\n",
                     (unsigned long long)before_digest,
                     (unsigned long long)candidate_digest,
-                    (unsigned long long)restored_digest);
+                    (unsigned long long)restored_digest, frozen_changed,
+                    trainable_changed, trainable_groups);
             ++failures;
         }
         transaction_state_destroy(&transaction_state);
+        model_set_trainable_scope(&model, TRAINABLE_SCOPE_ALL);
     }
     model_destroy(&model);
     if (failures == 0) {
@@ -4017,6 +4152,16 @@ int main(int argc, char **argv)
                 (int)parse_long(argv[++i], "--validation");
         } else if (strcmp(argv[i], "--dropout") == 0 && i + 1 < argc) {
             options.dropout = parse_float(argv[++i], "--dropout");
+        } else if (strcmp(argv[i], "--trainable-scope") == 0 &&
+                   i + 1 < argc) {
+            const char *scope = argv[++i];
+            if (strcmp(scope, "all") == 0) {
+                options.trainable_scope = TRAINABLE_SCOPE_ALL;
+            } else if (strcmp(scope, "top-ffn") == 0) {
+                options.trainable_scope = TRAINABLE_SCOPE_TOP_FFN;
+            } else {
+                fail("--trainable-scope must be all or top-ffn");
+            }
         } else if (strcmp(argv[i], "--cosine") == 0) {
             options.cosine_decay = 1;
         } else if (strcmp(argv[i], "--gradient-cosine") == 0 &&
@@ -4259,6 +4404,7 @@ int main(int argc, char **argv)
 
     rng_seed(&rng, (uint64_t)options.seed);
     model_create(&model, cfg, &rng);
+    model_set_trainable_scope(&model, options.trainable_scope);
     if (options.resume_path != NULL) {
         update = checkpoint_load(options.resume_path, &model, &rng,
                                  &checkpoint_attempts,
@@ -4322,10 +4468,12 @@ int main(int argc, char **argv)
     printf("literary_lm: backend=portable-C");
 #endif
     printf(" context=%d vocab=%d dim=%d heads=%d layers=%d ff=%d positions=%s "
-           "parameters=%zu\n",
+           "parameters=%zu trainable-scope=%s trainable-parameters=%zu\n",
            cfg.context, cfg.vocab, cfg.dim, cfg.heads, cfg.layers, cfg.ff,
            cfg.rotary ? "rotary" : "learned",
-           model_parameter_total(&model));
+           model_parameter_total(&model),
+           trainable_scope_name(model.trainable_scope),
+           model_trainable_parameter_total(&model));
 
     if (options.steps > 0 || options.eval_only) {
         size_t minimum;

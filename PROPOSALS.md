@@ -75,7 +75,37 @@ promotion outcome.
 
 ---
 
-### P1: SAT-1 — Single-faculty ops scaling
+### P1a: ZERO.4-Q2.7 — Top-FFN isolation repair
+
+**Source**: Q2.6 seed-2 optimizer trace and the prospective
+`zero-language-gate-v1` result.
+**Status**: Preregistered, mechanics only. No training workflow, budget, or
+compute authorization exists.
+**Depends on**: Q2.6-R family promotion (satisfied) and the frozen language
+gate (satisfied).
+**Cost**: Zero for the mechanics merge. The AWS diagnostic is unmeasured and
+requires a separate immutable timing/budget proposal.
+
+**Design**:
+
+Rerun the Q2.6 quantity experiment from immutable ZERO.3 while freezing every
+parameter except `layer.5.norm2`, `layer.5.w1`, `layer.5.w2`, and
+`final_norm`. This exposes 541,184 parameters (11.151554%) while isolating the
+token embedding, which dominated the completed Q2.6 replay-drift diagnostics.
+The Q2.6 optimizer, tangent guard, quantity gates, replay authority, split
+isolation, selection rule, and stop conditions remain unchanged.
+
+Only a prospectively selected quantity/replay-feasible seed-2 checkpoint may
+open quantity promotion and then the candidate-only BLiMP/TinyStories gate,
+each exactly once. Either failure resolves no-go without adaptation. Seeds 1
+and 3 remain sealed behind a later replication contract and budget.
+
+**Question**: Is language regression caused by broad parameter interference
+rather than by the quantity faculty itself?
+
+---
+
+### P1b: SAT-1 — Single-faculty ops scaling
 
 **Source**: `SATURATION.md` §3.1.
 **Status**: Staged preregistration complete, but blocked at the five-operation
@@ -83,7 +113,8 @@ anchor; no compute authorized. Q2.6-R established the three-seed replay-safe
 quantity result, but its frozen seed-2 model fails the prospective language
 gate on TinyStories. `benchmarks/sat1-v1/contract.json` freezes the later
 adaptive stage boundaries without authorizing them.
-**Depends on**: Q2.6-R family promotion (satisfied).
+**Depends on**: Q2.6-R family promotion (satisfied) and a three-seed Q2.7
+language-preserving five-operation anchor (unsatisfied).
 **Cost**: Unmeasured. Stage 0 must produce a score-sealed AWS timing unit.
 Every later stage requires its own immutable budget and explicit approval.
 
@@ -147,8 +178,8 @@ level rather than relying on post-hoc checkpoint selection?
 ### P3: SAT-2 — Multi-faculty scaling
 
 **Source**: `SATURATION.md` §3.2.
-**Status**: Proposed. Blocked on P1 (ops scaling) and P2 (replay guard).
-**Depends on**: P1 passing, P2 implemented.
+**Status**: Proposed. Blocked on P1b (ops scaling) and P2 (replay guard).
+**Depends on**: P1b passing, P2 implemented.
 **Cost**: Unmeasured; derive from the P0/SAT-1 instance-hour observations.
 
 **Design**:
