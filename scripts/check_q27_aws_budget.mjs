@@ -67,7 +67,7 @@ export function validateBudget(
       "Q2.7 execution is not authorized");
   }
 
-  const requiredLocks = [
+  const requiredScientificLocks = [
     "q27_contract",
     "q26_contract",
     "trainer",
@@ -76,24 +76,65 @@ export function validateBudget(
     "exporter_source",
     "quantity_evaluator_source",
     "generator",
+    "language_gate_contract",
+    "language_gate_runner",
+  ];
+  assert(
+    budget.scientific_source_lock?.frozen_science_commit ===
+      "765600e218537ac3b7ff320c676cfb7f62dab0ae" &&
+      budget.scientific_source_lock?.scientific_design_unchanged === true,
+    "Q2.7 frozen scientific authority drifted",
+  );
+  assert(
+    same(
+      Object.keys(budget.scientific_source_lock).slice(2),
+      requiredScientificLocks,
+    ),
+    "Q2.7 scientific source-lock grid drifted",
+  );
+  for (const name of requiredScientificLocks) {
+    const lock = budget.scientific_source_lock[name];
+    assert(typeof lock.path === "string" && fs.existsSync(lock.path),
+      `${name} scientific lock unavailable`);
+    assert(sha256(lock.path) === lock.sha256,
+      `${name} scientific source-lock hash mismatch`);
+  }
+
+  const requiredInfrastructureLocks = [
     "budget_checker",
+    "preflight_checker",
     "workflow_checker",
     "completion_checker",
+    "preflight",
+    "request_builder",
     "workload",
     "user_data",
     "launch_workflow",
     "collector_workflow",
+    "conditional_authorization",
+    "language_gate_materializer",
   ];
-  assert(same(Object.keys(budget.source_lock), requiredLocks),
-    "Q2.7 source-lock grid drifted");
-  for (const [name, lock] of Object.entries(budget.source_lock)) {
+  assert(
+    budget.infrastructure_source_lock?.executor_version ===
+      "q27-aws-v1-preflight-1",
+    "Q2.7 infrastructure executor version drifted",
+  );
+  assert(
+    same(
+      Object.keys(budget.infrastructure_source_lock).slice(1),
+      requiredInfrastructureLocks,
+    ),
+    "Q2.7 infrastructure source-lock grid drifted",
+  );
+  for (const name of requiredInfrastructureLocks) {
+    const lock = budget.infrastructure_source_lock[name];
     assert(typeof lock.path === "string" && fs.existsSync(lock.path),
-      `${name} lock unavailable`);
+      `${name} infrastructure lock unavailable`);
     assert(sha256(lock.path) === lock.sha256,
-      `${name} source-lock hash mismatch`);
+      `${name} infrastructure source-lock hash mismatch`);
   }
   const q27 = JSON.parse(fs.readFileSync(
-    budget.source_lock.q27_contract.path,
+    budget.scientific_source_lock.q27_contract.path,
     "utf8",
   ));
   assert(q27.schema === "zero.zero4_q27_contract.v1",
@@ -102,8 +143,34 @@ export function validateBudget(
     "base Q2.7 contract directly authorizes compute");
   assert(
     q27.lineage.q26_contract_sha256 ===
-      budget.source_lock.q26_contract.sha256,
+      budget.scientific_source_lock.q26_contract.sha256,
     "Q2.7 inherited Q2.6 contract differs from the budget lock",
+  );
+  const conditional = JSON.parse(fs.readFileSync(
+    budget.infrastructure_source_lock.conditional_authorization.path,
+    "utf8",
+  ));
+  assert(
+    conditional.schema ===
+      "zero.q27_conditional_language_gate_authorization.v1" &&
+      conditional.status === "authorized_if_candidate_ready" &&
+      conditional.quantity_stage.required_decision === "candidate-ready" &&
+      conditional.language_gate.caps.max_compute_usd === 0.12 &&
+      conditional.all_in_envelope.maximum_compute_usd === 1.29 &&
+      conditional.authorization.explicit_manual_authorization === true &&
+      conditional.authorization.authorized_for_execution_if_candidate_ready ===
+        true &&
+      conditional.authorization.one_execution_only === true,
+    "Q2.7 conditional language-gate authorization drifted",
+  );
+  assert(
+    conditional.quantity_stage.result_checker_sha256 ===
+      budget.scientific_source_lock.result_checker.sha256 &&
+      conditional.language_gate.contract_sha256 ===
+        budget.scientific_source_lock.language_gate_contract.sha256 &&
+      conditional.language_gate.runner_sha256 ===
+        budget.scientific_source_lock.language_gate_runner.sha256,
+    "Q2.7 conditional stage differs from frozen science",
   );
 
   const venue = budget.venue;
@@ -164,6 +231,16 @@ export function validateBudget(
       budget.completion_gate.structured_status_required === true &&
       budget.completion_gate.green_ci_required_before_merge === true,
     "Q2.7 completion gate drifted",
+  );
+  assert(
+    budget.preflight?.required_before_execution_lock === true &&
+      budget.preflight.exact_run_instances_dry_run_required === true &&
+      budget.preflight.iam_pass_role_proof_required === true &&
+      budget.preflight.ami_validation_required === true &&
+      budget.preflight.subnet_security_group_validation_required === true &&
+      budget.preflight.s3_write_once_proof_required === true &&
+      budget.preflight.required_asset_count === 6,
+    "Q2.7 infrastructure preflight authority drifted",
   );
   return true;
 }

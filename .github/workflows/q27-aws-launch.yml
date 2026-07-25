@@ -102,6 +102,30 @@ jobs:
           [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
           echo "ami=$ami" >> "$GITHUB_OUTPUT"
 
+      - name: Preflight exact request, network, assets, and write-once storage
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+          ZERO_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          ZERO_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          ZERO_LAUNCH_EPOCH=$(date +%s)
+          export ZERO_LAUNCH_EPOCH
+          echo "ZERO_LAUNCH_EPOCH=$ZERO_LAUNCH_EPOCH" >> "$GITHUB_ENV"
+          scripts/aws/q27-preflight.sh
+          {
+            echo "ZERO_PREFLIGHT_SHA256=$(sha256sum /tmp/zero-q27-preflight.json | awk '{print $1}')"
+            echo "ZERO_REQUEST_BUILDER_SHA256=$(sha256sum scripts/aws/q27-run-instances.sh | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/preflight.json" \
+            --body /tmp/zero-q27-preflight.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          jq -c \
+            '{compute_launched,execution_lock_acquired,ec2,image,network,s3: {write_once_condition_proved: .s3.write_once_condition_proved,required_asset_count: (.s3.required_assets | length)}}' \
+            /tmp/zero-q27-preflight.json >> "$GITHUB_STEP_SUMMARY"
+
       - name: Acquire one-time execution lock
         run: |
           jq -n \
@@ -111,6 +135,8 @@ jobs:
             --arg source_sha256 "$ZERO_SOURCE_SHA256" \
             --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
             --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --arg preflight_sha256 "$ZERO_PREFLIGHT_SHA256" \
+            --arg request_builder_sha256 "$ZERO_REQUEST_BUILDER_SHA256" \
             '{
               schema: "zero.aws_execution_lock.v1",
               experiment: "zero4-q27-aws-v1",
@@ -120,7 +146,9 @@ jobs:
               budget_sha256: $budget_sha256,
               source_archive_sha256: $source_sha256,
               workload_sha256: $workload_sha256,
-              user_data_sha256: $user_data_sha256
+              user_data_sha256: $user_data_sha256,
+              preflight_sha256: $preflight_sha256,
+              request_builder_sha256: $request_builder_sha256
             }' > /tmp/zero-q27-execution-lock.json
           aws s3api put-object \
             --bucket "$ZERO_BUCKET" \
@@ -133,26 +161,14 @@ jobs:
         id: launch
         env:
           ZERO_AMI: ${{ steps.ami.outputs.ami }}
+          ZERO_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          ZERO_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
         run: |
-          launch_epoch=$(date +%s)
-          instance_id=$(aws ec2 run-instances \
-            --image-id "$ZERO_AMI" \
-            --instance-type "$ZERO_INSTANCE_TYPE" \
-            --iam-instance-profile Name=zero-training-ec2 \
-            --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
-            --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
-            --user-data file://scripts/aws/q27-seed2-user-data.sh \
-            --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
-            --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":32,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
-            --instance-initiated-shutdown-behavior terminate \
-            --tag-specifications \
-              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero4-q27-seed2},{Key=Experiment,Value=zero4-q27-aws-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=WorkloadSha256,Value=${ZERO_WORKLOAD_SHA256}},{Key=SourceArchiveSha256,Value=${ZERO_SOURCE_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
-              "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=Experiment,Value=zero4-q27-aws-v1},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
-            --query 'Instances[0].InstanceId' --output text --no-cli-pager)
+          instance_id=$(scripts/aws/q27-run-instances.sh launch)
           [[ "$instance_id" =~ ^i-[0-9a-f]+$ ]]
           {
             echo "instance_id=$instance_id"
-            echo "launch_epoch=$launch_epoch"
+            echo "launch_epoch=$ZERO_LAUNCH_EPOCH"
           } >> "$GITHUB_OUTPUT"
 
       - name: Record durable launch receipt
@@ -172,6 +188,8 @@ jobs:
             --arg source_sha256 "$ZERO_SOURCE_SHA256" \
             --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
             --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --arg preflight_sha256 "$ZERO_PREFLIGHT_SHA256" \
+            --arg request_builder_sha256 "$ZERO_REQUEST_BUILDER_SHA256" \
             --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
             '{
               schema: "zero.q27_aws_launch.v1",
@@ -188,6 +206,8 @@ jobs:
               source_archive_sha256: $source_sha256,
               workload_sha256: $workload_sha256,
               user_data_sha256: $user_data_sha256,
+              preflight_sha256: $preflight_sha256,
+              request_builder_sha256: $request_builder_sha256,
               launch_epoch: $launch_epoch,
               max_instance_seconds: 6190,
               workload_timeout_seconds: 6130,

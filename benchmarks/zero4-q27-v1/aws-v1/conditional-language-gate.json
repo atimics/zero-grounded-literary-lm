@@ -1,0 +1,61 @@
+{
+  "schema": "zero.q27_conditional_language_gate_authorization.v1",
+  "id": "zero4-q27-seed2-language-gate-v1",
+  "status": "authorized_if_candidate_ready",
+  "purpose": "Prospectively authorize one candidate-bound language-preservation gate only if the separately validated Q2.7 seed-2 quantity stage returns candidate-ready. No-go, infrastructure failure, budget exhaustion, missing artifacts, or an invalid result cannot open this gate.",
+  "quantity_stage": {
+    "experiment": "zero4-q27-aws-v1",
+    "seed": 2,
+    "budget_path": "benchmarks/zero4-q27-v1/aws-v1/budget.json",
+    "maximum_compute_usd": 1.17,
+    "required_result_schema": "zero.zero4_q27_quantity_stage_result.v1",
+    "required_decision": "candidate-ready",
+    "result_checker_path": "scripts/check_zero4_q27_result.mjs",
+    "result_checker_sha256": "9058bf2110110579fb04a21e04ba90e018ae31e42e3dedbaaf140034a0255c60"
+  },
+  "candidate_binding": {
+    "id": "zero4-q27-seed2-selected",
+    "artifact": "selected.litq8",
+    "sha256_field": "artifacts.quantizedSha256",
+    "bytes_field": "artifacts.quantizedBytes",
+    "requires_artifact_hash_and_size_match": true,
+    "deterministic_materializer_path": "scripts/materialize_q27_language_gate_budget.mjs"
+  },
+  "language_gate": {
+    "contract_path": "benchmarks/zero-language-gate-v1/contract.json",
+    "contract_id": "zero-language-gate-v1",
+    "contract_sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a",
+    "runner_path": "scripts/run_zero_language_gate.mjs",
+    "runner_sha256": "233e9e29fc078712bec4602e40fdb8d044a93b330424af456af7699e220bdc3c",
+    "venue": {
+      "provider": "aws",
+      "region": "us-east-1",
+      "instance_type": "c6i.4xlarge"
+    },
+    "caps": {
+      "max_instance_seconds": 600,
+      "max_compute_usd": 0.12
+    }
+  },
+  "all_in_envelope": {
+    "quantity_stage_max_compute_usd": 1.17,
+    "conditional_language_gate_max_compute_usd": 0.12,
+    "maximum_compute_usd": 1.29
+  },
+  "authorization": {
+    "explicit_manual_authorization": true,
+    "authorized_for_materialization": true,
+    "authorized_for_execution_if_candidate_ready": true,
+    "one_execution_only": true,
+    "authorized_at": "2026-07-25",
+    "basis": "Issue #51 implementation proceeds under explicit user approval to authorize and run Q2.7 with its prospectively bounded conditional language gate."
+  },
+  "forbidden_triggers": [
+    "Q2.7 no-go",
+    "infrastructure error",
+    "budget exhaustion",
+    "missing or invalid result",
+    "missing or hash-mismatched selected.litq8",
+    "language gate already evaluated"
+  ]
+}

@@ -6,6 +6,8 @@ const launchPath = ".github/workflows/q27-aws-launch.yml";
 const collectPath = ".github/workflows/q27-aws-collect.yml";
 const workloadPath = "scripts/aws/q27-seed2.sh";
 const userDataPath = "scripts/aws/q27-seed2-user-data.sh";
+const preflightPath = "scripts/aws/q27-preflight.sh";
+const requestPath = "scripts/aws/q27-run-instances.sh";
 
 function fail(message) { throw new Error(message); }
 function assert(condition, message) { if (!condition) fail(message); }
@@ -19,16 +21,19 @@ const launch = fs.readFileSync(launchPath, "utf8");
 const collect = fs.readFileSync(collectPath, "utf8");
 const workload = fs.readFileSync(workloadPath, "utf8");
 const userData = fs.readFileSync(userDataPath, "utf8");
+const preflight = fs.readFileSync(preflightPath, "utf8");
+const request = fs.readFileSync(requestPath, "utf8");
 
 includesAll(launch, [
   "workflow_dispatch:",
   "dispatch seed 2 and exit",
   "--require-authorized",
-  "instance-initiated-shutdown-behavior terminate",
-  "MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}",
-  "WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}",
-  "MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}",
   "experiments/zero4-q27-aws-v1/execution.lock",
+  "Preflight exact request, network, assets, and write-once storage",
+  "scripts/aws/q27-preflight.sh",
+  "scripts/aws/q27-run-instances.sh launch",
+  "preflight_sha256: $preflight_sha256",
+  "request_builder_sha256: $request_builder_sha256",
   "--if-none-match '*'",
   "max_instance_seconds: 6190",
   "workload_timeout_seconds: 6130",
@@ -36,6 +41,16 @@ includesAll(launch, [
   "max_compute_usd: 1.17",
   "language_gate_authorized: false",
 ], "Q2.7 launch workflow");
+assert(
+  launch.indexOf("scripts/aws/q27-preflight.sh") <
+    launch.indexOf("experiments/zero4-q27-aws-v1/execution.lock"),
+  "Q2.7 execution lock precedes infrastructure preflight",
+);
+assert(
+  launch.indexOf("experiments/zero4-q27-aws-v1/execution.lock") <
+    launch.indexOf("scripts/aws/q27-run-instances.sh launch"),
+  "Q2.7 compute launch precedes its one-time execution lock",
+);
 for (const forbidden of [
   "aws ec2 wait",
   "aws ssm wait",
@@ -92,5 +107,60 @@ includesAll(userData, [
   "ZERO_WORKLOAD_DEADLINE_EPOCH",
   "timeout --signal=TERM",
 ], "Q2.7 user data");
+
+includesAll(preflight, [
+  "describe-images",
+  '.[0].OwnerId == "099720109477"',
+  '.[0].State == "available"',
+  '.[0].Architecture == "x86_64"',
+  "describe-subnets",
+  '.[0].State == "available"',
+  ".AvailableIpAddressCount > 0",
+  "describe-security-groups",
+  "assets/corpus/bpe/zero-foundation.tok",
+  "assets/corpus/bpe/shakespeare.tok",
+  "assets/corpus/bpe/blake.tok",
+  "assets/corpus/bpe/crowley.tok",
+  "assets/corpus/bpe/bible-kjv.tok",
+  "assets/corpus/channel/literary-dialogue.tok",
+  "PreconditionFailed|412",
+  "scripts/aws/q27-run-instances.sh dry-run",
+  "iam_pass_role_proved_by_exact_dry_run: true",
+  "compute_launched: false",
+  "execution_lock_acquired: false",
+], "Q2.7 infrastructure preflight");
+for (const forbidden of [
+  "execution.lock",
+  "scripts/aws/q27-run-instances.sh launch",
+  "aws ec2 wait",
+]) {
+  assert(!preflight.includes(forbidden),
+    `Q2.7 preflight can lock, launch, or wait: ${forbidden}`);
+}
+
+includesAll(request, [
+  "dry-run|launch",
+  "--image-id \"$ZERO_AMI\"",
+  "--instance-type \"$ZERO_INSTANCE_TYPE\"",
+  "--iam-instance-profile Name=zero-training-ec2",
+  "--security-group-ids \"$ZERO_SECURITY_GROUP_ID\"",
+  "--subnet-id \"$ZERO_SUBNET_ID\"",
+  "--user-data file://scripts/aws/q27-seed2-user-data.sh",
+  "HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled",
+  "VolumeSize\":32",
+  "--instance-initiated-shutdown-behavior terminate",
+  "MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}",
+  "WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}",
+  "MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}",
+  "aws ec2 run-instances \"${request[@]}\"",
+  "--dry-run",
+  "DryRunOperation",
+  "UnauthorizedOperation",
+  "iam:PassRole",
+], "Q2.7 exact EC2 request builder");
+assert(
+  (request.match(/aws ec2 run-instances/g) ?? []).length === 2,
+  "Q2.7 request builder has an unexpected RunInstances path",
+);
 
 console.log("Q2.7 launch/collector non-waiting workflow checks passed");
