@@ -1,0 +1,137 @@
+{
+  "schema": "zero.q27_diagnostic_execution_budget.v1",
+  "id": "zero4-q27-aws-v1",
+  "status": "proposed_not_authorized",
+  "purpose": "Execute the frozen Q2.7 top-FFN diagnostic seed 2 once on AWS through public selection and the exactly-once quantity promotion gate. This budget cannot run the separately candidate-bound language gate.",
+  "scientific_inference_allowed": true,
+  "authorization": {
+    "scope": "one AWS execution of Q2.7 diagnostic seed 2 through quantity promotion",
+    "one_execution_only": true,
+    "requires_manual_approval": true,
+    "manual_approval_observed": false,
+    "authorized_for_execution": false,
+    "authorized_at": null
+  },
+  "source_lock": {
+    "q27_contract": {
+      "path": "benchmarks/zero4-q27-v1/contract.json",
+      "sha256": "e2ed4f2d6e151bfbc33073fa0cb26865534255378fc1d32d9922a527a84a49c1"
+    },
+    "q26_contract": {
+      "path": "benchmarks/zero4-q26-v1/contract.json",
+      "sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80"
+    },
+    "trainer": {
+      "path": "scripts/train_zero4_q27.mjs",
+      "sha256": "4fa33a346ae06814ae84d307ede35ff4116d597093a7b17a315d1b3d55c297ef"
+    },
+    "result_checker": {
+      "path": "scripts/check_zero4_q27_result.mjs",
+      "sha256": "9058bf2110110579fb04a21e04ba90e018ae31e42e3dedbaaf140034a0255c60"
+    },
+    "trainer_source": {
+      "path": "literary_lm.c",
+      "sha256": "5f4c47e0fedcc0f96d5eafcd8f45f6bfc4808a1d1af7434cb188693449ff53e3"
+    },
+    "exporter_source": {
+      "path": "export_literary.c",
+      "sha256": "c7b1ba5a2763211871df1720f01f49b765365253924b7d4c1113643403ce463c"
+    },
+    "quantity_evaluator_source": {
+      "path": "quantity_request_eval.c",
+      "sha256": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902"
+    },
+    "generator": {
+      "path": "scripts/generate_zero4_q2.mjs",
+      "sha256": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded"
+    },
+    "budget_checker": {
+      "path": "scripts/check_q27_aws_budget.mjs",
+      "sha256": "21f5941b067a7433cbcc31e6d463da904acfaec305078362ac143de6fe0ef127"
+    },
+    "workflow_checker": {
+      "path": "scripts/check_q27_aws_workflows.mjs",
+      "sha256": "25cf9cf0226cba75086e2fd9ac632acc54047cf80d9f8d8ae29e88a9049f988a"
+    },
+    "completion_checker": {
+      "path": "scripts/check_q27_aws_completion.mjs",
+      "sha256": "6e2ba8d1e99a0d0444f22ccdbfd51f0bea740e29aca2ea0aff8f3308871ba160"
+    },
+    "workload": {
+      "path": "scripts/aws/q27-seed2.sh",
+      "sha256": "00c9a22d5d0661e841c7470a6c5188f01f0c89eb3facee048449908c2f1b261a"
+    },
+    "user_data": {
+      "path": "scripts/aws/q27-seed2-user-data.sh",
+      "sha256": "ecb0077f7e32384b25623c26cd96313850dd28cbd1edb70f120062c640bb7325"
+    },
+    "launch_workflow": {
+      "path": ".github/workflows/q27-aws-launch.yml",
+      "sha256": "a8e0729cc9c8613c0b140af8815c870e43eaefdb5c9195be33fa7aef930594d8"
+    },
+    "collector_workflow": {
+      "path": ".github/workflows/q27-aws-collect.yml",
+      "sha256": "faa03078766227b1e1ce85e71a71524e6c21ce27968f16e29e63c72a72016583"
+    }
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "cpu_architecture": "x86_64",
+    "online_vcpus": 16,
+    "training_backend": "OpenBLAS",
+    "openblas_threads": 16,
+    "quantity_evaluator_jobs": 16,
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-07-24",
+    "price_source": "frozen Q2.6-R c6i.4xlarge execution budget"
+  },
+  "workload": {
+    "seed": 2,
+    "maximum_optimizer_attempts": 1400,
+    "acquisition_attempts": 1000,
+    "consolidation_attempts": 400,
+    "batch": 2,
+    "recovery_checkpoint_every_committed_updates": 25,
+    "full_evaluation_every_committed_updates": 100,
+    "sentinel_replay_batches": 12,
+    "full_replay_batches": 48,
+    "trainable_scope": "top-ffn",
+    "trainable_parameters": 541184,
+    "quantity_promotion_evaluated_at_most_once": true,
+    "language_gate_included": false,
+    "language_gate_requires_candidate_bound_budget": true
+  },
+  "timing_basis": {
+    "source": "completed Q2.6-R recovery-3 seeds on the same c6i.4xlarge OpenBLAS venue",
+    "q26r_seed1_observed_instance_seconds": 4962,
+    "q26r_seed3_observed_instance_seconds": 5000,
+    "maximum_observed_q26r_seed_seconds": 5000,
+    "top_ffn_speedup_assumed": false,
+    "rationale": "Only optimizer state writes shrink substantially; the full-model forward pass, backward activation path, replay-gradient construction, direct replay trials, and quantity evaluations remain. The budget therefore reuses the already-frozen conservative Q2.6-R per-seed ceiling.",
+    "observed_plus_twenty_percent_seconds": 6000,
+    "additional_workload_contingency_seconds": 130,
+    "publication_reserve_seconds": 60
+  },
+  "execution": {
+    "max_instance_seconds": 6190,
+    "workload_timeout_seconds": 6130,
+    "publication_reserve_seconds": 60,
+    "max_compute_usd": 1.17,
+    "github_actions_must_not_wait_for_compute": true,
+    "collector_may_wait_or_launch_compute": false
+  },
+  "completion_gate": {
+    "frozen_seed_required": 2,
+    "complete_result_required": true,
+    "optimizer_attempt_log_required": true,
+    "artifact_hashes_required_for_candidate_ready": true,
+    "structured_status_required": true,
+    "terminal_instance_required": true,
+    "language_gate_must_remain_unevaluated": true,
+    "green_ci_required_before_merge": true,
+    "infrastructure_or_budget_failure_is_never_scientific_no_go": true
+  },
+  "next_authority": "A separate explicit approval may flip both authorization booleans and set authorized_at. If the collected quantity-stage result is candidate-ready, freeze its exact quantized hash into a separate zero.language_preservation_gate_budget.v1 before any external evaluation."
+}

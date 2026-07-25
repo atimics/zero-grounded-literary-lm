@@ -1,0 +1,207 @@
+name: Launch bounded Q2.7 diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero4-q27-aws-v1
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: AWS · dispatch seed 2 and exit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_RUN_ID: ${{ github.run_id }}
+      ZERO_COMMIT: ${{ github.sha }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q27-v1/aws-v1/budget.json
+      ZERO_INSTANCE_TYPE: c6i.4xlarge
+      ZERO_MAX_INSTANCE_SECONDS: '6190'
+      ZERO_WORKLOAD_TIMEOUT_SECONDS: '6130'
+      ZERO_MAX_COMPUTE_USD: '1.17'
+      ZERO_HOURLY_RATE_USD: '0.68'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate immutable authority
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          test ! -e benchmarks/zero4-q27-v1/aws-v1/COMPLETED
+          node scripts/check_zero4_q27.mjs
+          node scripts/check_q27_aws_budget.mjs \
+            "$ZERO_BUDGET_FILE" --require-authorized
+          node scripts/train_zero4_q27.mjs --self-test
+          {
+            echo "ZERO_BUDGET_SHA256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')"
+            echo "ZERO_WORKLOAD_SHA256=$(sha256sum scripts/aws/q27-seed2.sh | awk '{print $1}')"
+            echo "ZERO_USER_DATA_SHA256=$(sha256sum scripts/aws/q27-seed2-user-data.sh | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Build immutable source archive
+        run: |
+          git archive --format=tar.gz \
+            --output=/tmp/zero-q27-source.tar.gz "$ZERO_COMMIT"
+          echo "ZERO_SOURCE_SHA256=$(sha256sum /tmp/zero-q27-source.tar.gz | awk '{print $1}')" \
+            >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Refuse overlapping ZERO compute
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Publish immutable inputs
+        run: |
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/source.tar.gz" \
+            --body /tmp/zero-q27-source.tar.gz \
+            --content-type application/gzip \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/q27-seed2.sh" \
+            --body scripts/aws/q27-seed2.sh \
+            --content-type text/x-shellscript \
+            --if-none-match '*' --no-cli-pager >/dev/null
+
+      - name: Resolve Ubuntu AMI
+        id: ami
+        run: |
+          ami=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value --output text --no-cli-pager)
+          [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
+          echo "ami=$ami" >> "$GITHUB_OUTPUT"
+
+      - name: Acquire one-time execution lock
+        run: |
+          jq -n \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
+            --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            '{
+              schema: "zero.aws_execution_lock.v1",
+              experiment: "zero4-q27-aws-v1",
+              seed: 2,
+              ci_run_id: $run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256,
+              source_archive_sha256: $source_sha256,
+              workload_sha256: $workload_sha256,
+              user_data_sha256: $user_data_sha256
+            }' > /tmp/zero-q27-execution-lock.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key experiments/zero4-q27-aws-v1/execution.lock \
+            --body /tmp/zero-q27-execution-lock.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+
+      - name: Launch bounded EC2 diagnostic
+        id: launch
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          launch_epoch=$(date +%s)
+          instance_id=$(aws ec2 run-instances \
+            --image-id "$ZERO_AMI" \
+            --instance-type "$ZERO_INSTANCE_TYPE" \
+            --iam-instance-profile Name=zero-training-ec2 \
+            --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
+            --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
+            --user-data file://scripts/aws/q27-seed2-user-data.sh \
+            --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
+            --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":32,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
+            --instance-initiated-shutdown-behavior terminate \
+            --tag-specifications \
+              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero4-q27-seed2},{Key=Experiment,Value=zero4-q27-aws-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=WorkloadSha256,Value=${ZERO_WORKLOAD_SHA256}},{Key=SourceArchiveSha256,Value=${ZERO_SOURCE_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${ZERO_MAX_INSTANCE_SECONDS}},{Key=WorkloadTimeoutSeconds,Value=${ZERO_WORKLOAD_TIMEOUT_SECONDS}},{Key=MaxComputeUsd,Value=${ZERO_MAX_COMPUTE_USD}},{Key=HourlyRateUsd,Value=${ZERO_HOURLY_RATE_USD}}]" \
+              "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=Experiment,Value=zero4-q27-aws-v1},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
+            --query 'Instances[0].InstanceId' --output text --no-cli-pager)
+          [[ "$instance_id" =~ ^i-[0-9a-f]+$ ]]
+          {
+            echo "instance_id=$instance_id"
+            echo "launch_epoch=$launch_epoch"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Record durable launch receipt
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          ZERO_LAUNCH_EPOCH: ${{ steps.launch.outputs.launch_epoch }}
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          jq -n \
+            --arg instance_id "$ZERO_INSTANCE_ID" \
+            --arg ami "$ZERO_AMI" \
+            --arg region "$ZERO_REGION" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg budget_file "$ZERO_BUDGET_FILE" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
+            --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
+            '{
+              schema: "zero.q27_aws_launch.v1",
+              experiment: "zero4-q27-aws-v1",
+              seed: 2,
+              instance_id: $instance_id,
+              instance_type: "c6i.4xlarge",
+              ami: $ami,
+              region: $region,
+              git_commit: $git_commit,
+              ci_run_id: $run_id,
+              budget_file: $budget_file,
+              budget_sha256: $budget_sha256,
+              source_archive_sha256: $source_sha256,
+              workload_sha256: $workload_sha256,
+              user_data_sha256: $user_data_sha256,
+              launch_epoch: $launch_epoch,
+              max_instance_seconds: 6190,
+              workload_timeout_seconds: 6130,
+              publication_reserve_seconds: 60,
+              max_compute_usd: 1.17,
+              maximum_optimizer_attempts: 1400,
+              language_gate_authorized: false
+            }' > /tmp/zero-q27-launch.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/launch.json" \
+            --body /tmp/zero-q27-launch.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          jq -c \
+            '{ci_run_id,instance_id,launch_epoch,max_instance_seconds,max_compute_usd}' \
+            /tmp/zero-q27-launch.json >> "$GITHUB_STEP_SUMMARY"

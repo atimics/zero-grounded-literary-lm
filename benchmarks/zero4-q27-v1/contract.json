@@ -137,13 +137,18 @@
   },
   "authorization": {
     "aws_only": true,
-    "training_workflow_exists": false,
-    "budget_exists": false,
+    "training_workflow_exists": true,
+    "budget_exists": true,
+    "proposed_max_optimizer_attempts": 1400,
+    "proposed_max_instance_seconds": 6190,
+    "proposed_max_compute_usd": 1.17,
+    "language_gate_included": false,
+    "language_gate_requires_separate_candidate_bound_budget": true,
     "maximum_optimizer_attempts": 0,
     "maximum_instance_seconds": 0,
     "maximum_compute_usd": 0,
     "authorized": false,
-    "next_authority": "After mechanics merge, measure or conservatively bound the top-ffn diagnostic on AWS, freeze a separate immutable budget and non-waiting launch/collector workflow, then request explicit authorization."
+    "next_authority": "The conservative seed-2 AWS budget and non-waiting launch/collector workflow are staged. A separate explicit approval must change the immutable budget authorization fields before launch."
   },
   "sat1_dependency": "SAT-1 remains blocked. Q2.7 diagnostic and any later seeds must resolve go before its five-operation anchor can be replaced."
 }

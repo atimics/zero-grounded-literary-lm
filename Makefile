@@ -1067,10 +1067,26 @@ zero4-q26-train: literary_lm export_literary quantity_request_eval \
 zero4-q26: zero4-q26-train
 
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
-		benchmarks/zero4-q27-v1/contract.json
+		scripts/check_q27_aws_budget.mjs \
+		scripts/check_q27_aws_workflows.mjs \
+		scripts/check_q27_aws_completion.mjs \
+		scripts/check_zero4_q27_result.mjs \
+		scripts/train_zero4_q27.mjs \
+		scripts/aws/q27-seed2.sh \
+		scripts/aws/q27-seed2-user-data.sh \
+		.github/workflows/q27-aws-launch.yml \
+		.github/workflows/q27-aws-collect.yml \
+		benchmarks/zero4-q27-v1/contract.json \
+		benchmarks/zero4-q27-v1/aws-v1/budget.json
 	rm -f /tmp/q27-scope-full.ckpt /tmp/q27-scope-chunk.ckpt
 	./literary_lm --self-test >/dev/null
 	node scripts/check_zero4_q27.mjs
+	node scripts/check_q27_aws_budget.mjs
+	node scripts/check_q27_aws_workflows.mjs
+	node scripts/check_q27_aws_completion.mjs --if-present
+	node scripts/train_zero4_q27.mjs --self-test
+	bash -n scripts/aws/q27-seed2.sh \
+		scripts/aws/q27-seed2-user-data.sh
 	./literary_lm --context 8 --dim 8 --heads 2 --layers 1 --ff 16 \
 		--trainable-scope top-ffn \
 		--text corpus/zero-foundation.txt --steps 4 --batch 1 \

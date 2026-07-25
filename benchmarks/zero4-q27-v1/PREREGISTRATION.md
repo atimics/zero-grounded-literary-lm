@@ -1,7 +1,8 @@
 # ZERO.4-Q2.7 preregistration — top-FFN isolation repair
 
-Status: **preregistered, not authorized**. This merge may validate mechanics;
-it may not launch training or external evaluation.
+Status: **preregistered and budgeted, not authorized**. The mechanics and
+dispatch/collection path are staged; training and external evaluation remain
+closed.
 
 ## Why this is next
 
@@ -61,10 +62,21 @@ approved. SAT-1 remains blocked until the repair family resolves go.
 
 ## Compute firewall
 
-This registration authorizes zero optimizer attempts, zero instance-seconds,
-and zero dollars. It adds no training workflow. The next step after green CI
-is an AWS-only timing/budget proposal whose launch workflow exits after
-dispatch and whose collector never waits or starts compute. Training requires
-another explicit approval.
+The staged seed-2 proposal inherits the slowest completed Q2.6-R seed rather
+than assuming that exposing 11.15% of the parameters makes the full
+forward/backward workload proportionally faster. Its hard ceiling is 1,400
+optimizer attempts, 6,190 `c6i.4xlarge` instance-seconds, and $1.17. The
+workload gets 6,130 seconds and reserves 60 seconds for publication.
+
+The launch workflow exits after dispatch. The collector reads durable state
+once, requires a terminated instance, and cannot wait or start compute. The
+budget remains `proposed_not_authorized`, so the launch fails closed until a
+separate explicit approval changes both authorization booleans.
+
+This budget ends after replay selection and the exactly-once quantity
+promotion. It does not open BLiMP or TinyStories. If seed 2 yields a frozen
+candidate, that exact artifact hash must first be bound into the separate
+600-second/$0.12 language-gate budget required by
+`zero-language-gate-v1`.
 
 The machine-readable authority is [`contract.json`](contract.json).

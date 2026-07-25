@@ -1,0 +1,263 @@
+name: Collect bounded Q2.7 diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Q2.7 AWS launch workflow run ID'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: zero4-q27-aws-v1
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: AWS · validate and publish seed 2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ZERO_COLLECTOR_RUN_ID: ${{ github.run_id }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q27-v1/aws-v1/budget.json
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate collector inputs
+        run: |
+          [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          test ! -e benchmarks/zero4-q27-v1/aws-v1/COMPLETED
+          test ! -e benchmarks/zero4-q27-v1/seed2/result.json
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Read durable records once
+        run: |
+          mkdir -p /tmp/zero-q27-collection/results
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/launch.json" \
+            /tmp/zero-q27-collection/launch.json --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed2/status.json" \
+            /tmp/zero-q27-collection/status.json --no-cli-pager
+          source_commit=$(jq -r '.git_commit' \
+            /tmp/zero-q27-collection/launch.json)
+          budget_sha256=$(jq -r '.budget_sha256' \
+            /tmp/zero-q27-collection/launch.json)
+          [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$budget_sha256" =~ ^[0-9a-f]{64}$ ]]
+          git cat-file -e "${source_commit}^{commit}"
+          git switch --detach "$source_commit"
+          node scripts/check_q27_aws_budget.mjs \
+            "$ZERO_BUDGET_FILE" --require-authorized
+          test "$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" = \
+            "$budget_sha256"
+          jq -e \
+            --arg run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg git_commit "$source_commit" \
+            --arg budget_sha256 "$budget_sha256" \
+            '.schema == "zero.q27_aws_launch.v1"
+             and .experiment == "zero4-q27-aws-v1"
+             and .seed == 2
+             and .ci_run_id == $run_id
+             and .git_commit == $git_commit
+             and .budget_sha256 == $budget_sha256
+             and .instance_type == "c6i.4xlarge"
+             and .max_instance_seconds == 6190
+             and .workload_timeout_seconds == 6130
+             and .publication_reserve_seconds == 60
+             and .max_compute_usd == 1.17
+             and .maximum_optimizer_attempts == 1400
+             and .language_gate_authorized == false' \
+            /tmp/zero-q27-collection/launch.json >/dev/null
+          status=$(jq -r '.status' /tmp/zero-q27-collection/status.json)
+          if [ "$status" = infrastructure-error ] ||
+              [ "$status" = budget-exhausted ]; then
+            jq -c \
+              '{status,phase,exit_code,scientific_result_available}' \
+              /tmp/zero-q27-collection/status.json
+            echo "Terminal execution failure; this is not a scientific no-go"
+            exit 2
+          fi
+          test "$status" = complete
+          jq -e \
+            --arg git_commit "$source_commit" \
+            --arg budget_sha256 "$budget_sha256" \
+            '.schema == "zero.aws_q27_seed2_status.v1"
+             and .experiment == "zero4-q27-aws-v1"
+             and .seed == 2
+             and .status == "complete"
+             and .git_commit == $git_commit
+             and .budget_sha256 == $budget_sha256
+             and .scientific_result_available == true
+             and (.scientific_decision == "candidate-ready"
+               or .scientific_decision == "no-go")
+             and .observed_instance_seconds >= 0
+             and .observed_instance_seconds <= 6190
+             and .observed_compute_usd >= 0
+             and .observed_compute_usd <= 1.17
+             and .training_backend == "OpenBLAS"
+             and .openblas_threads == 16
+             and .language_gate_evaluated == false' \
+            /tmp/zero-q27-collection/status.json >/dev/null
+          aws s3 sync \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/seed2/results/" \
+            /tmp/zero-q27-collection/results --no-cli-pager
+          test "$(sha256sum /tmp/zero-q27-collection/results/result.json \
+            | awk '{print $1}')" = \
+            "$(jq -r '.result_sha256' \
+              /tmp/zero-q27-collection/status.json)"
+          node scripts/check_zero4_q26.mjs \
+            benchmarks/zero4-q26-v1/contract.json \
+            /tmp/zero-q27-collection/results/optimizer-attempts.jsonl
+          node scripts/check_zero4_q27_result.mjs \
+            /tmp/zero-q27-collection/results/result.json \
+            benchmarks/zero4-q27-v1/contract.json \
+            "$ZERO_BUDGET_FILE" \
+            /tmp/zero-q27-collection/results
+          {
+            echo "ZERO_SOURCE_COMMIT=$source_commit"
+            echo "ZERO_BUDGET_SHA256=$budget_sha256"
+          } >> "$GITHUB_ENV"
+
+      - name: Require terminal instance
+        run: |
+          instance=$(jq -r '.instance_id' \
+            /tmp/zero-q27-collection/launch.json)
+          [[ "$instance" =~ ^i-[0-9a-f]+$ ]]
+          test "$(jq -r '.instance_id' \
+            /tmp/zero-q27-collection/status.json)" = "$instance"
+          state=$(aws ec2 describe-instances --instance-ids "$instance" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text --no-cli-pager)
+          test "$state" = terminated
+          jq -n \
+            --arg instance_id "$instance" \
+            --arg observed_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              schema: "zero.aws_terminal_observation.v1",
+              experiment: "zero4-q27-aws-v1",
+              instance_id: $instance_id,
+              state: "terminated",
+              observed_at: $observed_at
+            }' > /tmp/zero-q27-collection/terminal.json
+
+      - name: Acquire one-time collector lock
+        run: |
+          jq -n \
+            --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg collector_run_id "$ZERO_COLLECTOR_RUN_ID" \
+            --arg git_commit "$ZERO_SOURCE_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '{
+              schema: "zero.aws_collector_lock.v1",
+              experiment: "zero4-q27-aws-v1",
+              source_run_id: $source_run_id,
+              collector_run_id: $collector_run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256
+            }' > /tmp/zero-q27-collector-lock.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key experiments/zero4-q27-aws-v1/collector.lock \
+            --body /tmp/zero-q27-collector-lock.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+
+      - name: Freeze validated records
+        run: |
+          git switch main
+          test "$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" = \
+            "$ZERO_BUDGET_SHA256"
+          root=benchmarks/zero4-q27-v1
+          mkdir -p "$root/seed2" "$root/aws-v1/results"
+          cp -R /tmp/zero-q27-collection/results/. "$root/seed2/"
+          cp /tmp/zero-q27-collection/launch.json \
+            "$root/aws-v1/results/launch-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/zero-q27-collection/status.json \
+            "$root/aws-v1/results/status-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/zero-q27-collection/terminal.json \
+            "$root/aws-v1/results/terminal-${ZERO_SOURCE_RUN_ID}.json"
+          launch_sha256=$(sha256sum \
+            "$root/aws-v1/results/launch-${ZERO_SOURCE_RUN_ID}.json" |
+            awk '{print $1}')
+          status_sha256=$(sha256sum \
+            "$root/aws-v1/results/status-${ZERO_SOURCE_RUN_ID}.json" |
+            awk '{print $1}')
+          terminal_sha256=$(sha256sum \
+            "$root/aws-v1/results/terminal-${ZERO_SOURCE_RUN_ID}.json" |
+            awk '{print $1}')
+          result_sha256=$(sha256sum "$root/seed2/result.json" |
+            awk '{print $1}')
+          decision=$(jq -r '.decision' "$root/seed2/result.json")
+          jq -n \
+            --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg git_commit "$ZERO_SOURCE_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg launch_sha256 "$launch_sha256" \
+            --arg status_sha256 "$status_sha256" \
+            --arg terminal_sha256 "$terminal_sha256" \
+            --arg result_sha256 "$result_sha256" \
+            --arg decision "$decision" \
+            '{
+              schema: "zero.q27_aws_completion.v1",
+              id: "zero4-q27-aws-v1",
+              status: "complete",
+              authorization_consumed: true,
+              source_run_id: $source_run_id,
+              git_commit: $git_commit,
+              seed: 2,
+              instance_state: "terminated",
+              budget_sha256: $budget_sha256,
+              launch_sha256: $launch_sha256,
+              status_sha256: $status_sha256,
+              terminal_sha256: $terminal_sha256,
+              result_sha256: $result_sha256,
+              quantity_stage_decision: $decision,
+              language_gate_evaluated: false,
+              q27_final_decision: null
+            }' > "$root/aws-v1/COMPLETED"
+          node scripts/check_zero4_q27_result.mjs \
+            "$root/seed2/result.json" \
+            "$root/contract.json" \
+            "$root/aws-v1/budget.json" \
+            "$root/seed2"
+          node scripts/check_q27_aws_completion.mjs \
+            "$root/aws-v1/COMPLETED"
+
+      - name: Publish results pull request
+        run: |
+          branch="exp/q27-seed2-results-${ZERO_SOURCE_RUN_ID}-${ZERO_COLLECTOR_RUN_ID}"
+          git switch -c "$branch"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add benchmarks/zero4-q27-v1
+          git commit -m "Record Q2.7 diagnostic seed 2 results"
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Record Q2.7 diagnostic seed 2 results" \
+            --body "Publishes the complete collector-validated Q2.7 seed-2 quantity stage. A candidate-ready result remains pending its separately budgeted, candidate-bound language gate; no language evaluation was included in this AWS execution."
