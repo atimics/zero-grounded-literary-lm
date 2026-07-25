@@ -1,0 +1,19 @@
+{
+  "schema": "zero.external_eval_calibration_launch.v1",
+  "experiment": "zero-eval-1-aws-calibration",
+  "instance_id": "i-06ce6e9b71a1f9eb1",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "ee140954af5eed86f81d15652fc83a0138fb99f5",
+  "ci_run_id": "30135007168",
+  "budget_file": "benchmarks/zero-eval-1/aws-calibration/budget.json",
+  "budget_sha256": "bd881bc1d58caf72e6f757256adb8e211baec7fab6fc7368ee4e93f9454df7dd",
+  "source_archive_sha256": "7f5b93f86f5dff73b5a01826248edaef2dd55a7c4d36d94704654f4cc1dccd3b",
+  "calibration_archive_sha256": "d7d265920d6ba261e47dd12b79a1c656793432d1e40c84a5453b7ec8104b57e0",
+  "launch_epoch": 1784937319,
+  "max_instance_seconds": 600,
+  "max_compute_usd": 0.12,
+  "scientific_inference_allowed": false,
+  "training_updates": 0
+}

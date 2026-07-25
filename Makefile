@@ -134,6 +134,7 @@ endif
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
 	external-eval-check \
+	zero-eval1-calibration-check zero-eval1-full-budget-check \
 	experiment-budget-check \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
@@ -1109,13 +1110,24 @@ promote-zero4:
 	cp $(ZERO4_PROMOTED_ARTIFACT) docs/model.litq8
 	node scripts/check_zero4_promotion.mjs
 
-experiment-budget-check: zero4-q26r-aws-v2-check
-	node scripts/check_zero_eval1_calibration.mjs --self-test
-	node scripts/check_zero_eval1_calibration.mjs \
-		benchmarks/zero-eval-1/aws-calibration/budget.json
-	node scripts/compile_zero_eval1_calibration_result.mjs --self-test
+zero-eval1-calibration-check:
+	if test -e benchmarks/zero-eval-1/aws-calibration/COMPLETED; then \
+		node scripts/check_zero_eval1_calibration_completion.mjs --self-test; \
+		node scripts/check_zero_eval1_calibration_completion.mjs; \
+	else \
+		node scripts/check_zero_eval1_calibration.mjs --self-test; \
+		node scripts/check_zero_eval1_calibration.mjs \
+			benchmarks/zero-eval-1/aws-calibration/budget.json; \
+		node scripts/compile_zero_eval1_calibration_result.mjs --self-test; \
+	fi
 	bash -n scripts/aws/zero-eval1-calibration.sh
 	bash -n scripts/aws/zero-eval1-calibration-user-data.sh
+
+zero-eval1-full-budget-check: zero-eval1-calibration-check
+	node scripts/check_zero_eval1_full_budget_proposal.mjs --self-test
+	node scripts/check_zero_eval1_full_budget_proposal.mjs
+
+experiment-budget-check: zero4-q26r-aws-v2-check zero-eval1-full-budget-check
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs \

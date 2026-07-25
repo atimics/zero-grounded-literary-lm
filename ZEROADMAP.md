@@ -28,7 +28,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | State-composition curriculum | modality-neutral finite-state transition generator | built, experimental |
 | Modal curriculum | finite-world reachability and possibility records | built, experimental; follows state composition |
 | Quantity faculty | operation-only routing with controller-bound arguments | promoted after three-seed Q2.6 go |
-| External language evaluation | frozen BLiMP, HellaSwag, adapted LAMBADA, and TinyStories contract | preregistered; timing calibration only authorized |
+| External language evaluation | frozen BLiMP, HellaSwag, adapted LAMBADA, and TinyStories contract | preregistered; timing calibration complete, full run proposed but unauthorized |
 | Dialogue training ablation | fixed contract for A/B/C/D candidates | specified, not trained |
 | Hidden human channel evaluation | consented, channel-level split | not yet collected |
 
