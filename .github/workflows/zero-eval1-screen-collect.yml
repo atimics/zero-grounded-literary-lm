@@ -1,0 +1,241 @@
+name: Collect bounded ZERO-EVAL-1 screen
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'ZERO-EVAL-1 screen launch workflow run ID'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: zero-eval-1-screen-v1
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: AWS · validate and publish stratified screen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ZERO_COLLECTOR_RUN_ID: ${{ github.run_id }}
+      ZERO_BUDGET_FILE: benchmarks/zero-eval-1/screen/aws/budget.json
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate collector inputs
+        run: |
+          [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          test ! -e benchmarks/zero-eval-1/screen/aws/COMPLETED
+          node scripts/check_zero_eval1_screen_budget.mjs "$ZERO_BUDGET_FILE"
+          echo "ZERO_BUDGET_SHA256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" \
+            >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Read durable records once
+        run: |
+          mkdir -p /tmp/zero-eval1-screen-collection
+          aws s3 cp "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/launch.json" \
+            /tmp/zero-eval1-screen-collection/launch.json --no-cli-pager
+          aws s3 cp "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/status.json" \
+            /tmp/zero-eval1-screen-collection/status.json --no-cli-pager
+          status=$(jq -r '.status' /tmp/zero-eval1-screen-collection/status.json)
+          if [ "$status" = infrastructure-error ] ||
+              [ "$status" = budget-exhausted ]; then
+            jq -c '{status,phase,exit_code,scientific_decision}' \
+              /tmp/zero-eval1-screen-collection/status.json
+            echo "Terminal execution failure; this is not a scientific result"
+            exit 2
+          fi
+          test "$status" = complete
+          aws s3 cp "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/results/result.json" \
+            /tmp/zero-eval1-screen-collection/result.json --no-cli-pager
+          source_commit=$(jq -r '.git_commit' /tmp/zero-eval1-screen-collection/launch.json)
+          test "$(jq -r '.ci_run_id' /tmp/zero-eval1-screen-collection/launch.json)" = \
+            "$ZERO_SOURCE_RUN_ID"
+          [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]]
+          git cat-file -e "${source_commit}^{commit}"
+          git switch --detach "$source_commit"
+          node scripts/check_zero_eval1_screen_budget.mjs "$ZERO_BUDGET_FILE"
+          test "$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" = \
+            "$ZERO_BUDGET_SHA256"
+          node scripts/check_zero_eval1_screen.mjs \
+            --published \
+              /tmp/zero-eval1-screen-collection/launch.json \
+              /tmp/zero-eval1-screen-collection/status.json \
+              /tmp/zero-eval1-screen-collection/result.json \
+            --commit "$source_commit" \
+            --budget-sha256 "$ZERO_BUDGET_SHA256" \
+            --max-instance-seconds 3600 \
+            --max-compute-usd 0.68
+          echo "ZERO_SOURCE_COMMIT=$source_commit" >> "$GITHUB_ENV"
+
+      - name: Require terminal instance
+        run: |
+          instance=$(jq -r '.instance_id' /tmp/zero-eval1-screen-collection/launch.json)
+          state=$(aws ec2 describe-instances --instance-ids "$instance" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text --no-cli-pager)
+          test "$state" = terminated
+          jq -n \
+            --arg instance_id "$instance" \
+            --arg observed_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              schema: "zero.aws_terminal_observation.v1",
+              experiment: "zero-eval-1-screen-v1",
+              instance_id: $instance_id,
+              state: "terminated",
+              observed_at: $observed_at
+            }' > /tmp/zero-eval1-screen-collection/terminal.json
+
+      - name: Acquire one-time collector lock
+        run: |
+          jq -n \
+            --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg collector_run_id "$ZERO_COLLECTOR_RUN_ID" \
+            --arg git_commit "$ZERO_SOURCE_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            '{
+              schema: "zero.aws_collector_lock.v1",
+              experiment: "zero-eval-1-screen-v1",
+              source_run_id: $source_run_id,
+              collector_run_id: $collector_run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256
+            }' > /tmp/zero-eval1-screen-collector-lock.json
+          set +e
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key experiments/zero-eval-1-screen-v1/collector.lock \
+            --body /tmp/zero-eval1-screen-collector-lock.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null 2>/tmp/collector-lock.err
+          lock_exit=$?
+          set -e
+          if [ "$lock_exit" -ne 0 ]; then
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/experiments/zero-eval-1-screen-v1/collector.lock" \
+              /tmp/existing-zero-eval1-screen-collector-lock.json \
+              --no-cli-pager
+            jq -e \
+              --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+              --arg git_commit "$ZERO_SOURCE_COMMIT" \
+              --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+              '.schema == "zero.aws_collector_lock.v1"
+               and .experiment == "zero-eval-1-screen-v1"
+               and .source_run_id == $source_run_id
+               and .git_commit == $git_commit
+               and .budget_sha256 == $budget_sha256' \
+              /tmp/existing-zero-eval1-screen-collector-lock.json >/dev/null
+          fi
+
+      - name: Freeze validated records
+        run: |
+          git switch main
+          root=benchmarks/zero-eval-1/screen
+          results="$root/results"
+          mkdir -p "$results"
+          cp /tmp/zero-eval1-screen-collection/launch.json \
+            "$results/launch-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/zero-eval1-screen-collection/status.json \
+            "$results/status-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/zero-eval1-screen-collection/terminal.json \
+            "$results/terminal-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/zero-eval1-screen-collection/result.json "$results/result.json"
+          node scripts/render_zero_eval1_screen_results.mjs \
+            "$results/result.json" "$root/RESULTS.md"
+          contract_sha256=$(sha256sum "$root/contract.json" | awk '{print $1}')
+          launch_sha256=$(sha256sum "$results/launch-${ZERO_SOURCE_RUN_ID}.json" | awk '{print $1}')
+          status_sha256=$(sha256sum "$results/status-${ZERO_SOURCE_RUN_ID}.json" | awk '{print $1}')
+          terminal_sha256=$(sha256sum "$results/terminal-${ZERO_SOURCE_RUN_ID}.json" | awk '{print $1}')
+          result_sha256=$(sha256sum "$results/result.json" | awk '{print $1}')
+          report_sha256=$(sha256sum "$root/RESULTS.md" | awk '{print $1}')
+          instance=$(jq -r '.instance_id' "$results/launch-${ZERO_SOURCE_RUN_ID}.json")
+          jq -n \
+            --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg git_commit "$ZERO_SOURCE_COMMIT" \
+            --arg instance_id "$instance" \
+            --arg contract_path "$root/contract.json" \
+            --arg contract_sha256 "$contract_sha256" \
+            --arg budget_path "$ZERO_BUDGET_FILE" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg launch_path "$results/launch-${ZERO_SOURCE_RUN_ID}.json" \
+            --arg launch_sha256 "$launch_sha256" \
+            --arg status_path "$results/status-${ZERO_SOURCE_RUN_ID}.json" \
+            --arg status_sha256 "$status_sha256" \
+            --arg terminal_path "$results/terminal-${ZERO_SOURCE_RUN_ID}.json" \
+            --arg terminal_sha256 "$terminal_sha256" \
+            --arg result_path "$results/result.json" \
+            --arg result_sha256 "$result_sha256" \
+            --arg report_path "$root/RESULTS.md" \
+            --arg report_sha256 "$report_sha256" \
+            '{
+              schema: "zero.external_eval_screen_completion.v1",
+              id: "zero-eval-1-screen-v1",
+              status: "complete",
+              authorization_consumed: true,
+              source_run_id: $source_run_id,
+              git_commit: $git_commit,
+              instance_id: $instance_id,
+              instance_state: "terminated",
+              training_updates: 0,
+              contract_path: $contract_path,
+              contract_sha256: $contract_sha256,
+              budget_path: $budget_path,
+              budget_sha256: $budget_sha256,
+              launch_path: $launch_path,
+              launch_sha256: $launch_sha256,
+              status_path: $status_path,
+              status_sha256: $status_sha256,
+              terminal_path: $terminal_path,
+              terminal_sha256: $terminal_sha256,
+              result_path: $result_path,
+              result_sha256: $result_sha256,
+              report_path: $report_path,
+              report_sha256: $report_sha256
+            }' > "$root/aws/COMPLETED"
+          node scripts/check_zero_eval1_screen.mjs \
+            --completion "$root/aws/COMPLETED"
+
+      - name: Publish results pull request
+        run: |
+          prefix="exp/zero-eval1-screen-results-${ZERO_SOURCE_RUN_ID}-"
+          if gh pr list --state open --json headRefName \
+              --jq "any(.headRefName; startswith(\"${prefix}\"))" | grep -q true; then
+            echo "A validated results pull request already exists"
+            exit 0
+          fi
+          branch="${prefix}${ZERO_COLLECTOR_RUN_ID}"
+          git switch -c "$branch"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add benchmarks/zero-eval-1/screen
+          if ! git diff --cached --quiet; then
+            git commit -m "Record ZERO-EVAL-1 screen results"
+          fi
+          git push --set-upstream origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Record ZERO-EVAL-1 screen results" \
+            --body "Publishes the complete, collector-validated, one-time AWS stratified screen for frozen ZERO.3 and ZERO.4. All eight model/task records completed within the frozen 3,600-second/\$0.68 cap; CI revalidates the completion chain."
