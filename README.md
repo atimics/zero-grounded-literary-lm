@@ -114,7 +114,7 @@ make zero4-q26-check
 # Only from the merged preregistered implementation:
 make zero4-q26-train ZERO4_Q26_SEED=2
 make zero4-q27-check
-# Q2.7 training remains unavailable until a separate AWS budget is frozen.
+# Q2.7's AWS path is staged but its budget remains unauthorized.
 ```
 
 The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
@@ -225,8 +225,10 @@ immutable ZERO.3 and changes only the trainable boundary: `layer.5.norm2`,
 (11.151554%). The trainer computes clipping and tangent projection only in
 that subspace, protects every frozen weight and AdamW moment byte-for-byte,
 and binds the scope into checkpoints so mismatched resume fails closed.
-`make zero4-q27-check` validates those mechanics; it launches no scientific
-compute. See the frozen
+`make zero4-q27-check` validates those mechanics plus the proposed $1.17
+seed-2 AWS ceiling and non-waiting dispatch/collector path; it launches no
+scientific compute. A candidate-ready quantity result would still require a
+separate candidate-bound $0.12 language-gate authorization. See the frozen
 [`contract.json`](benchmarks/zero4-q27-v1/contract.json).
 
 Q2.6-R prospectively authorized those two replications without altering the

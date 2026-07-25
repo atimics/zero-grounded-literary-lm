@@ -80,8 +80,14 @@ assert(contract.diagnostic_policy.seed === 2 &&
 
 const authorization = contract.authorization;
 assert(authorization.aws_only === true &&
-  authorization.training_workflow_exists === false &&
-  authorization.budget_exists === false &&
+  authorization.training_workflow_exists === true &&
+  authorization.budget_exists === true &&
+  authorization.proposed_max_optimizer_attempts === 1400 &&
+  authorization.proposed_max_instance_seconds === 6190 &&
+  authorization.proposed_max_compute_usd === 1.17 &&
+  authorization.language_gate_included === false &&
+  authorization.language_gate_requires_separate_candidate_bound_budget ===
+    true &&
   authorization.maximum_optimizer_attempts === 0 &&
   authorization.maximum_instance_seconds === 0 &&
   authorization.maximum_compute_usd === 0 &&

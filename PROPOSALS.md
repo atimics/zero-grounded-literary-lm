@@ -79,12 +79,14 @@ promotion outcome.
 
 **Source**: Q2.6 seed-2 optimizer trace and the prospective
 `zero-language-gate-v1` result.
-**Status**: Preregistered, mechanics only. No training workflow, budget, or
-compute authorization exists.
+**Status**: Preregistered and mechanically staged. A one-seed AWS budget and
+non-waiting launch/collector exist, but compute is not authorized.
 **Depends on**: Q2.6-R family promotion (satisfied) and the frozen language
 gate (satisfied).
-**Cost**: Zero for the mechanics merge. The AWS diagnostic is unmeasured and
-requires a separate immutable timing/budget proposal.
+**Cost**: Proposed maximum $1.17/6,190 instance-seconds for seed 2 through
+quantity promotion, conservatively inherited from the slowest Q2.6-R seed.
+The candidate-only language gate is separate and remains capped at
+$0.12/600 seconds.
 
 **Design**:
 
