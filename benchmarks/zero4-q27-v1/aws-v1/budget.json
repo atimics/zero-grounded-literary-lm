@@ -1,18 +1,20 @@
 {
   "schema": "zero.q27_diagnostic_execution_budget.v1",
   "id": "zero4-q27-aws-v1",
-  "status": "proposed_not_authorized",
+  "status": "authorized",
   "purpose": "Execute the frozen Q2.7 top-FFN diagnostic seed 2 once on AWS through public selection and the exactly-once quantity promotion gate. This budget cannot run the separately candidate-bound language gate.",
   "scientific_inference_allowed": true,
   "authorization": {
     "scope": "one AWS execution of Q2.7 diagnostic seed 2 through quantity promotion",
     "one_execution_only": true,
     "requires_manual_approval": true,
-    "manual_approval_observed": false,
-    "authorized_for_execution": false,
-    "authorized_at": null
+    "manual_approval_observed": true,
+    "authorized_for_execution": true,
+    "authorized_at": "2026-07-25"
   },
-  "source_lock": {
+  "scientific_source_lock": {
+    "frozen_science_commit": "765600e218537ac3b7ff320c676cfb7f62dab0ae",
+    "scientific_design_unchanged": true,
     "q27_contract": {
       "path": "benchmarks/zero4-q27-v1/contract.json",
       "sha256": "e2ed4f2d6e151bfbc33073fa0cb26865534255378fc1d32d9922a527a84a49c1"
@@ -45,17 +47,40 @@
       "path": "scripts/generate_zero4_q2.mjs",
       "sha256": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded"
     },
+    "language_gate_contract": {
+      "path": "benchmarks/zero-language-gate-v1/contract.json",
+      "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+    },
+    "language_gate_runner": {
+      "path": "scripts/run_zero_language_gate.mjs",
+      "sha256": "233e9e29fc078712bec4602e40fdb8d044a93b330424af456af7699e220bdc3c"
+    }
+  },
+  "infrastructure_source_lock": {
+    "executor_version": "q27-aws-v1-preflight-1",
     "budget_checker": {
       "path": "scripts/check_q27_aws_budget.mjs",
-      "sha256": "21f5941b067a7433cbcc31e6d463da904acfaec305078362ac143de6fe0ef127"
+      "sha256": "c377655f168e28ecd9d114ec08df8f00715c73bd4f8559b073d4fc9f027fa44e"
+    },
+    "preflight_checker": {
+      "path": "scripts/check_q27_aws_preflight.mjs",
+      "sha256": "f392ffcccad37a136555e61c3ad641a49e5410ca3e7627c34f91e88e7c443961"
     },
     "workflow_checker": {
       "path": "scripts/check_q27_aws_workflows.mjs",
-      "sha256": "25cf9cf0226cba75086e2fd9ac632acc54047cf80d9f8d8ae29e88a9049f988a"
+      "sha256": "c8945c99762b3059c15f1b808d8afa49b4c8aa255f6840a415955cd36520b811"
     },
     "completion_checker": {
       "path": "scripts/check_q27_aws_completion.mjs",
       "sha256": "6e2ba8d1e99a0d0444f22ccdbfd51f0bea740e29aca2ea0aff8f3308871ba160"
+    },
+    "preflight": {
+      "path": "scripts/aws/q27-preflight.sh",
+      "sha256": "2e68aba872e842af07bafaa76250ee6eb9f82165d93b3e3540606aedba03e8b9"
+    },
+    "request_builder": {
+      "path": "scripts/aws/q27-run-instances.sh",
+      "sha256": "511b0c849b0cec1593a08fca10507119f3cfa4d98fcac7265bbbbbf9546f503a"
     },
     "workload": {
       "path": "scripts/aws/q27-seed2.sh",
@@ -67,11 +92,19 @@
     },
     "launch_workflow": {
       "path": ".github/workflows/q27-aws-launch.yml",
-      "sha256": "a8e0729cc9c8613c0b140af8815c870e43eaefdb5c9195be33fa7aef930594d8"
+      "sha256": "27965ef8f0b95a778dfccdf1d8d61e4e29ec113b18d323d1f63b4f10604b7ac1"
     },
     "collector_workflow": {
       "path": ".github/workflows/q27-aws-collect.yml",
       "sha256": "faa03078766227b1e1ce85e71a71524e6c21ce27968f16e29e63c72a72016583"
+    },
+    "conditional_authorization": {
+      "path": "benchmarks/zero4-q27-v1/aws-v1/conditional-language-gate.json",
+      "sha256": "4ea0fbf95e3dfb1769815b08d99acfeabcf08cf46d62f5bc12b75f8dd4021ae2"
+    },
+    "language_gate_materializer": {
+      "path": "scripts/materialize_q27_language_gate_budget.mjs",
+      "sha256": "fc30e96d87ec12dbdf2c5d78ef6ed8a4c3b98a370e8578affc070e6e7417f19e"
     }
   },
   "venue": {
@@ -122,6 +155,15 @@
     "github_actions_must_not_wait_for_compute": true,
     "collector_may_wait_or_launch_compute": false
   },
+  "preflight": {
+    "required_before_execution_lock": true,
+    "exact_run_instances_dry_run_required": true,
+    "iam_pass_role_proof_required": true,
+    "ami_validation_required": true,
+    "subnet_security_group_validation_required": true,
+    "s3_write_once_proof_required": true,
+    "required_asset_count": 6
+  },
   "completion_gate": {
     "frozen_seed_required": 2,
     "complete_result_required": true,
@@ -133,5 +175,5 @@
     "green_ci_required_before_merge": true,
     "infrastructure_or_budget_failure_is_never_scientific_no_go": true
   },
-  "next_authority": "A separate explicit approval may flip both authorization booleans and set authorized_at. If the collected quantity-stage result is candidate-ready, freeze its exact quantized hash into a separate zero.language_preservation_gate_budget.v1 before any external evaluation."
+  "next_authority": "This one Q2.7 quantity execution is authorized. If and only if its validated result is candidate-ready, the prospectively approved conditional authorization deterministically materializes one candidate-hash-bound language-gate budget at no more than $0.12; the all-in ceiling is $1.29."
 }

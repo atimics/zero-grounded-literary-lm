@@ -1068,25 +1068,34 @@ zero4-q26: zero4-q26-train
 
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_q27_aws_budget.mjs \
+		scripts/check_q27_aws_preflight.mjs \
 		scripts/check_q27_aws_workflows.mjs \
 		scripts/check_q27_aws_completion.mjs \
 		scripts/check_zero4_q27_result.mjs \
+		scripts/materialize_q27_language_gate_budget.mjs \
 		scripts/train_zero4_q27.mjs \
+		scripts/aws/q27-preflight.sh \
+		scripts/aws/q27-run-instances.sh \
 		scripts/aws/q27-seed2.sh \
 		scripts/aws/q27-seed2-user-data.sh \
 		.github/workflows/q27-aws-launch.yml \
 		.github/workflows/q27-aws-collect.yml \
 		benchmarks/zero4-q27-v1/contract.json \
+		benchmarks/zero4-q27-v1/aws-v1/conditional-language-gate.json \
 		benchmarks/zero4-q27-v1/aws-v1/budget.json
 	rm -f /tmp/q27-scope-full.ckpt /tmp/q27-scope-chunk.ckpt
 	./literary_lm --self-test >/dev/null
 	node scripts/check_zero4_q27.mjs
+	node scripts/materialize_q27_language_gate_budget.mjs --self-test
 	node scripts/check_q27_aws_budget.mjs
+	node scripts/check_q27_aws_preflight.mjs
 	node scripts/check_q27_aws_workflows.mjs
 	node scripts/check_q27_aws_completion.mjs --if-present
 	node scripts/train_zero4_q27.mjs --self-test
 	bash -n scripts/aws/q27-seed2.sh \
-		scripts/aws/q27-seed2-user-data.sh
+		scripts/aws/q27-seed2-user-data.sh \
+		scripts/aws/q27-preflight.sh \
+		scripts/aws/q27-run-instances.sh
 	./literary_lm --context 8 --dim 8 --heads 2 --layers 1 --ff 16 \
 		--trainable-scope top-ffn \
 		--text corpus/zero-foundation.txt --steps 4 --batch 1 \
