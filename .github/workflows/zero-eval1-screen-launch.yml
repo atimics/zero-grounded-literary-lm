@@ -1,0 +1,223 @@
+name: Launch bounded ZERO-EVAL-1 screen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero-eval-1-screen-v1
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: AWS · stratified external-eval screen · ≤$0.68
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_COMMIT: ${{ github.sha }}
+      ZERO_RUN_ID: ${{ github.run_id }}
+      ZERO_BUDGET_FILE: benchmarks/zero-eval-1/screen/aws/budget.json
+      ZERO_CONTRACT_FILE: benchmarks/zero-eval-1/contract.json
+      ZERO_INSTANCE_TYPE: c6i.4xlarge
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Require the immutable one-time screen budget
+        run: |
+          test ! -e benchmarks/zero-eval-1/screen/aws/COMPLETED
+          node scripts/check_zero_eval1_screen.mjs
+          node scripts/check_zero_eval1_screen_budget.mjs "$ZERO_BUDGET_FILE"
+          budget_sha256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')
+          workload_sha256=$(jq -r '.source_lock.workload.sha256' "$ZERO_BUDGET_FILE")
+          test "$(jq -r '.execution.max_instance_seconds' "$ZERO_BUDGET_FILE")" = 3600
+          test "$(jq -r '.execution.workload_timeout_seconds' "$ZERO_BUDGET_FILE")" = 3480
+          test "$(jq -r '.execution.max_compute_usd' "$ZERO_BUDGET_FILE")" = 0.68
+          {
+            echo "ZERO_BUDGET_SHA256=$budget_sha256"
+            echo "ZERO_WORKLOAD_SHA256=$workload_sha256"
+          } >> "$GITHUB_ENV"
+
+      - name: Prepare and verify the frozen stratified screen
+        run: |
+          mkdir -p /tmp/zero-eval1-sources /tmp/zero-eval1-blimp \
+            /tmp/zero-eval1-bundle /tmp/zero-eval1-screen
+          jq -r '.sources[] | [.id, .url, .sha256] | @tsv' \
+            "$ZERO_CONTRACT_FILE" |
+          while IFS=$'\t' read -r id url expected; do
+            destination="/tmp/zero-eval1-sources/${id}"
+            curl --fail --silent --show-error --location \
+              "$url" --output "$destination"
+            test "$(sha256sum "$destination" | awk '{print $1}')" = "$expected"
+          done
+          unzip -q /tmp/zero-eval1-sources/blimp_zip -d /tmp/zero-eval1-blimp
+          node scripts/prepare_zero_eval1.mjs \
+            --contract "$ZERO_CONTRACT_FILE" \
+            --blimp-zip /tmp/zero-eval1-sources/blimp_zip \
+            --blimp-directory /tmp/zero-eval1-blimp/data \
+            --hellaswag /tmp/zero-eval1-sources/hellaswag_validation \
+            --lambada /tmp/zero-eval1-sources/lambada_openai_test \
+            --tinystories /tmp/zero-eval1-sources/tinystories_validation \
+            --output /tmp/zero-eval1-bundle >/dev/null
+          node scripts/check_zero_eval1.mjs --bundle /tmp/zero-eval1-bundle
+          node scripts/sample_zero_eval1_screen.mjs \
+            --bundle /tmp/zero-eval1-bundle \
+            --output /tmp/zero-eval1-screen >/dev/null
+          node scripts/check_zero_eval1_screen.mjs --bundle /tmp/zero-eval1-screen
+          tar -C /tmp/zero-eval1-screen -czf /tmp/zero-eval1-screen.tar.gz .
+          git archive --format=tar.gz \
+            --output=/tmp/zero-source.tar.gz "$ZERO_COMMIT"
+          {
+            echo "ZERO_SOURCE_ARCHIVE_SHA256=$(sha256sum /tmp/zero-source.tar.gz | awk '{print $1}')"
+            echo "ZERO_SCREEN_ARCHIVE_SHA256=$(sha256sum /tmp/zero-eval1-screen.tar.gz | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Audit active ZERO instances
+        run: |
+          test -n "$ZERO_BUCKET"
+          active=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Publish immutable inputs
+        run: |
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/zero-eval1-screen.sh" \
+            --body scripts/aws/zero-eval1-screen.sh \
+            --content-type text/x-shellscript --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/source.tar.gz" \
+            --body /tmp/zero-source.tar.gz \
+            --content-type application/gzip --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/screen-bundle.tar.gz" \
+            --body /tmp/zero-eval1-screen.tar.gz \
+            --content-type application/gzip --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Resolve Ubuntu AMI
+        id: ami
+        run: |
+          ami=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value --output text --no-cli-pager)
+          [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
+          echo "ami=$ami" >> "$GITHUB_OUTPUT"
+
+      - name: Acquire one-time execution lock
+        run: |
+          jq -n \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg source_archive_sha256 "$ZERO_SOURCE_ARCHIVE_SHA256" \
+            --arg screen_archive_sha256 "$ZERO_SCREEN_ARCHIVE_SHA256" \
+            '{
+              schema: "zero.aws_execution_lock.v1",
+              experiment: "zero-eval-1-screen-v1",
+              ci_run_id: $run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256,
+              source_archive_sha256: $source_archive_sha256,
+              screen_archive_sha256: $screen_archive_sha256
+            }' > /tmp/zero-eval1-screen-execution-lock.json
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key experiments/zero-eval-1-screen-v1/execution.lock \
+            --body /tmp/zero-eval1-screen-execution-lock.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Launch bounded EC2 screen
+        id: launch
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          launch_epoch=$(date +%s)
+          instance_id=$(aws ec2 run-instances \
+            --image-id "$ZERO_AMI" \
+            --instance-type "$ZERO_INSTANCE_TYPE" \
+            --iam-instance-profile Name=zero-training-ec2 \
+            --security-group-ids "${{ secrets.AWS_SECURITY_GROUP_ID }}" \
+            --subnet-id "${{ secrets.AWS_SUBNET_ID }}" \
+            --user-data file://scripts/aws/zero-eval1-screen-user-data.sh \
+            --metadata-options HttpTokens=required,HttpEndpoint=enabled,InstanceMetadataTags=enabled \
+            --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":16,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]' \
+            --instance-initiated-shutdown-behavior terminate \
+            --tag-specifications \
+              "ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero-eval1-screen},{Key=Experiment,Value=zero-eval-1-screen-v1},{Key=Commit,Value=${ZERO_COMMIT}},{Key=RunId,Value=${ZERO_RUN_ID}},{Key=Bucket,Value=${ZERO_BUCKET}},{Key=Region,Value=${ZERO_REGION}},{Key=BudgetFile,Value=${ZERO_BUDGET_FILE}},{Key=BudgetSha256,Value=${ZERO_BUDGET_SHA256}},{Key=WorkloadSha256,Value=${ZERO_WORKLOAD_SHA256}},{Key=SourceArchiveSha256,Value=${ZERO_SOURCE_ARCHIVE_SHA256}},{Key=ScreenArchiveSha256,Value=${ZERO_SCREEN_ARCHIVE_SHA256}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=3600},{Key=WorkloadTimeoutSeconds,Value=3480},{Key=MaxComputeUsd,Value=0.68}]" \
+              "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=RunId,Value=${ZERO_RUN_ID}}]" \
+            --query 'Instances[0].InstanceId' --output text --no-cli-pager)
+          [[ "$instance_id" =~ ^i-[0-9a-f]+$ ]]
+          {
+            echo "instance_id=$instance_id"
+            echo "launch_epoch=$launch_epoch"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Record durable launch receipt
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          ZERO_LAUNCH_EPOCH: ${{ steps.launch.outputs.launch_epoch }}
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          jq -n \
+            --arg instance_id "$ZERO_INSTANCE_ID" \
+            --arg ami "$ZERO_AMI" \
+            --arg region "$ZERO_REGION" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg budget_file "$ZERO_BUDGET_FILE" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg source_archive_sha256 "$ZERO_SOURCE_ARCHIVE_SHA256" \
+            --arg screen_archive_sha256 "$ZERO_SCREEN_ARCHIVE_SHA256" \
+            --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
+            '{
+              schema: "zero.external_eval_screen_launch.v1",
+              experiment: "zero-eval-1-screen-v1",
+              instance_id: $instance_id,
+              instance_type: "c6i.4xlarge",
+              ami: $ami,
+              region: $region,
+              git_commit: $git_commit,
+              ci_run_id: $run_id,
+              budget_file: $budget_file,
+              budget_sha256: $budget_sha256,
+              source_archive_sha256: $source_archive_sha256,
+              screen_archive_sha256: $screen_archive_sha256,
+              launch_epoch: $launch_epoch,
+              max_instance_seconds: 3600,
+              workload_timeout_seconds: 3480,
+              max_compute_usd: 0.68,
+              training_updates: 0
+            }' > /tmp/zero-eval1-screen-launch.json
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/launch.json" \
+            --body /tmp/zero-eval1-screen-launch.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          jq -c '{ci_run_id,instance_id,launch_epoch,max_instance_seconds,max_compute_usd}' \
+            /tmp/zero-eval1-screen-launch.json >> "$GITHUB_STEP_SUMMARY"

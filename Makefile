@@ -135,6 +135,7 @@ endif
 	zero4-promotion-check promote-zero4 \
 	external-eval-check \
 	zero-eval1-calibration-check zero-eval1-full-budget-check \
+	zero-eval1-screen-check \
 	experiment-budget-check \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
@@ -1127,7 +1128,20 @@ zero-eval1-full-budget-check: zero-eval1-calibration-check
 	node scripts/check_zero_eval1_full_budget_proposal.mjs --self-test
 	node scripts/check_zero_eval1_full_budget_proposal.mjs
 
-experiment-budget-check: zero4-q26r-aws-v2-check zero-eval1-full-budget-check
+zero-eval1-screen-check:
+	node scripts/sample_zero_eval1_screen.mjs --self-test
+	node scripts/check_zero_eval1_screen.mjs --self-test
+	node scripts/compile_zero_eval1_screen_result.mjs --self-test
+	node scripts/check_zero_eval1_screen_budget.mjs \
+		benchmarks/zero-eval-1/screen/aws/budget.json
+	bash -n scripts/aws/zero-eval1-screen.sh
+	bash -n scripts/aws/zero-eval1-screen-user-data.sh
+	test ! -e benchmarks/zero-eval-1/screen/aws/COMPLETED || \
+		node scripts/check_zero_eval1_screen.mjs \
+			--completion benchmarks/zero-eval-1/screen/aws/COMPLETED
+
+experiment-budget-check: zero4-q26r-aws-v2-check zero-eval1-full-budget-check \
+		zero-eval1-screen-check
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs \

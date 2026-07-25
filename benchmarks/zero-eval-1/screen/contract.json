@@ -1,0 +1,111 @@
+{
+  "schema": "zero.external_eval_screen_contract.v1",
+  "id": "zero-eval-1-screen-v1",
+  "status": "preregistered_authorized",
+  "frozen_at": "2026-07-24",
+  "purpose": "A bounded, stratified screen of the frozen ZERO.3 and ZERO.4 bare generative cores on the four preregistered ZERO-EVAL-1 task adaptations.",
+  "base_contract_path": "benchmarks/zero-eval-1/contract.json",
+  "base_contract_sha256": "a14261cd4b48ed04f8e89d162e20cbe1e019e1d02537be1ad06b83196aebac05",
+  "training_allowed": false,
+  "controller_or_kernel_allowed": false,
+  "models": [
+    {
+      "id": "zero3",
+      "path": "benchmarks/zero-channel-v1/model.litq8",
+      "sha256": "05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24",
+      "bytes": 4920400
+    },
+    {
+      "id": "zero4",
+      "path": "docs/model.litq8",
+      "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+      "bytes": 4920400
+    }
+  ],
+  "datasets": {
+    "blimp": {
+      "path": "blimp.tsv",
+      "sha256": "06ffc0ee2832b193ff6ce895828bbe4a69befe2b1f30cfec19027b83692187a3",
+      "bytes": 177758,
+      "cases": 1000,
+      "source_sha256": "b69d5f829d23c648dbf7cfbfd64ba9d7b3cc9f1650e8041ada06c7e0e67da55c",
+      "selected_ordinals_sha256": "14f1456e099efc0895e453e645ef9cacf6fd94b582f3a33cd6c634d8da418de3",
+      "selection": "14 cases from every paradigm plus one extra case from 62 hash-ranked paradigms; lowest sha256(id + NUL + row) within each paradigm",
+      "groups": 67,
+      "group_case_minimum": 14,
+      "group_case_maximum": 15,
+      "primary_metric": "raw_accuracy"
+    },
+    "tinystories": {
+      "path": "tinystories.tsv",
+      "sha256": "75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54",
+      "bytes": 568036,
+      "cases": 1000,
+      "source_sha256": "75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54",
+      "selected_ordinals_sha256": "8db91b2ee25d579493dbc2ca66417cc945e215b5424349884013834d43df7ac4",
+      "selection": "all 1000 frozen TinyStories cases",
+      "groups": 1,
+      "primary_metric": "bits_per_byte"
+    },
+    "hellaswag": {
+      "path": "hellaswag.tsv",
+      "sha256": "b568c86a5f107a115f1850e0239fd42bd017e3f89017b2628e60be4e0f5bfe13",
+      "bytes": 826521,
+      "cases": 1000,
+      "source_sha256": "188d66998285911fdf402ec291c088b91f1b373907d0d59fb6e3b1dd8b46f457",
+      "selected_ordinals_sha256": "f62da925877d1fceafaa2b60b3d321aaa1e2730c7dc10c872fee668b5259d773",
+      "selection": "largest-remainder proportional split quotas; lowest sha256(id + NUL + row) within each split",
+      "group_quotas": {
+        "indomain": 498,
+        "zeroshot": 502
+      },
+      "groups": 2,
+      "primary_metric": "normalized_accuracy"
+    },
+    "lambada": {
+      "path": "lambada.tsv",
+      "sha256": "0f12f8288e44c2f1b4992ac395ec275410a2a0f86d21e0108ea9d20b5c8a687e",
+      "bytes": 367547,
+      "cases": 1000,
+      "source_sha256": "17886d1b0b1cf045d7014d363907dc9defb7a492d3764a78e7d90d5ce137b627",
+      "selected_ordinals_sha256": "3be74c3e37886270f8d3ddfed48ee9abc2ff92133931043f362834ed848ae646",
+      "selection": "lowest sha256(id + NUL + row), first 1000",
+      "groups": 1,
+      "primary_metric": "greedy_exact_accuracy"
+    }
+  },
+  "execution_policy": {
+    "venue": "AWS EC2 only",
+    "instance_type": "c6i.4xlarge",
+    "region": "us-east-1",
+    "jobs": 16,
+    "repetitions": 1,
+    "evaluation_order": [
+      "zero3:blimp",
+      "zero4:blimp",
+      "zero3:tinystories",
+      "zero4:tinystories",
+      "zero3:hellaswag",
+      "zero4:hellaswag",
+      "zero3:lambada",
+      "zero4:lambada"
+    ],
+    "one_execution_only": true,
+    "full_suite_authorized": false
+  },
+  "interpretation": {
+    "confidence_intervals": "two-sided 95% Wilson interval for aggregate binomial accuracies only",
+    "permitted": [
+      "report the two frozen models on the exact stratified screen",
+      "report ZERO.4 minus ZERO.3 on the exact same screen and metric",
+      "use the result to decide whether the full preregistered suite is worth a separate budget"
+    ],
+    "forbidden": [
+      "claiming general LLM capability",
+      "treating the BLiMP per-paradigm values as inferential with only 14 or 15 cases",
+      "reporting adapted LAMBADA as standard full-context LAMBADA",
+      "using the screen to change either frozen checkpoint",
+      "extrapolating the screen result to the unexecuted full suite"
+    ]
+  }
+}
