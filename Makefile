@@ -130,6 +130,7 @@ endif
 	zero4-q24-check zero4-q24-train zero4-q24 \
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
+	zero4-q27-check \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
@@ -1065,6 +1066,37 @@ zero4-q26-train: literary_lm export_literary quantity_request_eval \
 
 zero4-q26: zero4-q26-train
 
+zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
+		benchmarks/zero4-q27-v1/contract.json
+	rm -f /tmp/q27-scope-full.ckpt /tmp/q27-scope-chunk.ckpt
+	./literary_lm --self-test >/dev/null
+	node scripts/check_zero4_q27.mjs
+	./literary_lm --context 8 --dim 8 --heads 2 --layers 1 --ff 16 \
+		--trainable-scope top-ffn \
+		--text corpus/zero-foundation.txt --steps 4 --batch 1 \
+		--lr 0.001 --warmup 1 --dropout 0.02 --cosine \
+		--schedule-total 4 --report 4 --validation 1 --seed 77 \
+		--save /tmp/q27-scope-full.ckpt --tokens 0 >/dev/null
+	./literary_lm --context 8 --dim 8 --heads 2 --layers 1 --ff 16 \
+		--trainable-scope top-ffn \
+		--text corpus/zero-foundation.txt --steps 2 --batch 1 \
+		--lr 0.001 --warmup 1 --dropout 0.02 --cosine \
+		--schedule-total 4 --report 4 --validation 1 --seed 77 \
+		--save /tmp/q27-scope-chunk.ckpt --tokens 0 >/dev/null
+	./literary_lm --resume /tmp/q27-scope-chunk.ckpt \
+		--trainable-scope top-ffn \
+		--text corpus/zero-foundation.txt --steps 2 --batch 1 \
+		--lr 0.001 --warmup 1 --dropout 0.02 --cosine \
+		--schedule-offset 2 --schedule-total 4 --report 4 \
+		--validation 1 --seed 77 --save /tmp/q27-scope-chunk.ckpt \
+		--tokens 0 >/dev/null
+	cmp /tmp/q27-scope-full.ckpt /tmp/q27-scope-chunk.ckpt
+	! ./literary_lm --resume /tmp/q27-scope-full.ckpt \
+		--steps 0 --tokens 0 >/dev/null 2>&1
+	./literary_lm --preset literary --trainable-scope top-ffn \
+		--steps 0 --tokens 0 | \
+		grep 'trainable-scope=top-ffn trainable-parameters=541184'
+
 zero4-q26r-check: zero4-q26-check \
 		scripts/check_zero4_q26r.mjs scripts/aggregate_zero4_q26r.mjs \
 		scripts/plan_q26r_aws_rescue.mjs \
@@ -1526,7 +1558,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check zero4-q27-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

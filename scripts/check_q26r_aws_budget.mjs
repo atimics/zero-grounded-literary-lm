@@ -2,7 +2,7 @@
 
 import crypto from "node:crypto";
 import fs from "node:fs";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 function fail(message) {
@@ -17,6 +17,10 @@ function sha256(file) {
   return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
+function sha256Bytes(bytes) {
+  return crypto.createHash("sha256").update(bytes).digest("hex");
+}
+
 function roundedCents(value) {
   return Math.ceil((value - Number.EPSILON) * 100) / 100;
 }
@@ -24,6 +28,19 @@ function roundedCents(value) {
 function requireLock(name, file, expected) {
   assert(typeof file === "string" && fs.existsSync(file), `${name} lock is unavailable`);
   assert(sha256(file) === expected, `${name} lock hash mismatch`);
+}
+
+function requireHistoricalLock(name, file, expected, commit) {
+  assert(typeof file === "string", `${name} lock path is unavailable`);
+  assert(/^[0-9a-f]{64}$/.test(expected), `${name} lock hash is invalid`);
+  assert(/^[0-9a-f]{40}$/.test(commit), `${name} lock commit is invalid`);
+  let bytes;
+  try {
+    bytes = execFileSync("git", ["show", `${commit}:${file}`]);
+  } catch {
+    fail(`${name} lock commit is unavailable; fetch full git history`);
+  }
+  assert(sha256Bytes(bytes) === expected, `${name} historical lock hash mismatch`);
 }
 
 export function validateBudget(budget) {
@@ -46,50 +63,54 @@ export function validateBudget(budget) {
   assert(authorization.authorized_for_execution === true, "execution is not authorized");
 
   const science = budget.scientific_source_lock;
+  assert(
+    science.frozen_science_commit === "3ee802c29ddf47982477a6b6dd635eaedede7bb7",
+    "frozen science commit drifted",
+  );
   for (const [name, file, expected] of [
     ["replication contract", science?.replication_contract_path, science?.replication_contract_sha256],
     ["diagnostic contract", science?.diagnostic_contract_path, science?.diagnostic_contract_sha256],
     ["diagnostic result", science?.diagnostic_result_path, science?.diagnostic_result_sha256],
     ["diagnostic model", science?.diagnostic_model_path, science?.diagnostic_model_sha256],
-    ["trainer", science?.trainer_path, science?.trainer_sha256],
-    ["replication checker", science?.replication_checker_path, science?.replication_checker_sha256],
-    ["diagnostic checker", science?.diagnostic_checker_path, science?.diagnostic_checker_sha256],
     ["family aggregator", science?.family_aggregator_path, science?.family_aggregator_sha256],
     ["quantity generator", science?.quantity_generator_path, science?.quantity_generator_sha256],
     ["teacher registry", science?.teacher_registry_path, science?.teacher_registry_sha256],
   ]) requireLock(name, file, expected);
   assert(
-    science.frozen_science_commit === "3ee802c29ddf47982477a6b6dd635eaedede7bb7",
-    "frozen science commit drifted",
-  );
-  assert(
     science.trainer_and_checkers_match_frozen_science_commit === true,
     "frozen science byte-identity is not asserted",
   );
-  const frozenCommitAvailable = fs.existsSync(".git")
-    && spawnSync(
-      "git",
-      ["cat-file", "-e", `${science.frozen_science_commit}^{commit}`],
-      { stdio: "ignore" },
-    ).status === 0;
-  if (frozenCommitAvailable) {
-    for (const path of [
-      science.trainer_path,
-      science.replication_checker_path,
-      science.diagnostic_checker_path,
-    ]) {
-      const frozen = execFileSync("git", ["show", `${science.frozen_science_commit}:${path}`]);
-      const current = fs.readFileSync(path);
-      assert(frozen.equals(current), `${path} differs from frozen science commit`);
-    }
-  }
-
-  const runtime = budget.execution_runtime_lock;
   for (const [name, file, expected] of [
-    ["literary trainer runtime", runtime?.literary_lm_path, runtime?.literary_lm_sha256],
-    ["literary inference runtime", runtime?.literary_infer_path, runtime?.literary_infer_sha256],
-    ["quantity evaluator runtime", runtime?.quantity_evaluator_path, runtime?.quantity_evaluator_sha256],
-  ]) requireLock(name, file, expected);
+    ["trainer", science?.trainer_path, science?.trainer_sha256],
+    ["replication checker", science?.replication_checker_path, science?.replication_checker_sha256],
+    ["diagnostic checker", science?.diagnostic_checker_path, science?.diagnostic_checker_sha256],
+  ]) requireHistoricalLock(
+    name,
+    file,
+    expected,
+    science.frozen_science_commit,
+  );
+  const runtime = budget.execution_runtime_lock;
+  for (const [name, file, expected, commit] of [
+    [
+      "literary trainer runtime",
+      runtime?.literary_lm_path,
+      runtime?.literary_lm_sha256,
+      "d4dce0772f7e43c9c7008c1707fcdec54f630a3c",
+    ],
+    [
+      "literary inference runtime",
+      runtime?.literary_infer_path,
+      runtime?.literary_infer_sha256,
+      "d4dce0772f7e43c9c7008c1707fcdec54f630a3c",
+    ],
+    [
+      "quantity evaluator runtime",
+      runtime?.quantity_evaluator_path,
+      runtime?.quantity_evaluator_sha256,
+      "118869122f7cd96bfc0e9d0976bc9b2548fa66ee",
+    ],
+  ]) requireHistoricalLock(name, file, expected, commit);
   assert(
     JSON.stringify(runtime.permitted_runtime_changes) === JSON.stringify([
       "OpenBLAS dispatch for the existing literary_lm matrix operations",

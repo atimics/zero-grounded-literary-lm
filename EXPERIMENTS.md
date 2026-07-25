@@ -156,6 +156,14 @@ seed-2 update-500 artifact is promoted as ZERO.4. The measured capability is
 operation routing with controller-bound arguments and deterministic kernel
 arithmetic; it is not evidence of neural arithmetic or untested faculties.
 
+14. **External preservation is a separate promotion axis.** The bounded
+ZERO-EVAL-1 screen found a small BLiMP improvement but a 1.681% TinyStories
+bits/byte regression for ZERO.4, above the prospectively frozen 1% candidate
+ceiling. Q2.7 therefore isolates quantity learning to the top FFN and final
+normalization. This is a registered hypothesis with a zero-compute firewall,
+not a completed experiment or a claim that isolation will succeed. Its
+machine-readable authority is `benchmarks/zero4-q27-v1`.
+
 ---
 
 ## Schema
@@ -184,6 +192,6 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
 - **Latest execution outcome**: the ZERO-EVAL-1 screen completed in 2,502 launch-relative seconds for $0.4726 and its results are merged
 - **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
-- **Next training experiment**: none authorized; staged SAT-1 is preregistered but blocked because the frozen five-operation anchor fails the prospective TinyStories preservation gate
+- **Next training experiment**: Q2.7 top-FFN isolation is preregistered but not authorized; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`
