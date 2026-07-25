@@ -20,10 +20,10 @@ bundle, and the bundle checker requires the frozen derived hashes.
 ## Scientific boundary
 
 Reportable measurements run only on the declared AWS venue. Local and GitHub
-Actions executions are mechanics tests. The initial AWS calibration may report
+Actions executions are mechanics tests. The initial AWS calibration reported
 only runtimes, case counts, byte counts, and deterministic result hashes; its
-scores are sealed from interpretation. A full evaluation requires a new budget
-derived from that calibration and explicit authorization.
+scores were sealed from interpretation. The later bounded screen was separately
+authorized, completed, and published.
 
 ZERO.4 has a 512-character context and a 128-character normalized vocabulary.
 Consequently, this suite does not pretend that all tasks are standard modern
@@ -54,11 +54,34 @@ terminated, and the one-time authorization is consumed. The immutable
 result, source archive, artifact digest, commit, and budget.
 
 Scaling each task by both case count and prepared input bytes, taking the
-larger estimate, projects 23,709 seconds (6h35m09s) for both models. The
-[`full-run budget proposal`](full-budget-proposal.json) adds 25% contingency,
-cold-start/build allowance, publication reserve, and rounding headroom for an
-8h30m/$5.78 hard ceiling. It is deliberately marked
-`proposed_not_authorized`; no full workflow or execution is authorized yet.
+larger estimate, projected 23,709 seconds (6h35m09s) for both models. The
+historical [`full-run budget proposal`](full-budget-proposal.json) added 25%
+contingency, cold-start/build allowance, publication reserve, and rounding
+headroom for an 8h30m/$5.78 hard ceiling.
+
+## Bounded screen and full-run decision
+
+The separately frozen 1,000-case-per-task screen completed in 2,502
+launch-relative seconds for $0.4726:
+
+| Metric | ZERO.3 | ZERO.4 | ZERO.4 − ZERO.3 |
+| --- | ---: | ---: | ---: |
+| BLiMP raw accuracy | 0.532 | 0.537 | +0.005 |
+| TinyStories bits/byte ↓ | 2.527861 | 2.570353 | +0.042492 |
+| HellaSwag normalized accuracy | 0.271 | 0.266 | -0.005 |
+| adapted LAMBADA exact accuracy | 0 | 0 | 0 |
+
+The bounded interpretation is mixed: the small BLiMP gain did not carry into
+TinyStories or HellaSwag, and neither model solved the adapted LAMBADA
+diagnostic. The [`full-run decision`](full-run-decision.json) therefore closes
+the proposed full evaluation as `do_not_run`. This does not claim equivalence
+or general capability, and it does not make a claim about the unexecuted full
+datasets.
+
+The replacement is the candidate-only
+[`ZERO language-preservation gate v1`](../zero-language-gate-v1/README.md).
+It retains BLiMP and TinyStories only, reuses the frozen ZERO.3 aggregate, and
+is proposed at 600 seconds/$0.12 per candidate. It is not yet authorized.
 
 ## Development commands
 
@@ -67,6 +90,8 @@ make external-eval
 node scripts/prepare_zero_eval1.mjs --self-test
 node scripts/check_zero_eval1.mjs --self-test
 make zero-eval1-full-budget-check
+make zero-eval1-full-run-decision-check
+make zero-language-gate-check
 ```
 
 Full bundle preparation requires the four exact upstream files named in the

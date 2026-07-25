@@ -1,0 +1,55 @@
+{
+  "schema": "zero.external_eval_full_run_decision.v1",
+  "id": "zero-eval-1-full-run-decision",
+  "status": "closed_do_not_run",
+  "decided_at": "2026-07-24",
+  "training_allowed": false,
+  "screen_evidence": {
+    "path": "benchmarks/zero-eval-1/screen/results/result.json",
+    "sha256": "b39788f286eab967569dbdf0b21cb769ebf22372a925e8ff57b0dc863b5f51dc",
+    "status": "complete",
+    "elapsed_instance_seconds": 2502,
+    "estimated_compute_usd": 0.4726
+  },
+  "retired_proposal": {
+    "path": "benchmarks/zero-eval-1/full-budget-proposal.json",
+    "sha256": "a096bd49ca4451289ad16e4a0f57bdf35b9d879e408771053491ac8d21e189f2",
+    "max_instance_seconds": 30600,
+    "max_compute_usd": 5.78
+  },
+  "screen_summary": {
+    "blimp_raw_accuracy": {
+      "zero3": 0.532,
+      "zero4": 0.537,
+      "delta": 0.005
+    },
+    "tinystories_bits_per_byte": {
+      "zero3": 2.5278611682744563,
+      "zero4": 2.5703534147275877,
+      "delta": 0.04249224645313143
+    },
+    "hellaswag_normalized_accuracy": {
+      "zero3": 0.271,
+      "zero4": 0.266,
+      "delta": -0.005
+    },
+    "adapted_lambada_greedy_exact_accuracy": {
+      "zero3": 0,
+      "zero4": 0,
+      "delta": 0
+    }
+  },
+  "decision": {
+    "full_evaluation_authorized": false,
+    "full_evaluation_should_run": false,
+    "dispatch_or_implementation_allowed": false,
+    "reason": "The bounded screen found a small BLiMP gain, worse TinyStories compression, worse HellaSwag normalized accuracy, and zero adapted-LAMBADA exact matches for both models. Spending up to $5.78 on the full suite is not the cheapest informative next action.",
+    "scientific_scope": "This closes only the proposed ZERO-EVAL-1 full run. It does not establish equivalence, general LLM capability, or a claim about the unexecuted full datasets."
+  },
+  "replacement": {
+    "id": "zero-language-gate-v1",
+    "purpose": "Use only the frozen 1,000-case BLiMP and TinyStories screens as a bounded language-preservation gate for future candidates.",
+    "candidate_only": true,
+    "authorized_for_execution": false
+  }
+}

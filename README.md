@@ -238,16 +238,26 @@ data hashes, ASCII normalization, the 512-character context policy, task order,
 models, metrics, and interpretation limits are all preregistered. The suite
 does not train or invoke the quantity controller.
 
-The one score-sealed AWS timing calibration completed in 167 launch-relative
-seconds for an estimated $0.031544, exposed no benchmark score, and terminated
-its instance. It projects 6h35m09s of base evaluation work for both models.
-The resulting full-run proposal has an 8h30m/$5.78 hard ceiling after
-contingency and reserves, but remains explicitly unauthorized and has no
-launch workflow. Local commands test mechanics and the consumed evidence:
+The bounded 1,000-case-per-task AWS screen is complete. ZERO.4 versus ZERO.3
+was +0.5 points on BLiMP raw accuracy (0.537 versus 0.532), worse on
+TinyStories bits/byte (2.570353 versus 2.527861), -0.5 points on HellaSwag
+normalized accuracy (0.266 versus 0.271), and tied at zero adapted-LAMBADA
+exact matches. It completed in 2,502 launch-relative seconds for $0.4726.
+These mixed results do not justify the proposed 8h30m/$5.78 full run, which is
+now explicitly closed as `do_not_run`.
+
+Future training candidates use the
+[`ZERO language-preservation gate v1`](benchmarks/zero-language-gate-v1/README.md):
+candidate-only BLiMP and TinyStories, with the frozen ZERO.3 aggregates reused.
+The observed candidate runtime is about 305 seconds; the proposed ceiling is
+600 seconds/$0.12. The gate emits non-copyright per-case correctness/score
+traces for future paired comparisons, but no execution is authorized yet.
+Local commands test mechanics and the consumed evidence:
 
 ```sh
 make external-eval-check
 make experiment-budget-check
+make zero-language-gate-check
 ```
 
 The one-time

@@ -135,7 +135,8 @@ endif
 	zero4-promotion-check promote-zero4 \
 	external-eval-check \
 	zero-eval1-calibration-check zero-eval1-full-budget-check \
-	zero-eval1-screen-check \
+	zero-eval1-screen-check zero-eval1-full-run-decision-check \
+	zero-language-gate-check sat1-prereg-check \
 	experiment-budget-check \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
@@ -1141,8 +1142,24 @@ zero-eval1-screen-check:
 		node scripts/check_zero_eval1_screen_lambada_compat.mjs \
 			--completion benchmarks/zero-eval-1/screen/aws/COMPLETED
 
-experiment-budget-check: zero4-q26r-aws-v2-check zero-eval1-full-budget-check \
+zero-eval1-full-run-decision-check: zero-eval1-full-budget-check \
 		zero-eval1-screen-check
+	node scripts/check_zero_eval1_full_run_decision.mjs --self-test
+	node scripts/check_zero_eval1_full_run_decision.mjs
+
+zero-language-gate-check: external_eval zero-eval1-full-run-decision-check
+	node scripts/run_zero_language_gate.mjs --self-test
+	node scripts/check_zero_language_gate.mjs --self-test
+	node scripts/check_zero_language_gate.mjs
+	node scripts/check_zero_language_gate.mjs --mechanics ./external_eval
+
+sat1-prereg-check: zero4-q26r-aws-v2-check zero-language-gate-check
+	node scripts/check_sat1_preregistration.mjs --self-test
+	node scripts/check_sat1_preregistration.mjs
+
+experiment-budget-check: zero4-q26r-aws-v2-check zero-eval1-full-budget-check \
+		zero-eval1-screen-check zero-eval1-full-run-decision-check \
+		zero-language-gate-check sat1-prereg-check
 	node scripts/check_experiment_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs --self-test
 	node scripts/check_q26r_aws_budget.mjs \
