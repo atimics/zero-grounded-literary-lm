@@ -1,0 +1,11 @@
+{
+  "schema": "zero.aws_external_eval_calibration_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "exit_code": 0,
+  "started_at": "2026-07-24T23:56:41Z",
+  "finished_at": "2026-07-24T23:58:06Z",
+  "git_commit": "ee140954af5eed86f81d15652fc83a0138fb99f5",
+  "budget_sha256": "bd881bc1d58caf72e6f757256adb8e211baec7fab6fc7368ee4e93f9454df7dd",
+  "scientific_inference_allowed": false
+}

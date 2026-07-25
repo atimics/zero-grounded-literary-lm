@@ -238,11 +238,12 @@ data hashes, ASCII normalization, the 512-character context policy, task order,
 models, metrics, and interpretation limits are all preregistered. The suite
 does not train or invoke the quantity controller.
 
-Only one score-sealed AWS timing calibration is currently authorized, under a
-600-second/$0.12 ceiling. It may publish runtimes and hashes but no benchmark
-scores. The full comparison remains disabled until that calibration supports a
-new frozen budget and the user separately authorizes it. Local commands test
-mechanics only:
+The one score-sealed AWS timing calibration completed in 167 launch-relative
+seconds for an estimated $0.031544, exposed no benchmark score, and terminated
+its instance. It projects 6h35m09s of base evaluation work for both models.
+The resulting full-run proposal has an 8h30m/$5.78 hard ceiling after
+contingency and reserves, but remains explicitly unauthorized and has no
+launch workflow. Local commands test mechanics and the consumed evidence:
 
 ```sh
 make external-eval-check

@@ -33,12 +33,40 @@ LAMBADA is an adapted boundary diagnostic and must never be presented as a
 standard full-context result. TinyStories is out-of-domain narrative modeling,
 not evidence that ZERO was trained on or optimized for that corpus.
 
+## Score-sealed calibration result
+
+GitHub Actions run
+[`30135007168`](https://github.com/atimics/zero-grounded-literary-lm/actions/runs/30135007168)
+completed the one authorized calibration on merged commit `ee140954...`.
+The frozen 16-process timing samples were:
+
+| Task shape | Cases | Elapsed | Cases/second |
+| --- | ---: | ---: | ---: |
+| BLiMP | 64 | 2.992 s | 21.394 |
+| TinyStories | 64 | 15.610 s | 4.100 |
+| HellaSwag | 64 | 48.717 s | 1.314 |
+| adapted LAMBADA | 64 | 10.060 s | 6.362 |
+
+The workload completed after 167 launch-relative seconds for an estimated
+$0.031544. Its result passed the independent score-field seal, the instance
+terminated, and the one-time authorization is consumed. The immutable
+[`completion record`](aws-calibration/COMPLETED) binds the launch, status,
+result, source archive, artifact digest, commit, and budget.
+
+Scaling each task by both case count and prepared input bytes, taking the
+larger estimate, projects 23,709 seconds (6h35m09s) for both models. The
+[`full-run budget proposal`](full-budget-proposal.json) adds 25% contingency,
+cold-start/build allowance, publication reserve, and rounding headroom for an
+8h30m/$5.78 hard ceiling. It is deliberately marked
+`proposed_not_authorized`; no full workflow or execution is authorized yet.
+
 ## Development commands
 
 ```sh
 make external-eval
 node scripts/prepare_zero_eval1.mjs --self-test
 node scripts/check_zero_eval1.mjs --self-test
+make zero-eval1-full-budget-check
 ```
 
 Full bundle preparation requires the four exact upstream files named in the

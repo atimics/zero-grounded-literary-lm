@@ -1,0 +1,98 @@
+{
+  "schema": "zero.external_eval_full_budget_proposal.v1",
+  "id": "zero-eval-1-aws-full",
+  "status": "proposed_not_authorized",
+  "purpose": "Evaluate the frozen ZERO.3 and ZERO.4 models once on every case in the preregistered ZERO-EVAL-1 external language suite.",
+  "scientific_inference_allowed_if_authorized": true,
+  "training_allowed": false,
+  "authorization": {
+    "full_evaluation_authorized": false,
+    "requires_separate_manual_authorization": true,
+    "authorized_for_execution": false
+  },
+  "evidence": {
+    "calibration_result_path": "benchmarks/zero-eval-1/aws-calibration/result-30135007168.json",
+    "calibration_result_sha256": "d63e0b3c7b8a60788234718003d75f4750f569fb268470e6aed237e4320e0036",
+    "calibration_cases_per_task": 64,
+    "calibration_jobs": 16,
+    "calibration_elapsed_instance_seconds": 167,
+    "calibration_estimated_compute_usd": 0.031544
+  },
+  "workload": {
+    "models": [
+      "zero3",
+      "zero4"
+    ],
+    "jobs": 16,
+    "repetitions": 1,
+    "task_cases": {
+      "blimp": 67000,
+      "tinystories": 1000,
+      "hellaswag": 10042,
+      "lambada": 5153
+    },
+    "evaluation_order": [
+      "zero3:blimp",
+      "zero4:blimp",
+      "zero3:tinystories",
+      "zero4:tinystories",
+      "zero3:hellaswag",
+      "zero4:hellaswag",
+      "zero3:lambada",
+      "zero4:lambada"
+    ],
+    "optimizer_attempts": 0,
+    "training_updates": 0,
+    "controller_or_kernel_calls": 0
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "online_vcpus": 16,
+    "on_demand_usd_per_hour": 0.68
+  },
+  "projection": {
+    "method": "for each task and two models, take the larger of calibration case-scaled and input-byte-scaled time, round up, then add 25 percent contingency and fixed reserves",
+    "tasks": {
+      "blimp": {
+        "case_scaled_seconds": 6263.57092146873,
+        "byte_scaled_seconds": 6146.153629692389,
+        "selected_seconds": 6264
+      },
+      "tinystories": {
+        "case_scaled_seconds": 487.8239669999998,
+        "byte_scaled_seconds": 486.65004101871364,
+        "selected_seconds": 488
+      },
+      "hellaswag": {
+        "case_scaled_seconds": 15288.040470615751,
+        "byte_scaled_seconds": 15336.794511543067,
+        "selected_seconds": 15337
+      },
+      "lambada": {
+        "case_scaled_seconds": 1619.973788846253,
+        "byte_scaled_seconds": 1616.3100747508838,
+        "selected_seconds": 1620
+      }
+    },
+    "base_evaluation_seconds": 23709,
+    "contingency_fraction": 0.25,
+    "contingency_seconds": 5928,
+    "cold_start_build_and_download_seconds": 240,
+    "rounding_headroom_seconds": 423,
+    "workload_timeout_seconds": 30300,
+    "publication_reserve_seconds": 300,
+    "max_instance_seconds": 30600,
+    "max_compute_usd": 5.78
+  },
+  "execution_policy": {
+    "long_run_must_be_asynchronous_aws": true,
+    "github_actions_must_not_wait_for_compute": true,
+    "collector_must_not_start_or_wait_for_compute": true,
+    "exactly_once_execution_lock_required": true,
+    "structured_status_required": true,
+    "instance_termination_required": true,
+    "full_workflow_not_yet_implemented": true
+  }
+}

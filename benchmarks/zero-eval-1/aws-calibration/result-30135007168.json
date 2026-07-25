@@ -1,0 +1,51 @@
+{
+  "schema": "zero.external_eval_calibration_result.v1",
+  "id": "zero-eval-1-aws-calibration",
+  "status": "complete",
+  "scientific_inference_allowed": false,
+  "training_updates": 0,
+  "optimizer_attempts": 0,
+  "controller_or_kernel_calls": 0,
+  "git_commit": "ee140954af5eed86f81d15652fc83a0138fb99f5",
+  "budget_sha256": "bd881bc1d58caf72e6f757256adb8e211baec7fab6fc7368ee4e93f9454df7dd",
+  "model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+  "jobs": 16,
+  "started_at": "2026-07-24T23:56:41Z",
+  "finished_at": "2026-07-24T23:58:06Z",
+  "elapsed_instance_seconds": 167,
+  "estimated_compute_usd": 0.031544,
+  "measurements": {
+    "blimp": {
+      "cases": 64,
+      "input_bytes": 11582,
+      "cases_sha256": "324a87a45eecf5c1a9e53d0183307c87e396be3217485642f815d1c90ec9fab5",
+      "case_results_sha256": "af615205a08f4ae6fb6c8ece9b70b84ffcf60e055147b54d564b43f39c0534f4",
+      "elapsed_seconds": 2.9915562609999906,
+      "cases_per_second": 21.393547176213445
+    },
+    "tinystories": {
+      "cases": 64,
+      "input_bytes": 36442,
+      "cases_sha256": "187538eddc3788c87eaa9679d2494ebe78eb19bc8a4a2895ada4eeee4c6675e5",
+      "case_results_sha256": "47b7fbf3a63e183e3f6adc1950ecdbcc2220fd42c8dfa849dd2615ace4318dad",
+      "elapsed_seconds": 15.610366943999994,
+      "cases_per_second": 4.099839563643253
+    },
+    "hellaswag": {
+      "cases": 64,
+      "input_bytes": 52859,
+      "cases_sha256": "f27471821e974b581a6363c866bc38328cf19d8ba085494046d538c9c0131e3a",
+      "case_results_sha256": "0ade4bf13aa55769e8e607a3632c61aa972ac89126997f49d668590db3ca7bd3",
+      "elapsed_seconds": 48.717117612,
+      "cases_per_second": 1.3137066217611264
+    },
+    "lambada": {
+      "cases": 64,
+      "input_bytes": 23515,
+      "cases_sha256": "0baaa9bb2d06676880507d0042fda9fa8f29b343d78e743c5a8b1e8564d24d34",
+      "case_results_sha256": "bb9bf573a3c7580b5ef22e37c13a65ab245c17c0627667f27f753c0c76e3fa69",
+      "elapsed_seconds": 10.059996360000019,
+      "cases_per_second": 6.36183132774015
+    }
+  }
+}
