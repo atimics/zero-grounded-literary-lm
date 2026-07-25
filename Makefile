@@ -1132,12 +1132,13 @@ zero-eval1-screen-check:
 	node scripts/sample_zero_eval1_screen.mjs --self-test
 	node scripts/check_zero_eval1_screen.mjs --self-test
 	node scripts/compile_zero_eval1_screen_result.mjs --self-test
+	node scripts/check_zero_eval1_screen_lambada_compat.mjs --self-test
 	node scripts/check_zero_eval1_screen_budget.mjs \
 		benchmarks/zero-eval-1/screen/aws/budget.json
 	bash -n scripts/aws/zero-eval1-screen.sh
 	bash -n scripts/aws/zero-eval1-screen-user-data.sh
 	test ! -e benchmarks/zero-eval-1/screen/aws/COMPLETED || \
-		node scripts/check_zero_eval1_screen.mjs \
+		node scripts/check_zero_eval1_screen_lambada_compat.mjs \
 			--completion benchmarks/zero-eval-1/screen/aws/COMPLETED
 
 experiment-budget-check: zero4-q26r-aws-v2-check zero-eval1-full-budget-check \
