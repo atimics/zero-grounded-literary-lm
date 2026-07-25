@@ -1,0 +1,94 @@
+{
+  "schema": "zero.language_preservation_gate_contract.v1",
+  "id": "zero-language-gate-v1",
+  "status": "preregistered_not_authorized",
+  "frozen_at": "2026-07-24",
+  "purpose": "A cheap candidate-only language-preservation gate for post-ZERO.4 experiments. It is an engineering non-inferiority guard, not a general LLM benchmark claim.",
+  "training_allowed": false,
+  "reference": {
+    "result_path": "benchmarks/zero-eval-1/screen/results/result.json",
+    "result_sha256": "b39788f286eab967569dbdf0b21cb769ebf22372a925e8ff57b0dc863b5f51dc",
+    "model": {
+      "id": "zero3",
+      "path": "benchmarks/zero-channel-v1/model.litq8",
+      "sha256": "05b9824d54f9d290ea472c3da8f9791c3d18fb3775419bd408a7e803012c7c24",
+      "bytes": 4920400
+    },
+    "tasks": {
+      "blimp": {
+        "cases": 1000,
+        "cases_sha256": "06ffc0ee2832b193ff6ce895828bbe4a69befe2b1f30cfec19027b83692187a3",
+        "case_results_sha256": "677b049f0132918ab56fa81915a621403dbb7c1995937afd78506c637cce9d5c",
+        "raw_accuracy": 0.532,
+        "elapsed_seconds": 41.19872819599998
+      },
+      "tinystories": {
+        "cases": 1000,
+        "cases_sha256": "75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54",
+        "case_results_sha256": "29bb9c8f5668d61a397e3619043b1062a4a102bc188e096d71e2a4896f01bd66",
+        "bits_per_byte": 2.5278611682744563,
+        "elapsed_seconds": 262.971487023
+      }
+    }
+  },
+  "decision_rule": {
+    "combination": "conjunctive",
+    "rationale": "These are prospective engineering preservation tolerances for candidates after ZERO.4: one absolute BLiMP accuracy point and one relative percent TinyStories bits/byte. They are not confidence intervals, equivalence bounds, or a retrofit to make ZERO.4 pass.",
+    "blimp": {
+      "metric": "raw_accuracy",
+      "direction": "higher_is_better",
+      "max_absolute_regression": 0.01,
+      "minimum_raw_accuracy": 0.522
+    },
+    "tinystories": {
+      "metric": "bits_per_byte",
+      "direction": "lower_is_better",
+      "max_relative_regression": 0.01,
+      "maximum_bits_per_byte": 2.553139779957201
+    }
+  },
+  "output_policy": {
+    "blimp_correctness_bits": "base64-packed-lsb-first-v1",
+    "tinystories_case_scores": "base64-utf8-tsv-ordinal-bits-bytes-v1",
+    "contains_case_text": false,
+    "first_comparison_is_aggregate_only": true,
+    "paired_inference_policy": "The historical ZERO.3 result retained aggregate hashes but not case-level correctness or score traces. The first candidate is therefore judged only by the frozen aggregate thresholds. New candidate traces are retained so later predeclared comparisons can use paired analysis; they do not retroactively create a paired ZERO.3 baseline."
+  },
+  "runner": {
+    "path": "scripts/run_zero_language_gate.mjs",
+    "sha256": "233e9e29fc078712bec4602e40fdb8d044a93b330424af456af7699e220bdc3c"
+  },
+  "execution": {
+    "venue": "AWS EC2 only",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "jobs": 16,
+    "models_per_execution": 1,
+    "evaluation_order": [
+      "candidate:blimp",
+      "candidate:tinystories"
+    ],
+    "observed_basis": "ZERO.4 task times from the completed ZERO-EVAL-1 screen",
+    "expected_candidate_seconds": 304.644213155,
+    "proposed_max_instance_seconds": 600,
+    "proposed_max_compute_usd": 0.12,
+    "github_actions_must_not_wait_for_compute": true,
+    "required_budget_schema": "zero.language_preservation_gate_budget.v1",
+    "authorized_for_execution": false,
+    "requires_separate_budget_and_manual_authorization": true
+  },
+  "interpretation": {
+    "permitted": [
+      "decide whether a frozen candidate preserves the two declared language-screen metrics within the preregistered tolerances",
+      "report candidate minus frozen ZERO.3 on the same 1,000 cases",
+      "retain non-copyright per-case traces for future predeclared paired analyses"
+    ],
+    "forbidden": [
+      "claiming general LLM capability",
+      "claiming equivalence when the gate passes",
+      "tuning a candidate or threshold after viewing gate output",
+      "treating a failed gate as evidence about the candidate's trained faculty",
+      "launching from this contract without a separate immutable budget and explicit authorization"
+    ]
+  }
+}

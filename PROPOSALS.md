@@ -78,19 +78,36 @@ promotion outcome.
 ### P1: SAT-1 — Single-faculty ops scaling
 
 **Source**: `SATURATION.md` §3.1.
-**Status**: Proposed, unblocked but not authorized. Q2.6-R established the
-three-seed replay-safe quantity result; SAT-1 still requires a new frozen
-contract and explicit budget before compute.
+**Status**: Staged preregistration complete, but blocked at the five-operation
+anchor; no compute authorized. Q2.6-R established the three-seed replay-safe
+quantity result, but its frozen seed-2 model fails the prospective language
+gate on TinyStories. `benchmarks/sat1-v1/contract.json` freezes the later
+adaptive stage boundaries without authorizing them.
 **Depends on**: Q2.6-R family promotion (satisfied).
-**Cost**: Unmeasured. Estimate in instance-hours only after P0 establishes an
-observed per-update and evaluation rate on the declared backend.
+**Cost**: Unmeasured. Stage 0 must produce a score-sealed AWS timing unit.
+Every later stage requires its own immutable budget and explicit approval.
 
 **Design**:
 
-With quantity confirmed working at ~5 operation types, scale to
-$N_{\text{ops}}\in\{5,10,20,40,80,160\}$. For each count, generate a
-corpus with equal representation per operation type, train three seeds
-from ZERO.3 init, measure routing accuracy and replay regression.
+Hold total records, optimizer budget, model size, initialization, replay
+authority, and promotion gates fixed while varying
+$N_{\text{ops}}\in\{5,10,20,40,80,160\}$. Use one nested operation inventory
+and balance records across active operation ids. Every selected arm must also
+pass the candidate-only BLiMP/TinyStories language-preservation gate.
+
+The staged design avoids opening all 18 arms:
+
+1. Stage 0 freezes generation, split isolation, replay, and validation
+   mechanics. Timing remains blocked with training.
+2. Stage A reuses the frozen count-5 anchor, then screens 40 and 160 on seed 2
+   only after a language-preserving five-operation anchor exists.
+3. Stage B runs 10, 20, and 80 on seed 2 only if Stage A brackets a quantity
+   failure while language remains preserved.
+4. Stage C replicates either 5/160 (no transition through 160) or the
+   prospectively selected adjacent transition bracket on seeds 1 and 3.
+
+No stage automatically authorizes the next. All declared arms within an
+authorized stage run even after an early scientific failure.
 
 **Question**: Does routing accuracy undergo a phase transition? If so, at
 what $N_{\text{ops}}$? If not up to 160, classification is not the
@@ -286,10 +303,13 @@ A proposal becomes RESOLVED when:
 ## Current state
 
 - **Current model**: ZERO.4, promoted from the prospectively selected Q2.6 seed-2 update-500 artifact
-- **Active evaluation study**: ZERO-EVAL-1; score-sealed calibration complete, full run proposed at ≤8h30m/≤$5.78
-- **Next training proposal**: SAT-1 single-faculty operation-count scaling
-- **Authorization**: the full ZERO-EVAL-1 comparison and all SAT-1 compute remain unauthorized until each has a separate frozen budget and explicit approval
+- **Completed evaluation study**: the bounded ZERO-EVAL-1 screen is published; its mixed result retires the ≤8h30m/≤$5.78 full run
+- **Active evaluation guard**: candidate-only BLiMP/TinyStories preservation, expected ≈305s and proposed at ≤600s/≤$0.12
+- **ZERO.4 against the prospective guard**: BLiMP passes, TinyStories fails (1.681% worse bits/byte versus a 1% allowance); this does not retroactively change the quantity promotion
+- **Next training proposal**: a separately frozen five-operation language-preserving repair; staged SAT-1 remains next after that anchor passes
+- **Authorization**: ZERO language-gate execution and all SAT-1 stages remain at zero authorized compute until each has a separate immutable budget and explicit approval
 - **Blocked proposals**: SAT-2 and faculty expansion remain downstream of SAT-1
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: approve, revise, or reject the proposed ZERO-EVAL-1
-  full-run ceiling before any long-run workflow is built or launched.
+- **Next decision point**: preregister the cheapest five-operation
+  language-preserving repair, while building SAT-1 inventory/validator
+  mechanics only. Do not budget timing or launch training yet.

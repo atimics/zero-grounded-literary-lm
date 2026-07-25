@@ -1,0 +1,169 @@
+{
+  "schema": "zero.sat1_staged_preregistration.v1",
+  "id": "sat1-v1",
+  "status": "preregistered_blocked_not_authorized",
+  "frozen_at": "2026-07-24",
+  "question": "Under fixed model size, training budget, and total quantity-record budget, at what operation count does routing or exact execution cease to satisfy the frozen quantity gates while language preservation remains bounded?",
+  "scientific_compute_authorized": false,
+  "training_allowed_without_stage_budget": false,
+  "lineage": {
+    "q26r_aggregate_path": "benchmarks/zero4-q26r-v1/aggregate.json",
+    "q26r_aggregate_sha256": "246274e15bcdcea7e337a01bdf415b72251f010fb411b8a1c0ac879d0ddc5d71",
+    "q26r_decision": "go",
+    "language_gate_path": "benchmarks/zero-language-gate-v1/contract.json"
+  },
+  "readiness": {
+    "five_operation_anchor": {
+      "source": "frozen Q2.6 seed-2 update-500 model; do not retrain it as a SAT-1 arm",
+      "model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+      "quantity_family_decision": "go",
+      "language_screen": {
+        "blimp_raw_accuracy": 0.537,
+        "blimp_gate": "pass",
+        "tinystories_bits_per_byte": 2.5703534147275877,
+        "tinystories_relative_regression": 0.01680956493435004,
+        "tinystories_gate": "fail",
+        "conjunctive_gate": "fail"
+      }
+    },
+    "stage_a_blocked": true,
+    "unblock_rule": "A separately preregistered five-operation repair candidate must preserve the existing quantity/replay result and pass zero-language-gate-v1. Mechanics-only inventory work may proceed, but no SAT-1 timing or training arm may launch before that anchor exists."
+  },
+  "fixed_design": {
+    "operation_counts": [
+      5,
+      10,
+      20,
+      40,
+      80,
+      160
+    ],
+    "declared_seeds": [
+      1,
+      2,
+      3
+    ],
+    "diagnostic_seed": 2,
+    "student_parameters": 4852992,
+    "initialization": "teachers/zero3-balanced-final.teacher",
+    "operation_inventory": "one frozen nested inventory; the N-operation arm uses the first N registered operation ids",
+    "record_budget": "identical total training, public, and promotion record counts at every N; counts are balanced across operation ids to within one record",
+    "optimizer_and_attempt_budgets": "inherit Q2.6 unless a pre-execution amendment is separately reviewed and frozen",
+    "public_quantity_gates": {
+      "closed_minimum": 0.99,
+      "syntax_minimum": 0.99,
+      "operation_minimum": 0.95,
+      "arguments_minimum": 0.95,
+      "exact_request_minimum": 0.95,
+      "oracle_arithmetic_minimum": 1,
+      "committed_minimum": 0.95,
+      "exact_artifact_minimum": 0.95,
+      "replay_relative_regression_maximum": 0.02
+    },
+    "promotion_split": "disjoint and opened exactly once after a jointly feasible public checkpoint",
+    "language_gate": {
+      "contract": "zero-language-gate-v1",
+      "timing": "run once on the prospectively selected candidate for each arm after quantity selection",
+      "decision_role": "required for an arm to be promotion-eligible",
+      "not_training_feedback": true
+    }
+  },
+  "stages": [
+    {
+      "id": "stage-0",
+      "name": "mechanics and timing",
+      "scientific_inference_allowed": false,
+      "compute_authorized": false,
+      "work": [
+        "freeze the 160-operation inventory and nested manifests",
+        "prove equal-total-record and balanced-per-operation generation",
+        "prove deterministic replay, split isolation, and result validation",
+        "after the five-operation anchor is unblocked, measure one score-sealed AWS timing unit only under a separate hard budget"
+      ],
+      "advance_rule": "the five-operation anchor is unblocked, all mechanics checks pass, score-sealed timing is complete, and a reviewed immutable Stage A budget exists",
+      "automatic_advance": false
+    },
+    {
+      "id": "stage-a",
+      "name": "three-point diagnostic screen",
+      "scientific_inference_allowed": true,
+      "compute_authorized": false,
+      "arms": [
+        {
+          "operation_count": 5,
+          "seed": 2,
+          "source": "reuse frozen Q2.6 seed-2 anchor; no retraining"
+        },
+        {
+          "operation_count": 40,
+          "seed": 2
+        },
+        {
+          "operation_count": 160,
+          "seed": 2
+        }
+      ],
+      "decision_tree": {
+        "five_fails_quantity_or_language": "stop; the scaling study has no valid anchor",
+        "forty_or_160_fails_language": "stop; record a language-preservation boundary, not a routing saturation result",
+        "160_passes_quantity_and_language": "skip Stage B; no diagnostic transition is detected through 160 and Stage C may replicate only 5 and 160",
+        "five_passes_and_a_larger_arm_fails_quantity_with_language_preserved": "Stage B may localize the first failure"
+      },
+      "automatic_advance": false
+    },
+    {
+      "id": "stage-b",
+      "name": "transition localization",
+      "scientific_inference_allowed": true,
+      "compute_authorized": false,
+      "conditional_on": "Stage A finds a quantity failure above a valid 5-operation anchor while every arm through that failure passes the language gate",
+      "arms": [
+        {
+          "operation_count": 10,
+          "seed": 2
+        },
+        {
+          "operation_count": 20,
+          "seed": 2
+        },
+        {
+          "operation_count": 80,
+          "seed": 2
+        }
+      ],
+      "selection_rule": "sort all valid seed-2 arms by operation count and select the adjacent highest passing and lowest failing quantity arms; do not substitute an arm after seeing replication outcomes",
+      "automatic_advance": false
+    },
+    {
+      "id": "stage-c",
+      "name": "two-endpoint replication",
+      "scientific_inference_allowed": true,
+      "compute_authorized": false,
+      "conditional_design": {
+        "no_transition_through_160": "replicate operation counts 5 and 160 on seeds 1 and 3",
+        "localized_transition": "replicate the two prospectively selected adjacent bracket counts on seeds 1 and 3"
+      },
+      "family_rule": "a count is confirmed only if all three declared seeds pass every frozen public, promotion, replay, and language gate; execute all four authorized replication arms even if an earlier arm fails",
+      "automatic_advance": false
+    }
+  ],
+  "budget_policy": {
+    "each_stage_requires_its_own_immutable_aws_budget": true,
+    "github_actions_must_not_wait_for_compute": true,
+    "collectors_must_not_start_or_wait_for_compute": true,
+    "no_stage_authorizes_a_later_stage": true,
+    "current_total_authorized_instance_seconds": 0,
+    "current_total_authorized_compute_usd": 0
+  },
+  "reporting": {
+    "report_every_declared_arm": true,
+    "separate_execution_failure_from_scientific_no_go": true,
+    "no_optional_stopping": true,
+    "primary_outputs": [
+      "operation and exact-artifact accuracy by count and seed",
+      "replay regression by count and seed",
+      "BLiMP and TinyStories preservation decisions by count and seed",
+      "the predeclared transition-bracket or no-transition-through-160 conclusion"
+    ]
+  }
+}

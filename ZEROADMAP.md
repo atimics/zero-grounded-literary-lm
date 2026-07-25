@@ -28,7 +28,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | State-composition curriculum | modality-neutral finite-state transition generator | built, experimental |
 | Modal curriculum | finite-world reachability and possibility records | built, experimental; follows state composition |
 | Quantity faculty | operation-only routing with controller-bound arguments | promoted after three-seed Q2.6 go |
-| External language evaluation | frozen BLiMP, HellaSwag, adapted LAMBADA, and TinyStories contract | preregistered; timing calibration complete, full run proposed but unauthorized |
+| External language evaluation | completed four-task screen plus candidate-only BLiMP/TinyStories preservation gate | screen complete; expensive full run retired; cheap gate preregistered but unauthorized |
 | Dialogue training ablation | fixed contract for A/B/C/D candidates | specified, not trained |
 | Hidden human channel evaluation | consented, channel-level split | not yet collected |
 
@@ -38,6 +38,17 @@ initialized from the frozen update-16,600 ZERO.3 teacher and promoted only
 after seeds 1, 2, and 3 all passed the unchanged quantity and replay gates.
 The earlier channel benchmark remains historical evidence for its pinned
 ZERO.3 artifact; it has not been relabelled as a ZERO.4 measurement.
+
+The external screen found a small BLiMP gain but worse TinyStories compression
+and HellaSwag accuracy, with zero adapted-LAMBADA exact matches for either
+model. It therefore does not support a general language-improvement claim for
+ZERO.4. The next training study is the staged
+[`SAT-1`](benchmarks/sat1-v1/PREREGISTRATION.md) operation-count experiment.
+Its frozen five-operation anchor fails the prospective TinyStories preservation
+gate, so scientific timing and training are blocked. Deterministic
+inventory/validator mechanics may proceed while a five-operation
+language-preserving repair is separately preregistered; no SAT-1 compute is
+currently authorized.
 
 ## The channel object
 

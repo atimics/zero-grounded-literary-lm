@@ -26,6 +26,14 @@ Schema: `zero.experiment_registry.v1`.
 
 ---
 
+## Evaluation studies
+
+| ID | Date | Scope | Result | Decision |
+| --- | --- | --- | --- | --- |
+| **zero-eval1-screen** | 2026-07-24–25 UTC | Frozen ZERO.3 and ZERO.4 on 1,000-case BLiMP, TinyStories, HellaSwag, and adapted LAMBADA screens | ZERO.4: BLiMP +0.005 raw accuracy, TinyStories +0.042492 bits/byte (worse), HellaSwag -0.005 normalized accuracy, adapted LAMBADA tied at zero. AWS: 2,502 seconds/$0.4726. | **Do not run the proposed 8h30m/$5.78 full suite.** Replace it with a candidate-only BLiMP/TinyStories preservation gate; do not claim general language improvement. |
+
+---
+
 ## Decision trace
 
 ```
@@ -174,8 +182,8 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Current and deployed model**: ZERO.4, the Q2.6 seed-2 update-500 artifact at `docs/model.litq8` (SHA-256 `44b32f22...`)
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
 - **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
-- **Latest execution outcome**: ZERO-EVAL-1's score-sealed AWS calibration completed in 167 launch-relative seconds for an estimated $0.031544; its instance terminated and no score was exposed
-- **Active evaluation study**: ZERO-EVAL-1 is preregistered; its full comparison is proposed at an 8h30m/$5.78 hard ceiling but is not authorized
-- **Next training experiment**: none authorized; SAT-1 operation-count scaling remains a proposal requiring its own preregistration and budget
+- **Latest execution outcome**: the ZERO-EVAL-1 screen completed in 2,502 launch-relative seconds for $0.4726 and its results are merged
+- **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
+- **Next training experiment**: none authorized; staged SAT-1 is preregistered but blocked because the frozen five-operation anchor fails the prospective TinyStories preservation gate
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`
