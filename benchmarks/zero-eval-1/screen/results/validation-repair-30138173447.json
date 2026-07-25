@@ -1,0 +1,18 @@
+{
+  "schema": "zero.external_eval_validation_repair.v1",
+  "experiment": "zero-eval-1-screen-v1",
+  "source_run_id": "30136240439",
+  "failed_collector_run_id": "30138173447",
+  "recovery_run_id": "30138361915",
+  "recovery_commit": "d923fe49a682c779e911336111f4cd297f75b67c",
+  "root_cause": "prepared LAMBADA rows freeze benchmark=lambada_openai while the first collector validator expected task key lambada",
+  "frozen_identifier": "lambada_openai",
+  "contract_identifier": "lambada",
+  "repair_scope": "normalize the two nested benchmark labels in an in-memory validation copy only",
+  "original_result_sha256": "b39788f286eab967569dbdf0b21cb769ebf22372a925e8ff57b0dc863b5f51dc",
+  "compatibility_checker_sha256": "e18940cc76217572b69a0ee09c918e0fb9016f82fda24ee0d547c50673bad479",
+  "recovery_workflow_sha256": "e5158fe818f26ff9b2bc539335a0e66f146a8473c84fbe506f95be25e8936955",
+  "recovery_script_sha256": "0860f735ee73d444bea9e59eff0faa6b16b90d5c676d46b980fa671eb6643ff7",
+  "scientific_values_changed": false,
+  "compute_restarted": false
+}

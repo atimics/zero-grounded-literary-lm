@@ -1,0 +1,19 @@
+{
+  "schema": "zero.external_eval_screen_launch.v1",
+  "experiment": "zero-eval-1-screen-v1",
+  "instance_id": "i-0e59da936f0ac8ada",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "38e6b8454ed30b8e2cba6d10325d5c1fac4c7729",
+  "ci_run_id": "30136240439",
+  "budget_file": "benchmarks/zero-eval-1/screen/aws/budget.json",
+  "budget_sha256": "3d7fae80f1d247d5cf7fba349794c5e2963a25e509a09c234254da92466a0247",
+  "source_archive_sha256": "862abcae65d74b9d3b23c593b64d1bd47b408d9e70db23794dbc6092a9c36bd1",
+  "screen_archive_sha256": "d646bc5a07c4369789a36341ea4f9e378353b7102f65cdcee06c72efbd5fd1b2",
+  "launch_epoch": 1784939157,
+  "max_instance_seconds": 3600,
+  "workload_timeout_seconds": 3480,
+  "max_compute_usd": 0.68,
+  "training_updates": 0
+}
