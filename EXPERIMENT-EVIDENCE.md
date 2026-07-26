@@ -94,3 +94,23 @@ draft
 `scripts/check_experiment_evidence.mjs` validates the structure. Live execution
 checkers must call it with `--require-ready`, or enforce the equivalent
 condition, before an authorization can open compute.
+
+## Automated review stage
+
+The paid research step is manual-triggered and bounded:
+
+```sh
+make literature-review-q27
+```
+
+It runs one `gpt-5.6-terra` agent at medium reasoning in a read-only sandbox,
+with no subagents, exactly five primary full texts, and a projected ceiling of
+30 agent credits. The agent receives an isolated, generated packet containing
+only the registered questions, citation metadata, claim boundaries, and cost
+controls; it cannot read the repository. It writes a structured
+`LITERATURE-REVIEW.json` once and refuses to overwrite an existing review.
+
+Ordinary CI never launches the agent. `make check` validates the output schema,
+registered source ids, full-text locators, counterevidence coverage, cost
+controls, and synthesis. Review generation spends credits; review validation
+does not.

@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "zero.literature_review_result.v1"
+    },
+    "experiment_id": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "blocked"
+      ]
+    },
+    "block_reason": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "reasoning_effort": {
+          "type": "string"
+        },
+        "subagents_allowed": {
+          "type": "boolean"
+        },
+        "max_primary_sources": {
+          "type": "integer"
+        },
+        "projected_credit_cap": {
+          "type": "number"
+        },
+        "actual_credits": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "actual_usage_available": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "model",
+        "reasoning_effort",
+        "subagents_allowed",
+        "max_primary_sources",
+        "projected_credit_cap",
+        "actual_credits",
+        "actual_usage_available"
+      ]
+    },
+    "method": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primary_sources_only": {
+          "type": "boolean"
+        },
+        "questions_addressed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "search_limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "primary_sources_only",
+        "questions_addressed",
+        "search_limitations"
+      ]
+    },
+    "works": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "access_url": {
+            "type": "string"
+          },
+          "primary_source_verified": {
+            "type": "boolean"
+          },
+          "review_status": {
+            "type": "string",
+            "const": "full_text_reviewed"
+          },
+          "locator": {
+            "type": "string"
+          },
+          "supports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "design_consequence": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "access_url",
+          "primary_source_verified",
+          "review_status",
+          "locator",
+          "supports",
+          "limitations",
+          "design_consequence",
+          "confidence"
+        ]
+      }
+    },
+    "synthesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "overall_assessment": {
+          "type": "string",
+          "enum": [
+            "supports",
+            "mixed",
+            "challenges"
+          ]
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "design_changes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unresolved_questions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommendation": {
+          "type": "string",
+          "enum": [
+            "run",
+            "revise",
+            "abandon"
+          ]
+        },
+        "recommendation_rationale": {
+          "type": "string"
+        },
+        "value_assessment": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "overall_assessment",
+        "findings",
+        "design_changes",
+        "unresolved_questions",
+        "recommendation",
+        "recommendation_rationale",
+        "value_assessment"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "experiment_id",
+    "reviewed_at",
+    "status",
+    "block_reason",
+    "agent",
+    "method",
+    "works",
+    "synthesis"
+  ]
+}
