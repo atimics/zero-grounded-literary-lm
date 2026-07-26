@@ -103,20 +103,25 @@ export function validateBudget(
   const requiredInfrastructureLocks = [
     "budget_checker",
     "preflight_checker",
+    "preflight_failure_checker",
+    "preflight_iam_checker",
     "workflow_checker",
     "completion_checker",
     "preflight",
     "request_builder",
+    "provisioner",
+    "preflight_iam_applier",
     "workload",
     "user_data",
     "launch_workflow",
     "collector_workflow",
     "conditional_authorization",
     "language_gate_materializer",
+    "preflight_failure_record",
   ];
   assert(
     budget.infrastructure_source_lock?.executor_version ===
-      "q27-aws-v1-preflight-1",
+      "q27-aws-v1-preflight-iam-2",
     "Q2.7 infrastructure executor version drifted",
   );
   assert(
@@ -241,6 +246,19 @@ export function validateBudget(
       budget.preflight.s3_write_once_proof_required === true &&
       budget.preflight.required_asset_count === 6,
     "Q2.7 infrastructure preflight authority drifted",
+  );
+  assert(
+    budget.prior_zero_compute_preflight?.record_path ===
+      "benchmarks/zero4-q27-v1/aws-v1/preflight-failure-30189009274.json" &&
+      budget.prior_zero_compute_preflight.ci_run_id === "30189009274" &&
+      budget.prior_zero_compute_preflight.execution_lock_acquired === false &&
+      budget.prior_zero_compute_preflight.compute_launched === false &&
+      budget.prior_zero_compute_preflight.observed_compute_usd === 0 &&
+      budget.prior_zero_compute_preflight.scientific_attempt_consumed ===
+        false &&
+      budget.prior_zero_compute_preflight.authorization_remains_available ===
+        true,
+    "Q2.7 zero-compute preflight history drifted",
   );
   return true;
 }

@@ -8,6 +8,8 @@ const workloadPath = "scripts/aws/q27-seed2.sh";
 const userDataPath = "scripts/aws/q27-seed2-user-data.sh";
 const preflightPath = "scripts/aws/q27-preflight.sh";
 const requestPath = "scripts/aws/q27-run-instances.sh";
+const provisionPath = "scripts/aws/provision.sh";
+const preflightIamPath = "scripts/aws/apply-q27-preflight-iam.sh";
 
 function fail(message) { throw new Error(message); }
 function assert(condition, message) { if (!condition) fail(message); }
@@ -23,6 +25,8 @@ const workload = fs.readFileSync(workloadPath, "utf8");
 const userData = fs.readFileSync(userDataPath, "utf8");
 const preflight = fs.readFileSync(preflightPath, "utf8");
 const request = fs.readFileSync(requestPath, "utf8");
+const provision = fs.readFileSync(provisionPath, "utf8");
+const preflightIam = fs.readFileSync(preflightIamPath, "utf8");
 
 includesAll(launch, [
   "workflow_dispatch:",
@@ -162,5 +166,27 @@ assert(
   (request.match(/aws ec2 run-instances/g) ?? []).length === 2,
   "Q2.7 request builder has an unexpected RunInstances path",
 );
+
+for (const [text, label] of [
+  [provision, "AWS provisioner"],
+  [preflightIam, "Q2.7 preflight IAM applier"],
+]) {
+  includesAll(text, [
+    "zero-training-github-actions",
+    "zero-training-github",
+    "ReadLaunchInfrastructure",
+    "ec2:DescribeImages",
+    "ec2:DescribeSecurityGroups",
+    "ec2:DescribeSubnets",
+  ], label);
+}
+includesAll(preflightIam, [
+  "--check|--apply",
+  "aws iam get-role-policy",
+  "aws iam put-role-policy",
+  "Q2.7 preflight IAM read permissions applied and verified",
+], "Q2.7 preflight IAM applier");
+assert(!preflightIam.includes("iam attach-role-policy"),
+  "Q2.7 preflight IAM correction attaches an unbounded managed policy");
 
 console.log("Q2.7 launch/collector non-waiting workflow checks passed");
