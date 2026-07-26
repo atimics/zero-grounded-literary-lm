@@ -24,9 +24,13 @@ When proposals conflict, the tiebreaker is:
    works.
 3. **Three seeds before promotion.** No claim about the architecture is
    credible on one seed. Replication is not optional.
-4. **Cheapest informative experiment first.** If two experiments answer
-   different questions, run the one with the lower measured cost on the
-   declared backend. Do not label CPU-instance time as GPU time.
+4. **Literature before execution.** Every live experiment must register the
+   relevant primary literature, its limitations, and at least one
+   disconfirming or limiting source before authorization.
+5. **Cheapest informative evidence path first.** Compare literature, design,
+   implementation, execution, evaluation, and interpretation costs—not compute
+   alone. Run an experiment only when its result changes a declared decision.
+   Do not label CPU-instance time as GPU time.
 
 ---
 
@@ -80,13 +84,17 @@ promotion outcome.
 **Source**: Q2.6 seed-2 optimizer trace and the prospective
 `zero-language-gate-v1` result.
 **Status**: Preregistered and mechanically staged. A one-seed AWS budget and
-non-waiting launch/collector exist, but compute is not authorized.
+non-waiting launch/collector exist, but the infrastructure retry is not
+authorized. The evidence budget is registered but remains blocked on
+decision-critical full-text review and explicit human approval.
 **Depends on**: Q2.6-R family promotion (satisfied) and the frozen language
 gate (satisfied).
 **Cost**: Proposed maximum $1.17/6,190 instance-seconds for seed 2 through
 quantity promotion, conservatively inherited from the slowest Q2.6-R seed.
 The candidate-only language gate is separate and remains capped at
-$0.12/600 seconds.
+$0.12/600 seconds. The wider evidence path is projected at 25–95 agent credits
+and 3.2–8.5 human hours; its known incremental USD-equivalent range is
+$1.00–$5.09. See `benchmarks/zero4-q27-v1/EVIDENCE.json`.
 
 **Design**:
 

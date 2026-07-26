@@ -3,6 +3,9 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 
+import { validateExperimentEvidence } from
+  "./check_experiment_evidence.mjs";
+
 function fail(message) { throw new Error(message); }
 function assert(condition, message) { if (!condition) fail(message); }
 function readJson(file) { return JSON.parse(fs.readFileSync(file, "utf8")); }
@@ -13,6 +16,10 @@ function sha256(file) {
 const contractPath = process.argv[2] ??
   "benchmarks/zero4-q27-v1/contract.json";
 const contract = readJson(contractPath);
+const evidence = readJson("benchmarks/zero4-q27-v1/EVIDENCE.json");
+const retry = readJson(
+  "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
+);
 
 assert(contract.schema === "zero.zero4_q27_contract.v1",
   "wrong Q2.7 contract schema");
@@ -22,6 +29,16 @@ assert(contract.status === "preregistered_not_authorized",
 assert(contract.training_allowed === false, "Q2.7 training is allowed");
 assert(contract.independent_variable.includes("top-ffn"),
   "Q2.7 independent variable drifted");
+assert(evidence.experiment_id === contract.id,
+  "Q2.7 evidence belongs to another experiment");
+validateExperimentEvidence(evidence, {
+  requireReady: retry.authorization.authorized_for_execution === true,
+});
+assert(
+  evidence.costs.comparison.literature_and_design_usd_equivalent_upper >
+    evidence.costs.comparison.scientific_execution_cash_usd_upper,
+  "Q2.7 evidence hides that review/design may cost more than compute",
+);
 
 const lineage = contract.lineage;
 for (const [pathKey, hashKey] of [

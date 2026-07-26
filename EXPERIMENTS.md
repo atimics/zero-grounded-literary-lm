@@ -164,6 +164,13 @@ normalization. This is a registered hypothesis with a zero-compute firewall,
 not a completed experiment or a claim that isolation will succeed. Its
 machine-readable authority is `benchmarks/zero4-q27-v1`.
 
+15. **Evidence work is part of the experiment budget.** Prospective and live
+experiments must register primary literature, limiting evidence, cheaper
+alternatives, design and review cost, total incremental cost, and the decision
+that each possible outcome changes. Compute authorization alone is
+insufficient. Completed historical results are not rewritten; Q2.7 is the
+first live experiment governed by `EXPERIMENT-EVIDENCE.md`.
+
 ---
 
 ## Schema

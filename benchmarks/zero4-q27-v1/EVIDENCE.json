@@ -1,0 +1,422 @@
+{
+  "schema": "zero.experiment_evidence.v1",
+  "experiment_id": "zero4-q27-v1",
+  "status": "review_incomplete",
+  "updated_at": "2026-07-26",
+  "policy": {
+    "applies_prospectively": true,
+    "completed_history_rewritten": false,
+    "purpose": "Account for the full evidence path and decision value before opening additional Q2.7 compute."
+  },
+  "literature": {
+    "status": "screened_review_incomplete",
+    "search_protocol": {
+      "searched_at": "2026-07-26",
+      "sources": [
+        "ACL Anthology",
+        "PMLR",
+        "NeurIPS proceedings",
+        "CVF Open Access",
+        "PNAS",
+        "arXiv for primary manuscripts without a stable proceedings page"
+      ],
+      "questions": [
+        "What evidence supports replay and gradient projection for reducing catastrophic forgetting?",
+        "What evidence supports parameter isolation or parameter-efficient adaptation as a preservation mechanism?",
+        "What evidence localizes language-model behavior to transformer feed-forward layers?",
+        "Does prior work specifically justify training only the top FFN for language preservation?",
+        "What are the limitations of BLiMP and TinyStories as preservation gates for this model?"
+      ],
+      "inclusion_criteria": [
+        "primary research with a stable paper or proceedings URL",
+        "direct relevance to continual learning, replay, gradient projection, parameter isolation, feed-forward localization, or the declared language gates",
+        "at least one source that limits or challenges the Q2.7 rationale"
+      ],
+      "known_gaps": [
+        "No screened paper directly tests top-FFN-only continual adaptation in a character-level transformer of ZERO's scale.",
+        "Most continual-learning results use vision, reinforcement-learning, multilingual, or large pretrained-model settings rather than this exact training regime.",
+        "The current pass screened abstracts and metadata; decision-critical full texts have not yet been reviewed.",
+        "The literature does not establish that parameter-efficient tuning automatically prevents forgetting."
+      ]
+    },
+    "authorization_requirements": {
+      "minimum_full_text_reviews": 5,
+      "minimum_limiting_or_counterevidence": 1
+    },
+    "works": [
+      {
+        "id": "kirkpatrick-2017-ewc",
+        "citation": "Kirkpatrick et al. (2017), Overcoming catastrophic forgetting in neural networks",
+        "year": 2017,
+        "url": "https://doi.org/10.1073/PNAS.1611835114",
+        "stance": "context",
+        "review_status": "abstract_screened",
+        "relevance": "Introduces selective parameter stabilization through elastic weight consolidation.",
+        "limits": "The tested settings and Fisher-style penalty differ from Q2.7's direct replay authority and hard trainable subspace.",
+        "design_consequence": "Treat parameter importance as a plausible preservation signal, not proof that the selected top-FFN boundary is correct."
+      },
+      {
+        "id": "lopez-paz-ranzato-2017-gem",
+        "citation": "Lopez-Paz and Ranzato (2017), Gradient Episodic Memory for Continual Learning",
+        "year": 2017,
+        "url": "https://proceedings.neurips.cc/paper/2017/hash/f87522788a2be2d171666752f97ddebb-Abstract.html",
+        "stance": "supporting",
+        "review_status": "abstract_screened",
+        "relevance": "Uses episodic memory and gradient constraints to reduce forgetting while learning new tasks.",
+        "limits": "Its task setup, constraints, and benchmarks do not validate ZERO's cumulative functional replay gate.",
+        "design_consequence": "Supports comparing Q2.7's replay-tangent projection with established gradient-constrained continual learning."
+      },
+      {
+        "id": "chaudhry-2019-agem",
+        "citation": "Chaudhry et al. (2019), Efficient Lifelong Learning with A-GEM",
+        "year": 2019,
+        "url": "https://arxiv.org/abs/1812.00420",
+        "stance": "supporting",
+        "review_status": "abstract_screened",
+        "relevance": "Projects against an averaged episodic-memory gradient with an explicit efficiency goal.",
+        "limits": "The averaged constraint and benchmark regime differ from Q2.7's six-slice direct functional authority.",
+        "design_consequence": "Provides a close conceptual baseline for the direction-changing part of Q2.6/Q2.7."
+      },
+      {
+        "id": "rolnick-2019-replay",
+        "citation": "Rolnick et al. (2019), Experience Replay for Continual Learning",
+        "year": 2019,
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2019/hash/fa7cdfad1a5aaf8370ebeda47a1ff1c3-Abstract.html",
+        "stance": "supporting",
+        "review_status": "abstract_screened",
+        "relevance": "Shows replay as a comparatively simple mechanism for balancing stability and plasticity.",
+        "limits": "The method is evaluated in multi-task reinforcement learning rather than language-model adaptation.",
+        "design_consequence": "Supports retaining historical replay, while leaving the correct replay mixture and preservation metric empirical."
+      },
+      {
+        "id": "farajtabar-2020-ogd",
+        "citation": "Farajtabar et al. (2020), Orthogonal Gradient Descent for Continual Learning",
+        "year": 2020,
+        "url": "https://proceedings.mlr.press/v108/farajtabar20a.html",
+        "stance": "supporting",
+        "review_status": "abstract_screened",
+        "relevance": "Projects new-task gradients into a subspace intended to preserve previous outputs.",
+        "limits": "It does not establish that a single local projection predicts or controls ZERO's measured language loss.",
+        "design_consequence": "Supports the projection family but reinforces the need for the unchanged direct functional gate as final authority."
+      },
+      {
+        "id": "mallya-lazebnik-2018-packnet",
+        "citation": "Mallya and Lazebnik (2018), PackNet: Adding Multiple Tasks to a Single Network by Iterative Pruning",
+        "year": 2018,
+        "url": "https://openaccess.thecvf.com/content_cvpr_2018/html/Mallya_PackNet_Adding_Multiple_CVPR_2018_paper.html",
+        "stance": "context",
+        "review_status": "abstract_screened",
+        "relevance": "Demonstrates hard parameter isolation as a way to avoid overwriting prior-task weights.",
+        "limits": "PackNet allocates pruned parameters across vision tasks; Q2.7 instead updates an existing dense top-FFN sublayer shared by all behavior.",
+        "design_consequence": "Supports testing isolation, but not assuming that freezing lower layers guarantees preservation."
+      },
+      {
+        "id": "houlsby-2019-adapters",
+        "citation": "Houlsby et al. (2019), Parameter-Efficient Transfer Learning for NLP",
+        "year": 2019,
+        "url": "https://proceedings.mlr.press/v97/houlsby19a.html",
+        "stance": "context",
+        "review_status": "abstract_screened",
+        "relevance": "Shows that small trainable modules can adapt a frozen transformer across NLP tasks.",
+        "limits": "Task-specific adapters add parameters and preserve the base model; Q2.7 mutates shared top-FFN weights and has no task selector.",
+        "design_consequence": "Establishes a relevant cheaper alternative that should be compared if Q2.7 is a no-go."
+      },
+      {
+        "id": "geva-2021-ffn-memory",
+        "citation": "Geva et al. (2021), Transformer Feed-Forward Layers Are Key-Value Memories",
+        "year": 2021,
+        "url": "https://aclanthology.org/2021.emnlp-main.446/",
+        "stance": "supporting",
+        "review_status": "abstract_screened",
+        "relevance": "Finds interpretable pattern/value behavior in transformer FFNs and more semantic patterns in upper layers.",
+        "limits": "Interpretability and memory-like behavior do not show that upper-FFN updates preserve a model's global language distribution.",
+        "design_consequence": "Makes the top-FFN intervention plausible while requiring an external preservation gate."
+      },
+      {
+        "id": "meng-2022-rome",
+        "citation": "Meng et al. (2022), Locating and Editing Factual Associations in GPT",
+        "year": 2022,
+        "url": "https://proceedings.neurips.cc/paper_files/paper/2022/hash/6f1d43d5a82a37e89b0665b33bf3a182-Abstract-Conference.html",
+        "stance": "limiting",
+        "review_status": "abstract_screened",
+        "relevance": "Provides causal evidence that some factual associations are editable through localized feed-forward computations.",
+        "limits": "Its strongest localization is in middle-layer FFNs for factual recall, not the top FFN for operation routing or language preservation.",
+        "design_consequence": "Prevents presenting top-layer selection as literature-established; Q2.7 remains an internal-trace hypothesis."
+      },
+      {
+        "id": "liu-niehues-2025-forgetting",
+        "citation": "Liu and Niehues (2025), Conditions for Catastrophic Forgetting in Multilingual Translation",
+        "year": 2025,
+        "url": "https://aclanthology.org/2025.mrl-main.23/",
+        "stance": "counterevidence",
+        "review_status": "abstract_screened",
+        "relevance": "Systematically studies forgetting during language-model fine-tuning and compares parameter-efficient with full fine-tuning.",
+        "limits": "The multilingual translation setting and model scale differ substantially from ZERO.",
+        "design_consequence": "Requires Q2.7 to test rather than assume that reduced trainable scope improves preservation."
+      },
+      {
+        "id": "warstadt-2020-blimp",
+        "citation": "Warstadt et al. (2020), BLiMP: The Benchmark of Linguistic Minimal Pairs for English",
+        "year": 2020,
+        "url": "https://aclanthology.org/2020.tacl-1.25/",
+        "stance": "context",
+        "review_status": "abstract_screened",
+        "relevance": "Defines the linguistic minimal-pair benchmark used by the candidate gate.",
+        "limits": "BLiMP isolates selected grammatical phenomena and is not a general measure of language quality.",
+        "design_consequence": "Keep BLiMP conjunctive with TinyStories loss and scope claims to the measured screen."
+      },
+      {
+        "id": "eldan-li-2023-tinystories",
+        "citation": "Eldan and Li (2023), TinyStories: How Small Can Language Models Be and Still Speak Coherent English?",
+        "year": 2023,
+        "url": "https://arxiv.org/abs/2305.07759",
+        "stance": "context",
+        "review_status": "abstract_screened",
+        "relevance": "Introduces a language corpus designed for training and evaluating very small language models.",
+        "limits": "Q2.7 uses bits per byte on TinyStories as a preservation proxy, not the paper's full generation-evaluation framework.",
+        "design_consequence": "Report the gate as bounded distributional preservation and avoid claiming general coherence or reasoning."
+      }
+    ]
+  },
+  "costs": {
+    "currency": "USD",
+    "estimates_are_ranges": true,
+    "human_time_monetized": false,
+    "price_basis_date": "2026-07-26",
+    "phases": [
+      {
+        "id": "literature",
+        "status": "projected",
+        "usd_equivalent": {
+          "lower": 0.4,
+          "upper": 1.2
+        },
+        "cash_usd": {
+          "lower": 0,
+          "upper": 1.2
+        },
+        "agent_credits": {
+          "lower": 10,
+          "upper": 30
+        },
+        "human_hours": {
+          "lower": 1,
+          "upper": 2
+        },
+        "machine_hours": {
+          "lower": 0,
+          "upper": 0
+        },
+        "basis": "One bounded GPT-5.6 Terra review at 100k-300k input and 10k-30k output tokens; incremental cash may be zero when covered by included plan credits."
+      },
+      {
+        "id": "design",
+        "status": "projected",
+        "usd_equivalent": {
+          "lower": 0.4,
+          "upper": 1.6
+        },
+        "cash_usd": {
+          "lower": 0,
+          "upper": 1.6
+        },
+        "agent_credits": {
+          "lower": 10,
+          "upper": 40
+        },
+        "human_hours": {
+          "lower": 1,
+          "upper": 3
+        },
+        "machine_hours": {
+          "lower": 0,
+          "upper": 0
+        },
+        "basis": "Critical synthesis, design revision, alternative comparison, and preregistration review after the literature pass."
+      },
+      {
+        "id": "implementation",
+        "status": "projected",
+        "usd_equivalent": {
+          "lower": 0,
+          "upper": 0.4
+        },
+        "cash_usd": {
+          "lower": 0,
+          "upper": 0.4
+        },
+        "agent_credits": {
+          "lower": 0,
+          "upper": 10
+        },
+        "human_hours": {
+          "lower": 0.5,
+          "upper": 1.5
+        },
+        "machine_hours": {
+          "lower": 0,
+          "upper": 0
+        },
+        "basis": "Remaining evidence-led contract corrections and verification only; prior Q2.7 engineering is a visible but unmetered sunk cost."
+      },
+      {
+        "id": "execution",
+        "status": "mixed",
+        "usd_equivalent": {
+          "lower": 0,
+          "upper": 1.17
+        },
+        "cash_usd": {
+          "lower": 0,
+          "upper": 1.17
+        },
+        "agent_credits": {
+          "lower": 0,
+          "upper": 0
+        },
+        "human_hours": {
+          "lower": 0.1,
+          "upper": 0.25
+        },
+        "machine_hours": {
+          "lower": 0,
+          "upper": 1.7194444444444446
+        },
+        "basis": "One proposed infrastructure retry capped at $1.17; the prior infrastructure failure spent $0.021344444444444444 and is accounted in the separate all-in ceiling."
+      },
+      {
+        "id": "evaluation",
+        "status": "projected",
+        "usd_equivalent": {
+          "lower": 0,
+          "upper": 0.12
+        },
+        "cash_usd": {
+          "lower": 0,
+          "upper": 0.12
+        },
+        "agent_credits": {
+          "lower": 0,
+          "upper": 0
+        },
+        "human_hours": {
+          "lower": 0.1,
+          "upper": 0.25
+        },
+        "machine_hours": {
+          "lower": 0,
+          "upper": 0.16666666666666666
+        },
+        "basis": "Candidate-only BLiMP/TinyStories gate, conditionally authorized only if quantity produces a frozen candidate."
+      },
+      {
+        "id": "analysis",
+        "status": "projected",
+        "usd_equivalent": {
+          "lower": 0.2,
+          "upper": 0.6
+        },
+        "cash_usd": {
+          "lower": 0,
+          "upper": 0.6
+        },
+        "agent_credits": {
+          "lower": 5,
+          "upper": 15
+        },
+        "human_hours": {
+          "lower": 0.5,
+          "upper": 1.5
+        },
+        "machine_hours": {
+          "lower": 0,
+          "upper": 0
+        },
+        "basis": "Result integrity review, comparison with literature, decision write-up, and roadmap update."
+      }
+    ],
+    "totals": {
+      "known_incremental_usd_equivalent": {
+        "lower": 1,
+        "upper": 5.09
+      },
+      "incremental_cash_usd": {
+        "lower": 0,
+        "upper": 5.09
+      },
+      "agent_credits": {
+        "lower": 25,
+        "upper": 95
+      },
+      "human_hours": {
+        "lower": 3.2,
+        "upper": 8.5
+      },
+      "machine_hours": {
+        "lower": 0,
+        "upper": 1.8861111111111113
+      },
+      "execution_all_in_cash_ceiling_usd": 1.32,
+      "exclusions": [
+        "Prior Q2.7 design and infrastructure engineering were not metered and are not silently valued at zero.",
+        "Future seed-1/3 replication and SAT-1 stages require separate evidence and execution budgets.",
+        "Human time is reported but not converted to dollars."
+      ]
+    },
+    "comparison": {
+      "literature_and_design_usd_equivalent_upper": 2.8,
+      "scientific_execution_cash_usd_upper": 1.17,
+      "knowledge_and_design_can_exceed_execution": true,
+      "interpretation": "The projected literature and design work can cost more than the proposed scientific compute. Compute price alone is therefore not a sufficient experiment-value argument."
+    }
+  },
+  "decision_value": {
+    "uncertainty": "Whether quantity routing can be learned from immutable ZERO.3 in a hard top-FFN subspace without repeating ZERO.4's bounded TinyStories regression.",
+    "decision_purchased": "Choose whether top-FFN isolation deserves a separately budgeted two-seed replication and can remain the candidate path to a language-preserving SAT-1 anchor.",
+    "go_action": "Retain the exact seed-2 candidate, review the result against the literature, and consider a separately preregistered and costed seed-1/3 replication. Do not promote from one seed.",
+    "no_go_action": "Retire this exact top-FFN isolation hypothesis without adaptation inside Q2.7 and compare modular or other parameter-isolation alternatives before proposing more compute.",
+    "inconclusive_action": "Treat infrastructure or integrity failure as no scientific evidence; do not consume the scientific question or infer a no-go.",
+    "null_result_value": "A clean no-go rules out a specific internally motivated localization boundary and prevents unbounded tuning against the language gate.",
+    "claims_not_supported": [
+      "that top-FFN isolation is established by prior literature",
+      "that parameter-efficient tuning generally prevents catastrophic forgetting",
+      "that passing BLiMP and TinyStories proves general language ability",
+      "that a one-seed result is sufficient for promotion"
+    ],
+    "downstream_effects": [
+      "A no-go avoids seed-1/3 replication of this intervention.",
+      "A go only opens consideration of replication; it does not authorize it.",
+      "SAT-1 remains blocked until a three-seed language-preserving anchor exists.",
+      "The literature review may redirect the roadmap to adapters, masks, or a different localization test before further training."
+    ]
+  },
+  "alternatives": [
+    {
+      "id": "literature-only",
+      "description": "Complete the decision-critical full-text review before any retry.",
+      "information_gained": "Determines whether the intervention has a defensible prior, identifies competing methods, and sharpens the claims and ablations.",
+      "reason_not_sufficient_alone": "No screened study tests this exact model, trainable boundary, data, or preservation gate."
+    },
+    {
+      "id": "existing-trace-only",
+      "description": "Stop after the completed Q2.6 displacement and replay-drift analysis.",
+      "information_gained": "Localizes internal correlations at zero additional scientific compute.",
+      "reason_not_sufficient_alone": "The trace cannot establish whether top-FFN-only training will learn quantity or preserve language."
+    },
+    {
+      "id": "do-nothing",
+      "description": "Keep ZERO.4 current and leave SAT-1 blocked.",
+      "information_gained": "No new evidence; avoids all incremental cost and risk.",
+      "reason_not_sufficient_alone": "Leaves the language-preserving anchor question unresolved."
+    }
+  ],
+  "authorization_gate": {
+    "literature_list_present": true,
+    "literature_review_complete": false,
+    "cost_projection_complete": true,
+    "decision_value_review_complete": true,
+    "human_approval_observed": false,
+    "ready_for_experiment_authorization": false,
+    "block_reason": "Decision-critical full texts have not been reviewed and the evidence/value package has not received explicit human approval."
+  }
+}
