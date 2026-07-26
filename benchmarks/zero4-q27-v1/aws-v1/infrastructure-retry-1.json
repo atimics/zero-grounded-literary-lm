@@ -1,0 +1,138 @@
+{
+  "schema": "zero.q27_infrastructure_retry_authorization.v1",
+  "id": "zero4-q27-aws-v1-infrastructure-retry-1",
+  "status": "proposed_not_authorized",
+  "purpose": "Permit at most one incident-bound infrastructure-only retry of the frozen Q2.7 seed-2 quantity stage after run 30199981920 failed in the build-phase test harness before scientific execution.",
+  "authorization": {
+    "scope": "one infrastructure-only retry of Q2.7 diagnostic seed 2 through quantity promotion",
+    "failed_workflow_run_id": "30199981920",
+    "retry_ordinal": 1,
+    "maximum_retry_count": 1,
+    "one_retry_execution_only": true,
+    "requires_manual_approval": true,
+    "manual_approval_observed": false,
+    "authorized_for_execution": false,
+    "expanded_all_in_envelope_approved": false,
+    "authorized_at": null
+  },
+  "eligibility": {
+    "failure_record": {
+      "path": "benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json",
+      "sha256": "941744f654969b60de54747a650a6bc5aa448db6a39bc90ac1f9e150c84cf728"
+    },
+    "required_terminal_status": "infrastructure-error",
+    "required_failure_phase": "build",
+    "required_scientific_result_available": false,
+    "required_scientific_decision": null,
+    "required_prior_instance_state": "terminated",
+    "result_object_must_be_absent": true,
+    "candidate_artifacts_must_be_absent": true,
+    "budget_exhaustion_is_ineligible": true,
+    "completed_result_is_ineligible": true
+  },
+  "scientific_immutability": {
+    "frozen_science_commit": "765600e218537ac3b7ff320c676cfb7f62dab0ae",
+    "scientific_design_unchanged": true,
+    "q27_contract": {
+      "path": "benchmarks/zero4-q27-v1/contract.json",
+      "sha256": "e2ed4f2d6e151bfbc33073fa0cb26865534255378fc1d32d9922a527a84a49c1"
+    },
+    "q26_contract": {
+      "path": "benchmarks/zero4-q26-v1/contract.json",
+      "sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80"
+    },
+    "trainer": {
+      "path": "scripts/train_zero4_q27.mjs",
+      "sha256": "4fa33a346ae06814ae84d307ede35ff4116d597093a7b17a315d1b3d55c297ef"
+    },
+    "result_checker": {
+      "path": "scripts/check_zero4_q27_result.mjs",
+      "sha256": "9058bf2110110579fb04a21e04ba90e018ae31e42e3dedbaaf140034a0255c60"
+    },
+    "trainer_source": {
+      "path": "literary_lm.c",
+      "sha256": "5f4c47e0fedcc0f96d5eafcd8f45f6bfc4808a1d1af7434cb188693449ff53e3"
+    },
+    "exporter_source": {
+      "path": "export_literary.c",
+      "sha256": "c7b1ba5a2763211871df1720f01f49b765365253924b7d4c1113643403ce463c"
+    },
+    "quantity_evaluator_source": {
+      "path": "quantity_request_eval.c",
+      "sha256": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902"
+    },
+    "generator": {
+      "path": "scripts/generate_zero4_q2.mjs",
+      "sha256": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded"
+    },
+    "language_gate_contract": {
+      "path": "benchmarks/zero-language-gate-v1/contract.json",
+      "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+    },
+    "language_gate_runner": {
+      "path": "scripts/run_zero_language_gate.mjs",
+      "sha256": "233e9e29fc078712bec4602e40fdb8d044a93b330424af456af7699e220bdc3c"
+    }
+  },
+  "provenance": {
+    "original_execution_lock": {
+      "s3_key": "experiments/zero4-q27-aws-v1/execution.lock",
+      "sha256": "7def9b3e6a684cfd48f401dda7a9988aeef636f89ba6a7b4eddcb969f529c59a"
+    },
+    "failed_launch": {
+      "s3_key": "jobs/30199981920/launch.json",
+      "sha256": "5798760a21e4766926cb8f25028bfc3b88319c91313672c71e0380cd860b43c1"
+    },
+    "failed_status": {
+      "s3_key": "jobs/30199981920/seed2/status.json",
+      "sha256": "2f2dad36934ad2aff3d3294e945cae0866b1dcc4e2a47e0f07745125038ac12e"
+    },
+    "failed_workload_log": {
+      "s3_key": "jobs/30199981920/seed2/zero-q27-seed2.log",
+      "sha256": "ffe10309a307a3fde80f134c4ce101d15e0e5ed9c95d26ed264b4e6f3d124614"
+    },
+    "prior_instance_id": "i-095a0fdf736ce98e9",
+    "prior_instance_must_be_terminated": true,
+    "original_execution_lock_must_remain_unchanged": true
+  },
+  "retry_execution": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "seed": 2,
+    "max_instance_seconds": 6190,
+    "workload_timeout_seconds": 6130,
+    "publication_reserve_seconds": 60,
+    "on_demand_usd_per_hour": 0.68,
+    "max_compute_usd": 1.17,
+    "exact_run_instances_dry_run_required": true,
+    "preflight_before_retry_lock_required": true,
+    "separate_write_once_lock_key": "experiments/zero4-q27-aws-v1/infrastructure-retry-1.lock",
+    "collector_may_wait_or_launch_compute": false
+  },
+  "cost_envelope": {
+    "prior_observed_instance_seconds": 113,
+    "prior_observed_compute_usd": 0.021344444444444444,
+    "retry_max_instance_seconds": 6190,
+    "retry_max_compute_usd": 1.17,
+    "quantity_all_in_max_instance_seconds": 6303,
+    "quantity_all_in_exact_max_compute_usd": 1.1913444444444443,
+    "quantity_all_in_ceiling_usd": 1.2,
+    "conditional_language_gate_max_compute_usd": 0.12,
+    "overall_exact_max_compute_usd": 1.3113444444444444,
+    "overall_all_in_ceiling_usd": 1.32,
+    "additional_retry_compute_authorization_required_usd": 1.17
+  },
+  "forbidden_conditions": [
+    "retry authorization absent",
+    "retry lock already exists",
+    "original execution lock missing or changed",
+    "prior instance not terminated",
+    "active ZERO compute exists",
+    "prior status is budget-exhausted",
+    "scientific result or decision exists",
+    "candidate artifact exists",
+    "retry ordinal greater than one",
+    "scientific source hash differs"
+  ]
+}

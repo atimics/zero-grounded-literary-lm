@@ -1,0 +1,91 @@
+{
+  "schema": "zero.q27_aws_execution_failure.v1",
+  "experiment": "zero4-q27-aws-v1",
+  "ci_run_id": "30199981920",
+  "workflow_url": "https://github.com/atimics/zero-grounded-literary-lm/actions/runs/30199981920",
+  "git_commit": "197856f4d0fc727899275195cbadd6582aff27b6",
+  "classification": "infrastructure-build-error",
+  "phase": "build",
+  "process_exit_code": 2,
+  "instance": {
+    "instance_id": "i-095a0fdf736ce98e9",
+    "instance_type": "c6i.4xlarge",
+    "ami": "ami-052355af2a014bd2c",
+    "launch_time": "2026-07-26T11:22:32Z",
+    "state": "terminated",
+    "terminal_observed_at": "2026-07-26T11:41:48Z"
+  },
+  "evidence": {
+    "execution_lock": {
+      "s3_key": "experiments/zero4-q27-aws-v1/execution.lock",
+      "sha256": "7def9b3e6a684cfd48f401dda7a9988aeef636f89ba6a7b4eddcb969f529c59a"
+    },
+    "launch": {
+      "s3_key": "jobs/30199981920/launch.json",
+      "sha256": "5798760a21e4766926cb8f25028bfc3b88319c91313672c71e0380cd860b43c1"
+    },
+    "preflight": {
+      "s3_key": "jobs/30199981920/preflight.json",
+      "sha256": "2d66646f34cc8b9f4ca40856b6ea412c46583d0da3214360a4a743831ab91b7c"
+    },
+    "heartbeat": {
+      "s3_key": "jobs/30199981920/seed2/heartbeat.json",
+      "sha256": "af73fb64361dc1b6f754b4c4518cb4f50734bb9e47658fe0bfd2fad0075e9297"
+    },
+    "status": {
+      "s3_key": "jobs/30199981920/seed2/status.json",
+      "sha256": "2f2dad36934ad2aff3d3294e945cae0866b1dcc4e2a47e0f07745125038ac12e"
+    },
+    "bootstrap_log": {
+      "s3_key": "jobs/30199981920/seed2/zero-q27-bootstrap.log",
+      "sha256": "2a82aa6f2c6ec8f6808512759e2db2f6e2f7a962ecf72e0bb72e13ce78b19e35"
+    },
+    "workload_log": {
+      "s3_key": "jobs/30199981920/seed2/zero-q27-seed2.log",
+      "sha256": "ffe10309a307a3fde80f134c4ce101d15e0e5ed9c95d26ed264b4e6f3d124614"
+    }
+  },
+  "terminal_status": {
+    "status": "infrastructure-error",
+    "phase": "build",
+    "exit_code": 2,
+    "started_at": "2026-07-26T11:23:58Z",
+    "finished_at": "2026-07-26T11:24:07Z",
+    "observed_instance_seconds": 113,
+    "scientific_result_available": false,
+    "scientific_decision": null,
+    "result_sha256": null
+  },
+  "cost": {
+    "on_demand_usd_per_hour": 0.68,
+    "observed_instance_seconds": 113,
+    "observed_compute_usd": 0.021344444444444444,
+    "observed_compute_usd_rounded_up_cents": 0.03,
+    "original_max_compute_usd": 1.17
+  },
+  "root_cause": {
+    "runtime": "Node.js 18.19.1",
+    "failing_check": "scripts/check_q27_aws_preflight.mjs",
+    "mechanism": "The extensionless fake aws executable used ESM import syntax and Node 18 loaded it as CommonJS.",
+    "error": "SyntaxError: Cannot use import statement outside a module",
+    "remediation": "Use CommonJS require syntax in extensionless fake executables and run the Q2.7 infrastructure checks under Node 18 in CI.",
+    "scientific_change_required": false
+  },
+  "scientific_scope": {
+    "scientific_phase_reached": false,
+    "result_s3_key": "jobs/30199981920/seed2/results/result.json",
+    "result_head_observation": "404 Not Found",
+    "candidate_artifacts_observed": false,
+    "scientific_result_available": false,
+    "scientific_decision": null,
+    "infrastructure_failure_is_not_scientific_no_go": true
+  },
+  "retry_eligibility": {
+    "eligible": true,
+    "retry_ordinal": 1,
+    "maximum_retry_count": 1,
+    "original_execution_lock_must_remain": true,
+    "separate_write_once_lock_key": "experiments/zero4-q27-aws-v1/infrastructure-retry-1.lock",
+    "manual_cost_authorization_required": true
+  }
+}

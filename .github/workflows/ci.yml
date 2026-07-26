@@ -57,6 +57,20 @@ jobs:
       - name: Run benchmark manifest check
         run: make zero-benchmark-check
 
+  q27-node18-portability:
+    name: Q2.7 infrastructure · Node 18
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install EC2-compatible Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '18.19.1'
+
+      - name: Run Q2.7 infrastructure and science-lock checks
+        run: make zero4-q27-check
+
   training-assets:
     name: Training assets and deterministic smoke
     if: github.event_name == 'workflow_dispatch'
