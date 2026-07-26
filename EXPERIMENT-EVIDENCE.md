@@ -22,6 +22,8 @@ contract. The file uses `zero.experiment_evidence.v1` and must contain:
    - review state (`abstract_screened` or `full_text_reviewed`);
    - at least one source that limits or challenges the proposed rationale;
    - explicit coverage gaps.
+   - a SHA-256-bound structured review artifact once the full-text pass
+     completes.
 2. **Evidence-cost ledger**
    - literature discovery and review;
    - experimental design and preregistration;
@@ -41,6 +43,7 @@ contract. The file uses `zero.experiment_evidence.v1` and must contain:
    - doing nothing.
 5. **Authorization gate**
    - literature review complete;
+   - the review's `run`, `revise`, or `abandon` recommendation resolved;
    - total incremental cost projection complete;
    - decision-value review complete;
    - explicit human approval observed.
@@ -86,6 +89,7 @@ cost.
 ```text
 draft
   -> review_incomplete
+  -> design_revision_required (when the review recommends revision)
   -> ready_for_authorization
   -> authorized under a separate immutable execution budget
   -> result and actual-cost reconciliation
@@ -93,7 +97,10 @@ draft
 
 `scripts/check_experiment_evidence.mjs` validates the structure. Live execution
 checkers must call it with `--require-ready`, or enforce the equivalent
-condition, before an authorization can open compute.
+condition, before an authorization can open compute. Completing a literature
+review does not itself authorize execution: a `revise` recommendation keeps
+the gate closed until the design changes are incorporated and reviewed, while
+an `abandon` recommendation cannot open the experiment.
 
 ## Automated review stage
 
@@ -112,5 +119,9 @@ controls; it cannot read the repository. It writes a structured
 
 Ordinary CI never launches the agent. `make check` validates the output schema,
 registered source ids, full-text locators, counterevidence coverage, cost
-controls, and synthesis. Review generation spends credits; review validation
-does not.
+controls, synthesis, artifact hash, and authorization consequence. Review
+generation spends credits; review validation does not. The runner captures the
+CLI's aggregate `tokens used` value and records a conservative credit range
+using the minimum and maximum GPT-5.6 Terra token-type rates from the
+[Codex rate card](https://help.openai.com/en/articles/20001106-codex-rate-card);
+without the input/cache/output split it does not invent an exact credit charge.

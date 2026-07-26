@@ -85,8 +85,11 @@ promotion outcome.
 `zero-language-gate-v1` result.
 **Status**: Preregistered and mechanically staged. A one-seed AWS budget and
 non-waiting launch/collector exist, but the infrastructure retry is not
-authorized. The evidence budget is registered but remains blocked on
-decision-critical full-text review and explicit human approval.
+authorized. The bounded five-paper full-text review completed with a `revise`
+recommendation. It found support for replay-guided projection but not for
+top-FFN isolation as an established preservation boundary. The current exact
+Q2.7 design must not run unchanged; its design revision and explicit
+experiment approval remain unresolved.
 **Depends on**: Q2.6-R family promotion (satisfied) and the frozen language
 gate (satisfied).
 **Cost**: Proposed maximum $1.17/6,190 instance-seconds for seed 2 through
@@ -94,7 +97,10 @@ quantity promotion, conservatively inherited from the slowest Q2.6-R seed.
 The candidate-only language gate is separate and remains capped at
 $0.12/600 seconds. The wider evidence path is projected at 25–95 agent credits
 and 3.2–8.5 human hours; its known incremental USD-equivalent range is
-$1.00–$5.09. See `benchmarks/zero4-q27-v1/EVIDENCE.json`.
+$1.00–$5.09. The completed Terra review reported 78,046 aggregate tokens,
+which bounds its credit use to 0.4877875–29.26725 without inventing a
+token-type split; the reconciled wider path is 15.4877875–94.26725 agent
+credits. See `benchmarks/zero4-q27-v1/EVIDENCE.json`.
 
 **Design**:
 
@@ -104,6 +110,12 @@ parameter except `layer.5.norm2`, `layer.5.w1`, `layer.5.w2`, and
 token embedding, which dominated the completed Q2.6 replay-drift diagnostics.
 The Q2.6 optimizer, tangent guard, quantity gates, replay authority, split
 isolation, selection rule, and stop conditions remain unchanged.
+
+This frozen design is now an ablation candidate, not the assumed safe path.
+Before compute can be reconsidered, a replacement preregistration must resolve
+the literature review's requested broader-scope comparison, retain the direct
+per-slice functional replay authority, preregister BLiMP category reporting,
+and limit TinyStories/BLiMP claims to their measured distributions.
 
 Only a prospectively selected quantity/replay-feasible seed-2 checkpoint may
 open quantity promotion and then the candidate-only BLiMP/TinyStories gate,

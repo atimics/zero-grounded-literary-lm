@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 
+import crypto from "node:crypto";
 import fs from "node:fs";
-import { pathToFileURL } from "node:url";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { validateLiteratureReview } from "./check_literature_review.mjs";
 
 function fail(message) { throw new Error(message); }
 function assert(condition, message) { if (!condition) fail(message); }
@@ -39,13 +43,19 @@ const REQUIRED_PHASES = [
 
 export function validateExperimentEvidence(
   evidence,
-  { requireReady = false } = {},
+  { requireReady = false, evidencePath = null } = {},
 ) {
   assert(evidence?.schema === "zero.experiment_evidence.v1",
     "unsupported experiment evidence schema");
   assert(nonEmpty(evidence.experiment_id), "experiment id is missing");
   assert(
-    ["draft", "review_incomplete", "ready_for_authorization", "retired"]
+    [
+      "draft",
+      "review_incomplete",
+      "design_revision_required",
+      "ready_for_authorization",
+      "retired",
+    ]
       .includes(evidence.status),
     "experiment evidence status is invalid",
   );
@@ -109,6 +119,32 @@ export function validateExperimentEvidence(
       requirements.minimum_limiting_or_counterevidence >= 1,
     "literature authorization requirements are invalid",
   );
+  let review = null;
+  if (literature.status === "review_complete") {
+    const artifact = literature.review_artifact;
+    assert(artifact && nonEmpty(artifact.path) &&
+      /^[a-f0-9]{64}$/.test(artifact.sha256),
+    "completed literature review lacks a bound artifact");
+    assert(path.basename(artifact.path) === artifact.path,
+      "literature review artifact must be next to its evidence file");
+    assert(evidencePath !== null,
+      "evidence path is required to validate the literature artifact");
+    const reviewPath = path.resolve(
+      path.dirname(path.resolve(evidencePath)),
+      artifact.path,
+    );
+    assert(fs.existsSync(reviewPath),
+      "bound literature review artifact is missing");
+    const bytes = fs.readFileSync(reviewPath);
+    assert(crypto.createHash("sha256").update(bytes).digest("hex") ===
+      artifact.sha256,
+    "bound literature review artifact hash drifted");
+    review = JSON.parse(bytes);
+    validateLiteratureReview(review, evidence);
+    assert(artifact.status === review.status &&
+      artifact.recommendation === review.synthesis.recommendation,
+    "literature review summary disagrees with its artifact");
+  }
 
   const costs = evidence.costs;
   assert(costs?.currency === "USD" && costs.estimates_are_ranges === true,
@@ -205,6 +241,7 @@ export function validateExperimentEvidence(
   for (const name of [
     "literature_list_present",
     "literature_review_complete",
+    "literature_recommendation_resolved",
     "cost_projection_complete",
     "decision_value_review_complete",
     "human_approval_observed",
@@ -213,13 +250,27 @@ export function validateExperimentEvidence(
     assert(typeof gate?.[name] === "boolean",
       `authorization gate ${name} is not boolean`);
   }
+  assert(typeof gate.recommendation_resolution === "string",
+    "literature recommendation resolution record is missing");
+  if (gate.literature_recommendation_resolved) {
+    assert(nonEmpty(gate.recommendation_resolution),
+      "resolved literature recommendation lacks a resolution record");
+  } else {
+    assert(gate.recommendation_resolution === "",
+      "unresolved literature recommendation claims a resolution");
+  }
   assert(gate.literature_list_present === true,
     "literature list is not registered");
-  const fullTextCount = literature.works.filter(
+  const fullTextCount = (review?.works ?? []).filter(
     (work) => work.review_status === "full_text_reviewed",
   ).length;
-  const limitingCount = literature.works.filter(
-    (work) => ["limiting", "counterevidence"].includes(work.stance),
+  const registeredById = new Map(
+    literature.works.map((work) => [work.id, work]),
+  );
+  const limitingCount = (review?.works ?? []).filter(
+    (work) => ["limiting", "counterevidence"].includes(
+      registeredById.get(work.id)?.stance,
+    ),
   ).length;
   const literatureComplete =
     literature.status === "review_complete" &&
@@ -227,7 +278,22 @@ export function validateExperimentEvidence(
     limitingCount >= requirements.minimum_limiting_or_counterevidence;
   assert(gate.literature_review_complete === literatureComplete,
     "literature completion gate disagrees with the review record");
+  if (review?.synthesis.recommendation === "run") {
+    assert(gate.literature_recommendation_resolved === true,
+      "run recommendation is not marked resolved");
+  }
+  if (review?.synthesis.recommendation === "revise") {
+    assert(gate.literature_recommendation_resolved
+      ? evidence.status !== "design_revision_required"
+      : evidence.status === "design_revision_required",
+    "unresolved revision has the wrong evidence status");
+  }
+  if (review?.synthesis.recommendation === "abandon") {
+    assert(gate.literature_recommendation_resolved === false,
+      "abandon recommendation cannot open experiment authorization");
+  }
   const ready = literatureComplete &&
+    gate.literature_recommendation_resolved &&
     gate.cost_projection_complete &&
     gate.decision_value_review_complete &&
     gate.human_approval_observed;
@@ -255,7 +321,9 @@ function selfTest() {
     import.meta.url,
   );
   const valid = JSON.parse(fs.readFileSync(path, "utf8"));
-  validateExperimentEvidence(valid);
+  validateExperimentEvidence(valid, {
+    evidencePath: fileURLToPath(path),
+  });
   const mutations = [
     ["empty literature", (copy) => { copy.literature.works = []; }],
     ["no counterevidence", (copy) => {
@@ -265,13 +333,23 @@ function selfTest() {
     ["false readiness", (copy) => {
       copy.authorization_gate.ready_for_experiment_authorization = true;
     }],
+    ["false recommendation resolution", (copy) => {
+      copy.authorization_gate.literature_recommendation_resolved = true;
+      copy.authorization_gate.recommendation_resolution =
+        "Claimed complete without revising the evidence status.";
+    }],
+    ["review hash drift", (copy) => {
+      copy.literature.review_artifact.sha256 = "0".repeat(64);
+    }],
   ];
   for (const [name, mutate] of mutations) {
     const copy = structuredClone(valid);
     mutate(copy);
     let rejected = false;
     try {
-      validateExperimentEvidence(copy);
+      validateExperimentEvidence(copy, {
+        evidencePath: fileURLToPath(path),
+      });
     } catch {
       rejected = true;
     }
@@ -279,7 +357,10 @@ function selfTest() {
   }
   let blocked = false;
   try {
-    validateExperimentEvidence(valid, { requireReady: true });
+    validateExperimentEvidence(valid, {
+      requireReady: true,
+      evidencePath: fileURLToPath(path),
+    });
   } catch {
     blocked = true;
   }
@@ -293,13 +374,16 @@ if (isMain) {
     selfTest();
     console.log("experiment evidence self-test passed");
   } else {
-    const path = process.argv[2];
-    if (!path) {
+    const evidencePath = process.argv[2];
+    if (!evidencePath) {
       fail("usage: check_experiment_evidence.mjs EVIDENCE.json [--require-ready]");
     }
     validateExperimentEvidence(
-      JSON.parse(fs.readFileSync(path, "utf8")),
-      { requireReady: process.argv.includes("--require-ready") },
+      JSON.parse(fs.readFileSync(evidencePath, "utf8")),
+      {
+        requireReady: process.argv.includes("--require-ready"),
+        evidencePath,
+      },
     );
     console.log("experiment evidence passed");
   }

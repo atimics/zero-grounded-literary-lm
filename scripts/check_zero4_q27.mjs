@@ -16,7 +16,8 @@ function sha256(file) {
 const contractPath = process.argv[2] ??
   "benchmarks/zero4-q27-v1/contract.json";
 const contract = readJson(contractPath);
-const evidence = readJson("benchmarks/zero4-q27-v1/EVIDENCE.json");
+const evidencePath = "benchmarks/zero4-q27-v1/EVIDENCE.json";
+const evidence = readJson(evidencePath);
 const retry = readJson(
   "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
 );
@@ -33,6 +34,7 @@ assert(evidence.experiment_id === contract.id,
   "Q2.7 evidence belongs to another experiment");
 validateExperimentEvidence(evidence, {
   requireReady: retry.authorization.authorized_for_execution === true,
+  evidencePath,
 });
 assert(
   evidence.costs.comparison.literature_and_design_usd_equivalent_upper >

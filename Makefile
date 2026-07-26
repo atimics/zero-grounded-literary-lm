@@ -1068,7 +1068,9 @@ zero4-q26-train: literary_lm export_literary quantity_request_eval \
 zero4-q26: zero4-q26-train
 
 experiment-evidence-check: scripts/check_experiment_evidence.mjs \
-		benchmarks/zero4-q27-v1/EVIDENCE.json
+		scripts/check_literature_review.mjs \
+		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json
 	node scripts/check_experiment_evidence.mjs --self-test
 	node scripts/check_experiment_evidence.mjs \
 		benchmarks/zero4-q27-v1/EVIDENCE.json
@@ -1076,7 +1078,8 @@ experiment-evidence-check: scripts/check_experiment_evidence.mjs \
 literature-review-pipeline-check: scripts/check_literature_review.mjs \
 		scripts/run_experiment_literature_review.mjs \
 		schemas/literature-review-result.schema.json \
-		benchmarks/zero4-q27-v1/EVIDENCE.json
+		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json
 	node scripts/check_literature_review.mjs --self-test
 	@if test -f benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json; then \
 		node scripts/check_literature_review.mjs \
@@ -1111,6 +1114,7 @@ zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		.github/workflows/q27-aws-collect.yml \
 		benchmarks/zero4-q27-v1/contract.json \
 		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json \
 		benchmarks/zero4-q27-v1/aws-v1/conditional-language-gate.json \
 		benchmarks/zero4-q27-v1/aws-v1/preflight-failure-30189009274.json \
 		benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json \

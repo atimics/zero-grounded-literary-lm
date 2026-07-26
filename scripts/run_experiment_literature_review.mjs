@@ -43,6 +43,26 @@ assert(fs.existsSync(schemaPath), "literature review output schema is missing");
 assert(!fs.existsSync(outputPath),
   "literature review output already exists; refusing to overwrite evidence");
 
+const CACHED_INPUT_CREDITS_PER_MILLION = 6.25;
+const OUTPUT_CREDITS_PER_MILLION = 375;
+function recordObservedUsage(review, observedTotalTokens) {
+  if (observedTotalTokens === null) {
+    review.agent.observed_total_tokens = null;
+    review.agent.credit_bounds = null;
+    return;
+  }
+  assert(Number.isInteger(observedTotalTokens) && observedTotalTokens > 0,
+    "observed total token count is invalid");
+  review.agent.observed_total_tokens = observedTotalTokens;
+  review.agent.credit_bounds = {
+    lower: observedTotalTokens *
+      CACHED_INPUT_CREDITS_PER_MILLION / 1_000_000,
+    upper: observedTotalTokens *
+      OUTPUT_CREDITS_PER_MILLION / 1_000_000,
+    basis: "Bounded from the observed aggregate token count using the GPT-5.6 Terra Codex rates: 6.25 cached-input to 375 output credits per million tokens. Exact credits remain unavailable without the token-type split.",
+  };
+}
+
 const relativeEvidence = path.relative(root, evidencePath);
 const evidence = JSON.parse(fs.readFileSync(evidencePath, "utf8"));
 const packet = {
@@ -88,7 +108,9 @@ Rules:
 - Treat the cost controls as immutable: model gpt-5.6-terra, medium reasoning,
   no subagents, five primary sources, projected cap 30 credits. The CLI does
   not expose actual task credits here, so set actual_usage_available=false and
-  actual_credits=null rather than inventing usage.
+  actual_credits=null rather than inventing usage. Also set
+  observed_total_tokens=null and credit_bounds=null; the runner populates
+  those fields from the CLI transcript after the review.
 - If five qualifying full texts cannot be accessed, return status="blocked",
   explain why in block_reason, and report only sources actually reviewed.
 - Return only the JSON object required by the supplied output schema.`;
@@ -129,7 +151,7 @@ try {
   });
   fs.copyFileSync(schemaPath, isolatedSchemaPath,
     fs.constants.COPYFILE_EXCL);
-  const codex = childProcess.spawnSync(
+  const codex = childProcess.spawn(
     "codex",
     [
       "exec",
@@ -155,17 +177,36 @@ try {
     {
       cwd: temporaryRoot,
       env: allowedEnvironment,
-      stdio: ["ignore", "inherit", "inherit"],
+      stdio: ["ignore", "pipe", "pipe"],
     },
   );
-  assert(codex.error === undefined,
-    `failed to launch literature review agent: ${codex.error?.message}`);
-  assert(codex.status === 0,
-    `literature review agent exited ${codex.status}`);
+  let transcript = "";
+  for (const stream of [codex.stdout, codex.stderr]) {
+    stream.on("data", (chunk) => {
+      const text = chunk.toString();
+      transcript += text;
+      process.stderr.write(text);
+    });
+  }
+  const status = await new Promise((resolve, reject) => {
+    codex.on("error", reject);
+    codex.on("close", resolve);
+  });
+  assert(status === 0, `literature review agent exited ${status}`);
   const review = JSON.parse(fs.readFileSync(isolatedOutputPath, "utf8"));
+  const usageMatches = [
+    ...transcript.matchAll(/tokens used\s+([\d,]+)/g),
+  ];
+  const observedTotalTokens = usageMatches.length === 0
+    ? null
+    : Number(usageMatches.at(-1)[1].replaceAll(",", ""));
+  recordObservedUsage(review, observedTotalTokens);
   validateLiteratureReview(review, evidence, { requireComplete: false });
-  fs.copyFileSync(isolatedOutputPath, outputPath,
-    fs.constants.COPYFILE_EXCL);
+  fs.writeFileSync(
+    outputPath,
+    `${JSON.stringify(review, null, 2)}\n`,
+    { flag: "wx" },
+  );
   console.log(`literature review artifact written: ${outputPath}`);
 } finally {
   fs.rmSync(temporaryRoot, { recursive: true, force: true });

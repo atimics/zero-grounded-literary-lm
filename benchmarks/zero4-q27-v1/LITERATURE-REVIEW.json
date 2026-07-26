@@ -1,0 +1,154 @@
+{
+  "schema": "zero.literature_review_result.v1",
+  "experiment_id": "zero4-q27-v1",
+  "reviewed_at": "2026-07-26",
+  "status": "complete",
+  "block_reason": "",
+  "agent": {
+    "model": "gpt-5.6-terra",
+    "reasoning_effort": "medium",
+    "subagents_allowed": false,
+    "max_primary_sources": 5,
+    "projected_credit_cap": 30,
+    "actual_credits": null,
+    "actual_usage_available": false,
+    "observed_total_tokens": 78046,
+    "credit_bounds": {
+      "lower": 0.4877875,
+      "upper": 29.26725,
+      "basis": "Bounded from the observed aggregate token count using the GPT-5.6 Terra Codex rates: 6.25 cached-input to 375 output credits per million tokens. Exact credits remain unavailable without the token-type split."
+    }
+  },
+  "method": {
+    "primary_sources_only": true,
+    "questions_addressed": [
+      "What evidence supports replay and gradient projection for reducing catastrophic forgetting?",
+      "What evidence supports parameter isolation or parameter-efficient adaptation as a preservation mechanism?",
+      "What evidence localizes language-model behavior to transformer feed-forward layers?",
+      "Does prior work specifically justify training only the top FFN for language preservation?",
+      "What are the limitations of BLiMP and TinyStories as preservation gates for this model?"
+    ],
+    "search_limitations": [
+      "Reviewed exactly five registered primary-paper full texts; results are therefore a bounded decision review, not a systematic review.",
+      "The evidence spans continual-learning benchmarks, large pretrained language models, multilingual translation, and synthetic English stories; none directly tests top-FFN-only adaptation in ZERO's character-level transformer.",
+      "The packet contains no Q2.6 trace artifact or measurements. Its rationale can be distinguished from the literature, but not independently verified here."
+    ]
+  },
+  "works": [
+    {
+      "id": "chaudhry-2019-agem",
+      "access_url": "https://arxiv.org/pdf/1812.00420",
+      "primary_source_verified": true,
+      "review_status": "full_text_reviewed",
+      "locator": "§4, pp. 4-5, Eqs. 9-11; §6 experiments.",
+      "supports": [
+        "A-GEM retains episodic memory and projects a proposed gradient when it conflicts with a reference gradient from past-task memory; this is direct support for replay-guided gradient projection as a continual-learning mechanism.",
+        "It explicitly trades GEM's per-task constraints for one averaged-memory constraint, making the projection computationally cheaper."
+      ],
+      "limitations": [
+        "The guarantee is local to the sampled episodic-memory loss/gradient, not a guarantee over an external language distribution.",
+        "Its experiments use continual classification streams, not character-level language adaptation or a fixed top-FFN trainable subspace.",
+        "Averaging historical gradients can protect mean replay loss while allowing a particular historical slice to worsen."
+      ],
+      "design_consequence": "Keep replay and a projection diagnostic, but preserve Q2.7's per-slice functional gate as final authority; do not substitute an averaged projection check for that gate.",
+      "confidence": "high"
+    },
+    {
+      "id": "meng-2022-rome",
+      "access_url": "https://proceedings.neurips.cc/paper_files/paper/2022/file/6f1d43d5a82a37e89b0665b33bf3a182-Paper-Conference.pdf",
+      "primary_source_verified": true,
+      "review_status": "full_text_reviewed",
+      "locator": "§2.2, p. 4 and Figures 2-3; §3.1, pp. 5-6 and Figure 4.",
+      "supports": [
+        "Causal tracing in GPT-2 XL finds that middle-layer MLP contributions are decisive for recalled factual associations at the final subject token; weight edits to one such MLP can modify a factual association while optimizing a locality term.",
+        "This supports FFNs as a plausible intervention locus and supports measuring preservation explicitly during localized edits."
+      ],
+      "limitations": [
+        "The localized causal site is in middle-layer FFNs, whereas Q2.7 selects the top FFN.",
+        "The measured behavior is factual recall and edit specificity in a large pretrained GPT, not general language preservation during learning a new routing behavior.",
+        "The paper's locality objective does not establish that freezing lower layers or updating only an upper FFN preserves the whole language distribution."
+      ],
+      "design_consequence": "Treat Q2.7's top-FFN boundary as an internal Q2.6 hypothesis, not a literature-established localization. Include a boundary ablation or reject promotion if the top-only update cannot satisfy the unchanged preservation gate.",
+      "confidence": "high"
+    },
+    {
+      "id": "liu-niehues-2025-forgetting",
+      "access_url": "https://aclanthology.org/2025.mrl-main.23.pdf",
+      "primary_source_verified": true,
+      "review_status": "full_text_reviewed",
+      "locator": "§4.1, pp. 5-6 and Figures 2-4; §4.4, p. 7; conclusion, p. 9.",
+      "supports": [
+        "The controlled study confirms that catastrophic forgetting depends on model scale and fine-tuning data volume, supporting explicit preservation measurement rather than assuming safe specialization.",
+        "It directly compares LoRA with full fine-tuning and finds comparable forgetting under its translation conditions."
+      ],
+      "limitations": [
+        "This is counterevidence to the general claim that limiting trainable parameters itself prevents forgetting.",
+        "LoRA modified attention and linear-projection components, not a single dense top FFN, and the models/tasks are multilingual translation at much larger scale.",
+        "Its evidence does not identify a safe parameter boundary for ZERO; it shows that the effect is conditional on training regime and task."
+      ],
+      "design_consequence": "Revise Q2.7 so top-FFN isolation is a tested intervention rather than its preservation premise. Retain direct replay/language gates and report trainable scope as an ablation, not as evidence of safety.",
+      "confidence": "high"
+    },
+    {
+      "id": "warstadt-2020-blimp",
+      "access_url": "https://aclanthology.org/2020.tacl-1.25.pdf",
+      "primary_source_verified": true,
+      "review_status": "full_text_reviewed",
+      "locator": "§1, pp. 1-2; §3 and Table 2, pp. 3-4; §6.4, pp. 10-11.",
+      "supports": [
+        "BLiMP supplies controlled English minimal pairs across 12 grammatical categories, so it is a useful conjunctive screen for selected grammatical preferences.",
+        "The paper evaluates whether a language model assigns higher probability to the acceptable member of each pair, matching a targeted preservation interpretation."
+      ],
+      "limitations": [
+        "BLiMP is English-only and covers selected phenomena rather than general language quality; the authors report uneven performance across phenomena and substantial gaps to human performance.",
+        "Its examples are template-generated, can occasionally be implausible, and the full-sentence probability metric can differ from prefix-based diagnostics for individual paradigms.",
+        "A pass cannot establish coherence, semantic competence, reasoning, broad distributional preservation, or behavior on the new routing task."
+      ],
+      "design_consequence": "Keep BLiMP only as a conjunctive, phenomenon-level regression gate; report category scores and avoid interpreting an aggregate pass as general language preservation.",
+      "confidence": "high"
+    },
+    {
+      "id": "eldan-li-2023-tinystories",
+      "access_url": "https://arxiv.org/pdf/2305.07759",
+      "primary_source_verified": true,
+      "review_status": "full_text_reviewed",
+      "locator": "§3, pp. 4-5; §8, p. 25.",
+      "supports": [
+        "TinyStories is designed for small language models and provides a relevant bounded English distribution for a loss-based regression screen.",
+        "The paper supplements loss with generation-based assessment of grammar, creativity, and consistency, showing that loss is not its sole language-quality evaluation."
+      ],
+      "limitations": [
+        "The corpus is synthetic, generated with GPT-3.5/GPT-4, and intentionally restricted to short stories using vocabulary suitable for young children; bits-per-byte on it measures preservation only on that narrow distribution.",
+        "The source identifies unresolved uncertainty about whether generated novelty reflects understanding versus template matching.",
+        "Q2.7's TinyStories bits-per-byte gate omits the paper's multidimensional generation assessment, so it cannot prove coherent generation, reasoning, or general English preservation."
+      ],
+      "design_consequence": "Describe the TinyStories gate as bounded distributional regression only. Keep it conjunctive with BLiMP and restrict claims to the two measured screens.",
+      "confidence": "high"
+    }
+  ],
+  "synthesis": {
+    "overall_assessment": "mixed",
+    "findings": [
+      "Replay-guided projection has direct continual-learning support, but A-GEM's averaged-memory constraint is not equivalent to Q2.7's direct, per-slice functional preservation authority.",
+      "FFN localization is plausible, yet the reviewed causal evidence localizes factual recall to middle-layer MLPs, not to the top FFN or to general language preservation.",
+      "The limiting/counterevidence source finds no significant forgetting advantage for LoRA over full fine-tuning in its controlled translation setting; reduced trainable scope cannot be assumed to preserve behavior.",
+      "BLiMP and TinyStories make useful complementary regression screens, but BLiMP is a selected grammatical minimal-pair test and TinyStories bits-per-byte is a narrow synthetic-story distributional metric.",
+      "The repository's Q2.6 trace is not literature evidence: the packet does not provide the trace or its measurements, and literature only supports testing its projection and top-FFN hypotheses."
+    ],
+    "design_changes": [
+      "Keep the immutable top-FFN candidate as an ablation, not as a justified safe boundary; compare it against a broader allowed update scope under identical replay, projection, and gate conditions.",
+      "Make the unchanged per-slice functional replay gate decisive; record both the projection's local conflict statistic and the post-update gate result, since the former does not prove the latter.",
+      "Pre-register BLiMP per-category results and TinyStories bits-per-byte as conjunctive bounded screens, with claims limited to grammar phenomena and the TinyStories distribution.",
+      "Use the separately budgeted two-seed replication only after a candidate clears all preservation gates; do not promote from a one-seed result."
+    ],
+    "unresolved_questions": [
+      "Can the Q2.6 trace's proposed top-FFN boundary improve quantity routing while passing the direct functional gate? The packet does not contain trace evidence to answer this.",
+      "What replay mixture, memory size, and projection reference best protect each of Q2.7's six slices rather than only their average?",
+      "Does a broader update scope, adapter-style alternative, or top-FFN-only update offer the best routing-versus-preservation trade-off at ZERO's scale?",
+      "Are the selected BLiMP categories and TinyStories bits-per-byte sensitive enough to the regressions relevant to ZERO's character-level model?"
+    ],
+    "recommendation": "revise",
+    "recommendation_rationale": "Run no compute unchanged. The literature supports replay and projection as a method family, but does not justify the top-FFN-only preservation premise; ROME points to middle rather than top FFNs, and the registered counterevidence shows parameter-efficient adaptation need not reduce forgetting. Revise Q2.7 to frame top-FFN isolation as a controlled ablation while retaining the unchanged direct functional replay gate and bounded BLiMP/TinyStories screens.",
+    "value_assessment": "The review purchases a sharper decision boundary: the proposed compute can test a plausible, bounded hypothesis, but cannot be presented as a literature-validated language-preserving intervention. Revision is worthwhile because it prevents attributing a successful gate result to parameter isolation alone and makes a failed result diagnostic rather than ambiguous."
+  }
+}

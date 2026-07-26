@@ -51,6 +51,35 @@
         },
         "actual_usage_available": {
           "type": "boolean"
+        },
+        "observed_total_tokens": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "credit_bounds": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "lower": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            },
+            "basis": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "lower",
+            "upper",
+            "basis"
+          ]
         }
       },
       "required": [
@@ -60,7 +89,9 @@
         "max_primary_sources",
         "projected_credit_cap",
         "actual_credits",
-        "actual_usage_available"
+        "actual_usage_available",
+        "observed_total_tokens",
+        "credit_bounds"
       ]
     },
     "method": {

@@ -171,6 +171,17 @@ that each possible outcome changes. Compute authorization alone is
 insufficient. Completed historical results are not rewritten; Q2.7 is the
 first live experiment governed by `EXPERIMENT-EVIDENCE.md`.
 
+16. **The Q2.7 literature gate completed and requires revision.** One
+read-only GPT-5.6 Terra pass reviewed five registered primary full texts with
+no subagents. It found replay-guided projection defensible but found no
+literature basis for treating top-FFN-only training as a safe preservation
+boundary; the closest causal-localization evidence points to middle-layer
+MLPs, and registered counterevidence shows that reduced trainable scope need
+not reduce forgetting. BLiMP and TinyStories remain bounded conjunctive
+screens rather than general-language proof. The review reported 78,046
+aggregate tokens, conservatively bounded at 0.4877875–29.26725 credits.
+Recommendation: revise; run no Q2.7 compute unchanged.
+
 ---
 
 ## Schema
@@ -199,6 +210,6 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
 - **Latest execution outcome**: the ZERO-EVAL-1 screen completed in 2,502 launch-relative seconds for $0.4726 and its results are merged
 - **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
-- **Next training experiment**: Q2.7 top-FFN isolation is preregistered but not authorized; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
+- **Next training experiment**: Q2.7 requires a literature-led design revision before authorization can be reconsidered; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`

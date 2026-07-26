@@ -1,7 +1,7 @@
 {
   "schema": "zero.experiment_evidence.v1",
   "experiment_id": "zero4-q27-v1",
-  "status": "review_incomplete",
+  "status": "design_revision_required",
   "updated_at": "2026-07-26",
   "policy": {
     "applies_prospectively": true,
@@ -9,7 +9,7 @@
     "purpose": "Account for the full evidence path and decision value before opening additional Q2.7 compute."
   },
   "literature": {
-    "status": "screened_review_incomplete",
+    "status": "review_complete",
     "search_protocol": {
       "searched_at": "2026-07-26",
       "sources": [
@@ -35,13 +35,19 @@
       "known_gaps": [
         "No screened paper directly tests top-FFN-only continual adaptation in a character-level transformer of ZERO's scale.",
         "Most continual-learning results use vision, reinforcement-learning, multilingual, or large pretrained-model settings rather than this exact training regime.",
-        "The current pass screened abstracts and metadata; decision-critical full texts have not yet been reviewed.",
+        "The bounded full-text review covers five decision-critical papers rather than a systematic review of the entire registered list.",
         "The literature does not establish that parameter-efficient tuning automatically prevents forgetting."
       ]
     },
     "authorization_requirements": {
       "minimum_full_text_reviews": 5,
       "minimum_limiting_or_counterevidence": 1
+    },
+    "review_artifact": {
+      "path": "LITERATURE-REVIEW.json",
+      "sha256": "0a2a28f4923bc06217e3657a4a716497db46569b302112ed91f3b3c95c3893ec",
+      "status": "complete",
+      "recommendation": "revise"
     },
     "works": [
       {
@@ -186,7 +192,7 @@
     "phases": [
       {
         "id": "literature",
-        "status": "projected",
+        "status": "mixed",
         "usd_equivalent": {
           "lower": 0.4,
           "upper": 1.2
@@ -196,8 +202,8 @@
           "upper": 1.2
         },
         "agent_credits": {
-          "lower": 10,
-          "upper": 30
+          "lower": 0.4877875,
+          "upper": 29.26725
         },
         "human_hours": {
           "lower": 1,
@@ -207,7 +213,7 @@
           "lower": 0,
           "upper": 0
         },
-        "basis": "One bounded GPT-5.6 Terra review at 100k-300k input and 10k-30k output tokens; incremental cash may be zero when covered by included plan credits."
+        "basis": "One bounded GPT-5.6 Terra review completed over five primary full texts. The CLI reported 78,046 aggregate tokens; absent a token-type split, usage is bounded from 0.4877875 cached-input credits to 29.26725 output credits at the published Terra rates. Exact credits remain unavailable; human review and USD-equivalent values remain projected."
       },
       {
         "id": "design",
@@ -345,8 +351,8 @@
         "upper": 5.09
       },
       "agent_credits": {
-        "lower": 25,
-        "upper": 95
+        "lower": 15.4877875,
+        "upper": 94.26725
       },
       "human_hours": {
         "lower": 3.2,
@@ -412,11 +418,13 @@
   ],
   "authorization_gate": {
     "literature_list_present": true,
-    "literature_review_complete": false,
+    "literature_review_complete": true,
+    "literature_recommendation_resolved": false,
+    "recommendation_resolution": "",
     "cost_projection_complete": true,
     "decision_value_review_complete": true,
     "human_approval_observed": false,
     "ready_for_experiment_authorization": false,
-    "block_reason": "Decision-critical full texts have not been reviewed and the evidence/value package has not received explicit human approval."
+    "block_reason": "The bounded full-text review recommends revising Q2.7 before compute: treat top-FFN isolation as a controlled ablation, preserve direct per-slice replay authority, and narrow the language-gate claims. Those design changes and explicit experiment approval remain unresolved."
   }
 }

@@ -43,6 +43,23 @@ export function validateLiteratureReview(
   assert(agent.actual_usage_available === false &&
     agent.actual_credits === null,
   "unavailable agent usage must not be fabricated");
+  if (agent.observed_total_tokens === null) {
+    assert(agent.credit_bounds === null,
+      "credit bounds require observed total tokens");
+  } else {
+    assert(Number.isInteger(agent.observed_total_tokens) &&
+      agent.observed_total_tokens > 0,
+    "observed total tokens are invalid");
+    assert(agent.credit_bounds &&
+      Number.isFinite(agent.credit_bounds.lower) &&
+      Number.isFinite(agent.credit_bounds.upper) &&
+      agent.credit_bounds.lower >= 0 &&
+      agent.credit_bounds.upper >= agent.credit_bounds.lower &&
+      nonEmpty(agent.credit_bounds.basis),
+    "observed token credit bounds are invalid");
+    assert(agent.credit_bounds.upper <= agent.projected_credit_cap,
+      "observed token upper credit bound exceeded the projected cap");
+  }
 
   assert(review.method?.primary_sources_only === true,
     "literature review admits non-primary evidence");
@@ -142,6 +159,12 @@ function selfTest() {
       projected_credit_cap: 30,
       actual_credits: null,
       actual_usage_available: false,
+      observed_total_tokens: 78046,
+      credit_bounds: {
+        lower: 0.4877875,
+        upper: 29.26725,
+        basis: "Terra token-rate bounds",
+      },
     },
     method: {
       primary_sources_only: true,
@@ -182,6 +205,9 @@ function selfTest() {
     ["fabricated usage", (copy) => {
       copy.agent.actual_usage_available = true;
       copy.agent.actual_credits = 12;
+    }],
+    ["credit cap", (copy) => {
+      copy.agent.credit_bounds.upper = 31;
     }],
   ];
   for (const [name, mutate] of mutations) {
