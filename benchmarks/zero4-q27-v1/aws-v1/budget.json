@@ -57,18 +57,26 @@
     }
   },
   "infrastructure_source_lock": {
-    "executor_version": "q27-aws-v1-preflight-1",
+    "executor_version": "q27-aws-v1-preflight-iam-2",
     "budget_checker": {
       "path": "scripts/check_q27_aws_budget.mjs",
-      "sha256": "c377655f168e28ecd9d114ec08df8f00715c73bd4f8559b073d4fc9f027fa44e"
+      "sha256": "ef19b7cb5d3b5b9ab929c5a7f5776973ea9b3584df17675226bcf0175e3af2c2"
     },
     "preflight_checker": {
       "path": "scripts/check_q27_aws_preflight.mjs",
       "sha256": "f392ffcccad37a136555e61c3ad641a49e5410ca3e7627c34f91e88e7c443961"
     },
+    "preflight_failure_checker": {
+      "path": "scripts/check_q27_aws_preflight_failure.mjs",
+      "sha256": "617c07c177f217388f97796464570b74333e56da9349d5f840594c35ebc9e9ef"
+    },
+    "preflight_iam_checker": {
+      "path": "scripts/check_q27_preflight_iam.mjs",
+      "sha256": "f40cb6d6133f5bc1f263870564a01e5c785270ff9dadfafa2fb951214a23cfa1"
+    },
     "workflow_checker": {
       "path": "scripts/check_q27_aws_workflows.mjs",
-      "sha256": "c8945c99762b3059c15f1b808d8afa49b4c8aa255f6840a415955cd36520b811"
+      "sha256": "a72d2a0abe74a0ce62803e700facf60be8fe5d43133f4690272b29e370ce2f34"
     },
     "completion_checker": {
       "path": "scripts/check_q27_aws_completion.mjs",
@@ -81,6 +89,14 @@
     "request_builder": {
       "path": "scripts/aws/q27-run-instances.sh",
       "sha256": "511b0c849b0cec1593a08fca10507119f3cfa4d98fcac7265bbbbbf9546f503a"
+    },
+    "provisioner": {
+      "path": "scripts/aws/provision.sh",
+      "sha256": "2372c653887a87fb29ece73f9878a7e6e2f920b9efdc33032f274a0c2290c40c"
+    },
+    "preflight_iam_applier": {
+      "path": "scripts/aws/apply-q27-preflight-iam.sh",
+      "sha256": "1d996432bb38a65ce8935058ef43306d81aa7cfe110091a73e2ace39e084e0ad"
     },
     "workload": {
       "path": "scripts/aws/q27-seed2.sh",
@@ -105,6 +121,10 @@
     "language_gate_materializer": {
       "path": "scripts/materialize_q27_language_gate_budget.mjs",
       "sha256": "fc30e96d87ec12dbdf2c5d78ef6ed8a4c3b98a370e8578affc070e6e7417f19e"
+    },
+    "preflight_failure_record": {
+      "path": "benchmarks/zero4-q27-v1/aws-v1/preflight-failure-30189009274.json",
+      "sha256": "0dede9d255f1c0e57bbbc612618571055a6713208b38c7a700c5aaae2fe53b72"
     }
   },
   "venue": {
@@ -163,6 +183,15 @@
     "subnet_security_group_validation_required": true,
     "s3_write_once_proof_required": true,
     "required_asset_count": 6
+  },
+  "prior_zero_compute_preflight": {
+    "record_path": "benchmarks/zero4-q27-v1/aws-v1/preflight-failure-30189009274.json",
+    "ci_run_id": "30189009274",
+    "execution_lock_acquired": false,
+    "compute_launched": false,
+    "observed_compute_usd": 0,
+    "scientific_attempt_consumed": false,
+    "authorization_remains_available": true
   },
   "completion_gate": {
     "frozen_seed_required": 2,

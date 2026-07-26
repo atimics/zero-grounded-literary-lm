@@ -119,6 +119,16 @@ cat > "$GITHUB_POLICY" <<EOF
       "Resource": "*"
     },
     {
+      "Sid": "ReadLaunchInfrastructure",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeImages",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "TerminateOnlyProjectInstances",
       "Effect": "Allow",
       "Action": "ec2:TerminateInstances",
