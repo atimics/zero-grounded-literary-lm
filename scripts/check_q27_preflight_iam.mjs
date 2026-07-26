@@ -35,7 +35,7 @@ const after = {
   }],
 };
 const fakeAws = `#!/usr/bin/env node
-import fs from "node:fs";
+const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.ZERO_FAKE_AWS_LOG, JSON.stringify(args) + "\\n");
 if (args[0] !== "iam") process.exit(2);

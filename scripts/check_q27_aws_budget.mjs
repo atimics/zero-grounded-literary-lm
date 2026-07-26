@@ -4,6 +4,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 
+import { validateExecutionFailure } from
+  "./check_q27_aws_execution_failure.mjs";
+import { validateRetry } from "./check_q27_aws_retry.mjs";
+
 const DEFAULT_BUDGET = "benchmarks/zero4-q27-v1/aws-v1/budget.json";
 
 function fail(message) { throw new Error(message); }
@@ -104,6 +108,8 @@ export function validateBudget(
     "budget_checker",
     "preflight_checker",
     "preflight_failure_checker",
+    "execution_failure_checker",
+    "retry_checker",
     "preflight_iam_checker",
     "workflow_checker",
     "completion_checker",
@@ -113,15 +119,19 @@ export function validateBudget(
     "preflight_iam_applier",
     "workload",
     "user_data",
+    "node18_ci_workflow",
     "launch_workflow",
+    "retry_workflow",
     "collector_workflow",
     "conditional_authorization",
     "language_gate_materializer",
     "preflight_failure_record",
+    "execution_failure_record",
+    "retry_authorization",
   ];
   assert(
     budget.infrastructure_source_lock?.executor_version ===
-      "q27-aws-v1-preflight-iam-2",
+      "q27-aws-v1-infrastructure-retry-proposal-1",
     "Q2.7 infrastructure executor version drifted",
   );
   assert(
@@ -176,6 +186,20 @@ export function validateBudget(
       conditional.language_gate.runner_sha256 ===
         budget.scientific_source_lock.language_gate_runner.sha256,
     "Q2.7 conditional stage differs from frozen science",
+  );
+  const failure = JSON.parse(fs.readFileSync(
+    budget.infrastructure_source_lock.execution_failure_record.path,
+    "utf8",
+  ));
+  validateExecutionFailure(failure);
+  const retry = JSON.parse(fs.readFileSync(
+    budget.infrastructure_source_lock.retry_authorization.path,
+    "utf8",
+  ));
+  validateRetry(retry);
+  assert(
+    same(retry.scientific_immutability, budget.scientific_source_lock),
+    "Q2.7 retry differs from the frozen scientific source grid",
   );
 
   const venue = budget.venue;
@@ -259,6 +283,43 @@ export function validateBudget(
       budget.prior_zero_compute_preflight.authorization_remains_available ===
         true,
     "Q2.7 zero-compute preflight history drifted",
+  );
+  const priorCompute = budget.prior_compute_infrastructure_failure;
+  assert(
+    priorCompute?.record_path ===
+      "benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json" &&
+      priorCompute.ci_run_id === "30199981920" &&
+      priorCompute.execution_lock_acquired === true &&
+      priorCompute.compute_launched === true &&
+      priorCompute.instance_id === "i-095a0fdf736ce98e9" &&
+      priorCompute.instance_state === "terminated" &&
+      priorCompute.status === "infrastructure-error" &&
+      priorCompute.phase === "build" &&
+      priorCompute.observed_instance_seconds === 113 &&
+      Math.abs(
+        priorCompute.observed_compute_usd - 113 * 0.68 / 3600,
+      ) < 1e-15 &&
+      priorCompute.scientific_phase_reached === false &&
+      priorCompute.scientific_result_available === false &&
+      priorCompute.scientific_decision === null,
+    "Q2.7 compute infrastructure failure history drifted",
+  );
+  assert(
+    budget.infrastructure_retry_proposal?.authority_path ===
+      "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json" &&
+      budget.infrastructure_retry_proposal.retry_ordinal === 1 &&
+      budget.infrastructure_retry_proposal.maximum_retry_count === 1 &&
+      typeof budget.infrastructure_retry_proposal.authorized_for_execution ===
+        "boolean" &&
+      budget.infrastructure_retry_proposal.authorized_for_execution ===
+        retry.authorization.authorized_for_execution &&
+      budget.infrastructure_retry_proposal.additional_max_compute_usd ===
+        1.17 &&
+      budget.infrastructure_retry_proposal.quantity_all_in_ceiling_usd ===
+        1.2 &&
+      budget.infrastructure_retry_proposal.overall_all_in_ceiling_usd ===
+        1.32,
+    "Q2.7 infrastructure retry proposal drifted",
   );
   return true;
 }

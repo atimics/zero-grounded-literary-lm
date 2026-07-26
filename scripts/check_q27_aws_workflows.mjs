@@ -3,7 +3,9 @@
 import fs from "node:fs";
 
 const launchPath = ".github/workflows/q27-aws-launch.yml";
+const retryPath = ".github/workflows/q27-aws-infrastructure-retry.yml";
 const collectPath = ".github/workflows/q27-aws-collect.yml";
+const ciPath = ".github/workflows/ci.yml";
 const workloadPath = "scripts/aws/q27-seed2.sh";
 const userDataPath = "scripts/aws/q27-seed2-user-data.sh";
 const preflightPath = "scripts/aws/q27-preflight.sh";
@@ -20,7 +22,9 @@ function includesAll(text, fragments, label) {
 }
 
 const launch = fs.readFileSync(launchPath, "utf8");
+const retry = fs.readFileSync(retryPath, "utf8");
 const collect = fs.readFileSync(collectPath, "utf8");
+const ci = fs.readFileSync(ciPath, "utf8");
 const workload = fs.readFileSync(workloadPath, "utf8");
 const userData = fs.readFileSync(userDataPath, "utf8");
 const preflight = fs.readFileSync(preflightPath, "utf8");
@@ -64,6 +68,76 @@ for (const forbidden of [
   assert(!launch.includes(forbidden),
     `Q2.7 launcher waits for compute: ${forbidden}`);
 }
+
+includesAll(retry, [
+  "workflow_dispatch:",
+  "dispatch sole infrastructure retry and exit",
+  "Validate immutable retry authority before AWS",
+  "scripts/check_q27_aws_retry.mjs",
+  "--require-authorized",
+  "execution-failure-30199981920.json",
+  "infrastructure-retry-1.json",
+  "Verify incident evidence, result absence, and terminal instance",
+  "experiments/zero4-q27-aws-v1/execution.lock",
+  ".provenance.original_execution_lock.sha256",
+  "scientific_result_available == false",
+  "scientific_decision == null",
+  "result_sha256 == null",
+  "observed_instance_seconds == 113",
+  "result.json",
+  "selected.ckpt",
+  "selected.litq8",
+  "test \"$prior_state\" = terminated",
+  "Refuse overlapping ZERO compute",
+  "Preflight exact retry request before retry lock",
+  "scripts/aws/q27-preflight.sh",
+  "Acquire sole infrastructure retry lock",
+  "zero.aws_infrastructure_retry_lock.v1",
+  "retry_ordinal: 1",
+  "experiments/zero4-q27-aws-v1/infrastructure-retry-1.lock",
+  "--if-none-match '*'",
+  "scripts/aws/q27-run-instances.sh launch",
+  "execution_failure_record_sha256",
+  "original_execution_lock_sha256",
+  "max_instance_seconds: 6190",
+  "max_compute_usd: 1.17",
+  "language_gate_authorized: false",
+], "Q2.7 infrastructure retry workflow");
+assert(
+  retry.indexOf("scripts/check_q27_aws_retry.mjs") <
+    retry.indexOf("Configure AWS credentials"),
+  "Q2.7 retry configures AWS before local authorization",
+);
+assert(
+  retry.indexOf("Preflight exact retry request before retry lock") <
+    retry.indexOf("Acquire sole infrastructure retry lock"),
+  "Q2.7 retry lock precedes exact infrastructure preflight",
+);
+assert(
+  retry.indexOf("Acquire sole infrastructure retry lock") <
+    retry.indexOf("Launch bounded EC2 diagnostic retry"),
+  "Q2.7 retry compute launch precedes its write-once lock",
+);
+assert(
+  !retry.includes("--key experiments/zero4-q27-aws-v1/execution.lock"),
+  "Q2.7 retry attempts to replace the original execution lock",
+);
+for (const forbidden of [
+  "aws ec2 wait",
+  "aws ssm wait",
+  "while true",
+  "sleep 60",
+]) {
+  assert(!retry.includes(forbidden),
+    `Q2.7 infrastructure retry waits for compute: ${forbidden}`);
+}
+
+includesAll(ci, [
+  "q27-node18-portability:",
+  "Q2.7 infrastructure · Node 18",
+  "node-version: '18.19.1'",
+  "make zero4-q27-check",
+], "Q2.7 Node 18 CI regression job");
 
 includesAll(collect, [
   "workflow_dispatch:",

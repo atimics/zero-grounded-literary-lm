@@ -14,7 +14,7 @@ const receipt = path.join(root, "preflight.json");
 fs.mkdirSync(bin);
 
 const fakeAws = `#!/usr/bin/env node
-import fs from "node:fs";
+const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.ZERO_FAKE_AWS_LOG, JSON.stringify(args) + "\\n");
 const is = (...prefix) => prefix.every((value, index) => args[index] === value);

@@ -1,0 +1,355 @@
+name: Retry bounded Q2.7 diagnostic after infrastructure failure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero4-q27-aws-v1
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: AWS · dispatch sole infrastructure retry and exit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: ${{ secrets.AWS_REGION }}
+      ZERO_RUN_ID: ${{ github.run_id }}
+      ZERO_COMMIT: ${{ github.sha }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q27-v1/aws-v1/budget.json
+      ZERO_RETRY_FILE: benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json
+      ZERO_FAILURE_FILE: benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json
+      ZERO_PRIOR_RUN_ID: '30199981920'
+      ZERO_PRIOR_INSTANCE_ID: i-095a0fdf736ce98e9
+      ZERO_INSTANCE_TYPE: c6i.4xlarge
+      ZERO_MAX_INSTANCE_SECONDS: '6190'
+      ZERO_WORKLOAD_TIMEOUT_SECONDS: '6130'
+      ZERO_MAX_COMPUTE_USD: '1.17'
+      ZERO_HOURLY_RATE_USD: '0.68'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate immutable retry authority before AWS
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test -n "$ZERO_BUCKET"
+          test -n "$ZERO_REGION"
+          test ! -e benchmarks/zero4-q27-v1/aws-v1/COMPLETED
+          test ! -e benchmarks/zero4-q27-v1/seed2/result.json
+          node scripts/check_zero4_q27.mjs
+          node scripts/check_q27_aws_budget.mjs \
+            "$ZERO_BUDGET_FILE" --require-authorized
+          node scripts/check_q27_aws_execution_failure.mjs \
+            "$ZERO_FAILURE_FILE"
+          node scripts/check_q27_aws_retry.mjs \
+            "$ZERO_RETRY_FILE" --require-authorized
+          node scripts/train_zero4_q27.mjs --self-test
+          {
+            echo "ZERO_BUDGET_SHA256=$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')"
+            echo "ZERO_RETRY_SHA256=$(sha256sum "$ZERO_RETRY_FILE" | awk '{print $1}')"
+            echo "ZERO_FAILURE_SHA256=$(sha256sum "$ZERO_FAILURE_FILE" | awk '{print $1}')"
+            echo "ZERO_WORKLOAD_SHA256=$(sha256sum scripts/aws/q27-seed2.sh | awk '{print $1}')"
+            echo "ZERO_USER_DATA_SHA256=$(sha256sum scripts/aws/q27-seed2-user-data.sh | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Build immutable source archive
+        run: |
+          git archive --format=tar.gz \
+            --output=/tmp/zero-q27-source.tar.gz "$ZERO_COMMIT"
+          echo "ZERO_SOURCE_SHA256=$(sha256sum /tmp/zero-q27-source.tar.gz | awk '{print $1}')" \
+            >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify incident evidence, result absence, and terminal instance
+        run: |
+          mkdir -p /tmp/zero-q27-retry
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/experiments/zero4-q27-aws-v1/execution.lock" \
+            /tmp/zero-q27-retry/original-execution.lock --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_PRIOR_RUN_ID}/launch.json" \
+            /tmp/zero-q27-retry/prior-launch.json --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_PRIOR_RUN_ID}/seed2/status.json" \
+            /tmp/zero-q27-retry/prior-status.json --no-cli-pager
+          aws s3 cp \
+            "s3://${ZERO_BUCKET}/jobs/${ZERO_PRIOR_RUN_ID}/seed2/zero-q27-seed2.log" \
+            /tmp/zero-q27-retry/prior-workload.log --no-cli-pager
+
+          original_lock_sha256=$(sha256sum \
+            /tmp/zero-q27-retry/original-execution.lock | awk '{print $1}')
+          prior_launch_sha256=$(sha256sum \
+            /tmp/zero-q27-retry/prior-launch.json | awk '{print $1}')
+          prior_status_sha256=$(sha256sum \
+            /tmp/zero-q27-retry/prior-status.json | awk '{print $1}')
+          prior_workload_sha256=$(sha256sum \
+            /tmp/zero-q27-retry/prior-workload.log | awk '{print $1}')
+          test "$original_lock_sha256" = \
+            "$(jq -r '.provenance.original_execution_lock.sha256' "$ZERO_RETRY_FILE")"
+          test "$prior_launch_sha256" = \
+            "$(jq -r '.provenance.failed_launch.sha256' "$ZERO_RETRY_FILE")"
+          test "$prior_status_sha256" = \
+            "$(jq -r '.provenance.failed_status.sha256' "$ZERO_RETRY_FILE")"
+          test "$prior_workload_sha256" = \
+            "$(jq -r '.provenance.failed_workload_log.sha256' "$ZERO_RETRY_FILE")"
+
+          jq -e \
+            --arg run_id "$ZERO_PRIOR_RUN_ID" \
+            --arg git_commit "197856f4d0fc727899275195cbadd6582aff27b6" \
+            --arg budget_sha256 \
+              "242af26f510fdf3598f84ac84eb29d6b3ff4826561548f4fc14e53218f659f45" \
+            '.schema == "zero.aws_execution_lock.v1"
+             and .experiment == "zero4-q27-aws-v1"
+             and .seed == 2
+             and .ci_run_id == $run_id
+             and .git_commit == $git_commit
+             and .budget_sha256 == $budget_sha256' \
+            /tmp/zero-q27-retry/original-execution.lock >/dev/null
+          jq -e \
+            --arg run_id "$ZERO_PRIOR_RUN_ID" \
+            --arg instance_id "$ZERO_PRIOR_INSTANCE_ID" \
+            '.schema == "zero.q27_aws_launch.v1"
+             and .experiment == "zero4-q27-aws-v1"
+             and .seed == 2
+             and .ci_run_id == $run_id
+             and .instance_id == $instance_id
+             and .max_compute_usd == 1.17' \
+            /tmp/zero-q27-retry/prior-launch.json >/dev/null
+          jq -e \
+            --arg instance_id "$ZERO_PRIOR_INSTANCE_ID" \
+            '.schema == "zero.aws_q27_seed2_status.v1"
+             and .experiment == "zero4-q27-aws-v1"
+             and .seed == 2
+             and .status == "infrastructure-error"
+             and .phase == "build"
+             and .exit_code == 2
+             and .instance_id == $instance_id
+             and .observed_instance_seconds == 113
+             and .scientific_result_available == false
+             and .scientific_decision == null
+             and .result_sha256 == null' \
+            /tmp/zero-q27-retry/prior-status.json >/dev/null
+
+          for key in \
+            "jobs/${ZERO_PRIOR_RUN_ID}/seed2/results/result.json" \
+            "jobs/${ZERO_PRIOR_RUN_ID}/seed2/results/selected.ckpt" \
+            "jobs/${ZERO_PRIOR_RUN_ID}/seed2/results/selected.litq8" \
+            "experiments/zero4-q27-aws-v1/infrastructure-retry-1.lock"; do
+            set +e
+            aws s3api head-object --bucket "$ZERO_BUCKET" --key "$key" \
+              --no-cli-pager >/tmp/zero-q27-retry/head.out \
+              2>/tmp/zero-q27-retry/head.err
+            head_exit=$?
+            set -e
+            test "$head_exit" -ne 0
+            grep -Eq '404|Not Found' /tmp/zero-q27-retry/head.err
+          done
+
+          prior_state=$(aws ec2 describe-instances \
+            --instance-ids "$ZERO_PRIOR_INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text --no-cli-pager)
+          test "$prior_state" = terminated
+          {
+            echo "ZERO_ORIGINAL_EXECUTION_LOCK_SHA256=$original_lock_sha256"
+            echo "ZERO_PRIOR_LAUNCH_SHA256=$prior_launch_sha256"
+            echo "ZERO_PRIOR_STATUS_SHA256=$prior_status_sha256"
+          } >> "$GITHUB_ENV"
+
+      - name: Refuse overlapping ZERO compute
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Publish immutable retry inputs
+        run: |
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/source.tar.gz" \
+            --body /tmp/zero-q27-source.tar.gz \
+            --content-type application/gzip \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/q27-seed2.sh" \
+            --body scripts/aws/q27-seed2.sh \
+            --content-type text/x-shellscript \
+            --if-none-match '*' --no-cli-pager >/dev/null
+
+      - name: Resolve Ubuntu AMI
+        id: ami
+        run: |
+          ami=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value --output text --no-cli-pager)
+          [[ "$ami" =~ ^ami-[0-9a-f]+$ ]]
+          echo "ami=$ami" >> "$GITHUB_OUTPUT"
+
+      - name: Preflight exact retry request before retry lock
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+          ZERO_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          ZERO_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          ZERO_LAUNCH_EPOCH=$(date +%s)
+          export ZERO_LAUNCH_EPOCH
+          echo "ZERO_LAUNCH_EPOCH=$ZERO_LAUNCH_EPOCH" >> "$GITHUB_ENV"
+          scripts/aws/q27-preflight.sh
+          {
+            echo "ZERO_PREFLIGHT_SHA256=$(sha256sum /tmp/zero-q27-preflight.json | awk '{print $1}')"
+            echo "ZERO_REQUEST_BUILDER_SHA256=$(sha256sum scripts/aws/q27-run-instances.sh | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/preflight.json" \
+            --body /tmp/zero-q27-preflight.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+
+      - name: Acquire sole infrastructure retry lock
+        run: |
+          jq -n \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg prior_run_id "$ZERO_PRIOR_RUN_ID" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg retry_sha256 "$ZERO_RETRY_SHA256" \
+            --arg failure_sha256 "$ZERO_FAILURE_SHA256" \
+            --arg original_lock_sha256 "$ZERO_ORIGINAL_EXECUTION_LOCK_SHA256" \
+            --arg prior_launch_sha256 "$ZERO_PRIOR_LAUNCH_SHA256" \
+            --arg prior_status_sha256 "$ZERO_PRIOR_STATUS_SHA256" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
+            --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --arg preflight_sha256 "$ZERO_PREFLIGHT_SHA256" \
+            --arg request_builder_sha256 "$ZERO_REQUEST_BUILDER_SHA256" \
+            '{
+              schema: "zero.aws_infrastructure_retry_lock.v1",
+              experiment: "zero4-q27-aws-v1",
+              seed: 2,
+              retry_ordinal: 1,
+              ci_run_id: $run_id,
+              failed_workflow_run_id: $prior_run_id,
+              git_commit: $git_commit,
+              budget_sha256: $budget_sha256,
+              retry_authority_sha256: $retry_sha256,
+              execution_failure_record_sha256: $failure_sha256,
+              original_execution_lock_sha256: $original_lock_sha256,
+              failed_launch_sha256: $prior_launch_sha256,
+              failed_status_sha256: $prior_status_sha256,
+              source_archive_sha256: $source_sha256,
+              workload_sha256: $workload_sha256,
+              user_data_sha256: $user_data_sha256,
+              preflight_sha256: $preflight_sha256,
+              request_builder_sha256: $request_builder_sha256
+            }' > /tmp/zero-q27-infrastructure-retry-lock.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key experiments/zero4-q27-aws-v1/infrastructure-retry-1.lock \
+            --body /tmp/zero-q27-infrastructure-retry-lock.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+
+      - name: Launch bounded EC2 diagnostic retry
+        id: launch
+        env:
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+          ZERO_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          ZERO_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          instance_id=$(scripts/aws/q27-run-instances.sh launch)
+          [[ "$instance_id" =~ ^i-[0-9a-f]+$ ]]
+          {
+            echo "instance_id=$instance_id"
+            echo "launch_epoch=$ZERO_LAUNCH_EPOCH"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Record durable retry launch receipt
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          ZERO_LAUNCH_EPOCH: ${{ steps.launch.outputs.launch_epoch }}
+          ZERO_AMI: ${{ steps.ami.outputs.ami }}
+        run: |
+          jq -n \
+            --arg instance_id "$ZERO_INSTANCE_ID" \
+            --arg ami "$ZERO_AMI" \
+            --arg region "$ZERO_REGION" \
+            --arg git_commit "$ZERO_COMMIT" \
+            --arg run_id "$ZERO_RUN_ID" \
+            --arg prior_run_id "$ZERO_PRIOR_RUN_ID" \
+            --arg budget_file "$ZERO_BUDGET_FILE" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg retry_sha256 "$ZERO_RETRY_SHA256" \
+            --arg failure_sha256 "$ZERO_FAILURE_SHA256" \
+            --arg original_lock_sha256 "$ZERO_ORIGINAL_EXECUTION_LOCK_SHA256" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
+            --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --arg preflight_sha256 "$ZERO_PREFLIGHT_SHA256" \
+            --arg request_builder_sha256 "$ZERO_REQUEST_BUILDER_SHA256" \
+            --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
+            '{
+              schema: "zero.q27_aws_launch.v1",
+              experiment: "zero4-q27-aws-v1",
+              seed: 2,
+              instance_id: $instance_id,
+              instance_type: "c6i.4xlarge",
+              ami: $ami,
+              region: $region,
+              git_commit: $git_commit,
+              ci_run_id: $run_id,
+              budget_file: $budget_file,
+              budget_sha256: $budget_sha256,
+              source_archive_sha256: $source_sha256,
+              workload_sha256: $workload_sha256,
+              user_data_sha256: $user_data_sha256,
+              preflight_sha256: $preflight_sha256,
+              request_builder_sha256: $request_builder_sha256,
+              launch_epoch: $launch_epoch,
+              max_instance_seconds: 6190,
+              workload_timeout_seconds: 6130,
+              publication_reserve_seconds: 60,
+              max_compute_usd: 1.17,
+              maximum_optimizer_attempts: 1400,
+              language_gate_authorized: false,
+              infrastructure_retry: {
+                ordinal: 1,
+                failed_workflow_run_id: $prior_run_id,
+                retry_authority_sha256: $retry_sha256,
+                execution_failure_record_sha256: $failure_sha256,
+                original_execution_lock_sha256: $original_lock_sha256
+              }
+            }' > /tmp/zero-q27-launch.json
+          aws s3api put-object \
+            --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/launch.json" \
+            --body /tmp/zero-q27-launch.json \
+            --content-type application/json \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          jq -c \
+            '{ci_run_id,instance_id,launch_epoch,max_instance_seconds,max_compute_usd,infrastructure_retry}' \
+            /tmp/zero-q27-launch.json >> "$GITHUB_STEP_SUMMARY"

@@ -57,26 +57,34 @@
     }
   },
   "infrastructure_source_lock": {
-    "executor_version": "q27-aws-v1-preflight-iam-2",
+    "executor_version": "q27-aws-v1-infrastructure-retry-proposal-1",
     "budget_checker": {
       "path": "scripts/check_q27_aws_budget.mjs",
-      "sha256": "ef19b7cb5d3b5b9ab929c5a7f5776973ea9b3584df17675226bcf0175e3af2c2"
+      "sha256": "b54b462bc3445b201af9ceef9a5408ee6e01e2623cae78bae501260e417df035"
     },
     "preflight_checker": {
       "path": "scripts/check_q27_aws_preflight.mjs",
-      "sha256": "f392ffcccad37a136555e61c3ad641a49e5410ca3e7627c34f91e88e7c443961"
+      "sha256": "0caf577d08b343ebab1a1b9f28c04dabd6c45e1a47eeae1df461ae629862d25b"
     },
     "preflight_failure_checker": {
       "path": "scripts/check_q27_aws_preflight_failure.mjs",
       "sha256": "617c07c177f217388f97796464570b74333e56da9349d5f840594c35ebc9e9ef"
     },
+    "execution_failure_checker": {
+      "path": "scripts/check_q27_aws_execution_failure.mjs",
+      "sha256": "2db4a38ef7c7ee2b80f570ac77d33a30ce79a8856a3c2e5cc9e7e63297b1cf5e"
+    },
+    "retry_checker": {
+      "path": "scripts/check_q27_aws_retry.mjs",
+      "sha256": "c5c5bd18bfb6e4f5cf1d16babb085d4b61d1c4f79d7777f0d893e480b7ea7cbe"
+    },
     "preflight_iam_checker": {
       "path": "scripts/check_q27_preflight_iam.mjs",
-      "sha256": "f40cb6d6133f5bc1f263870564a01e5c785270ff9dadfafa2fb951214a23cfa1"
+      "sha256": "4a87b83722fefb95461f1c2ba944c1ee4f36e9898edb8111aa116fb33f62b700"
     },
     "workflow_checker": {
       "path": "scripts/check_q27_aws_workflows.mjs",
-      "sha256": "a72d2a0abe74a0ce62803e700facf60be8fe5d43133f4690272b29e370ce2f34"
+      "sha256": "da055da57a7153e7b446468eaa24ea9e21a5423074757b75c4dbbac04571c690"
     },
     "completion_checker": {
       "path": "scripts/check_q27_aws_completion.mjs",
@@ -106,9 +114,17 @@
       "path": "scripts/aws/q27-seed2-user-data.sh",
       "sha256": "ecb0077f7e32384b25623c26cd96313850dd28cbd1edb70f120062c640bb7325"
     },
+    "node18_ci_workflow": {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "9bd4f4515b4835c28926c985c90e366fa46497db2a2767a5d7dfc9d1afb86e3d"
+    },
     "launch_workflow": {
       "path": ".github/workflows/q27-aws-launch.yml",
       "sha256": "27965ef8f0b95a778dfccdf1d8d61e4e29ec113b18d323d1f63b4f10604b7ac1"
+    },
+    "retry_workflow": {
+      "path": ".github/workflows/q27-aws-infrastructure-retry.yml",
+      "sha256": "7a9a41ce7e4a26cbe30d8d1a7913254930d53dbb1371dbe0ba4bda64f5c16ea6"
     },
     "collector_workflow": {
       "path": ".github/workflows/q27-aws-collect.yml",
@@ -125,6 +141,14 @@
     "preflight_failure_record": {
       "path": "benchmarks/zero4-q27-v1/aws-v1/preflight-failure-30189009274.json",
       "sha256": "0dede9d255f1c0e57bbbc612618571055a6713208b38c7a700c5aaae2fe53b72"
+    },
+    "execution_failure_record": {
+      "path": "benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json",
+      "sha256": "941744f654969b60de54747a650a6bc5aa448db6a39bc90ac1f9e150c84cf728"
+    },
+    "retry_authorization": {
+      "path": "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
+      "sha256": "e708077a1a7f5b39445f0da274e54725f50fd249ef619aeaaf2881899420d491"
     }
   },
   "venue": {
@@ -193,6 +217,30 @@
     "scientific_attempt_consumed": false,
     "authorization_remains_available": true
   },
+  "prior_compute_infrastructure_failure": {
+    "record_path": "benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json",
+    "ci_run_id": "30199981920",
+    "execution_lock_acquired": true,
+    "compute_launched": true,
+    "instance_id": "i-095a0fdf736ce98e9",
+    "instance_state": "terminated",
+    "status": "infrastructure-error",
+    "phase": "build",
+    "observed_instance_seconds": 113,
+    "observed_compute_usd": 0.021344444444444444,
+    "scientific_phase_reached": false,
+    "scientific_result_available": false,
+    "scientific_decision": null
+  },
+  "infrastructure_retry_proposal": {
+    "authority_path": "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
+    "retry_ordinal": 1,
+    "maximum_retry_count": 1,
+    "authorized_for_execution": false,
+    "additional_max_compute_usd": 1.17,
+    "quantity_all_in_ceiling_usd": 1.2,
+    "overall_all_in_ceiling_usd": 1.32
+  },
   "completion_gate": {
     "frozen_seed_required": 2,
     "complete_result_required": true,
@@ -204,5 +252,5 @@
     "green_ci_required_before_merge": true,
     "infrastructure_or_budget_failure_is_never_scientific_no_go": true
   },
-  "next_authority": "This one Q2.7 quantity execution is authorized. If and only if its validated result is candidate-ready, the prospectively approved conditional authorization deterministically materializes one candidate-hash-bound language-gate budget at no more than $0.12; the all-in ceiling is $1.29."
+  "next_authority": "The original execution lock was consumed by an infrastructure-only build failure before scientific execution. One retry is proposed but not authorized: it requires explicit approval for up to $1.17 additional compute, a $1.20 quantity all-in ceiling, and a $1.32 overall ceiling including the still-conditional $0.12 candidate-bound language gate."
 }
