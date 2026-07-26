@@ -5,6 +5,8 @@ import fs from "node:fs";
 
 import { validateExperimentEvidence } from
   "./check_experiment_evidence.mjs";
+import { validateQ27DesignRevision } from
+  "./check_q27_design_revision.mjs";
 
 function fail(message) { throw new Error(message); }
 function assert(condition, message) { if (!condition) fail(message); }
@@ -18,6 +20,7 @@ const contractPath = process.argv[2] ??
 const contract = readJson(contractPath);
 const evidencePath = "benchmarks/zero4-q27-v1/EVIDENCE.json";
 const evidence = readJson(evidencePath);
+const revision = readJson("benchmarks/zero4-q27-v1/DESIGN-REVISION.json");
 const retry = readJson(
   "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
 );
@@ -36,6 +39,7 @@ validateExperimentEvidence(evidence, {
   requireReady: retry.authorization.authorized_for_execution === true,
   evidencePath,
 });
+validateQ27DesignRevision(revision);
 assert(
   evidence.costs.comparison.literature_and_design_usd_equivalent_upper >
     evidence.costs.comparison.scientific_execution_cash_usd_upper,

@@ -1,0 +1,100 @@
+{
+  "schema": "zero.q27_design_revision.v1",
+  "id": "zero4-q27-v1-scope-ablation",
+  "status": "preregistered_not_authorized",
+  "revised_at": "2026-07-26",
+  "question": "Does the already-preregistered top-FFN arm preserve the bounded language screens better than the paid-for Q2.6 full-scope control while retaining quantity and direct replay performance?",
+  "bindings": {
+    "q27_contract": {
+      "path": "benchmarks/zero4-q27-v1/contract.json",
+      "sha256": "e2ed4f2d6e151bfbc33073fa0cb26865534255378fc1d32d9922a527a84a49c1"
+    },
+    "literature_review": {
+      "path": "benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json",
+      "sha256": "0a2a28f4923bc06217e3657a4a716497db46569b302112ed91f3b3c95c3893ec",
+      "recommendation": "revise"
+    }
+  },
+  "historical_control": {
+    "id": "q26-seed2-full-scope",
+    "new_execution_required": false,
+    "contract": {
+      "path": "benchmarks/zero4-q26-v1/contract.json",
+      "sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80"
+    },
+    "result": {
+      "path": "benchmarks/zero4-q26-v1/seed2/result.json",
+      "sha256": "6fba7b46a00c881ab129ea706125fee0924d897836784274275ae9517805eb5f",
+      "seed": 2,
+      "selected_update": 500,
+      "exact_request_rate": 0.998,
+      "replay_regression": 0.011833231146535925,
+      "model_sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+    },
+    "language_screen": {
+      "path": "benchmarks/zero-eval-1/screen/results/result.json",
+      "sha256": "b39788f286eab967569dbdf0b21cb769ebf22372a925e8ff57b0dc863b5f51dc",
+      "blimp_raw_accuracy": 0.537,
+      "blimp_descriptive_paradigms": 67,
+      "tinystories_bits_per_byte": 2.5703534147275877
+    }
+  },
+  "comparability": {
+    "matched": [
+      "diagnostic seed 2",
+      "immutable ZERO.3 initialization and teachers",
+      "quantity corpus, replay slices, source order, and evaluation splits",
+      "optimizer schedule, batch size, attempt budgets, and stop conditions",
+      "tangent projection, direct per-slice functional replay authority, quantity gates, and selection rule",
+      "frozen BLiMP and TinyStories case sets, aggregate thresholds, and evaluator"
+    ],
+    "only_prospective_training_difference": "Q2.7 uses --trainable-scope top-ffn while Q2.6 trained the full model.",
+    "invalidators": [
+      "any drift in a bound artifact hash",
+      "any training or selection difference beyond trainable scope",
+      "any reuse of BLiMP or TinyStories observations for checkpoint selection",
+      "any post-result change to thresholds or outcome rules"
+    ]
+  },
+  "prospective_arm": {
+    "id": "q27-seed2-top-ffn",
+    "new_execution_count": 1,
+    "mechanics": "unchanged from the bound Q2.7 contract",
+    "language_reporting": {
+      "aggregate_gate_authority": true,
+      "blimp_all_67_paradigms_reported_descriptively": true,
+      "per_paradigm_inference_forbidden": true,
+      "tinystories_claim_scope": "the frozen 1,000-case TinyStories distribution only"
+    }
+  },
+  "decision": {
+    "go": "The prospectively selected top-FFN seed-2 candidate passes every quantity, replay, promotion, BLiMP, and TinyStories gate. Conclude only that this scope improved the declared language-preservation trade-off versus the full-scope historical control; consider separately budgeted seeds 1 and 3.",
+    "no_go_before_language_gate": "No quantity/replay-feasible promoted candidate exists. Retire this top-FFN scope and do not spend the conditional language-gate budget.",
+    "no_go_at_language_gate": "The promoted candidate fails BLiMP or TinyStories. Retire this top-FFN scope without tuning or repetition.",
+    "inconclusive": "Infrastructure or integrity failure yields no scientific inference and cannot change the intervention.",
+    "claims_forbidden": [
+      "general language preservation or equivalence",
+      "that top-FFN localization is established by literature",
+      "promotion from one seed",
+      "causal attribution to parameter count rather than the tested scope bundle"
+    ]
+  },
+  "roi": {
+    "new_broad_scope_control_cost_usd": 0,
+    "avoided_broad_scope_rerun_compute_usd": 1.17,
+    "avoided_broad_scope_language_gate_usd": 0.12,
+    "prospective_top_ffn_training_max_usd": 1.17,
+    "conditional_top_ffn_language_gate_max_usd": 0.12,
+    "maximum_new_scientific_compute_usd": 1.29,
+    "additional_broad_literature_review_required": false,
+    "additional_literature_agent_credit_cap": 0,
+    "targeted_review_trigger": "Only before introducing a new intervention family such as adapters, masks/pruning, or a different layer boundary, or if this comparability audit is invalidated."
+  },
+  "authorization": {
+    "training_allowed": false,
+    "evaluation_allowed": false,
+    "authorized_compute_usd": 0,
+    "explicit_human_experiment_approval_observed": false,
+    "aws_workflow_dispatch_allowed": false
+  }
+}

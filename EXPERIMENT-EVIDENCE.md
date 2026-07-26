@@ -90,6 +90,7 @@ cost.
 draft
   -> review_incomplete
   -> design_revision_required (when the review recommends revision)
+  -> approval_required (when evidence and design are complete)
   -> ready_for_authorization
   -> authorized under a separate immutable execution budget
   -> result and actual-cost reconciliation
