@@ -76,7 +76,7 @@
     },
     "retry_checker": {
       "path": "scripts/check_q27_aws_retry.mjs",
-      "sha256": "c5c5bd18bfb6e4f5cf1d16babb085d4b61d1c4f79d7777f0d893e480b7ea7cbe"
+      "sha256": "ae420bbdbba8f822799838703eeedb976c4a8c5e99fcdc03065f7162c43db04e"
     },
     "preflight_iam_checker": {
       "path": "scripts/check_q27_preflight_iam.mjs",
@@ -148,7 +148,7 @@
     },
     "retry_authorization": {
       "path": "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
-      "sha256": "e708077a1a7f5b39445f0da274e54725f50fd249ef619aeaaf2881899420d491"
+      "sha256": "ac018a3c5c582160a577860761d9de97274f15ac3eb86fa023a11fb73414ff2b"
     }
   },
   "venue": {
@@ -236,7 +236,7 @@
     "authority_path": "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
     "retry_ordinal": 1,
     "maximum_retry_count": 1,
-    "authorized_for_execution": false,
+    "authorized_for_execution": true,
     "additional_max_compute_usd": 1.17,
     "quantity_all_in_ceiling_usd": 1.2,
     "overall_all_in_ceiling_usd": 1.32
@@ -252,5 +252,5 @@
     "green_ci_required_before_merge": true,
     "infrastructure_or_budget_failure_is_never_scientific_no_go": true
   },
-  "next_authority": "The original execution lock was consumed by an infrastructure-only build failure before scientific execution. One retry is proposed but not authorized: it requires explicit approval for up to $1.17 additional compute, a $1.20 quantity all-in ceiling, and a $1.32 overall ceiling including the still-conditional $0.12 candidate-bound language gate."
+  "next_authority": "Issue #61 authorizes exactly one incident-bound infrastructure retry with up to $1.17 additional quantity compute, a $1.20 quantity all-in ceiling, and a $1.32 overall ceiling including the still-conditional $0.12 candidate-bound language gate. Dispatch remains fail-closed on every frozen eligibility, lock, source, and active-instance check."
 }

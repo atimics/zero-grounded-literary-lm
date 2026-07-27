@@ -23,7 +23,7 @@ export function validateQ27DesignRevision(revision, { root = "." } = {}) {
   assert(revision?.schema === "zero.q27_design_revision.v1",
     "Q2.7 design revision schema drifted");
   assert(revision.id === "zero4-q27-v1-scope-ablation" &&
-    revision.status === "preregistered_not_authorized",
+    ["preregistered_not_authorized", "authorized"].includes(revision.status),
   "Q2.7 design revision identity or status drifted");
 
   const q27 = boundJson(root, revision.bindings.q27_contract, "Q2.7 contract");
@@ -127,12 +127,28 @@ export function validateQ27DesignRevision(revision, { root = "." } = {}) {
   "Q2.7 literature trigger is not bounded");
 
   const authorization = revision.authorization;
-  assert(authorization.training_allowed === false &&
-    authorization.evaluation_allowed === false &&
-    authorization.authorized_compute_usd === 0 &&
-    authorization.explicit_human_experiment_approval_observed === false &&
-    authorization.aws_workflow_dispatch_allowed === false,
-  "Q2.7 design revision opened execution");
+  if (authorization.explicit_human_experiment_approval_observed) {
+    assert(revision.status === "authorized" &&
+      authorization.training_allowed === true &&
+      authorization.evaluation_allowed === true &&
+      authorization.authorized_compute_usd ===
+        roi.maximum_new_scientific_compute_usd &&
+      authorization.aws_workflow_dispatch_allowed === true &&
+      /^\d{4}-\d{2}-\d{2}$/.test(authorization.authorized_at) &&
+      typeof authorization.scope === "string" &&
+      authorization.scope.includes("$1.17") &&
+      authorization.scope.includes("$0.12") &&
+      typeof authorization.basis === "string" &&
+      authorization.basis.includes("Issue #61"),
+    "authorized Q2.7 design revision lacks bounded approval");
+  } else {
+    assert(revision.status === "preregistered_not_authorized" &&
+      authorization.training_allowed === false &&
+      authorization.evaluation_allowed === false &&
+      authorization.authorized_compute_usd === 0 &&
+      authorization.aws_workflow_dispatch_allowed === false,
+    "unapproved Q2.7 design revision opened execution");
+  }
   return true;
 }
 
@@ -141,7 +157,7 @@ function selfTest(revisionPath) {
   const revision = JSON.parse(fs.readFileSync(revisionPath, "utf8"));
   validateQ27DesignRevision(revision, { root });
   const copy = structuredClone(revision);
-  copy.authorization.training_allowed = true;
+  copy.authorization.authorized_compute_usd = 0;
   let rejected = false;
   try {
     validateQ27DesignRevision(copy, { root });
