@@ -1,7 +1,7 @@
 {
   "schema": "zero.q27_infrastructure_retry_authorization.v1",
   "id": "zero4-q27-aws-v1-infrastructure-retry-1",
-  "status": "proposed_not_authorized",
+  "status": "authorized",
   "purpose": "Permit at most one incident-bound infrastructure-only retry of the frozen Q2.7 seed-2 quantity stage after run 30199981920 failed in the build-phase test harness before scientific execution.",
   "authorization": {
     "scope": "one infrastructure-only retry of Q2.7 diagnostic seed 2 through quantity promotion",
@@ -10,10 +10,13 @@
     "maximum_retry_count": 1,
     "one_retry_execution_only": true,
     "requires_manual_approval": true,
-    "manual_approval_observed": false,
-    "authorized_for_execution": false,
-    "expanded_all_in_envelope_approved": false,
-    "authorized_at": null
+    "manual_approval_observed": true,
+    "authorized_for_execution": true,
+    "expanded_all_in_envelope_approved": true,
+    "authorized_at": "2026-07-26",
+    "approval_basis": "Issue #61 records the user's explicit “Do it” approval of the redesigned Q2.7 execution.",
+    "approved_additional_compute_usd": 1.17,
+    "approved_max_new_scientific_compute_usd": 1.29
   },
   "eligibility": {
     "failure_record": {

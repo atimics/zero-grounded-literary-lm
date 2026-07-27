@@ -69,9 +69,10 @@ optimizer attempts, 6,190 `c6i.4xlarge` instance-seconds, and $1.17. The
 workload gets 6,130 seconds and reserves 60 seconds for publication.
 
 The launch workflow exits after dispatch. The collector reads durable state
-once, requires a terminated instance, and cannot wait or start compute. The
-budget remains `proposed_not_authorized`, so the launch fails closed until a
-separate explicit approval changes both authorization booleans.
+once, requires a terminated instance, and cannot wait or start compute. Issue
+#61 authorizes exactly one incident-bound infrastructure retry; the launch
+still fails closed unless its hash-bound approval, evidence, retry lock,
+source, prior-failure, and active-instance checks all pass.
 
 This budget ends after replay selection and the exactly-once quantity
 promotion. It does not open BLiMP or TinyStories. If seed 2 yields a frozen

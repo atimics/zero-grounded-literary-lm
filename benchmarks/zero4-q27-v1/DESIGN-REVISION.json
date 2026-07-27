@@ -1,7 +1,7 @@
 {
   "schema": "zero.q27_design_revision.v1",
   "id": "zero4-q27-v1-scope-ablation",
-  "status": "preregistered_not_authorized",
+  "status": "authorized",
   "revised_at": "2026-07-26",
   "question": "Does the already-preregistered top-FFN arm preserve the bounded language screens better than the paid-for Q2.6 full-scope control while retaining quantity and direct replay performance?",
   "bindings": {
@@ -91,10 +91,13 @@
     "targeted_review_trigger": "Only before introducing a new intervention family such as adapters, masks/pruning, or a different layer boundary, or if this comparability audit is invalidated."
   },
   "authorization": {
-    "training_allowed": false,
-    "evaluation_allowed": false,
-    "authorized_compute_usd": 0,
-    "explicit_human_experiment_approval_observed": false,
-    "aws_workflow_dispatch_allowed": false
+    "training_allowed": true,
+    "evaluation_allowed": true,
+    "authorized_compute_usd": 1.29,
+    "explicit_human_experiment_approval_observed": true,
+    "aws_workflow_dispatch_allowed": true,
+    "authorized_at": "2026-07-26",
+    "scope": "one top-FFN seed-2 quantity execution capped at $1.17 and, only if candidate-ready, one candidate-bound language gate capped at $0.12",
+    "basis": "Issue #61 records the user's explicit “Do it” approval of the merged literature-led redesign and its $1.29 maximum new scientific-compute envelope."
   }
 }

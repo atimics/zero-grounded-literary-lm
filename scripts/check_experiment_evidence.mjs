@@ -262,6 +262,13 @@ export function validateExperimentEvidence(
   }
   assert(gate.literature_list_present === true,
     "literature list is not registered");
+  if (gate.human_approval_observed) {
+    assert(/^\d{4}-\d{2}-\d{2}$/.test(gate.human_approval_observed_at) &&
+      nonEmpty(gate.human_approval_basis) &&
+      gate.human_approval_basis.includes("Issue #61") &&
+      gate.approved_max_new_scientific_compute_usd === 1.29,
+    "experiment approval lacks a bounded human authorization record");
+  }
   const fullTextCount = (review?.works ?? []).filter(
     (work) => work.review_status === "full_text_reviewed",
   ).length;
@@ -351,7 +358,8 @@ function selfTest() {
     }],
     ["missing design cost", (copy) => { copy.costs.phases.splice(1, 1); }],
     ["false readiness", (copy) => {
-      copy.authorization_gate.ready_for_experiment_authorization = true;
+      copy.authorization_gate.ready_for_experiment_authorization =
+        !copy.authorization_gate.ready_for_experiment_authorization;
     }],
     ["design revision hash drift", (copy) => {
       copy.literature.design_revision_artifact.sha256 = "0".repeat(64);
@@ -373,16 +381,10 @@ function selfTest() {
     }
     assert(rejected, `self-test failed to reject ${name}`);
   }
-  let blocked = false;
-  try {
-    validateExperimentEvidence(valid, {
-      requireReady: true,
-      evidencePath: fileURLToPath(path),
-    });
-  } catch {
-    blocked = true;
-  }
-  assert(blocked, "self-test evidence unexpectedly opened authorization");
+  validateExperimentEvidence(valid, {
+    requireReady: true,
+    evidencePath: fileURLToPath(path),
+  });
 }
 
 const isMain = process.argv[1] &&

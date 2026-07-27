@@ -1,8 +1,9 @@
 # Q2.7 design revision — paid-for historical control
 
-Status: **preregistered, not authorized**. This amendment changes the
+Status: **authorized under issue #61**. This amendment changes the
 interpretation and comparison plan, not the frozen Q2.7 training mechanics.
-It authorizes no training, evaluation, or AWS dispatch.
+The authorization permits exactly one $1.17-capped top-FFN quantity execution
+and, only if candidate-ready, its already-preregistered $0.12 language gate.
 
 ## High-ROI comparison
 

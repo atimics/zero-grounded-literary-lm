@@ -1,7 +1,7 @@
 {
   "schema": "zero.experiment_evidence.v1",
   "experiment_id": "zero4-q27-v1",
-  "status": "approval_required",
+  "status": "ready_for_authorization",
   "updated_at": "2026-07-26",
   "policy": {
     "applies_prospectively": true,
@@ -51,9 +51,9 @@
     },
     "design_revision_artifact": {
       "path": "DESIGN-REVISION.json",
-      "sha256": "4de0a655df6dc9e9e17ed8fbc616537bc9270e918355e65a1186ed08a4df4634",
+      "sha256": "f244958aff62289295484200a2244cb3632663707498c2a84983b6e99c2d8e5c",
       "id": "zero4-q27-v1-scope-ablation",
-      "status": "preregistered_not_authorized"
+      "status": "authorized"
     },
     "works": [
       {
@@ -430,8 +430,11 @@
     "recommendation_resolution": "DESIGN-REVISION.json reframes top-FFN as the prospective arm in a hash-bound scope ablation, reuses Q2.6 seed 2 as the paid-for broader-scope control, retains direct replay authority, and bounds BLiMP/TinyStories claims.",
     "cost_projection_complete": true,
     "decision_value_review_complete": true,
-    "human_approval_observed": false,
-    "ready_for_experiment_authorization": false,
-    "block_reason": "The literature-led design revision is complete, but explicit approval of the revised experiment has not been observed. Training, evaluation, and AWS dispatch remain unauthorized."
+    "human_approval_observed": true,
+    "human_approval_observed_at": "2026-07-26",
+    "human_approval_basis": "Issue #61 records the user's explicit “Do it” approval after PRs #58 and #60 merged and the $1.29-capped redesigned execution was restated.",
+    "approved_max_new_scientific_compute_usd": 1.29,
+    "ready_for_experiment_authorization": true,
+    "block_reason": ""
   }
 }

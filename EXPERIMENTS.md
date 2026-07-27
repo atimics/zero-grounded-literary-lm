@@ -212,13 +212,13 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 ---
 
-## Current state (2026-07-24)
+## Current state (2026-07-26)
 
 - **Current and deployed model**: ZERO.4, the Q2.6 seed-2 update-500 artifact at `docs/model.litq8` (SHA-256 `44b32f22...`)
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
 - **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
 - **Latest execution outcome**: the ZERO-EVAL-1 screen completed in 2,502 launch-relative seconds for $0.4726 and its results are merged
 - **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
-- **Next training experiment**: Q2.7's literature-led scope-ablation redesign is complete but not authorized; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
+- **Next training experiment**: Q2.7's literature-led scope ablation is authorized under issue #61 for one $1.17-capped quantity execution and, only if candidate-ready, its $0.12 language gate; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`

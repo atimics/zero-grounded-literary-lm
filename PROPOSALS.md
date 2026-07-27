@@ -83,14 +83,14 @@ promotion outcome.
 
 **Source**: Q2.6 seed-2 optimizer trace and the prospective
 `zero-language-gate-v1` result.
-**Status**: Preregistered and mechanically staged. A one-seed AWS budget and
-non-waiting launch/collector exist, but the infrastructure retry is not
-authorized. The bounded five-paper full-text review completed with a `revise`
+**Status**: Preregistered, mechanically staged, and authorized for exactly one
+incident-bound infrastructure retry under issue #61. The bounded five-paper
+full-text review completed with a `revise`
 recommendation. It found support for replay-guided projection but not for
 top-FFN isolation as an established preservation boundary. The current exact
 Q2.7 mechanics are now reframed as a scope ablation against the hash-bound,
-already-paid Q2.6 seed-2 full-scope control. The design revision is complete;
-explicit experiment approval remains unresolved.
+already-paid Q2.6 seed-2 full-scope control. The design revision and explicit
+$1.29-capped experiment approval are complete.
 **Depends on**: Q2.6-R family promotion (satisfied) and the frozen language
 gate (satisfied).
 **Cost**: Proposed maximum $1.17/6,190 instance-seconds for seed 2 through
@@ -117,7 +117,9 @@ This frozen design is now an ablation candidate, not the assumed safe path.
 Q2.6, retains direct per-slice functional replay authority, preregisters all
 67 BLiMP paradigms as descriptive output, and limits TinyStories/BLiMP claims
 to their measured distributions. This avoids up to $1.29 of duplicate control
-training/evaluation; it authorizes no compute.
+training/evaluation. Issue #61 authorizes one top-FFN quantity execution capped
+at $1.17 and the already-preregistered $0.12 language gate only if the result
+is candidate-ready.
 
 Only a prospectively selected quantity/replay-feasible seed-2 checkpoint may
 open quantity promotion and then the candidate-only BLiMP/TinyStories gate,

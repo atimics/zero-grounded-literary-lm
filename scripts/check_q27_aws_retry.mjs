@@ -58,6 +58,13 @@ export function validateRetry(
         /^\d{4}-\d{2}-\d{2}$/.test(authorization.authorized_at),
       "authorized Q2.7 retry lacks an authorization date",
     );
+    assert(
+      typeof authorization.approval_basis === "string" &&
+        authorization.approval_basis.includes("Issue #61") &&
+        authorization.approved_additional_compute_usd === 1.17 &&
+        authorization.approved_max_new_scientific_compute_usd === 1.29,
+      "authorized Q2.7 retry lacks the bounded human approval record",
+    );
   } else {
     assert(
       retry.status === "proposed_not_authorized" &&
