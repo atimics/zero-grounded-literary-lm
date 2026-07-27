@@ -1,7 +1,7 @@
 {
   "schema": "zero.experiment_evidence.v1",
   "experiment_id": "zero4-q27-v1",
-  "status": "design_revision_required",
+  "status": "approval_required",
   "updated_at": "2026-07-26",
   "policy": {
     "applies_prospectively": true,
@@ -48,6 +48,12 @@
       "sha256": "0a2a28f4923bc06217e3657a4a716497db46569b302112ed91f3b3c95c3893ec",
       "status": "complete",
       "recommendation": "revise"
+    },
+    "design_revision_artifact": {
+      "path": "DESIGN-REVISION.json",
+      "sha256": "4de0a655df6dc9e9e17ed8fbc616537bc9270e918355e65a1186ed08a4df4634",
+      "id": "zero4-q27-v1-scope-ablation",
+      "status": "preregistered_not_authorized"
     },
     "works": [
       {
@@ -377,12 +383,12 @@
     }
   },
   "decision_value": {
-    "uncertainty": "Whether quantity routing can be learned from immutable ZERO.3 in a hard top-FFN subspace without repeating ZERO.4's bounded TinyStories regression.",
-    "decision_purchased": "Choose whether top-FFN isolation deserves a separately budgeted two-seed replication and can remain the candidate path to a language-preserving SAT-1 anchor.",
-    "go_action": "Retain the exact seed-2 candidate, review the result against the literature, and consider a separately preregistered and costed seed-1/3 replication. Do not promote from one seed.",
-    "no_go_action": "Retire this exact top-FFN isolation hypothesis without adaptation inside Q2.7 and compare modular or other parameter-isolation alternatives before proposing more compute.",
+    "uncertainty": "Whether the top-FFN scope improves the bounded language-preservation trade-off relative to the already-paid Q2.6 full-scope seed-2 control while retaining quantity and direct replay performance.",
+    "decision_purchased": "Choose whether top-FFN isolation deserves separately budgeted seed-1/3 replication, without paying to rerun the hash-bound Q2.6 full-scope control.",
+    "go_action": "Retain the exact seed-2 top-FFN candidate only as a bounded scope-ablation result and consider a separately preregistered, costed seed-1/3 replication. Do not promote from one seed.",
+    "no_go_action": "Retire this exact top-FFN scope without adaptation or repetition; require a targeted literature review before proposing a new intervention family.",
     "inconclusive_action": "Treat infrastructure or integrity failure as no scientific evidence; do not consume the scientific question or infer a no-go.",
-    "null_result_value": "A clean no-go rules out a specific internally motivated localization boundary and prevents unbounded tuning against the language gate.",
+    "null_result_value": "A clean no-go rules out the top-FFN boundary, avoids its seed-1/3 replication, and avoids the conditional language evaluation when quantity/replay fails first.",
     "claims_not_supported": [
       "that top-FFN isolation is established by prior literature",
       "that parameter-efficient tuning generally prevents catastrophic forgetting",
@@ -391,6 +397,7 @@
     ],
     "downstream_effects": [
       "A no-go avoids seed-1/3 replication of this intervention.",
+      "Reusing the frozen Q2.6 control avoids up to $1.29 of duplicate training and language evaluation.",
       "A go only opens consideration of replication; it does not authorize it.",
       "SAT-1 remains blocked until a three-seed language-preserving anchor exists.",
       "The literature review may redirect the roadmap to adapters, masks, or a different localization test before further training."
@@ -404,10 +411,10 @@
       "reason_not_sufficient_alone": "No screened study tests this exact model, trainable boundary, data, or preservation gate."
     },
     {
-      "id": "existing-trace-only",
-      "description": "Stop after the completed Q2.6 displacement and replay-drift analysis.",
-      "information_gained": "Localizes internal correlations at zero additional scientific compute.",
-      "reason_not_sufficient_alone": "The trace cannot establish whether top-FFN-only training will learn quantity or preserve language."
+      "id": "historical-control-only",
+      "description": "Use the completed Q2.6 seed-2 full-scope result and language screen without running the top-FFN arm.",
+      "information_gained": "Defines the paid-for broad-scope baseline at zero additional scientific compute.",
+      "reason_not_sufficient_alone": "It cannot reveal whether the top-FFN scope changes the quantity-versus-language trade-off."
     },
     {
       "id": "do-nothing",
@@ -419,12 +426,12 @@
   "authorization_gate": {
     "literature_list_present": true,
     "literature_review_complete": true,
-    "literature_recommendation_resolved": false,
-    "recommendation_resolution": "",
+    "literature_recommendation_resolved": true,
+    "recommendation_resolution": "DESIGN-REVISION.json reframes top-FFN as the prospective arm in a hash-bound scope ablation, reuses Q2.6 seed 2 as the paid-for broader-scope control, retains direct replay authority, and bounds BLiMP/TinyStories claims.",
     "cost_projection_complete": true,
     "decision_value_review_complete": true,
     "human_approval_observed": false,
     "ready_for_experiment_authorization": false,
-    "block_reason": "The bounded full-text review recommends revising Q2.7 before compute: treat top-FFN isolation as a controlled ablation, preserve direct per-slice replay authority, and narrow the language-gate claims. Those design changes and explicit experiment approval remain unresolved."
+    "block_reason": "The literature-led design revision is complete, but explicit approval of the revised experiment has not been observed. Training, evaluation, and AWS dispatch remain unauthorized."
   }
 }

@@ -53,6 +53,7 @@ export function validateExperimentEvidence(
       "draft",
       "review_incomplete",
       "design_revision_required",
+      "approval_required",
       "ready_for_authorization",
       "retired",
     ]
@@ -287,6 +288,25 @@ export function validateExperimentEvidence(
       ? evidence.status !== "design_revision_required"
       : evidence.status === "design_revision_required",
     "unresolved revision has the wrong evidence status");
+    if (gate.literature_recommendation_resolved) {
+      const artifact = literature.design_revision_artifact;
+      assert(artifact && path.basename(artifact.path) === artifact.path &&
+        /^[a-f0-9]{64}$/.test(artifact.sha256),
+      "resolved revision lacks a bound design artifact");
+      const revisionPath = path.resolve(
+        path.dirname(path.resolve(evidencePath)),
+        artifact.path,
+      );
+      assert(fs.existsSync(revisionPath) &&
+        crypto.createHash("sha256").update(fs.readFileSync(revisionPath))
+          .digest("hex") === artifact.sha256,
+      "bound design revision artifact drifted");
+      const revision = JSON.parse(fs.readFileSync(revisionPath, "utf8"));
+      assert(revision.schema === "zero.q27_design_revision.v1" &&
+        revision.id === artifact.id &&
+        revision.status === artifact.status,
+      "design revision summary disagrees with its artifact");
+    }
   }
   if (review?.synthesis.recommendation === "abandon") {
     assert(gate.literature_recommendation_resolved === false,
@@ -333,10 +353,8 @@ function selfTest() {
     ["false readiness", (copy) => {
       copy.authorization_gate.ready_for_experiment_authorization = true;
     }],
-    ["false recommendation resolution", (copy) => {
-      copy.authorization_gate.literature_recommendation_resolved = true;
-      copy.authorization_gate.recommendation_resolution =
-        "Claimed complete without revising the evidence status.";
+    ["design revision hash drift", (copy) => {
+      copy.literature.design_revision_artifact.sha256 = "0".repeat(64);
     }],
     ["review hash drift", (copy) => {
       copy.literature.review_artifact.sha256 = "0".repeat(64);

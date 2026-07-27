@@ -1070,6 +1070,7 @@ zero4-q26: zero4-q26-train
 experiment-evidence-check: scripts/check_experiment_evidence.mjs \
 		scripts/check_literature_review.mjs \
 		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/DESIGN-REVISION.json \
 		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json
 	node scripts/check_experiment_evidence.mjs --self-test
 	node scripts/check_experiment_evidence.mjs \
@@ -1092,6 +1093,7 @@ literature-review-q27: literature-review-pipeline-check
 
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_experiment_evidence.mjs \
+		scripts/check_q27_design_revision.mjs \
 		scripts/check_q27_aws_budget.mjs \
 		scripts/check_q27_aws_preflight.mjs \
 		scripts/check_q27_aws_preflight_failure.mjs \
@@ -1113,6 +1115,8 @@ zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		.github/workflows/q27-aws-infrastructure-retry.yml \
 		.github/workflows/q27-aws-collect.yml \
 		benchmarks/zero4-q27-v1/contract.json \
+		benchmarks/zero4-q27-v1/DESIGN-REVISION.json \
+		benchmarks/zero4-q27-v1/DESIGN-REVISION.md \
 		benchmarks/zero4-q27-v1/EVIDENCE.json \
 		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json \
 		benchmarks/zero4-q27-v1/aws-v1/conditional-language-gate.json \
@@ -1122,6 +1126,7 @@ zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		benchmarks/zero4-q27-v1/aws-v1/budget.json
 	rm -f /tmp/q27-scope-full.ckpt /tmp/q27-scope-chunk.ckpt
 	./literary_lm --self-test >/dev/null
+	node scripts/check_q27_design_revision.mjs --self-test
 	node scripts/check_zero4_q27.mjs
 	node scripts/materialize_q27_language_gate_budget.mjs --self-test
 	node scripts/check_q27_aws_budget.mjs

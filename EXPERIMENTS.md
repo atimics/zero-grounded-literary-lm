@@ -182,6 +182,15 @@ screens rather than general-language proof. The review reported 78,046
 aggregate tokens, conservatively bounded at 0.4877875–29.26725 credits.
 Recommendation: revise; run no Q2.7 compute unchanged.
 
+17. **Q2.7 is redesigned as a paid-for-control scope ablation.** The frozen
+Q2.6 seed-2 result supplies the hash-bound full-scope control because seed,
+initialization, teachers, data, optimizer, direct replay authority, quantity
+gates, selection, and language cases match; only the prospective trainable
+scope changes. Reusing it avoids up to $1.29 of duplicate control
+training/evaluation. No second broad review is needed unless a new
+intervention family is proposed or comparability fails. The redesign
+authorizes zero compute and awaits explicit experiment approval.
+
 ---
 
 ## Schema
@@ -210,6 +219,6 @@ invalidated trajectories, frontier checkpoints, or notices:
 - **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
 - **Latest execution outcome**: the ZERO-EVAL-1 screen completed in 2,502 launch-relative seconds for $0.4726 and its results are merged
 - **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
-- **Next training experiment**: Q2.7 requires a literature-led design revision before authorization can be reconsidered; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
+- **Next training experiment**: Q2.7's literature-led scope-ablation redesign is complete but not authorized; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`
