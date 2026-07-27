@@ -138,7 +138,8 @@ endif
 	zero-eval1-calibration-check zero-eval1-full-budget-check \
 	zero-eval1-screen-check zero-eval1-full-run-decision-check \
 	zero-language-gate-check sat1-prereg-check \
-	experiment-budget-check \
+	experiment-budget-check experiment-evidence-check \
+	literature-review-pipeline-check literature-review-q27 \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
@@ -1066,7 +1067,31 @@ zero4-q26-train: literary_lm export_literary quantity_request_eval \
 
 zero4-q26: zero4-q26-train
 
+experiment-evidence-check: scripts/check_experiment_evidence.mjs \
+		scripts/check_literature_review.mjs \
+		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json
+	node scripts/check_experiment_evidence.mjs --self-test
+	node scripts/check_experiment_evidence.mjs \
+		benchmarks/zero4-q27-v1/EVIDENCE.json
+
+literature-review-pipeline-check: scripts/check_literature_review.mjs \
+		scripts/run_experiment_literature_review.mjs \
+		schemas/literature-review-result.schema.json \
+		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json
+	node scripts/check_literature_review.mjs --self-test
+	@if test -f benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json; then \
+		node scripts/check_literature_review.mjs \
+			benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json \
+			benchmarks/zero4-q27-v1/EVIDENCE.json; \
+	fi
+
+literature-review-q27: literature-review-pipeline-check
+	node scripts/run_experiment_literature_review.mjs
+
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
+		scripts/check_experiment_evidence.mjs \
 		scripts/check_q27_aws_budget.mjs \
 		scripts/check_q27_aws_preflight.mjs \
 		scripts/check_q27_aws_preflight_failure.mjs \
@@ -1088,6 +1113,8 @@ zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		.github/workflows/q27-aws-infrastructure-retry.yml \
 		.github/workflows/q27-aws-collect.yml \
 		benchmarks/zero4-q27-v1/contract.json \
+		benchmarks/zero4-q27-v1/EVIDENCE.json \
+		benchmarks/zero4-q27-v1/LITERATURE-REVIEW.json \
 		benchmarks/zero4-q27-v1/aws-v1/conditional-language-gate.json \
 		benchmarks/zero4-q27-v1/aws-v1/preflight-failure-30189009274.json \
 		benchmarks/zero4-q27-v1/aws-v1/execution-failure-30199981920.json \
@@ -1598,7 +1625,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check zero4-q27-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
