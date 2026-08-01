@@ -76,7 +76,7 @@
     },
     "retry_checker": {
       "path": "scripts/check_q27_aws_retry.mjs",
-      "sha256": "ae420bbdbba8f822799838703eeedb976c4a8c5e99fcdc03065f7162c43db04e"
+      "sha256": "6d737c0617be7f0e4660f12f3e614e91b95cb211142b12ee7cb33b9ecd6db996"
     },
     "preflight_iam_checker": {
       "path": "scripts/check_q27_preflight_iam.mjs",
@@ -84,7 +84,7 @@
     },
     "workflow_checker": {
       "path": "scripts/check_q27_aws_workflows.mjs",
-      "sha256": "da055da57a7153e7b446468eaa24ea9e21a5423074757b75c4dbbac04571c690"
+      "sha256": "543c1e190769b2d42a989e6b31912c595f6fe2cca9357863ef3c9247dfda9d86"
     },
     "completion_checker": {
       "path": "scripts/check_q27_aws_completion.mjs",
@@ -124,7 +124,7 @@
     },
     "retry_workflow": {
       "path": ".github/workflows/q27-aws-infrastructure-retry.yml",
-      "sha256": "7a9a41ce7e4a26cbe30d8d1a7913254930d53dbb1371dbe0ba4bda64f5c16ea6"
+      "sha256": "0ca77c8de541677762f8a40e0d282a89c42f3a0d739ce61e26832ee92d7e52d6"
     },
     "collector_workflow": {
       "path": ".github/workflows/q27-aws-collect.yml",
@@ -148,7 +148,7 @@
     },
     "retry_authorization": {
       "path": "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
-      "sha256": "ac018a3c5c582160a577860761d9de97274f15ac3eb86fa023a11fb73414ff2b"
+      "sha256": "da12735b6763db59b8f18f551501785122dea042d32d339dd03820c13229d669"
     }
   },
   "venue": {
@@ -252,5 +252,5 @@
     "green_ci_required_before_merge": true,
     "infrastructure_or_budget_failure_is_never_scientific_no_go": true
   },
-  "next_authority": "Issue #61 authorizes exactly one incident-bound infrastructure retry with up to $1.17 additional quantity compute, a $1.20 quantity all-in ceiling, and a $1.32 overall ceiling including the still-conditional $0.12 candidate-bound language gate. Dispatch remains fail-closed on every frozen eligibility, lock, source, and active-instance check."
+  "next_authority": "Issue #63 authorizes one replacement dispatch after run 30226812898 failed before the retry lock and before compute because EC2 aged the previously terminated instance out of DescribeInstances. The unchanged envelope permits up to $1.17 additional quantity compute, a $1.20 quantity all-in ceiling, and a $1.32 overall ceiling including the still-conditional $0.12 candidate-bound language gate. Dispatch remains fail-closed on every frozen eligibility, lock, source, and active-instance check."
 }

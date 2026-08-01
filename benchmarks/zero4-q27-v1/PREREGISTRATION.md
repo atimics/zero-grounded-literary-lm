@@ -70,9 +70,13 @@ workload gets 6,130 seconds and reserves 60 seconds for publication.
 
 The launch workflow exits after dispatch. The collector reads durable state
 once, requires a terminated instance, and cannot wait or start compute. Issue
-#61 authorizes exactly one incident-bound infrastructure retry; the launch
-still fails closed unless its hash-bound approval, evidence, retry lock,
-source, prior-failure, and active-instance checks all pass.
+#61 authorizes the incident-bound infrastructure retry, and issue #63
+authorizes one replacement dispatch after the first control-plane attempt
+failed before its lock and before compute. A prior instance aged out of
+`DescribeInstances` is accepted only after its immutable terminated-failure
+record and artifact-absence checks pass. The launch still fails closed unless
+its hash-bound approval, evidence, retry lock, source, prior-failure, and
+active-instance checks all pass.
 
 This budget ends after replay selection and the exactly-once quantity
 promotion. It does not open BLiMP or TinyStories. If seed 2 yields a frozen

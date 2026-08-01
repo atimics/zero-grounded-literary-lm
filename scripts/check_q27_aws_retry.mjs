@@ -65,6 +65,19 @@ export function validateRetry(
         authorization.approved_max_new_scientific_compute_usd === 1.29,
       "authorized Q2.7 retry lacks the bounded human approval record",
     );
+    const replacement = authorization.replacement_dispatch;
+    assert(
+      replacement?.failed_control_plane_run_id === "30226812898" &&
+        replacement.failed_before_retry_lock === true &&
+        replacement.failed_before_compute === true &&
+        replacement.maximum_replacement_dispatch_count === 1 &&
+        replacement.replacement_dispatch_authorized === true &&
+        /^\d{4}-\d{2}-\d{2}$/.test(replacement.authorized_at) &&
+        typeof replacement.approval_basis === "string" &&
+        replacement.approval_basis.includes("Issue #63") &&
+        replacement.approval_basis.includes("$1.29"),
+      "Q2.7 replacement dispatch lacks bounded approval",
+    );
   } else {
     assert(
       retry.status === "proposed_not_authorized" &&

@@ -87,7 +87,14 @@ includesAll(retry, [
   "result.json",
   "selected.ckpt",
   "selected.litq8",
-  "test \"$prior_state\" = terminated",
+  "case \"$prior_state\" in",
+  "terminated)",
+  "None)",
+  "prior_state_basis=described-terminated",
+  "prior_state_basis=aged-out-after-immutable-termination-evidence",
+  "Refusing retry: prior instance state is $prior_state",
+  "prior_instance_state=$prior_state",
+  "prior_instance_state_basis=$prior_state_basis",
   "Refuse overlapping ZERO compute",
   "Preflight exact retry request before retry lock",
   "scripts/aws/q27-preflight.sh",
@@ -112,6 +119,16 @@ assert(
   retry.indexOf("Preflight exact retry request before retry lock") <
     retry.indexOf("Acquire sole infrastructure retry lock"),
   "Q2.7 retry lock precedes exact infrastructure preflight",
+);
+assert(
+  retry.indexOf("grep -Eq '404|Not Found'") <
+    retry.indexOf("case \"$prior_state\" in"),
+  "Q2.7 aged-out instance is accepted before absence checks",
+);
+assert(
+  retry.indexOf("case \"$prior_state\" in") <
+    retry.indexOf("Refuse overlapping ZERO compute"),
+  "Q2.7 prior-instance check no longer precedes the active-compute guard",
 );
 assert(
   retry.indexOf("Acquire sole infrastructure retry lock") <

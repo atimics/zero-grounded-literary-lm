@@ -84,7 +84,10 @@ promotion outcome.
 **Source**: Q2.6 seed-2 optimizer trace and the prospective
 `zero-language-gate-v1` result.
 **Status**: Preregistered, mechanically staged, and authorized for exactly one
-incident-bound infrastructure retry under issue #61. The bounded five-paper
+incident-bound infrastructure retry under issue #61. Issue #63 authorizes one
+replacement dispatch after run 30226812898 failed before its lock and before
+compute because EC2 aged the prior terminated instance out of
+`DescribeInstances`. The bounded five-paper
 full-text review completed with a `revise`
 recommendation. It found support for replay-guided projection but not for
 top-FFN isolation as an established preservation boundary. The current exact

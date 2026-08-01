@@ -166,7 +166,22 @@ jobs:
             --instance-ids "$ZERO_PRIOR_INSTANCE_ID" \
             --query 'Reservations[0].Instances[0].State.Name' \
             --output text --no-cli-pager)
-          test "$prior_state" = terminated
+          case "$prior_state" in
+            terminated)
+              prior_state_basis=described-terminated
+              ;;
+            None)
+              prior_state_basis=aged-out-after-immutable-termination-evidence
+              ;;
+            *)
+              echo "Refusing retry: prior instance state is $prior_state" >&2
+              exit 1
+              ;;
+          esac
+          {
+            echo "prior_instance_state=$prior_state"
+            echo "prior_instance_state_basis=$prior_state_basis"
+          } >> "$GITHUB_STEP_SUMMARY"
           {
             echo "ZERO_ORIGINAL_EXECUTION_LOCK_SHA256=$original_lock_sha256"
             echo "ZERO_PRIOR_LAUNCH_SHA256=$prior_launch_sha256"

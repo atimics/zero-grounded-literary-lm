@@ -16,7 +16,16 @@
     "authorized_at": "2026-07-26",
     "approval_basis": "Issue #61 records the user's explicit “Do it” approval of the redesigned Q2.7 execution.",
     "approved_additional_compute_usd": 1.17,
-    "approved_max_new_scientific_compute_usd": 1.29
+    "approved_max_new_scientific_compute_usd": 1.29,
+    "replacement_dispatch": {
+      "failed_control_plane_run_id": "30226812898",
+      "failed_before_retry_lock": true,
+      "failed_before_compute": true,
+      "maximum_replacement_dispatch_count": 1,
+      "replacement_dispatch_authorized": true,
+      "authorized_at": "2026-08-01",
+      "approval_basis": "Issue #63 records explicit approval of the aged-out-instance workflow fix and one replacement dispatch under the unchanged $1.29 maximum-new-scientific-compute envelope."
+    }
   },
   "eligibility": {
     "failure_record": {
