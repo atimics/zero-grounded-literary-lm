@@ -1,0 +1,46 @@
+{
+  "schema": "zero.graded_plasticity_audit_manifest.v1",
+  "experiment": "zero4-q28-v1",
+  "training_only": true,
+  "updates_committed": 0,
+  "forbidden_evaluation_inputs_used": false,
+  "inputs": {
+    "contract": {
+      "path": "benchmarks/zero4-q28-v1/contract.json",
+      "sha256": "e850b090abca32e9adf63fe53f5b70375fb2daed8228818fbd683a2904b0b805"
+    },
+    "trainer": {
+      "path": "graded_plasticity_audit.c",
+      "sha256": "1383aca26500f17a65444ae93af20f7858c8378e30670cb3d2324650561cb75b"
+    },
+    "files": {
+      "teachers/zero3-balanced-final.teacher": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137",
+      "corpus/literary.bpe": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+      "corpus/bpe/zero-foundation.tok": "87b039e5d4645ebf2a521454a13b1a912cbd1c53ff8fbcfb26baf9da1f5e638b",
+      "corpus/bpe/shakespeare.tok": "ffa36c4890ca07d403e8d76fab47026e1b6d46b1fb2b9d2dc1c31c206ff9351d",
+      "corpus/bpe/blake.tok": "329bf291a5842897b59151640a57d2a2270a451e31c99adbf7d3d6f684d2576c",
+      "corpus/bpe/crowley.tok": "68decb62cbd4f1efaff34067eb5a533406d99a6bc0e60ca219846b39306177da",
+      "corpus/bpe/bible-kjv.tok": "0c387e697fbe339712a62efb75d27c788365ce90911895dbf66e732deee44ed9",
+      "corpus/channel/literary-dialogue.tok": "d401868f33f2ac318315b167dd2bc6850edb3a8b0aaf5b18c1b2fa8cba42c379",
+      "corpus/faculty/q22/quantity-request.tok": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2"
+    }
+  },
+  "outputs": {
+    "audit": {
+      "path": "benchmarks/zero4-q28-v1/audit/shadow-audit.json",
+      "sha256": "1d95572ce79e933d7f1c2f1958f996ff8760353ab1266c248fb952b9a260a461"
+    },
+    "profile": {
+      "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+      "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+    }
+  },
+  "profile_summary": {
+    "groups": 50,
+    "minimum": 0.157184198,
+    "maximum": 0.788669884
+  },
+  "learned_state_digest_before": "0af92f28cdc3c69b",
+  "learned_state_digest_after": "0af92f28cdc3c69b",
+  "weights_and_optimizer_byte_identical": true
+}
