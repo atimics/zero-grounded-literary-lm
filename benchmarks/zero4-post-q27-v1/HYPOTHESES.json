@@ -1,0 +1,302 @@
+{
+  "schema": "zero.post_q27_hypotheses.v1",
+  "as_of": "2026-08-08",
+  "frozen_evidence": {
+    "q27_workflow_run": 31270819935,
+    "q27_source_commit": "59a97ff57e964db4e576bbf1a75e44dc7a983e9d",
+    "q27_result_sha256": "e460286d746518c44f908a178cab839eb484d8f85e4afb69beba73873c58aef2",
+    "q27_decision": "no-go",
+    "q27_stop_reason": "no Pareto improvement for 200 committed updates",
+    "q27_attempts": 300,
+    "q27_committed_updates": 300,
+    "q27_trainable_scope": "top-ffn",
+    "q27_trainable_parameters": 541184,
+    "model_parameters": 4852992,
+    "q27_observed_quantity_cost_usd": 0.484688888889,
+    "q27_language_gate_evaluated": false,
+    "q27_selected_checkpoint": null
+  },
+  "matched_trace_findings": [
+    {
+      "id": "all_q27_steps_accepted",
+      "classification": "observed",
+      "finding": "All 300 Q2.7 proposals were accepted at full scale; 204 were projected, none backtracked, and the maximum removed fraction was 0.061954474913212966.",
+      "implication": "Hard guard rejection and gross projection removal are not sufficient explanations for failure.",
+      "limit": "A small removed norm can still remove a decisive direction, and accepted steps can remain badly conditioned."
+    },
+    {
+      "id": "q27_weaker_global_signal",
+      "classification": "observed",
+      "finding": "Across the matched first 300 updates, Q2.7 mean gradient norm was 0.6491063152299998 versus 1.6458561620066656 for Q2.6, and mean step displacement was 0.007109983232836668 versus 0.011707618236309995.",
+      "implication": "The isolated subspace received about 39.4% of Q2.6's mean gradient norm and about 60.7% of its mean step displacement.",
+      "limit": "Norms do not measure alignment with the quantity objective."
+    },
+    {
+      "id": "top_ffn_moved_more_but_learned_less",
+      "classification": "observed",
+      "finding": "Over 300 matched updates, layer.5.w1 displacement summed to 1.4912508140992016 in Q2.7 versus 0.8409923800762605 in Q2.6; layer.5.w2 summed to 1.5230342705711895 versus 1.0579959197731201.",
+      "implication": "The top FFN moved about 77.3% and 44.0% more respectively in Q2.7, so 'the top FFN simply did not move enough' is contradicted by the trace.",
+      "limit": "Displacement is not causal attribution and does not reveal whether Q2.6 needed those groups."
+    },
+    {
+      "id": "q26_distributed_learning_signature",
+      "classification": "observed_with_causal_uncertainty",
+      "finding": "Successful Q2.6 moved both FFN matrices in every transformer layer substantially during the first 300 updates; attention value/output groups also moved, while token embeddings carried the largest summed absolute replay drift and Fisher-weighted drift.",
+      "implication": "Useful capacity and preservation risk appear distributed, with embeddings a high-risk candidate and cross-layer FFN/attention changes plausible contributors.",
+      "limit": "Groupwise drift fields are local diagnostics. They cannot separate useful learning from correlated movement without an intervention."
+    },
+    {
+      "id": "matched_gate_divergence",
+      "classification": "observed",
+      "finding": "Q2.6 first passed the quantity gate at update 200 with operation and exact-request rates of 0.954; Q2.7 had zero syntax, operation, and exact-request success at updates 100, 200, and 300.",
+      "implication": "A 100-update pilot is not adequate because even the successful control had not passed then; update 200 is the cheapest existing discriminating checkpoint.",
+      "limit": "This is one seed and does not establish variance."
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "full_top_transformer_block",
+      "family": "complete top transformer block while freezing embeddings",
+      "causal_mechanism": "The top block's attention, FFN, and normalization components jointly reroute representations into the required quantity protocol while lower blocks and embeddings preserve the inherited language basis.",
+      "expected_existing_trace_signature": "Successful Q2.6 should show decisive movement or replay-gradient interaction concentrated in layer 5 attention and FFN groups; Q2.7 should show usable top-FFN signal that lacks only attention-mediated routing.",
+      "existing_evidence_assessment": "partly_supported_but_lower_layer_q26_movement_weakens_exclusivity",
+      "falsifier": "At matched update 200, a preregistered top-block arm still has zero syntax/operation/exact-request success or does no better than the Q2.7 hard top-FFN control while consuming comparable replay budget.",
+      "risks": [
+        "Still imposes a binary boundary unsupported by the literature.",
+        "May move language damage into top attention or normalization.",
+        "A one-seed success would not establish the boundary as minimal."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "4-8",
+        "additional_targeted_review_person_hours": "0-2",
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    },
+    {
+      "id": "top_attention_plus_ffn",
+      "family": "top attention plus top FFN with frozen lower blocks",
+      "causal_mechanism": "Attention projections in the top layer provide the missing routing degrees of freedom while the top FFN supplies the transformation already attempted by Q2.7.",
+      "expected_existing_trace_signature": "Q2.6 top-layer attention value/output groups should co-move with quantity progress and Q2.7 top-FFN movement should be large but behaviorally ineffective.",
+      "existing_evidence_assessment": "plausible_and_cheap_but_not_causally_identified",
+      "falsifier": "A top-attention-plus-FFN arm fails to produce nonzero syntax and operation at update 200 despite gradients and accepted steps comparable to Q2.6.",
+      "risks": [
+        "Attention-only expansion may still omit lower-layer coordination.",
+        "The exact boundary can be tuned post hoc unless fixed prospectively.",
+        "Replay preservation in Q2.7 may not survive the added routing freedom."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "3-6",
+        "additional_targeted_review_person_hours": "0-2",
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    },
+    {
+      "id": "distributed_graded_plasticity",
+      "family": "distributed graded plasticity across all layers",
+      "causal_mechanism": "Every layer retains some update capacity, but a fixed training-only importance profile makes parameters with strong old-replay sensitivity increasingly sticky and parameters with strong quantity signal relative to replay risk more flexible.",
+      "expected_existing_trace_signature": "Q2.6 success should coincide with distributed cross-layer movement, Q2.7 should preserve replay but underfit, and high replay-risk groups such as embeddings should be separable from high new-task-relevance groups.",
+      "existing_evidence_assessment": "best_supported_next_intervention_but_not_yet_causal",
+      "falsifier": "A profile fixed before training fails to improve the update-200 quantity vector over Q2.7, or achieves quantity progress only by exceeding the unchanged replay boundary or later frozen language gates.",
+      "risks": [
+        "Replay-gradient importance may miss language behavior outside the replay set.",
+        "Noisy importance estimates can create false safe regions.",
+        "Scaling after adaptive optimization and projection can change constraint geometry.",
+        "Damage may migrate to low-importance groups rather than disappear."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "12-20",
+        "additional_targeted_review_person_hours": "0-3",
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    },
+    {
+      "id": "distributed_sparse_mask",
+      "family": "distributed sparse plasticity selected from training-only signals",
+      "causal_mechanism": "A prospectively frozen cross-layer mask concentrates updates on parameters with high quantity relevance and low old-replay risk while leaving the base forward computation intact.",
+      "expected_existing_trace_signature": "Q2.6 group movement should be distributed rather than top-local, and a joint relevance/risk score should select parameters across multiple layers rather than a single FFN.",
+      "existing_evidence_assessment": "strong_literature_analogy_requires_zero_specific_selection_validation",
+      "falsifier": "The selected mask is unstable across training-only resamples, collapses into one layer, or fails to improve quantity at update 200 without breaching replay.",
+      "risks": [
+        "Mask selection can overfit the acquisition sample.",
+        "A binary sparse mask recreates a hard cutoff at finer granularity.",
+        "Learning the mask jointly adds memory and another optimization target."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "16-28",
+        "additional_targeted_review_person_hours": "2-4",
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    },
+    {
+      "id": "residual_adapters_or_lora",
+      "family": "parameter-efficient residual adapters or low-rank updates",
+      "causal_mechanism": "Distributed trainable residual paths learn the new routing faculty while immutable base weights retain the inherited model; active-model gates determine whether the new paths interfere at inference.",
+      "expected_existing_trace_signature": "Q2.7 should underfit despite low replay change, indicating that preserving base weights is useful but local shared-weight capacity is insufficient.",
+      "existing_evidence_assessment": "credible_fallback_not_a_preservation_guarantee",
+      "falsifier": "Active adapters/LoRA fail quantity at matched update 200 or pass quantity only by failing replay/language screens; inactive-base preservation does not count as success.",
+      "risks": [
+        "Architecture, serialization, deployment, and parameter-count semantics change.",
+        "Task-specific paths may require a selector inconsistent with one-model operation.",
+        "LoRA can forget comparably to full fine-tuning in some language regimes."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "20-40",
+        "additional_targeted_review_person_hours": "3-6",
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    },
+    {
+      "id": "embedding_or_output_adaptation",
+      "family": "selective embedding or output adaptation with replay regularization",
+      "causal_mechanism": "Token representations or output logits may directly encode the missing syntax and exact serialization, so selective adaptation there could unlock behavior without broad hidden-state changes.",
+      "expected_existing_trace_signature": "Q2.6 embeddings/output groups should align with gate transitions rather than merely with replay drift.",
+      "existing_evidence_assessment": "low_priority_because_embedding_trace_is_high_risk_and_not_causal",
+      "falsifier": "Training-only causal or shadow-step analysis shows poor quantity alignment, or an arm produces replay drift without nonzero syntax/operation by update 200.",
+      "risks": [
+        "Token embeddings carry the largest Q2.6 replay-drift and Fisher-weighted-drift diagnostics.",
+        "Output adaptation can memorize formatting without learning operation routing.",
+        "Tied embeddings/output weights can broaden the intervention unexpectedly."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "4-8",
+        "additional_targeted_review_person_hours": "1-3",
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    },
+    {
+      "id": "optimizer_projection_or_stop_rule",
+      "family": "optimizer, projection, or stopping-rule failure without changing the boundary",
+      "causal_mechanism": "The top FFN may contain adequate representational capacity, but adaptive conditioning, a decisively misaligned projected direction, or a premature Pareto stop prevents acquisition.",
+      "expected_existing_trace_signature": "Rejected/backtracked proposals, large or gate-aligned projection removal, collapsing gradient-to-step ratios, or continued improvement immediately before the stop would support this mechanism.",
+      "existing_evidence_assessment": "gross_guard_failure_weakened_but_alignment_and_conditioning_remain_unmeasured",
+      "falsifier": "A training-only shadow-step audit finds weak unprojected quantity alignment in the top FFN and no evidence that removed directions predict gate improvement; extending or retuning the same boundary then lacks a causal basis.",
+      "risks": [
+        "Optimizer tuning can become an unconstrained search over a failed subspace.",
+        "Using public or language gates to tune the optimizer would leak evaluation authority.",
+        "A stop extension spends compute despite Q2.7's flat zero syntax/operation trajectory."
+      ],
+      "projected_cost": {
+        "implementation_person_hours": "4-8",
+        "additional_targeted_review_person_hours": "0-2",
+        "offline_diagnostic_compute_cap_usd": 0,
+        "pilot_quantity_compute_cap_usd": 0.5,
+        "conditional_language_gate_cap_usd": 0.12,
+        "later_full_run_cap_usd": 1.17
+      }
+    }
+  ],
+  "decision": {
+    "diagnostic_precondition": {
+      "action": "Add a training-only shadow-step audit before any new training authorization.",
+      "purpose": "Measure groupwise new-task gradient energy, replay-gradient energy, their alignment, the proposed optimizer delta, and the post-profile/post-projection delta on frozen acquisition and replay batches.",
+      "authority_boundary": "No BLiMP, TinyStories candidate set, promotion set, workflow dispatch, AWS instance, or parameter update is permitted by this research artifact.",
+      "estimated_person_hours": "4-8",
+      "estimated_aws_compute_usd": 0
+    },
+    "ranked_interventions": [
+      {
+        "rank": 1,
+        "hypothesis_id": "distributed_graded_plasticity",
+        "reason": "It directly compares graded stickiness with Q2.7's hard boundary, preserves distributed capacity seen in Q2.6, and has support from multiple independent method families."
+      },
+      {
+        "rank": 2,
+        "hypothesis_id": "distributed_sparse_mask",
+        "reason": "It is a stronger isolation alternative if a stable training-only mask exists, but selection instability and implementation cost are higher."
+      },
+      {
+        "rank": 3,
+        "hypothesis_id": "top_attention_plus_ffn",
+        "reason": "It is the cheapest binary expansion and targets routing directly, but it retains the unestablished hard layer boundary."
+      },
+      {
+        "rank": 4,
+        "hypothesis_id": "full_top_transformer_block",
+        "reason": "It is simple, but differs little conceptually from the failed top-floor assumption and does not explain distributed Q2.6 movement."
+      },
+      {
+        "rank": 5,
+        "hypothesis_id": "residual_adapters_or_lora",
+        "reason": "It offers distributed capacity with immutable base weights, but changes architecture and is not itself a forgetting guarantee."
+      },
+      {
+        "rank": 6,
+        "hypothesis_id": "embedding_or_output_adaptation",
+        "reason": "It is cheap but high-risk because embeddings dominate existing replay-risk diagnostics and useful causal alignment is unmeasured."
+      },
+      {
+        "rank": 7,
+        "hypothesis_id": "optimizer_projection_or_stop_rule",
+        "reason": "It deserves the zero-compute audit, but all accepted full-scale steps and flat gate results make an optimizer-only training rerun a poor first bet."
+      }
+    ],
+    "graded_profile_preregistration_candidate": {
+      "granularity": "parameter group for the first pilot; no per-weight claim",
+      "old_behavior_importance": "Mean squared gradients on the frozen direct-replay training set only, normalized by the median across eligible groups.",
+      "new_task_relevance": "Mean squared gradients on the frozen quantity-acquisition training set only, normalized by the median across eligible groups.",
+      "plasticity_formula": "p_g = 0.05 + 0.95 * N_g / (N_g + O_g + epsilon), where N_g and O_g are the normalized new-task relevance and old-behavior importance.",
+      "profile_freeze": "Compute once before training, hash the inputs and coefficients, and hold the profile fixed for the run.",
+      "evaluation_firewall": "BLiMP, TinyStories, promotion examples, and public candidate-gate results cannot influence importance, relevance, coefficients, floors, or stopping rules.",
+      "weights_and_optimizer_moments": "Apply p_g to the complete proposed parameter delta, including weight decay, before the replay-constrained weighted projection. Start optimizer moments from the same frozen initialization, never reuse moments across profiles, keep p_g fixed, and discard moments after the run. A future dynamic profile would require separate review and explicit moment-reset semantics.",
+      "projection_geometry": "Project the scaled proposed delta in the plasticity-weighted subspace so the replay correction cannot reopen nominally sticky coordinates without the same p_g multiplier.",
+      "damage_migration_check": "Report replay drift, Fisher-weighted drift, and accepted displacement by group and by replay slice; a good aggregate with a worsened slice is a failure."
+    },
+    "cheapest_discriminating_pilot": {
+      "status": "proposed_not_authorized",
+      "new_arm": "One seed-2 distributed graded-plasticity arm using the fixed profile above.",
+      "historical_controls": [
+        "Q2.7 hard top-FFN control at the hash-bound run 31270819935",
+        "Q2.6 full-model reference at matched update checkpoints"
+      ],
+      "maximum_committed_updates": 200,
+      "frozen_evaluation_checkpoints": [
+        0,
+        100,
+        200
+      ],
+      "quantity_compute_cost_basis": "Q2.7 cost $0.484688888889 for 300 committed updates, or $0.161562962963 per 100 updates by linear extrapolation.",
+      "quantity_compute_projected_usd": 0.323125925926,
+      "quantity_compute_cap_with_contingency_usd": 0.5,
+      "conditional_language_gate_cap_usd": 0.12,
+      "maximum_new_compute_envelope_usd": 0.62,
+      "success_condition": "At update 200, clear the unchanged quantity and per-slice replay gates and dominate Q2.7's matched outcome; freeze the candidate before any language evaluation.",
+      "failure_condition": "At update 200, no jointly feasible quantity/replay checkpoint exists, or progress is purchased by moving replay damage into another slice or parameter group.",
+      "stop_conditions": [
+        "Fail closed on any source, data, profile, contract, or trace hash mismatch.",
+        "Do not stop for scientific futility at update 100 solely because Q2.6 had not passed at that checkpoint.",
+        "Stop no later than 200 committed updates; no unregistered extension or profile retuning.",
+        "Do not run the $0.12 language gate unless a valid frozen quantity/replay candidate exists.",
+        "No promotion follows from the pilot; replication and promotion require separate authorization."
+      ]
+    },
+    "value_of_information": {
+      "research_and_design_cost": "The targeted 12-paper review and trace analysis are completed artifacts; exact agent-credit usage is unavailable and is not fabricated. Marginal implementation plus audit is estimated at 16-28 person-hours, which dominates the sub-dollar compute cost.",
+      "experiment_cost": "The proposed pilot caps new compute at $0.62 including the conditional language screen; the quantity-only cap is $0.50.",
+      "decision_value": "A success supports a distributed graded boundary for later replication; a failure retires this fixed estimator/profile before a broad multi-arm sweep. Either outcome distinguishes hard top-only undercapacity from a specific distributed-plasticity intervention.",
+      "compute_only_break_even": "The $0.62 maximum is 48.1% of the existing $1.29 quantity-plus-conditional-language envelope. It pays for itself on compute alone if it has at least a 48.1% chance of preventing one otherwise uninformative full-envelope run; engineering time must be justified separately.",
+      "recommendation": "Implement and verify the no-update shadow audit first. If it shows a stable cross-layer relevance/risk profile, open a separate protected experiment issue for exactly the 200-update graded pilot. Do not launch another hard top-only or optimizer-tuning run first.",
+      "further_literature_review": "No further broad review is required for this fixed-profile pilot. A narrow follow-up is required if the design changes to dynamic masks, reused optimizer moments, jointly learned masks, or a new adapter architecture."
+    },
+    "authorization": {
+      "workflow_dispatch": false,
+      "aws_compute": false,
+      "training": false,
+      "language_gate": false,
+      "evaluation": false,
+      "promotion": false,
+      "next_experiment_requires_separate_issue_and_exact_approval": true
+    }
+  }
+}
