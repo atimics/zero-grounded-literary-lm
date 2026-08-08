@@ -1108,6 +1108,7 @@ zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/aws/q27-preflight.sh \
 		scripts/aws/apply-q27-preflight-iam.sh \
 		scripts/aws/q27-run-instances.sh \
+		scripts/aws/q27-classify-prior-instance.sh \
 		scripts/aws/q27-seed2.sh \
 		scripts/aws/q27-seed2-user-data.sh \
 		.github/workflows/ci.yml \
@@ -1136,12 +1137,14 @@ zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 	node scripts/check_q27_aws_retry.mjs
 	node scripts/check_q27_preflight_iam.mjs
 	node scripts/check_q27_aws_workflows.mjs
+	bash scripts/aws/q27-classify-prior-instance.sh --self-test
 	node scripts/check_q27_aws_completion.mjs --if-present
 	node scripts/train_zero4_q27.mjs --self-test
 	bash -n scripts/aws/q27-seed2.sh \
 		scripts/aws/q27-seed2-user-data.sh \
 		scripts/aws/apply-q27-preflight-iam.sh \
 		scripts/aws/q27-preflight.sh \
+		scripts/aws/q27-classify-prior-instance.sh \
 		scripts/aws/q27-run-instances.sh
 	./literary_lm --context 8 --dim 8 --heads 2 --layers 1 --ff 16 \
 		--trainable-scope top-ffn \

@@ -60,7 +60,7 @@
     "executor_version": "q27-aws-v1-infrastructure-retry-proposal-1",
     "budget_checker": {
       "path": "scripts/check_q27_aws_budget.mjs",
-      "sha256": "b54b462bc3445b201af9ceef9a5408ee6e01e2623cae78bae501260e417df035"
+      "sha256": "7fb02b1698b42d5768c48d3e95d48fe229d2479b698156207437ee5c89a05f9e"
     },
     "preflight_checker": {
       "path": "scripts/check_q27_aws_preflight.mjs",
@@ -84,7 +84,11 @@
     },
     "workflow_checker": {
       "path": "scripts/check_q27_aws_workflows.mjs",
-      "sha256": "543c1e190769b2d42a989e6b31912c595f6fe2cca9357863ef3c9247dfda9d86"
+      "sha256": "a128cdf740dfe0b2df160c3f40b068dceae94925595c2f60d12a4a2fdc0188a2"
+    },
+    "prior_instance_policy": {
+      "path": "scripts/aws/q27-classify-prior-instance.sh",
+      "sha256": "0b8ed54a3206b92f9fc3a2e1bbdb6bcf7de869e934d21b68bbeb6270172f7a0f"
     },
     "completion_checker": {
       "path": "scripts/check_q27_aws_completion.mjs",
@@ -124,7 +128,7 @@
     },
     "retry_workflow": {
       "path": ".github/workflows/q27-aws-infrastructure-retry.yml",
-      "sha256": "0ca77c8de541677762f8a40e0d282a89c42f3a0d739ce61e26832ee92d7e52d6"
+      "sha256": "92685807698ad19b76b262db982fbb09f89a48163f8f1cbdcc676b982d041e94"
     },
     "collector_workflow": {
       "path": ".github/workflows/q27-aws-collect.yml",

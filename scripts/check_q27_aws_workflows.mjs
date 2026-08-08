@@ -12,6 +12,8 @@ const preflightPath = "scripts/aws/q27-preflight.sh";
 const requestPath = "scripts/aws/q27-run-instances.sh";
 const provisionPath = "scripts/aws/provision.sh";
 const preflightIamPath = "scripts/aws/apply-q27-preflight-iam.sh";
+const priorInstancePolicyPath =
+  "scripts/aws/q27-classify-prior-instance.sh";
 
 function fail(message) { throw new Error(message); }
 function assert(condition, message) { if (!condition) fail(message); }
@@ -31,6 +33,10 @@ const preflight = fs.readFileSync(preflightPath, "utf8");
 const request = fs.readFileSync(requestPath, "utf8");
 const provision = fs.readFileSync(provisionPath, "utf8");
 const preflightIam = fs.readFileSync(preflightIamPath, "utf8");
+const priorInstancePolicy = fs.readFileSync(
+  priorInstancePolicyPath,
+  "utf8",
+);
 
 includesAll(launch, [
   "workflow_dispatch:",
@@ -87,12 +93,10 @@ includesAll(retry, [
   "result.json",
   "selected.ckpt",
   "selected.litq8",
-  "case \"$prior_state\" in",
-  "terminated)",
-  "None)",
-  "prior_state_basis=described-terminated",
-  "prior_state_basis=aged-out-after-immutable-termination-evidence",
-  "Refusing retry: prior instance state is $prior_state",
+  "prior_state_stdout=/tmp/zero-q27-retry/prior-state.out",
+  "prior_state_stderr=/tmp/zero-q27-retry/prior-state.err",
+  "prior_state_exit=$?",
+  "scripts/aws/q27-classify-prior-instance.sh",
   "prior_instance_state=$prior_state",
   "prior_instance_state_basis=$prior_state_basis",
   "Refuse overlapping ZERO compute",
@@ -122,13 +126,17 @@ assert(
 );
 assert(
   retry.indexOf("grep -Eq '404|Not Found'") <
-    retry.indexOf("case \"$prior_state\" in"),
+    retry.indexOf("scripts/aws/q27-classify-prior-instance.sh"),
   "Q2.7 aged-out instance is accepted before absence checks",
 );
 assert(
-  retry.indexOf("case \"$prior_state\" in") <
+  retry.indexOf("scripts/aws/q27-classify-prior-instance.sh") <
     retry.indexOf("Refuse overlapping ZERO compute"),
   "Q2.7 prior-instance check no longer precedes the active-compute guard",
+);
+assert(
+  !retry.includes("None)"),
+  "Q2.7 retry still treats a successful None response as aged-out evidence",
 );
 assert(
   retry.indexOf("Acquire sole infrastructure retry lock") <
@@ -148,6 +156,18 @@ for (const forbidden of [
   assert(!retry.includes(forbidden),
     `Q2.7 infrastructure retry waits for compute: ${forbidden}`);
 }
+
+includesAll(priorInstancePolicy, [
+  "InvalidInstanceID.NotFound",
+  "when calling the DescribeInstances operation:",
+  "prior_instance_state=",
+  "prior_instance_state_basis=",
+  "described-terminated",
+  "aged-out-after-immutable-termination-evidence",
+  "successful None response was accepted",
+  "unexpected AWS error was accepted",
+  "NotFound from the wrong operation was accepted",
+], "Q2.7 prior-instance policy");
 
 includesAll(ci, [
   "q27-node18-portability:",
