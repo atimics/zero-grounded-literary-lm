@@ -66,15 +66,38 @@ export function validateRetry(
       "authorized Q2.7 retry lacks the bounded human approval record",
     );
     const replacement = authorization.replacement_dispatch;
+    const failedControlPlaneRuns =
+      replacement?.failed_control_plane_runs;
     assert(
-      replacement?.failed_control_plane_run_id === "30226812898" &&
-        replacement.failed_before_retry_lock === true &&
-        replacement.failed_before_compute === true &&
-        replacement.maximum_replacement_dispatch_count === 1 &&
+      same(failedControlPlaneRuns, [
+        {
+          workflow_run_id: "30226812898",
+          head_sha: "548094821e3b5dea7cba84b185ad4b274f649d5d",
+          role: "initial-retry-dispatch",
+          failed_before_retry_lock: true,
+          failed_before_compute: true,
+        },
+        {
+          workflow_run_id: "31268566748",
+          head_sha: "287c78c59ea9c7fa6ded484986e9920274720af3",
+          role: "replacement-dispatch-1",
+          failed_before_retry_lock: true,
+          failed_before_compute: true,
+        },
+      ]) &&
+        replacement.replacement_dispatches_observed === 1 &&
+        replacement.maximum_replacement_dispatch_count === 2 &&
+        replacement.remaining_replacement_dispatch_count === 1 &&
+        replacement.replacement_dispatches_observed +
+          replacement.remaining_replacement_dispatch_count ===
+          replacement.maximum_replacement_dispatch_count &&
         replacement.replacement_dispatch_authorized === true &&
         /^\d{4}-\d{2}-\d{2}$/.test(replacement.authorized_at) &&
+        typeof replacement.prior_approval_basis === "string" &&
+        replacement.prior_approval_basis.includes("Issue #63") &&
         typeof replacement.approval_basis === "string" &&
-        replacement.approval_basis.includes("Issue #63") &&
+        replacement.approval_basis.includes("Issue #67") &&
+        replacement.approval_basis.includes("31268566748") &&
         replacement.approval_basis.includes("$1.29"),
       "Q2.7 replacement dispatch lacks bounded approval",
     );
