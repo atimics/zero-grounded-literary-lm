@@ -112,6 +112,7 @@ export function validateBudget(
     "retry_checker",
     "preflight_iam_checker",
     "workflow_checker",
+    "prior_instance_policy",
     "completion_checker",
     "preflight",
     "request_builder",

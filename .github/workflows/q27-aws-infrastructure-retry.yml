@@ -162,22 +162,25 @@ jobs:
             grep -Eq '404|Not Found' /tmp/zero-q27-retry/head.err
           done
 
-          prior_state=$(aws ec2 describe-instances \
+          prior_state_stdout=/tmp/zero-q27-retry/prior-state.out
+          prior_state_stderr=/tmp/zero-q27-retry/prior-state.err
+          set +e
+          aws ec2 describe-instances \
             --instance-ids "$ZERO_PRIOR_INSTANCE_ID" \
             --query 'Reservations[0].Instances[0].State.Name' \
-            --output text --no-cli-pager)
-          case "$prior_state" in
-            terminated)
-              prior_state_basis=described-terminated
-              ;;
-            None)
-              prior_state_basis=aged-out-after-immutable-termination-evidence
-              ;;
-            *)
-              echo "Refusing retry: prior instance state is $prior_state" >&2
-              exit 1
-              ;;
-          esac
+            --output text --no-cli-pager \
+            >"$prior_state_stdout" 2>"$prior_state_stderr"
+          prior_state_exit=$?
+          set -e
+          prior_observation=$(bash \
+            scripts/aws/q27-classify-prior-instance.sh \
+            "$prior_state_exit" "$prior_state_stdout" "$prior_state_stderr")
+          prior_state=$(printf '%s\n' "$prior_observation" | \
+            sed -n 's/^prior_instance_state=//p')
+          prior_state_basis=$(printf '%s\n' "$prior_observation" | \
+            sed -n 's/^prior_instance_state_basis=//p')
+          test -n "$prior_state"
+          test -n "$prior_state_basis"
           {
             echo "prior_instance_state=$prior_state"
             echo "prior_instance_state_basis=$prior_state_basis"
