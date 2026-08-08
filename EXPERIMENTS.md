@@ -23,6 +23,7 @@ Schema: `zero.experiment_registry.v1`.
 | **q25** | `benchmarks/zero4-q25-v1` | 2026-07-19 | Q2.4 no-go and `benchmarks/zero4-q25-v1/PREREGISTRATION.md` | Keeps the immutable six-slice baseline and 1.5% authority, but retries each outer attempt at frozen scales 1, 1/2, …, 1/128. Every retry restores weights and AdamW moments and reuses the same minibatch, gradient, and proposed update. | Can deterministic first-feasible backtracking preserve replay safety while reopening the quantity-learning path? | Seed 2 committed 66 full-scale and 5 backtracked updates, then exhausted all eight scales on attempts 72–79. The smallest accepted scale was 1/128 and the maximum committed replay increase was 1.49944%. No 100-commit public checkpoint was reached. | **No-go.** Scalar continuation bought five updates but did not reopen the learning path. Promotion and seeds 1 and 3 remained sealed; ZERO.3 remains current. | Q2.6 proposal: change update direction or optimization geometry without weakening the frozen gates |
 | **q26** | `benchmarks/zero4-q26-v1` | 2026-07-19 | Q2.5 no-go and `benchmarks/zero4-q26-v1/PREREGISTRATION.md` | Computes the mean gradient of the same six frozen replay slices at the pre-attempt state, projects only the replay-increasing component out of each scaled AdamW weight displacement, and retains the unchanged direct cumulative evaluation as sole commit authority. | Can a global replay-tangent projection change update direction enough to reopen the quantity-learning path under the same gates? | Seed 2 committed all 700 attempts at full scale; projection applied on 423. Six of seven public checkpoints were jointly feasible. Update 500 was selected with 99.8% limiting quantity rates and 1.1833% replay regression; the one-time promotion evaluation passed at 99.6%. | **Go.** Direction-changing projection reopened the constrained path without weakening any gate. The seed-2 model is published; ZERO.3 remains current pending the preregistered seed-1/3 replication decision. | Freeze the Q2.6 replication adapter and execute seeds 1 and 3 without changing the seed-2 contract |
 | **q26r** | `benchmarks/zero4-q26r-v1` | 2026-07-19–24 | Q2.6 seed-2 go and `benchmarks/zero4-q26r-v1/PREREGISTRATION.md` | Executes only seeds 1 and 3 through the frozen Q2.6 driver while inheriting its intervention, initialization, corpora, optimizer, budgets, scales, authorities, gates, promotion split, and stop rules. OpenBLAS parallelizes deterministic evaluation without changing scientific outputs. | Does the accepted Q2.6 intervention reproduce on both remaining declared seeds without post-hoc selection or optional stopping? | Recovery-3 completed both seeds under independent caps. Seed 1: go, 98.0% exact, 1.0423% replay, $0.9373. Seed 3: go, 96.0% exact, 1.2753% replay, $0.9444. Both exactly-once promotion evaluations passed; the three-seed aggregate is go. | **Promote ZERO.4.** The prospectively selected seed-2 update-500 model becomes current; replication checkpoints remain evidence and cannot replace it post hoc. | Separately preregister SAT-1 operation-count scaling; no follow-up compute is authorized by promotion |
+| **q27** | `benchmarks/zero4-q27-v1` | 2026-08-08 | Q2.6 language-preservation result and the authorized Q2.7 scope-ablation design | Restricted training to the top FFN and associated normalization while retaining the same seed-2 initialization, data, optimizer, replay projection, gates, selector, and historical Q2.6 full-model control. | Can top-FFN isolation acquire quantity routing while preserving the inherited behavior more tightly? | All 300 updates committed at full scale, but syntax, operation, and exact-request rates remained zero at updates 100, 200, and 300. No quantity/replay candidate was selected; the conditional language gate did not run. Observed quantity cost: $0.484688888889. | **No-go.** Retire hard top-FFN isolation as the next default intervention; no model or promotion follows. | Research the minimum distributed trainable subspace from matched Q2.6/Q2.7 traces and primary literature |
 
 ---
 
@@ -31,6 +32,7 @@ Schema: `zero.experiment_registry.v1`.
 | ID | Date | Scope | Result | Decision |
 | --- | --- | --- | --- | --- |
 | **zero-eval1-screen** | 2026-07-24–25 UTC | Frozen ZERO.3 and ZERO.4 on 1,000-case BLiMP, TinyStories, HellaSwag, and adapted LAMBADA screens | ZERO.4: BLiMP +0.005 raw accuracy, TinyStories +0.042492 bits/byte (worse), HellaSwag -0.005 normalized accuracy, adapted LAMBADA tied at zero. AWS: 2,502 seconds/$0.4726. | **Do not run the proposed 8h30m/$5.78 full suite.** Replace it with a candidate-only BLiMP/TinyStories preservation gate; do not claim general language improvement. |
+| **post-q27-plasticity** | 2026-08-08 | Research-only matched trace analysis and 12-paper primary review in `benchmarks/zero4-post-q27-v1` | Q2.7's top FFN moved more than the corresponding Q2.6 groups but learned far less; Q2.6's successful trajectory had distributed cross-layer movement. The literature supports graded consolidation, distributed sparse changes, and adapters as testable families but does not establish a safe Zero boundary. | **Lead with a no-update shadow audit, then—only under separate authorization—one 200-update fixed graded-plasticity pilot against the frozen Q2.7 control.** No compute or promotion is authorized. |
 
 ---
 
@@ -191,6 +193,16 @@ training/evaluation. No second broad review is needed unless a new
 intervention family is proposed or comparability fails. The redesign
 authorizes zero compute and awaits explicit experiment approval.
 
+18. **Q2.7 rejected the hard top-FFN boundary, not replay projection.** The
+completed run accepted all 300 updates at full scale and selected no candidate.
+At the matched update-200 checkpoint, Q2.6 had 95.4% operation and exact-request
+success while Q2.7 remained at zero. Q2.7's active `layer.5.w1` and
+`layer.5.w2` accumulated more displacement than the same groups in Q2.6, so
+insufficient top-FFN movement is contradicted by the trace. The post-Q2.7
+research review ranks a fixed, training-only, cross-layer graded-plasticity
+profile as the next intervention to test, preceded by a no-update shadow audit.
+This is a research recommendation, not compute authority.
+
 ---
 
 ## Schema
@@ -212,13 +224,13 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 ---
 
-## Current state (2026-07-26)
+## Current state (2026-08-08)
 
 - **Current and deployed model**: ZERO.4, the Q2.6 seed-2 update-500 artifact at `docs/model.litq8` (SHA-256 `44b32f22...`)
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
-- **Latest completed experiment**: Q2.6-R three-seed replication (go; all declared seeds passed public and exactly-once promotion gates)
-- **Latest execution outcome**: the ZERO-EVAL-1 screen completed in 2,502 launch-relative seconds for $0.4726 and its results are merged
+- **Latest completed experiment**: Q2.7 top-FFN scope ablation (no-go; no quantity/replay candidate and no language-gate run)
+- **Latest execution outcome**: Q2.7 completed 300 committed updates for $0.484688888889 and selected no checkpoint
 - **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
-- **Next training experiment**: Q2.7's literature-led scope ablation is authorized under issue #61 for one $1.17-capped quantity execution and, only if candidate-ready, its $0.12 language gate; staged SAT-1 remains blocked behind a three-seed language-preserving anchor
+- **Next training experiment**: none authorized; issue #69 recommends a no-update shadow audit before a separately approved 200-update graded-plasticity pilot, while staged SAT-1 remains blocked behind a language-preserving anchor
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`

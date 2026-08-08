@@ -130,7 +130,7 @@ endif
 	zero4-q24-check zero4-q24-train zero4-q24 \
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
-	zero4-q27-check \
+	zero4-q27-check zero4-post-q27-research-check \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
@@ -1091,6 +1091,14 @@ literature-review-pipeline-check: scripts/check_literature_review.mjs \
 literature-review-q27: literature-review-pipeline-check
 	node scripts/run_experiment_literature_review.mjs
 
+zero4-post-q27-research-check: scripts/analyze_zero4_plasticity.mjs \
+		scripts/check_post_q27_research.mjs \
+		benchmarks/zero4-post-q27-v1/LITERATURE-REVIEW.json \
+		benchmarks/zero4-post-q27-v1/HYPOTHESES.json \
+		benchmarks/zero4-post-q27-v1/trace-analysis.json
+	node scripts/analyze_zero4_plasticity.mjs --self-test
+	node scripts/check_post_q27_research.mjs --self-test
+
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_experiment_evidence.mjs \
 		scripts/check_q27_design_revision.mjs \
@@ -1633,7 +1641,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

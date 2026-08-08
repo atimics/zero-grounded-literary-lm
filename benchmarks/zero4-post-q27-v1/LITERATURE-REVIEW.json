@@ -1,0 +1,338 @@
+{
+  "schema": "zero.post_q27_literature_review.v1",
+  "reviewed_at": "2026-08-08",
+  "status": "complete",
+  "method": {
+    "primary_sources_only": true,
+    "full_text_required": true,
+    "source_count": 12,
+    "search_scope": [
+      "continual-learning stability and plasticity",
+      "constrained or projected optimization",
+      "parameter-efficient adaptation",
+      "layerwise transfer and localization",
+      "causal parameter attribution",
+      "importance-weighted consolidation and schedules",
+      "soft masks and distributed sparse plasticity"
+    ],
+    "known_limits": [
+      "This is a targeted decision review rather than a systematic or exhaustive review.",
+      "No reviewed paper tests Zero's exact 4.85M-parameter character transformer, quantity-routing task, replay authority, and language gates.",
+      "Results from classifiers, large pretrained transformers, and other continual-learning regimes transfer to Zero only as mechanisms to test, not as outcome guarantees."
+    ]
+  },
+  "works": [
+    {
+      "id": "kirkpatrick-2017-ewc",
+      "citation": "Kirkpatrick et al. (2017), Overcoming catastrophic forgetting in neural networks",
+      "year": 2017,
+      "url": "https://arxiv.org/pdf/1612.00796",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Figure 1 and Eq. 3, p. 3; Fisher approximation caveat, supplementary discussion",
+      "categories": [
+        "stability_plasticity",
+        "importance_weighted_consolidation",
+        "per_parameter_or_group_schedules"
+      ],
+      "supports": [
+        "A quadratic penalty can make parameters selectively resistant to change in proportion to estimated old-task importance while leaving less important parameters more plastic.",
+        "The source explicitly frames this as slow learning for crucial weights and faster learning for weakly constrained weights."
+      ],
+      "experimental_setting": "Sequential supervised classification and Atari reinforcement-learning tasks.",
+      "limitations": [
+        "The diagonal Fisher approximation can underestimate uncertainty and treat estimated null directions as safer than they are.",
+        "The experiments do not establish language preservation or the correct importance estimator for Zero."
+      ],
+      "direct_design_consequence": "Use replay-derived importance only as a prospective stiffness signal; retain direct replay and frozen language gates as authority, and include a floor on plasticity so an estimated nullspace is not mistaken for proven safety.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "zenke-2017-synaptic-intelligence",
+      "citation": "Zenke, Poole, and Ganguli (2017), Continual Learning Through Synaptic Intelligence",
+      "year": 2017,
+      "url": "https://proceedings.mlr.press/v70/zenke17a.html",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Sections 2-3 and Eqs. 3-5; discussion of noisy contribution estimates",
+      "categories": [
+        "stability_plasticity",
+        "importance_weighted_consolidation",
+        "per_parameter_or_group_schedules"
+      ],
+      "supports": [
+        "Per-synapse importance can be estimated online from each parameter's contribution along the optimization path and used in a quadratic consolidation penalty.",
+        "The method is an explicit soft alternative to hard freezing or a single reduced learning rate."
+      ],
+      "experimental_setting": "Sequential classification, including permuted MNIST, with feed-forward and deep networks.",
+      "limitations": [
+        "Noisy stochastic gradients can overestimate importance; damping and regularization strength are material hyperparameters.",
+        "The source does not validate the estimator on generative language behavior or under Zero's replay projection."
+      ],
+      "direct_design_consequence": "Do not use raw path-integral importance without damping and stability checks; compare it with replay-gradient Fisher before choosing a Zero plasticity profile.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "howard-ruder-2018-ulmfit",
+      "citation": "Howard and Ruder (2018), Universal Language Model Fine-tuning for Text Classification",
+      "year": 2018,
+      "url": "https://aclanthology.org/P18-1031/",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Sections 3.2-3.3; Table 7, p. 8",
+      "categories": [
+        "layerwise_transfer_localization",
+        "per_parameter_or_group_schedules",
+        "stability_plasticity"
+      ],
+      "supports": [
+        "Discriminative fine-tuning uses smaller learning rates in lower layers, and gradual unfreezing opens layers in stages rather than imposing a permanent hard cutoff.",
+        "Last-layer-only fine-tuning severely underfit in the reported classifier experiments."
+      ],
+      "experimental_setting": "Pretrained AWD-LSTM language models fine-tuned for text classification.",
+      "limitations": [
+        "The architecture is recurrent and the target is classification rather than character-level generation or continual faculty acquisition.",
+        "Gradual unfreezing eventually trains all layers; it does not prove a fixed importance-weighted profile."
+      ],
+      "direct_design_consequence": "Treat a top-only boundary as a baseline and compare it against a distributed layerwise schedule; do not infer that lower layers should remain permanently frozen.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "houlsby-2019-adapters",
+      "citation": "Houlsby et al. (2019), Parameter-Efficient Transfer Learning for NLP",
+      "year": 2019,
+      "url": "https://proceedings.mlr.press/v97/houlsby19a.html",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Figure 2 and Section 2.1; Figure 6 ablations, pp. 6-7",
+      "categories": [
+        "parameter_efficient_adaptation",
+        "layerwise_transfer_localization",
+        "distributed_sparse_plasticity"
+      ],
+      "supports": [
+        "Near-identity bottleneck adapters distributed after attention and feed-forward sublayers can approach full fine-tuning performance while the base transformer remains frozen.",
+        "Single-layer adapter ablations had small effects while removing all adapters caused large drops, showing a cumulative distributed adaptation effect."
+      ],
+      "experimental_setting": "BERT transfer to GLUE classification tasks and SQuAD, with task-specific adapters.",
+      "limitations": [
+        "Adapters add parameters and task-specific paths; Zero currently expects one shared generative model and checkpoint format.",
+        "Base-weight preservation does not by itself prove preservation when the adapter is active."
+      ],
+      "direct_design_consequence": "Keep distributed adapters as a higher-cost fallback; any test must measure active-model replay/language behavior and account for architecture and checkpoint changes.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "chaudhry-2019-agem",
+      "citation": "Chaudhry et al. (2019), Efficient Lifelong Learning with A-GEM",
+      "year": 2019,
+      "url": "https://arxiv.org/pdf/1812.00420",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Section 4, Eqs. 9-11; Section 6",
+      "categories": [
+        "constrained_optimization",
+        "stability_plasticity"
+      ],
+      "supports": [
+        "A replay-memory gradient can define a local constraint, with a proposed update projected only when it conflicts with retained-task performance.",
+        "An averaged constraint reduces the cost of per-task gradient constraints."
+      ],
+      "experimental_setting": "Continual supervised classification with episodic replay memory.",
+      "limitations": [
+        "The guarantee is local to the sampled memory gradient, not an external language distribution.",
+        "Averaging can hide damage to individual replay slices."
+      ],
+      "direct_design_consequence": "Keep projection as a local guard diagnostic, but retain Zero's per-slice functional gate and test whether plasticity scaling changes the projected direction's useful signal.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "farajtabar-2020-ogd",
+      "citation": "Farajtabar et al. (2020), Orthogonal Gradient Descent for Continual Learning",
+      "year": 2020,
+      "url": "https://proceedings.mlr.press/v108/farajtabar20a.html",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Section 3, Eqs. 7-11 and Algorithm 1; conclusion",
+      "categories": [
+        "constrained_optimization",
+        "causal_parameter_attribution",
+        "stability_plasticity"
+      ],
+      "supports": [
+        "Projecting new-task gradients orthogonally to stored old-output gradient directions can locally minimize interference with old predictions.",
+        "A subset of stored gradient directions can be used as an approximation."
+      ],
+      "experimental_setting": "Sequential classification benchmarks with stored output-gradient bases.",
+      "limitations": [
+        "Stored old gradients are only local proxies as parameters move, and storage grows with tasks or basis size.",
+        "The source does not show that projection creates missing new-task gradient signal or fixes a poorly chosen trainable subspace."
+      ],
+      "direct_design_consequence": "Instrument pre/post-projection new-task alignment and retained-output change separately; do not interpret a small removal fraction as proof that the remaining subspace has adequate learning capacity.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "warstadt-2020-blimp",
+      "citation": "Warstadt et al. (2020), BLiMP: The Benchmark of Linguistic Minimal Pairs for English",
+      "year": 2020,
+      "url": "https://aclanthology.org/2020.tacl-1.25/",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Sections 1 and 3; Table 2; Section 6.4",
+      "categories": [
+        "language_preservation_measurement"
+      ],
+      "supports": [
+        "Controlled minimal pairs provide a targeted screen for selected grammatical preferences."
+      ],
+      "experimental_setting": "English grammatical acceptability across 67 paradigms and 12 phenomenon categories.",
+      "limitations": [
+        "BLiMP does not measure general coherence, semantics, reasoning, or the quantity-routing faculty.",
+        "Aggregate accuracy can hide phenomenon-specific regressions."
+      ],
+      "direct_design_consequence": "Never use BLiMP to construct or tune a plasticity profile; use it once, prospectively and conjunctively, only after a quantity/replay candidate is frozen.",
+      "project_evidence_status": "measurement_scope_established"
+    },
+    {
+      "id": "xu-2021-child-tuning",
+      "citation": "Xu et al. (2021), Raise a Child in Large Language Model: Towards Effective and Generalizable Fine-tuning",
+      "year": 2021,
+      "url": "https://aclanthology.org/2021.emnlp-main.749/",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Figure 1 and Sections 2.2-2.3; lowest-Fisher ablation in Section 4.4",
+      "categories": [
+        "soft_masks",
+        "distributed_sparse_plasticity",
+        "causal_parameter_attribution"
+      ],
+      "supports": [
+        "A fixed gradient mask can update a distributed parameter subset while the forward pass still uses the full network.",
+        "For new-task generalization, selecting high new-task Fisher parameters outperformed selecting the lowest-Fisher parameters in the reported ablation."
+      ],
+      "experimental_setting": "Large pretrained transformer fine-tuning on GLUE and NLI tasks.",
+      "limitations": [
+        "The task-driven Fisher measures importance to the new task, not safety for an old language behavior.",
+        "Random masks sometimes improved over vanilla fine-tuning, so benefits can include regularization rather than causal localization."
+      ],
+      "direct_design_consequence": "Combine old-task risk with new-task relevance; selecting only low replay importance could allocate flexible capacity that carries no quantity signal.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "guo-2021-diff-pruning",
+      "citation": "Guo, Rush, and Kim (2021), Parameter-Efficient Transfer Learning with Diff Pruning",
+      "year": 2021,
+      "url": "https://aclanthology.org/2021.acl-long.378/",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Table 1; Sections 6.1-6.3 and Figure 2, p. 6; footnote 15",
+      "categories": [
+        "parameter_efficient_adaptation",
+        "soft_masks",
+        "distributed_sparse_plasticity",
+        "layerwise_transfer_localization"
+      ],
+      "supports": [
+        "Sparse task-specific difference vectors distributed across a frozen pretrained model matched full fine-tuning on the reported NLP benchmarks at about 0.5% changed base parameters.",
+        "Different tasks selected different cross-layer distributions of changes."
+      ],
+      "experimental_setting": "BERT transfer across GLUE and SQuAD using learned sparse difference vectors.",
+      "limitations": [
+        "The method adds training memory for difference and mask variables and was evaluated on discriminative tasks, not continual generative preservation.",
+        "Sparsity does not itself establish which old behavior remains intact."
+      ],
+      "direct_design_consequence": "Prefer a prospectively fixed, cross-layer mask over a top-FFN-only mask; the paper reports much worse performance when diff pruning is restricted to fully connected layers after self-attention.",
+      "project_evidence_status": "mechanism_supported_setting_indirect"
+    },
+    {
+      "id": "meng-2022-rome",
+      "citation": "Meng et al. (2022), Locating and Editing Factual Associations in GPT",
+      "year": 2022,
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2022/file/6f1d43d5a82a37e89b0665b33bf3a182-Paper-Conference.pdf",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Sections 2.2 and 3.1; Figures 2-4",
+      "categories": [
+        "causal_parameter_attribution",
+        "layerwise_transfer_localization"
+      ],
+      "supports": [
+        "Causal tracing and localized MLP edits can identify and change some factual associations while optimizing locality."
+      ],
+      "experimental_setting": "Factual recall and model editing in large pretrained GPT models.",
+      "limitations": [
+        "The strongest localization is in middle-layer MLPs for factual recall, not Zero's top FFN for operation routing.",
+        "Localized factual edits do not establish global language preservation or a universal safe layer boundary."
+      ],
+      "direct_design_consequence": "Require causal ablations or prospective masks for Zero; do not infer a quantity-routing locus from aggregate displacement or FFN interpretability alone.",
+      "project_evidence_status": "localization_method_supported_target_indirect"
+    },
+    {
+      "id": "eldan-li-2023-tinystories",
+      "citation": "Eldan and Li (2023), TinyStories: How Small Can Language Models Be and Still Speak Coherent English?",
+      "year": 2023,
+      "url": "https://arxiv.org/pdf/2305.07759",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Section 3, pp. 4-5; Section 8, p. 25",
+      "categories": [
+        "language_preservation_measurement"
+      ],
+      "supports": [
+        "A bounded synthetic-story distribution is relevant to measuring small language models, and the paper evaluates more than loss alone."
+      ],
+      "experimental_setting": "Small language models trained and evaluated on synthetic short English stories.",
+      "limitations": [
+        "The distribution is synthetic, narrow, and intentionally simple.",
+        "Bits per byte cannot alone establish coherent generation or general English preservation."
+      ],
+      "direct_design_consequence": "Keep TinyStories loss as a frozen, bounded regression screen; do not expose it to profile selection and do not broaden claims beyond that distribution.",
+      "project_evidence_status": "measurement_scope_established"
+    },
+    {
+      "id": "liu-niehues-2025-forgetting",
+      "citation": "Liu and Niehues (2025), Conditions for Catastrophic Forgetting in Multilingual Translation",
+      "year": 2025,
+      "url": "https://aclanthology.org/2025.mrl-main.23/",
+      "primary_source": true,
+      "review_status": "full_text_reviewed",
+      "locator": "Section 4.1, Figures 2-4; Section 4.4; conclusion",
+      "categories": [
+        "stability_plasticity",
+        "parameter_efficient_adaptation"
+      ],
+      "supports": [
+        "Forgetting depends on model scale and fine-tuning data volume, so it must be measured under the actual training regime.",
+        "LoRA and full fine-tuning showed comparable forgetting under the controlled translation conditions."
+      ],
+      "experimental_setting": "Multilingual translation adaptation across model sizes and data volumes.",
+      "limitations": [
+        "The models, languages, task, and scale differ from Zero.",
+        "The result is counterevidence to parameter-count safety, not a claim that LoRA never helps preservation."
+      ],
+      "direct_design_consequence": "Treat every parameter-efficient method as an adaptation mechanism, not a preservation guarantee; the unchanged replay and language gates remain decisive.",
+      "project_evidence_status": "counterevidence_setting_indirect"
+    }
+  ],
+  "synthesis": {
+    "established_evidence": [
+      "Soft, importance-weighted consolidation, layerwise learning schedules, gradient projection, sparse masks, and distributed adapters are established method families in their reported settings.",
+      "Top- or last-layer-only adaptation can underfit, and distributed adaptation can matter cumulatively across layers.",
+      "Reduced trainable parameter count is not, by itself, evidence of reduced forgetting.",
+      "BLiMP and TinyStories loss are bounded screens, not comprehensive language-preservation proofs."
+    ],
+    "analogy_to_zero": [
+      "Per-weight stiffness is a direct conceptual match to graded stickiness, but the importance estimator and optimization geometry must be validated in Zero.",
+      "Distributed sparse diffs and adapters suggest that useful flexibility may need to exist throughout the network, but their discriminative large-model results do not predict Zero's effect size.",
+      "Projection methods explain how to reduce local interference; they do not supply absent quantity-routing signal."
+    ],
+    "project_specific_hypotheses": [
+      "Zero's best next trainable subspace may be a cross-layer profile based jointly on new-task relevance and old-replay risk.",
+      "Embeddings should begin highly sticky because Q2.6 assigns them the largest replay-drift and Fisher-weighted-drift signals, but that attribution is correlational rather than causal.",
+      "Q2.7 failed because top-FFN isolation removed necessary cross-layer coordination or routing capacity, not because those top FFN weights moved too little."
+    ],
+    "overall_assessment": "supports_testing_graded_distributed_plasticity_but_does_not_establish_it",
+    "further_broad_review_required_before_pilot": false,
+    "targeted_review_trigger": "Perform an additional targeted review only if the proposed intervention changes family materially, such as dynamic masks, optimizer-state consolidation, or a new adapter architecture."
+  }
+}
