@@ -76,7 +76,7 @@
     },
     "retry_checker": {
       "path": "scripts/check_q27_aws_retry.mjs",
-      "sha256": "6d737c0617be7f0e4660f12f3e614e91b95cb211142b12ee7cb33b9ecd6db996"
+      "sha256": "f5045f3254b52a5d46ef724a61355f5639bae4fae9c35a09c14d97eb4e3f5e45"
     },
     "preflight_iam_checker": {
       "path": "scripts/check_q27_preflight_iam.mjs",
@@ -152,7 +152,7 @@
     },
     "retry_authorization": {
       "path": "benchmarks/zero4-q27-v1/aws-v1/infrastructure-retry-1.json",
-      "sha256": "da12735b6763db59b8f18f551501785122dea042d32d339dd03820c13229d669"
+      "sha256": "c56766150d245df458cb2e1f9a73d83177d4b78d80700b0135ff08549b796d30"
     }
   },
   "venue": {

@@ -18,13 +18,29 @@
     "approved_additional_compute_usd": 1.17,
     "approved_max_new_scientific_compute_usd": 1.29,
     "replacement_dispatch": {
-      "failed_control_plane_run_id": "30226812898",
-      "failed_before_retry_lock": true,
-      "failed_before_compute": true,
-      "maximum_replacement_dispatch_count": 1,
+      "failed_control_plane_runs": [
+        {
+          "workflow_run_id": "30226812898",
+          "head_sha": "548094821e3b5dea7cba84b185ad4b274f649d5d",
+          "role": "initial-retry-dispatch",
+          "failed_before_retry_lock": true,
+          "failed_before_compute": true
+        },
+        {
+          "workflow_run_id": "31268566748",
+          "head_sha": "287c78c59ea9c7fa6ded484986e9920274720af3",
+          "role": "replacement-dispatch-1",
+          "failed_before_retry_lock": true,
+          "failed_before_compute": true
+        }
+      ],
+      "replacement_dispatches_observed": 1,
+      "maximum_replacement_dispatch_count": 2,
+      "remaining_replacement_dispatch_count": 1,
       "replacement_dispatch_authorized": true,
-      "authorized_at": "2026-08-01",
-      "approval_basis": "Issue #63 records explicit approval of the aged-out-instance workflow fix and one replacement dispatch under the unchanged $1.29 maximum-new-scientific-compute envelope."
+      "authorized_at": "2026-08-08",
+      "prior_approval_basis": "Issue #63 records explicit approval of the first replacement dispatch under the unchanged $1.29 maximum-new-scientific-compute envelope.",
+      "approval_basis": "Issue #67 records the user's explicit “lets do it” authorization for one final replacement dispatch after run 31268566748 failed before the retry lock and before compute, under the unchanged $1.29 maximum-new-scientific-compute envelope."
     }
   },
   "eligibility": {
