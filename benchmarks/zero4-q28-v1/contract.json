@@ -1,0 +1,110 @@
+{
+  "schema": "zero.zero4_q28_graded_plasticity_contract.v1",
+  "id": "zero4-q28-v1",
+  "status": "implementation_only_not_authorized",
+  "training_allowed": false,
+  "question": "Can a fixed distributed plasticity profile preserve replay-sensitive parameter groups while leaving enough cross-layer flexibility to recover quantity learning?",
+  "lineage": {
+    "research_commit": "b7c676f7d18e6367c67f61a6d41d861c25bf57da",
+    "research_merge_commit": "ffba21b960fff0cafe79b39cbf44f37c0f734687",
+    "q26_contract": {
+      "path": "benchmarks/zero4-q26-v1/contract.json",
+      "sha256": "2fa40ace634c9fc737d6212f902b074685a7769628becf720cefe5f936e4ac80"
+    },
+    "post_q27_hypotheses": {
+      "path": "benchmarks/zero4-post-q27-v1/HYPOTHESES.json",
+      "sha256": "fcb0d6cdf208633511fe9f0689a9c7aeaf99700ad39826a7f273aa6d4ca37e24"
+    },
+    "post_q27_literature": {
+      "path": "benchmarks/zero4-post-q27-v1/LITERATURE-REVIEW.json",
+      "sha256": "8e2da34c8c51a297597a17f8e0810b22bfef98d119e334f3a9af7ecbd71ed461"
+    },
+    "post_q27_trace": {
+      "path": "benchmarks/zero4-post-q27-v1/trace-analysis.json",
+      "sha256": "bfcb5810f75b0fa7f54b8e5f1f8aefdb7223cc448b0bed57dee098c02456260b"
+    }
+  },
+  "shadow_audit": {
+    "training_only": true,
+    "committed_updates": 0,
+    "deterministic_samples_per_range": 4,
+    "quantity_source": "the frozen Q2.6 seed-5 operation-request training split",
+    "replay_sources": "the six frozen Q2.6 replay training splits in their original order",
+    "initialization": "teachers/zero3-balanced-final.teacher",
+    "initialization_sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137",
+    "optimizer_probe": {
+      "update": 1,
+      "learning_rate": 0.00002,
+      "weight_decay": 0.01,
+      "clip": 1,
+      "moment_state": "fresh zeros"
+    },
+    "required_measurements_per_group": [
+      "quantity gradient energy",
+      "replay gradient energy",
+      "gradient alignment",
+      "complete AdamW delta norm",
+      "plasticity-scaled delta norm",
+      "weighted replay projection drift",
+      "predicted quantity loss change"
+    ],
+    "state_invariant": "all weights and both AdamW moment arrays must be byte-identical before and after the audit"
+  },
+  "fixed_profile": {
+    "scope": "all parameter groups",
+    "minimum": 0.05,
+    "maximum": 1,
+    "epsilon": 1e-12,
+    "formula": "p_g = 0.05 + 0.95 * N_g / (N_g + O_g + epsilon)",
+    "normalization": "N_g and O_g are quantity and replay mean-squared gradient energies divided by their respective cross-group medians",
+    "adaptation": "computed once by the no-update audit and immutable for the complete pilot",
+    "delta_policy": "scale the complete proposed AdamW weight displacement, including weight decay, by p_g",
+    "weighted_projection": "d_projected = d_scaled - max(0, dot(r,d_scaled) / sum_g(p_g * dot(r_g,r_g))) * (p elementwise r)",
+    "moment_policy": "each profile starts with fresh AdamW moments; moments produced by an accepted trial are retained within that profile and never reused across profiles",
+    "hash_policy": "the canonical profile and every audit input are SHA-256 bound before any paid pilot approval",
+    "dynamic_profiles_forbidden": true
+  },
+  "leakage_firewall": {
+    "audit_and_training_allowed_inputs": [
+      "immutable ZERO.3 initialization",
+      "Q2.6 quantity training tokens",
+      "Q2.6 replay training tokens"
+    ],
+    "forbidden_before_candidate_freeze": [
+      "BLiMP examples or scores",
+      "TinyStories examples or scores",
+      "quantity public evaluation rows",
+      "quantity promotion rows",
+      "language-gate results",
+      "model promotion inputs"
+    ],
+    "checkpoint_selection": "updates 0, 100, and 200 only under the frozen quantity/replay criteria; no language metric may select a checkpoint"
+  },
+  "proposed_paid_pilot": {
+    "authorized": false,
+    "requires_separate_exact_approval": true,
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 200,
+    "measurement_updates": [0, 100, 200],
+    "controls": ["Q2.6 full-plasticity", "Q2.7 top-FFN hard cutoff"],
+    "maximum_quantity_compute_usd": 0.5,
+    "conditional_language_gate_usd": 0.12,
+    "language_gate_condition": "only one prospectively selected quantity-and-replay-valid frozen candidate",
+    "promotion_authorized": false,
+    "required_approval_bindings": [
+      "exact merged commit",
+      "exact canonical profile SHA-256",
+      "200-update ceiling",
+      "$0.50 quantity-compute ceiling",
+      "conditional $0.12 language-gate ceiling"
+    ]
+  },
+  "stop_conditions": [
+    "audit mutates any weight or optimizer byte",
+    "any coefficient is outside [0.05, 1]",
+    "the weighted projection fails to remove positive first-order replay drift within numerical tolerance",
+    "any forbidden evaluation source is supplied",
+    "the fixed profile or its input hashes differ from the approved bindings",
+    "200 optimizer updates are reached"
+  ]
+}

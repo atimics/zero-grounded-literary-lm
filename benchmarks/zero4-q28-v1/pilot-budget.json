@@ -1,0 +1,31 @@
+{
+  "schema": "zero.q28_graded_plasticity_pilot_budget.v1",
+  "id": "zero4-q28-seed2-pilot-v1",
+  "status": "proposal_not_authorized",
+  "profile": {
+    "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+    "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+  },
+  "proposed": {
+    "source_commit": "exact merged commit required before authorization",
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 200,
+    "checkpoint_updates": [0, 100, 200],
+    "maximum_quantity_compute_usd": 0.5,
+    "conditional_language_gate_usd": 0.12,
+    "language_gate_condition": "one frozen candidate first passes all quantity and replay criteria",
+    "promotion_authorized": false
+  },
+  "authorization": {
+    "authorized": false,
+    "approved_by": null,
+    "approved_at": null,
+    "source_commit": null,
+    "profile_sha256": null,
+    "maximum_optimizer_updates": 0,
+    "maximum_quantity_compute_usd": 0,
+    "conditional_language_gate_usd": 0,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "zero.graded_plasticity_audit_decision.v1",
+  "experiment": "zero4-q28-v1",
+  "status": "shadow_audit_passed_pilot_not_authorized",
+  "bindings": {
+    "contract": {
+      "path": "benchmarks/zero4-q28-v1/contract.json",
+      "sha256": "e850b090abca32e9adf63fe53f5b70375fb2daed8228818fbd683a2904b0b805"
+    },
+    "manifest": {
+      "path": "benchmarks/zero4-q28-v1/audit/manifest.json",
+      "sha256": "33e8e9b843626447df753ec7514fece6ee485b777c5b7419f2da179148b1d1ae"
+    },
+    "audit": {
+      "path": "benchmarks/zero4-q28-v1/audit/shadow-audit.json",
+      "sha256": "1d95572ce79e933d7f1c2f1958f996ff8760353ab1266c248fb952b9a260a461"
+    },
+    "profile": {
+      "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+      "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+    }
+  },
+  "observations": {
+    "training_only": true,
+    "committed_updates": 0,
+    "forbidden_evaluation_inputs_used": false,
+    "weights_and_optimizer_byte_identical": true,
+    "parameter_groups": 50,
+    "plasticity_minimum": 0.157184198,
+    "plasticity_maximum": 0.788669884,
+    "projection_pre_dot": 0.00015003233398779164,
+    "projection_post_dot": 7.506064056422038e-10,
+    "projection_removed_fraction": 0.007927790075885764,
+    "stickiest_group": "layer.1.norm1",
+    "most_flexible_group": "final_norm"
+  },
+  "decision": {
+    "shadow_audit": "pass",
+    "profile": "freeze exactly for prospective approval",
+    "pilot_recommendation": "eligible for a separately authorized 200-update diagnostic pilot",
+    "paid_compute_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false,
+    "rationale": "The audit used all frozen Q2.6 training sources, produced bounded distributed coefficients, removed positive first-order replay drift to numerical tolerance, and restored every learned-state byte. This establishes mechanics and a prospective profile, not model capability."
+  }
+}
