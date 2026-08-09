@@ -1,0 +1,259 @@
+name: Launch Q2.8 candidate language gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: 'Exact merged implementation commit authorized for dispatch'
+        required: true
+        type: string
+      candidate_sha256:
+        description: 'Exact frozen quantized candidate SHA-256'
+        required: true
+        type: string
+      approval_id:
+        description: 'Unique final dispatch approval ID'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero4-q28-seed2-language-gate-v1
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: AWS · dispatch candidate gate and exit · ≤$0.12
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: us-east-1
+      ZERO_RUN_ID: ${{ github.run_id }}
+      ZERO_COMMIT: ${{ github.sha }}
+      ZERO_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      ZERO_CANDIDATE_SHA256: ${{ inputs.candidate_sha256 }}
+      ZERO_APPROVAL_ID: ${{ inputs.approval_id }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q28-v1/language-gate/results/runtime-budget.json
+      ZERO_INSTANCE_TYPE: c6i.4xlarge
+      ZERO_MAX_INSTANCE_SECONDS: '600'
+      ZERO_WORKLOAD_TIMEOUT_SECONDS: '540'
+      ZERO_MAX_COMPUTE_USD: '0.12'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate exact final authority
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          [[ "$ZERO_EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test "$ZERO_COMMIT" = "$ZERO_EXPECTED_COMMIT"
+          test "$ZERO_CANDIDATE_SHA256" = \
+            ffc9a4aa74933547785deacb2ceb790a498833e2aff875a81299cc8955a1b0a1
+          [[ "$ZERO_APPROVAL_ID" =~ ^[A-Za-z0-9_.:-]{8,128}$ ]]
+          test -n "$ZERO_BUCKET"
+          test ! -e benchmarks/zero4-q28-v1/language-gate/results/COMPLETED
+          node scripts/check_zero4_q28_language_gate.mjs
+          node scripts/materialize_q28_language_gate_budget.mjs \
+            --source-commit "$ZERO_COMMIT" \
+            --candidate-sha256 "$ZERO_CANDIDATE_SHA256" \
+            --approval-id "$ZERO_APPROVAL_ID" \
+            --approved-by "$GITHUB_ACTOR" \
+            --approved-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --out /tmp/q28-language-gate-budget.json
+          test "$(sha256sum benchmarks/zero4-q28-v1/language-gate/candidate.litq8 | awk '{print $1}')" = \
+            "$ZERO_CANDIDATE_SHA256"
+          test "$(stat -c %s benchmarks/zero4-q28-v1/language-gate/candidate.litq8)" = \
+            4920400
+          {
+            echo "ZERO_BUDGET_SHA256=$(sha256sum /tmp/q28-language-gate-budget.json | awk '{print $1}')"
+            echo "ZERO_WORKLOAD_SHA256=$(sha256sum scripts/aws/q28-language-gate.sh | awk '{print $1}')"
+            echo "ZERO_USER_DATA_SHA256=$(sha256sum scripts/aws/q28-language-gate-user-data.sh | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Prepare frozen BLiMP and TinyStories cases
+        run: |
+          mkdir -p /tmp/q28-sources /tmp/q28-blimp /tmp/q28-bundle \
+            /tmp/q28-screen /tmp/q28-gate-screen
+          jq -r '.sources[] | [.id, .url, .sha256] | @tsv' \
+            benchmarks/zero-eval-1/contract.json |
+          while IFS=$'\t' read -r id url expected; do
+            destination="/tmp/q28-sources/${id}"
+            curl --fail --silent --show-error --location \
+              "$url" --output "$destination"
+            test "$(sha256sum "$destination" | awk '{print $1}')" = "$expected"
+          done
+          unzip -q /tmp/q28-sources/blimp_zip -d /tmp/q28-blimp
+          node scripts/prepare_zero_eval1.mjs \
+            --contract benchmarks/zero-eval-1/contract.json \
+            --blimp-zip /tmp/q28-sources/blimp_zip \
+            --blimp-directory /tmp/q28-blimp/data \
+            --hellaswag /tmp/q28-sources/hellaswag_validation \
+            --lambada /tmp/q28-sources/lambada_openai_test \
+            --tinystories /tmp/q28-sources/tinystories_validation \
+            --output /tmp/q28-bundle >/dev/null
+          node scripts/sample_zero_eval1_screen.mjs \
+            --bundle /tmp/q28-bundle --output /tmp/q28-screen >/dev/null
+          cp /tmp/q28-screen/blimp.tsv /tmp/q28-gate-screen/blimp.tsv
+          cp /tmp/q28-screen/tinystories.tsv \
+            /tmp/q28-gate-screen/tinystories.tsv
+          test "$(sha256sum /tmp/q28-gate-screen/blimp.tsv | awk '{print $1}')" = \
+            06ffc0ee2832b193ff6ce895828bbe4a69befe2b1f30cfec19027b83692187a3
+          test "$(sha256sum /tmp/q28-gate-screen/tinystories.tsv | awk '{print $1}')" = \
+            75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54
+          tar -C /tmp/q28-gate-screen -czf /tmp/q28-screen.tar.gz .
+          git archive --format=tar.gz --output=/tmp/q28-source.tar.gz \
+            "$ZERO_COMMIT"
+          {
+            echo "ZERO_SCREEN_SHA256=$(sha256sum /tmp/q28-screen.tar.gz | awk '{print $1}')"
+            echo "ZERO_SOURCE_SHA256=$(sha256sum /tmp/q28-source.tar.gz | awk '{print $1}')"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Refuse overlapping ZERO compute
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Resolve and dry-run the exact EC2 request
+        id: preflight
+        env:
+          ZERO_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          ZERO_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          ZERO_AMI=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value --output text --no-cli-pager)
+          [[ "$ZERO_AMI" =~ ^ami-[0-9a-f]+$ ]]
+          ZERO_LAUNCH_EPOCH=$(date +%s)
+          export ZERO_AMI ZERO_LAUNCH_EPOCH
+          scripts/aws/q28-language-gate-run-instances.sh dry-run
+          {
+            echo "ami=$ZERO_AMI"
+            echo "launch_epoch=$ZERO_LAUNCH_EPOCH"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish immutable inputs
+        run: |
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/source.tar.gz" \
+            --body /tmp/q28-source.tar.gz --content-type application/gzip \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/screen.tar.gz" \
+            --body /tmp/q28-screen.tar.gz --content-type application/gzip \
+            --if-none-match '*' --no-cli-pager >/dev/null
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/budget.json" \
+            --body /tmp/q28-language-gate-budget.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/workload.sh" \
+            --body scripts/aws/q28-language-gate.sh \
+            --content-type text/x-shellscript --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Acquire one-time execution lock
+        run: |
+          jq -n --arg run_id "$ZERO_RUN_ID" --arg git_commit "$ZERO_COMMIT" \
+            --arg approval_id "$ZERO_APPROVAL_ID" \
+            --arg candidate_sha256 "$ZERO_CANDIDATE_SHA256" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg screen_sha256 "$ZERO_SCREEN_SHA256" \
+            '{
+              schema: "zero.aws_execution_lock.v1",
+              experiment: "zero4-q28-seed2-language-gate-v1",
+              ci_run_id: $run_id,
+              git_commit: $git_commit,
+              approval_id: $approval_id,
+              candidate_sha256: $candidate_sha256,
+              budget_sha256: $budget_sha256,
+              source_sha256: $source_sha256,
+              screen_sha256: $screen_sha256
+            }' > /tmp/q28-language-gate-lock.json
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key experiments/zero4-q28-seed2-language-gate-v1/execution.lock \
+            --body /tmp/q28-language-gate-lock.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Launch bounded gate
+        id: launch
+        env:
+          ZERO_AMI: ${{ steps.preflight.outputs.ami }}
+          ZERO_LAUNCH_EPOCH: ${{ steps.preflight.outputs.launch_epoch }}
+          ZERO_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          ZERO_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          instance_id=$(scripts/aws/q28-language-gate-run-instances.sh launch)
+          echo "instance_id=$instance_id" >> "$GITHUB_OUTPUT"
+
+      - name: Record durable launch receipt and exit
+        env:
+          ZERO_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          ZERO_AMI: ${{ steps.preflight.outputs.ami }}
+          ZERO_LAUNCH_EPOCH: ${{ steps.preflight.outputs.launch_epoch }}
+        run: |
+          jq -n --arg instance_id "$ZERO_INSTANCE_ID" --arg ami "$ZERO_AMI" \
+            --arg region "$ZERO_REGION" --arg git_commit "$ZERO_COMMIT" \
+            --arg run_id "$ZERO_RUN_ID" --arg approval_id "$ZERO_APPROVAL_ID" \
+            --arg candidate_sha256 "$ZERO_CANDIDATE_SHA256" \
+            --arg budget_sha256 "$ZERO_BUDGET_SHA256" \
+            --arg source_sha256 "$ZERO_SOURCE_SHA256" \
+            --arg screen_sha256 "$ZERO_SCREEN_SHA256" \
+            --arg workload_sha256 "$ZERO_WORKLOAD_SHA256" \
+            --arg user_data_sha256 "$ZERO_USER_DATA_SHA256" \
+            --argjson launch_epoch "$ZERO_LAUNCH_EPOCH" \
+            '{
+              schema: "zero.q28_language_gate_launch.v1",
+              experiment: "zero4-q28-seed2-language-gate-v1",
+              instance_id: $instance_id,
+              instance_type: "c6i.4xlarge",
+              ami: $ami,
+              region: $region,
+              git_commit: $git_commit,
+              ci_run_id: $run_id,
+              approval_id: $approval_id,
+              candidate_sha256: $candidate_sha256,
+              budget_sha256: $budget_sha256,
+              source_sha256: $source_sha256,
+              screen_sha256: $screen_sha256,
+              workload_sha256: $workload_sha256,
+              user_data_sha256: $user_data_sha256,
+              launch_epoch: $launch_epoch,
+              max_instance_seconds: 600,
+              workload_timeout_seconds: 540,
+              max_compute_usd: 0.12,
+              execution_lock_acquired: true,
+              workflow_waited_for_compute: false
+            }' > /tmp/q28-language-gate-launch.json
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key "jobs/${ZERO_RUN_ID}/launch.json" \
+            --body /tmp/q28-language-gate-launch.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          jq -c '{ci_run_id,instance_id,candidate_sha256,max_instance_seconds,max_compute_usd,workflow_waited_for_compute}' \
+            /tmp/q28-language-gate-launch.json >> "$GITHUB_STEP_SUMMARY"

@@ -22,6 +22,7 @@ bpe_tokenizer
 *.litq8
 !benchmarks/zero4-q22r-v1/seed*/selected.litq8
 !benchmarks/zero-channel-v1/model.litq8
+!benchmarks/zero4-q28-v1/language-gate/candidate.litq8
 
 # Generated corpus files
 corpus/bpe/
