@@ -555,6 +555,7 @@ static int q28_self_test(void)
     return 1;
 }
 
+#ifndef Q28_AUDIT_NO_MAIN
 int main(int argc, char **argv)
 {
     Q28AuditOptions options = {0};
@@ -606,3 +607,4 @@ int main(int argc, char **argv)
     model_destroy(&model);
     return 0;
 }
+#endif
