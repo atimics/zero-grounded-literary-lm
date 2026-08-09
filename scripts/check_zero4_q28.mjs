@@ -105,13 +105,25 @@ assert.equal(decision.decision.language_gate_authorized, false);
 assert.equal(decision.decision.promotion_authorized, false);
 const budget = readJson(BUDGET);
 assert.equal(budget.schema, "zero.q28_graded_plasticity_pilot_budget.v1");
-assert.equal(budget.status, "proposal_not_authorized");
+assert.equal(budget.status,
+  "activation_implementation_authorized_run_not_authorized");
 assert.equal(budget.profile.sha256, decision.bindings.profile.sha256);
 assert.equal(budget.proposed.maximum_optimizer_updates, 200);
 assert.deepEqual(budget.proposed.checkpoint_updates, [0, 100, 200]);
 assert.equal(budget.proposed.maximum_quantity_compute_usd, 0.5);
 assert.equal(budget.proposed.conditional_language_gate_usd, 0.12);
+assert.equal(budget.implementation_authorization.issue, 74);
+assert.equal(budget.implementation_authorization.authorized, true);
+assert.equal(budget.implementation_authorization.base_commit,
+  "ea5242d0f65dd1e604c553a4d9aca9856347757e");
+assert.equal(budget.implementation_authorization.profile_sha256,
+  decision.bindings.profile.sha256);
+for (const field of [
+  "workflow_dispatch", "aws_compute", "parameter_training",
+  "language_gate_execution", "promotion",
+]) assert.equal(budget.implementation_authorization[field], false);
 assert.equal(budget.authorization.authorized, false);
+assert.equal(budget.authorization.one_execution_only, true);
 assert.equal(budget.authorization.maximum_optimizer_updates, 0);
 assert.equal(budget.authorization.maximum_quantity_compute_usd, 0);
 assert.equal(budget.authorization.conditional_language_gate_usd, 0);

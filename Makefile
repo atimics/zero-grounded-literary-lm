@@ -131,6 +131,7 @@ endif
 	zero4-q25-check zero4-q25-train zero4-q25 \
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q27-check zero4-post-q27-research-check zero4-q28-check \
+	zero4-q28-activation-check \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
@@ -167,6 +168,12 @@ literary_lm: literary_lm.c channel_protocol.h zero1_protocol.h
 graded_plasticity_audit: graded_plasticity_audit.c literary_lm.c \
 		channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) graded_plasticity_audit.c -o $@ \
+		$(LITERARY_LDLIBS)
+
+graded_plasticity_pilot: graded_plasticity_pilot.c \
+		graded_plasticity_audit.c literary_lm.c channel_protocol.h \
+		zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) graded_plasticity_pilot.c -o $@ \
 		$(LITERARY_LDLIBS)
 
 bpe_tokenizer: bpe_tokenizer.c
@@ -1112,6 +1119,15 @@ zero4-q28-check: graded_plasticity_audit scripts/check_zero4_q28.mjs \
 		benchmarks/zero4-q28-v1/pilot-budget.json
 	node scripts/check_zero4_q28.mjs --mechanics ./graded_plasticity_audit
 
+zero4-q28-activation-check: graded_plasticity_pilot \
+		scripts/check_zero4_q28_activation.mjs \
+		scripts/run_zero4_q28_pilot.mjs \
+		benchmarks/zero4-q28-v1/activation-contract.json \
+		benchmarks/zero4-q28-v1/ACTIVATION.md \
+		benchmarks/zero4-q28-v1/pilot-budget.json
+	node scripts/check_zero4_q28_activation.mjs \
+		--mechanics ./graded_plasticity_pilot
+
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_experiment_evidence.mjs \
 		scripts/check_q27_design_revision.mjs \
@@ -1654,7 +1670,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

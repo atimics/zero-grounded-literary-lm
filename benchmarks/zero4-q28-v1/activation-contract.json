@@ -1,0 +1,116 @@
+{
+  "schema": "zero.zero4_q28_activation_contract.v1",
+  "id": "zero4-q28-seed2-pilot-v1",
+  "status": "implementation_authorized_run_not_authorized",
+  "lineage": {
+    "audited_merge_commit": "ea5242d0f65dd1e604c553a4d9aca9856347757e",
+    "audit_contract": {
+      "path": "benchmarks/zero4-q28-v1/contract.json",
+      "sha256": "e850b090abca32e9adf63fe53f5b70375fb2daed8228818fbd683a2904b0b805"
+    },
+    "profile": {
+      "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+      "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+    },
+    "initialization": {
+      "path": "teachers/zero3-balanced-final.teacher",
+      "sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+    }
+  },
+  "mechanics": {
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 200,
+    "measurement_updates": [0, 100, 200],
+    "batch_size": 2,
+    "learning_rate": 0.00002,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "quantity_samples_per_update": 2,
+    "replay_samples_per_update": "one from each of the six frozen replay training ranges",
+    "measurement_samples_per_range": 4,
+    "optimizer_moments": "fresh at update 0 and retained only within the immutable profile",
+    "weight_update": "scale each parameter group's complete AdamW displacement, including weight decay, by its fixed profile coefficient",
+    "weighted_projection": "the preregistered profile-weighted replay tangent projection is applied after scaling on every update",
+    "resume_allowed": false,
+    "dynamic_profile_allowed": false
+  },
+  "inputs": {
+    "tokenizer": {
+      "path": "corpus/literary.bpe",
+      "sha256": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152"
+    },
+    "quantity": {
+      "path": "corpus/faculty/q22/quantity-request.tok",
+      "sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2"
+    },
+    "replay": [
+      {
+        "path": "corpus/bpe/zero-foundation.tok",
+        "sha256": "87b039e5d4645ebf2a521454a13b1a912cbd1c53ff8fbcfb26baf9da1f5e638b"
+      },
+      {
+        "path": "corpus/bpe/shakespeare.tok",
+        "sha256": "ffa36c4890ca07d403e8d76fab47026e1b6d46b1fb2b9d2dc1c31c206ff9351d"
+      },
+      {
+        "path": "corpus/bpe/blake.tok",
+        "sha256": "329bf291a5842897b59151640a57d2a2270a451e31c99adbf7d3d6f684d2576c"
+      },
+      {
+        "path": "corpus/bpe/crowley.tok",
+        "sha256": "68decb62cbd4f1efaff34067eb5a533406d99a6bc0e60ca219846b39306177da"
+      },
+      {
+        "path": "corpus/bpe/bible-kjv.tok",
+        "sha256": "0c387e697fbe339712a62efb75d27c788365ce90911895dbf66e732deee44ed9"
+      },
+      {
+        "path": "corpus/channel/literary-dialogue.tok",
+        "sha256": "d401868f33f2ac318315b167dd2bc6850edb3a8b0aaf5b18c1b2fa8cba42c379"
+      }
+    ],
+    "cli_input_overrides_allowed": false
+  },
+  "candidate_selection": {
+    "eligible_updates": [100, 200],
+    "quantity_training_loss_relative_improvement_minimum": 0.005,
+    "replay_training_loss_relative_regression_maximum": 0.02,
+    "ranking": [
+      "largest quantity training-loss improvement",
+      "lowest replay training loss",
+      "earliest update"
+    ],
+    "measurement_inputs": "four deterministic samples from each frozen training range",
+    "public_quantity_rows_before_freeze": false,
+    "language_metrics_before_freeze": false
+  },
+  "budget": {
+    "path": "benchmarks/zero4-q28-v1/pilot-budget.json",
+    "maximum_quantity_compute_usd": 0.5,
+    "conditional_language_gate_usd": 0.12,
+    "language_gate_condition": "one frozen candidate first passes every quantity and replay criterion",
+    "promotion_authorized": false
+  },
+  "implementation_authorization": {
+    "issue": 74,
+    "authorized": true,
+    "base_commit": "ea5242d0f65dd1e604c553a4d9aca9856347757e",
+    "profile_sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e",
+    "workflow_dispatch": false,
+    "aws_compute": false,
+    "parameter_training": false,
+    "language_gate_execution": false,
+    "promotion": false
+  },
+  "run_authorization": {
+    "authorized": false,
+    "one_execution_only": true,
+    "required_exact_bindings": [
+      "merged activation commit",
+      "profile SHA-256",
+      "200-update ceiling",
+      "$0.50 quantity-compute ceiling",
+      "conditional $0.12 language-gate ceiling"
+    ]
+  }
+}
