@@ -1,0 +1,42 @@
+{
+  "schema": "zero.language_preservation_gate_budget.v1",
+  "id": "zero4-q28-seed2-language-gate-v1",
+  "status": "authorized",
+  "contract": {
+    "id": "zero-language-gate-v1",
+    "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+  },
+  "candidate": {
+    "id": "zero4-q28-seed2-u200",
+    "sha256": "ffc9a4aa74933547785deacb2ceb790a498833e2aff875a81299cc8955a1b0a1",
+    "bytes": 4920400
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge"
+  },
+  "caps": {
+    "max_instance_seconds": 600,
+    "workload_timeout_seconds": 540,
+    "max_compute_usd": 0.12
+  },
+  "authorization": {
+    "explicit_manual_authorization": true,
+    "authorized_for_execution": true,
+    "one_execution_only": true,
+    "approved_by": "atimics",
+    "approved_at": "2026-08-10T02:43:29Z",
+    "approval_id": "codex-q28-language-gate-20260810"
+  },
+  "provenance": {
+    "source_commit": "9893e014b2ec94a309ddae78e4cdf1308044692d",
+    "activation_commit": "606e1ab6c9b449bdfe647d283a35127e29f5e309",
+    "profile_sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e",
+    "checkpoint_sha256": "a5bad72e0421a600f686928fd9da88e9c3b6e182b1a117b24224fb82af5463b1",
+    "quantity_result_sha256": "8b6ac9908834b96c61fcc37a56a296392152ac0ed2a5a19e29aa7687d69824e6",
+    "candidate_binding_sha256": "ff4e92f87971fdd7d01490fd1175f28196e8fb4506715c1f7359b565f050ec7a",
+    "budget_template_sha256": "cf2a5ca974df75622f4288d30c7037415aa3bc064c30451bab4dc80acfc755d6",
+    "promotion_authorized": false
+  }
+}
