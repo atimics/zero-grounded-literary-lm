@@ -1,0 +1,46 @@
+{
+  "schema": "zero.q29_conservative_exposure_pilot_budget.v1",
+  "id": "zero4-q29-seed2-pilot-v1",
+  "status": "activation_implementation_authorized_run_not_authorized",
+  "profile": {
+    "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+    "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+  },
+  "proposed": {
+    "source_commit": "exact merged activation commit required before run authorization",
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 100,
+    "checkpoint_updates": [0, 25, 50, 75, 100],
+    "quantity_improvement_minimum": 0.8,
+    "replay_regression_maximum": 0.0075,
+    "stop_order": ["replay guard", "quantity first hit", "update cap"],
+    "maximum_quantity_compute_usd": 0.25,
+    "conditional_language_gate_usd": 0.12,
+    "language_gate_condition": "one first-hit candidate is hash-frozen",
+    "promotion_authorized": false
+  },
+  "implementation_authorization": {
+    "issue": 83,
+    "authorized": true,
+    "base_commit": "5ccd73e7e5eb733cf37652953d99163e0209dd13",
+    "profile_sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e",
+    "workflow_dispatch": false,
+    "aws_compute": false,
+    "parameter_training": false,
+    "language_gate_execution": false,
+    "promotion": false
+  },
+  "authorization": {
+    "authorized": false,
+    "one_execution_only": true,
+    "approval_id": null,
+    "approved_by": null,
+    "approved_at": null,
+    "source_commit": null,
+    "profile_sha256": null,
+    "maximum_optimizer_updates": 0,
+    "maximum_quantity_compute_usd": 0,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  }
+}

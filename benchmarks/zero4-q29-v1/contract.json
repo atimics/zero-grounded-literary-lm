@@ -1,0 +1,143 @@
+{
+  "schema": "zero.zero4_q29_conservative_exposure_contract.v1",
+  "id": "zero4-q29-v1",
+  "status": "implementation_authorized_run_not_authorized",
+  "training_allowed": false,
+  "question": "Can the unchanged Q2.8 profile reach substantial quantity recovery before a stricter replay guard, under at most half of Q2.8's exposure?",
+  "lineage": {
+    "post_q28_decision": {
+      "path": "benchmarks/zero4-post-q28-v1/decision.json",
+      "sha256": "5badb8a227aea3707eb721a61db08f81e083b077cbb18253cc06c4ac0a17ac71"
+    },
+    "q28_profile": {
+      "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+      "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+    },
+    "q28_activation": {
+      "path": "benchmarks/zero4-q28-v1/activation-contract.json",
+      "sha256": "aec5db50f2c7fc924075538426df67765605963d685acc9f1e7184b5c614bd9e"
+    },
+    "q28_quantity_result": {
+      "path": "benchmarks/zero4-q28-v1/language-gate/quantity-result.json",
+      "sha256": "8b6ac9908834b96c61fcc37a56a296392152ac0ed2a5a19e29aa7687d69824e6"
+    },
+    "q28_update100_language_result": {
+      "path": "benchmarks/zero4-q28-v1/update-100-language-gate/results/result.json",
+      "sha256": "52b3ed25e522b1ff64c77d17d34a4f891f9fda76d1b9eaac835eb7f5ec5f1417"
+    },
+    "q28_update200_language_result": {
+      "path": "benchmarks/zero4-q28-v1/language-gate/results/result.json",
+      "sha256": "8161e1bda448c2172220991d3f58f02d5bb017ab31b6bd8fcebfbaa60ab1deb1"
+    }
+  },
+  "scientific_change": {
+    "changed": [
+      "maximum optimizer updates from 200 to 100",
+      "measurement cadence from 100 to 25 updates",
+      "first-hit early stopping at 80% quantity recovery",
+      "replay hard guard tightened from 2% eligibility to 0.75%"
+    ],
+    "unchanged": [
+      "Q2.8 fixed graded-plasticity profile and coefficients",
+      "initialization and fresh AdamW moments",
+      "quantity and replay training inputs",
+      "seed 2, batch size, deterministic sample order, learning rate, weight decay, and gradient clip",
+      "four deterministic measurement samples per range",
+      "complete-displacement profile scaling including weight decay",
+      "profile-weighted replay-tangent projection"
+    ],
+    "causal_scope": "combined operational repair; it tests the preregistered stopping policy, not the individual effect of cadence, quantity threshold, or replay threshold"
+  },
+  "pilot": {
+    "authorized": false,
+    "requires_separate_exact_approval": true,
+    "one_execution_only": true,
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 75, 100],
+    "batch_size": 2,
+    "learning_rate": 0.00002,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "quantity_samples_per_update": 2,
+    "replay_samples_per_update": "one from each of the six frozen replay training ranges",
+    "measurement_samples_per_range": 4,
+    "resume_allowed": false,
+    "runtime_input_or_hyperparameter_overrides_allowed": false,
+    "stop_rule": {
+      "evaluation_order": [
+        "replay guard",
+        "quantity first hit",
+        "update cap"
+      ],
+      "quantity_training_loss_relative_improvement_minimum": 0.8,
+      "replay_training_loss_relative_regression_maximum": 0.0075,
+      "replay_comparator": "greater than 0.0075 is an immediate no-go",
+      "quantity_comparator": "greater than or equal to 0.8 freezes the current checkpoint",
+      "ranking": "none; the first eligible measurement is the only candidate",
+      "stop_immediately": true
+    },
+    "maximum_quantity_compute_usd": 0.25,
+    "conditional_language_gate_usd": 0.12,
+    "promotion_authorized": false
+  },
+  "leakage_firewall": {
+    "allowed_before_candidate_freeze": [
+      "immutable ZERO.3 initialization",
+      "Q2.6 quantity training tokens",
+      "Q2.6 replay training tokens",
+      "Q2.8 fixed profile",
+      "Q2.8 historical aggregate evidence bound by this contract"
+    ],
+    "forbidden_before_candidate_freeze": [
+      "BLiMP examples or per-case outputs",
+      "TinyStories examples or per-case outputs",
+      "quantity public evaluation rows",
+      "quantity promotion rows",
+      "language-gate examples or candidate scores",
+      "model promotion inputs"
+    ],
+    "language_metrics_in_candidate_selection": false
+  },
+  "language_gate": {
+    "authorized": false,
+    "condition": "exactly one first-hit checkpoint has been hash-frozen",
+    "maximum_candidates": 1,
+    "contract": "unchanged zero-language-gate-v1 thresholds and examples",
+    "maximum_compute_usd": 0.12,
+    "checkpoint_ranking_or_threshold_tuning_from_language_results": false
+  },
+  "decision_branches": {
+    "replay_guard": "record Q2.9 no-go and retire the profile family",
+    "no_first_hit_by_update100": "record Q2.9 no-go and retire the profile family",
+    "candidate_frozen": "stop training and require a separately bound unchanged language gate",
+    "language_gate_no_go": "record Q2.9 no-go; keep seeds 1 and 3 sealed",
+    "language_gate_go": "stop and require a separate three-seed replication contract; no seed-2 promotion"
+  },
+  "implementation_authorization": {
+    "issue": 83,
+    "authorized": true,
+    "base_commit": "5ccd73e7e5eb733cf37652953d99163e0209dd13",
+    "workflow_dispatch": false,
+    "aws_compute": false,
+    "parameter_training": false,
+    "language_gate_execution": false,
+    "promotion": false
+  },
+  "authorization": {
+    "pilot_execution": false,
+    "language_gate": false,
+    "promotion": false,
+    "executable_optimizer_updates": 0,
+    "executable_quantity_compute_usd": 0,
+    "executable_language_gate_usd": 0
+  },
+  "stop_conditions": [
+    "any lineage, source, profile, data, authorization, or contract hash mismatch",
+    "a forbidden evaluation source is supplied before candidate freeze",
+    "a runtime input, seed, hyperparameter, threshold, or resume override is supplied",
+    "replay regression exceeds 0.75% at a frozen measurement",
+    "the first eligible checkpoint is frozen",
+    "100 optimizer updates are reached"
+  ]
+}
