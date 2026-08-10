@@ -1,0 +1,23 @@
+{
+  "schema": "zero.q28_language_gate_launch.v1",
+  "experiment": "zero4-q28-seed2-language-gate-v1",
+  "instance_id": "i-0b42d7abd847c19a1",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "9893e014b2ec94a309ddae78e4cdf1308044692d",
+  "ci_run_id": "31350553049",
+  "approval_id": "codex-q28-language-gate-20260810",
+  "candidate_sha256": "ffc9a4aa74933547785deacb2ceb790a498833e2aff875a81299cc8955a1b0a1",
+  "budget_sha256": "e347a012223c48b5191f7ca6d4c8ac6f56a42ea4d6959fe209528ffc718b3c6b",
+  "source_sha256": "7fc8f2e034ff56275bf8a3addc7d46654e03d571e0159c1e8ba7dc8a95d6ec5b",
+  "screen_sha256": "258febde81c9e598ca417e39b878f40b710badd281a8001dcf77bf3b473a9bc7",
+  "workload_sha256": "86a8fc1c0c3a9a4162f10870b5ca8ee44a837949e95555891e19e58b56699a77",
+  "user_data_sha256": "c6d5b1148eb7b930b79f908bc54ea9ed30104c766f7cf48608d67c66b42cf4d0",
+  "launch_epoch": 1786329823,
+  "max_instance_seconds": 600,
+  "workload_timeout_seconds": 540,
+  "max_compute_usd": 0.12,
+  "execution_lock_acquired": true,
+  "workflow_waited_for_compute": false
+}
