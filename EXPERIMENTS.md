@@ -37,6 +37,7 @@ Schema: `zero.experiment_registry.v1`.
 | **q28-pilot-activation** | 2026-08-08 | Implementation-only activation in `benchmarks/zero4-q28-v1` bound to audited merge `ea5242d0…` and profile `de858b2c…` | The seed, data, 200-update ceiling, 0/100/200 measurements, complete-displacement scaling, weighted replay projection, candidate-selection rule, and $0.50 + conditional $0.12 ceilings are fail-closed. The tracked run budget remains unauthorized with zero executable caps. | **Prepare for exact-head review and merge.** No pilot, language gate, workflow, AWS compute, or promotion may run until a separate one-execution authorization binds the merged activation commit. |
 | **q28-seed2-pilot** | 2026-08-08 | One authorized local execution at merge `606e1ab6…`, fixed profile `de858b2c…`, seed 2, and exactly 200 updates | Update 200 was prospectively selected: quantity training loss improved 98.2847% and replay training loss regressed 1.94345%, inside the 2% ceiling. The frozen checkpoint is `a5bad72e…`; paid compute was $0.00. | **Candidate frozen; language gate eligible.** This is a small fixed training measurement, not a generalization result. No language evaluation or promotion occurred. |
 | **q28-language-gate-route** | 2026-08-08 | Implementation-only candidate binding in `benchmarks/zero4-q28-v1/language-gate` for deterministic artifact `ffc9a4aa…` | The route reuses unchanged `zero-language-gate-v1`, fixes AWS to `c6i.4xlarge`/`us-east-1`, caps the instance at 600 seconds/$0.12, exits GitHub Actions after launch, and uses one-time execution and collector locks. The tracked template remains non-executable. | **Prepare for protected review and merge.** No dispatch, AWS compute, evaluation, threshold change, candidate substitution, or promotion is authorized by this implementation. |
+| **q28-language-gate** | 2026-08-10 | Exactly-once, candidate-bound 1,000-case BLiMP and TinyStories preservation gate for Q2.8 update 200 (`ffc9a4aa…`) | BLiMP raw accuracy was 0.539 against the ≥0.522 floor (pass). TinyStories was 2.675123 bits/byte against the ≤2.553140 ceiling (fail). Evaluation took 281.811 seconds; the terminated AWS instance cost an estimated $0.071211. Zero training updates occurred. | **No-go.** The conjunctive language gate failed. Keep seeds 1 and 3 sealed, do not promote the candidate, and leave SAT-1 blocked behind a language-preserving five-operation anchor. |
 
 ---
 
@@ -228,13 +229,13 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 ---
 
-## Current state (2026-08-08)
+## Current state (2026-08-10)
 
 - **Current and deployed model**: ZERO.4, the Q2.6 seed-2 update-500 artifact at `docs/model.litq8` (SHA-256 `44b32f22...`)
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
-- **Latest completed experiment**: Q2.7 top-FFN scope ablation (no-go; no quantity/replay candidate and no language-gate run)
-- **Latest execution outcome**: Q2.7 completed 300 committed updates for $0.484688888889 and selected no checkpoint
-- **Evaluation decision**: retire the 8h30m/$5.78 full suite; use the ≈305-second candidate-only BLiMP/TinyStories preservation gate
-- **Next training experiment**: none authorized; issue #69 recommends a no-update shadow audit before a separately approved 200-update graded-plasticity pilot, while staged SAT-1 remains blocked behind a language-preserving anchor
+- **Latest completed experiment**: Q2.8 fixed graded-plasticity seed-2 pilot and candidate-bound language gate (no-go)
+- **Latest execution outcome**: the frozen Q2.8 update-200 candidate passed BLiMP and failed TinyStories; the gate used zero training updates and an estimated $0.071211 of AWS compute
+- **Evaluation decision**: the Q2.8 candidate is not language-preserving under the frozen conjunctive screen; keep seeds 1 and 3 sealed and do not promote it
+- **Next training experiment**: none authorized; analyze the matched Q2.6/Q2.7/Q2.8 evidence and preregister a new five-operation repair before any further update
 - **Active proposals**: See `PROPOSALS.md`
-- **Promotion status**: ZERO.4 promoted; deployment and evidence are bound in `docs/model.json`
+- **Promotion status**: ZERO.4 remains current; Q2.8 did not change deployment or `docs/model.json`
