@@ -97,6 +97,13 @@ export function selectCandidate(measurements) {
   return selected;
 }
 
+export function validateCompletion(completion, measurements) {
+  assert.equal(completion.updates_committed, measurements.at(-1).update,
+    "terminal update count does not match the final measurement");
+  assert(completion.updates_committed <= MAXIMUM_UPDATES,
+    "terminal update count exceeds the authorized cap");
+}
+
 function parseArgs(argv) {
   if (argv.includes("--self-test")) return { selfTest: true };
   const options = { authorization: null, out: null,
@@ -140,6 +147,13 @@ function selfTest() {
     { update: 0, quantity_training_loss: 10, replay_training_loss: 2 },
     { update: 50, quantity_training_loss: 1.9, replay_training_loss: 2.01 },
   ]));
+  const terminalMeasurements = [
+    { update: 0 }, { update: 50 }, { update: 100 }, { update: 150 },
+    { update: 200 },
+  ];
+  validateCompletion({ updates_committed: 200 }, terminalMeasurements);
+  assert.throws(() => validateCompletion({ updates_committed: 201 },
+    terminalMeasurements));
   budget.authorization.authorized = false;
   assert.throws(() => validateAuthorization(budget, source, contractHash));
   console.log("Q3.0 pilot authorization and selection self-test passed");
@@ -184,6 +198,7 @@ function main() {
     .map(({ update, quantity_training_loss, replay_training_loss,
       base_state_digest }) => ({ update, quantity_training_loss,
       replay_training_loss, base_state_digest }));
+  validateCompletion(complete[0], measurements);
   const selected = selectCandidate(measurements);
   for (const measurement of measurements.slice(1)) {
     assert.equal(measurement.base_state_digest, start[0].base_state_digest,

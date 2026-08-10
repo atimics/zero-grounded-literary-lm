@@ -1,0 +1,45 @@
+{
+  "schema": "zero.q30_routed_quantity_adapter_pilot_budget.v1",
+  "id": "zero4-q30-seed2-pilot-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "4d92dd4208a89ed8ad3b6ae36d45643613aa6992",
+    "diagnostic_seed": 2,
+    "adapter_rank": 4,
+    "adapter_parameters": 62976,
+    "maximum_optimizer_updates": 200,
+    "checkpoint_updates": [
+      0,
+      50,
+      100,
+      150,
+      200
+    ],
+    "quantity_improvement_minimum": 0.8,
+    "maximum_quantity_compute_usd": 0.5,
+    "conditional_language_gate_usd": 0.12,
+    "language_gate_condition": "one quantity-valid candidate is hash-frozen",
+    "promotion_authorized": false
+  },
+  "implementation_authorization": {
+    "kind": "interactive_user_directive",
+    "authorized": true,
+    "workflow_dispatch": false,
+    "parameter_training": false,
+    "language_gate_execution": false,
+    "promotion": false
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q30-interactive-seed2-20260810",
+    "approved_by": "interactive-user",
+    "approved_at": "2026-08-10T05:59:00Z",
+    "source_commit": "4d92dd4208a89ed8ad3b6ae36d45643613aa6992",
+    "contract_sha256": "7b863db0c6d2926b85dbb100753d5cf57dfafe65f5434c5f889edce8f0e90ed2",
+    "maximum_optimizer_updates": 200,
+    "maximum_quantity_compute_usd": 0.5,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  }
+}

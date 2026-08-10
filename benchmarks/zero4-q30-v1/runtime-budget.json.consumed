@@ -1,0 +1,6 @@
+{
+  "schema": "zero.q30_pilot_authorization_consumption.v1",
+  "authorization_sha256": "f6da63ffc8b1f23c80d5930132993fab8c4ede504bd13ebb15965604ee24bd34",
+  "source_commit": "4d92dd4208a89ed8ad3b6ae36d45643613aa6992",
+  "output": "benchmarks/zero4-q30-v1/results"
+}

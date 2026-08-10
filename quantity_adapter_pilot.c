@@ -535,6 +535,7 @@ static void q30_run(Model *model, Q30Adapter *adapter, const Corpus *corpus,
     FILE *events;
     char checkpoint[4096];
     const char *stop_reason = "update-cap";
+    int updates_committed = 0;
     int update;
     for (update = 0; update <= Q30_MAXIMUM_UPDATES;
          update += Q30_MEASUREMENT_CADENCE) {
@@ -569,6 +570,7 @@ static void q30_run(Model *model, Q30Adapter *adapter, const Corpus *corpus,
         for (sample = 0; sample < Q30_BATCH; ++sample)
             q30_train_sample(model, adapter, corpus, &ranges[6], mask, rng);
         q30_adapter_update(adapter, (uint64_t)update);
+        updates_committed = update;
         if (model_learned_state_digest(model) != base_digest)
             fail("Q3.0 changed frozen ZERO.3 state");
         if (update % Q30_MEASUREMENT_CADENCE == 0) {
@@ -607,7 +609,7 @@ static void q30_run(Model *model, Q30Adapter *adapter, const Corpus *corpus,
             "\"updates_committed\":%d,\"stop_reason\":\"%s\","
             "\"candidate_checkpoint_available\":%s,"
             "\"language_gate_run\":false,\"promotion_run\":false}\n",
-            Q30_SCHEMA, update, stop_reason,
+            Q30_SCHEMA, updates_committed, stop_reason,
             strcmp(stop_reason, "quantity-first-hit") == 0 ? "true" :
                                                                "false");
     if (fclose(events) != 0) fail_path("close Q3.0 events",
