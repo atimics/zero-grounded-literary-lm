@@ -132,7 +132,7 @@ endif
 	zero4-q26-check zero4-q26-train zero4-q26 \
 	zero4-q27-check zero4-post-q27-research-check zero4-q28-check \
 	zero4-q28-activation-check zero4-q28-language-gate-check \
-	zero4-q28-u100-language-gate-check \
+	zero4-q28-u100-language-gate-check zero4-q29-check \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
@@ -175,6 +175,12 @@ graded_plasticity_pilot: graded_plasticity_pilot.c \
 		graded_plasticity_audit.c literary_lm.c channel_protocol.h \
 		zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) graded_plasticity_pilot.c -o $@ \
+		$(LITERARY_LDLIBS)
+
+conservative_exposure_pilot: conservative_exposure_pilot.c \
+		graded_plasticity_audit.c literary_lm.c channel_protocol.h \
+		zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) conservative_exposure_pilot.c -o $@ \
 		$(LITERARY_LDLIBS)
 
 bpe_tokenizer: bpe_tokenizer.c
@@ -1161,6 +1167,20 @@ zero4-q28-u100-language-gate-check: \
 		.github/workflows/q28-u100-language-gate-collect.yml
 	node scripts/check_zero4_q28_u100_language_gate.mjs
 
+zero4-q29-check: conservative_exposure_pilot \
+		scripts/check_zero4_q29.mjs \
+		scripts/run_zero4_q29_pilot.mjs \
+		scripts/materialize_q29_pilot_budget.mjs \
+		benchmarks/zero4-post-q28-v1/decision.json \
+		benchmarks/zero4-post-q28-v1/DECISION.md \
+		benchmarks/zero4-q29-v1/contract.json \
+		benchmarks/zero4-q29-v1/activation-contract.json \
+		benchmarks/zero4-q29-v1/PREREGISTRATION.md \
+		benchmarks/zero4-q29-v1/ACTIVATION.md \
+		benchmarks/zero4-q29-v1/pilot-budget.json
+	node scripts/check_zero4_q29.mjs \
+		--mechanics ./conservative_exposure_pilot
+
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_experiment_evidence.mjs \
 		scripts/check_q27_design_revision.mjs \
@@ -1703,7 +1723,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
