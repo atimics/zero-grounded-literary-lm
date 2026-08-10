@@ -1,0 +1,12 @@
+{
+  "schema": "zero.quantity_request_eval.v2",
+  "model": "benchmarks/zero4-q31-v1/results/candidate.litqhead",
+  "request_mode": "operation",
+  "quantity": {
+    "cases": 500, "closed": 500, "syntax": 500,
+    "operation": 367, "arguments": 500, "exact_request": 367,
+    "oracle_arithmetic": 500, "committed": 367, "exact_artifact": 367,
+    "rejected": 133, "rejected_state_mutations": 0,
+    "target_bits": 0.03112028
+  }
+}
