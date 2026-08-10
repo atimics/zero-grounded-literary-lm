@@ -13,7 +13,7 @@ The active faculty-training decision is tracked in `PROPOSALS.md`, with the
 completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 `ZERO4-BACKLOG.md` is subordinate engineering work.
 
-## State of the system — 2026-07-24
+## State of the system — 2026-08-10
 
 | Layer | Concrete artifact | State |
 | --- | --- | --- |
@@ -28,8 +28,8 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | State-composition curriculum | modality-neutral finite-state transition generator | built, experimental |
 | Modal curriculum | finite-world reachability and possibility records | built, experimental; follows state composition |
 | Quantity faculty | operation-only routing with controller-bound arguments | promoted after three-seed Q2.6 go |
-| External language evaluation | completed four-task screen plus candidate-only BLiMP/TinyStories preservation gate | screen complete; expensive full run retired; cheap gate preregistered but unauthorized |
-| Language-preserving quantity repair | top-FFN-only Q2.7 candidate from immutable ZERO.3 | mechanics preregistered; zero compute authorized |
+| External language evaluation | completed four-task screen plus candidate-only BLiMP/TinyStories preservation gate | Q2.8 candidate gate completed no-go; expensive full run retired |
+| Language-preserving quantity repair | Q2.7 top-FFN and Q2.8 fixed graded-plasticity interventions from immutable ZERO.3 | both resolved no-go; no follow-up training authorized |
 | Dialogue training ablation | fixed contract for A/B/C/D candidates | specified, not trained |
 | Hidden human channel evaluation | consented, channel-level split | not yet collected |
 
@@ -43,11 +43,16 @@ ZERO.3 artifact; it has not been relabelled as a ZERO.4 measurement.
 The external screen found a small BLiMP gain but worse TinyStories compression
 and HellaSwag accuracy, with zero adapted-LAMBADA exact matches for either
 model. It therefore does not support a general language-improvement claim for
-ZERO.4. The next scientific question is the
-[`Q2.7`](benchmarks/zero4-q27-v1/PREREGISTRATION.md) top-FFN isolation repair.
-It freezes embeddings, attention, and lower blocks while exposing 541,184
-top-FFN/final-normalization parameters. Q2.7 mechanics are checked, but it has
-no training workflow, budget, or authorization.
+ZERO.4. Q2.7 then rejected hard top-FFN isolation because it preserved replay
+but learned none of the new quantity behavior. Q2.8's fixed cross-layer graded
+plasticity did produce a quantity/replay candidate, but the exactly-once
+language gate passed BLiMP at 0.539 and failed TinyStories at 2.675123
+bits/byte against the frozen 2.553140 ceiling.
+
+Q2.8 is therefore no-go: seeds 1 and 3 remain sealed, the candidate is not
+promoted, and no more training is authorized. The next decision is to analyze
+the matched Q2.6/Q2.7/Q2.8 evidence and preregister the cheapest disconfirming
+repair from the remaining distributed-sparse and adapter families.
 [`SAT-1`](benchmarks/sat1-v1/PREREGISTRATION.md) remains staged behind a
 three-seed language-preserving five-operation anchor.
 
