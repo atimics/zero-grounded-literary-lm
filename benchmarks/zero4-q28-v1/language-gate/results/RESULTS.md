@@ -1,6 +1,6 @@
 # Q2.8 candidate-bound language gate
 
-Decision: **FAIL**
+Decision: **no-go**
 
 | Screen | Candidate | Frozen threshold | Result |
 | --- | ---: | ---: | --- |
