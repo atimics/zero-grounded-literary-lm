@@ -133,6 +133,7 @@ endif
 	zero4-q27-check zero4-post-q27-research-check zero4-q28-check \
 	zero4-q28-activation-check zero4-q28-language-gate-check \
 	zero4-q28-u100-language-gate-check zero4-q29-check \
+	zero4-q29-language-gate-check \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
@@ -1183,6 +1184,22 @@ zero4-q29-check: conservative_exposure_pilot \
 		--mechanics ./conservative_exposure_pilot
 	node scripts/check_zero4_q29_result.mjs
 
+zero4-q29-language-gate-check: \
+		scripts/check_zero4_q29_language_gate.mjs \
+		scripts/materialize_q29_language_gate_budget.mjs \
+		scripts/check_q29_language_gate_result.mjs \
+		scripts/render_q29_language_gate_result.mjs \
+		scripts/aws/q29-language-gate.sh \
+		scripts/aws/q29-language-gate-user-data.sh \
+		scripts/aws/q29-language-gate-run-instances.sh \
+		benchmarks/zero4-q29-v1/language-gate/candidate-binding.json \
+		benchmarks/zero4-q29-v1/language-gate/budget-template.json \
+		benchmarks/zero4-q29-v1/language-gate/quantity-result.json \
+		benchmarks/zero4-q29-v1/language-gate/candidate.litq8 \
+		.github/workflows/q29-language-gate-launch.yml \
+		.github/workflows/q29-language-gate-collect.yml
+	node scripts/check_zero4_q29_language_gate.mjs
+
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_experiment_evidence.mjs \
 		scripts/check_q27_design_revision.mjs \
@@ -1725,7 +1742,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

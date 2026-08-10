@@ -1,0 +1,255 @@
+name: Collect Q2.9 language gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Q2.9 launch workflow run ID'
+        required: true
+        type: string
+      expected_commit:
+        description: 'Exact merged implementation commit from the launch approval'
+        required: true
+        type: string
+      candidate_sha256:
+        description: 'Exact frozen quantized candidate SHA-256'
+        required: true
+        type: string
+      approval_id:
+        description: 'Unique terminal collector approval ID'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: zero4-q29-seed2-language-gate-v1
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: AWS · validate terminal gate and publish draft result
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      ZERO_BUCKET: ${{ secrets.AWS_BUCKET }}
+      ZERO_REGION: us-east-1
+      ZERO_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ZERO_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      ZERO_CANDIDATE_SHA256: ${{ inputs.candidate_sha256 }}
+      ZERO_COLLECTOR_APPROVAL_ID: ${{ inputs.approval_id }}
+      ZERO_COLLECTOR_RUN_ID: ${{ github.run_id }}
+      ZERO_BUDGET_FILE: benchmarks/zero4-q29-v1/language-gate/results/runtime-budget.json
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate collector authority
+        run: |
+          [[ "$ZERO_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$ZERO_EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test "$ZERO_CANDIDATE_SHA256" = \
+            018efb1151731f35d10137ee76679d50d62f9bfb344234b54dc418e065abce28
+          [[ "$ZERO_COLLECTOR_APPROVAL_ID" =~ ^[A-Za-z0-9_.:-]{8,128}$ ]]
+          test -n "$ZERO_BUCKET"
+          test ! -e benchmarks/zero4-q29-v1/language-gate/results/COMPLETED
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Read immutable launch and complete result
+        run: |
+          mkdir -p /tmp/q29-gate-collection
+          for file in launch.json budget.json status.json result.json; do
+            aws s3 cp \
+              "s3://${ZERO_BUCKET}/jobs/${ZERO_SOURCE_RUN_ID}/${file}" \
+              "/tmp/q29-gate-collection/${file}" --no-cli-pager
+          done
+          jq -e --arg run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg commit "$ZERO_EXPECTED_COMMIT" \
+            --arg candidate "$ZERO_CANDIDATE_SHA256" \
+            '.schema == "zero.q29_language_gate_launch.v1"
+             and .ci_run_id == $run_id
+             and .git_commit == $commit
+             and .candidate_sha256 == $candidate
+             and .execution_lock_acquired == true
+             and .workflow_waited_for_compute == false' \
+            /tmp/q29-gate-collection/launch.json >/dev/null
+          budget_sha256=$(jq -r '.budget_sha256' \
+            /tmp/q29-gate-collection/launch.json)
+          test "$(sha256sum /tmp/q29-gate-collection/budget.json | awk '{print $1}')" = \
+            "$budget_sha256"
+          git cat-file -e "${ZERO_EXPECTED_COMMIT}^{commit}"
+          git switch --detach "$ZERO_EXPECTED_COMMIT"
+          node scripts/check_zero4_q29_language_gate.mjs
+          mkdir -p "$(dirname "$ZERO_BUDGET_FILE")"
+          cp /tmp/q29-gate-collection/budget.json "$ZERO_BUDGET_FILE"
+          node scripts/check_q29_language_gate_result.mjs \
+            --launch /tmp/q29-gate-collection/launch.json \
+            --status /tmp/q29-gate-collection/status.json \
+            --result /tmp/q29-gate-collection/result.json \
+            --budget "$ZERO_BUDGET_FILE"
+
+      - name: Require terminal instance
+        run: |
+          instance=$(jq -r '.instance_id' \
+            /tmp/q29-gate-collection/launch.json)
+          state=$(aws ec2 describe-instances --instance-ids "$instance" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text --no-cli-pager)
+          test "$state" = terminated
+          jq -n --arg instance_id "$instance" \
+            --arg observed_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{
+              schema: "zero.aws_terminal_observation.v1",
+              experiment: "zero4-q29-seed2-language-gate-v1",
+              instance_id: $instance_id,
+              state: "terminated",
+              observed_at: $observed_at
+            }' > /tmp/q29-gate-collection/terminal.json
+
+      - name: Acquire one-time collector lock
+        run: |
+          jq -n --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg collector_run_id "$ZERO_COLLECTOR_RUN_ID" \
+            --arg collector_approval_id "$ZERO_COLLECTOR_APPROVAL_ID" \
+            --arg git_commit "$ZERO_EXPECTED_COMMIT" \
+            --arg candidate_sha256 "$ZERO_CANDIDATE_SHA256" \
+            '{
+              schema: "zero.aws_collector_lock.v1",
+              experiment: "zero4-q29-seed2-language-gate-v1",
+              source_run_id: $source_run_id,
+              collector_run_id: $collector_run_id,
+              collector_approval_id: $collector_approval_id,
+              git_commit: $git_commit,
+              candidate_sha256: $candidate_sha256
+            }' > /tmp/q29-gate-collector-lock.json
+          aws s3api put-object --bucket "$ZERO_BUCKET" \
+            --key experiments/zero4-q29-seed2-language-gate-v1/collector.lock \
+            --body /tmp/q29-gate-collector-lock.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Freeze validated records
+        run: |
+          git switch main
+          root=benchmarks/zero4-q29-v1/language-gate
+          results="$root/results"
+          mkdir -p "$results"
+          cp /tmp/q29-gate-collection/budget.json "$ZERO_BUDGET_FILE"
+          cp /tmp/q29-gate-collection/launch.json \
+            "$results/launch-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/q29-gate-collection/status.json \
+            "$results/status-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/q29-gate-collection/terminal.json \
+            "$results/terminal-${ZERO_SOURCE_RUN_ID}.json"
+          cp /tmp/q29-gate-collection/result.json "$results/result.json"
+          decision=$(jq -r 'if .decision.pass then "pass" else "fail" end' \
+            "$results/result.json")
+          repository_decision=$(test "$decision" = pass && echo go || echo no-go)
+          jq -n --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg git_commit "$ZERO_EXPECTED_COMMIT" \
+            --arg candidate_sha256 "$ZERO_CANDIDATE_SHA256" \
+            --arg decision "$decision" \
+            --arg budget_sha256 "$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" \
+            --arg result_sha256 "$(sha256sum "$results/result.json" | awk '{print $1}')" \
+            '{
+              schema: "zero.q29_language_gate_completion.v1",
+              id: "zero4-q29-seed2-language-gate-v1",
+              status: "complete",
+              authorization_consumed: true,
+              source_run_id: $source_run_id,
+              git_commit: $git_commit,
+              candidate_sha256: $candidate_sha256,
+              budget_sha256: $budget_sha256,
+              result_sha256: $result_sha256,
+              scientific_decision: $decision,
+              training_updates: 0,
+              promotion_executed: false
+            }' > "$results/COMPLETED"
+          jq -n --arg source_run_id "$ZERO_SOURCE_RUN_ID" \
+            --arg collector_run_id "$ZERO_COLLECTOR_RUN_ID" \
+            --arg git_commit "$ZERO_EXPECTED_COMMIT" \
+            --arg candidate_sha256 "$ZERO_CANDIDATE_SHA256" \
+            --arg decision "$repository_decision" \
+            --arg scientific_decision "$decision" \
+            --arg budget_sha256 "$(sha256sum "$ZERO_BUDGET_FILE" | awk '{print $1}')" \
+            --arg result_sha256 "$(sha256sum "$results/result.json" | awk '{print $1}')" \
+            --argjson blimp_value "$(jq '.tasks.blimp.metrics.raw_accuracy' "$results/result.json")" \
+            --argjson blimp_threshold "$(jq '.decision.checks.blimp_raw_accuracy.threshold' "$results/result.json")" \
+            --argjson blimp_pass "$(jq '.decision.checks.blimp_raw_accuracy.pass' "$results/result.json")" \
+            --argjson tiny_value "$(jq '.tasks.tinystories.metrics.bits_per_byte' "$results/result.json")" \
+            --argjson tiny_threshold "$(jq '.decision.checks.tinystories_bits_per_byte.threshold' "$results/result.json")" \
+            --argjson tiny_pass "$(jq '.decision.checks.tinystories_bits_per_byte.pass' "$results/result.json")" \
+            '{
+              schema: "zero.zero4_q29_language_gate_result.v1",
+              id: "zero4-q29-seed2-language-gate-v1",
+              decision: $decision,
+              scientific_decision: $scientific_decision,
+              source_run_id: $source_run_id,
+              collector_run_id: $collector_run_id,
+              git_commit: $git_commit,
+              candidate: {
+                id: "zero4-q29-seed2-u50",
+                sha256: $candidate_sha256,
+                bytes: 4920400,
+                update: 50
+              },
+              budget_sha256: $budget_sha256,
+              result_sha256: $result_sha256,
+              checks: {
+                blimp_raw_accuracy: {
+                  value: $blimp_value,
+                  comparator: ">=",
+                  threshold: $blimp_threshold,
+                  pass: $blimp_pass
+                },
+                tinystories_bits_per_byte: {
+                  value: $tiny_value,
+                  comparator: "<=",
+                  threshold: $tiny_threshold,
+                  pass: $tiny_pass
+                }
+              },
+              next_action: (if $scientific_decision == "pass" then
+                "stop_and_require_separate_three_seed_replication_contract"
+                else "record_q29_no_go_keep_seeds_1_and_3_sealed_and_retire_profile_family" end),
+              training_updates: 0,
+              promotion_executed: false
+            }' > "$results/manifest.json"
+          node scripts/render_q29_language_gate_result.mjs \
+            "$results/result.json" "$results/RESULTS.md"
+          node scripts/check_zero4_q29_language_gate.mjs \
+            --completion "$results/COMPLETED"
+
+      - name: Publish draft results pull request
+        run: |
+          prefix="exp/q29-language-gate-${ZERO_SOURCE_RUN_ID}-"
+          if gh pr list --state open --json headRefName \
+              --jq "any(.headRefName; startswith(\"${prefix}\"))" | grep -q true; then
+            echo "A validated result pull request already exists"
+            exit 0
+          fi
+          branch="${prefix}${ZERO_COLLECTOR_RUN_ID}"
+          git switch -c "$branch"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add benchmarks/zero4-q29-v1/language-gate/results
+          git commit -m "Record Q2.9 language-gate result"
+          git push --set-upstream origin "$branch"
+          gh pr create --draft --base main --head "$branch" \
+            --title "Record Q2.9 language-gate result" \
+            --body "Publishes the terminal Q2.9 candidate-bound BLiMP/TinyStories gate result. It applies the preregistered go/no-go branch, includes zero training, and does not authorize model promotion."
