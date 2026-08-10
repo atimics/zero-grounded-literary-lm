@@ -1169,6 +1169,7 @@ zero4-q28-u100-language-gate-check: \
 
 zero4-q29-check: conservative_exposure_pilot \
 		scripts/check_zero4_q29.mjs \
+		scripts/check_zero4_q29_result.mjs \
 		scripts/run_zero4_q29_pilot.mjs \
 		scripts/materialize_q29_pilot_budget.mjs \
 		benchmarks/zero4-post-q28-v1/decision.json \
@@ -1180,6 +1181,7 @@ zero4-q29-check: conservative_exposure_pilot \
 		benchmarks/zero4-q29-v1/pilot-budget.json
 	node scripts/check_zero4_q29.mjs \
 		--mechanics ./conservative_exposure_pilot
+	node scripts/check_zero4_q29_result.mjs
 
 zero4-q27-check: literary_lm scripts/check_zero4_q27.mjs \
 		scripts/check_experiment_evidence.mjs \

@@ -1,0 +1,121 @@
+{
+  "schema": "zero.zero4_q29_pilot_manifest.v1",
+  "id": "zero4-q29-seed2-u50",
+  "status": "completed_candidate_frozen_language_gate_not_authorized",
+  "decision": "candidate-frozen",
+  "source_commit": "c4f682c020e17d6231b6cab5542172f8ef6c1b76",
+  "publication": {
+    "issue": 85,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  },
+  "bindings": {
+    "post_q28_decision": {
+      "path": "benchmarks/zero4-post-q28-v1/decision.json",
+      "sha256": "5badb8a227aea3707eb721a61db08f81e083b077cbb18253cc06c4ac0a17ac71"
+    },
+    "contract": {
+      "path": "benchmarks/zero4-q29-v1/contract.json",
+      "sha256": "f0dd386a82cd1b24af504d113afbc4b6adc3654b651766d93a4de6b0995171c6"
+    },
+    "activation": {
+      "path": "benchmarks/zero4-q29-v1/activation-contract.json",
+      "sha256": "a0a9354e6276b99fe4f623cad4cfc16fd258a58acd07c53682d6df0bfd283cb9"
+    },
+    "profile": {
+      "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+      "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+    },
+    "runtime_budget": {
+      "path": "benchmarks/zero4-q29-v1/results/runtime-budget.json",
+      "sha256": "2f57117f3e110d02dc0578c53a054db163d8251088809af5d7046681c98dd0b6"
+    },
+    "authorization_consumption": {
+      "path": "benchmarks/zero4-q29-v1/results/authorization-consumption.json",
+      "sha256": "b6241daec52ba16ee58e55eeb7261dbcc88d0005fbaa486fbc5bd9314e9639e8"
+    }
+  },
+  "execution": {
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 100,
+    "updates_committed": 50,
+    "stop_reason": "first-hit",
+    "measurement_updates_executed": [0, 25, 50],
+    "measurement_updates_not_executed": [75, 100],
+    "observed_started_at": "2026-08-10T04:34:13Z",
+    "observed_completed_at": "2026-08-10T04:34:49Z",
+    "observed_elapsed_seconds": 36,
+    "paid_compute_usd": 0,
+    "language_gate_executed": false,
+    "promotion_executed": false
+  },
+  "measurements": [
+    {
+      "update": 0,
+      "quantity_training_loss": 3.8250226378440857,
+      "replay_training_loss": 1.1482575001815956,
+      "learned_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 25,
+      "quantity_training_loss": 1.7917150855064392,
+      "replay_training_loss": 1.1505661793053152,
+      "quantity_improvement": 0.5315805277125598,
+      "replay_regression": 0.002010593550100536,
+      "decision": "continue",
+      "learned_state_digest": "6325767f088cf59c"
+    },
+    {
+      "update": 50,
+      "quantity_training_loss": 0.7247729301452637,
+      "replay_training_loss": 1.1496726994713145,
+      "quantity_improvement": 0.8105180024362495,
+      "replay_regression": 0.0012324755462037754,
+      "decision": "first-hit",
+      "learned_state_digest": "9142f1cb6ffead09"
+    }
+  ],
+  "outputs": {
+    "runtime_result": {
+      "path": "benchmarks/zero4-q29-v1/results/result.json",
+      "sha256": "e4741358825f5a24e278569e0c57ef82e1d83637f2c7063add3be78609239837"
+    },
+    "events": {
+      "path": "benchmarks/zero4-q29-v1/results/events.jsonl",
+      "sha256": "e729b3e7435dec80cfc88a0013a02536d65fad66fa1137dd158d2e66327d2bb6"
+    },
+    "raw_checkpoint": {
+      "logical_id": "zero4-q29-seed2-u50.ckpt",
+      "sha256": "b996514dc947f195723aa8f2ba6a86f3cb937e2c06d5968e3e3f8f65b6e96f86",
+      "bytes": 58236384,
+      "tracked": false
+    },
+    "quantized_candidate": {
+      "path": "benchmarks/zero4-q29-v1/results/candidate.litq8",
+      "sha256": "018efb1151731f35d10137ee76679d50d62f9bfb344234b54dc418e065abce28",
+      "bytes": 4920400,
+      "format": "LITQ8V1",
+      "update": 50
+    }
+  },
+  "conversion": {
+    "tool": "export_literary.c",
+    "tool_sha256": "c7b1ba5a2763211871df1720f01f49b765365253924b7d4c1113643403ce463c",
+    "deterministic_repeat_cmp": true
+  },
+  "language_gate": {
+    "eligible": true,
+    "authorized": false,
+    "executed": false,
+    "maximum_candidates": 1,
+    "contract": {
+      "path": "benchmarks/zero-language-gate-v1/contract.json",
+      "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+    },
+    "maximum_compute_usd_if_separately_authorized": 0.12
+  },
+  "promotion": {
+    "authorized": false,
+    "executed": false
+  }
+}
