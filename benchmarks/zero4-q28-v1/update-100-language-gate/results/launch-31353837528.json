@@ -1,0 +1,23 @@
+{
+  "schema": "zero.q28_u100_language_gate_launch.v1",
+  "experiment": "zero4-q28-seed2-u100-language-diagnostic-v1",
+  "instance_id": "i-0b68468fc428b27f6",
+  "instance_type": "c6i.4xlarge",
+  "ami": "ami-052355af2a014bd2c",
+  "region": "us-east-1",
+  "git_commit": "e245fbacdb005533cdaefc0a0d7625544df400ef",
+  "ci_run_id": "31353837528",
+  "approval_id": "owner-let-do-it-q28-u100-e245fbac-20260810",
+  "candidate_sha256": "694788b023e9dbd1c1182ddafe5a7692bc02f9e592f59b47682f0b5ae6af79c2",
+  "budget_sha256": "a573dd17bef918b7221400359a6a5977faf5f7548b83d15509e70dedf3fa35a2",
+  "source_sha256": "d98f7b312e92191871c1c018399be527f8d8922aeb4c230ff9b88571918084a6",
+  "screen_sha256": "39b772b5ffc62b955091616526f74a547c0bbdae8f4d51aace948d81488668b7",
+  "workload_sha256": "068ca99dce6eb8556a5e7b4f9fb8afadcdc468b5ec80b4f4c18461696a5f90f5",
+  "user_data_sha256": "556cf87adf2d93ed3f232ce0518dfc1091bc68abd1f1e4df1281216bc17f748b",
+  "launch_epoch": 1786334011,
+  "max_instance_seconds": 600,
+  "workload_timeout_seconds": 540,
+  "max_compute_usd": 0.12,
+  "execution_lock_acquired": true,
+  "workflow_waited_for_compute": false
+}

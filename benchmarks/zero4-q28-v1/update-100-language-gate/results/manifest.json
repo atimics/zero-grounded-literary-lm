@@ -1,0 +1,33 @@
+{
+  "schema": "zero.zero4_q28_u100_language_diagnostic_result.v1",
+  "id": "zero4-q28-seed2-u100-language-diagnostic-v1",
+  "decision": "no-go",
+  "scientific_decision": "fail",
+  "source_run_id": "31353837528",
+  "collector_run_id": "31354247375",
+  "git_commit": "e245fbacdb005533cdaefc0a0d7625544df400ef",
+  "candidate": {
+    "id": "zero4-q28-seed2-u100",
+    "sha256": "694788b023e9dbd1c1182ddafe5a7692bc02f9e592f59b47682f0b5ae6af79c2"
+  },
+  "budget_sha256": "a573dd17bef918b7221400359a6a5977faf5f7548b83d15509e70dedf3fa35a2",
+  "result_sha256": "52b3ed25e522b1ff64c77d17d34a4f891f9fda76d1b9eaac835eb7f5ec5f1417",
+  "checks": {
+    "blimp_raw_accuracy": {
+      "value": 0.546,
+      "comparator": ">=",
+      "threshold": 0.522,
+      "pass": true
+    },
+    "tinystories_bits_per_byte": {
+      "value": 2.645308591821118,
+      "comparator": "<=",
+      "threshold": 2.553139779957201,
+      "pass": false
+    }
+  },
+  "interpretation": "supports_graded_profile_language_safety_failure",
+  "q28_no_go_revisable": false,
+  "training_updates": 0,
+  "promotion_executed": false
+}

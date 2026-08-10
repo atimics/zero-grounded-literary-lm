@@ -1,0 +1,44 @@
+{
+  "schema": "zero.language_preservation_gate_budget.v1",
+  "id": "zero4-q28-seed2-u100-language-diagnostic-v1",
+  "status": "authorized",
+  "contract": {
+    "id": "zero-language-gate-v1",
+    "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+  },
+  "candidate": {
+    "id": "zero4-q28-seed2-u100",
+    "sha256": "694788b023e9dbd1c1182ddafe5a7692bc02f9e592f59b47682f0b5ae6af79c2",
+    "bytes": 4920400
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge"
+  },
+  "caps": {
+    "max_instance_seconds": 600,
+    "workload_timeout_seconds": 540,
+    "max_compute_usd": 0.12
+  },
+  "authorization": {
+    "explicit_manual_authorization": true,
+    "authorized_for_execution": true,
+    "one_execution_only": true,
+    "approved_by": "atimics",
+    "approved_at": "2026-08-10T03:53:15Z",
+    "approval_id": "owner-let-do-it-q28-u100-e245fbac-20260810"
+  },
+  "provenance": {
+    "source_commit": "e245fbacdb005533cdaefc0a0d7625544df400ef",
+    "activation_commit": "606e1ab6c9b449bdfe647d283a35127e29f5e309",
+    "profile_sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e",
+    "checkpoint_sha256": "b19b39d76c01071dd68e9883bf1c86aa759e96cf82cd9b854b7d45d7090047dc",
+    "quantity_result_sha256": "8b6ac9908834b96c61fcc37a56a296392152ac0ed2a5a19e29aa7687d69824e6",
+    "candidate_binding_sha256": "d50e9cb985df03c5d1d10fb1defa4b99a52fe1817cb5936d0317388bfcc2d576",
+    "budget_template_sha256": "fe95c9c68cd286f803016a2080a2f42b8ab5c45d26bc9381df8936b03f405b21",
+    "promotion_authorized": false,
+    "q28_no_go_revisable": false,
+    "diagnostic_only": true
+  }
+}
