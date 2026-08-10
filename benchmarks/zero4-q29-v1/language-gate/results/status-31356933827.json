@@ -1,0 +1,18 @@
+{
+  "schema": "zero.q29_language_gate_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "exit_code": 0,
+  "instance_id": "i-02274650fd404b56c",
+  "git_commit": "b031974152922b6bcae3f65c255ca5c20c0a5dc1",
+  "budget_sha256": "51a86d835de12e90a0a7b6bc888465da942a885f0953f02480ce44098eaf586a",
+  "candidate_sha256": "018efb1151731f35d10137ee76679d50d62f9bfb344234b54dc418e065abce28",
+  "started_at": "2026-08-10T04:56:19Z",
+  "finished_at": "2026-08-10T05:01:25Z",
+  "elapsed_instance_seconds": 407,
+  "estimated_compute_usd": 0.076877777778,
+  "training_updates": 0,
+  "promotion_executed": false,
+  "result_sha256": "0bdfc0e986f57b158319030afb957d138b90c8c1dae77833f7f5f17c6dd313c9",
+  "scientific_decision": "fail"
+}

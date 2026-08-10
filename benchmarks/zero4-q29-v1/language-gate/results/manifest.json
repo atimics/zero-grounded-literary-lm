@@ -1,0 +1,34 @@
+{
+  "schema": "zero.zero4_q29_language_gate_result.v1",
+  "id": "zero4-q29-seed2-language-gate-v1",
+  "decision": "no-go",
+  "scientific_decision": "fail",
+  "source_run_id": "31356933827",
+  "collector_run_id": "31357545509",
+  "git_commit": "b031974152922b6bcae3f65c255ca5c20c0a5dc1",
+  "candidate": {
+    "id": "zero4-q29-seed2-u50",
+    "sha256": "018efb1151731f35d10137ee76679d50d62f9bfb344234b54dc418e065abce28",
+    "bytes": 4920400,
+    "update": 50
+  },
+  "budget_sha256": "51a86d835de12e90a0a7b6bc888465da942a885f0953f02480ce44098eaf586a",
+  "result_sha256": "0bdfc0e986f57b158319030afb957d138b90c8c1dae77833f7f5f17c6dd313c9",
+  "checks": {
+    "blimp_raw_accuracy": {
+      "value": 0.535,
+      "comparator": ">=",
+      "threshold": 0.522,
+      "pass": true
+    },
+    "tinystories_bits_per_byte": {
+      "value": 2.5797352564366838,
+      "comparator": "<=",
+      "threshold": 2.553139779957201,
+      "pass": false
+    }
+  },
+  "next_action": "record_q29_no_go_keep_seeds_1_and_3_sealed_and_retire_profile_family",
+  "training_updates": 0,
+  "promotion_executed": false
+}
