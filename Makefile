@@ -215,6 +215,32 @@ zero4-q30-check: quantity_adapter_pilot literary_infer export_literary \
 		quantity_adapter_request_eval base_probability_infer
 	node scripts/check_zero4_q30.mjs
 
+operation_head_pilot: operation_head_pilot.c literary_lm.c \
+		channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) operation_head_pilot.c -o $@ \
+		$(LITERARY_LDLIBS)
+
+package_operation_head: package_operation_head.c
+	$(CC) $(CFLAGS) package_operation_head.c -o $@
+
+operation_head_infer: operation_head_infer.c literary_infer.c \
+		literary_infer.h channel_protocol.h
+	$(CC) $(CFLAGS) operation_head_infer.c -o $@ -lm
+
+operation_head_request_eval: quantity_request_eval.c \
+		operation_head_infer.c literary_infer.c literary_infer.h \
+		faculty_controller.c faculty_protocol.h quantity_oracle.c \
+		quantity_oracle.h channel_protocol.h
+	$(CC) $(CFLAGS) -DOPERATION_HEAD_INFER_NO_MAIN \
+		-DFACULTY_CONTROLLER_NO_MAIN quantity_request_eval.c \
+		operation_head_infer.c faculty_controller.c quantity_oracle.c \
+		-o $@ -lm
+
+zero4-q31-check: operation_head_pilot package_operation_head \
+		operation_head_infer operation_head_request_eval \
+		base_probability_infer
+	node scripts/check_zero4_q31.mjs
+
 bpe_tokenizer: bpe_tokenizer.c
 	$(CC) $(CFLAGS) bpe_tokenizer.c -o $@
 
@@ -1773,7 +1799,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
@@ -1836,5 +1862,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer
+	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval
 	rm -f docs/literary.js docs/literary.wasm
