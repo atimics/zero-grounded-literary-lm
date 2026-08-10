@@ -250,8 +250,6 @@ for (const forbidden of ["--seed", "--resume", "--init", "--profile",
 const makefile = fs.readFileSync("Makefile", "utf8");
 assert(!/^zero4-q29-(?:train|run):/m.test(makefile),
   "Makefile exposes an unauthorized Q2.9 execution target");
-assert(!fs.existsSync("benchmarks/zero4-q29-v1/results"),
-  "Q2.9 implementation PR must not contain execution results");
 const prereg = fs.readFileSync(PREREG, "utf8");
 for (const phrase of ["0.75%", "80%", "updates 0, 25, 50, 75, and 100",
   "first eligible", "not authorize a pilot run"]) {

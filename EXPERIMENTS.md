@@ -40,6 +40,7 @@ Schema: `zero.experiment_registry.v1`.
 | **q28-language-gate** | 2026-08-10 | Exactly-once, candidate-bound 1,000-case BLiMP and TinyStories preservation gate for Q2.8 update 200 (`ffc9a4aa…`) | BLiMP raw accuracy was 0.539 against the ≥0.522 floor (pass). TinyStories was 2.675123 bits/byte against the ≤2.553140 ceiling (fail). Evaluation took 281.811 seconds; the terminated AWS instance cost an estimated $0.071211. Zero training updates occurred. | **No-go.** The conjunctive language gate failed. Keep seeds 1 and 3 sealed, do not promote the candidate, and leave SAT-1 blocked behind a language-preserving five-operation anchor. |
 | **post-q28-conservative** | 2026-08-10 | Frozen update-100/update-200 comparison and decision in `benchmarks/zero4-post-q28-v1` | Update 100 retained 94.7272% quantity recovery with 0.94218% replay regression and was better than update 200 on all 1,000 paired TinyStories cases, although both checkpoints failed the TinyStories ceiling. BLiMP had no reliable paired direction (exact McNemar p=0.2295). | **Preregister Q2.9 conservative exposure.** Keep the Q2.8 profile fixed, cap exposure at 100 updates, measure every 25, enforce a 0.75% replay guard, and freeze the first checkpoint reaching 80% quantity recovery. The fixed 5% coordinate mask moves to fallback. |
 | **q29-pilot-activation** | 2026-08-10 | Implementation-only activation in `benchmarks/zero4-q29-v1`, bound to issue #83 and the unchanged Q2.8 profile `de858b2c…` | The seed-2 trajectory, 100-update cap, 0/25/50/75/100 measurements, replay-first stopping rule, first-hit selection, input hashes, and one-shot authorization consumption are fail-closed. The tracked budget has zero executable caps. | **Prepare for protected review and merge.** No pilot, language gate, seed expansion, promotion, or deployment is authorized by this implementation. |
+| **q29-seed2-pilot** | 2026-08-10 | One authorized local execution at merge `c4f682c0…`, fixed Q2.8 profile `de858b2c…`, seed 2, and a maximum of 100 updates | Update 25 recovered 53.1581% of quantity loss with 0.20106% replay regression and continued. Update 50 was the first hit: 81.0518% quantity recovery and 0.12325% replay regression. The run stopped immediately; raw checkpoint `b996514d…` and quantized candidate `018efb11…` were frozen. Observed wall time was 36 seconds and paid compute was $0.00. | **Candidate frozen; unchanged language gate eligible but not authorized.** No updates 51–100, language evaluation, seed expansion, promotion, or deployment occurred. |
 
 ---
 
@@ -235,9 +236,9 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 - **Current and deployed model**: ZERO.4, the Q2.6 seed-2 update-500 artifact at `docs/model.litq8` (SHA-256 `44b32f22...`)
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
-- **Latest completed experiment**: Q2.8 fixed graded-plasticity seed-2 pilot plus update-100 and update-200 candidate-bound language gates (both no-go)
-- **Latest execution outcome**: both Q2.8 checkpoints passed BLiMP and failed TinyStories; update 100 was better on all 1,000 paired TinyStories cases and used zero additional training updates for its diagnostic gate
-- **Evaluation decision**: retire Q2.8 without seeds 1 or 3; do not promote either checkpoint
-- **Next training experiment**: Q2.9 conservative exposure is preregistered and implementation-authorized under issue #83; no run is authorized until an exact merged commit receives a one-shot budget
+- **Latest completed experiment**: Q2.9 conservative-exposure seed-2 pilot (training-side candidate frozen)
+- **Latest execution outcome**: the first hit occurred at update 50 with 81.0518% quantity recovery and 0.12325% replay regression; no updates 51–100 were committed
+- **Evaluation decision**: the update-50 candidate is eligible for one unchanged language gate; this is not yet a language-preservation or promotion result
+- **Next training experiment**: none; the next permitted action is a separately reviewed, candidate-bound BLiMP/TinyStories gate with zero training updates
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 remains current; Q2.8 did not change deployment or `docs/model.json`
