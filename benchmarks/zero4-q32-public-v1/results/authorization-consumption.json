@@ -1,0 +1,8 @@
+{
+  "schema": "zero.q32_public_authorization_consumption.v1",
+  "authorization_sha256": "3851bddb61ecd9da5ab507fab036f7c8682e15ca3d4631a82dbed07aafacc4ec",
+  "source_commit": "6b5e75189502c265e544d439f4f7204cf1b8d3fc",
+  "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+  "public_records": 500,
+  "output": "benchmarks/zero4-q32-public-v1/results"
+}

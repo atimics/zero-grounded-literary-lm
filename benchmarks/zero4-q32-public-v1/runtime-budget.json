@@ -1,0 +1,29 @@
+{
+  "schema": "zero.q32_public_quantity_budget.v1",
+  "id": "zero4-q32-seed2-public-quantity-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "6b5e75189502c265e544d439f4f7204cf1b8d3fc",
+    "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "public_records": 500,
+    "training_updates": 0,
+    "maximum_compute_usd": 0.1
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q32-public-user-do-it",
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-11T02:58:26Z",
+    "source_commit": "6b5e75189502c265e544d439f4f7204cf1b8d3fc",
+    "contract_sha256": "35f0a1333553535f261641a47147665ab638f7f2edf3814e4bcd280f05c13184",
+    "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "maximum_public_records": 500,
+    "maximum_compute_usd": 0.1,
+    "training_updates": 0,
+    "promotion_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}
