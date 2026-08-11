@@ -1,0 +1,125 @@
+{
+  "classes": {
+    "add": {
+      "schema": "zero.quantity_request_eval.v2",
+      "model": "benchmarks/zero4-q32-v1/results/runtime-gate-candidate.litqhead",
+      "request_mode": "operation",
+      "quantity": {
+        "cases": 100,
+        "closed": 100,
+        "syntax": 100,
+        "operation": 100,
+        "arguments": 100,
+        "exact_request": 100,
+        "oracle_arithmetic": 100,
+        "committed": 100,
+        "exact_artifact": 100,
+        "rejected": 0,
+        "rejected_state_mutations": 0,
+        "target_bits": 0.00335702
+      }
+    },
+    "multiply": {
+      "schema": "zero.quantity_request_eval.v2",
+      "model": "benchmarks/zero4-q32-v1/results/runtime-gate-candidate.litqhead",
+      "request_mode": "operation",
+      "quantity": {
+        "cases": 100,
+        "closed": 100,
+        "syntax": 100,
+        "operation": 100,
+        "arguments": 100,
+        "exact_request": 100,
+        "oracle_arithmetic": 100,
+        "committed": 100,
+        "exact_artifact": 100,
+        "rejected": 0,
+        "rejected_state_mutations": 0,
+        "target_bits": 0.00179362
+      }
+    },
+    "add-rational": {
+      "schema": "zero.quantity_request_eval.v2",
+      "model": "benchmarks/zero4-q32-v1/results/runtime-gate-candidate.litqhead",
+      "request_mode": "operation",
+      "quantity": {
+        "cases": 100,
+        "closed": 100,
+        "syntax": 100,
+        "operation": 100,
+        "arguments": 100,
+        "exact_request": 100,
+        "oracle_arithmetic": 100,
+        "committed": 100,
+        "exact_artifact": 100,
+        "rejected": 0,
+        "rejected_state_mutations": 0,
+        "target_bits": 0.0016312
+      }
+    },
+    "convert": {
+      "schema": "zero.quantity_request_eval.v2",
+      "model": "benchmarks/zero4-q32-v1/results/runtime-gate-candidate.litqhead",
+      "request_mode": "operation",
+      "quantity": {
+        "cases": 100,
+        "closed": 100,
+        "syntax": 100,
+        "operation": 100,
+        "arguments": 100,
+        "exact_request": 100,
+        "oracle_arithmetic": 100,
+        "committed": 100,
+        "exact_artifact": 100,
+        "rejected": 0,
+        "rejected_state_mutations": 0,
+        "target_bits": 0.00063381
+      }
+    },
+    "solve-linear": {
+      "schema": "zero.quantity_request_eval.v2",
+      "model": "benchmarks/zero4-q32-v1/results/runtime-gate-candidate.litqhead",
+      "request_mode": "operation",
+      "quantity": {
+        "cases": 100,
+        "closed": 100,
+        "syntax": 100,
+        "operation": 100,
+        "arguments": 100,
+        "exact_request": 100,
+        "oracle_arithmetic": 100,
+        "committed": 100,
+        "exact_artifact": 100,
+        "rejected": 0,
+        "rejected_state_mutations": 0,
+        "target_bits": 0.00191498
+      }
+    }
+  },
+  "gate": {
+    "passed": true,
+    "overall_accuracy": 1,
+    "per_class_accuracy": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "totals": {
+      "cases": 500,
+      "closed": 500,
+      "syntax": 500,
+      "operation": 500,
+      "arguments": 500,
+      "exact_request": 500,
+      "oracle_arithmetic": 500,
+      "committed": 500,
+      "exact_artifact": 500,
+      "rejected": 0,
+      "rejected_state_mutations": 0
+    },
+    "exact_structural": true,
+    "non_q_probability_identity": true
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "zero.q32_deployment_exact_head_pilot_budget.v1",
+  "id": "zero4-q32-seed2-pilot-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "d875625081053a65a770fc21642e71a1731b70cd",
+    "diagnostic_seed": 2,
+    "head_parameters": 7685,
+    "feature_records": 9500,
+    "training_pool_records": 9000,
+    "private_holdout_records": 500,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [
+      0,
+      25,
+      50,
+      100
+    ],
+    "packaged_runtime_overall_minimum": 0.99,
+    "packaged_runtime_per_class_minimum": 0.98,
+    "maximum_compute_usd": 0.1
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q32-user-continue-one-shot",
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-11T02:29:19Z",
+    "source_commit": "d875625081053a65a770fc21642e71a1731b70cd",
+    "contract_sha256": "be8832501eb48e1ca0ecf631e662fdb655594f0dfd585b076bf2311f1d97bc70",
+    "maximum_optimizer_updates": 100,
+    "maximum_compute_usd": 0.1,
+    "packaged_runtime_private_gate_authorized": true,
+    "public_quantity_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false,
+    "deployment_authorized": false
+  }
+}

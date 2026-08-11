@@ -1,0 +1,160 @@
+{
+  "schema": "zero.zero4_q32_pilot_result.v1",
+  "source_commit": "d875625081053a65a770fc21642e71a1731b70cd",
+  "authorization_sha256": "e0fabb79c520adbd05555bbf4444751b969f339320a75e733992d2e3992f4a66",
+  "contract_sha256": "be8832501eb48e1ca0ecf631e662fdb655594f0dfd585b076bf2311f1d97bc70",
+  "measurements": [
+    {
+      "update": 0,
+      "holdout_cross_entropy": 1.6094378975329513,
+      "holdout_accuracy": 0.20000000000000015,
+      "per_class_accuracy": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    },
+    {
+      "update": 25,
+      "holdout_cross_entropy": 0.5409234214835539,
+      "holdout_accuracy": 0.9860000000000008,
+      "per_class_accuracy": [
+        1,
+        1,
+        0.99,
+        1,
+        0.94
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    },
+    {
+      "update": 50,
+      "holdout_cross_entropy": 0.1864592184483826,
+      "holdout_accuracy": 0.9860000000000008,
+      "per_class_accuracy": [
+        0.98,
+        1,
+        1,
+        1,
+        0.95
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    },
+    {
+      "update": 100,
+      "holdout_cross_entropy": 0.04353067801209605,
+      "holdout_accuracy": 1.0000000000000007,
+      "per_class_accuracy": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    }
+  ],
+  "runtime_feature_selection": {
+    "update": 100,
+    "holdout_cross_entropy": 0.04353067801209605,
+    "holdout_accuracy": 1.0000000000000007,
+    "per_class_accuracy": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "per_class_count": [
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "base_runtime_digest": "139a723e7d832129"
+  },
+  "packaged_runtime": {
+    "passed": true,
+    "overall_accuracy": 1,
+    "per_class_accuracy": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "totals": {
+      "cases": 500,
+      "closed": 500,
+      "syntax": 500,
+      "operation": 500,
+      "arguments": 500,
+      "exact_request": 500,
+      "oracle_arithmetic": 500,
+      "committed": 500,
+      "exact_artifact": 500,
+      "rejected": 0,
+      "rejected_state_mutations": 0
+    },
+    "exact_structural": true,
+    "non_q_probability_identity": true
+  },
+  "selected": {
+    "update": 100,
+    "holdout_cross_entropy": 0.04353067801209605,
+    "holdout_accuracy": 1.0000000000000007,
+    "per_class_accuracy": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "per_class_count": [
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "base_runtime_digest": "139a723e7d832129"
+  },
+  "selected_checkpoint": "benchmarks/zero4-q32-v1/results/checkpoint-u000100.q32",
+  "selected_package": "benchmarks/zero4-q32-v1/results/candidate.litqhead",
+  "public_quantity_run": false,
+  "language_gate_run": false,
+  "promotion_run": false,
+  "deployment_run": false
+}

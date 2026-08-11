@@ -134,7 +134,7 @@ endif
 	zero4-q28-activation-check zero4-q28-language-gate-check \
 	zero4-q28-u100-language-gate-check zero4-q29-check \
 	zero4-q29-language-gate-check \
-	zero4-q32-check \
+	zero4-q32-check zero4-q32-result-check \
 	zero4-q26r-check zero4-q26r-train zero4-q26r zero4-q26r-aggregate \
 	zero4-q26r-aws-v2-check \
 	zero4-promotion-check promote-zero4 \
@@ -253,6 +253,9 @@ zero4-q31-check: operation_head_pilot package_operation_head \
 zero4-q32-check: runtime_operation_head_pilot package_runtime_operation_head \
 		operation_head_infer operation_head_request_eval base_probability_infer
 	node scripts/check_zero4_q32.mjs
+
+zero4-q32-result-check:
+	node scripts/check_zero4_q32_result.mjs
 
 bpe_tokenizer: bpe_tokenizer.c
 	$(CC) $(CFLAGS) bpe_tokenizer.c -o $@
@@ -1812,7 +1815,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
