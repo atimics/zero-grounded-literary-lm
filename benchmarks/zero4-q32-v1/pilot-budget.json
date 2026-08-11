@@ -1,0 +1,28 @@
+{
+  "schema": "zero.q32_deployment_exact_head_pilot_budget.v1",
+  "id": "zero4-q32-seed2-pilot-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "proposed": {
+    "source_commit": null,
+    "diagnostic_seed": 2,
+    "head_parameters": 7685,
+    "feature_records": 9500,
+    "training_pool_records": 9000,
+    "private_holdout_records": 500,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 100],
+    "packaged_runtime_overall_minimum": 0.99,
+    "packaged_runtime_per_class_minimum": 0.98,
+    "maximum_compute_usd": 0.1
+  },
+  "authorization": {
+    "authorized": false,
+    "maximum_optimizer_updates": 0,
+    "maximum_compute_usd": 0,
+    "packaged_runtime_private_gate_authorized": false,
+    "public_quantity_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false,
+    "deployment_authorized": false
+  }
+}
