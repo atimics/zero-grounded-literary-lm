@@ -249,6 +249,11 @@ semantic_operation_eval: semantic_operation_eval.c operation_head_infer.c \
 	$(CC) $(CFLAGS) -DFACULTY_CONTROLLER_NO_MAIN semantic_operation_eval.c \
 		faculty_controller.c quantity_oracle.c -o $@ -lm
 
+semantic_runtime_head_pilot: semantic_runtime_head_pilot.c \
+		runtime_operation_head_pilot.c operation_head_infer.c literary_infer.c \
+		literary_infer.h channel_protocol.h
+	$(CC) $(CFLAGS) semantic_runtime_head_pilot.c -o $@ -lm
+
 runtime_operation_head_pilot: runtime_operation_head_pilot.c \
 		operation_head_infer.c literary_infer.c literary_infer.h \
 		channel_protocol.h
@@ -290,6 +295,11 @@ zero4-q33-semantic-check: semantic_operation_eval \
 
 zero4-q33-semantic-result-check:
 	node scripts/check_zero4_q33_semantic_result.mjs
+
+zero4-q34-semantic-head-check: semantic_runtime_head_pilot \
+		package_runtime_operation_head semantic_operation_eval \
+		operation_head_request_eval operation_head_infer base_probability_infer
+	node scripts/check_zero4_q34_semantic_head.mjs
 
 bpe_tokenizer: bpe_tokenizer.c
 	$(CC) $(CFLAGS) bpe_tokenizer.c -o $@
@@ -1912,5 +1922,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval
+	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
 	rm -f docs/literary.js docs/literary.wasm
