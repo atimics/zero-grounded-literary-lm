@@ -1,0 +1,14 @@
+{
+  "schema": "zero.q29_language_gate_completion.v1",
+  "id": "zero4-q29-seed2-language-gate-v1",
+  "status": "complete",
+  "authorization_consumed": true,
+  "source_run_id": "31356933827",
+  "git_commit": "b031974152922b6bcae3f65c255ca5c20c0a5dc1",
+  "candidate_sha256": "018efb1151731f35d10137ee76679d50d62f9bfb344234b54dc418e065abce28",
+  "budget_sha256": "51a86d835de12e90a0a7b6bc888465da942a885f0953f02480ce44098eaf586a",
+  "result_sha256": "0bdfc0e986f57b158319030afb957d138b90c8c1dae77833f7f5f17c6dd313c9",
+  "scientific_decision": "fail",
+  "training_updates": 0,
+  "promotion_executed": false
+}

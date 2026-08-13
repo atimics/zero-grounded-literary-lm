@@ -1,0 +1,18 @@
+{
+  "schema": "zero.q28_u100_language_gate_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "exit_code": 0,
+  "instance_id": "i-0b68468fc428b27f6",
+  "git_commit": "e245fbacdb005533cdaefc0a0d7625544df400ef",
+  "budget_sha256": "a573dd17bef918b7221400359a6a5977faf5f7548b83d15509e70dedf3fa35a2",
+  "candidate_sha256": "694788b023e9dbd1c1182ddafe5a7692bc02f9e592f59b47682f0b5ae6af79c2",
+  "started_at": "2026-08-10T03:55:03Z",
+  "finished_at": "2026-08-10T04:00:17Z",
+  "elapsed_instance_seconds": 406,
+  "estimated_compute_usd": 0.076688888889,
+  "training_updates": 0,
+  "promotion_executed": false,
+  "result_sha256": "52b3ed25e522b1ff64c77d17d34a4f891f9fda76d1b9eaac835eb7f5ec5f1417",
+  "scientific_decision": "fail"
+}

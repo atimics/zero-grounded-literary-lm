@@ -1,0 +1,59 @@
+{
+  "schema": "zero.q28_u100_language_gate_budget_template.v1",
+  "id": "zero4-q28-seed2-u100-language-diagnostic-v1",
+  "status": "implementation_authorized_dispatch_not_authorized",
+  "source_commit": "exact merged implementation commit required at dispatch",
+  "candidate_binding": {
+    "path": "benchmarks/zero4-q28-v1/update-100-language-gate/candidate-binding.json",
+    "id": "zero4-q28-seed2-u100",
+    "checkpoint_sha256": "b19b39d76c01071dd68e9883bf1c86aa759e96cf82cd9b854b7d45d7090047dc",
+    "quantized_sha256": "694788b023e9dbd1c1182ddafe5a7692bc02f9e592f59b47682f0b5ae6af79c2",
+    "quantized_bytes": 4920400
+  },
+  "contract": {
+    "id": "zero-language-gate-v1",
+    "path": "benchmarks/zero-language-gate-v1/contract.json",
+    "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "hourly_rate_usd": 0.68
+  },
+  "caps": {
+    "max_instance_seconds": 600,
+    "workload_timeout_seconds": 540,
+    "max_compute_usd": 0.12,
+    "jobs": 16,
+    "models_per_execution": 1
+  },
+  "workload": {
+    "training_updates": 0,
+    "evaluation_order": [
+      "candidate:blimp",
+      "candidate:tinystories"
+    ],
+    "threshold_changes_allowed": false,
+    "candidate_substitution_allowed": false,
+    "promotion_authorized": false,
+    "q28_no_go_revisable": false,
+    "diagnostic_only": true
+  },
+  "authorization": {
+    "implementation_issue": 80,
+    "implementation_authorized": true,
+    "dispatch_authorized": false,
+    "aws_compute_authorized": false,
+    "evaluation_authorized": false,
+    "one_execution_only": true,
+    "required_final_bindings": [
+      "exact merged implementation commit",
+      "exact quantized candidate SHA-256",
+      "one launch workflow dispatch",
+      "one terminal collector workflow dispatch",
+      "600-second instance ceiling",
+      "$0.12 compute ceiling"
+    ]
+  }
+}

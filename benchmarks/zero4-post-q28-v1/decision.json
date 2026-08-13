@@ -1,0 +1,105 @@
+{
+  "schema": "zero.post_q28_conservative_exposure_decision.v1",
+  "as_of": "2026-08-10",
+  "status": "q29_implementation_authorized_run_not_authorized",
+  "implementation_issue": 83,
+  "frozen_evidence": {
+    "q28_profile": {
+      "path": "benchmarks/zero4-q28-v1/audit/profile.tsv",
+      "sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e"
+    },
+    "q28_quantity_result": {
+      "path": "benchmarks/zero4-q28-v1/language-gate/quantity-result.json",
+      "sha256": "8b6ac9908834b96c61fcc37a56a296392152ac0ed2a5a19e29aa7687d69824e6"
+    },
+    "q28_update100_language_result": {
+      "path": "benchmarks/zero4-q28-v1/update-100-language-gate/results/result.json",
+      "sha256": "52b3ed25e522b1ff64c77d17d34a4f891f9fda76d1b9eaac835eb7f5ec5f1417"
+    },
+    "q28_update100_language_manifest": {
+      "path": "benchmarks/zero4-q28-v1/update-100-language-gate/results/manifest.json",
+      "sha256": "164744da1bb41eda722bbf5f9ce9e0fad48e79eb5423886afe5b95bef864e579"
+    },
+    "q28_update200_language_result": {
+      "path": "benchmarks/zero4-q28-v1/language-gate/results/result.json",
+      "sha256": "8161e1bda448c2172220991d3f58f02d5bb017ab31b6bd8fcebfbaa60ab1deb1"
+    },
+    "q28_update200_language_manifest": {
+      "path": "benchmarks/zero4-q28-v1/language-gate/results/manifest.json",
+      "sha256": "2a1133a61eb3163a7ffe8be7496c06331a8bf4855c89d60e69d8c78bd711c93b"
+    }
+  },
+  "observations": {
+    "q28_update100": {
+      "quantity_training_improvement": 0.9472719590821288,
+      "replay_training_regression": 0.009421804040580933,
+      "blimp_raw_accuracy": 0.546,
+      "tinystories_bits_per_byte": 2.645308591821118,
+      "language_decision": "no-go"
+    },
+    "q28_update200": {
+      "quantity_training_improvement": 0.9828465553066823,
+      "replay_training_regression": 0.019434500311499264,
+      "blimp_raw_accuracy": 0.539,
+      "tinystories_bits_per_byte": 2.6751232026564002,
+      "language_decision": "no-go"
+    },
+    "language_thresholds": {
+      "blimp_raw_accuracy_floor": 0.522,
+      "tinystories_bits_per_byte_ceiling": 2.553139779957201
+    },
+    "paired_update100_vs_update200": {
+      "tinystories_update100_better_cases": 1000,
+      "tinystories_equal_cases": 0,
+      "tinystories_update100_worse_cases": 0,
+      "tinystories_bits_per_byte_difference": -0.02981461083528214,
+      "blimp_both_correct": 530,
+      "blimp_update100_only_correct": 16,
+      "blimp_update200_only_correct": 9,
+      "blimp_both_wrong": 445,
+      "blimp_mcnemar_exact_two_sided_p": 0.2295229434967041
+    }
+  },
+  "inference": {
+    "supported": [
+      "The fixed Q2.8 profile produced substantial quantity-training recovery by update 100.",
+      "Both observed Q2.8 checkpoints failed the frozen TinyStories ceiling.",
+      "Continuing from update 100 to update 200 worsened every paired TinyStories case while adding little quantity recovery.",
+      "A preregistered earlier stopping test is cheaper and changes fewer scientific variables than introducing a new mask immediately."
+    ],
+    "not_supported": [
+      "Any untested earlier Q2.8 checkpoint will pass the language gate.",
+      "Replay-training regression alone predicts TinyStories preservation.",
+      "The 80% and 0.75% thresholds are statistically optimal.",
+      "A fixed sparse mask or adapter will preserve language."
+    ]
+  },
+  "selected_next_family": {
+    "id": "conservative_sparse_exposure_stop_rule",
+    "profile": "reuse Q2.8 unchanged",
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 75, 100],
+    "quantity_training_loss_relative_improvement_minimum": 0.8,
+    "replay_training_loss_relative_regression_maximum": 0.0075,
+    "selection": "first post-baseline measurement to pass both thresholds; replay guard evaluated first; stop immediately"
+  },
+  "fallback_if_q29_fails": [
+    "fixed distributed-sparse mask under a new protected contract",
+    "residual adapter or low-rank update after architecture and learned-parameter-budget review"
+  ],
+  "retired_or_forbidden": [
+    "Q2.8 seeds 1 and 3",
+    "Q2.8 coefficient retuning after language-gate observation",
+    "language-based Q2.9 checkpoint ranking",
+    "Q2.9 extension beyond update 100",
+    "Q2.9 seed expansion after a no-go"
+  ],
+  "authorization": {
+    "implementation_issue": 83,
+    "implementation": true,
+    "pilot_execution": false,
+    "language_gate": false,
+    "promotion": false
+  }
+}

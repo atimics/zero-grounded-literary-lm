@@ -1,0 +1,83 @@
+{
+  "schema": "zero.q28_u100_language_gate_candidate_binding.v1",
+  "id": "zero4-q28-seed2-u100",
+  "status": "historical_eligible_checkpoint_diagnostic_route_implementation_authorized",
+  "activation_commit": "606e1ab6c9b449bdfe647d283a35127e29f5e309",
+  "profile_sha256": "de858b2cddc21cacb25a831e63ab30eba2e4ea9e944b3010d8ba6759653a0e4e",
+  "quantity_result": {
+    "path": "benchmarks/zero4-q28-v1/update-100-language-gate/quantity-result.json",
+    "sha256": "8b6ac9908834b96c61fcc37a56a296392152ac0ed2a5a19e29aa7687d69824e6",
+    "decision": "candidate-frozen",
+    "original_selected_update": 200,
+    "diagnostic_update": 100,
+    "diagnostic_update_eligible": true,
+    "quantity_improvement": 0.9472719590821288,
+    "replay_regression": 0.009421804040580933
+  },
+  "checkpoint": {
+    "logical_id": "zero4-q28-seed2-u100.ckpt",
+    "sha256": "b19b39d76c01071dd68e9883bf1c86aa759e96cf82cd9b854b7d45d7090047dc",
+    "bytes": 58236384,
+    "tracked": false
+  },
+  "quantized": {
+    "path": "benchmarks/zero4-q28-v1/update-100-language-gate/candidate.litq8",
+    "sha256": "694788b023e9dbd1c1182ddafe5a7692bc02f9e592f59b47682f0b5ae6af79c2",
+    "bytes": 4920400,
+    "format": "LITQ8V1",
+    "update": 100
+  },
+  "conversion": {
+    "tool": "export_literary.c",
+    "tool_sha256": "c7b1ba5a2763211871df1720f01f49b765365253924b7d4c1113643403ce463c",
+    "command": "./export_literary FROZEN_CHECKPOINT candidate.litq8",
+    "deterministic_repeat_cmp": true
+  },
+  "diagnostic_constraints": {
+    "post_result_use": "mechanism_discrimination_only",
+    "q28_no_go_revisable": false,
+    "promotion_authorized": false,
+    "training_authorized": false,
+    "additional_seeds_authorized": false,
+    "pass_interpretation": "supports_accumulation_or_checkpoint_selection_hypothesis",
+    "fail_interpretation": "supports_graded_profile_language_safety_failure"
+  },
+  "gate": {
+    "contract": {
+      "id": "zero-language-gate-v1",
+      "path": "benchmarks/zero-language-gate-v1/contract.json",
+      "sha256": "1dcd3f0f577190ec2f879e2a7d713260b241f6335bc850de71f60efd6ef25a7a"
+    },
+    "runner": {
+      "path": "scripts/run_zero_language_gate.mjs",
+      "sha256": "233e9e29fc078712bec4602e40fdb8d044a93b330424af456af7699e220bdc3c"
+    },
+    "checker": {
+      "path": "scripts/check_zero_language_gate.mjs",
+      "sha256": "0d18b6a60c7c9ceadfa33aad0e4ebd980acb87a667542b0c50e92a8fec959b16"
+    },
+    "evaluator_sources": [
+      {
+        "path": "external_eval.c",
+        "sha256": "6fcbbbfc2b017c817d830057b284f323597e0aba55f4ab9908635b9d4da7f95b"
+      },
+      {
+        "path": "literary_infer.c",
+        "sha256": "7a0d0156587647881e8b18108b8a1265117ddee5827e42c5ece37d066f852f76"
+      },
+      {
+        "path": "literary_infer.h",
+        "sha256": "f947d132d2ca5b9bdfe9a44fdea00f339850efe91fb26c673f0f6a1a6b004453"
+      }
+    ],
+    "datasets": {
+      "blimp_cases_sha256": "06ffc0ee2832b193ff6ce895828bbe4a69befe2b1f30cfec19027b83692187a3",
+      "tinystories_cases_sha256": "75e522b8c1e942eb0198be98b494dcefdec92f18f5e2e47fc14fdcfb66eb8b54"
+    },
+    "thresholds": {
+      "blimp_minimum_raw_accuracy": 0.522,
+      "tinystories_maximum_bits_per_byte": 2.553139779957201,
+      "combination": "conjunctive"
+    }
+  }
+}

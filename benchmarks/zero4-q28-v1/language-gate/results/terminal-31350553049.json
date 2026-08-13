@@ -1,0 +1,7 @@
+{
+  "schema": "zero.aws_terminal_observation.v1",
+  "experiment": "zero4-q28-seed2-language-gate-v1",
+  "instance_id": "i-0b42d7abd847c19a1",
+  "state": "terminated",
+  "observed_at": "2026-08-10T02:54:42Z"
+}

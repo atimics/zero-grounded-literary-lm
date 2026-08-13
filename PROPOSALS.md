@@ -364,12 +364,10 @@ A proposal becomes RESOLVED when:
 
 - **Current model**: ZERO.4, promoted from the prospectively selected Q2.6 seed-2 update-500 artifact
 - **Completed evaluation study**: the bounded ZERO-EVAL-1 screen is published; its mixed result retires the ≤8h30m/≤$5.78 full run
-- **Active evaluation guard**: candidate-only BLiMP/TinyStories preservation, expected ≈305s and proposed at ≤600s/≤$0.12
-- **ZERO.4 against the prospective guard**: BLiMP passes, TinyStories fails (1.681% worse bits/byte versus a 1% allowance); this does not retroactively change the quantity promotion
-- **Next training proposal**: a separately frozen five-operation language-preserving repair; staged SAT-1 remains next after that anchor passes
-- **Authorization**: ZERO language-gate execution and all SAT-1 stages remain at zero authorized compute until each has a separate immutable budget and explicit approval
-- **Blocked proposals**: SAT-2 and faculty expansion remain downstream of SAT-1
+- **Completed candidate guard**: Q2.8's frozen update-200 candidate passed BLiMP at 0.539 against the ≥0.522 floor and failed TinyStories at 2.675123 bits/byte against the ≤2.553140 ceiling
+- **Q2.8 decision**: no-go. Do not open seeds 1 and 3, promote the candidate, or treat its training-only quantity improvement as a language-preserving anchor
+- **Next training proposal**: none authorized; analyze the matched Q2.6/Q2.7/Q2.8 evidence and preregister the cheapest disconfirming five-operation repair before any further update
+- **Authorization**: all follow-up training and all SAT-1 stages remain at zero authorized compute until each has a separate immutable budget and explicit approval
+- **Blocked proposals**: SAT-1 remains blocked without a three-seed language-preserving five-operation anchor; SAT-2 and faculty expansion remain downstream
 - **Deferred proposals**: 14 proposals (see table above)
-- **Next decision point**: preregister the cheapest five-operation
-  language-preserving repair, while building SAT-1 inventory/validator
-  mechanics only. Do not budget timing or launch training yet.
+- **Next decision point**: choose and preregister the next repair family from the remaining distributed-sparse and adapter candidates. Do not budget timing or launch training yet.

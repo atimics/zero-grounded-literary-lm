@@ -1,0 +1,6 @@
+{
+  "schema": "zero.q29_pilot_authorization_consumption.v1",
+  "authorization_sha256": "2f57117f3e110d02dc0578c53a054db163d8251088809af5d7046681c98dd0b6",
+  "source_commit": "c4f682c020e17d6231b6cab5542172f8ef6c1b76",
+  "output": "/tmp/zero-q29-c4f682c.6NTgt5/pilot-output"
+}

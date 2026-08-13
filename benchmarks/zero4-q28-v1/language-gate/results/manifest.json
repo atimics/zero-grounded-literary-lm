@@ -1,0 +1,31 @@
+{
+  "schema": "zero.zero4_q28_language_gate_result.v1",
+  "id": "zero4-q28-seed2-language-gate-v1",
+  "decision": "no-go",
+  "scientific_decision": "fail",
+  "source_run_id": "31350553049",
+  "collector_run_id": "31351060900",
+  "git_commit": "9893e014b2ec94a309ddae78e4cdf1308044692d",
+  "candidate": {
+    "id": "zero4-q28-seed2-u200",
+    "sha256": "ffc9a4aa74933547785deacb2ceb790a498833e2aff875a81299cc8955a1b0a1"
+  },
+  "budget_sha256": "e347a012223c48b5191f7ca6d4c8ac6f56a42ea4d6959fe209528ffc718b3c6b",
+  "result_sha256": "8161e1bda448c2172220991d3f58f02d5bb017ab31b6bd8fcebfbaa60ab1deb1",
+  "checks": {
+    "blimp_raw_accuracy": {
+      "value": 0.539,
+      "comparator": ">=",
+      "threshold": 0.522,
+      "pass": true
+    },
+    "tinystories_bits_per_byte": {
+      "value": 2.6751232026564002,
+      "comparator": "<=",
+      "threshold": 2.553139779957201,
+      "pass": false
+    }
+  },
+  "training_updates": 0,
+  "promotion_executed": false
+}
