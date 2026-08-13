@@ -1,0 +1,524 @@
+{
+  "schema": "zero.zero4_q33_semantic_routing_result.v1",
+  "source_commit": "2f43a4e6d40a6da4cd63db66fcccf77e89ff7809",
+  "contract_sha256": "a487d1ca4897f69e93340e742269728766e283d0d7b2378dd8cee30750b906eb",
+  "authorization_sha256": "b03c5ab97acc394137e807322190d0149442194a7539334ddb3e61f7635529b5",
+  "candidate": {
+    "path": "benchmarks/zero4-q32-v1/results/candidate.litqhead",
+    "sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "update": 100
+  },
+  "dataset": {
+    "path": "benchmarks/zero4-q33-semantic-v1/semantic-eval.tsv",
+    "sha256": "2c49fa5c5a431b204ed79d06f20f17126a3180735230fcd73eb7c0511bfd2888",
+    "records": 500
+  },
+  "training_updates": 0,
+  "totals": {
+    "cases": 500,
+    "closed": 500,
+    "syntax": 500,
+    "operation": 130,
+    "canonical_binding": 500,
+    "oracle_arithmetic": 500,
+    "committed": 130,
+    "exact_artifact": 130,
+    "rejected": 370,
+    "rejected_state_mutations": 0
+  },
+  "classes": {
+    "add": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 0,
+      "canonical_binding": 100,
+      "oracle_arithmetic": 100,
+      "committed": 0,
+      "exact_artifact": 0,
+      "rejected": 100,
+      "rejected_state_mutations": 0,
+      "accuracy": 0
+    },
+    "multiply": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 89,
+      "canonical_binding": 100,
+      "oracle_arithmetic": 100,
+      "committed": 89,
+      "exact_artifact": 89,
+      "rejected": 11,
+      "rejected_state_mutations": 0,
+      "accuracy": 0.89
+    },
+    "add-rational": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 24,
+      "canonical_binding": 100,
+      "oracle_arithmetic": 100,
+      "committed": 24,
+      "exact_artifact": 24,
+      "rejected": 76,
+      "rejected_state_mutations": 0,
+      "accuracy": 0.24
+    },
+    "convert": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 7,
+      "canonical_binding": 100,
+      "oracle_arithmetic": 100,
+      "committed": 7,
+      "exact_artifact": 7,
+      "rejected": 93,
+      "rejected_state_mutations": 0,
+      "accuracy": 0.07
+    },
+    "solve-linear": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 10,
+      "canonical_binding": 100,
+      "oracle_arithmetic": 100,
+      "committed": 10,
+      "exact_artifact": 10,
+      "rejected": 90,
+      "rejected_state_mutations": 0,
+      "accuracy": 0.1
+    }
+  },
+  "strata": {
+    "lexical": {
+      "cases": 250,
+      "closed": 250,
+      "syntax": 250,
+      "operation": 73,
+      "canonical_binding": 250,
+      "oracle_arithmetic": 250,
+      "committed": 73,
+      "exact_artifact": 73,
+      "rejected": 177,
+      "rejected_state_mutations": 0,
+      "accuracy": 0.292
+    },
+    "implicit": {
+      "cases": 250,
+      "closed": 250,
+      "syntax": 250,
+      "operation": 57,
+      "canonical_binding": 250,
+      "oracle_arithmetic": 250,
+      "committed": 57,
+      "exact_artifact": 57,
+      "rejected": 193,
+      "rejected_state_mutations": 0,
+      "accuracy": 0.228
+    }
+  },
+  "confusion_labels": [
+    "add",
+    "multiply",
+    "add-rational",
+    "convert",
+    "solve-linear"
+  ],
+  "confusion_matrix": {
+    "add": [
+      0,
+      58,
+      11,
+      31,
+      0
+    ],
+    "multiply": [
+      0,
+      89,
+      9,
+      2,
+      0
+    ],
+    "add-rational": [
+      0,
+      71,
+      24,
+      2,
+      3
+    ],
+    "convert": [
+      0,
+      93,
+      0,
+      7,
+      0
+    ],
+    "solve-linear": [
+      2,
+      51,
+      37,
+      0,
+      10
+    ]
+  },
+  "template_cells": {
+    "add/lexical": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      }
+    ],
+    "add/implicit": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      }
+    ],
+    "multiply/lexical": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 9,
+        "accuracy": 0.9
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      }
+    ],
+    "multiply/implicit": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      }
+    ],
+    "add-rational/lexical": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 2,
+        "accuracy": 0.2
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 1,
+        "accuracy": 0.1
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 1,
+        "accuracy": 0.1
+      }
+    ],
+    "add-rational/implicit": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      }
+    ],
+    "convert/lexical": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      }
+    ],
+    "convert/implicit": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 2,
+        "accuracy": 0.2
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 5,
+        "accuracy": 0.5
+      }
+    ],
+    "solve-linear/lexical": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 1,
+        "accuracy": 0.1
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 9,
+        "accuracy": 0.9
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      }
+    ],
+    "solve-linear/implicit": [
+      {
+        "template": 0,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 1,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 2,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 3,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "template": 4,
+        "cases": 10,
+        "correct": 0,
+        "accuracy": 0
+      }
+    ]
+  },
+  "chance_accuracy": 0.2,
+  "non_q_probability_identity": true,
+  "decision": {
+    "passed": false,
+    "gates": {
+      "overall": false,
+      "per_class": false,
+      "lexical": false,
+      "implicit": false,
+      "canonical_binding": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true,
+      "non_q_probability_identity": true
+    }
+  },
+  "scientific_decision": "no-go",
+  "retraining": {
+    "authorized": false,
+    "executed": false
+  },
+  "language_gate": {
+    "authorized": false,
+    "executed": false
+  },
+  "deployment": {
+    "authorized": false,
+    "executed": false
+  },
+  "additional_seeds": {
+    "authorized": false,
+    "executed": false
+  }
+}
