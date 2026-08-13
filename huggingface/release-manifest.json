@@ -1,0 +1,85 @@
+{
+  "schema": "zero.huggingface_release.v1",
+  "model_id": "zero4",
+  "release_status": "ready",
+  "repository_license_metadata": "cc-by-sa-4.0",
+  "files": [
+    {
+      "source": "huggingface/README.md",
+      "target": "README.md",
+      "license": "CC-BY-SA-4.0"
+    },
+    {
+      "source": "docs/model.litq8",
+      "target": "model.litq8",
+      "license": "CC-BY-SA-4.0",
+      "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+      "bytes": 4920400
+    },
+    {
+      "source": "docs/model.json",
+      "target": "model.json",
+      "license": "CC-BY-SA-4.0"
+    },
+    {
+      "source": "literary_infer.c",
+      "target": "literary_infer.c",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "literary_infer.h",
+      "target": "literary_infer.h",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "channel_protocol.h",
+      "target": "channel_protocol.h",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "LICENSE",
+      "target": "LICENSE-CODE",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "LICENSE-MODEL.md",
+      "target": "LICENSE-MODEL.md",
+      "license": "CC-BY-SA-4.0"
+    },
+    {
+      "source": "huggingface/LICENSES.md",
+      "target": "LICENSES.md",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "LICENSE-DATA.md",
+      "target": "LICENSE-DATA.md",
+      "license": "CC0-1.0"
+    },
+    {
+      "source": "NOTICE",
+      "target": "NOTICE",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "CORPUS_RIGHTS.md",
+      "target": "CORPUS_RIGHTS.md",
+      "license": "Apache-2.0"
+    },
+    {
+      "source": "release/zero4-memorization-v1.json",
+      "target": "zero4-memorization-v1.json",
+      "license": "Apache-2.0"
+    }
+  ],
+  "forbidden_source_prefixes": [
+    "corpus/",
+    "tests/fixtures/",
+    "benchmarks/zero-eval-1/data/"
+  ],
+  "notes": [
+    "This is an allowlist, not a suggestion to mirror the upstream repository.",
+    "Do not add training text, token streams, raw downloads, or evaluation datasets.",
+    "Publish only after release_status and corpus/RIGHTS.json both record a passed memorization gate."
+  ]
+}

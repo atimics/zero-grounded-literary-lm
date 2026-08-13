@@ -9,6 +9,7 @@ channel_corpus
 export_literary
 freeze_literary_teacher
 literary_infer
+memorization_eval
 zero_eval
 faculty_controller
 faculty_eval

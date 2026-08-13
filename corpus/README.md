@@ -15,9 +15,10 @@ The top-level `.txt` files are normalized UTF-8/LF training inputs for
 
 The Project Gutenberg license wrappers were removed from the training copies;
 the source works, titles, headings, poetry, dramatic text, punctuation, and
-lineation were retained. CRLF line endings were normalized to LF. The full
-original downloads remain in `raw/` and mechanical conversion products remain
-in `intermediate/`.
+lineation were retained. CRLF line endings were normalized to LF. Raw downloads
+and mechanical conversion products are deliberately gitignored. Their hashes
+remain in `SHA256SUMS`, allowing exact local reconstructions to be checked
+without redistributing those files in the model release.
 
 For the King James Bible, the preface, table of contents, Project Gutenberg
 wrapper, and mechanical chapter-and-verse identifiers were removed. Book
@@ -59,20 +60,30 @@ United States:
 - King James Bible, eBook 30:
   <https://www.gutenberg.org/ebooks/30>
 
-The additional Crowley transcriptions came from Wikisource:
+The additional Crowley transcriptions came from these permanent Wikisource
+revisions:
 
 - *Clouds without Water*:
-  <https://en.wikisource.org/wiki/Clouds_without_Water>
+  <https://en.wikisource.org/w/index.php?title=Clouds_without_Water&oldid=13649032>
 - *Liber AL vel Legis*:
-  <https://en.wikisource.org/wiki/Liber_AL_vel_Legis>
+  <https://en.wikisource.org/w/index.php?title=Liber_AL_vel_Legis&oldid=15225259>
 
 Wikisource marks the underlying works public domain and provides its digital
-transcriptions under CC BY-SA. The original export and its contributor list are
-preserved in `raw/crowley-wikisource-clouds.epub`; the rendered source for
-*Liber AL* is preserved in `raw/crowley-wikisource-liber-al.html`.
+transcription contributions under CC BY-SA. Contributor histories are linked
+from [CORPUS_RIGHTS.md](../CORPUS_RIGHTS.md). The raw export and rendered source
+are not published in the model repository; their hashes are preserved here.
+Wikisource reports that the source document for its *Liber AL* transcription
+is not known, so its provenance is weaker than the other listed editions.
+
+Project Gutenberg identifies its KJV edition as public domain in the USA, but
+the right to print and publish the Authorized Version remains subject to Crown
+letters patent in the United Kingdom. The KJV text is therefore a recorded
+training source but is excluded from the Hugging Face release and is not
+approved here for dataset redistribution.
 
 Check the copyright rules that apply in your location and intended use. Source
-and transcription status can differ.
+and transcription status can differ. The complete release assessment and
+machine-readable source records are in `../CORPUS_RIGHTS.md` and `RIGHTS.json`.
 
 ## Train
 
