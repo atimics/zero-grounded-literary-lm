@@ -85,6 +85,7 @@ MONKEY_TRACE_EXAMPLES ?= 60000
 MONKEY_TRACE_STEPS ?= 12000
 MONKEY_TRACE_BATCH ?= 2
 MONKEY_TRACE_RESULTS ?= benchmarks/infinite-monkey-trace10m-v2
+HF_OUT ?= /tmp/zero4-huggingface-release
 
 ifeq ($(UNAME_S),Darwin)
 ifneq ($(filter $(LITERARY_BACKEND),auto accelerate portable),$(LITERARY_BACKEND))
@@ -143,6 +144,7 @@ endif
 	zero-language-gate-check sat1-prereg-check \
 	experiment-budget-check experiment-evidence-check \
 	literature-review-pipeline-check literature-review-q27 \
+	corpus-rights-check zero4-memorization-check huggingface-release-stage \
 	quantity-request-eval-check \
 	brainfuck-data monkey-data \
 	monkey-bf monkey-logic monkey-shakespeare monkey-blake monkey-crowley \
@@ -159,7 +161,7 @@ endif
 	$(MONKEY_PREFIX)-literary.ckpt $(MONKEY_PREFIX)-balanced.ckpt \
 	$(MONKEY_TRACE_PREFIX)-brainfuck.ckpt
 
-all: zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval
+all: zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm
@@ -208,6 +210,10 @@ freeze_literary_teacher: freeze_literary_teacher.c
 literary_infer: literary_infer.c literary_infer.h channel_protocol.h
 	$(CC) $(CFLAGS) literary_infer.c -o $@ -lm
 
+memorization_eval: memorization_eval.c literary_infer.c literary_infer.h channel_protocol.h
+	$(CC) $(CFLAGS) -DLITERARY_INFER_NO_MAIN \
+		memorization_eval.c literary_infer.c -o $@ -lm
+
 zero_eval: zero_eval.c literary_infer.c literary_infer.h channel_protocol.h
 	$(CC) $(CFLAGS) -DLITERARY_INFER_NO_MAIN zero_eval.c literary_infer.c -o $@ -lm
 
@@ -243,6 +249,17 @@ quantity-request-eval-check: quantity_request_eval scripts/generate_zero4_q2.mjs
 	! ZERO_QUANTITY_JOBS=invalid ./quantity_request_eval docs/model.litq8 \
 		/tmp/zero-quantity-eval-check/quantity-request.sentinel.tsv \
 		--json /tmp/zero-quantity-invalid.json --limit 1 >/dev/null 2>&1
+
+corpus-rights-check:
+	node scripts/check_corpus_rights.mjs
+
+zero4-memorization-check: memorization_eval corpus/bpe/.zero3.stamp \
+		channel-data zero4-q22-data
+	node scripts/run_zero4_memorization.mjs
+	node scripts/check_corpus_rights.mjs
+
+huggingface-release-stage: corpus-rights-check
+	node scripts/stage_huggingface_release.mjs --out $(HF_OUT)
 
 corpus/literary.bpe corpus/bpe/shakespeare.tok corpus/bpe/blake.tok corpus/bpe/crowley.tok: bpe_tokenizer corpus/shakespeare.txt corpus/blake.txt corpus/crowley.txt
 	mkdir -p corpus/bpe
@@ -1742,7 +1759,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check corpus-rights-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
@@ -1805,5 +1822,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval
+	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
 	rm -f docs/literary.js docs/literary.wasm

@@ -1,0 +1,158 @@
+{
+  "schema": "zero.corpus_rights.v1",
+  "reviewed_at": "2026-08-12",
+  "scope": "promoted ZERO.4 quantized model and its immutable teacher lineage",
+  "model": {
+    "path": "docs/model.litq8",
+    "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50",
+    "license": "CC-BY-SA-4.0",
+    "license_rationale": "conservative ShareAlike compliance for a publicly shared model trained through CC BY-SA Wikisource transcription contributions"
+  },
+  "release_policy": {
+    "status": "ready_memorization_gate_passed",
+    "training_text_in_model_repository": false,
+    "approved_upload_manifest": "huggingface/release-manifest.json",
+    "memorization_result": "release/zero4-memorization-v1.json",
+    "memorization_summary": "80 protected third-party probes passed; longest exact greedy prefix was 16 of 64 tokens; eight of sixteen first-party CC0 foundation probes reproduced all 64 tokens and are disclosed as informational findings",
+    "jurisdiction_warning_required": true,
+    "content_warning_required": true
+  },
+  "lineage": {
+    "student_initialization": "zero3",
+    "immutable_teachers": {
+      "zero1": "3c74025734b0408fbf54aaa9e1481d72590cdc6d1853486a965a698e10790816",
+      "zero2": "347b94f21917e1d1ee4d5fb0512c9d29e2724ae401545cec7495aa4ae9515afc",
+      "zero3": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+    },
+    "binding_contract": "benchmarks/zero4-q26-v1/contract.json",
+    "quantity_generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation"
+  },
+  "sources": [
+    {
+      "id": "zero-foundation",
+      "category": "first-party",
+      "works": ["ZERO foundation statements"],
+      "normalized_source": "corpus/zero-foundation.txt",
+      "normalized_source_sha256": "d90f3cf5f9039b3626262e3c06bb5bd4b3948a6f26daf4532735650b2c5cdd2a",
+      "training_artifact_sha256": "87b039e5d4645ebf2a521454a13b1a912cbd1c53ff8fbcfb26baf9da1f5e638b",
+      "rights": "CC0-1.0",
+      "redistribute_in_dataset_repository": true
+    },
+    {
+      "id": "shakespeare",
+      "category": "public-domain-literature",
+      "works": ["The Complete Works of William Shakespeare"],
+      "normalized_source": "corpus/shakespeare.txt",
+      "normalized_source_sha256": "a6209a86eb3de42530f24feaf317e94d43ea18d71ccb64a8cf5e54a368db23f2",
+      "training_artifact_sha256": "ffa36c4890ca07d403e8d76fab47026e1b6d46b1fb2b9d2dc1c31c206ff9351d",
+      "sources": [
+        {
+          "url": "https://www.gutenberg.org/ebooks/100",
+          "raw_sha256": "3cf4b3d44ee14cff4e14e78e2ad3318eff76f3f7f2afc3cee6bb925879110a37"
+        }
+      ],
+      "rights": "Project Gutenberg identifies the edition as public domain in the USA; Gutenberg wrapper and trademark references were removed",
+      "redistribute_in_dataset_repository": "jurisdiction_review_required"
+    },
+    {
+      "id": "blake",
+      "category": "public-domain-literature",
+      "works": ["Poems of William Blake", "The Marriage of Heaven and Hell"],
+      "normalized_source": "corpus/blake.txt",
+      "normalized_source_sha256": "1998764098fe6cde39040ae2b793ad828798894cf956739d7be61e91239f4040",
+      "training_artifact_sha256": "329bf291a5842897b59151640a57d2a2270a451e31c99adbf7d3d6f684d2576c",
+      "sources": [
+        {
+          "url": "https://www.gutenberg.org/ebooks/574",
+          "raw_sha256": "7e40d6eee71365362973c0083a3117bc11d49c1feaf5566163109d54bd573a24"
+        },
+        {
+          "url": "https://www.gutenberg.org/ebooks/45315",
+          "raw_sha256": "fc9a76619fcb76c58273d7fc9e034108b0d7fffed3780ad5b8226954a12b289a"
+        }
+      ],
+      "rights": "Project Gutenberg identifies both editions as public domain in the USA; Gutenberg wrappers and trademark references were removed",
+      "redistribute_in_dataset_repository": "jurisdiction_review_required"
+    },
+    {
+      "id": "crowley",
+      "category": "mixed-public-domain-and-sharealike-transcription",
+      "works": ["Tannhauser", "Household Gods", "Clouds without Water", "Liber AL vel Legis"],
+      "normalized_source": "corpus/crowley.txt",
+      "normalized_source_sha256": "448c8ecabeee793aee640b3e50d01dc6fa26bd9b939d2fae2f0305fd30150dc4",
+      "training_artifact_sha256": "68decb62cbd4f1efaff34067eb5a533406d99a6bc0e60ca219846b39306177da",
+      "sources": [
+        {
+          "work": "Tannhauser",
+          "url": "https://www.gutenberg.org/ebooks/70261",
+          "rights": "public domain in the USA per Project Gutenberg",
+          "raw_sha256": "0b93014429d7dfbed9e9d74e7edab7f55df0eb1c72151cfa8175779f516ab1b8"
+        },
+        {
+          "work": "Household Gods",
+          "url": "https://www.gutenberg.org/ebooks/14040",
+          "rights": "public domain in the USA per Project Gutenberg",
+          "raw_sha256": "6c3d339f88c17040a5c20badd12785f608f3ad2643049e26e258b94ead348aad"
+        },
+        {
+          "work": "Clouds without Water",
+          "url": "https://en.wikisource.org/w/index.php?title=Clouds_without_Water&oldid=13649032",
+          "contributors": "https://en.wikisource.org/w/index.php?title=Clouds_without_Water&action=history",
+          "rights": "underlying US-public-domain work; Wikisource transcription contributions under CC-BY-SA-4.0",
+          "raw_sha256": "74ebd57b939589f9013a828d2bea8dfbd87dff098912df0fd10d41f111f0ddb1"
+        },
+        {
+          "work": "Liber AL vel Legis",
+          "url": "https://en.wikisource.org/w/index.php?title=Liber_AL_vel_Legis&oldid=15225259",
+          "contributors": "https://en.wikisource.org/w/index.php?title=Liber_AL_vel_Legis&action=history",
+          "rights": "underlying US-public-domain work; Wikisource transcription contributions under CC-BY-SA-4.0",
+          "provenance_warning": "Wikisource states that the source document of this transcription is not known",
+          "raw_sha256": "d655d8b6544115198091c5422617484bd11eccbbb5ac67b4c579173c5b2a4494"
+        }
+      ],
+      "transformations": ["wrapper removal", "ASCII normalization", "editorial-noise removal", "whitespace normalization"],
+      "redistribute_in_dataset_repository": "separate attribution-preserving review required"
+    },
+    {
+      "id": "bible-kjv",
+      "category": "jurisdiction-sensitive-text",
+      "works": ["King James Bible, 66-book edition"],
+      "normalized_source": "corpus/bible-kjv.txt",
+      "normalized_source_sha256": "ffa65bc44f1772165f50d572b04a6afdd66eabda2f7ee31ddacc67644f5b1d7f",
+      "training_artifact_sha256": "0c387e697fbe339712a62efb75d27c788365ce90911895dbf66e732deee44ed9",
+      "sources": [
+        {
+          "url": "https://www.gutenberg.org/ebooks/30",
+          "raw_sha256": "dfed950e8e6719a2536a9e70a171a4addb3093e024acc1cfc0c7d3bdc7ed9d76"
+        }
+      ],
+      "rights": "Project Gutenberg identifies its edition as public domain in the USA; UK publication is subject to Crown letters patent",
+      "uk_notice": "https://www.gov.uk/government/publications/copyright-notice-duration-of-copyright-term/copyright-notice-duration-of-copyright-term",
+      "redistribute_in_dataset_repository": false
+    },
+    {
+      "id": "literary-channel",
+      "category": "derived-literary-records",
+      "works": ["structured reply and memory records derived from Shakespeare, Blake, and Crowley sources"],
+      "training_artifact_sha256": "d401868f33f2ac318315b167dd2bc6850edb3a8b0aaf5b18c1b2fa8cba42c379",
+      "rights": "follows the source-specific status of the literary inputs",
+      "human_chat_in_bound_lineage": false,
+      "redistribute_in_dataset_repository": false
+    },
+    {
+      "id": "quantity-requests",
+      "category": "first-party-synthetic",
+      "works": ["typed operation requests and deterministic expected artifacts"],
+      "generator": "scripts/generate_zero4_q2.mjs --quantity 10000 --seed 5 --request-mode operation",
+      "training_artifact_sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2",
+      "rights": "CC0-1.0 to the extent copyright or related rights exist",
+      "redistribute_in_dataset_repository": true
+    }
+  ],
+  "excluded": [
+    "private messages",
+    "unconsented human chat exports",
+    "third-party evaluation datasets used only after training",
+    "Q2.7 and Q2.8 research outputs created after ZERO.4 promotion"
+  ]
+}
