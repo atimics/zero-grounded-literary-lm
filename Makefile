@@ -8,6 +8,7 @@ ZERO2_CHECKPOINT ?= literary-v8-consolidated.ckpt
 ZERO3_STEPS ?= 6000
 ZERO3_CONSOLIDATION_STEPS ?= 1200
 ZERO3_BALANCE_STEPS ?= 400
+ZERO_DATA_OUT ?= build/zero-literary-v1
 ZERO4_Q1_STEPS ?= 4000
 ZERO4_Q1_BATCH ?= 2
 ZERO4_Q1_SEED ?= 1
@@ -118,6 +119,7 @@ endif
 endif
 
 .PHONY: all check clean web channel-data zero3-data zero3-stage1 \
+	zero-data-build zero-data-pipeline-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
 	zero4-q1-train zero4-q1-eval zero4-q1 zero4-q2-data zero4-q2-check \
@@ -169,6 +171,12 @@ endif
 	$(MONKEY_TRACE_PREFIX)-brainfuck.ckpt
 
 all: zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer zero_eval faculty_eval quantity_request_eval external_eval
+
+zero-data-build: bpe_tokenizer
+	node scripts/build_zero_corpus.mjs --out "$(ZERO_DATA_OUT)"
+
+zero-data-pipeline-check: bpe_tokenizer
+	node scripts/check_zero_data_pipeline.mjs
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm

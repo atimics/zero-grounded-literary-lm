@@ -48,6 +48,7 @@ corpus/bible-kjv.txt
 __pycache__/
 *.py[cod]
 node_modules/
+build/
 
 # Misc
 literary-training.log

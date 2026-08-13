@@ -1,0 +1,359 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Immutable corpus catalog, training telemetry index, and read-only ZERO dashboard API.
+
+Parameters:
+  CorpusBucketName:
+    Type: String
+  TrainingBucketName:
+    Type: String
+  DatasetTableName:
+    Type: String
+    Default: zero-datasets
+  RunTableName:
+    Type: String
+    Default: zero-training-runs
+  TrainingRoleName:
+    Type: String
+    Default: zero-training-ec2
+  GitHubRoleName:
+    Type: String
+    Default: zero-training-github-actions
+
+Resources:
+  CorpusBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref CorpusBucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: Project
+          Value: zero
+        - Key: Purpose
+          Value: immutable-corpus
+
+  DatasetTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref DatasetTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: dataset_id
+          AttributeType: S
+        - AttributeName: version
+          AttributeType: S
+      KeySchema:
+        - AttributeName: dataset_id
+          KeyType: HASH
+        - AttributeName: version
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: zero
+
+  RunTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref RunTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: run_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: run_id
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: zero
+
+  DashboardApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ReadZeroCatalog
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt DatasetTable.Arn
+                  - !GetAtt RunTable.Arn
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub '${DashboardApiLogGroup.Arn}:*'
+
+  DashboardApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: /aws/lambda/zero-data-dashboard-api
+      RetentionInDays: 30
+
+  DashboardApiFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: DashboardApiLogGroup
+    Properties:
+      FunctionName: zero-data-dashboard-api
+      Runtime: python3.13
+      Handler: index.handler
+      Role: !GetAtt DashboardApiRole.Arn
+      MemorySize: 128
+      Timeout: 10
+      Environment:
+        Variables:
+          DATASET_TABLE: !Ref DatasetTable
+          RUN_TABLE: !Ref RunTable
+      Code:
+        ZipFile: |
+          import json
+          import os
+          from decimal import Decimal
+          import boto3
+
+          dynamodb = boto3.resource("dynamodb")
+          datasets = dynamodb.Table(os.environ["DATASET_TABLE"])
+          runs = dynamodb.Table(os.environ["RUN_TABLE"])
+
+          def clean(value):
+              if isinstance(value, Decimal):
+                  return int(value) if value % 1 == 0 else float(value)
+              if isinstance(value, dict):
+                  return {key: clean(item) for key, item in value.items()}
+              if isinstance(value, list):
+                  return [clean(item) for item in value]
+              return value
+
+          def response(status, body):
+              return {
+                  "statusCode": status,
+                  "headers": {
+                      "content-type": "application/json; charset=utf-8",
+                      "cache-control": "no-store",
+                      "access-control-allow-origin": "*"
+                  },
+                  "body": json.dumps(clean(body), separators=(",", ":"))
+              }
+
+          def scan_all(table):
+              items = []
+              result = table.scan()
+              items.extend(result.get("Items", []))
+              while result.get("LastEvaluatedKey"):
+                  result = table.scan(ExclusiveStartKey=result["LastEvaluatedKey"])
+                  items.extend(result.get("Items", []))
+              return items
+
+          def public_dataset(item):
+              fields = ["dataset_id", "version", "dataset_digest", "release_date",
+                        "status", "promoted_at", "documents", "train_tokens",
+                        "source_count", "quality_json", "approval_id"]
+              return {key: item[key] for key in fields if key in item}
+
+          def public_run(item):
+              fields = ["run_id", "latest_sequence", "latest_kind", "occurred_at",
+                        "status", "dataset_digest", "experiment", "seed", "update",
+                        "loss", "accuracy", "decision", "compute_usd"]
+              result = {key: item[key] for key in fields if key in item}
+              try:
+                  payload = json.loads(item.get("payload_json", "{}"))
+                  allowed = ["note", "per_class_accuracy"]
+                  result["payload_json"] = json.dumps(
+                      {key: payload[key] for key in allowed if key in payload},
+                      separators=(",", ":"))
+              except (TypeError, ValueError):
+                  result["payload_json"] = "{}"
+              return result
+
+          def handler(event, context):
+              method = event.get("requestContext", {}).get("http", {}).get("method", "GET")
+              path = event.get("rawPath", "/")
+              if method != "GET":
+                  return response(405, {"error": "method_not_allowed"})
+              if path == "/health":
+                  return response(200, {"ok": True, "service": "zero-data-dashboard-api"})
+              if path == "/datasets":
+                  items = scan_all(datasets)
+                  items.sort(key=lambda item: (item.get("release_date", ""), item.get("version", "")), reverse=True)
+                  return response(200, {"datasets": [public_dataset(item) for item in items]})
+              if path == "/runs":
+                  items = scan_all(runs)
+                  items.sort(key=lambda item: (item.get("occurred_at", ""), item.get("run_id", "")), reverse=True)
+                  return response(200, {"runs": [public_run(item) for item in items]})
+              if path.startswith("/runs/"):
+                  run_id = path[len("/runs/"):]
+                  item = runs.get_item(Key={"run_id": run_id}).get("Item")
+                  return response(200, public_run(item)) if item else response(404, {"error": "run_not_found"})
+              return response(404, {"error": "not_found"})
+
+  DashboardHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: zero-data-dashboard
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowHeaders: ['content-type']
+        AllowMethods: [GET]
+        AllowOrigins: ['*']
+        MaxAge: 86400
+
+  DashboardApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref DashboardHttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt DashboardApiFunction.Arn
+      PayloadFormatVersion: '2.0'
+
+  HealthRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref DashboardHttpApi
+      RouteKey: GET /health
+      Target: !Sub integrations/${DashboardApiIntegration}
+
+  DatasetsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref DashboardHttpApi
+      RouteKey: GET /datasets
+      Target: !Sub integrations/${DashboardApiIntegration}
+
+  RunsRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref DashboardHttpApi
+      RouteKey: GET /runs
+      Target: !Sub integrations/${DashboardApiIntegration}
+
+  RunRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref DashboardHttpApi
+      RouteKey: GET /runs/{runId}
+      Target: !Sub integrations/${DashboardApiIntegration}
+
+  DashboardStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref DashboardHttpApi
+      StageName: '$default'
+      AutoDeploy: true
+
+  DashboardApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DashboardApiFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${DashboardHttpApi}/*
+
+  TrainingCorpusPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: zero-immutable-corpus-read
+      Roles:
+        - !Ref TrainingRoleName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectVersion
+            Resource: !Sub '${CorpusBucket.Arn}/datasets/*'
+          - Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+              - s3:ListBucket
+            Resource: !GetAtt CorpusBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: ['datasets/*']
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            Resource: !GetAtt DatasetTable.Arn
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+            Resource: !GetAtt RunTable.Arn
+
+  GitHubDataPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: zero-data-pipeline-publish
+      Roles:
+        - !Ref GitHubRoleName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub '${CorpusBucket.Arn}/datasets/*'
+          - Effect: Allow
+            Action:
+              - s3:GetBucketLocation
+              - s3:ListBucket
+            Resource: !GetAtt CorpusBucket.Arn
+            Condition:
+              StringLike:
+                s3:prefix: ['datasets/*']
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+            Resource:
+              - !GetAtt DatasetTable.Arn
+              - !GetAtt RunTable.Arn
+
+Outputs:
+  CorpusBucket:
+    Value: !Ref CorpusBucket
+  DatasetTable:
+    Value: !Ref DatasetTable
+  RunTable:
+    Value: !Ref RunTable
+  DashboardApiUrl:
+    Value: !GetAtt DashboardHttpApi.ApiEndpoint
+  TrainingBucket:
+    Value: !Ref TrainingBucketName

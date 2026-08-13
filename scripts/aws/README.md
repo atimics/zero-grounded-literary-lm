@@ -1,5 +1,10 @@
 # AWS experiment runner
 
+The corpus catalog and training dashboard are documented in
+[`docs/DATA-PIPELINE.md`](../../docs/DATA-PIPELINE.md). New training launchers
+must materialize an immutable dataset digest instead of syncing the historical
+mutable `corpus/` prefix.
+
 The bounded `zero4-q26r-aws-v1` workflow is authorized for one combined launch
 of seeds 1 and 3. Each seed receives an independent `c6i.4xlarge` instance
 with a 13,620-second/$2.58 hard cap; the combined ceiling is 27,240 seconds and
