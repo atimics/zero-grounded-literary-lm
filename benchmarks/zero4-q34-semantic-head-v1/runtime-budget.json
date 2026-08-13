@@ -1,0 +1,36 @@
+{
+  "schema": "zero.q34_semantic_head_budget.v1",
+  "id": "zero4-q34-seed2-semantic-head-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "1456dfb09c7d2e5bfc4293ac903c0515cc1494c7",
+    "diagnostic_seed": 2,
+    "base_trainable_parameters": 0,
+    "head_parameters": 7685,
+    "feature_records": 9500,
+    "maximum_optimizer_updates": 100,
+    "maximum_semantic_evaluation_records": 1000,
+    "maximum_canonical_evaluation_records": 1500,
+    "maximum_compute_usd": 0.15
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q34-user-do-it-20260812",
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-13T01:04:46Z",
+    "source_commit": "1456dfb09c7d2e5bfc4293ac903c0515cc1494c7",
+    "contract_sha256": "74fee27396800a6bba3e62c3d15c11d4cbe1e2e46c7315e8818faf9353d3a94e",
+    "maximum_optimizer_updates": 100,
+    "maximum_semantic_evaluation_records": 1000,
+    "maximum_canonical_evaluation_records": 1500,
+    "maximum_compute_usd": 0.15,
+    "training_authorized": true,
+    "private_gate_authorized": true,
+    "confirmation_gate_authorized": true,
+    "canonical_regression_authorized": true,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}

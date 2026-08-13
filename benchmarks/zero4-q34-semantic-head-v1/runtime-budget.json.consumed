@@ -1,0 +1,6 @@
+{
+  "schema": "zero.q34_authorization_consumption.v1",
+  "authorization_sha256": "8e3f6d0585a810a2eb9d9485dbd419fa9309dbcab2130dee4d6ce8bd6e709b13",
+  "source_commit": "1456dfb09c7d2e5bfc4293ac903c0515cc1494c7",
+  "output": "benchmarks/zero4-q34-semantic-head-v1/results"
+}

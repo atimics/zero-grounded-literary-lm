@@ -1,0 +1,111 @@
+{
+  "schema": "zero.zero4_q34_semantic_head_result.v1",
+  "source_commit": "1456dfb09c7d2e5bfc4293ac903c0515cc1494c7",
+  "contract_sha256": "74fee27396800a6bba3e62c3d15c11d4cbe1e2e46c7315e8818faf9353d3a94e",
+  "authorization_sha256": "8e3f6d0585a810a2eb9d9485dbd419fa9309dbcab2130dee4d6ce8bd6e709b13",
+  "measurements": [
+    {
+      "update": 0,
+      "holdout_cross_entropy": 1.6094378975329513,
+      "holdout_accuracy": 0.20000000000000015,
+      "per_class_accuracy": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    },
+    {
+      "update": 25,
+      "holdout_cross_entropy": 1.5406640948650545,
+      "holdout_accuracy": 0.2980000000000002,
+      "per_class_accuracy": [
+        0.31,
+        0.15,
+        0,
+        0.93,
+        0.1
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    },
+    {
+      "update": 50,
+      "holdout_cross_entropy": 1.4823752922613276,
+      "holdout_accuracy": 0.2940000000000002,
+      "per_class_accuracy": [
+        0.71,
+        0.35,
+        0.32,
+        0.09,
+        0
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    },
+    {
+      "update": 100,
+      "holdout_cross_entropy": 1.328922460588492,
+      "holdout_accuracy": 0.4160000000000003,
+      "per_class_accuracy": [
+        0.01,
+        0.08,
+        0.49,
+        0.92,
+        0.58
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_runtime_digest": "139a723e7d832129"
+    }
+  ],
+  "selected_feature_checkpoint": null,
+  "private_semantic": null,
+  "private_canonical": null,
+  "confirmation_semantic": null,
+  "public_canonical": null,
+  "promotion_canonical": null,
+  "combined_public_promotion_canonical": null,
+  "candidate": null,
+  "scientific_decision": "no-go",
+  "base_trainable_parameters": 0,
+  "head_trainable_parameters": 7685,
+  "language_gate": {
+    "authorized": false,
+    "executed": false
+  },
+  "deployment": {
+    "authorized": false,
+    "executed": false
+  },
+  "additional_seeds": {
+    "authorized": false,
+    "executed": false
+  }
+}
