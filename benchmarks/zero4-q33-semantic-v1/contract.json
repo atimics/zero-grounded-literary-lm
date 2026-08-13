@@ -1,0 +1,90 @@
+{
+  "schema": "zero.zero4_q33_semantic_routing_contract.v1",
+  "id": "zero4-q33-seed2-semantic-routing-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "evaluation_allowed": false,
+  "question": "Can the frozen Q3.2 head select the correct operation from paraphrased or implicit intent when the literal operation label is absent?",
+  "eligibility": {
+    "promotion_result": {
+      "path": "benchmarks/zero4-q32-promotion-v1/results/result.json",
+      "sha256": "23086929f38eb84d28e8defc2995afd54a4134eff09aa1cc90a77058b2ad18fc",
+      "required_decision": "go",
+      "observed_exact_requests": 500,
+      "observed_records": 500
+    }
+  },
+  "candidate": {
+    "path": "benchmarks/zero4-q32-v1/results/candidate.litqhead",
+    "sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "bytes": 4951212,
+    "selected_update": 100
+  },
+  "dataset": {
+    "path": "benchmarks/zero4-q33-semantic-v1/semantic-eval.tsv",
+    "sha256": "2c49fa5c5a431b204ed79d06f20f17126a3180735230fcd73eb7c0511bfd2888",
+    "source": {
+      "path": "corpus/faculty/q22/quantity-request.promotion.tsv",
+      "sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+      "role": "already-open canonical values and oracle targets; model-visible commands are replaced"
+    },
+    "generator": {
+      "path": "scripts/generate_q32_semantic_eval.mjs",
+      "sha256": "bc5d161ad4c786b651db75ecc7eaaa8cabf512a26d7a700f042dd56e96e82aff"
+    },
+    "records": 500,
+    "unique_model_inputs": 500,
+    "records_per_class": 100,
+    "strata": { "lexical": 250, "implicit": 250 },
+    "records_per_class_stratum": 50,
+    "templates_per_class_stratum": 5,
+    "records_per_template_cell": 10,
+    "model_visible_forbidden_literal_words": ["add", "multiply", "convert", "solve", "quantity"]
+  },
+  "isolation": {
+    "model_receives": "previous neutral summary plus model_input paraphrase only",
+    "model_never_receives": "canonical_input, model_request, bound_request, class, stratum, or template id",
+    "canonical_input_role": "after prediction only: verify deterministic argument binding, oracle arithmetic, and safe controller commit",
+    "claim_excludes": "natural-language argument extraction; the canonical binder remains required after semantic routing"
+  },
+  "mechanics": {
+    "semantic_evaluator": {
+      "path": "semantic_operation_eval.c",
+      "sha256": "2cf8d3f821fd4ca66e33ccdb5a1479a26ed7687ebef7edbb334f1f246f4a33a7"
+    },
+    "runtime_sources": {
+      "operation_head_infer.c": "98b82eb442b68391a257c96a49f7ccef9dd66b24aee59b2631634e60d81d5d7a",
+      "literary_infer.c": "7a0d0156587647881e8b18108b8a1265117ddee5827e42c5ece37d066f852f76",
+      "faculty_controller.c": "42681a75a11660aba6d9b274398abbc1ddc51f35f324302e01b994ea1e0627d9",
+      "quantity_oracle.c": "7f55a9ff1a5f31d6cb8ec894c590c6239e7063fa578fe1badba123ff74f95467",
+      "base_probability_infer.c": "00a343a8a1c96fe4bba4c809ff1ee506169486752e5593fbe711b3fe31de10cb"
+    },
+    "training_updates": 0,
+    "semantic_rows_evaluated_exactly_once": true,
+    "chance_accuracy": 0.2,
+    "confusion_matrix_retained": true,
+    "template_cell_results_retained": true
+  },
+  "strong_generalization_gate": {
+    "overall_operation_accuracy_minimum": 0.8,
+    "per_class_operation_accuracy_minimum": 0.6,
+    "lexical_accuracy_minimum": 0.75,
+    "implicit_accuracy_minimum": 0.65,
+    "canonical_binding_accuracy": 1,
+    "oracle_arithmetic_accuracy": 1,
+    "committed_must_equal_correct_operation_count": true,
+    "exact_artifact_must_equal_correct_operation_count": true,
+    "rejected_state_mutations_maximum": 0,
+    "non_q_probability_identity_exact": true
+  },
+  "budget": {
+    "one_execution_only": true,
+    "maximum_semantic_records": 500,
+    "maximum_compute_usd": 0.1
+  },
+  "downstream": {
+    "retraining_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}
