@@ -1,0 +1,9 @@
+{
+  "schema": "zero.q32_promotion_authorization_consumption.v1",
+  "authorization_sha256": "7f96e4c3346ff98b58f8cfff99be1061d14beca40bc9b9597ef924b3e3cbe4ea",
+  "source_commit": "d609b770b6a65a8ca7f04e56be8687020bc224c4",
+  "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+  "public_result_sha256": "2c87a3227ecd559b1840d7cfb0e415dc581d41521dc7d4af6e690e97407f7a00",
+  "promotion_records": 500,
+  "output": "benchmarks/zero4-q32-promotion-v1/results"
+}

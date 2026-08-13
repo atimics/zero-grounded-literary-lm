@@ -1,0 +1,147 @@
+{
+  "schema": "zero.zero4_q32_quantity_promotion_result.v1",
+  "source_commit": "d609b770b6a65a8ca7f04e56be8687020bc224c4",
+  "contract_sha256": "9bb209418f30440be24129e18c5cecae4b41da6bda614b297717c6d75c0cca5f",
+  "authorization_sha256": "7f96e4c3346ff98b58f8cfff99be1061d14beca40bc9b9597ef924b3e3cbe4ea",
+  "eligibility": {
+    "public_result": "benchmarks/zero4-q32-public-v1/results/result.json",
+    "public_result_sha256": "2c87a3227ecd559b1840d7cfb0e415dc581d41521dc7d4af6e690e97407f7a00",
+    "public_decision": "go"
+  },
+  "candidate": {
+    "path": "benchmarks/zero4-q32-v1/results/candidate.litqhead",
+    "sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "update": 100
+  },
+  "promotion_split": {
+    "path": "corpus/faculty/q22/quantity-request.promotion.tsv",
+    "sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+    "records": 500,
+    "records_per_class": 100
+  },
+  "training_updates": 0,
+  "classes": {
+    "add": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 100,
+      "arguments": 100,
+      "exact_request": 100,
+      "oracle_arithmetic": 100,
+      "committed": 100,
+      "exact_artifact": 100,
+      "rejected": 0,
+      "rejected_state_mutations": 0,
+      "target_bits": 0.00347714
+    },
+    "multiply": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 100,
+      "arguments": 100,
+      "exact_request": 100,
+      "oracle_arithmetic": 100,
+      "committed": 100,
+      "exact_artifact": 100,
+      "rejected": 0,
+      "rejected_state_mutations": 0,
+      "target_bits": 0.00125717
+    },
+    "add-rational": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 100,
+      "arguments": 100,
+      "exact_request": 100,
+      "oracle_arithmetic": 100,
+      "committed": 100,
+      "exact_artifact": 100,
+      "rejected": 0,
+      "rejected_state_mutations": 0,
+      "target_bits": 0.00106053
+    },
+    "convert": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 100,
+      "arguments": 100,
+      "exact_request": 100,
+      "oracle_arithmetic": 100,
+      "committed": 100,
+      "exact_artifact": 100,
+      "rejected": 0,
+      "rejected_state_mutations": 0,
+      "target_bits": 0.00065585
+    },
+    "solve-linear": {
+      "cases": 100,
+      "closed": 100,
+      "syntax": 100,
+      "operation": 100,
+      "arguments": 100,
+      "exact_request": 100,
+      "oracle_arithmetic": 100,
+      "committed": 100,
+      "exact_artifact": 100,
+      "rejected": 0,
+      "rejected_state_mutations": 0,
+      "target_bits": 0.0018879
+    }
+  },
+  "totals": {
+    "cases": 500,
+    "closed": 500,
+    "syntax": 500,
+    "operation": 500,
+    "arguments": 500,
+    "exact_request": 500,
+    "oracle_arithmetic": 500,
+    "committed": 500,
+    "exact_artifact": 500,
+    "rejected": 0,
+    "rejected_state_mutations": 0
+  },
+  "non_q_probability_identity": true,
+  "decision": {
+    "passed": true,
+    "rates": {
+      "closed": 1,
+      "syntax": 1,
+      "operation": 1,
+      "arguments": 1,
+      "exact_request": 1,
+      "oracle_arithmetic": 1,
+      "committed": 1,
+      "exact_artifact": 1
+    },
+    "gates": {
+      "closed": true,
+      "syntax": true,
+      "operation": true,
+      "arguments": true,
+      "exact_request": true,
+      "oracle_arithmetic": true,
+      "committed": true,
+      "exact_artifact": true,
+      "rejected_state_mutations": true,
+      "non_q_probability_identity": true
+    }
+  },
+  "scientific_decision": "go",
+  "language_gate": {
+    "authorized": false,
+    "executed": false
+  },
+  "deployment": {
+    "authorized": false,
+    "executed": false
+  },
+  "additional_seeds": {
+    "authorized": false,
+    "executed": false
+  }
+}
