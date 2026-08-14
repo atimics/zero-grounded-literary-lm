@@ -1,0 +1,9 @@
+{
+  "schema": "zero.q33_semantic_authorization_consumption.v1",
+  "authorization_sha256": "b03c5ab97acc394137e807322190d0149442194a7539334ddb3e61f7635529b5",
+  "source_commit": "2f43a4e6d40a6da4cd63db66fcccf77e89ff7809",
+  "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+  "dataset_sha256": "2c49fa5c5a431b204ed79d06f20f17126a3180735230fcd73eb7c0511bfd2888",
+  "semantic_records": 500,
+  "output": "benchmarks/zero4-q33-semantic-v1/results"
+}

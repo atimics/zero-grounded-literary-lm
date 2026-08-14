@@ -1,0 +1,33 @@
+{
+  "schema": "zero.q33_semantic_routing_budget.v1",
+  "id": "zero4-q33-seed2-semantic-routing-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "2f43a4e6d40a6da4cd63db66fcccf77e89ff7809",
+    "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "promotion_result_sha256": "23086929f38eb84d28e8defc2995afd54a4134eff09aa1cc90a77058b2ad18fc",
+    "semantic_dataset_sha256": "2c49fa5c5a431b204ed79d06f20f17126a3180735230fcd73eb7c0511bfd2888",
+    "semantic_records": 500,
+    "training_updates": 0,
+    "maximum_compute_usd": 0.1
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q33-semantic-user-do-it",
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-13T00:40:57Z",
+    "source_commit": "2f43a4e6d40a6da4cd63db66fcccf77e89ff7809",
+    "contract_sha256": "a487d1ca4897f69e93340e742269728766e283d0d7b2378dd8cee30750b906eb",
+    "candidate_sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "promotion_result_sha256": "23086929f38eb84d28e8defc2995afd54a4134eff09aa1cc90a77058b2ad18fc",
+    "semantic_dataset_sha256": "2c49fa5c5a431b204ed79d06f20f17126a3180735230fcd73eb7c0511bfd2888",
+    "maximum_semantic_records": 500,
+    "maximum_compute_usd": 0.1,
+    "training_updates": 0,
+    "retraining_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}

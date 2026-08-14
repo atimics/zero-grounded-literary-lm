@@ -1,0 +1,48 @@
+{
+  "schema": "zero.q31_routed_operation_head_pilot_budget.v1",
+  "id": "zero4-q31-seed2-pilot-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "75b70f25e7ed04c43b03f62befbe96f56bac25e8",
+    "diagnostic_seed": 2,
+    "head_parameters": 7685,
+    "training_pool_records": 9000,
+    "holdout_records": 500,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [
+      0,
+      25,
+      50,
+      100
+    ],
+    "overall_accuracy_minimum": 0.99,
+    "per_class_accuracy_minimum": 0.98,
+    "maximum_compute_usd": 0.1,
+    "public_quantity_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  },
+  "implementation_authorization": {
+    "kind": "interactive_user_directive",
+    "authorized": true,
+    "workflow_dispatch": false,
+    "parameter_training": false,
+    "public_quantity_execution": false,
+    "language_gate_execution": false,
+    "promotion": false
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q31-interactive-seed2-20260810",
+    "approved_by": "interactive-user",
+    "approved_at": "2026-08-10T06:53:13Z",
+    "source_commit": "75b70f25e7ed04c43b03f62befbe96f56bac25e8",
+    "contract_sha256": "52138eb476ad34e64a77dc556611213d7fcb0880e5c229f24d294ccbdc39cad4",
+    "maximum_optimizer_updates": 100,
+    "maximum_compute_usd": 0.1,
+    "public_quantity_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  }
+}

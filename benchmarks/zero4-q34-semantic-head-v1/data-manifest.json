@@ -1,0 +1,24 @@
+{
+  "schema": "zero.zero4_q34_semantic_data.v1",
+  "source": "corpus/faculty/q22/quantity-request.jsonl",
+  "source_sha256": "49a94fceabab5ad37791743f9ae5dbe8faccd38a77860cfd970246263b850d3a",
+  "records": {
+    "training": 9000,
+    "canonical_training": 4500,
+    "semantic_training": 4500,
+    "semantic_private": 500,
+    "semantic_confirmation": 500
+  },
+  "length_buckets": [
+    160,
+    176,
+    192,
+    208,
+    224
+  ],
+  "files": {
+    "mixed-training.tok": "efa8f4e7feb4830cdf68128eea33ff7515f7b6e1a269380506a7e6ee95b49783",
+    "semantic-private.tsv": "d390c5b66f0c0ea4e39f11c3404c9cd587fdd22c03f56ea6bc1c3f447c96ed9e",
+    "semantic-confirmation.tsv": "c8e5f3623763b94391b06d63ace697dd3bffc512d196fe9581dcfd9ecfaafbac"
+  }
+}

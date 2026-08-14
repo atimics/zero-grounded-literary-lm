@@ -1,0 +1,12 @@
+{
+  "schema": "zero.semantic_operation_eval.v1",
+  "cases": 50, "closed": 50, "syntax": 50,
+  "operation": 10, "canonical_binding": 50,
+  "oracle_arithmetic": 50, "committed": 10,
+  "exact_artifact": 10, "rejected": 40,
+  "rejected_state_mutations": 0,
+  "predicted_counts": [2,1,37,0,10],
+  "template_cases": [10,10,10,10,10],
+  "template_correct": [0,1,0,9,0],
+  "target_bits": 0.08152914
+}

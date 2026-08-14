@@ -1,0 +1,115 @@
+{
+  "schema": "zero.zero4_q34_semantic_head_contract.v1",
+  "id": "zero4-q34-seed2-semantic-head-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "training_allowed": false,
+  "question": "Can the same frozen-base 7,685-parameter runtime head learn operation routing from canonical requests plus paraphrases and confirm on unseen semantic templates without losing canonical routing?",
+  "lineage": {
+    "q33_result": {
+      "path": "benchmarks/zero4-q33-semantic-v1/results/result.json",
+      "sha256": "1e6d1a5033aa704c52ea3c02bd000875b8f30ebc3ef599ca690655cd4d6df150",
+      "required_decision": "no-go",
+      "observed_semantic_accuracy": 0.26
+    },
+    "runtime_base": {
+      "path": "docs/model.litq8",
+      "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+    }
+  },
+  "architecture": {
+    "base_parameters": 4852992,
+    "base_trainable_parameters": 0,
+    "feature_dimension": 1536,
+    "head": "zero-initialized linear 1536-to-5 classifier with bias",
+    "head_parameters": 7685,
+    "head_fraction_of_base": 0.0015835591733924144,
+    "feature_source": "deployment-exact quantized token-by-token hidden states from all six frozen layers",
+    "renderer": "posterior-preserving finite-state operation renderer",
+    "non_q_execution": "delegate every token to unchanged ZERO.3 runtime",
+    "runtime_overrides_allowed": false
+  },
+  "data": {
+    "manifest": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/data-manifest.json",
+      "sha256": "f76b2e033c210a186bf95fa57efc8cc5b6aabe32da440958d655e32b46dfd473"
+    },
+    "generator": {
+      "path": "scripts/generate_q34_semantic_data.mjs",
+      "sha256": "87857d089c51a9cad16f8bd8b4f6a7a9fae8af35a8d5a2e62cd8554f6cb641e9"
+    },
+    "training_tokens": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/mixed-training.tok",
+      "sha256": "efa8f4e7feb4830cdf68128eea33ff7515f7b6e1a269380506a7e6ee95b49783",
+      "total_channel_records": 10000,
+      "records": 9000,
+      "canonical_records": 4500,
+      "semantic_records": 4500
+    },
+    "semantic_private": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/semantic-private.tsv",
+      "sha256": "d390c5b66f0c0ea4e39f11c3404c9cd587fdd22c03f56ea6bc1c3f447c96ed9e",
+      "records": 500
+    },
+    "semantic_confirmation": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/semantic-confirmation.tsv",
+      "sha256": "c8e5f3623763b94391b06d63ace697dd3bffc512d196fe9581dcfd9ecfaafbac",
+      "records": 500,
+      "relationship": "never extracted during training or private selection; distinct templates"
+    },
+    "canonical_private": {
+      "path": "benchmarks/zero4-q31-v1/results/private-holdout.tsv",
+      "sha256": "771bad5de2c5703827f69ba25da02a1c6e31dc4526e52acf8236e10a346c8265",
+      "records": 500
+    },
+    "canonical_public": {
+      "path": "corpus/faculty/q22/quantity-request.public.tsv",
+      "sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+      "records": 500
+    },
+    "canonical_promotion": {
+      "path": "corpus/faculty/q22/quantity-request.promotion.tsv",
+      "sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519",
+      "records": 500
+    }
+  },
+  "pilot": {
+    "diagnostic_seed": 2,
+    "feature_records": 9500,
+    "training_records": 9000,
+    "private_records": 500,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 100],
+    "selection": "first measured semantic-private feature checkpoint meeting the strong semantic gate",
+    "resume_allowed": false,
+    "maximum_compute_usd": 0.15
+  },
+  "gates": {
+    "semantic_overall_minimum": 0.8,
+    "semantic_per_class_minimum": 0.6,
+    "semantic_lexical_minimum": 0.75,
+    "semantic_implicit_minimum": 0.65,
+    "canonical_overall_minimum": 0.99,
+    "canonical_per_class_minimum": 0.98,
+    "canonical_closure_syntax_arguments_oracle_exact": true,
+    "rejected_state_mutations_maximum": 0,
+    "non_q_probability_identity_exact": true,
+    "candidate_freezes_only_after_private_and_confirmation_gates": true
+  },
+  "mechanics": {
+    "semantic_runtime_head_pilot.c": "6a912a33a64fca33982085c39796898ce3546d6b12559d287a1f66f27c90060a",
+    "runtime_operation_head_pilot.c": "fafced993a963df4467213f8c2fef83949fd63a2358f7d9f630c1dc7aabafa7a",
+    "semantic_operation_eval.c": "2cf8d3f821fd4ca66e33ccdb5a1479a26ed7687ebef7edbb334f1f246f4a33a7",
+    "operation_head_infer.c": "98b82eb442b68391a257c96a49f7ccef9dd66b24aee59b2631634e60d81d5d7a",
+    "faculty_controller.c": "42681a75a11660aba6d9b274398abbc1ddc51f35f324302e01b994ea1e0627d9",
+    "quantity_oracle.c": "7f55a9ff1a5f31d6cb8ec894c590c6239e7063fa578fe1badba123ff74f95467",
+    "base_probability_infer.c": "00a343a8a1c96fe4bba4c809ff1ee506169486752e5593fbe711b3fe31de10cb",
+    "package_runtime_operation_head.c": "8e593326f642e23211ff462259591a0cf500996b06d6ddd5a51747e03a20b88c"
+  },
+  "downstream": {
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}

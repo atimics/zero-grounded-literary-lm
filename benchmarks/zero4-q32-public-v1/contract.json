@@ -1,0 +1,60 @@
+{
+  "schema": "zero.zero4_q32_public_quantity_contract.v1",
+  "id": "zero4-q32-seed2-public-quantity-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "evaluation_allowed": false,
+  "question": "Does the frozen Q3.2 runtime-qualified package pass the disjoint 500-record public quantity gate?",
+  "candidate": {
+    "path": "benchmarks/zero4-q32-v1/results/candidate.litqhead",
+    "sha256": "cd3a1d5ea3833dda88c352b5bdb1add0eb9dca7d36d9133461f251b6ca27852c",
+    "bytes": 4951212,
+    "selected_update": 100,
+    "training_result": {
+      "path": "benchmarks/zero4-q32-v1/results/result.json",
+      "sha256": "382c2e9cb420de5e7234df70c55f3dbdf000930f33b6b66b5f337a2cebd6a910"
+    }
+  },
+  "public_split": {
+    "path": "corpus/faculty/q22/quantity-request.public.tsv",
+    "sha256": "3e5c929124436a7eeb2fb71d1043a36dcd257c4c0e2b3a864026e28f667f8925",
+    "records": 500,
+    "records_per_class": 100,
+    "classes": ["add", "multiply", "add-rational", "convert", "solve-linear"],
+    "relationship_to_private_selection": "disjoint validation split; private selection used train records 9000 through 9499"
+  },
+  "mechanics": {
+    "evaluator_sources": {
+      "quantity_request_eval.c": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902",
+      "operation_head_infer.c": "98b82eb442b68391a257c96a49f7ccef9dd66b24aee59b2631634e60d81d5d7a",
+      "faculty_controller.c": "42681a75a11660aba6d9b274398abbc1ddc51f35f324302e01b994ea1e0627d9",
+      "quantity_oracle.c": "7f55a9ff1a5f31d6cb8ec894c590c6239e7063fa578fe1badba123ff74f95467",
+      "base_probability_infer.c": "00a343a8a1c96fe4bba4c809ff1ee506169486752e5593fbe711b3fe31de10cb"
+    },
+    "training_updates": 0,
+    "public_rows_evaluated_exactly_once": true,
+    "non_q_probability_identity_rechecked": true
+  },
+  "gates": {
+    "closed_minimum": 0.99,
+    "syntax_minimum": 0.99,
+    "operation_minimum": 0.95,
+    "arguments_minimum": 0.95,
+    "exact_request_minimum": 0.95,
+    "oracle_arithmetic_minimum": 1,
+    "committed_minimum": 0.95,
+    "exact_artifact_minimum": 0.95,
+    "rejected_state_mutations_maximum": 0,
+    "non_q_probability_identity_exact": true
+  },
+  "budget": {
+    "one_execution_only": true,
+    "maximum_public_records": 500,
+    "maximum_compute_usd": 0.1
+  },
+  "downstream": {
+    "promotion_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}

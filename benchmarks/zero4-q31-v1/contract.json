@@ -1,0 +1,93 @@
+{
+  "schema": "zero.zero4_q31_routed_operation_head_contract.v1",
+  "id": "zero4-q31-seed2-pilot-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "training_allowed": false,
+  "question": "Can a Q-routed five-way head decode the explicit operation label while leaving non-Q ZERO.3 exactly unchanged?",
+  "lineage": {
+    "q30_result": {
+      "path": "benchmarks/zero4-q30-v1/results/result.json",
+      "sha256": "a77a156931f35a6ce9ccd793ff133ac8ec81757044674beeb523caa36823f20e"
+    },
+    "q30_postmortem": {
+      "path": "benchmarks/zero4-q30-v1/results/PILOT-RESULT.md",
+      "sha256": "78adb884793c609dc72ca9eedcb96411e748af186523df4aef5b11bea35544b0"
+    },
+    "initialization": {
+      "path": "teachers/zero3-balanced-final.teacher",
+      "sha256": "c865769461ef12374cadf3c5851016efb4bac06cf760e7599f610aa4cd35f137"
+    },
+    "runtime_base": {
+      "path": "docs/model.litq8",
+      "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+    }
+  },
+  "architecture": {
+    "base_parameters": 4852992,
+    "base_trainable_parameters": 0,
+    "layers": 6,
+    "dimension_per_layer": 256,
+    "feature_layers": "all transformer layer outputs at the Q target boundary",
+    "feature_normalization": "independent RMS normalization per layer",
+    "feature_dimension": 1536,
+    "classes": [
+      "quantity.add",
+      "quantity.multiply",
+      "quantity.add-rational",
+      "quantity.convert",
+      "quantity.solve-linear"
+    ],
+    "head": "zero-initialized linear 1536-to-5 classifier with bias",
+    "head_parameters": 7685,
+    "head_fraction_of_base": 0.0015835591733924144,
+    "routing": "CHANNEL_START_TOKEN followed by literal Q",
+    "renderer": "posterior-preserving finite-state prefix trie",
+    "non_q_execution": "delegate every token to unchanged ZERO.3 runtime",
+    "runtime_overrides_allowed": false
+  },
+  "pilot": {
+    "authorized": false,
+    "one_execution_only": true,
+    "diagnostic_seed": 2,
+    "training_pool_records": 9000,
+    "holdout_records": 500,
+    "holdout_records_per_class": 100,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "weight_decay": 0,
+    "gradient_clip": 1,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 100],
+    "overall_accuracy_minimum": 0.99,
+    "per_class_accuracy_minimum": 0.98,
+    "selection": "first qualifying private-holdout checkpoint",
+    "base_state_digest_must_remain_exact": true,
+    "resume_allowed": false,
+    "maximum_compute_usd": 0.1,
+    "public_quantity_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false
+  },
+  "inputs": {
+    "tokenizer": {
+      "path": "corpus/literary.bpe",
+      "sha256": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152"
+    },
+    "quantity_tokens": {
+      "path": "corpus/faculty/q22/quantity-request.tok",
+      "sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2"
+    },
+    "quantity_records": {
+      "path": "corpus/faculty/q22/quantity-request.jsonl",
+      "sha256": "49a94fceabab5ad37791743f9ae5dbe8faccd38a77860cfd970246263b850d3a"
+    }
+  },
+  "evaluation": {
+    "private_holdout_only_before_candidate_freeze": true,
+    "public_quantity_before_candidate_freeze": false,
+    "language_metrics_before_candidate_freeze": false,
+    "promotion_before_candidate_freeze": false,
+    "seeds_1_and_3_sealed": true,
+    "semantic_routing_claimed": false
+  }
+}

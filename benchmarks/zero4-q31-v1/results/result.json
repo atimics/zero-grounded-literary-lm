@@ -1,0 +1,112 @@
+{
+  "schema": "zero.zero4_q31_pilot_result.v1",
+  "source_commit": "75b70f25e7ed04c43b03f62befbe96f56bac25e8",
+  "authorization_sha256": "dc57e820d2fab4949a0a8d3165991d565520f020c062b742ba804ee8e73879dc",
+  "contract_sha256": "52138eb476ad34e64a77dc556611213d7fcb0880e5c229f24d294ccbdc39cad4",
+  "measurements": [
+    {
+      "update": 0,
+      "holdout_cross_entropy": 1.6094378975329513,
+      "holdout_accuracy": 0.20000000000000015,
+      "per_class_accuracy": [
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 25,
+      "holdout_cross_entropy": 0.8547331057606973,
+      "holdout_accuracy": 0.7920000000000006,
+      "per_class_accuracy": [
+        0.39,
+        1,
+        0.96,
+        0.95,
+        0.66
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 50,
+      "holdout_cross_entropy": 0.4254637500885896,
+      "holdout_accuracy": 0.9700000000000008,
+      "per_class_accuracy": [
+        0.98,
+        1,
+        0.99,
+        1,
+        0.88
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 100,
+      "holdout_cross_entropy": 0.13988084550943705,
+      "holdout_accuracy": 0.9960000000000008,
+      "per_class_accuracy": [
+        1,
+        1,
+        1,
+        1,
+        0.98
+      ],
+      "per_class_count": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "base_state_digest": "0af92f28cdc3c69b"
+    }
+  ],
+  "selected": {
+    "update": 100,
+    "holdout_cross_entropy": 0.13988084550943705,
+    "holdout_accuracy": 0.9960000000000008,
+    "per_class_accuracy": [
+      1,
+      1,
+      1,
+      1,
+      0.98
+    ],
+    "per_class_count": [
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "base_state_digest": "0af92f28cdc3c69b"
+  },
+  "selected_checkpoint": "benchmarks/zero4-q31-v1/results/checkpoint-u000100.q31",
+  "public_quantity_run": false,
+  "language_gate_run": false,
+  "promotion_run": false
+}

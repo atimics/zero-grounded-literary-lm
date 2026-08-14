@@ -112,6 +112,10 @@ button { cursor: pointer; }
   letter-spacing: .12em;
 }
 
+.masthead-links { justify-self: end; display: flex; align-items: center; gap: 18px; }
+.masthead-links a { color: var(--muted); text-decoration: none; }
+.masthead-links a:hover { color: var(--ink); }
+
 .about-button:hover,
 .tune-button:hover,
 #clearButton:hover { color: var(--ink); }

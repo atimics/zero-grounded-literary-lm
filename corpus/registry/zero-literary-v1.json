@@ -1,0 +1,82 @@
+{
+  "schema": "zero.corpus_sources.v1",
+  "dataset_id": "zero-literary",
+  "version": "2026-08-12.v1",
+  "release_date": "2026-08-12",
+  "description": "The reproducible literary and foundation corpus inherited by ZERO.4.",
+  "split_seed": "zero-literary-split-v1",
+  "splits": {
+    "train_permyriad": 9800,
+    "validation_permyriad": 100,
+    "test_permyriad": 100
+  },
+  "documents": {
+    "target_utf8_bytes": 12288,
+    "maximum_utf8_bytes": 16384,
+    "minimum_utf8_bytes": 256
+  },
+  "deduplication": {
+    "word_shingle_size": 5,
+    "simhash_max_hamming_distance": 3
+  },
+  "tokenizer": {
+    "path": "corpus/literary.bpe",
+    "sha256": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+    "vocabulary_size": 128,
+    "token_width_bytes": 2
+  },
+  "contamination_panels": [
+    {
+      "id": "zero4-q34-semantic-confirmation",
+      "path": "benchmarks/zero4-q34-semantic-head-v1/semantic-confirmation.tsv",
+      "sha256": "c8e5f3623763b94391b06d63ace697dd3bffc512d196fe9581dcfd9ecfaafbac",
+      "text_column": "model_input"
+    }
+  ],
+  "sources": [
+    {
+      "id": "zero-foundation",
+      "path": "corpus/zero-foundation.txt",
+      "sha256": "d90f3cf5f9039b3626262e3c06bb5bd4b3948a6f26daf4532735650b2c5cdd2a",
+      "title": "ZERO foundation statements",
+      "author": "Project ZERO",
+      "origin_url": "https://github.com/atimics/zero-grounded-literary-lm",
+      "license": "project-authored",
+      "sampling_weight": 2,
+      "tags": ["foundation", "synthetic", "project-authored"]
+    },
+    {
+      "id": "shakespeare",
+      "path": "corpus/shakespeare.txt",
+      "sha256": "a6209a86eb3de42530f24feaf317e94d43ea18d71ccb64a8cf5e54a368db23f2",
+      "title": "The Complete Works of William Shakespeare",
+      "author": "William Shakespeare",
+      "origin_url": "https://www.gutenberg.org/ebooks/100",
+      "license": "public-domain-us",
+      "sampling_weight": 1,
+      "tags": ["literature", "drama", "poetry", "public-domain"]
+    },
+    {
+      "id": "blake",
+      "path": "corpus/blake.txt",
+      "sha256": "1998764098fe6cde39040ae2b793ad828798894cf956739d7be61e91239f4040",
+      "title": "Poems and prose of William Blake",
+      "author": "William Blake",
+      "origin_url": "https://www.gutenberg.org/ebooks/574",
+      "license": "public-domain-us",
+      "sampling_weight": 1,
+      "tags": ["literature", "poetry", "public-domain"]
+    },
+    {
+      "id": "crowley",
+      "path": "corpus/crowley.txt",
+      "sha256": "448c8ecabeee793aee640b3e50d01dc6fa26bd9b939d2fae2f0305fd30150dc4",
+      "title": "Selected poetry, drama, and prose of Aleister Crowley",
+      "author": "Aleister Crowley",
+      "origin_url": "https://www.gutenberg.org/ebooks/70261",
+      "license": "public-domain-us-and-cc-by-sa-transcription",
+      "sampling_weight": 1,
+      "tags": ["literature", "poetry", "drama", "public-domain"]
+    }
+  ]
+}

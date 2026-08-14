@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#151511">
+  <meta name="description" content="The live corpus and training ledger for Project ZERO.">
+  <title>ZERO — corpus & training ledger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="masthead">
+      <a class="wordmark" href="../" aria-label="Return to ZERO.4">
+        <span class="zero-mark">0</span><span>ZERO / DATA</span>
+      </a>
+      <div class="connection" id="connection" role="status" aria-live="polite">
+        <span class="connection-dot"></span><span id="connectionText">CONNECTING TO THE LEDGER</span>
+      </div>
+      <button class="refresh" id="refresh" type="button">REFRESH</button>
+    </header>
+
+    <section class="hero" aria-labelledby="pageTitle">
+      <p class="eyebrow">ZERO.5 · CORPUS & TRAINING CONTROL PLANE</p>
+      <h1 id="pageTitle">Data is the model<br><em>before the model learns.</em></h1>
+      <p class="dek">Every source is named. Every split is frozen. Every run points back to the exact bytes that taught it.</p>
+    </section>
+
+    <section class="metrics" aria-label="Corpus and training overview">
+      <article><span>READY DATASETS</span><strong id="datasetCount">—</strong><small>immutable versions</small></article>
+      <article><span>TRAIN TOKENS</span><strong id="tokenCount">—</strong><small>latest ready dataset</small></article>
+      <article><span>DOCUMENTS</span><strong id="documentCount">—</strong><small>after quality gates</small></article>
+      <article><span>LATEST ACCURACY</span><strong id="latestAccuracy">—</strong><small>held-out measurement</small></article>
+    </section>
+
+    <section class="ledger-grid">
+      <article class="panel dataset-panel" aria-labelledby="datasetTitle">
+        <div class="panel-heading">
+          <div><p class="eyebrow">IMMUTABLE INPUT</p><h2 id="datasetTitle">Current corpus</h2></div>
+          <span class="seal" id="datasetSeal">WAITING</span>
+        </div>
+        <div id="datasetBody" class="loading-block">Reading the corpus catalog…</div>
+      </article>
+
+      <article class="panel run-panel" aria-labelledby="runTitle">
+        <div class="panel-heading">
+          <div><p class="eyebrow">MEASURED OUTPUT</p><h2 id="runTitle">Latest run</h2></div>
+          <span class="seal neutral" id="runSeal">WAITING</span>
+        </div>
+        <div id="runBody" class="loading-block">Reading the training ledger…</div>
+      </article>
+    </section>
+
+    <section class="panel history-panel" aria-labelledby="historyTitle">
+      <div class="panel-heading">
+        <div><p class="eyebrow">APPEND-ONLY HISTORY</p><h2 id="historyTitle">Run ledger</h2></div>
+        <span class="small-note">newest first</span>
+      </div>
+      <div id="runHistory" class="loading-block">Loading recorded runs…</div>
+    </section>
+
+    <footer>
+      <p>The public dashboard exposes measurements and provenance only. Corpus bytes, checkpoints, and write credentials remain private in AWS.</p>
+      <a href="https://github.com/atimics/zero-grounded-literary-lm">SOURCE & CONTRACTS ↗</a>
+    </footer>
+  </main>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

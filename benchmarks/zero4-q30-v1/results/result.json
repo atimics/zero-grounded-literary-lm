@@ -1,0 +1,41 @@
+{
+  "schema": "zero.zero4_q30_pilot_result.v1",
+  "source_commit": "4d92dd4208a89ed8ad3b6ae36d45643613aa6992",
+  "authorization_sha256": "f6da63ffc8b1f23c80d5930132993fab8c4ede504bd13ebb15965604ee24bd34",
+  "contract_sha256": "7b863db0c6d2926b85dbb100753d5cf57dfafe65f5434c5f889edce8f0e90ed2",
+  "measurements": [
+    {
+      "update": 0,
+      "quantity_training_loss": 3.8250226378440857,
+      "replay_training_loss": 1.1482575001815956
+    },
+    {
+      "update": 50,
+      "quantity_training_loss": 3.7604905366897583,
+      "replay_training_loss": 1.1482575001815956,
+      "base_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 100,
+      "quantity_training_loss": 3.6725515723228455,
+      "replay_training_loss": 1.1482575001815956,
+      "base_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 150,
+      "quantity_training_loss": 3.5530301928520203,
+      "replay_training_loss": 1.1482575001815956,
+      "base_state_digest": "0af92f28cdc3c69b"
+    },
+    {
+      "update": 200,
+      "quantity_training_loss": 3.3955220580101013,
+      "replay_training_loss": 1.1482575001815956,
+      "base_state_digest": "0af92f28cdc3c69b"
+    }
+  ],
+  "selected": null,
+  "selected_checkpoint": null,
+  "language_gate_run": false,
+  "promotion_run": false
+}

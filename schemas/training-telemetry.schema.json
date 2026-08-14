@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atimics.github.io/zero-grounded-literary-lm/schemas/training-telemetry.schema.json",
+  "title": "ZERO append-only training telemetry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "event_id", "run_id", "sequence", "occurred_at", "kind", "dataset_digest", "source", "payload"],
+  "properties": {
+    "schema": {"const": "zero.training_telemetry.v1"},
+    "event_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,127}$"},
+    "sequence": {"type": "integer", "minimum": 0},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "kind": {"enum": ["run.started", "phase.started", "metric", "checkpoint", "run.completed", "run.failed", "run.imported"]},
+    "dataset_digest": {"type": "string", "pattern": "^(unknown|[0-9a-f]{64})$"},
+    "source": {"type": "string", "minLength": 1},
+    "payload": {"type": "object"}
+  }
+}

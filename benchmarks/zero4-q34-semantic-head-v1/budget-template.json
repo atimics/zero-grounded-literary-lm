@@ -1,0 +1,28 @@
+{
+  "schema": "zero.q34_semantic_head_budget.v1",
+  "id": "zero4-q34-seed2-semantic-head-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "proposed": {
+    "source_commit": null,
+    "diagnostic_seed": 2,
+    "base_trainable_parameters": 0,
+    "head_parameters": 7685,
+    "feature_records": 9500,
+    "maximum_optimizer_updates": 100,
+    "maximum_semantic_evaluation_records": 1000,
+    "maximum_canonical_evaluation_records": 1500,
+    "maximum_compute_usd": 0.15
+  },
+  "authorization": {
+    "authorized": false,
+    "maximum_optimizer_updates": 0,
+    "maximum_compute_usd": 0,
+    "training_authorized": false,
+    "private_gate_authorized": false,
+    "confirmation_gate_authorized": false,
+    "canonical_regression_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false
+  }
+}

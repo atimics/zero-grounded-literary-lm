@@ -1,0 +1,67 @@
+name: Publish immutable ZERO corpus
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact main-branch commit containing the reviewed registry
+        required: true
+        type: string
+      approval_id:
+        description: Unique approval for this dataset promotion
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: zero-corpus-promotion
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, verify, and seal corpus
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: aws
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate exact promotion authority
+        env:
+          EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+          APPROVAL_ID: ${{ inputs.approval_id }}
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          [[ "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_SHA" = "$EXPECTED_COMMIT"
+          [[ "$APPROVAL_ID" =~ ^[A-Za-z0-9_.:-]{8,128}$ ]]
+          make zero-data-pipeline-check
+
+      - name: Build sealed dataset
+        run: make zero-data-build ZERO_DATA_OUT=/tmp/zero-literary-v1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Promote immutable dataset
+        env:
+          APPROVAL_ID: ${{ inputs.approval_id }}
+        run: |
+          account_id=$(aws sts get-caller-identity --query Account --output text)
+          node scripts/promote_zero_dataset.mjs \
+            --build /tmp/zero-literary-v1 \
+            --bucket "zero-corpus-${account_id}" \
+            --table zero-datasets \
+            --approval-id "$APPROVAL_ID"

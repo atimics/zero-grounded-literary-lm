@@ -1,0 +1,92 @@
+{
+  "schema": "zero.zero4_q32_deployment_exact_head_contract.v1",
+  "id": "zero4-q32-seed2-pilot-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "training_allowed": false,
+  "question": "Can the same 7,685-parameter head pass when both learning and selection use the deployment-exact quantized streaming representation?",
+  "lineage": {
+    "q31_result": {
+      "path": "benchmarks/zero4-q31-v1/results/result.json",
+      "sha256": "62f9ad597ec67c9d6e87128a4ccd3166a460fe3651ec6678c5a59ace067a5fbc"
+    },
+    "q31_postmortem": {
+      "path": "benchmarks/zero4-q31-v1/results/PILOT-RESULT.md",
+      "sha256": "6c6fa58e7fa4b9907d10443c2a5dadf67e594efeff4e75ae39296bff0990e0f5"
+    },
+    "q31_runtime_source": {
+      "path": "benchmarks/zero4-q31-v1/results/candidate.litqhead",
+      "sha256": "84c67ea546383be82d85b16f4be0e5e9a3d2d3641c7f0ca928a96d652a21d452"
+    },
+    "runtime_base": {
+      "path": "docs/model.litq8",
+      "sha256": "44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50"
+    }
+  },
+  "architecture": {
+    "base_parameters": 4852992,
+    "base_trainable_parameters": 0,
+    "layers": 6,
+    "dimension_per_layer": 256,
+    "feature_source": "the packaged deployment runtime's quantized, token-by-token forward path at CHANNEL_TARGET_TOKEN",
+    "feature_normalization": "the packaged runtime's independent RMS normalization after each layer",
+    "feature_dimension": 1536,
+    "classes": ["quantity.add", "quantity.multiply", "quantity.add-rational", "quantity.convert", "quantity.solve-linear"],
+    "head": "zero-initialized linear 1536-to-5 classifier with bias",
+    "head_parameters": 7685,
+    "head_fraction_of_base": 0.0015835591733924144,
+    "routing": "CHANNEL_START_TOKEN followed by literal Q",
+    "renderer": "posterior-preserving finite-state prefix trie",
+    "non_q_execution": "delegate every token to unchanged ZERO.3 runtime",
+    "runtime_source_head_bytes": "ignored while extracting representations",
+    "runtime_overrides_allowed": false
+  },
+  "pilot": {
+    "authorized": false,
+    "one_execution_only": true,
+    "diagnostic_seed": 2,
+    "feature_records": 9500,
+    "feature_workers": 8,
+    "training_pool_records": 9000,
+    "private_holdout_records": 500,
+    "private_holdout_records_per_class": 100,
+    "public_records_touched": 0,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "weight_decay": 0,
+    "gradient_clip": 1,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 100],
+    "resume_allowed": false,
+    "maximum_compute_usd": 0.1
+  },
+  "selection": {
+    "runtime_feature_overall_minimum": 0.99,
+    "runtime_feature_per_class_minimum": 0.98,
+    "packaged_runtime_overall_minimum": 0.99,
+    "packaged_runtime_per_class_minimum": 0.98,
+    "packaged_runtime_exact_closure_syntax_arguments_oracle": true,
+    "non_q_probability_identity_exact": true,
+    "candidate_freezes_only_after_packaged_runtime_gate": true
+  },
+  "inputs": {
+    "quantity_tokens": {
+      "path": "corpus/faculty/q22/quantity-request.tok",
+      "sha256": "e04e518a6bd6ddd1698a65b18dfd4589cf0cee4f4737beaa6f72a3c3b4dce8f2"
+    },
+    "quantity_records": {
+      "path": "corpus/faculty/q22/quantity-request.jsonl",
+      "sha256": "49a94fceabab5ad37791743f9ae5dbe8faccd38a77860cfd970246263b850d3a"
+    },
+    "private_holdout": {
+      "path": "benchmarks/zero4-q31-v1/results/private-holdout.tsv",
+      "sha256": "771bad5de2c5703827f69ba25da02a1c6e31dc4526e52acf8236e10a346c8265"
+    }
+  },
+  "downstream": {
+    "public_quantity_authorized": false,
+    "language_gate_authorized": false,
+    "promotion_authorized": false,
+    "deployment_authorized": false,
+    "seeds_1_and_3_sealed": true
+  }
+}
