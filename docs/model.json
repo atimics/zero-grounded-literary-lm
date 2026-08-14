@@ -37,5 +37,13 @@
     "controller_owned_arithmetic": true,
     "neural_arithmetic_claimed": false,
     "browser_exposes": "the promoted generative core; the faculty controller and deterministic quantity kernel are not integrated into this page"
+  },
+  "release": {
+    "model_license": "CC-BY-SA-4.0",
+    "code_license": "Apache-2.0",
+    "corpus_rights": "CORPUS_RIGHTS.md",
+    "training_text_distributed_with_model": false,
+    "upload_manifest": "huggingface/release-manifest.json",
+    "memorization_evaluation": "release/zero4-memorization-v1.json"
   }
 }

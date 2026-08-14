@@ -49,6 +49,29 @@ make check
 `make check` includes finite-difference checks of the hand-written transformer
 backward pass as well as short end-to-end training runs.
 
+## Licenses and release provenance
+
+This is a mixed-material repository. Project code is Apache 2.0, trained model
+artifacts are CC BY-SA 4.0 to the extent controlled rights apply, eligible
+first-party generated data is CC0 1.0, and literary sources retain their own
+source-specific status. See [LICENSES.md](LICENSES.md) for the exact boundary.
+
+ZERO.4's source-level audit, permanent attribution links, transformations,
+jurisdiction notes, and no-human-chat lineage statement are in
+[CORPUS_RIGHTS.md](CORPUS_RIGHTS.md). The checked
+[`huggingface/release-manifest.json`](huggingface/release-manifest.json) is the
+only approved model-repository upload set; it deliberately excludes all
+training text and token streams. Run the release checks with:
+
+```sh
+make corpus-rights-check
+make zero4-memorization-check
+```
+
+The second command reconstructs the bound token streams, evaluates prompted
+continuation overlap, and writes a non-corpus JSON report. It is a release
+gate, not proof that memorization is impossible.
+
 ## Run the browser chat
 
 Build the 4.7 MB inference model and WebAssembly runtime from the deployed
