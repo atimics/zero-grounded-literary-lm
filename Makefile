@@ -231,7 +231,8 @@ quantity_adapter_request_eval: quantity_request_eval.c \
 
 zero4-q30-check: quantity_adapter_pilot literary_infer export_literary \
 		package_quantity_adapter quantity_adapter_infer \
-		quantity_adapter_request_eval base_probability_infer zero4-q22-data
+		quantity_adapter_request_eval base_probability_infer zero4-q22-data \
+		corpus/bpe/.zero3.stamp channel-data
 	node scripts/check_zero4_q30.mjs
 
 operation_head_pilot: operation_head_pilot.c literary_lm.c \
