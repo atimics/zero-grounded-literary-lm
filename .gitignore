@@ -16,6 +16,20 @@ faculty_eval
 quantity_request_eval
 external_eval
 bpe_tokenizer
+quantity_adapter_pilot
+package_quantity_adapter
+quantity_adapter_infer
+quantity_adapter_request_eval
+base_probability_infer
+operation_head_pilot
+package_operation_head
+operation_head_infer
+operation_head_request_eval
+runtime_operation_head_pilot
+package_runtime_operation_head
+semantic_operation_eval
+semantic_runtime_head_pilot
+conservative_exposure_pilot
 
 # Model artifacts (large binaries)
 *.ckpt

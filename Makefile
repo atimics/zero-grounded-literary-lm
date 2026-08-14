@@ -231,7 +231,7 @@ quantity_adapter_request_eval: quantity_request_eval.c \
 
 zero4-q30-check: quantity_adapter_pilot literary_infer export_literary \
 		package_quantity_adapter quantity_adapter_infer \
-		quantity_adapter_request_eval base_probability_infer
+		quantity_adapter_request_eval base_probability_infer zero4-q22-data
 	node scripts/check_zero4_q30.mjs
 
 operation_head_pilot: operation_head_pilot.c literary_lm.c \
@@ -276,25 +276,26 @@ package_runtime_operation_head: package_runtime_operation_head.c
 
 zero4-q31-check: operation_head_pilot package_operation_head \
 		operation_head_infer operation_head_request_eval \
-		base_probability_infer
+		base_probability_infer zero4-q22-data
 	node scripts/check_zero4_q31.mjs
 
 zero4-q32-check: runtime_operation_head_pilot package_runtime_operation_head \
-		operation_head_infer operation_head_request_eval base_probability_infer
+		operation_head_infer operation_head_request_eval base_probability_infer \
+		zero4-q22-data
 	node scripts/check_zero4_q32.mjs
 
 zero4-q32-result-check:
 	node scripts/check_zero4_q32_result.mjs
 
 zero4-q32-public-check: operation_head_infer operation_head_request_eval \
-		base_probability_infer
+		base_probability_infer zero4-q22-data
 	node scripts/check_zero4_q32_public.mjs
 
 zero4-q32-public-result-check:
 	node scripts/check_zero4_q32_public_result.mjs
 
 zero4-q32-promotion-check: operation_head_infer operation_head_request_eval \
-		base_probability_infer
+		base_probability_infer zero4-q22-data
 	node scripts/check_zero4_q32_promotion.mjs
 
 zero4-q32-promotion-result-check:
@@ -302,7 +303,7 @@ zero4-q32-promotion-result-check:
 
 zero4-q33-semantic-check: semantic_operation_eval \
 		runtime_operation_head_pilot package_runtime_operation_head \
-		operation_head_infer base_probability_infer
+		operation_head_infer base_probability_infer zero4-q22-data
 	node scripts/check_zero4_q33_semantic.mjs
 
 zero4-q33-semantic-result-check:
@@ -310,7 +311,8 @@ zero4-q33-semantic-result-check:
 
 zero4-q34-semantic-head-check: semantic_runtime_head_pilot \
 		package_runtime_operation_head semantic_operation_eval \
-		operation_head_request_eval operation_head_infer base_probability_infer
+		operation_head_request_eval operation_head_infer base_probability_infer \
+		zero4-q22-data
 	node scripts/check_zero4_q34_semantic_head.mjs
 
 zero4-q34-semantic-head-result-check:
@@ -1889,7 +1891,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
