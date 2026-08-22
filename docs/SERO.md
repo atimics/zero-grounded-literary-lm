@@ -79,15 +79,24 @@ Both arms receive exactly the same manifest-sampled raw windows, and the
 result records their schedule digest, source exposure, validation bytes,
 compute estimate, wall time, and artifact hashes.
 
-The model, control, invariant tests, smoke route, aggregation, and frozen
-result checker are implemented. The smoke test is mechanics only. The real
-three-seed experiment remains unrun and cannot promote until the corpus has at
-least 100 million unique training bytes. See
-[`PREREGISTRATION.md`](../benchmarks/sero-latent-v3/PREREGISTRATION.md) and
+The project promoted `sero-pretrain/2026-08-22.v1`, with 123,153,182 unique
+training bytes balanced across Simple English Wikipedia, English Wikibooks,
+and English Wikinews. The frozen three-seed experiment then completed at 10M,
+30M, and 100M raw training bytes per arm.
+
+V3 does not promote. At 100M, mean latent quality was 2.5009 bits per byte
+against 2.1835 for byte-BPE, a 14.53% loss. Every seed failed the quality gate.
+Learned chunks ended between 1.92 and 2.95 bytes, and seeds 0 and 1 also failed
+the compute gate. Seed 2 met compute parity but remained 16.91% worse in
+quality, showing that over-segmentation was not the only problem. See
+[`RESULTS.md`](../benchmarks/sero-latent-v3/RESULTS.md),
+[`PREREGISTRATION.md`](../benchmarks/sero-latent-v3/PREREGISTRATION.md), and
 [`contract.json`](../benchmarks/sero-latent-v3/contract.json).
 
 Sero 1's lossless 4,096-entry byte-BPE remains the current control, not a claim
-that learned tokenization is hopeless. Its canonical artifact and dataset
-binding are in
+that learned tokenization is hopeless. The next main-line step is actual Sero
+language-model training on the promoted corpus, while latent tokenization stays
+a separate research branch. The canonical BPE artifact and dataset binding are
+in
 [`tokenizers/sero1-tokenizer.json`](../tokenizers/sero1-tokenizer.json); verify
 the locked digest with `make sero1-tokenizer-check`.

@@ -61,13 +61,14 @@ used a source-biased corpus prefix; V1 also charged a causally predictable
 end-patch output. Those runs reject their tested designs, not the larger idea.
 The lossless 4,096-entry byte-BPE tokenizer stays as the Sero control.
 
-**Sero Latent v3 is now implemented and preregistered, but unrun.** It learns
-boundaries from adjacent causal embeddings, passes continuous representations
-through a compute-matched global model, and predicts only the 256 raw bytes.
-There is no patch vocabulary, escape route, unknown byte, or end-patch output.
-The full three-seed result is blocked until the manifest contains at least 100
-million unique training bytes. See
-[`benchmarks/sero-latent-v3/PREREGISTRATION.md`](benchmarks/sero-latent-v3/PREREGISTRATION.md).
+**Sero Latent v3 is complete and does not promote.** The project built and
+promoted a licensed, source-balanced corpus with 123,153,182 unique training
+bytes, then ran the frozen 10M/30M/100M-byte experiment on seeds 0, 1, and 2.
+V3 was 14.53% worse than byte-BPE on average at 100M. All seeds failed the
+quality gate, and two also failed compute parity because the learned chunks
+became too short. This rejects the tested one-stage embedding-router design,
+not all learned tokenization. See
+[`benchmarks/sero-latent-v3/RESULTS.md`](benchmarks/sero-latent-v3/RESULTS.md).
 
 ## Build
 
@@ -77,6 +78,7 @@ make check
 make sero-latent-v1-result-check
 make sero-latent-v2-result-check
 make sero-latent-v3-contract-check
+make sero-latent-v3-result-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

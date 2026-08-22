@@ -1,0 +1,98 @@
+{
+  "schema": "sero.latent_v3_aws_runs.v1",
+  "experiment": "sero-latent-v3",
+  "region": "us-east-1",
+  "instance_type": "g5.xlarge",
+  "on_demand_usd_per_hour": 1.006,
+  "source": {
+    "git_commit": "f899ea6557ed1d85461578ff0b311ed587cc3119",
+    "archive_s3_key": "experiments/sero-latent-v3/source/f899ea6557ed1d85461578ff0b311ed587cc3119.tar.gz",
+    "archive_sha256": "02a8c2fa6efff8c22ad1c2edb8a8bf1e505e562f5d9d900b586bb20a83a00c11"
+  },
+  "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+  "calibration": {
+    "estimated_ec2_usd": 0.112336666666,
+    "attempts": [
+      {
+        "run_id": "sero-latent-v3-calibration-20260822-4c44fa6",
+        "instance_id": "i-088136ae0e2ab95b3",
+        "git_commit": "4c44fa6b6995aac98f8c0dcf8fc91256f80864fe",
+        "status": "failed",
+        "phase": "environment",
+        "exit_code": 1,
+        "elapsed_instance_seconds": 111,
+        "estimated_ec2_usd": 0.031018333333,
+        "reason": "NumPy 2.5.2 required Python 3.12 on the selected Python 3.10 AMI"
+      },
+      {
+        "run_id": "sero-latent-v3-calibration-retry1-20260822-f899ea6",
+        "instance_id": "i-095d72d01ef1295c0",
+        "git_commit": "f899ea6557ed1d85461578ff0b311ed587cc3119",
+        "status": "complete",
+        "exit_code": 0,
+        "elapsed_instance_seconds": 291,
+        "estimated_ec2_usd": 0.081318333333,
+        "result_sha256": "789bd6bd5d124f873f8302ec47178989bc4781a24c42b4d93e9ee83de9844a8e"
+      }
+    ]
+  },
+  "promotion_run": {
+    "decision": "do-not-promote-latent-v3",
+    "estimated_ec2_usd": 3.942681666666,
+    "runs": [
+      {
+        "seed": 0,
+        "run_id": "sero-latent-v3-full-seed0-20260822-f899ea6",
+        "instance_id": "i-098e9b6ea22c3124a",
+        "status": "complete",
+        "exit_code": 0,
+        "started_at": "2026-08-22T16:07:58Z",
+        "finished_at": "2026-08-22T17:28:48Z",
+        "elapsed_instance_seconds": 4896,
+        "estimated_ec2_usd": 1.36816,
+        "result_s3_key": "experiments/sero-latent-v3/sero-latent-v3-full-seed0-20260822-f899ea6/result.json",
+        "result_sha256": "287fe45593577fb5d15f5e88d8b9bef02107a8f77193eb3ebd55df71d36e8c61",
+        "model_sha256": "9f69d25a0aeef91729dad5f78d17ab2da89309be4d219096c401d56317ab253a",
+        "tokenizer_artifact_sha256": "a100a7e00a59ff4e52d9ec24a19a3f070cd761cbe151bb87021ee3cf131be6c9",
+        "dashboard_payload_sha256": "1143c2a5a3ce1f97583c79d437793f5674325b1df76f1a388347c44952a654b6",
+        "dashboard_event_key": "telemetry/runs/sero-latent-v3-full-seed0-20260822-f899ea6/000000000000-6a9fbe96d46dc614f53635e01ebcdd04cdfeaedc9bf8bd226cc3c00ea5d9c2d9.json"
+      },
+      {
+        "seed": 1,
+        "run_id": "sero-latent-v3-full-seed1-20260822-f899ea6",
+        "instance_id": "i-09d9525ef94a96ad8",
+        "status": "complete",
+        "exit_code": 0,
+        "started_at": "2026-08-22T16:08:01Z",
+        "finished_at": "2026-08-22T17:24:29Z",
+        "elapsed_instance_seconds": 4636,
+        "estimated_ec2_usd": 1.295504444444,
+        "result_s3_key": "experiments/sero-latent-v3/sero-latent-v3-full-seed1-20260822-f899ea6/result.json",
+        "result_sha256": "824890ec93590f3024f7bd20919ad048c3bb2373c7e0c45ede4dd2421780162b",
+        "model_sha256": "bc664e15d1d7077b7dfcc99f4345164d9bf991dab43483ae02525ff546fd6cc8",
+        "tokenizer_artifact_sha256": "a100a7e00a59ff4e52d9ec24a19a3f070cd761cbe151bb87021ee3cf131be6c9",
+        "dashboard_payload_sha256": "57b5f6949cbbd4065d6211c9e97749c1b3571de7fe6ce43b9183fbd81bc808b5",
+        "dashboard_event_key": "telemetry/runs/sero-latent-v3-full-seed1-20260822-f899ea6/000000000000-2927a071ec48fe19ebd95c57af71a5fd59e0f7dd3bfffd999233f85622dd758b.json"
+      },
+      {
+        "seed": 2,
+        "run_id": "sero-latent-v3-full-seed2-20260822-f899ea6",
+        "instance_id": "i-0c51d8950605b2a01",
+        "status": "complete",
+        "exit_code": 0,
+        "started_at": "2026-08-22T16:07:58Z",
+        "finished_at": "2026-08-22T17:23:28Z",
+        "elapsed_instance_seconds": 4577,
+        "estimated_ec2_usd": 1.279017222222,
+        "result_s3_key": "experiments/sero-latent-v3/sero-latent-v3-full-seed2-20260822-f899ea6/result.json",
+        "result_sha256": "38b8b90e3df8b0ae138f3328e79874c948187719059a19274c893cefc54822d5",
+        "model_sha256": "d957d94a82a5fc8feab177f648193498fc094699abd851aac0ae4de4086405ca",
+        "tokenizer_artifact_sha256": "a100a7e00a59ff4e52d9ec24a19a3f070cd761cbe151bb87021ee3cf131be6c9",
+        "dashboard_payload_sha256": "08b5b5512337298b1545934b86cc0d1ed350be90fde7cb9d6c3215b5ea43cd78",
+        "dashboard_event_key": "telemetry/runs/sero-latent-v3-full-seed2-20260822-f899ea6/000000000000-cd39f07046c3c233804b29897e266a5f8a7194a629aea5c1fa0792c71ff779c3.json"
+      }
+    ]
+  },
+  "total_estimated_ec2_usd": 4.055018333332,
+  "dashboard_api": "https://z184ir6n7g.execute-api.us-east-1.amazonaws.com"
+}
