@@ -1,0 +1,31 @@
+{
+  "schema": "sero.pretrain_v1_aws_execution.v1",
+  "region": "us-east-1",
+  "instance_type": "g5.xlarge",
+  "gpu": "NVIDIA A10G 24 GB",
+  "ami": "ami-0909175f265dac51e",
+  "pricing_verified_at": "2026-08-22",
+  "on_demand_usd_per_hour": 1.006,
+  "calibration": {
+    "seed": 0,
+    "maximum_updates": 128,
+    "validation_byte_limit": 131072,
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.503
+  },
+  "full_runs": {
+    "seeds": [0, 1, 2],
+    "maximum_instance_seconds_each": 10800,
+    "maximum_ec2_usd_each": 3.018,
+    "maximum_ec2_usd_total": 9.054
+  },
+  "controls": {
+    "market": "on-demand",
+    "metadata_tokens": "required",
+    "network_ingress": false,
+    "instance_initiated_shutdown_behavior": "terminate",
+    "encrypted_ephemeral_volume": true,
+    "dry_run_required": true,
+    "calibration_required_before_full_runs": true
+  }
+}

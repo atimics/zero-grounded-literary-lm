@@ -1,0 +1,73 @@
+{
+  "schema": "sero.pretrain_v1_contract.v1",
+  "experiment": "sero1-pretrain-v1",
+  "status": "preregistered-unrun",
+  "seeds": [0, 1, 2],
+  "canonical_seed": 0,
+  "data": {
+    "dataset_id": "sero-pretrain",
+    "dataset_version": "2026-08-22.v1",
+    "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+    "unique_training_bytes": 123153182,
+    "unique_validation_bytes": 1316683,
+    "unique_test_bytes": 1247826,
+    "document_boundaries_crossed": false,
+    "source_sampling": "complete-balanced-corpus-epochs"
+  },
+  "tokenizer": {
+    "release": "tokenizers/sero1-tokenizer.json",
+    "artifact": "tokenizers/sero1-byte-bpe-4096.json",
+    "artifact_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+    "algorithm": "lossless-byte-bpe",
+    "vocabulary_size": 4096,
+    "maximum_token_bytes": 8,
+    "unknown_token": false,
+    "unicode_normalization": "none"
+  },
+  "model": {
+    "architecture": "dense-causal-tied-embedding-transformer",
+    "token_context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1056,
+    "dropout": 0.0,
+    "position": "learned-absolute",
+    "normalization": "pre-norm-plus-final-rmsnorm",
+    "private_input_bos": true,
+    "expected_parameters": 6021312
+  },
+  "training": {
+    "epochs": 3,
+    "batch_size": 16,
+    "checkpoint_epochs": [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0],
+    "windowing": "non-overlapping-token-windows-within-documents",
+    "tail_windows": "padded-and-loss-masked",
+    "shuffle": "deterministic-per-epoch",
+    "precision": "bfloat16-on-cuda",
+    "gradient_clip": 1.0
+  },
+  "optimization": {
+    "optimizer": "AdamW",
+    "learning_rate": 0.0003,
+    "betas": [0.9, 0.95],
+    "epsilon": 1e-8,
+    "weight_decay": 0.1,
+    "warmup_fraction": 0.02,
+    "minimum_learning_rate_ratio": 0.1,
+    "schedule": "linear-warmup-cosine-decay"
+  },
+  "evaluation": {
+    "checkpoint_split": "complete-validation",
+    "final_split": "complete-test",
+    "metric": "autoregressive-bits-per-raw-byte",
+    "sample_prompts": ["The", "In", "A"]
+  },
+  "gates": {
+    "validation_bits_per_byte_maximum_each_seed": 2.1,
+    "test_bits_per_byte_maximum_each_seed": 2.1,
+    "final_validation_must_beat_epoch_one": true,
+    "all_seeds_required": true,
+    "aggregate_override": false
+  }
+}

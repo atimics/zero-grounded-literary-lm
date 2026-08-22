@@ -20,6 +20,12 @@ function parsePayload(run) {
   try { return JSON.parse(run.payload_json || "{}"); } catch { return {}; }
 }
 
+function metricType(payload) {
+  if (payload.metric_kind === "language-model-bits-per-byte") return "language";
+  if (payload.metric_kind === "bits-per-byte") return "latent";
+  return "standard";
+}
+
 function setConnection(mode, text) {
   $("#connection").className = `connection ${mode}`;
   $("#connectionText").textContent = text;
@@ -62,14 +68,18 @@ function renderRun(run) {
   }
   const payload = parsePayload(run);
   const decision = run.decision || payload.decision || run.status;
-  const byteRun = payload.metric_kind === "bits-per-byte";
+  const type = metricType(payload); const byteRun = type !== "standard";
   $("#runSeal").textContent = String(decision).toUpperCase();
   $("#runSeal").className = `seal ${/no-go|failed/.test(String(decision)) ? "no-go" : "neutral"}`;
   const labels = ["add", "multiply", "add-rational", "convert", "solve-linear"];
   const values = payload.per_class_accuracy || [];
   const chart = values.length ? `<div class="chart">${values.map((value, index) => `
     <div class="bar"><span>${safe(labels[index] || `class-${index}`)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0, Math.min(100, value * 100))}%"></div></div><span>${percent(value)}</span></div>`).join("")}</div>` : "";
-  const details = byteRun ? `
+  const details = type === "language" ? `
+      <div class="detail"><span class="detail-label">TRAIN BYTES</span><span class="detail-value">${number.format(payload.training_bytes || 0)}</span></div>
+      <div class="detail"><span class="detail-label">TRAIN TOKENS</span><span class="detail-value">${number.format(payload.training_tokens || 0)}</span></div>
+      <div class="detail"><span class="detail-label">VALIDATION BPB</span><span class="detail-value">${fixed(payload.validation_bits_per_byte)}</span></div>
+      <div class="detail"><span class="detail-label">TEST BPB</span><span class="detail-value">${fixed(payload.test_bits_per_byte)}</span></div>` : byteRun ? `
       <div class="detail"><span class="detail-label">TRAIN BYTES</span><span class="detail-value">${number.format(payload.training_bytes || 0)}</span></div>
       <div class="detail"><span class="detail-label">LATENT BPB</span><span class="detail-value">${fixed(payload.latent_bits_per_byte)}</span></div>
       <div class="detail"><span class="detail-label">BPE BPB</span><span class="detail-value">${fixed(payload.bpe_bits_per_byte)}</span></div>
@@ -77,7 +87,9 @@ function renderRun(run) {
       <div class="detail"><span class="detail-label">UPDATE</span><span class="detail-value">${integer.format(run.update || 0)}</span></div>
       <div class="detail"><span class="detail-label">LOSS</span><span class="detail-value">${fixed(run.loss)}</span></div>
       <div class="detail"><span class="detail-label">ACCURACY</span><span class="detail-value">${percent(run.accuracy)}</span></div>`;
-  const note = byteRun
+  const note = type === "language"
+    ? `${fixed(payload.epoch, 2)} corpus epochs · ${fixed(payload.tokens_per_parameter, 2)} tokens per parameter. ${safe(payload.note || "")}`
+    : byteRun
     ? `Learned chunk ${fixed(payload.bytes_per_chunk, 2)} bytes · BPE token ${fixed(payload.bytes_per_bpe_token, 2)} bytes · estimated compute ${fixed(payload.estimated_compute_ratio, 3)}× control. ${safe(payload.note || "")}`
     : safe(payload.note || "This snapshot is bound to the dataset digest recorded for the run.");
   $("#runBody").className = "panel-content";
@@ -98,14 +110,15 @@ function renderHistory(runs) {
   }
   $("#runHistory").className = "history-list";
   $("#runHistory").innerHTML = runs.map((run) => {
-    const payload = parsePayload(run); const byteRun = payload.metric_kind === "bits-per-byte";
+    const payload = parsePayload(run); const type = metricType(payload);
+    const byteRun = type !== "standard"; const language = type === "language";
     return `
     <div class="history-row">
       <div><span class="history-meta">RUN</span><div class="history-name">${safe(run.experiment || run.run_id)}</div></div>
       <div><span class="history-meta">STATUS</span><div class="history-value">${safe(run.decision || run.status)}</div></div>
       <div><span class="history-meta">UPDATE</span><div class="history-value">${integer.format(run.update || 0)}</div></div>
-      <div><span class="history-meta">${byteRun ? "LATENT BPB" : "LOSS"}</span><div class="history-value">${fixed(byteRun ? payload.latent_bits_per_byte : run.loss)}</div></div>
-      <div><span class="history-meta">${byteRun ? "VS BPE" : "ACCURACY"}</span><div class="history-value">${byteRun ? `${fixed(payload.latent_to_bpe_bpb_ratio, 3)}×` : percent(run.accuracy)}</div></div>
+      <div><span class="history-meta">${language ? "VALIDATION BPB" : byteRun ? "LATENT BPB" : "LOSS"}</span><div class="history-value">${fixed(language ? payload.validation_bits_per_byte : byteRun ? payload.latent_bits_per_byte : run.loss)}</div></div>
+      <div><span class="history-meta">${language ? "TEST BPB" : byteRun ? "VS BPE" : "ACCURACY"}</span><div class="history-value">${language ? fixed(payload.test_bits_per_byte) : byteRun ? `${fixed(payload.latent_to_bpe_bpb_ratio, 3)}×` : percent(run.accuracy)}</div></div>
     </div>`;
   }).join("");
 }
@@ -135,10 +148,10 @@ async function load() {
     $("#tokenCount").textContent = dataset ? number.format(dataset.train_tokens) : "—";
     $("#documentCount").textContent = dataset ? integer.format(dataset.documents) : "—";
     const latestPayload = run ? parsePayload(run) : {};
-    const latestIsByteRun = latestPayload.metric_kind === "bits-per-byte";
-    $("#latestMetricLabel").textContent = latestIsByteRun ? "LATEST LATENT BPB" : "LATEST ACCURACY";
+    const latestType = metricType(latestPayload); const latestIsByteRun = latestType !== "standard";
+    $("#latestMetricLabel").textContent = latestType === "language" ? "LATEST VALIDATION BPB" : latestIsByteRun ? "LATEST LATENT BPB" : "LATEST ACCURACY";
     $("#latestMetric").textContent = run
-      ? (latestIsByteRun ? fixed(latestPayload.latent_bits_per_byte) : percent(run.accuracy)) : "—";
+      ? (latestType === "language" ? fixed(latestPayload.validation_bits_per_byte) : latestIsByteRun ? fixed(latestPayload.latent_bits_per_byte) : percent(run.accuracy)) : "—";
     $("#latestMetricNote").textContent = latestIsByteRun ? "held-out raw bytes" : "held-out measurement";
     renderDataset(dataset); renderRun(run); renderHistory(runs);
     setConnection("live", "LIVE AWS LEDGER");
