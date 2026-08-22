@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import platform
 import random
@@ -305,6 +306,11 @@ def set_optimizer_learning_rates(
 
 
 def git_commit() -> str | None:
+    bound = os.environ.get("SERO_SOURCE_COMMIT", "")
+    if bound:
+        if len(bound) != 40 or any(character not in "0123456789abcdef" for character in bound):
+            raise ValueError("SERO_SOURCE_COMMIT must be a full lowercase Git SHA")
+        return bound
     result = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True, capture_output=True, check=False
     )

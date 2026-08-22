@@ -31,10 +31,18 @@ make sero-latent-v3-smoke \
   SERO_LATENT_V3_PYTHON=build/sero-latent-v3/venv/bin/python
 ```
 
-The full three-seed run remains blocked until the training manifest contains
-at least 100 million unique bytes. Derived models and tokenizer files belong
-under `build/sero-latent-v3/`; complete seed results belong under
+The full run is bound to the promoted `sero-pretrain/2026-08-22.v1` manifest,
+which contains 123,153,182 unique training bytes. Derived models and tokenizer
+files belong under `build/sero-latent-v3/`; complete seed results belong under
 `benchmarks/sero-latent-v3/` only after the preregistered run.
+
+The bounded AWS route uses one on-demand `g5.xlarge` per seed. Its AMI, current
+price, wall-clock limits, and $21.126 three-seed EC2 ceiling are frozen in
+`benchmarks/sero-latent-v3/aws-execution.json`. Check the launcher with:
+
+```sh
+make sero-latent-v3-aws-check
+```
 
 Each run also writes a `seedN-dashboard-payload.json` beside its model. It is
 ready for `scripts/publish_zero_telemetry.mjs`; training never publishes to AWS
