@@ -54,12 +54,20 @@ current control while the latent arm advances to discrete-code research. See
 [`docs/SERO.md`](docs/SERO.md) and
 [`benchmarks/sero-latent-v1/RESULTS.md`](benchmarks/sero-latent-v1/RESULTS.md).
 
-**Sero Latent v2 is now settled.** Direct discrete patch codes remained 4.44%
-worse than byte-BPE on average across all three frozen seeds, despite exact
-reconstruction and matched compute. The hard stop has fired: the lossless
-4,096-entry byte-BPE tokenizer is locked for Sero 1, and the project now moves
-to base-model and corpus scaling. See
-[`benchmarks/sero-latent-v2/RESULTS.md`](benchmarks/sero-latent-v2/RESULTS.md).
+**Sero Latent v2 is complete, but it does not end learned tokenization.** Its
+frequency dictionary remained 4.44% worse than byte-BPE on average across the
+three frozen seeds. A later audit found that V1 and V2 were both too small and
+used a source-biased corpus prefix; V1 also charged a causally predictable
+end-patch output. Those runs reject their tested designs, not the larger idea.
+The lossless 4,096-entry byte-BPE tokenizer stays as the Sero control.
+
+**Sero Latent v3 is now implemented and preregistered, but unrun.** It learns
+boundaries from adjacent causal embeddings, passes continuous representations
+through a compute-matched global model, and predicts only the 256 raw bytes.
+There is no patch vocabulary, escape route, unknown byte, or end-patch output.
+The full three-seed result is blocked until the manifest contains at least 100
+million unique training bytes. See
+[`benchmarks/sero-latent-v3/PREREGISTRATION.md`](benchmarks/sero-latent-v3/PREREGISTRATION.md).
 
 ## Build
 
@@ -68,6 +76,7 @@ make
 make check
 make sero-latent-v1-result-check
 make sero-latent-v2-result-check
+make sero-latent-v3-contract-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

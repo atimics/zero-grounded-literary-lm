@@ -31,6 +31,9 @@ Schema: `zero.experiment_registry.v1`.
 | **q32-promotion** | `benchmarks/zero4-q32-promotion-v1` | 2026-08-12 | Q3.2 public go | Opened the 500-case promotion split exactly once with the same frozen package and zero training updates. | Does the public result survive the final disjoint quantity gate? | 500/500 exact; combined private, public, and promotion evidence was 1,499/1,500 (99.93%). | **Quantity promotion go.** The claim remains limited to explicit operation names. | Test paraphrased and implicit semantic routing before any broader capability claim |
 | **q33-semantic** | `benchmarks/zero4-q33-semantic-v1` | 2026-08-12 | Q3.2 explicit-operation promotion go | Evaluated the frozen head on 500 balanced lexical paraphrases and implicit descriptions without retraining. | Did the explicit-operation head learn operation concepts rather than a surface cue? | 130/500 (26.0%): above 20% chance but far below the 80% gate; multiply dominated 72.4% of predictions and add scored 0/100. | **No-go for semantic generalization.** | Q3.4: retrain the deployment-exact head on a balanced canonical/semantic mixture with sealed template families |
 | **q34-semantic-head** | `benchmarks/zero4-q34-semantic-head-v1` | 2026-08-12 | Q3.3 semantic-routing no-go | Trained the same frozen-base 7,685-parameter linear head on 4,500 canonical and 4,500 semantic records, with disjoint private and confirmation families. | Can mixed supervision produce a reliable semantic router inside 100 updates? | Final private accuracy was 208/500 (41.6%) with large per-class swings; only 6,400 batch examples were consumed, less than one pass through the pool. | **No-go; no candidate.** Semantic signal improved but never reached the 80% overall/60% per-class selector, so packaging and all later gates remained sealed. | Build the immutable corpus pipeline, then compare adequate exposure and a small nonlinear probe before training a larger routed expert |
+| **sero-latent-v1** | `benchmarks/sero-latent-v1` | 2026-08-21 | Learned causal byte patches | Added a local/global byte model with learned boundaries and compared it with static patches and a byte-BPE Transformer. | Can learned boundaries beat static patching and direct BPE at pilot scale? | Learned boundaries beat static patches, but total loss lost to BPE on all three seeds. A later audit found a redundant end-patch target and too little, source-biased training data. | **Reject V1; retain its narrow result.** Do not treat it as a general learned-tokenizer no-go. | Test a corrected representation without redundant boundary output |
+| **sero-latent-v2** | `benchmarks/sero-latent-v2` | 2026-08-21 | Direct discrete patch codes | Replaced V1's patch decoder with a 4,095-entry frequency dictionary plus one residual escape path. | Does a direct patch code remove V1's local reconstruction cost? | Mean validation loss was 4.171 versus 3.993 BPE bits per byte. Removing the redundant end-patch charge diagnostically did not reverse the result. | **Reject the V2 frequency dictionary.** Its result does not test a jointly learned continuous tokenizer. | Build a causal embedding-routed continuous hierarchy |
+| **sero-latent-v3** | `benchmarks/sero-latent-v3` | 2026-08-22 | H-Net-inspired continuous causal chunking | Removed end-patch, codebook, unknown, and escape outputs; added an adjacent-embedding cosine router, continuous global chunks, exact shared-window accounting, representative manifest sampling, and a compute-matched BPE control. | Can a learned byte hierarchy deliver at least 1% lower bits per byte than BPE at equal data and estimated compute? | Implementation invariants and a deliberately non-promoting smoke run pass. The real result is unrun because the current corpus has only about 5.7 million unique training bytes, below the frozen 100 million floor. | **Preregistered; no scientific decision yet.** | Expand the rights-cleared corpus to at least 100 million unique bytes, then run seeds 0, 1, and 2 |
 
 ---
 
@@ -239,13 +242,13 @@ invalidated trajectories, frontier checkpoints, or notices:
 
 ---
 
-## Current state (2026-08-13)
+## Current state (2026-08-22)
 
 - **Current and deployed model**: ZERO.4, the Q2.6 seed-2 update-500 artifact at `docs/model.litq8` (SHA-256 `44b32f22...`)
 - **Frozen initialization teacher**: ZERO.3 (`teachers/zero3-balanced-final.teacher`, source update 16,600, SHA-256 `c8657694...`)
-- **Latest completed experiment**: Q3.4 mixed canonical/semantic operation-head pilot
-- **Latest execution outcome**: the frozen-base linear head reached 41.6% private semantic accuracy after 100 updates; no candidate qualified
-- **Evaluation decision**: Q3.4 is no-go; packaging, confirmation, canonical regression, language, promotion, and deployment gates did not run
-- **Next training experiment**: none authorized; first compare adequate exposure and a small nonlinear probe against the immutable corpus/data contract
+- **Latest completed capability experiment**: Q3.4 mixed canonical/semantic operation-head pilot
+- **Latest mechanics outcome**: Sero Latent v3 passes causal, router-gradient, byte-round-trip, manifest-sampling, and end-to-end smoke checks
+- **Evaluation decision**: V3 has no scientific result yet; the smoke run cannot promote
+- **Next training experiment**: Sero Latent v3 after the training manifest reaches at least 100 million unique bytes
 - **Active proposals**: See `PROPOSALS.md`
 - **Promotion status**: ZERO.4 remains current; Q3.2's separate routed quantity package passed its narrow quantity gates but did not replace `docs/model.json`

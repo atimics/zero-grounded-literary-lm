@@ -66,12 +66,14 @@ function verifyBuild(root) {
 function catalogItem(manifest, bucket, prefix, approvalId) {
   const documents = Object.values(manifest.splits).reduce((sum, split) => sum + split.documents, 0);
   const trainTokens = manifest.splits.train.sources.reduce((sum, source) => sum + source.tokens, 0);
+  const trainBytes = manifest.splits.train.utf8_bytes;
   return {
     dataset_id: { S: manifest.dataset_id }, version: { S: manifest.version },
     dataset_digest: { S: manifest.dataset_digest }, release_date: { S: manifest.release_date },
     status: { S: "ready" }, bucket: { S: bucket }, prefix: { S: prefix },
     manifest_key: { S: `${prefix}/manifest.json` },
     documents: { N: String(documents) }, train_tokens: { N: String(trainTokens) },
+    train_bytes: { N: String(trainBytes) },
     source_count: { N: String(manifest.sources.length) },
     quality_json: { S: JSON.stringify(manifest.quality) },
     promoted_at: { S: new Date().toISOString() },

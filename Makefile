@@ -9,7 +9,11 @@ ZERO3_STEPS ?= 6000
 ZERO3_CONSOLIDATION_STEPS ?= 1200
 ZERO3_BALANCE_STEPS ?= 400
 ZERO_DATA_OUT ?= build/zero-literary-v1
+SERO_CORPUS_WORK ?= build/sero-corpus-v1
+SERO_CORPUS_OUT ?= build/sero-pretrain-v1
+SERO_LATENT_V3_MANIFEST ?= $(SERO_CORPUS_OUT)/manifest.json
 SERO_LATENT_PYTHON ?= python3
+SERO_LATENT_V3_PYTHON ?= python3
 SERO0_OUT ?= build/sero0
 ZERO4_Q1_STEPS ?= 4000
 ZERO4_Q1_BATCH ?= 2
@@ -123,10 +127,14 @@ endif
 
 .PHONY: all check clean web channel-data zero3-data zero3-stage1 \
 	zero-data-build zero-data-pipeline-check \
+	sero-corpus-plan-check sero-corpus-prepare sero-corpus-build \
+	sero-corpus-result-check \
 	sero0-tokenizer sero0-check \
 	sero-latent-v1-check sero-latent-v1-pilot \
 	sero-latent-v1-conventional sero-latent-v1-result-check \
 	sero-latent-v2-check sero-latent-v2-run sero-latent-v2-result-check \
+	sero-latent-v3-contract-check sero-latent-v3-check \
+	sero-latent-v3-smoke sero-latent-v3-run sero-latent-v3-result-check \
 	sero1-tokenizer-lock sero1-tokenizer-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
@@ -199,6 +207,26 @@ $(ZERO_DATA_OUT)/manifest.json: bpe_tokenizer
 zero-data-pipeline-check: bpe_tokenizer
 	node scripts/check_zero_data_pipeline.mjs
 
+sero-corpus-plan-check:
+	node scripts/check_sero_corpus_acquisition.mjs
+
+sero-corpus-prepare: $(SERO_CORPUS_WORK)/source-registry.json
+
+$(SERO_CORPUS_WORK)/source-registry.json: \
+		corpus/registry/sero-pretrain-v1-acquisition.json \
+		scripts/prepare_sero_corpus.py
+	python3 scripts/prepare_sero_corpus.py --work "$(SERO_CORPUS_WORK)"
+
+sero-corpus-build: $(SERO_CORPUS_OUT)/manifest.json
+
+$(SERO_CORPUS_OUT)/manifest.json: bpe_tokenizer $(SERO_CORPUS_WORK)/source-registry.json
+	node scripts/build_zero_corpus.mjs \
+		--registry "$(SERO_CORPUS_WORK)/source-registry.json" \
+		--out "$(SERO_CORPUS_OUT)"
+
+sero-corpus-result-check: $(SERO_CORPUS_OUT)/manifest.json
+	node scripts/check_sero_corpus_result.mjs --build "$(SERO_CORPUS_OUT)"
+
 sero-latent-v1-check:
 	$(SERO_LATENT_PYTHON) experiments/sero-latent-v1/train.py --self-test
 	$(SERO_LATENT_PYTHON) experiments/sero-latent-v1/conventional_control.py --self-test
@@ -233,6 +261,46 @@ sero-latent-v2-run: $(ZERO_DATA_OUT)/manifest.json
 
 sero-latent-v2-result-check:
 	node scripts/check_sero_latent_v2_result.mjs
+
+sero-latent-v3-contract-check:
+	node scripts/check_sero_latent_v3_contract.mjs
+
+sero-latent-v3-check: $(ZERO_DATA_OUT)/manifest.json sero-latent-v3-contract-check
+	$(SERO_LATENT_V3_PYTHON) experiments/sero-latent-v3/tests.py \
+		--manifest "$(ZERO_DATA_OUT)/manifest.json"
+
+sero-latent-v3-smoke: $(ZERO_DATA_OUT)/manifest.json sero-latent-v3-contract-check
+	$(SERO_LATENT_V3_PYTHON) experiments/sero-latent-v3/train.py \
+		--manifest "$(ZERO_DATA_OUT)/manifest.json" \
+		--output build/sero-latent-v3/smoke-result.json \
+		--artifact-dir build/sero-latent-v3/smoke-artifacts \
+		--budgets 512,1024 --context 32 --batch-size 2 \
+		--tokenizer-training-bytes 8192 --vocab-size 384 \
+		--validation-byte-limit 2048 --device cpu --tiny --allow-small-corpus
+
+sero-latent-v3-run: $(SERO_LATENT_V3_MANIFEST) sero-latent-v3-contract-check
+	$(SERO_LATENT_V3_PYTHON) experiments/sero-latent-v3/train.py \
+		--manifest "$(SERO_LATENT_V3_MANIFEST)" \
+		--output benchmarks/sero-latent-v3/seed0.json \
+		--artifact-dir build/sero-latent-v3/seed0 --seed 0
+	$(SERO_LATENT_V3_PYTHON) experiments/sero-latent-v3/train.py \
+		--manifest "$(SERO_LATENT_V3_MANIFEST)" \
+		--output benchmarks/sero-latent-v3/seed1.json \
+		--artifact-dir build/sero-latent-v3/seed1 --seed 1
+	$(SERO_LATENT_V3_PYTHON) experiments/sero-latent-v3/train.py \
+		--manifest "$(SERO_LATENT_V3_MANIFEST)" \
+		--output benchmarks/sero-latent-v3/seed2.json \
+		--artifact-dir build/sero-latent-v3/seed2 --seed 2
+	$(SERO_LATENT_V3_PYTHON) experiments/sero-latent-v3/aggregate.py \
+		--contract benchmarks/sero-latent-v3/contract.json \
+		--results benchmarks/sero-latent-v3/seed0.json \
+			benchmarks/sero-latent-v3/seed1.json \
+			benchmarks/sero-latent-v3/seed2.json \
+		--output benchmarks/sero-latent-v3/aggregate.json
+	$(MAKE) sero-latent-v3-result-check
+
+sero-latent-v3-result-check:
+	node scripts/check_sero_latent_v3_result.mjs
 
 sero1-tokenizer-lock:
 	node scripts/promote_sero1_tokenizer.mjs
@@ -1952,7 +2020,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero1-tokenizer-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero1-tokenizer-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null

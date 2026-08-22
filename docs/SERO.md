@@ -49,7 +49,7 @@ compute-matched Transformer predicting 4,096 lossless byte-BPE tokens directly
 reached 4.004 bits per byte. It won all three seeds. Static byte-BPE therefore
 remains the Sero control.
 
-## Next lineage step
+## Sero Latent v2
 
 Sero Latent v2 tested that discrete-code repair. Its exact 4,095-entry patch
 dictionary plus one residual escape code passed the data, reconstruction, and
@@ -57,11 +57,37 @@ compute gates, but lost to byte-BPE on all three seeds. Mean validation loss was
 4.171 versus 3.993 bits per raw byte. Rare escaped patches covered about a
 quarter of validation bytes and added 1.191 bits per byte of residual cost.
 
-The preregistered hard stop is now active. Sero 1 uses the frozen lossless
-4,096-entry byte-BPE tokenizer. The next work is base-model pretraining and
-corpus scaling, beginning with 100 million raw bytes and then a one-billion-byte
-learning curve. New tokenizer variants require new evidence from those scaling
-runs; they are not on the current critical path. The canonical artifact and
-its dataset binding are in
+The later audit narrowed that result. V2 tested a top-frequency patch
+dictionary, not a jointly learned continuous tokenizer. V1 and V2 also trained
+on only about 132,000 to 139,000 sampled bytes and inherited a sorted-prefix
+source imbalance. V1's explicit end-patch target was redundant under its
+causal boundary rule. The old measurements remain valid for those exact
+systems, but their broad hard-stop interpretation is retired.
+
+## Sero Latent v3
+
+V3 is the corrected learned-tokenizer test. A local causal encoder produces
+contextual byte embeddings. Adjacent projected embeddings choose hard chunk
+boundaries by cosine distance. Selected continuous embeddings enter a larger
+global Transformer, then a causal smoothing and upsampling path returns them
+to byte resolution for local decoding.
+
+The output space is exactly 256 bytes. BOS is input-only. There is no
+end-patch target, unknown byte, discrete codebook, or escape stream. Its H-Net
+ratio target is measured from a training-only 4,096-entry byte-BPE tokenizer.
+Both arms receive exactly the same manifest-sampled raw windows, and the
+result records their schedule digest, source exposure, validation bytes,
+compute estimate, wall time, and artifact hashes.
+
+The model, control, invariant tests, smoke route, aggregation, and frozen
+result checker are implemented. The smoke test is mechanics only. The real
+three-seed experiment remains unrun and cannot promote until the corpus has at
+least 100 million unique training bytes. See
+[`PREREGISTRATION.md`](../benchmarks/sero-latent-v3/PREREGISTRATION.md) and
+[`contract.json`](../benchmarks/sero-latent-v3/contract.json).
+
+Sero 1's lossless 4,096-entry byte-BPE remains the current control, not a claim
+that learned tokenization is hopeless. Its canonical artifact and dataset
+binding are in
 [`tokenizers/sero1-tokenizer.json`](../tokenizers/sero1-tokenizer.json); verify
 the locked digest with `make sero1-tokenizer-check`.

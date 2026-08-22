@@ -52,8 +52,10 @@ const { dataset_digest: observed, ...body } = manifest;
 assert(sha256(stableJson(body, 0)) === observed, "manifest dataset digest does not verify");
 
 const wanted = new Set(["tokenizer.bpe", "source-registry.json"]);
-for (const split of Object.values(manifest.splits))
+for (const [splitName, split] of Object.entries(manifest.splits)) {
+  wanted.add(`documents/${splitName}.jsonl`);
   for (const source of split.sources) for (const shard of source.shards) wanted.add(shard);
+}
 for (const relative of [...wanted].sort()) {
   const binding = manifest.artifacts.find((item) => item.path === relative);
   assert(binding, `manifest has no binding for ${relative}`);
@@ -64,6 +66,8 @@ for (const relative of [...wanted].sort()) {
 writeJson(path.join(output, "training-inputs.json"), {
   schema: "zero.materialized_dataset.v1", dataset_id: manifest.dataset_id,
   version: manifest.version, dataset_digest: manifest.dataset_digest,
-  tokenizer: "tokenizer.bpe", splits: manifest.splits,
+  manifest: "manifest.json", tokenizer: "tokenizer.bpe",
+  documents: Object.fromEntries(Object.keys(manifest.splits).map((split) =>
+    [split, `documents/${split}.jsonl`])), splits: manifest.splits,
 });
 console.log(`materialized ${manifest.dataset_id}/${manifest.version} at ${output}`);

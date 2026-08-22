@@ -96,6 +96,48 @@ export function hamming(left, right) {
   return count;
 }
 
+export class SimHashIndex {
+  constructor(maximumDistance) {
+    assert(Number.isInteger(maximumDistance) && maximumDistance >= 0 && maximumDistance < 64,
+      "invalid SimHash distance");
+    this.maximumDistance = maximumDistance;
+    this.bandCount = maximumDistance + 1;
+    this.buckets = new Map();
+    this.fingerprints = [];
+  }
+
+  keys(fingerprint) {
+    const keys = [];
+    for (let band = 0; band < this.bandCount; ++band) {
+      const start = Math.floor(64 * band / this.bandCount);
+      const end = Math.floor(64 * (band + 1) / this.bandCount);
+      const width = end - start;
+      const mask = (1n << BigInt(width)) - 1n;
+      keys.push(`${band}:${(fingerprint >> BigInt(start)) & mask}`);
+    }
+    return keys;
+  }
+
+  find(fingerprint) {
+    const candidates = new Set();
+    for (const key of this.keys(fingerprint))
+      for (const index of this.buckets.get(key) ?? []) candidates.add(index);
+    for (const index of [...candidates].sort((left, right) => left - right)) {
+      if (hamming(this.fingerprints[index], fingerprint) <= this.maximumDistance) return index;
+    }
+    return -1;
+  }
+
+  add(fingerprint) {
+    const index = this.fingerprints.length;
+    this.fingerprints.push(fingerprint);
+    for (const key of this.keys(fingerprint)) {
+      const members = this.buckets.get(key) ?? [];
+      members.push(index); this.buckets.set(key, members);
+    }
+  }
+}
+
 function assignSplits(documents, registry) {
   for (const sourceId of new Set(documents.map((document) => document.source_id))) {
     const source = documents.filter((document) => document.source_id === sourceId)
@@ -188,6 +230,18 @@ export function build(options) {
     assert(fs.existsSync(binding.path), `missing bound input ${binding.path}`);
     assert(sha256File(binding.path) === binding.sha256, `${binding.path} digest drifted`);
   }
+  if (registry.acquisition_plan) {
+    assert(fs.existsSync(registry.acquisition_plan),
+      `missing acquisition plan ${registry.acquisition_plan}`);
+    assert(sha256File(registry.acquisition_plan) === registry.acquisition_plan_sha256,
+      `${registry.acquisition_plan} digest drifted`);
+  }
+  for (const source of registry.sources) if (source.attribution_path) {
+    assert(fs.existsSync(source.attribution_path),
+      `missing attribution index ${source.attribution_path}`);
+    assert(sha256File(source.attribution_path) === source.attribution_sha256,
+      `${source.attribution_path} digest drifted`);
+  }
   assert(fs.existsSync(options.tokenizer_bin),
     `missing tokenizer binary ${options.tokenizer_bin}; run make bpe_tokenizer`);
   fs.mkdirSync(outputRoot, { recursive: true });
@@ -197,12 +251,22 @@ export function build(options) {
   const exactDuplicates = [];
   const nearDuplicates = [];
   const sourceStats = [];
+  const nearIndex = new SimHashIndex(registry.deduplication.simhash_max_hamming_distance);
   for (const source of registry.sources) {
     const original = fs.readFileSync(source.path, "utf8");
     const normalized = normalize(original);
     const sourceCopy = path.join(outputRoot, "sources", `${source.id}.txt`);
     fs.mkdirSync(path.dirname(sourceCopy), { recursive: true });
     fs.writeFileSync(sourceCopy, normalized);
+    let attribution = null;
+    if (source.attribution_path) {
+      const attributionCopy = path.join(outputRoot, "attribution", `${source.id}.jsonl`);
+      fs.mkdirSync(path.dirname(attributionCopy), { recursive: true });
+      fs.copyFileSync(source.attribution_path, attributionCopy);
+      const records = fs.readFileSync(attributionCopy, "utf8").split("\n").filter(Boolean).length;
+      attribution = { artifact: path.relative(outputRoot, attributionCopy).split(path.sep).join("/"),
+        records, sha256: sha256File(attributionCopy) };
+    }
     const pieces = segmentText(normalized, registry.documents);
     let accepted = 0;
     for (let ordinal = 0; ordinal < pieces.length; ++ordinal) {
@@ -214,20 +278,24 @@ export function build(options) {
         continue;
       }
       const fingerprint = simhash(text, registry.deduplication.word_shingle_size);
-      const near = kept.find((candidate) => hamming(candidate.fingerprint, fingerprint) <=
-        registry.deduplication.simhash_max_hamming_distance);
-      if (near) {
+      const nearOrdinal = nearIndex.find(fingerprint);
+      if (nearOrdinal >= 0) {
+        const near = kept[nearOrdinal];
         nearDuplicates.push({ discarded_id: id, retained_id: near.id,
           hamming_distance: hamming(near.fingerprint, fingerprint) });
         continue;
       }
       const document = { id, source_id: source.id, ordinal, sha256: contentSha,
         bytes: utf8Bytes(text), words: words(text).length, text, fingerprint };
-      exact.set(contentSha, id); kept.push(document); ++accepted;
+      exact.set(contentSha, id); nearIndex.add(fingerprint); kept.push(document); ++accepted;
     }
     sourceStats.push({ id: source.id, input_bytes: utf8Bytes(original),
       normalized_bytes: utf8Bytes(normalized), candidate_documents: pieces.length,
-      retained_documents: accepted, sampling_weight: source.sampling_weight });
+      retained_documents: accepted, sampling_weight: source.sampling_weight,
+      ...(registry.acquisition_plan ? { title: source.title, origin_url: source.origin_url,
+        license: source.license } : {}),
+      ...(registry.acquisition_plan && source.license_url ? { license_url: source.license_url } : {}),
+      ...(attribution ? { attribution } : {}) });
   }
 
   const contamination = contaminationAudit(kept, registry.contamination_panels);
@@ -301,7 +369,10 @@ export function build(options) {
     tokenizer: { ...registry.tokenizer, artifact: "tokenizer.bpe" },
     build: { implementation: "zero-corpus-builder-v1", deterministic: true,
       split_seed: registry.split_seed, document_limits: registry.documents,
-      deduplication: registry.deduplication },
+      deduplication: registry.deduplication,
+      ...(registry.acquisition_plan ? { acquisition_plan: registry.acquisition_plan,
+        acquisition_plan_sha256: registry.acquisition_plan_sha256,
+        extractor: registry.extractor } : {}) },
     sources: sourceStats, splits: splitManifest,
     quality: { passed: true, exact_duplicates_removed: exactDuplicates.length,
       near_duplicates_removed: nearDuplicates.length, contamination_matches: 0 },

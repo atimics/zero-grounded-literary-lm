@@ -39,6 +39,11 @@
       }
     },
     "tokenizer": {"$ref": "#/$defs/fileBinding"},
+    "acquisition_plan": {"type": "string", "minLength": 1},
+    "acquisition_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "extractor": {"type": "object"},
+    "legal_notice_url": {"type": "string", "format": "uri"},
+    "terms_url": {"type": "string", "format": "uri"},
     "contamination_panels": {
       "type": "array",
       "items": {
@@ -61,9 +66,20 @@
               "title": {"type": "string", "minLength": 1},
               "author": {"type": "string", "minLength": 1},
               "origin_url": {"type": "string", "format": "uri"},
+              "origin_sha1": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+              "project_url": {"type": "string", "format": "uri"},
               "license": {"type": "string", "minLength": 1},
+              "license_url": {"type": "string", "format": "uri"},
+              "attribution_method": {"type": "string", "minLength": 1},
+              "attribution_path": {"type": "string", "minLength": 1},
+              "attribution_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
               "sampling_weight": {"type": "number", "exclusiveMinimum": 0},
-              "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+              "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+              "prepared_articles": {"type": "integer", "minimum": 1},
+              "prepared_utf8_bytes": {"type": "integer", "minimum": 1},
+              "eligible_articles": {"type": "integer", "minimum": 1},
+              "eligible_utf8_bytes": {"type": "integer", "minimum": 1},
+              "residual_markup_exclusions": {"type": "integer", "minimum": 0}
             }
           }
         ]

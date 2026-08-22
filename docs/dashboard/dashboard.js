@@ -12,6 +12,10 @@ function percent(value) {
   return Number.isFinite(Number(value)) ? `${(Number(value) * 100).toFixed(1)}%` : "—";
 }
 
+function fixed(value, digits = 4) {
+  return Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : "—";
+}
+
 function parsePayload(run) {
   try { return JSON.parse(run.payload_json || "{}"); } catch { return {}; }
 }
@@ -39,6 +43,7 @@ function renderDataset(dataset) {
     <div class="details">
       <div class="detail"><span class="detail-label">SOURCES</span><span class="detail-value">${integer.format(dataset.source_count || 0)}</span></div>
       <div class="detail"><span class="detail-label">DOCUMENTS</span><span class="detail-value">${integer.format(dataset.documents || 0)}</span></div>
+      <div class="detail"><span class="detail-label">TRAIN BYTES</span><span class="detail-value">${number.format(dataset.train_bytes || 0)}</span></div>
       <div class="detail"><span class="detail-label">TRAIN TOKENS</span><span class="detail-value">${number.format(dataset.train_tokens || 0)}</span></div>
     </div>
     <div class="quality-line">Quality gate passed · ${integer.format(quality.exact_duplicates_removed || 0)} exact and ${integer.format(quality.near_duplicates_removed || 0)} near duplicates removed · ${integer.format(quality.contamination_matches || 0)} held-out overlaps</div>`;
@@ -57,22 +62,32 @@ function renderRun(run) {
   }
   const payload = parsePayload(run);
   const decision = run.decision || payload.decision || run.status;
+  const byteRun = payload.metric_kind === "bits-per-byte";
   $("#runSeal").textContent = String(decision).toUpperCase();
-  $("#runSeal").className = `seal ${String(decision).includes("no-go") ? "no-go" : "neutral"}`;
+  $("#runSeal").className = `seal ${/no-go|failed/.test(String(decision)) ? "no-go" : "neutral"}`;
   const labels = ["add", "multiply", "add-rational", "convert", "solve-linear"];
   const values = payload.per_class_accuracy || [];
   const chart = values.length ? `<div class="chart">${values.map((value, index) => `
     <div class="bar"><span>${safe(labels[index] || `class-${index}`)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0, Math.min(100, value * 100))}%"></div></div><span>${percent(value)}</span></div>`).join("")}</div>` : "";
+  const details = byteRun ? `
+      <div class="detail"><span class="detail-label">TRAIN BYTES</span><span class="detail-value">${number.format(payload.training_bytes || 0)}</span></div>
+      <div class="detail"><span class="detail-label">LATENT BPB</span><span class="detail-value">${fixed(payload.latent_bits_per_byte)}</span></div>
+      <div class="detail"><span class="detail-label">BPE BPB</span><span class="detail-value">${fixed(payload.bpe_bits_per_byte)}</span></div>
+      <div class="detail"><span class="detail-label">VS BPE</span><span class="detail-value">${fixed(payload.latent_to_bpe_bpb_ratio, 3)}×</span></div>` : `
+      <div class="detail"><span class="detail-label">UPDATE</span><span class="detail-value">${integer.format(run.update || 0)}</span></div>
+      <div class="detail"><span class="detail-label">LOSS</span><span class="detail-value">${fixed(run.loss)}</span></div>
+      <div class="detail"><span class="detail-label">ACCURACY</span><span class="detail-value">${percent(run.accuracy)}</span></div>`;
+  const note = byteRun
+    ? `Learned chunk ${fixed(payload.bytes_per_chunk, 2)} bytes · BPE token ${fixed(payload.bytes_per_bpe_token, 2)} bytes · estimated compute ${fixed(payload.estimated_compute_ratio, 3)}× control. ${safe(payload.note || "")}`
+    : safe(payload.note || "This snapshot is bound to the dataset digest recorded for the run.");
   $("#runBody").className = "panel-content";
   $("#runBody").innerHTML = `
     <p class="run-name">${safe(run.experiment || run.run_id)}</p>
     <p class="run-subtitle">${safe(run.run_id)} · ${safe(new Date(run.occurred_at).toLocaleString())}</p>
-    <div class="details">
-      <div class="detail"><span class="detail-label">UPDATE</span><span class="detail-value">${integer.format(run.update || 0)}</span></div>
-      <div class="detail"><span class="detail-label">LOSS</span><span class="detail-value">${Number.isFinite(Number(run.loss)) ? Number(run.loss).toFixed(4) : "—"}</span></div>
-      <div class="detail"><span class="detail-label">ACCURACY</span><span class="detail-value">${percent(run.accuracy)}</span></div>
-    </div>${chart}
-    <div class="quality-line">${safe(payload.note || "This snapshot is bound to the dataset digest recorded for the run.")}</div>`;
+    <div class="details${byteRun ? " byte-details" : ""}">
+      ${details}
+    </div>${byteRun ? "" : chart}
+    <div class="quality-line">${note}</div>`;
 }
 
 function renderHistory(runs) {
@@ -82,14 +97,17 @@ function renderHistory(runs) {
     return;
   }
   $("#runHistory").className = "history-list";
-  $("#runHistory").innerHTML = runs.map((run) => `
+  $("#runHistory").innerHTML = runs.map((run) => {
+    const payload = parsePayload(run); const byteRun = payload.metric_kind === "bits-per-byte";
+    return `
     <div class="history-row">
       <div><span class="history-meta">RUN</span><div class="history-name">${safe(run.experiment || run.run_id)}</div></div>
       <div><span class="history-meta">STATUS</span><div class="history-value">${safe(run.decision || run.status)}</div></div>
       <div><span class="history-meta">UPDATE</span><div class="history-value">${integer.format(run.update || 0)}</div></div>
-      <div><span class="history-meta">LOSS</span><div class="history-value">${Number.isFinite(Number(run.loss)) ? Number(run.loss).toFixed(4) : "—"}</div></div>
-      <div><span class="history-meta">ACCURACY</span><div class="history-value">${percent(run.accuracy)}</div></div>
-    </div>`).join("");
+      <div><span class="history-meta">${byteRun ? "LATENT BPB" : "LOSS"}</span><div class="history-value">${fixed(byteRun ? payload.latent_bits_per_byte : run.loss)}</div></div>
+      <div><span class="history-meta">${byteRun ? "VS BPE" : "ACCURACY"}</span><div class="history-value">${byteRun ? `${fixed(payload.latent_to_bpe_bpb_ratio, 3)}×` : percent(run.accuracy)}</div></div>
+    </div>`;
+  }).join("");
 }
 
 async function apiBase() {
@@ -116,7 +134,12 @@ async function load() {
     $("#datasetCount").textContent = integer.format(datasets.filter((item) => item.status === "ready").length);
     $("#tokenCount").textContent = dataset ? number.format(dataset.train_tokens) : "—";
     $("#documentCount").textContent = dataset ? integer.format(dataset.documents) : "—";
-    $("#latestAccuracy").textContent = run ? percent(run.accuracy) : "—";
+    const latestPayload = run ? parsePayload(run) : {};
+    const latestIsByteRun = latestPayload.metric_kind === "bits-per-byte";
+    $("#latestMetricLabel").textContent = latestIsByteRun ? "LATEST LATENT BPB" : "LATEST ACCURACY";
+    $("#latestMetric").textContent = run
+      ? (latestIsByteRun ? fixed(latestPayload.latent_bits_per_byte) : percent(run.accuracy)) : "—";
+    $("#latestMetricNote").textContent = latestIsByteRun ? "held-out raw bytes" : "held-out measurement";
     renderDataset(dataset); renderRun(run); renderHistory(runs);
     setConnection("live", "LIVE AWS LEDGER");
   } catch (error) {
