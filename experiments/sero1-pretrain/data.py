@@ -204,6 +204,81 @@ class TokenizedCorpus:
         return token_ids, valid, byte_lengths
 
 
+class EodTokenizedCorpus(TokenizedCorpus):
+    """Document-safe corpus with a source-absent NUL token after every article."""
+
+    def __init__(
+        self, source: ManifestDocuments, tokenizer: Sero1Tokenizer, context: int,
+    ) -> None:
+        if context < 2:
+            raise ValueError("token context must be at least two")
+        eod_ids, eod_lengths = tokenizer.encode(b"\0")
+        if len(eod_ids) != 1 or eod_lengths != [1]:
+            raise ValueError("reserved NUL end-of-document marker must be exactly one token")
+        if any(b"\0" in document.data for rows in source.splits.values() for document in rows):
+            raise ValueError("reserved NUL end-of-document marker occurs in source text")
+        self.source = source
+        self.tokenizer = tokenizer
+        self.context = context
+        self.eod_token_id = eod_ids[0]
+        self.documents: dict[str, list[TokenizedDocument]] = {}
+        self.windows: dict[str, list[TokenWindow]] = {}
+        for split, raw_documents in source.splits.items():
+            tokenized: list[TokenizedDocument] = []
+            windows: list[TokenWindow] = []
+            for document_index, document in enumerate(raw_documents):
+                ids, lengths = tokenizer.encode(document.data)
+                if not ids or sum(lengths) != len(document.data):
+                    raise ValueError(f"tokenization accounting failed for {document.document_id}")
+                ids.append(self.eod_token_id)
+                lengths.append(0)
+                token_ids = np.asarray(ids, dtype=np.int64)
+                token_byte_lengths = np.asarray(lengths, dtype=np.int64)
+                tokenized.append(TokenizedDocument(
+                    document.document_id, document.source_id, token_ids, token_byte_lengths,
+                    len(document.data),
+                ))
+                for start in range(0, len(ids), context):
+                    stop = min(start + context, len(ids))
+                    windows.append(TokenWindow(
+                        document_index, document.document_id, document.source_id,
+                        start, stop, int(token_byte_lengths[start:stop].sum()),
+                    ))
+            self.documents[split] = tokenized
+            self.windows[split] = windows
+            if self.window_raw_bytes(split) != source.raw_bytes(split):
+                raise ValueError(f"{split} windows do not cover every source byte exactly once")
+
+    def eod_count(self, split: str) -> int:
+        return len(self.documents[split])
+
+    def content_token_count(self, split: str) -> int:
+        return self.token_count(split) - self.eod_count(split)
+
+    def batch_negative_token_ids(
+        self, split: str, windows: Sequence[TokenWindow], ngram: int = 4,
+    ) -> np.ndarray:
+        if ngram < 2:
+            raise ValueError("unlikelihood n-gram must be at least two")
+        negative = np.full((len(windows), self.context), -1, dtype=np.int64)
+        documents = self.documents[split]
+        prefix = ngram - 1
+        for row, window in enumerate(windows):
+            values = documents[window.document_index].token_ids[
+                window.token_start:window.token_stop
+            ]
+            previous: dict[tuple[int, ...], list[int]] = {}
+            for index in range(prefix, len(values)):
+                key = tuple(int(value) for value in values[index - prefix:index])
+                target = int(values[index])
+                for candidate in reversed(previous.get(key, [])):
+                    if candidate != target:
+                        negative[row, index] = candidate
+                        break
+                previous.setdefault(key, []).append(target)
+        return negative
+
+
 def batches(values: Sequence[TokenWindow], batch_size: int) -> Iterator[list[TokenWindow]]:
     for start in range(0, len(values), batch_size):
         yield list(values[start:start + batch_size])

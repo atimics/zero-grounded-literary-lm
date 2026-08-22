@@ -1,0 +1,41 @@
+{
+  "schema": "sero.optimized_pretrain_aws_execution.v1",
+  "region": "us-east-1",
+  "instance_type": "g5.xlarge",
+  "gpu": "NVIDIA A10G 24 GB",
+  "ami": "ami-0909175f265dac51e",
+  "pricing_verified_at": "2026-08-22",
+  "on_demand_usd_per_hour": 1.006,
+  "calibration": {
+    "seed": 0,
+    "maximum_updates": 128,
+    "validation_byte_limit": 131072,
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.503
+  },
+  "base": {
+    "seed": 0,
+    "epochs": 6,
+    "maximum_instance_seconds": 7200,
+    "maximum_ec2_usd": 2.012
+  },
+  "unlikelihood_branch": {
+    "seed": 0,
+    "resume_epoch": 5,
+    "train_epochs": 1,
+    "maximum_instance_seconds": 3600,
+    "maximum_ec2_usd": 1.006
+  },
+  "pilot_maximum_ec2_usd": 3.521,
+  "controls": {
+    "market": "on-demand",
+    "metadata_tokens": "required",
+    "network_ingress": false,
+    "instance_initiated_shutdown_behavior": "terminate",
+    "encrypted_ephemeral_volume": true,
+    "dry_run_required": true,
+    "calibration_required_before_base": true,
+    "base_epoch5_checkpoint_required_before_unlikelihood": true,
+    "seeds_1_and_2_closed": true
+  }
+}

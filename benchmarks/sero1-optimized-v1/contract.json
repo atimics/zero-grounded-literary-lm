@@ -1,0 +1,91 @@
+{
+  "schema": "sero.optimized_pretrain_contract.v1",
+  "experiment": "sero1-optimized-v1",
+  "status": "diagnostic-seed0-unrun",
+  "pilot_seed": 0,
+  "data": {
+    "dataset_id": "sero-pretrain-article",
+    "dataset_version": "2026-08-22.v2",
+    "dataset_digest": "0cefd7a464177abec1ce32349aca957ac2a82d4d53cb0c9a7775defb13ace82d",
+    "parent_dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+    "unique_training_bytes": 123081945,
+    "unique_validation_bytes": 1360728,
+    "unique_test_bytes": 1230862,
+    "split_unit": "original-source-article",
+    "articles_present_in_multiple_splits": 0,
+    "document_boundaries_crossed": false,
+    "unmarked_document_boundaries": 0
+  },
+  "tokenizer": {
+    "artifact": "tokenizers/sero1-byte-bpe-4096.json",
+    "artifact_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+    "vocabulary_size": 4096,
+    "maximum_token_bytes": 8,
+    "end_of_document_byte_hex": "00",
+    "end_of_document_token_id": 188,
+    "end_of_document_in_training_loss": true,
+    "end_of_document_in_content_bpb": false
+  },
+  "model": {
+    "architecture": "dense-causal-tied-embedding-transformer",
+    "token_context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1056,
+    "dropout": 0.0,
+    "position": "learned-absolute",
+    "normalization": "pre-norm-plus-final-rmsnorm",
+    "private_input_bos": true,
+    "expected_parameters": 6021312
+  },
+  "training": {
+    "epochs": 6,
+    "batch_size": 16,
+    "checkpoint_epochs": [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+    "unlikelihood_branch_epoch": 5.0,
+    "windowing": "non-overlapping-token-windows-within-original-articles",
+    "tail_windows": "padded-and-loss-masked",
+    "shuffle": "deterministic-per-epoch",
+    "precision": "bfloat16-on-cuda",
+    "gradient_clip": 1.0
+  },
+  "optimization": {
+    "optimizer": "AdamW",
+    "learning_rate": 0.0003,
+    "betas": [0.9, 0.95],
+    "epsilon": 1e-8,
+    "weight_decay": 0.1,
+    "warmup_fraction": 0.02,
+    "minimum_learning_rate_ratio": 0.1,
+    "schedule": "linear-warmup-cosine-decay-over-six-epochs"
+  },
+  "objectives": {
+    "base": "next-token-cross-entropy-including-end-of-document",
+    "branch": "base-plus-repeated-four-gram-token-unlikelihood",
+    "branch_unlikelihood_alpha": 0.1,
+    "branch_unlikelihood_ngram": 4,
+    "branch_negative_rule": "most-recent prior non-target continuation of the current three-token suffix"
+  },
+  "evaluation": {
+    "checkpoint_split": "complete-validation",
+    "final_split": "complete-test",
+    "primary_metric": "content-bits-per-raw-byte-excluding-end-of-document-loss",
+    "boundary_metrics_reported_separately": true,
+    "sample_prompts": [
+      "In",
+      "The history of astronomy began with",
+      "According to the official report, the government",
+      "Question: Why does ice float on water?\nAnswer:",
+      "Once upon a time, a young inventor"
+    ],
+    "sample_new_tokens": 128,
+    "generation_stops_at_end_of_document": true
+  },
+  "pilot_decisions": {
+    "compare_epoch6_base_with_epoch5_base": true,
+    "compare_epoch6_unlikelihood_with_matched_epoch6_base": true,
+    "do_not_open_seeds_1_and_2_until_seed0_report": true,
+    "no_promotion_from_this_pilot": true
+  }
+}

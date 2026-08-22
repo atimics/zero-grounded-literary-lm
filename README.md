@@ -70,6 +70,21 @@ became too short. This rejects the tested one-stage embedding-router design,
 not all learned tokenization. See
 [`benchmarks/sero-latent-v3/RESULTS.md`](benchmarks/sero-latent-v3/RESULTS.md).
 
+**Sero 1 is the first promoted dense base model in the Sero lineage.** Its
+three 6.02M-parameter seeds reached a mean 1.6181 test BPB after 135.5M token
+exposures each. A post-training generation diagnostic found that 128 tokens of
+real held-out context reduced continuation loss by 0.1135 BPB versus one token,
+but greedy generation still looped in 91.7% of those cases. Sampling sharply
+reduced repetition without making the content reliable. See
+[`benchmarks/sero1-pretrain-v1/RESULT.md`](benchmarks/sero1-pretrain-v1/RESULT.md)
+and
+[`benchmarks/sero1-generation-eval-v1/RESULT.md`](benchmarks/sero1-generation-eval-v1/RESULT.md).
+The next diagnostic rebuilds the corpus with original articles as documents,
+adds an explicit end-of-document target, doubles the training schedule, and
+branches after epoch 5 to test a small repeated-four-gram unlikelihood loss.
+Its frozen seed-0 contract is in
+[`benchmarks/sero1-optimized-v1/contract.json`](benchmarks/sero1-optimized-v1/contract.json).
+
 ## Build
 
 ```sh
@@ -79,6 +94,8 @@ make sero-latent-v1-result-check
 make sero-latent-v2-result-check
 make sero-latent-v3-contract-check
 make sero-latent-v3-result-check
+make sero1-generation-eval-result-check
+make sero1-optimized-check SERO1_OPTIMIZED_MANIFEST=/path/to/manifest.json
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer
