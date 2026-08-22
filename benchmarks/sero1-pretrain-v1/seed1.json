@@ -1,0 +1,1160 @@
+{
+  "calibration": null,
+  "checkpoints": [
+    {
+      "learning_rate": 0.00029721713471195785,
+      "nominal_epoch": 0.25,
+      "observed_epoch": 0.2501262614554287,
+      "raw_byte_overshoot": 15549,
+      "training_raw_bytes": 30803845,
+      "training_tokens": 11303538,
+      "update": 1453,
+      "validation": {
+        "bits_per_byte": 2.4955132884533344,
+        "bits_per_token": 6.895003070374026,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 2277542.9526367188,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583180.5325172276,
+        "seconds": 2.2577622649999967,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 2.5404857926217934,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 806868.9501953125,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 2.3858471519634805,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 722778.3996582031,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 2.560350045521102,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 747895.6022949219,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.0002853287748663915,
+      "nominal_epoch": 0.5,
+      "observed_epoch": 0.5000535105946349,
+      "raw_byte_overshoot": 6590,
+      "training_raw_bytes": 61583181,
+      "training_tokens": 22588018,
+      "update": 2904,
+      "validation": {
+        "bits_per_byte": 2.227094033854433,
+        "bits_per_token": 6.153371441654474,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 2032568.7485351562,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583259.0883255956,
+        "seconds": 2.2574581800000715,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 2.2875222184574358,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 726526.6573486328,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 2.1210513544013794,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 642560.0660400391,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 2.2713680980449324,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 663482.0167236328,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.0002649208180598977,
+      "nominal_epoch": 0.75,
+      "observed_epoch": 0.7500216600168723,
+      "raw_byte_overshoot": 2668,
+      "training_raw_bytes": 92367554,
+      "training_tokens": 33874544,
+      "update": 4354,
+      "validation": {
+        "bits_per_byte": 1.974186423635041,
+        "bits_per_token": 5.454597863869026,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1801751.3259277344,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583235.6845752372,
+        "seconds": 2.2575487660000135,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 2.031061524990175,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 645073.6647338867,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.8922229848555947,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 573237.8537597656,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.9973511407387379,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 583439.8062133789,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.00023743403091879545,
+      "nominal_epoch": 1.0,
+      "observed_epoch": 1.0,
+      "raw_byte_overshoot": 0,
+      "training_raw_bytes": 123153182,
+      "training_tokens": 45161159,
+      "update": 5804,
+      "validation": {
+        "bits_per_byte": 1.8308894670135822,
+        "bits_per_token": 5.0586741232695225,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1670970.6263427734,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583358.4786886406,
+        "seconds": 2.257073562999949,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.869944138868505,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 593902.1066894531,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.7721892403460995,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 536874.3349609375,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.849303824579356,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 540194.1817016602,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.00020483944683937066,
+      "nominal_epoch": 1.25,
+      "observed_epoch": 1.2500437138522333,
+      "raw_byte_overshoot": 5383,
+      "training_raw_bytes": 153946861,
+      "training_tokens": 56443073,
+      "update": 7253,
+      "validation": {
+        "bits_per_byte": 1.755544001410473,
+        "bits_per_token": 4.850497625442024,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1602206.2022094727,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 574705.4538032796,
+        "seconds": 2.291057081999952,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.7852161601696646,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 566992.1450500488,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.7103594951657983,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 518143.37634277344,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.7701427018957763,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 517070.6812133789,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.00016930212094709996,
+      "nominal_epoch": 1.5,
+      "observed_epoch": 1.5001583962321006,
+      "raw_byte_overshoot": 19507,
+      "training_raw_bytes": 184749280,
+      "training_tokens": 67732688,
+      "update": 8707,
+      "validation": {
+        "bits_per_byte": 1.71302050159224,
+        "bits_per_token": 4.733006901923783,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1563396.9128417969,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583292.2189038371,
+        "seconds": 2.2573299580001276,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.743825310918583,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 553846.2376098633,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.6709854594816713,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 506215.2431945801,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.7231213817027553,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 503335.4348754883,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.00013353084531611035,
+      "nominal_epoch": 1.75,
+      "observed_epoch": 1.7501000989158364,
+      "raw_byte_overshoot": 12328,
+      "training_raw_bytes": 215530396,
+      "training_tokens": 79016189,
+      "update": 10158,
+      "validation": {
+        "bits_per_byte": 1.6803319660107523,
+        "bits_per_token": 4.6426897899118975,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1533563.5538330078,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 582133.570301727,
+        "seconds": 2.2618228310000177,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.7101661977686355,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 543155.9620056152,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.6404118333109814,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 496953.14248657227,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.6892947942738736,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 493454.4594116211,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 0.00010001382521657936,
+      "nominal_epoch": 2.0,
+      "observed_epoch": 2.0,
+      "raw_byte_overshoot": 0,
+      "training_raw_bytes": 246306364,
+      "training_tokens": 90322318,
+      "update": 11608,
+      "validation": {
+        "bits_per_byte": 1.6543458930374233,
+        "bits_per_token": 4.5708913131147195,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1509847.2315673828,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583745.3493228757,
+        "seconds": 2.255577712999866,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.683391200903668,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 534652.1106262207,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.6171077104553284,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 489893.2951660156,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.6613850424291565,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 485301.8317260742,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 7.111857078113215e-05,
+      "nominal_epoch": 2.25,
+      "observed_epoch": 2.250012500692024,
+      "raw_byte_overshoot": 1539,
+      "training_raw_bytes": 277096199,
+      "training_tokens": 101605572,
+      "update": 13057,
+      "validation": {
+        "bits_per_byte": 1.6385524282512696,
+        "bits_per_token": 4.527254603706586,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1495433.2452392578,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 582164.401693123,
+        "seconds": 2.261703045000104,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.6680437910615538,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 529777.7088470459,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.6021025091011714,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 485347.55743408203,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.6442891253590077,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 480307.9984741211,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 4.8814515545697804e-05,
+      "nominal_epoch": 2.5,
+      "observed_epoch": 2.5001473936743266,
+      "raw_byte_overshoot": 18152,
+      "training_raw_bytes": 307901107,
+      "training_tokens": 112909273,
+      "update": 14510,
+      "validation": {
+        "bits_per_byte": 1.6240329794334385,
+        "bits_per_token": 4.487137949292323,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1482181.99609375,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583298.3236484583,
+        "seconds": 2.2573063330000878,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.6526918761887635,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 524901.8762512207,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.5889118079724607,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 481351.51190185547,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.629296666767335,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 475928.59970092773,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 3.4781996953824404e-05,
+      "nominal_epoch": 2.75,
+      "observed_epoch": 2.7500375913957305,
+      "raw_byte_overshoot": 4630,
+      "training_raw_bytes": 338675880,
+      "training_tokens": 124195330,
+      "update": 15962,
+      "validation": {
+        "bits_per_byte": 1.6154631291037254,
+        "bits_per_token": 4.463459796741734,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1474360.6784057617,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 582176.6882122868,
+        "seconds": 2.261655312999892,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.6441159761301365,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 522178.13439941406,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.5813930664629428,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 479073.75326538086,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.619643309263143,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 473108.7885437012,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    },
+    {
+      "learning_rate": 2.9999999999999997e-05,
+      "nominal_epoch": 3.0,
+      "observed_epoch": 3.0,
+      "raw_byte_overshoot": 0,
+      "training_raw_bytes": 369459546,
+      "training_tokens": 135483477,
+      "update": 17412,
+      "validation": {
+        "bits_per_byte": 1.6100519242221951,
+        "bits_per_token": 4.448508854807181,
+        "bytes_per_token": 2.762959869729807,
+        "nll_nats": 1469422.1146240234,
+        "raw_bytes": 1316683,
+        "raw_bytes_per_second": 583417.8344134459,
+        "seconds": 2.2568439330000274,
+        "sources": {
+          "english-wikibooks": {
+            "bits_per_byte": 1.6385610102208743,
+            "bytes_per_token": 2.7567730174296528,
+            "nll_nats": 520413.8539123535,
+            "raw_bytes": 458206,
+            "tokens": 166211
+          },
+          "english-wikinews": {
+            "bits_per_byte": 1.5761448843853478,
+            "bytes_per_token": 2.8788154237310466,
+            "nll_nats": 477483.84729003906,
+            "raw_bytes": 437056,
+            "tokens": 151818
+          },
+          "simple-wikipedia": {
+            "bits_per_byte": 1.6142193191445056,
+            "bytes_per_token": 2.658488887767397,
+            "nll_nats": 471524.4042663574,
+            "raw_bytes": 421421,
+            "tokens": 158519
+          }
+        },
+        "split": "validation",
+        "tokens": 476548,
+        "windows": 977
+      }
+    }
+  ],
+  "contract": {
+    "path": "/opt/sero/repo/benchmarks/sero1-pretrain-v1/contract.json",
+    "sha256": "16e84a4b6976d4650524bd10a516c4980d7abcecc82d3f18536e80be4029c21f",
+    "status_at_launch": "preregistered-unrun"
+  },
+  "data": {
+    "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+    "dataset_id": "sero-pretrain",
+    "dataset_version": "2026-08-22.v1",
+    "document_boundaries_crossed": false,
+    "manifest_path": "build/sero-pretrain-v1/manifest.json",
+    "raw_bytes": {
+      "test": 1247826,
+      "train": 123153182,
+      "validation": 1316683
+    },
+    "schedule_sha256": "0ded582e86136ebec9fc8f13990854e15a3b754014e43e90b1063c44ce142bcd",
+    "source_bytes": {
+      "test": {
+        "english-wikibooks": 410517,
+        "english-wikinews": 421343,
+        "simple-wikipedia": 415966
+      },
+      "train": {
+        "english-wikibooks": 40854557,
+        "english-wikinews": 41138847,
+        "simple-wikipedia": 41159778
+      },
+      "validation": {
+        "english-wikibooks": 458206,
+        "english-wikinews": 437056,
+        "simple-wikipedia": 421421
+      }
+    },
+    "token_counts": {
+      "test": 448980,
+      "train": 45161159,
+      "validation": 476548
+    },
+    "token_digests": {
+      "test": "9d484b8a5864286264c38c25017d6d9276b528d53d6a2215828af13f37a93f67",
+      "train": "cfa14d20379b5d8f99718ac4d8bc52fa353a1c93c78dc56a40785e3b9125cfdd",
+      "validation": "3071e63db38560950f523100d3a863f0d89a3c4ced6b891abc58d6bc4ea01ab1"
+    },
+    "window_counts": {
+      "test": 923,
+      "train": 92862,
+      "validation": 977
+    }
+  },
+  "experiment": "sero1-pretrain-v1",
+  "final_test": {
+    "bits_per_byte": 1.6179583481624444,
+    "bits_per_token": 4.496704739084481,
+    "bytes_per_token": 2.7792462915942804,
+    "nll_nats": 1399415.9794921875,
+    "raw_bytes": 1247826,
+    "raw_bytes_per_second": 586228.1791548906,
+    "seconds": 2.128567073999875,
+    "sources": {
+      "english-wikibooks": {
+        "bits_per_byte": 1.659669100193716,
+        "bytes_per_token": 2.761560402007346,
+        "nll_nats": 472256.68675231934,
+        "raw_bytes": 410517,
+        "tokens": 148654
+      },
+      "english-wikinews": {
+        "bits_per_byte": 1.589975690269066,
+        "bytes_per_token": 2.8740603811680603,
+        "nll_nats": 464356.7131500244,
+        "raw_bytes": 421343,
+        "tokens": 146602
+      },
+      "simple-wikipedia": {
+        "bits_per_byte": 1.6051383635337049,
+        "bytes_per_token": 2.7059275064401134,
+        "nll_nats": 462802.5782318115,
+        "raw_bytes": 415966,
+        "tokens": 153724
+      }
+    },
+    "split": "test",
+    "tokens": 448980,
+    "windows": 923
+  },
+  "final_validation": {
+    "bits_per_byte": 1.6100519242221951,
+    "bits_per_token": 4.448508854807181,
+    "bytes_per_token": 2.762959869729807,
+    "nll_nats": 1469422.1146240234,
+    "raw_bytes": 1316683,
+    "raw_bytes_per_second": 583417.8344134459,
+    "seconds": 2.2568439330000274,
+    "sources": {
+      "english-wikibooks": {
+        "bits_per_byte": 1.6385610102208743,
+        "bytes_per_token": 2.7567730174296528,
+        "nll_nats": 520413.8539123535,
+        "raw_bytes": 458206,
+        "tokens": 166211
+      },
+      "english-wikinews": {
+        "bits_per_byte": 1.5761448843853478,
+        "bytes_per_token": 2.8788154237310466,
+        "nll_nats": 477483.84729003906,
+        "raw_bytes": 437056,
+        "tokens": 151818
+      },
+      "simple-wikipedia": {
+        "bits_per_byte": 1.6142193191445056,
+        "bytes_per_token": 2.658488887767397,
+        "nll_nats": 471524.4042663574,
+        "raw_bytes": 421421,
+        "tokens": 158519
+      }
+    },
+    "split": "validation",
+    "tokens": 476548,
+    "windows": 977
+  },
+  "finished_at": "2026-08-22T21:57:05.833164Z",
+  "gates": {
+    "decision": "go",
+    "values": {
+      "final_validation_beats_epoch_one": true,
+      "test_bits_per_byte": true,
+      "validation_bits_per_byte": true
+    }
+  },
+  "mode": "full",
+  "model": {
+    "artifact": "build/sero1-pretrain/seed1/model-final.pt",
+    "artifact_bytes": 72351423,
+    "artifact_sha256": "6b72c4ab02afbee32a7153eb59211adc94cb422bb8a33723be395cd19691b688",
+    "config": {
+      "dimension": 256,
+      "dropout": 0.0,
+      "feed_forward": 1056,
+      "heads": 8,
+      "layers": 6,
+      "token_context": 512,
+      "vocabulary_size": 4096
+    },
+    "parameters": 6021312,
+    "state_sha256": "1f896fc4b7f4b7f82c68585fcbd1fc2cc27c60d3dbc425faa94d283ce95eebfd",
+    "tokens_per_parameter_full_run": 22.500657165747267,
+    "tokens_per_parameter_one_epoch": 7.500219055249088
+  },
+  "runtime": {
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "device": "cuda",
+    "device_name": "NVIDIA A10G",
+    "git_commit": "809ea0cd48262feee06c58e3d8e7f8c523e363a3",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1061-aws-x86_64-with-glibc2.35",
+    "python": "3.10.12",
+    "torch": "2.13.0+cu130"
+  },
+  "samples": [
+    {
+      "generated_bytes_hex": "6f7279206f662074686520536369656e6365206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f66204175737472616c69612773204465706172746d656e74206f6620",
+      "generated_token_ids": [
+        273,
+        271,
+        474,
+        50,
+        1085,
+        800,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332,
+        32,
+        1041,
+        331,
+        308,
+        64,
+        991,
+        35,
+        68,
+        1286,
+        2270,
+        332
+      ],
+      "prompt": "The",
+      "prompt_token_ids": [
+        2429
+      ],
+      "text_lossy_utf8": "Theory of the Science of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of Australia's Department of "
+    },
+    {
+      "generated_bytes_hex": "74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e2e0a496e74726f64756374696f6e",
+      "generated_token_ids": [
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810,
+        265,
+        524,
+        2274,
+        1110,
+        2810
+      ],
+      "prompt": "In",
+      "prompt_token_ids": [
+        524
+      ],
+      "text_lossy_utf8": "Introduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction.\nIntroduction"
+    },
+    {
+      "generated_bytes_hex": "6d65726963616e20436976696c205761722e0a496e20313939392c20416d65726963616e20436976696c205761722077617320626f726e20696e2053636f746c616e642c2053636f746c616e642e20496e20313939392c20416d65726963616e20436976696c205761722077617320626f726e20696e2053636f746c616e642e20496e20313939392c20416d65726963616e20436976696c205761722077617320626f726e20696e2053636f746c616e642e20496e20313939392c20416d65726963616e20436976696c205761722077617320626f726e20696e2053636f746c616e642e20496e20313939392c20416d65726963616e20436976696c205761722077617320626f726e20696e2053636f746c616e64",
+      "generated_token_ids": [
+        989,
+        465,
+        405,
+        34,
+        1169,
+        2594,
+        54,
+        275,
+        265,
+        1162,
+        16,
+        24,
+        24,
+        24,
+        266,
+        32,
+        989,
+        465,
+        405,
+        34,
+        1169,
+        2594,
+        54,
+        275,
+        1424,
+        1701,
+        1948,
+        50,
+        883,
+        83,
+        1033,
+        266,
+        50,
+        883,
+        83,
+        1033,
+        297,
+        1162,
+        16,
+        24,
+        24,
+        24,
+        266,
+        32,
+        989,
+        465,
+        405,
+        34,
+        1169,
+        2594,
+        54,
+        275,
+        1424,
+        1701,
+        1948,
+        50,
+        883,
+        83,
+        1033,
+        297,
+        1162,
+        16,
+        24,
+        24,
+        24,
+        266,
+        32,
+        989,
+        465,
+        405,
+        34,
+        1169,
+        2594,
+        54,
+        275,
+        1424,
+        1701,
+        1948,
+        50,
+        883,
+        83,
+        1033,
+        297,
+        1162,
+        16,
+        24,
+        24,
+        24,
+        266,
+        32,
+        989,
+        465,
+        405,
+        34,
+        1169,
+        2594,
+        54,
+        275,
+        1424,
+        1701,
+        1948,
+        50,
+        883,
+        83,
+        1033,
+        297,
+        1162,
+        16,
+        24,
+        24,
+        24,
+        266,
+        32,
+        989,
+        465,
+        405,
+        34,
+        1169,
+        2594,
+        54,
+        275,
+        1424,
+        1701,
+        1948,
+        50,
+        883,
+        83,
+        1033
+      ],
+      "prompt": "A",
+      "prompt_token_ids": [
+        32
+      ],
+      "text_lossy_utf8": "American Civil War.\nIn 1999, American Civil War was born in Scotland, Scotland. In 1999, American Civil War was born in Scotland. In 1999, American Civil War was born in Scotland. In 1999, American Civil War was born in Scotland. In 1999, American Civil War was born in Scotland"
+    }
+  ],
+  "schema": "sero.pretrain_v1_seed_result.v1",
+  "seed": 1,
+  "started_at": "2026-08-22T21:32:59.753862Z",
+  "telemetry": {
+    "dashboard_payload": {
+      "decision": "go",
+      "epoch": 3.0,
+      "experiment": "sero1-pretrain-v1",
+      "metric_kind": "language-model-bits-per-byte",
+      "note": "Frozen dense Sero 1 pretraining run.",
+      "seed": 1,
+      "status": "completed",
+      "test_bits_per_byte": 1.6179583481624444,
+      "tokens_per_parameter": 22.500657165747267,
+      "training_bytes": 369459546,
+      "training_tokens": 135483477,
+      "validation_bits_per_byte": 1.6100519242221951
+    },
+    "dashboard_payload_sha256": "5a222dc820116cf7de1c4933b3b6cf15985c2a670f0c6097c9be984f63ab48ff",
+    "published": false
+  },
+  "timing": {
+    "wall_seconds": 1446.0792800899999
+  },
+  "tokenizer": {
+    "artifact_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+    "maximum_token_bytes": 8,
+    "path": "tokenizers/sero1-byte-bpe-4096.json",
+    "train_bytes_per_token": 2.7269712453571,
+    "vocabulary_size": 4096
+  },
+  "training": {
+    "batch_size": 16,
+    "completed_updates": 17412,
+    "final_learning_rate": 2.9999999999999997e-05,
+    "frozen_epochs": 3,
+    "frozen_total_updates": 17412,
+    "mean_token_nll_nats": 3.6108537933472737,
+    "nll_nats": 489211026.8613281,
+    "raw_bytes": 369459546,
+    "raw_bytes_per_second": 281732.2596994207,
+    "seconds": 1311.3853074339986,
+    "source_raw_bytes": {
+      "english-wikibooks": 122563671,
+      "english-wikinews": 123416541,
+      "simple-wikipedia": 123479334
+    },
+    "tokens": 135483477,
+    "tokens_per_second": 103313.24915108431,
+    "updates_per_epoch": 5804
+  }
+}
