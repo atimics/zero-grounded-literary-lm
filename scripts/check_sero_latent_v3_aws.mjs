@@ -24,7 +24,7 @@ for (const file of ["scripts/aws/sero-latent-v3-user-data.sh",
 const userData = fs.readFileSync("scripts/aws/sero-latent-v3-user-data.sh", "utf8");
 const launcher = fs.readFileSync("scripts/aws/sero-latent-v3-run-instances.sh", "utf8");
 const requirements = fs.readFileSync("experiments/sero-latent-v3/requirements.txt", "utf8");
-for (const pin of ["numpy==2.5.2", "tokenizers==0.23.1", "torch==2.13.0"])
+for (const pin of ["numpy==2.2.6", "tokenizers==0.23.1", "torch==2.13.0"])
   assert(requirements.includes(pin), `runtime omits exact pin ${pin}`);
 for (const required of ["shutdown -h now", "X-aws-ec2-metadata-token-ttl-seconds",
   "scripts/verify_zero_dataset.py", "--device cuda", "timeout --signal=TERM"])
