@@ -1,0 +1,37 @@
+{
+  "schema": "sero.latent_v1_exploratory_aggregate.v1",
+  "status": "exploratory-not-promotion-evidence",
+  "seeds": [
+    {
+      "seed": 0,
+      "static_local_global_bits_per_byte": 4.198412954181382,
+      "latent_local_global_bits_per_byte": 4.070584743091351,
+      "conventional_token_bits_per_byte": 4.003875795506535,
+      "latent_vs_static_local_global_percent": -3.0446793225216484,
+      "latent_vs_conventional_percent": 1.6661093148714112
+    },
+    {
+      "seed": 1,
+      "static_local_global_bits_per_byte": 4.144249979446913,
+      "latent_local_global_bits_per_byte": 4.055089797649906,
+      "conventional_token_bits_per_byte": 3.963665927434818,
+      "latent_vs_static_local_global_percent": -2.15141900800363,
+      "latent_vs_conventional_percent": 2.3065483289671507
+    },
+    {
+      "seed": 2,
+      "static_local_global_bits_per_byte": 4.2066183623418345,
+      "latent_local_global_bits_per_byte": 4.091318542299283,
+      "conventional_token_bits_per_byte": 4.012653191758525,
+      "latent_vs_static_local_global_percent": -2.7409146756627534,
+      "latent_vs_conventional_percent": 1.9604323319624806
+    }
+  ],
+  "means": {
+    "static_local_global_bits_per_byte": 4.183093765323377,
+    "latent_local_global_bits_per_byte": 4.07233102768018,
+    "conventional_token_bits_per_byte": 3.9933983048999595,
+    "latent_vs_static_local_global_percent": -2.6456710020626772,
+    "latent_vs_conventional_percent": 1.9776966586003475
+  }
+}

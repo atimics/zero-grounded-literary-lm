@@ -1,0 +1,41 @@
+{
+  "schema": "sero.model_lineage.v1",
+  "model": "sero-0",
+  "status": "reference-baseline",
+  "tokenizer": {
+    "kind": "lossless-byte",
+    "vocabulary_size": 264,
+    "byte_tokens": 256,
+    "document_token": 256,
+    "literal_control_byte_tokens": {
+      "1": 257,
+      "2": 258,
+      "3": 259,
+      "4": 260,
+      "5": 261,
+      "6": 262,
+      "7": 263
+    },
+    "protected_channel_ids": [1, 2, 3, 4, 5, 6, 7],
+    "first_learned_merge_id": 264,
+    "unicode_normalization": "none",
+    "unknown_token": false,
+    "token_width_bytes": 2,
+    "byte_order": "little-endian"
+  },
+  "architecture": {
+    "context": 512,
+    "dimension": 256,
+    "attention_heads": 8,
+    "layers": 6,
+    "feed_forward_dimension": 1056,
+    "positions": "rotary",
+    "embedding": "full-tied",
+    "parameters": 4887808
+  },
+  "gates": {
+    "exact_all_byte_roundtrip": true,
+    "deterministic_artifact": true,
+    "historical_zero_source_unchanged": true
+  }
+}

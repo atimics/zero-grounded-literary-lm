@@ -9,6 +9,8 @@ ZERO3_STEPS ?= 6000
 ZERO3_CONSOLIDATION_STEPS ?= 1200
 ZERO3_BALANCE_STEPS ?= 400
 ZERO_DATA_OUT ?= build/zero-literary-v1
+SERO_LATENT_PYTHON ?= python3
+SERO0_OUT ?= build/sero0
 ZERO4_Q1_STEPS ?= 4000
 ZERO4_Q1_BATCH ?= 2
 ZERO4_Q1_SEED ?= 1
@@ -121,6 +123,9 @@ endif
 
 .PHONY: all check clean web channel-data zero3-data zero3-stage1 \
 	zero-data-build zero-data-pipeline-check \
+	sero0-tokenizer sero0-check \
+	sero-latent-v1-check sero-latent-v1-pilot \
+	sero-latent-v1-conventional sero-latent-v1-result-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
 	zero4-q1-train zero4-q1-eval zero4-q1 zero4-q2-data zero4-q2-check \
@@ -172,13 +177,42 @@ endif
 	$(MONKEY_PREFIX)-literary.ckpt $(MONKEY_PREFIX)-balanced.ckpt \
 	$(MONKEY_TRACE_PREFIX)-brainfuck.ckpt
 
-all: zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
+all: zero_lm literary_lm bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
 
-zero-data-build: bpe_tokenizer
+sero_tokenizer: sero_tokenizer.c
+	$(CC) $(CFLAGS) sero_tokenizer.c -o $@
+
+sero0-tokenizer: sero_tokenizer
+	mkdir -p "$(SERO0_OUT)"
+	./sero_tokenizer init --vocab "$(SERO0_OUT)/tokenizer.sero"
+
+sero0-check: sero_tokenizer
+	node scripts/check_sero0.mjs
+
+zero-data-build: $(ZERO_DATA_OUT)/manifest.json
+
+$(ZERO_DATA_OUT)/manifest.json: bpe_tokenizer
 	node scripts/build_zero_corpus.mjs --out "$(ZERO_DATA_OUT)"
 
 zero-data-pipeline-check: bpe_tokenizer
 	node scripts/check_zero_data_pipeline.mjs
+
+sero-latent-v1-check:
+	$(SERO_LATENT_PYTHON) experiments/sero-latent-v1/train.py --self-test
+	$(SERO_LATENT_PYTHON) experiments/sero-latent-v1/conventional_control.py --self-test
+
+sero-latent-v1-pilot: $(ZERO_DATA_OUT)/manifest.json
+	$(SERO_LATENT_PYTHON) experiments/sero-latent-v1/train.py \
+		--train '$(ZERO_DATA_OUT)/text/train/*.txt' \
+		--validation '$(ZERO_DATA_OUT)/text/validation/*.txt'
+
+sero-latent-v1-conventional:
+	$(SERO_LATENT_PYTHON) experiments/sero-latent-v1/conventional_control.py \
+		--train '$(ZERO_DATA_OUT)/text/train/*.txt' \
+		--validation '$(ZERO_DATA_OUT)/text/validation/*.txt'
+
+sero-latent-v1-result-check:
+	node scripts/check_sero_latent_v1_result.mjs
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm
@@ -1892,7 +1926,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero0-check sero-latent-v1-result-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
@@ -1955,5 +1989,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm bpe_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
+	rm -f zero_lm literary_lm bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
 	rm -f docs/literary.js docs/literary.wasm

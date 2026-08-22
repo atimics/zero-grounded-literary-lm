@@ -39,11 +39,27 @@ this corpus, so the final preset uses its cleaned 128-character ASCII stream
 with no merges. The smaller vocabulary reallocates capacity to the transformer
 while keeping the total parameter count unchanged.
 
+## Sero model lineage
+
+Historical ZERO names remain attached to their released experiments and
+artifacts. New base-model research is named **Sero**. Sero starts from exact raw
+bytes and makes tokenizer/model tradeoffs explicit rather than inheriting the
+old 128-character normalization contract.
+
+The first integrated **Sero Latent v1** experiment is complete. Causal learned
+patches beat static patches inside the same local/global architecture, but a
+compute-matched conventional 4,096-token byte-BPE Transformer remained 1.64%
+better on the preregistered seed. The static tokenizer therefore remains the
+current control while the latent arm advances to discrete-code research. See
+[`docs/SERO.md`](docs/SERO.md) and
+[`benchmarks/sero-latent-v1/RESULTS.md`](benchmarks/sero-latent-v1/RESULTS.md).
+
 ## Build
 
 ```sh
 make
 make check
+make sero-latent-v1-result-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

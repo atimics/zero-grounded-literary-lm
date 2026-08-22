@@ -1,0 +1,92 @@
+{
+  "comparison": {
+    "conventional_to_latent_bits_per_byte": 0.9836119496841245,
+    "conventional_to_latent_estimated_madds": 0.9453026451683736,
+    "conventional_to_latent_training_raw_bytes": 1.0499615969639011,
+    "conventional_total_bits_per_raw_byte": 4.003875795506535,
+    "estimated_conventional_madds_per_patch_position": 313344.0,
+    "estimated_latent_madds_per_patch_position": 331474.7944497589,
+    "latent_parameters": 88257,
+    "latent_total_bits_per_raw_byte": 4.070584743091351
+  },
+  "decision": "retain-static-control",
+  "experiment": "sero-latent-v1-conventional-control",
+  "gates": {
+    "conventional_matches_or_beats_latent": true,
+    "estimated_compute_within_ten_percent": true,
+    "exact_roundtrip": true,
+    "training_exposure_within_five_percent": true
+  },
+  "inputs": {
+    "train_bytes": 1048576,
+    "train_paths": [
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/blake.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/crowley.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/shakespeare.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/zero-foundation.txt"
+    ],
+    "train_sha256": "fdd8c39050866edc2be7efd78c09c30ac9a2781877f316d9ebf601efdc670c6d",
+    "validation_bytes": 75562,
+    "validation_paths": [
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/blake.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/crowley.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/shakespeare.txt"
+    ],
+    "validation_sha256": "2dd74a73277472bf3f6df0ba09c237e1e0a9721d7d7fb43ffaf3fb7a40382748"
+  },
+  "model": {
+    "artifact": "build/sero-latent-v1/conventional-token-lm.pt",
+    "context": 16,
+    "dimension": 48,
+    "feed_forward": 192,
+    "heads": 4,
+    "layers": 4,
+    "parameters": 314704,
+    "patch_positions_seen": 38400,
+    "raw_bytes_seen": 139437,
+    "trace": [
+      {
+        "gradient_norm": 6.3291015625,
+        "training_bits_per_raw_byte": 11.98838226094294,
+        "update": 1
+      },
+      {
+        "gradient_norm": 0.9949665069580078,
+        "training_bits_per_raw_byte": 6.50586428229005,
+        "update": 75
+      },
+      {
+        "gradient_norm": 0.6911952495574951,
+        "training_bits_per_raw_byte": 4.917154250992053,
+        "update": 150
+      },
+      {
+        "gradient_norm": 0.4285728335380554,
+        "training_bits_per_raw_byte": 3.3661324978041325,
+        "update": 225
+      },
+      {
+        "gradient_norm": 0.47022950649261475,
+        "training_bits_per_raw_byte": 3.786285081966069,
+        "update": 300
+      }
+    ],
+    "training_wall_seconds": 1.9588737919693813,
+    "updates": 300,
+    "validation": {
+      "model_bytes_per_second": 74717.23575475856,
+      "raw_bytes": 75526,
+      "tokens": 22944,
+      "total_bits_per_raw_byte": 4.003875795506535,
+      "wall_seconds": 1.0108243330614641
+    }
+  },
+  "schema": "sero.latent_v1_conventional_result.v1",
+  "seed": 0,
+  "tokenizer": {
+    "artifact": "build/sero-latent-v1/static-byte-bpe.json",
+    "exact_roundtrip": true,
+    "sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+    "vocabulary_size": 4096
+  }
+}

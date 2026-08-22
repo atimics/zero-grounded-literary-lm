@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sero.example/schemas/sero-lineage.schema.json",
+  "title": "Sero model lineage contract",
+  "type": "object",
+  "required": ["schema", "model", "status", "tokenizer", "architecture", "gates"],
+  "properties": {
+    "schema": { "const": "sero.model_lineage.v1" },
+    "model": { "type": "string", "pattern": "^sero-[0-9]+$" },
+    "status": { "type": "string" },
+    "tokenizer": {
+      "type": "object",
+      "required": ["kind", "vocabulary_size", "byte_tokens", "document_token", "protected_channel_ids", "first_learned_merge_id", "unicode_normalization", "unknown_token", "token_width_bytes", "byte_order"]
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["context", "dimension", "attention_heads", "layers", "feed_forward_dimension", "positions", "embedding", "parameters"]
+    },
+    "gates": {
+      "type": "object",
+      "required": ["exact_all_byte_roundtrip", "deterministic_artifact", "historical_zero_source_unchanged"]
+    }
+  },
+  "additionalProperties": false
+}

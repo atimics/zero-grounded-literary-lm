@@ -1,0 +1,222 @@
+{
+  "arms": {
+    "latent": {
+      "decoder_slots_computed": 345600,
+      "name": "latent-entropy-patches",
+      "parameters": 88257,
+      "patch_positions_seen": 38400,
+      "raw_bytes_seen": 132802,
+      "trace": [
+        {
+          "gradient_norm": 9.601187705993652,
+          "training_total_bits_per_raw_byte": 15.051716600193183,
+          "update": 1
+        },
+        {
+          "gradient_norm": 1.3211073875427246,
+          "training_total_bits_per_raw_byte": 5.361897946470259,
+          "update": 75
+        },
+        {
+          "gradient_norm": 1.1212986707687378,
+          "training_total_bits_per_raw_byte": 3.8448613409540364,
+          "update": 150
+        },
+        {
+          "gradient_norm": 1.6761183738708496,
+          "training_total_bits_per_raw_byte": 4.240483695658108,
+          "update": 225
+        },
+        {
+          "gradient_norm": 1.2824833393096924,
+          "training_total_bits_per_raw_byte": 4.046666815372361,
+          "update": 300
+        }
+      ],
+      "training_wall_seconds": 1.7757231669966131,
+      "updates": 300,
+      "validation": {
+        "boundary_bits_per_raw_byte": 0.2592009943109994,
+        "byte_only_bits_per_raw_byte": 3.8113837240757373,
+        "model_bytes_per_second": 193080.05570729706,
+        "patches": 22720,
+        "raw_bytes": 75519,
+        "total_bits_per_raw_byte": 4.070584743091351
+      },
+      "validation_wall_seconds": 0.3911279169842601
+    },
+    "static": {
+      "decoder_slots_computed": 345600,
+      "name": "static-byte-bpe",
+      "parameters": 88257,
+      "patch_positions_seen": 38400,
+      "raw_bytes_seen": 139437,
+      "trace": [
+        {
+          "gradient_norm": 8.042939186096191,
+          "training_total_bits_per_raw_byte": 14.700395944455465,
+          "update": 1
+        },
+        {
+          "gradient_norm": 1.5536384582519531,
+          "training_total_bits_per_raw_byte": 5.756958605836614,
+          "update": 75
+        },
+        {
+          "gradient_norm": 1.1138758659362793,
+          "training_total_bits_per_raw_byte": 4.579351431612152,
+          "update": 150
+        },
+        {
+          "gradient_norm": 1.2487740516662598,
+          "training_total_bits_per_raw_byte": 4.110990390586862,
+          "update": 225
+        },
+        {
+          "gradient_norm": 1.265494465827942,
+          "training_total_bits_per_raw_byte": 4.082853340975103,
+          "update": 300
+        }
+      ],
+      "training_wall_seconds": 1.6113502910593525,
+      "updates": 300,
+      "validation": {
+        "boundary_bits_per_raw_byte": 0.43293122626153885,
+        "byte_only_bits_per_raw_byte": 3.7654817443151916,
+        "model_bytes_per_second": 245305.97679835814,
+        "patches": 22944,
+        "raw_bytes": 75526,
+        "total_bits_per_raw_byte": 4.198412954181382
+      },
+      "validation_wall_seconds": 0.30788487498648465
+    }
+  },
+  "configuration": {
+    "batch_size": 8,
+    "boundary_dimension": 32,
+    "boundary_steps": 200,
+    "calibration_bytes": 262144,
+    "device": "cpu",
+    "language_model": {
+      "dimension": 48,
+      "feed_forward": 128,
+      "heads": 4,
+      "layers": 2,
+      "max_patch": 8,
+      "patch_context": 16
+    },
+    "language_model_steps": 300,
+    "learning_rate": 0.001,
+    "maximum_patch_bytes": 8,
+    "seed": 0,
+    "static_vocabulary_target": 4096,
+    "threads": 4
+  },
+  "decision": "advance-latent",
+  "experiment": "sero-latent-v1",
+  "fairness": {
+    "identical_model_parameters": true,
+    "identical_patch_positions_and_decoder_slots": true,
+    "latent_to_static_model_throughput": 0.7870988641504203,
+    "latent_to_static_training_raw_bytes": 0.9524157863407847,
+    "latent_to_static_validation_raw_bytes": 0.9999073166856447
+  },
+  "gates": {
+    "exact_roundtrip_both": true,
+    "latent_total_bpb_at_least_one_percent_better": true,
+    "promotion": true,
+    "training_exposure_within_five_percent": true,
+    "validation_coverage_within_one_percent": true
+  },
+  "inputs": {
+    "train_bytes": 1048576,
+    "train_paths": [
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/blake.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/crowley.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/shakespeare.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/zero-foundation.txt"
+    ],
+    "train_sha256": "fdd8c39050866edc2be7efd78c09c30ac9a2781877f316d9ebf601efdc670c6d",
+    "training_only_threshold_calibration": true,
+    "training_only_tokenizer_fit": true,
+    "validation_bytes": 75562,
+    "validation_paths": [
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/blake.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/crowley.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/shakespeare.txt"
+    ],
+    "validation_sha256": "2dd74a73277472bf3f6df0ba09c237e1e0a9721d7d7fb43ffaf3fb7a40382748"
+  },
+  "interpretation": "The latent segmenter passed the fixed-compute downstream ablation.",
+  "latent_tokenizer": {
+    "boundary_training": {
+      "parameters": 14784,
+      "trace": [
+        {
+          "bits_per_byte": 10.252416900357888,
+          "update": 1
+        },
+        {
+          "bits_per_byte": 4.4723709995041485,
+          "update": 50
+        },
+        {
+          "bits_per_byte": 3.556092151196329,
+          "update": 100
+        },
+        {
+          "bits_per_byte": 3.546731479475168,
+          "update": 150
+        },
+        {
+          "bits_per_byte": 3.2158200049153396,
+          "update": 200
+        }
+      ],
+      "training_bytes_seen": 819200,
+      "updates": 200,
+      "wall_seconds": 1.3079697500215843
+    },
+    "scoring_and_segmentation_wall_seconds": 6.563784666010179,
+    "threshold_bits": 4.063639071826286,
+    "training_distribution": {
+      "bytes_per_patch": 3.446961404062419,
+      "maximum_patch_bytes": 8,
+      "p50_patch_bytes": 3.0,
+      "p95_patch_bytes": 8.0,
+      "patches": 304203,
+      "raw_bytes": 1048576
+    },
+    "validation_distribution": {
+      "bytes_per_patch": 3.3240366003871196,
+      "maximum_patch_bytes": 8,
+      "p50_patch_bytes": 3.0,
+      "p95_patch_bytes": 8.0,
+      "patches": 22732,
+      "raw_bytes": 75562
+    }
+  },
+  "schema": "sero.latent_v1_result.v1",
+  "static_tokenizer": {
+    "artifact": "build/sero-latent-v1/static-byte-bpe.json",
+    "artifact_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+    "training_and_segmentation_wall_seconds": 6.310053707915358,
+    "training_distribution": {
+      "bytes_per_patch": 3.6210485603188087,
+      "maximum_patch_bytes": 7,
+      "p50_patch_bytes": 4.0,
+      "p95_patch_bytes": 7.0,
+      "patches": 289578,
+      "raw_bytes": 1048576
+    },
+    "validation_distribution": {
+      "bytes_per_patch": 3.291171218258635,
+      "maximum_patch_bytes": 7,
+      "p50_patch_bytes": 3.0,
+      "p95_patch_bytes": 6.0,
+      "patches": 22959,
+      "raw_bytes": 75562
+    },
+    "vocabulary_size": 4096
+  }
+}

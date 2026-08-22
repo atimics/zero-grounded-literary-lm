@@ -28,5 +28,14 @@ build/sero-latent-v1/venv/bin/python experiments/sero-latent-v1/train.py \
   --validation 'build/zero-literary-v1/text/validation/*.txt'
 ```
 
+Then run the separately frozen conventional next-token control:
+
+```sh
+build/sero-latent-v1/venv/bin/python \
+  experiments/sero-latent-v1/conventional_control.py \
+  --train 'build/zero-literary-v1/text/train/*.txt' \
+  --validation 'build/zero-literary-v1/text/validation/*.txt'
+```
+
 Artifacts under `build/sero-latent-v1/` are derived caches. The result JSON and
 human interpretation belong under `benchmarks/sero-latent-v1/`.
