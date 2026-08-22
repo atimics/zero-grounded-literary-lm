@@ -116,15 +116,19 @@ class StaticByteBPE:
         return cls(tokenizer, tokenizer.get_vocab_size(), max_patch)
 
     def encode(self, data: bytes) -> list[bytes]:
+        patches, _ = self.encode_with_ids(data)
+        return patches
+
+    def encode_with_ids(self, data: bytes) -> tuple[list[bytes], list[int]]:
         if not data:
-            return []
-        tokens = self.tokenizer.encode(bytes_to_alphabet(data), add_special_tokens=False).tokens
-        patches = [alphabet_to_bytes(token) for token in tokens]
+            return [], []
+        encoding = self.tokenizer.encode(bytes_to_alphabet(data), add_special_tokens=False)
+        patches = [alphabet_to_bytes(token) for token in encoding.tokens]
         if any(not patch or len(patch) > self.max_patch for patch in patches):
             raise AssertionError("byte-BPE emitted an empty or overlong patch")
         if b"".join(patches) != data:
             raise AssertionError("byte-BPE failed exact reconstruction")
-        return patches
+        return patches, encoding.ids
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
