@@ -1,0 +1,105 @@
+{
+  "schema": "sero.latent_v3_contract.v1",
+  "experiment": "sero-latent-v3",
+  "status": "preregistered-unrun",
+  "research_basis": [
+    {
+      "name": "H-Net dynamic chunking",
+      "url": "https://arxiv.org/abs/2507.07955"
+    },
+    {
+      "name": "Byte Latent Transformer",
+      "url": "https://arxiv.org/abs/2412.09871"
+    },
+    {
+      "name": "MANTa adaptive neural tokenization",
+      "url": "https://aclanthology.org/2022.findings-emnlp.207/"
+    }
+  ],
+  "seeds": [0, 1, 2],
+  "data": {
+    "dataset_id": "sero-pretrain",
+    "dataset_version": "2026-08-22.v1",
+    "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+    "manifest_schema": "zero.dataset_manifest.v1",
+    "minimum_unique_training_bytes": 100000000,
+    "training_sampler": "eligible-document-byte-windows-times-source-weight",
+    "validation_sampler": "all-documents-non-crossing-raw-byte-windows",
+    "document_boundaries_crossed": false,
+    "raw_byte_context": 256,
+    "batch_size": 8,
+    "training_byte_budgets": [10000000, 30000000, 100000000],
+    "arms_share_exact_windows": true
+  },
+  "representation": {
+    "output_classes": 256,
+    "private_input_bos": true,
+    "end_patch_output": false,
+    "unknown_byte": false,
+    "discrete_codebook": false,
+    "escape_path": false,
+    "chunk_representation": "continuous-contextual-embedding",
+    "router": "half-one-minus-adjacent-projected-cosine",
+    "boundary_threshold": 0.5,
+    "first_position_is_boundary": true,
+    "ratio_loss_weight": 0.03,
+    "compression_target": "training-bpe-bytes-per-token"
+  },
+  "latent_model": {
+    "local_dimension": 48,
+    "local_heads": 4,
+    "local_feed_forward": 128,
+    "local_encoder_layers": 2,
+    "local_decoder_layers": 2,
+    "local_attention_window": 64,
+    "global_dimension": 88,
+    "global_heads": 4,
+    "global_feed_forward": 240,
+    "global_layers": 4,
+    "dropout": 0.0
+  },
+  "bpe_control": {
+    "algorithm": "lossless-byte-bpe",
+    "vocabulary_size": 4096,
+    "maximum_token_bytes": 8,
+    "tokenizer_training_bytes": 10000000,
+    "tokenizer_seed": 1729,
+    "dimension": 96,
+    "heads": 4,
+    "feed_forward": 256,
+    "layers": 4,
+    "dropout": 0.0
+  },
+  "compute_calibration": {
+    "scope": "training-only",
+    "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+    "tokenizer_training_bytes": 10000000,
+    "tokenizer_sample_schedule_sha256": "1ec1d44ad96ba586cdec5b556d30acc9c2f7ca61b7da21454e964f2e0c20a319",
+    "tokenizer_sha256": "eb5063e49af5279ff4552b10b1431c065de3f9a95443d24332d3e52b482de0de",
+    "measured_bytes_per_token": 3.355747489397516,
+    "estimator": "inference-multiply-adds-v1",
+    "latent_to_bpe_ratio_at_target": 1.001220787890163
+  },
+  "optimization": {
+    "optimizer": "AdamW",
+    "learning_rate": 0.0003,
+    "outer_learning_rate_multiplier": 2.0,
+    "betas": [0.9, 0.95],
+    "epsilon": 1e-8,
+    "weight_decay": 0.1,
+    "gradient_clip": 1.0,
+    "warmup_fraction": 0.05,
+    "minimum_learning_rate_ratio": 0.1
+  },
+  "gates": {
+    "raw_byte_exposure_ratio_minimum": 1.0,
+    "raw_byte_exposure_ratio_maximum": 1.0,
+    "validation_byte_ratio_minimum": 1.0,
+    "validation_byte_ratio_maximum": 1.0,
+    "estimated_compute_ratio_minimum": 0.85,
+    "estimated_compute_ratio_maximum": 1.15,
+    "latent_final_bpb_ratio_maximum": 0.99,
+    "all_seeds_required": true,
+    "aggregate_override": false
+  }
+}

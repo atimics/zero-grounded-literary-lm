@@ -183,7 +183,7 @@ Resources:
           def public_dataset(item):
               fields = ["dataset_id", "version", "dataset_digest", "release_date",
                         "status", "promoted_at", "documents", "train_tokens",
-                        "source_count", "quality_json", "approval_id"]
+                        "train_bytes", "source_count", "quality_json", "approval_id"]
               return {key: item[key] for key in fields if key in item}
 
           def public_run(item):
@@ -193,7 +193,11 @@ Resources:
               result = {key: item[key] for key in fields if key in item}
               try:
                   payload = json.loads(item.get("payload_json", "{}"))
-                  allowed = ["note", "per_class_accuracy"]
+                  allowed = ["note", "per_class_accuracy", "metric_kind",
+                             "training_bytes", "latent_bits_per_byte",
+                             "bpe_bits_per_byte", "latent_to_bpe_bpb_ratio",
+                             "bytes_per_chunk", "bytes_per_bpe_token",
+                             "estimated_compute_ratio"]
                   result["payload_json"] = json.dumps(
                       {key: payload[key] for key in allowed if key in payload},
                       separators=(",", ":"))

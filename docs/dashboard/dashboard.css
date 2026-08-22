@@ -63,6 +63,7 @@ h2 { margin: 0; font-size: 24px; font-weight: 400; letter-spacing: -.025em; }
 .digest code { min-width: 0; overflow: hidden; color: #cfc5b2; font: 10px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .copy { flex: none; border: 0; color: var(--gold); background: none; font: 8px var(--mono); letter-spacing: .12em; cursor: pointer; }
 .details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 22px; background: var(--line); }
+.details.byte-details { grid-template-columns: repeat(4, 1fr); }
 .detail { min-width: 0; padding: 15px; background: var(--raised); }
 .detail-value { display: block; margin-top: 8px; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .quality-line { display: flex; gap: 12px; margin-top: 20px; color: var(--muted); font-size: 11px; line-height: 1.5; }
@@ -98,7 +99,7 @@ footer a { color: var(--muted); text-decoration: none; }
   h1 { font-size: 42px; }
   .metrics { grid-template-columns: 1fr; }
   .metrics article { min-height: 112px; }
-  .details { grid-template-columns: 1fr 1fr; }
+  .details, .details.byte-details { grid-template-columns: 1fr 1fr; }
   footer { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }

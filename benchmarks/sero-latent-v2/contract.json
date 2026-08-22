@@ -1,0 +1,64 @@
+{
+  "schema": "sero.latent_v2_contract.v1",
+  "experiment": "sero-latent-v2",
+  "status": "preregistered",
+  "dataset": {
+    "id": "zero-literary",
+    "version": "2026-08-12.v1",
+    "digest": "9ac3fcfd15e9e4cea44c0b8504799c9de33672fb0561d620bc1959b27b6ec736",
+    "train_sha256": "fdd8c39050866edc2be7efd78c09c30ac9a2781877f316d9ebf601efdc670c6d",
+    "validation_sha256": "2dd74a73277472bf3f6df0ba09c237e1e0a9721d7d7fb43ffaf3fb7a40382748",
+    "train_byte_limit": 1048576,
+    "validation_byte_limit": 131072
+  },
+  "seeds": [0, 1, 2],
+  "boundary_segmenter": {
+    "algorithm": "causal-next-byte-entropy",
+    "embedding_dimension": 32,
+    "updates": 200,
+    "batch_size": 64,
+    "sequence_bytes": 64,
+    "learning_rate": 0.003,
+    "calibration_bytes": 262144,
+    "target_bytes_per_patch": 3.6210485603188087,
+    "maximum_patch_bytes": 8
+  },
+  "codebook": {
+    "vocabulary_size": 4096,
+    "exact_training_dictionary_codes": 4095,
+    "escape_codes": 1,
+    "ranking": "descending-training-frequency-then-byte-lexicographic",
+    "fit_split": "train-only"
+  },
+  "model": {
+    "global_model": "tied-code-embedding-causal-transformer",
+    "escape_model": "tied-byte-embedding-autoregressive-gru-with-end-patch",
+    "dimension": 48,
+    "attention_heads": 4,
+    "transformer_layers": 4,
+    "feed_forward_dimension": 192,
+    "patch_context": 16,
+    "updates": 300,
+    "batch_size": 8,
+    "learning_rate": 0.001
+  },
+  "frozen_conventional_controls": {
+    "estimated_madds_per_patch_position": 313344,
+    "seeds": [
+      { "seed": 0, "bits_per_raw_byte": 4.003875795506535, "training_raw_bytes": 139437 },
+      { "seed": 1, "bits_per_raw_byte": 3.963665927434818, "training_raw_bytes": 138966 },
+      { "seed": 2, "bits_per_raw_byte": 4.012653191758525, "training_raw_bytes": 138755 }
+    ]
+  },
+  "promotion_gates": {
+    "exact_roundtrip_all_seeds": true,
+    "vocabulary_size": 4096,
+    "training_raw_byte_ratio_minimum": 0.95,
+    "training_raw_byte_ratio_maximum": 1.05,
+    "estimated_compute_ratio_minimum": 0.9,
+    "estimated_compute_ratio_maximum": 1.1,
+    "maximum_relative_bits_per_byte_each_seed": 0.99,
+    "all_seeds_must_pass": true
+  },
+  "hard_stop": "Promote V2 only if all gates pass. Otherwise lock static byte-BPE for Sero 1 pretraining."
+}

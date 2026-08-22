@@ -1,0 +1,35 @@
+{
+  "schema": "sero.latent_v3_aws_execution.v1",
+  "region": "us-east-1",
+  "ami_parameter": "/aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-22.04/latest/ami-id",
+  "resolved_ami": "ami-0909175f265dac51e",
+  "resolved_ami_name": "Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 22.04) 20260818",
+  "instance_type": "g5.xlarge",
+  "gpu": "NVIDIA A10G 24 GB",
+  "on_demand_usd_per_hour": 1.006,
+  "price_effective_date": "2026-08-01",
+  "calibration": {
+    "seed": 0,
+    "training_bytes": 1048576,
+    "validation_bytes": 131072,
+    "maximum_instance_seconds": 3600,
+    "maximum_ec2_usd": 1.006
+  },
+  "promotion_run": {
+    "seeds": [0, 1, 2],
+    "parallel_instances": 3,
+    "maximum_instance_seconds_each": 25200,
+    "maximum_ec2_usd_each": 7.042,
+    "maximum_ec2_usd_total": 21.126
+  },
+  "controls": {
+    "market": "on-demand",
+    "instance_initiated_shutdown_behavior": "terminate",
+    "root_volume_gib": 100,
+    "root_volume_encrypted": true,
+    "metadata_tokens": "required",
+    "metadata_instance_tags": true,
+    "inbound_access_required": false,
+    "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6"
+  }
+}

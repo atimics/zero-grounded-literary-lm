@@ -16,6 +16,7 @@ faculty_eval
 quantity_request_eval
 external_eval
 bpe_tokenizer
+sero_tokenizer
 quantity_adapter_pilot
 package_quantity_adapter
 quantity_adapter_infer

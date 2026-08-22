@@ -39,11 +39,46 @@ this corpus, so the final preset uses its cleaned 128-character ASCII stream
 with no merges. The smaller vocabulary reallocates capacity to the transformer
 while keeping the total parameter count unchanged.
 
+## Sero model lineage
+
+Historical ZERO names remain attached to their released experiments and
+artifacts. New base-model research is named **Sero**. Sero starts from exact raw
+bytes and makes tokenizer/model tradeoffs explicit rather than inheriting the
+old 128-character normalization contract.
+
+The first integrated **Sero Latent v1** experiment is complete. Causal learned
+patches beat static patches inside the same local/global architecture, but a
+compute-matched conventional 4,096-token byte-BPE Transformer remained 1.64%
+better on the preregistered seed. The static tokenizer therefore remains the
+current control while the latent arm advances to discrete-code research. See
+[`docs/SERO.md`](docs/SERO.md) and
+[`benchmarks/sero-latent-v1/RESULTS.md`](benchmarks/sero-latent-v1/RESULTS.md).
+
+**Sero Latent v2 is complete, but it does not end learned tokenization.** Its
+frequency dictionary remained 4.44% worse than byte-BPE on average across the
+three frozen seeds. A later audit found that V1 and V2 were both too small and
+used a source-biased corpus prefix; V1 also charged a causally predictable
+end-patch output. Those runs reject their tested designs, not the larger idea.
+The lossless 4,096-entry byte-BPE tokenizer stays as the Sero control.
+
+**Sero Latent v3 is complete and does not promote.** The project built and
+promoted a licensed, source-balanced corpus with 123,153,182 unique training
+bytes, then ran the frozen 10M/30M/100M-byte experiment on seeds 0, 1, and 2.
+V3 was 14.53% worse than byte-BPE on average at 100M. All seeds failed the
+quality gate, and two also failed compute parity because the learned chunks
+became too short. This rejects the tested one-stage embedding-router design,
+not all learned tokenization. See
+[`benchmarks/sero-latent-v3/RESULTS.md`](benchmarks/sero-latent-v3/RESULTS.md).
+
 ## Build
 
 ```sh
 make
 make check
+make sero-latent-v1-result-check
+make sero-latent-v2-result-check
+make sero-latent-v3-contract-check
+make sero-latent-v3-result-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

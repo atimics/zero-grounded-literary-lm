@@ -1,0 +1,86 @@
+{
+  "schema": "sero.corpus_acquisition.v1",
+  "dataset_id": "sero-pretrain",
+  "version": "2026-08-22.v1",
+  "release_date": "2026-08-22",
+  "description": "A source-balanced English corpus prepared from fixed, officially published Wikimedia snapshots.",
+  "target_clean_utf8_bytes_per_source": 42000000,
+  "minimum_article_utf8_bytes": 512,
+  "extractor": {
+    "repository": "https://github.com/WikiExtractor/wikiextractor.git",
+    "commit": "177d185c7bef46020fc65f970c8e3c8571bb6052",
+    "license": "AGPL-3.0-only",
+    "arguments": ["--json", "--no-templates", "-ns", "0", "-b", "100M"]
+  },
+  "registry": {
+    "split_seed": "sero-pretrain-split-v1",
+    "splits": {
+      "train_permyriad": 9800,
+      "validation_permyriad": 100,
+      "test_permyriad": 100
+    },
+    "documents": {
+      "target_utf8_bytes": 12288,
+      "maximum_utf8_bytes": 16384,
+      "minimum_utf8_bytes": 256
+    },
+    "deduplication": {
+      "word_shingle_size": 5,
+      "simhash_max_hamming_distance": 3
+    },
+    "tokenizer": {
+      "path": "corpus/literary.bpe",
+      "sha256": "b1e8d4cdf3a232ef880e133ff52fc53e5bd6e35c3d1ceec1d3c388e11b911152",
+      "vocabulary_size": 128,
+      "token_width_bytes": 2
+    },
+    "contamination_panels": [
+      {
+        "id": "zero4-q34-semantic-confirmation",
+        "path": "benchmarks/zero4-q34-semantic-head-v1/semantic-confirmation.tsv",
+        "sha256": "c8e5f3623763b94391b06d63ace697dd3bffc512d196fe9581dcfd9ecfaafbac",
+        "text_column": "model_input"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "simple-wikipedia",
+      "project": "Simple English Wikipedia",
+      "project_url": "https://simple.wikipedia.org/",
+      "dump_url": "https://dumps.wikimedia.org/simplewiki/20260801/simplewiki-20260801-pages-articles-multistream.xml.bz2",
+      "dump_sha1": "4f646363bd2d095652149a6bdd87a0cedf51f6b2",
+      "license": "CC-BY-SA-4.0-and-GFDL",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution_method": "Per-article URL resolving to contributor history",
+      "sampling_weight": 1,
+      "tags": ["encyclopedia", "simple-english", "wikimedia", "open-license"]
+    },
+    {
+      "id": "english-wikibooks",
+      "project": "English Wikibooks",
+      "project_url": "https://en.wikibooks.org/",
+      "dump_url": "https://dumps.wikimedia.org/enwikibooks/20260801/enwikibooks-20260801-pages-articles-multistream.xml.bz2",
+      "dump_sha1": "726667a53896e6d43b692f916441086ae6382384",
+      "license": "CC-BY-SA-4.0-and-GFDL",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution_method": "Per-page URL resolving to contributor history",
+      "sampling_weight": 1,
+      "tags": ["instructional", "books", "wikimedia", "open-license"]
+    },
+    {
+      "id": "english-wikinews",
+      "project": "English Wikinews",
+      "project_url": "https://en.wikinews.org/",
+      "dump_url": "https://dumps.wikimedia.org/enwikinews/20260801/enwikinews-20260801-pages-articles-multistream.xml.bz2",
+      "dump_sha1": "d195129bc73687384bb0f4169546eb4f27ce2ae6",
+      "license": "CC-BY-2.5-and-public-domain-before-2005-09-25",
+      "license_url": "https://creativecommons.org/licenses/by/2.5/",
+      "attribution_method": "Per-article URL resolving to contributor history",
+      "sampling_weight": 1,
+      "tags": ["news", "current-events", "wikimedia", "open-license"]
+    }
+  ],
+  "legal_notice_url": "https://dumps.wikimedia.org/legal.html",
+  "terms_url": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use"
+}

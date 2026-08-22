@@ -1,0 +1,56 @@
+{
+  "aggregate_override_used": false,
+  "all_seed_conjunction_passed": false,
+  "contract_sha256": "6be10f15b9e3d9279d4457a42533469a81521437917b8110caadeeb23d8dd4f9",
+  "created_at": "2026-08-22T17:31:41.893109+00:00",
+  "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+  "decision": "do-not-promote-latent-v3",
+  "experiment": "sero-latent-v3",
+  "means": {
+    "bpe_bits_per_byte": 2.1835234858327284,
+    "latent_bits_per_byte": 2.500872965300962,
+    "latent_to_bpe_ratio": 1.1453426327898664
+  },
+  "population_standard_deviations": {
+    "bpe_bits_per_byte": 0.0005794224658720421,
+    "latent_bits_per_byte": 0.0730293603077233,
+    "latent_to_bpe_ratio": 0.033590961790934466
+  },
+  "schema": "sero.latent_v3_aggregate.v1",
+  "seeds": [
+    {
+      "bpe_bits_per_byte": 2.183940754997687,
+      "bytes_per_bpe_token": 3.3802705894434175,
+      "bytes_per_learned_chunk": 1.9231251223238464,
+      "estimated_compute_ratio": 1.4284073226187943,
+      "latent_bits_per_byte": 2.553119675200093,
+      "latent_to_bpe_ratio": 1.169042552714667,
+      "passed": false,
+      "seed": 0,
+      "status": "failed"
+    },
+    {
+      "bpe_bits_per_byte": 2.1839255970434537,
+      "bytes_per_bpe_token": 3.3802705894434175,
+      "bytes_per_learned_chunk": 2.5624726321586975,
+      "estimated_compute_ratio": 1.1741697564666576,
+      "latent_bits_per_byte": 2.3975962424471375,
+      "latent_to_bpe_ratio": 1.0978378776698923,
+      "passed": false,
+      "seed": 1,
+      "status": "failed"
+    },
+    {
+      "bpe_bits_per_byte": 2.1827041054570446,
+      "bytes_per_bpe_token": 3.3802705894434175,
+      "bytes_per_learned_chunk": 2.945553425337858,
+      "estimated_compute_ratio": 1.081728926272295,
+      "latent_bits_per_byte": 2.5519029782556557,
+      "latent_to_bpe_ratio": 1.1691474679850402,
+      "passed": false,
+      "seed": 2,
+      "status": "failed"
+    }
+  ],
+  "tokenizer_sha256": "eb5063e49af5279ff4552b10b1431c065de3f9a95443d24332d3e52b482de0de"
+}

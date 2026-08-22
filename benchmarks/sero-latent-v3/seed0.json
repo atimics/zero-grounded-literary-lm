@@ -1,0 +1,274 @@
+{
+  "checkpoints": [
+    {
+      "actual_training_bytes": 10000384,
+      "bpe_control": {
+        "bits_per_byte": 2.681839467536094,
+        "bytes_per_token": 3.3802705894434175,
+        "nll_nats": 2447594.4919433594,
+        "raw_bytes": 1316683,
+        "tokens": 389520
+      },
+      "comparison": {
+        "latent_minus_bpe_bpb": 0.48661541432149846,
+        "latent_to_bpe_bpb_ratio": 1.1814483753453633
+      },
+      "estimated_inference_compute": {
+        "bpe_madds_per_sample": 60241777.310222566,
+        "includes": [
+          "input-and-output-projections",
+          "local-encoder-and-decoder",
+          "router-and-bridges",
+          "global-model",
+          "attention"
+        ],
+        "latent_madds_per_sample": 68314303.56301962,
+        "latent_to_bpe_ratio": 1.1340021263188595
+      },
+      "latent": {
+        "bits_per_byte": 3.1684548818575924,
+        "bytes_per_chunk": 2.7139989075431057,
+        "chunks": 485145,
+        "first_position_boundary_fraction": 1.0,
+        "mean_boundary_confidence": 0.7127388469122373,
+        "mean_boundary_probability": 0.45992832867476274,
+        "nll_nats": 2891706.536010742,
+        "raw_bytes": 1316683
+      },
+      "requested_training_bytes": 10000000,
+      "step": 4883,
+      "validation_timing": {
+        "bpe_model_raw_bytes_per_second": 486628.4917756218,
+        "bpe_model_seconds": 2.7057252550002886,
+        "bpe_tokenization_seconds": 1.2733060019997993,
+        "latent_model_raw_bytes_per_second": 101784.45989136075,
+        "latent_model_seconds": 12.935992404001126,
+        "raw_bytes_per_second": 74726.37562029081,
+        "total_seconds": 17.62005702900001
+      }
+    },
+    {
+      "actual_training_bytes": 30001152,
+      "bpe_control": {
+        "bits_per_byte": 2.3503019314868165,
+        "bytes_per_token": 3.3802705894434175,
+        "nll_nats": 2145015.0657958984,
+        "raw_bytes": 1316683,
+        "tokens": 389520
+      },
+      "comparison": {
+        "latent_minus_bpe_bpb": 0.5008872362729035,
+        "latent_to_bpe_bpb_ratio": 1.2131161233212444
+      },
+      "estimated_inference_compute": {
+        "bpe_madds_per_sample": 60241777.310222566,
+        "includes": [
+          "input-and-output-projections",
+          "local-encoder-and-decoder",
+          "router-and-bridges",
+          "global-model",
+          "attention"
+        ],
+        "latent_madds_per_sample": 65927753.86846357,
+        "latent_to_bpe_ratio": 1.094385936340496
+      },
+      "latent": {
+        "bits_per_byte": 2.85118916775972,
+        "bytes_per_chunk": 2.885387265300398,
+        "chunks": 456328,
+        "first_position_boundary_fraction": 1.0,
+        "mean_boundary_confidence": 0.7077403850421381,
+        "mean_boundary_probability": 0.4567920739284757,
+        "nll_nats": 2602152.3610839844,
+        "raw_bytes": 1316683
+      },
+      "requested_training_bytes": 30000000,
+      "step": 14649,
+      "validation_timing": {
+        "bpe_model_raw_bytes_per_second": 487997.46220819413,
+        "bpe_model_seconds": 2.6981349330014837,
+        "bpe_tokenization_seconds": 1.2683644329993058,
+        "latent_model_raw_bytes_per_second": 106108.29144374462,
+        "latent_model_seconds": 12.408860627994045,
+        "raw_bytes_per_second": 77115.00999808038,
+        "total_seconds": 17.074276460999954
+      }
+    },
+    {
+      "actual_training_bytes": 100001792,
+      "bpe_control": {
+        "bits_per_byte": 2.183940754997687,
+        "bytes_per_token": 3.3802705894434175,
+        "nll_nats": 1993184.6881103516,
+        "raw_bytes": 1316683,
+        "tokens": 389520
+      },
+      "comparison": {
+        "latent_minus_bpe_bpb": 0.36917892020240606,
+        "latent_to_bpe_bpb_ratio": 1.169042552714667
+      },
+      "estimated_inference_compute": {
+        "bpe_madds_per_sample": 60241777.310222566,
+        "includes": [
+          "input-and-output-projections",
+          "local-encoder-and-decoder",
+          "router-and-bridges",
+          "global-model",
+          "attention"
+        ],
+        "latent_madds_per_sample": 86049795.83749264,
+        "latent_to_bpe_ratio": 1.4284073226187943
+      },
+      "latent": {
+        "bits_per_byte": 2.553119675200093,
+        "bytes_per_chunk": 1.9231251223238464,
+        "chunks": 684658,
+        "first_position_boundary_fraction": 1.0,
+        "mean_boundary_confidence": 0.720902504425976,
+        "mean_boundary_probability": 0.5142485770621285,
+        "nll_nats": 2330117.7158203125,
+        "raw_bytes": 1316683
+      },
+      "requested_training_bytes": 100000000,
+      "step": 48829,
+      "validation_timing": {
+        "bpe_model_raw_bytes_per_second": 484396.6209374683,
+        "bpe_model_seconds": 2.71819195900207,
+        "bpe_tokenization_seconds": 1.277713924981981,
+        "latent_model_raw_bytes_per_second": 86272.91952811653,
+        "latent_model_seconds": 15.261834272003398,
+        "raw_bytes_per_second": 65932.30881480403,
+        "total_seconds": 19.970224365999456
+      }
+    }
+  ],
+  "contract": {
+    "path": "benchmarks/sero-latent-v3/contract.json",
+    "sha256": "6be10f15b9e3d9279d4457a42533469a81521437917b8110caadeeb23d8dd4f9"
+  },
+  "created_at": "2026-08-22T17:28:43.379906+00:00",
+  "data": {
+    "dataset_digest": "6919a2a55495ff3364381d0861f6295412362f6dcf5fff46fda751b779a6d6b6",
+    "document_boundaries_crossed": false,
+    "manifest": "build/sero-pretrain-v1/manifest.json",
+    "schedule_sha256": "2840dc0e6bb97a80e1e12b35ac0f764212975ef3e1517157c1caf79cd75629e6",
+    "source_training_exposure_bytes": {
+      "english-wikibooks": 33200384,
+      "english-wikinews": 33344512,
+      "simple-wikipedia": 33456896
+    },
+    "source_unique_bytes": {
+      "english-wikibooks": 40854557,
+      "english-wikinews": 41138847,
+      "simple-wikipedia": 41159778
+    },
+    "train_split_digest": "f63693881af57bf11ecfd1234e308d913fec2e2175ebb68eb9294c0998dceac0",
+    "unique_training_bytes": 123153182,
+    "unique_validation_bytes": 1316683,
+    "validation_split_digest": "08fafab5267066ecdea412e4b8cab49bacc786583f46126647a55d05cf5dee49"
+  },
+  "decision": {
+    "aggregate_override_allowed": false,
+    "eligible_for_promotion": true,
+    "failed_or_ineligible_gates": [
+      "estimated_compute_parity",
+      "quality_step_change"
+    ],
+    "passed": false
+  },
+  "experiment": "sero-latent-v3",
+  "gates": {
+    "estimated_compute_parity": false,
+    "exact_training_byte_exposure": true,
+    "exact_validation_byte_exposure": true,
+    "full_preregistered_configuration": true,
+    "minimum_corpus_size": true,
+    "quality_step_change": false
+  },
+  "models": {
+    "artifact_sha256": "9f69d25a0aeef91729dad5f78d17ab2da89309be4d219096c401d56317ab253a",
+    "bpe_control": {
+      "byte_context": 256,
+      "dim": 96,
+      "ffn_dim": 256,
+      "heads": 4,
+      "layers": 4
+    },
+    "bpe_parameters": 770720,
+    "latent": {
+      "boundary_threshold": 0.5,
+      "byte_context": 256,
+      "compression_ratio_target": 3.355747489397516,
+      "global_dim": 88,
+      "global_ffn_dim": 240,
+      "global_heads": 4,
+      "global_layers": 4,
+      "local_decoder_layers": 2,
+      "local_dim": 48,
+      "local_encoder_layers": 2,
+      "local_ffn_dim": 128,
+      "local_heads": 4,
+      "local_window": 64,
+      "ratio_loss_weight": 0.03,
+      "router_dim": 32
+    },
+    "latent_parameters": 446713
+  },
+  "runtime": {
+    "device": "cuda",
+    "git_commit": "f899ea6557ed1d85461578ff0b311ed587cc3119",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1061-aws-x86_64-with-glibc2.35",
+    "python": "3.10.12",
+    "tokenizers": "0.23.1",
+    "torch": "2.13.0+cu130"
+  },
+  "schema": "sero.latent_v3_seed_result.v1",
+  "seed": 0,
+  "status": "failed",
+  "telemetry": {
+    "dashboard_payload": "build/sero-latent-v3/seed0/seed0-dashboard-payload.json",
+    "dashboard_payload_sha256": "1143c2a5a3ce1f97583c79d437793f5674325b1df76f1a388347c44952a654b6",
+    "published": false
+  },
+  "tokenizer": {
+    "actual_vocabulary_size": 4096,
+    "artifact_sha256": "a100a7e00a59ff4e52d9ec24a19a3f070cd761cbe151bb87021ee3cf131be6c9",
+    "maximum_token_bytes": 8,
+    "requested_vocabulary_size": 4096,
+    "sha256": "eb5063e49af5279ff4552b10b1431c065de3f9a95443d24332d3e52b482de0de",
+    "training_bytes": 10000000,
+    "training_bytes_per_token": 3.355747489397516,
+    "training_seed": 1729,
+    "training_tokens": 2979962
+  },
+  "training": {
+    "actual_raw_bytes_per_arm": {
+      "bpe_control": 100001792,
+      "latent": 100001792
+    },
+    "batch_size": 8,
+    "bpe_model_seconds": 560.9889106290376,
+    "bpe_training_tokenization_seconds": 98.74508640006215,
+    "evaluation_tokenization_seconds": 3.819384359981086,
+    "latent_model_seconds": 3862.6081698749776,
+    "raw_byte_context": 256,
+    "raw_byte_exposure_ratio": 1.0,
+    "requested_byte_budgets": [
+      10000000,
+      30000000,
+      100000000
+    ],
+    "steps_per_arm": 48829,
+    "tokenizer_fit_seconds": 10.845156750000001,
+    "wall_seconds": 4654.087983296
+  },
+  "validation": {
+    "complete_split": true,
+    "raw_byte_exposure_ratio": 1.0,
+    "raw_bytes_per_arm": {
+      "bpe_control": 1316683,
+      "latent": 1316683
+    }
+  }
+}
