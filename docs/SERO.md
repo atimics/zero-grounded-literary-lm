@@ -51,13 +51,17 @@ remains the Sero control.
 
 ## Next lineage step
 
-Sero Latent v2 should learn discrete patch codes. The global Transformer would
-predict one code containing both patch content and length; a local residual
-decoder would preserve exact bytes. This directly targets the v1 failure: the
-latent model discovered useful boundaries but paid too much to regenerate
-their contents and end markers byte by byte.
+Sero Latent v2 tested that discrete-code repair. Its exact 4,095-entry patch
+dictionary plus one residual escape code passed the data, reconstruction, and
+compute gates, but lost to byte-BPE on all three seeds. Mean validation loss was
+4.171 versus 3.993 bits per raw byte. Rare escaped patches covered about a
+quarter of validation bytes and added 1.191 bits per byte of residual cost.
 
-Any v2 promotion must again bind raw-data digests, fit only on training data,
-round-trip every byte, and beat the conventional control at matched raw bytes
-and analytic compute. Parameter counts, tokenizer construction cost, and
-measured throughput remain mandatory diagnostics.
+The preregistered hard stop is now active. Sero 1 uses the frozen lossless
+4,096-entry byte-BPE tokenizer. The next work is base-model pretraining and
+corpus scaling, beginning with 100 million raw bytes and then a one-billion-byte
+learning curve. New tokenizer variants require new evidence from those scaling
+runs; they are not on the current critical path. The canonical artifact and
+its dataset binding are in
+[`tokenizers/sero1-tokenizer.json`](../tokenizers/sero1-tokenizer.json); verify
+the locked digest with `make sero1-tokenizer-check`.

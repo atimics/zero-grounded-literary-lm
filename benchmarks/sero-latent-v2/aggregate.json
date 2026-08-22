@@ -1,0 +1,40 @@
+{
+  "schema": "sero.latent_v2_aggregate.v1",
+  "experiment": "sero-latent-v2",
+  "decision": "lock-static-byte-bpe",
+  "hard_stop_triggered": true,
+  "seeds": [
+    {
+      "seed": 0,
+      "v2_bits_per_raw_byte": 4.145544585095678,
+      "conventional_bits_per_raw_byte": 4.003875795506535,
+      "relative_difference_percent": 3.5382913163324023,
+      "decision": "seed-no-go"
+    },
+    {
+      "seed": 1,
+      "v2_bits_per_raw_byte": 4.161566773251076,
+      "conventional_bits_per_raw_byte": 3.963665927434818,
+      "relative_difference_percent": 4.992874007026479,
+      "decision": "seed-no-go"
+    },
+    {
+      "seed": 2,
+      "v2_bits_per_raw_byte": 4.2045541214716255,
+      "conventional_bits_per_raw_byte": 4.012653191758525,
+      "relative_difference_percent": 4.782395102254038,
+      "decision": "seed-no-go"
+    }
+  ],
+  "means": {
+    "v2_bits_per_raw_byte": 4.17055515993946,
+    "conventional_bits_per_raw_byte": 3.9933983048999595,
+    "relative_difference_percent": 4.436243057000522,
+    "v2_code_bits_per_raw_byte": 2.97961671603003,
+    "v2_residual_byte_bits_per_raw_byte": 1.0949687425969967,
+    "v2_residual_boundary_bits_per_raw_byte": 0.09596970142632154,
+    "validation_exact_code_patch_fraction": 0.8636067718970266,
+    "validation_exact_code_raw_byte_fraction": 0.7557149537245352
+  },
+  "next": "Use the frozen 4,096-entry lossless byte-BPE tokenizer for Sero 1 base-model pretraining."
+}

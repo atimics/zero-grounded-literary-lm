@@ -1,0 +1,29 @@
+{
+  "schema": "sero.tokenizer_release.v1",
+  "model_lineage": "sero-1",
+  "decision_source": "benchmarks/sero-latent-v2/aggregate.json",
+  "decision": "lock-static-byte-bpe",
+  "dataset": {
+    "id": "zero-literary",
+    "version": "2026-08-12.v1",
+    "digest": "9ac3fcfd15e9e4cea44c0b8504799c9de33672fb0561d620bc1959b27b6ec736",
+    "training_input_sha256": "fdd8c39050866edc2be7efd78c09c30ac9a2781877f316d9ebf601efdc670c6d"
+  },
+  "algorithm": "byte-bpe",
+  "format": "huggingface-tokenizers-json",
+  "vocabulary_size": 4096,
+  "maximum_token_bytes": 8,
+  "lossless_bytes": true,
+  "unknown_token": false,
+  "unicode_normalization": "none",
+  "byte_alphabet": "reversible-gpt2-byte-unicode-map",
+  "artifact": {
+    "path": "tokenizers/sero1-byte-bpe-4096.json",
+    "sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1"
+  },
+  "gates": {
+    "exact_arbitrary_byte_roundtrip": true,
+    "three_seed_conventional_win": true,
+    "latent_v2_hard_stop_triggered": true
+  }
+}

@@ -54,12 +54,20 @@ current control while the latent arm advances to discrete-code research. See
 [`docs/SERO.md`](docs/SERO.md) and
 [`benchmarks/sero-latent-v1/RESULTS.md`](benchmarks/sero-latent-v1/RESULTS.md).
 
+**Sero Latent v2 is now settled.** Direct discrete patch codes remained 4.44%
+worse than byte-BPE on average across all three frozen seeds, despite exact
+reconstruction and matched compute. The hard stop has fired: the lossless
+4,096-entry byte-BPE tokenizer is locked for Sero 1, and the project now moves
+to base-model and corpus scaling. See
+[`benchmarks/sero-latent-v2/RESULTS.md`](benchmarks/sero-latent-v2/RESULTS.md).
+
 ## Build
 
 ```sh
 make
 make check
 make sero-latent-v1-result-check
+make sero-latent-v2-result-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

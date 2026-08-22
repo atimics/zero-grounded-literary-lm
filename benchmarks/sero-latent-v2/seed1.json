@@ -1,0 +1,168 @@
+{
+  "boundary_model": {
+    "parameters": 14784,
+    "scoring_and_segmentation_wall_seconds": 6.853672375087626,
+    "threshold_bits": 4.03301048762456,
+    "trace": [
+      {
+        "bits_per_byte": 11.010109858374507,
+        "update": 1
+      },
+      {
+        "bits_per_byte": 4.9252205812828205,
+        "update": 50
+      },
+      {
+        "bits_per_byte": 3.623551658066662,
+        "update": 100
+      },
+      {
+        "bits_per_byte": 3.5612939384543254,
+        "update": 150
+      },
+      {
+        "bits_per_byte": 3.0910152908719146,
+        "update": 200
+      }
+    ],
+    "training_bytes_seen": 819200,
+    "updates": 200,
+    "wall_seconds": 1.4181916669476777
+  },
+  "codebook": {
+    "artifact": "build/sero-latent-v2/seed1/codebook.json",
+    "artifact_sha256": "66ed9a0122c5bb77dcb86e0c3ab5aabb6db7f8dc2691de617b9837a6585b9774",
+    "escape_id": 4095,
+    "training_distribution": {
+      "bytes_per_patch": 3.4997329915625333,
+      "escape_bytes_per_patch": 6.195654150377307,
+      "escape_patches": 32997,
+      "exact_code_patch_fraction": 0.8898690323614227,
+      "exact_code_patches": 266619,
+      "exact_code_raw_byte_fraction": 0.8050327301025391,
+      "maximum_patch_bytes": 8,
+      "patches": 299616,
+      "raw_bytes": 1048576
+    },
+    "validation_distribution": {
+      "bytes_per_patch": 3.414768618944324,
+      "escape_bytes_per_patch": 5.9,
+      "escape_patches": 3150,
+      "exact_code_patch_fraction": 0.857646420824295,
+      "exact_code_patches": 18978,
+      "exact_code_raw_byte_fraction": 0.7540430375056245,
+      "maximum_patch_bytes": 8,
+      "patches": 22128,
+      "raw_bytes": 75562
+    }
+  },
+  "comparison": {
+    "conventional_bits_per_raw_byte": 3.963665927434818,
+    "conventional_training_raw_bytes": 138966,
+    "estimated_conventional_madds_per_patch_position": 313344.0,
+    "estimated_v2_madds_per_patch_position": 339526.97677026596,
+    "v2_to_conventional_bits_per_byte": 1.0499287400702648,
+    "v2_to_conventional_estimated_madds": 1.0835598472294539,
+    "v2_to_conventional_training_raw_bytes": 0.9646748125440755
+  },
+  "configuration": {
+    "batch_size": 8,
+    "boundary_dimension": 32,
+    "boundary_steps": 200,
+    "calibration_bytes": 262144,
+    "codebook_size": 4096,
+    "device": "cpu",
+    "learning_rate": 0.001,
+    "maximum_patch_bytes": 8,
+    "model": {
+      "dimension": 48,
+      "feed_forward": 192,
+      "heads": 4,
+      "layers": 4,
+      "max_patch": 8,
+      "patch_context": 16,
+      "vocabulary_size": 4096
+    },
+    "steps": 300,
+    "target_bytes_per_patch": 3.6210485603188087,
+    "threads": 4
+  },
+  "decision": "seed-no-go",
+  "experiment": "sero-latent-v2",
+  "gates": {
+    "at_least_one_percent_better_than_conventional": false,
+    "estimated_compute_within_ten_percent": true,
+    "exact_roundtrip": true,
+    "training_exposure_within_five_percent": true,
+    "vocabulary_size_is_4096": true
+  },
+  "inputs": {
+    "dataset_digest": "9ac3fcfd15e9e4cea44c0b8504799c9de33672fb0561d620bc1959b27b6ec736",
+    "train_bytes": 1048576,
+    "train_paths": [
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/blake.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/crowley.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/shakespeare.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/train/zero-foundation.txt"
+    ],
+    "train_sha256": "fdd8c39050866edc2be7efd78c09c30ac9a2781877f316d9ebf601efdc670c6d",
+    "training_only_boundary_fit": true,
+    "training_only_codebook_fit": true,
+    "training_only_threshold_calibration": true,
+    "validation_bytes": 75562,
+    "validation_paths": [
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/blake.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/crowley.txt",
+      "/Users/ratimics/develop/sero-model-lineage/build/zero-literary-v1/text/validation/shakespeare.txt"
+    ],
+    "validation_sha256": "2dd74a73277472bf3f6df0ba09c237e1e0a9721d7d7fb43ffaf3fb7a40382748"
+  },
+  "model": {
+    "artifact": "build/sero-latent-v2/seed1/model.pt",
+    "parameters": 343809,
+    "patch_positions_seen": 38400,
+    "raw_bytes_seen": 134057,
+    "trace": [
+      {
+        "gradient_norm": 4.6351847648620605,
+        "training_total_bits_per_raw_byte": 16.164484251250556,
+        "update": 1
+      },
+      {
+        "gradient_norm": 0.9089518189430237,
+        "training_total_bits_per_raw_byte": 5.929599950252227,
+        "update": 75
+      },
+      {
+        "gradient_norm": 0.7139042615890503,
+        "training_total_bits_per_raw_byte": 4.837491199181796,
+        "update": 150
+      },
+      {
+        "gradient_norm": 0.48491019010543823,
+        "training_total_bits_per_raw_byte": 3.1252776745768034,
+        "update": 225
+      },
+      {
+        "gradient_norm": 0.7162017226219177,
+        "training_total_bits_per_raw_byte": 4.2344378175496775,
+        "update": 300
+      }
+    ],
+    "training_wall_seconds": 2.0847024159738794,
+    "updates": 300,
+    "validation": {
+      "code_bits_per_raw_byte": 2.9634597834514818,
+      "escape_patches": 3150,
+      "model_bytes_per_second": 212345.90895024184,
+      "patches": 22128,
+      "raw_bytes": 75562,
+      "residual_boundary_bits_per_raw_byte": 0.0970537410836307,
+      "residual_byte_bits_per_raw_byte": 1.1010532434673994,
+      "total_bits_per_raw_byte": 4.161566773251076,
+      "wall_seconds": 0.3558439170010388
+    }
+  },
+  "schema": "sero.latent_v2_seed_result.v1",
+  "seed": 1
+}
