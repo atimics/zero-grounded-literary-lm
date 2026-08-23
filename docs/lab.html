@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171612">
+  <meta name="description" content="The ZERO lab builds small, local AI models that are easy to inspect and test.">
+  <title>ZERO Lab - what we build and what comes next</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&amp;family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="shell lab-shell">
+    <header class="masthead lab-masthead">
+      <a class="wordmark" href="./" aria-label="Return to the ZERO.4 model">
+        <span class="zero-mark">0</span>
+        <span>ZERO / LAB</span>
+      </a>
+      <nav class="masthead-links lab-nav" aria-label="Project pages">
+        <a href="./">MODEL</a>
+        <a href="dashboard/">TRAINING</a>
+      </nav>
+    </header>
+
+    <section class="lab-hero" aria-labelledby="pageTitle">
+      <p class="eyebrow">SMALL MODELS · CLEAR TESTS · LOCAL AI</p>
+      <h1 id="pageTitle">Build useful AI<br><em>without hiding how it works.</em></h1>
+      <p class="dek">We build small AI models that we can inspect, test, and run on a personal computer. ZERO.4 is our main public model. We also study language, memory, checked tools, integer models, and teams of small expert models.</p>
+    </section>
+
+    <section class="lab-section" aria-labelledby="thesisTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">WHAT THE LAB IS</p>
+        <div>
+          <h2 id="thesisTitle">A model is only one part of the system.</h2>
+          <p>A model can learn language. Memory can keep useful parts of a conversation. Exact programs can check answers. When the system does not know, it should say so.</p>
+        </div>
+      </div>
+      <div class="thesis-grid">
+        <article class="thesis-card">
+          <span class="card-index">01 / SMALL</span>
+          <h3>Small models are easier to understand.</h3>
+          <p>We can read the code, follow the memory, and see where a small model fails. We make a model larger only after a smaller test shows that the idea works.</p>
+        </article>
+        <article class="thesis-card">
+          <span class="card-index">02 / LOCAL</span>
+          <h3>Your words can stay on your computer.</h3>
+          <p>ZERO.4 runs inside the browser. It does not send your prompt to a server. There is no hidden model or outside service fixing its answers.</p>
+        </article>
+        <article class="thesis-card">
+          <span class="card-index">03 / CHECKED</span>
+          <h3>Good writing is not proof.</h3>
+          <p>The language model writes. Memory recalls. A router chooses a tool. Exact code checks facts it can prove. We keep these jobs separate and test each one.</p>
+        </article>
+        <article class="thesis-card">
+          <span class="card-index">04 / HONEST</span>
+          <h3>Failed tests still teach us.</h3>
+          <p>We keep failed experiments. They show which path did not work and help us ask a better question. ilXyr keeps the plan, result, model file, and decision for each test.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="lab-section" aria-labelledby="programTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">ONE PROGRAM, MANY BRANCHES</p>
+        <div>
+          <h2 id="programTitle">The projects are parts of one lab.</h2>
+          <p>Each project has one job. Good results feed the next ZERO model. Failed results stay in the record.</p>
+        </div>
+      </div>
+      <div class="branch-grid">
+        <article class="branch-card">
+          <span class="branch-role">Public flagship</span>
+          <h3>ZERO</h3>
+          <p>Our public model family. It includes the small language model, browser app, conversation format, and model history.</p>
+        </article>
+        <article class="branch-card">
+          <span class="branch-role">Language research</span>
+          <h3>Sero</h3>
+          <p>Our language training branch. It tests training data, token formats, model size, and new ways to group bytes into tokens.</p>
+        </article>
+        <article class="branch-card">
+          <span class="branch-role">Memory research</span>
+          <h3>Holo</h3>
+          <p>Our memory branch. It tests how a small model can keep useful old moments without saving the full conversation.</p>
+        </article>
+        <article class="branch-card">
+          <span class="branch-role">Deployment research</span>
+          <h3>Solomon / NSRL</h3>
+          <p>Our integer-model branch. It trains models that can replay the same way, run well on CPUs, and work with text and images.</p>
+        </article>
+        <article class="branch-card">
+          <span class="branch-role">Certified gates</span>
+          <h3>CRLP</h3>
+          <p>Our checking branch. It builds small task models and exact tests that decide whether a research claim is ready to publish.</p>
+        </article>
+        <article class="branch-card">
+          <span class="branch-role">Evidence system</span>
+          <h3>ilXyr</h3>
+          <p>Our research record. It freezes the test plan, limits the budget, tracks model files, records repeats, and stores the final decision.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="lab-section" aria-labelledby="familiesTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">THE NEXT MODEL FAMILIES</p>
+        <div>
+          <h2 id="familiesTitle">Bring the work together before making it larger.</h2>
+          <p>The family numbers mark research steps. They do not mean a fixed model size. A family becomes public only after it passes a test we wrote before training.</p>
+        </div>
+      </div>
+      <div class="family-stack">
+        <article class="family-card">
+          <div class="family-number" aria-hidden="true">Z5</div>
+          <div>
+            <p class="family-label">BETTER LOCAL LANGUAGE</p>
+            <h3>A stronger model that still runs locally.</h3>
+            <p class="family-question">Can a small local model write and talk much better while staying easy to inspect?</p>
+            <p>Z5 brings together ZERO.4, Sero's approved training data, its current token format, larger language training, conversation memory, and Holo recall. The public result must still run on a personal computer.</p>
+          </div>
+          <div>
+            <p class="family-label">MUST PASS</p>
+            <ul class="gate-list">
+              <li>Beat ZERO.4 on fixed language and conversation tests.</li>
+              <li>Show that limited memory helps.</li>
+              <li>Pass the same planned test with several random seeds.</li>
+              <li>Publish the chosen model file and its limits.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="family-card">
+          <div class="family-number" aria-hidden="true">Z6</div>
+          <div>
+            <p class="family-label">LANGUAGE WITH CHECKED TOOLS</p>
+            <h3>A model that knows when to use a tool.</h3>
+            <p class="family-question">Can the language model choose tools and memories while exact code still checks the final result?</p>
+            <p>Z6 brings together Z5, ZERO's tool-routing work, CRLP's checks, ilXyr's test plans, and a matching Solomon integer model. The model may choose an operation. Exact code performs and checks it.</p>
+          </div>
+          <div>
+            <p class="family-label">MUST PASS</p>
+            <ul class="gate-list">
+              <li>Lock the shared tasks before training.</li>
+              <li>Count wrong tool choices and safe refusals.</li>
+              <li>Compare every test case, not only the average.</li>
+              <li>Repeat the result with the integer model.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="family-card">
+          <div class="family-number" aria-hidden="true">Z8</div>
+          <div>
+            <p class="family-label">A TEAM OF SMALL EXPERTS</p>
+            <h3>Many experts in one clear system.</h3>
+            <p class="family-question">Can small expert models, memory, text, and images work together without hiding which part did the work?</p>
+            <p>Z8 brings together Z6, Holo memory, Solomon text-and-image models, groups of routed experts, and small task scorers. We add one expert at a time. Each expert must prove that it helps.</p>
+          </div>
+          <div>
+            <p class="family-label">MUST PASS</p>
+            <ul class="gate-list">
+              <li>Keep the Z5 language and Z6 safety results.</li>
+              <li>Remove each expert once to prove that it helps.</li>
+              <li>Pass new text, image, and task tests.</li>
+              <li>Publish memory use, speed, and energy use.</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+      <aside class="z7-note" aria-label="Z7 release note">
+        <strong>Z7 / RESERVED</strong>
+        <p>Z7 is held for the work that repeats and strengthens Z6 before Z8 begins. It is a release step, not a promised model. We will use the number only when a real result earns it.</p>
+      </aside>
+    </section>
+
+    <section class="lab-section" aria-labelledby="consolidationTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">RESEARCH CONSOLIDATION</p>
+        <div>
+          <h2 id="consolidationTitle">One model history. Clear owners. Fewer copies.</h2>
+          <p>Each project can keep its own code. One catalog should show every model, who owns it, where its file is, whether it passed, and which test supports the result.</p>
+        </div>
+      </div>
+      <ol class="consolidation-list">
+        <li>Keep this repository as the main public ZERO model and browser app.</li>
+        <li>Give every model an ID, a parent model, a file hash, a status, and a test record.</li>
+        <li>Store the official result in ilXyr. Keep training code in the project that owns it.</li>
+        <li>Mark old work as a Z5 input, Z6 input, Z8 input, product test, or archive.</li>
+        <li>Freeze copied repositories after we save any unique results they contain.</li>
+        <li>Every new experiment must say which Z5, Z6, or Z8 decision it could change.</li>
+      </ol>
+    </section>
+
+    <footer class="lab-footer">
+      <p>ZERO is our public model family. ilXyr keeps the research record. Sero, Holo, Solomon, and CRLP help build and test the next models.</p>
+      <nav class="lab-footer-links" aria-label="More information">
+        <a href="./">TRY ZERO.4</a>
+        <a href="dashboard/">TRAINING LEDGER</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm">SOURCE</a>
+        <a href="https://cenetex.github.io/ilXyr/">ILXYR</a>
+      </nav>
+    </footer>
+  </main>
+</body>
+</html>

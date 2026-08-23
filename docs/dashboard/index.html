@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#151511">
   <meta name="description" content="The live corpus and training ledger for Project ZERO.">
-  <title>ZERO — corpus & training ledger</title>
+  <title>ZERO — corpus &amp; training ledger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&amp;family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
@@ -21,11 +21,14 @@
       <div class="connection" id="connection" role="status" aria-live="polite">
         <span class="connection-dot"></span><span id="connectionText">CONNECTING TO THE LEDGER</span>
       </div>
-      <button class="refresh" id="refresh" type="button">REFRESH</button>
+      <nav class="dashboard-links" aria-label="Project pages">
+        <a href="../lab.html">LAB</a>
+        <button class="refresh" id="refresh" type="button">REFRESH</button>
+      </nav>
     </header>
 
     <section class="hero" aria-labelledby="pageTitle">
-      <p class="eyebrow">ZERO.5 · CORPUS & TRAINING CONTROL PLANE</p>
+      <p class="eyebrow">ZERO.5 · CORPUS &amp; TRAINING CONTROL PLANE</p>
       <h1 id="pageTitle">Data is the model<br><em>before the model learns.</em></h1>
       <p class="dek">Every source is named. Every split is frozen. Every run points back to the exact bytes that taught it.</p>
     </section>
@@ -65,7 +68,7 @@
 
     <footer>
       <p>The public dashboard exposes measurements and provenance only. Corpus bytes, checkpoints, and write credentials remain private in AWS.</p>
-      <a href="https://github.com/atimics/zero-grounded-literary-lm">SOURCE & CONTRACTS ↗</a>
+      <a href="https://github.com/atimics/zero-grounded-literary-lm">SOURCE &amp; CONTRACTS ↗</a>
     </footer>
   </main>
   <script type="module" src="dashboard.js"></script>

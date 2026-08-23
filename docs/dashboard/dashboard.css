@@ -36,8 +36,10 @@ button { font: inherit; }
 .connection-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 5px rgba(188,162,101,.08); animation: pulse 1.7s ease-in-out infinite; }
 .connection.live .connection-dot { background: var(--green); animation: none; }
 .connection.error .connection-dot { background: var(--red); animation: none; }
-.refresh { justify-self: end; border: 0; padding: 0; color: var(--muted); background: none; font: 10px var(--mono); letter-spacing: .13em; cursor: pointer; }
-.refresh:hover { color: var(--ink); }
+.dashboard-links { justify-self: end; display: flex; align-items: center; gap: 18px; }
+.dashboard-links a { color: var(--muted); font: 10px var(--mono); letter-spacing: .13em; text-decoration: none; }
+.refresh { border: 0; padding: 0; color: var(--muted); background: none; font: 10px var(--mono); letter-spacing: .13em; cursor: pointer; }
+.dashboard-links a:hover, .refresh:hover { color: var(--ink); }
 .hero { padding: 72px 5% 62px; text-align: center; }
 .eyebrow { margin: 0 0 16px; color: var(--gold); font: 10px var(--mono); letter-spacing: .18em; }
 h1 { margin: 0; font-size: clamp(42px, 6vw, 72px); font-weight: 400; letter-spacing: -.05em; line-height: 1.06; }
