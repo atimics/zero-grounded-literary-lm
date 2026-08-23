@@ -1,0 +1,132 @@
+{
+  "schema": "sero.curriculum_consolidation_replication_aggregate.v1",
+  "experiment": "sero2-curriculum-consolidation-replication-v1",
+  "status": "complete-three-seed-pass",
+  "completed_at": "2026-08-23T07:14:37.367434Z",
+  "dataset_digest": "dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2fc149a35d8",
+  "contracts": {
+    "staged_replication_sha256": "2b3a7f0ebbd1ce0370424544d2b5b349454e9f51962c21e0185b40333e5a77ac",
+    "consolidation_replication_sha256": "6bec8cec10dcf6b040925840897616a71388c91d4c711a85a6e14b8825d1b8e2"
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "staged": {
+        "run_id": "sero2-curriculum-full-seed0-20260822-10331e8",
+        "finished_at": "2026-08-23T02:37:30.038447Z",
+        "completed_updates": 37509,
+        "decision": "seed0-failed-stop",
+        "result_sha256": "ca6693b009eb94aa779dc396229aa8acb510a707f765c2e4da8937d8a3b080a6",
+        "model_sha256": "bf91752d5997c780614cee31b747bc40ef1959d8f35d10e1327757c7130a17fc",
+        "test_content_bits_per_byte": 1.3561537584687084,
+        "estimated_ec2_usd": 0.902326111111
+      },
+      "final": {
+        "run_id": "sero2-consolidation-full-seed0-20260822-81b0d2b",
+        "finished_at": "2026-08-23T03:37:09.857488Z",
+        "completed_updates": 23424,
+        "decision": "seed0-passed-open-replication",
+        "result_sha256": "278481f8324b407efcf188f5ae367af3213c8df8481c2fa795da60ebf47347bf",
+        "model_sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7",
+        "test_content_bits_per_byte": 1.327818283199724,
+        "test_end_of_document_top1_accuracy": 0.8915962207856788,
+        "all_gates_passed": true,
+        "estimated_ec2_usd": 0.602482222222
+      }
+    },
+    {
+      "seed": 1,
+      "staged": {
+        "run_id": "sero2-curriculum-replication-seed1-20260822-252dd08",
+        "finished_at": "2026-08-23T06:20:40.219876Z",
+        "completed_updates": 37502,
+        "decision": "replication-parent-ready",
+        "result_sha256": "23a6002cd09f765bd50a4a44eddb5c26b20243f66c6c021413fd9d0e730be066",
+        "model_sha256": "68720e9f8c01b383605eb15a91d12717a9828cdb757c936362a4a2ec5c2463d9",
+        "test_content_bits_per_byte": 1.3568971701784571,
+        "estimated_ec2_usd": 0.903443888889
+      },
+      "final": {
+        "run_id": "sero2-consolidation-replication-seed1-20260822-15d57f5",
+        "finished_at": "2026-08-23T07:14:37.367434Z",
+        "completed_updates": 23429,
+        "decision": "replication-seed-passed",
+        "result_sha256": "00df9bdd22accabaf9b3000b407731b3c3a2aac4b9af89f14df5ca9093398a56",
+        "model_sha256": "0809133aa86a7db332861837a7ecd399082386f82b6099713f1ea1dea12844c7",
+        "test_content_bits_per_byte": 1.3301855402388312,
+        "test_end_of_document_top1_accuracy": 0.8801591248135257,
+        "all_gates_passed": true,
+        "estimated_ec2_usd": 0.598011111111
+      }
+    },
+    {
+      "seed": 2,
+      "staged": {
+        "run_id": "sero2-curriculum-replication-seed2-20260822-252dd08",
+        "finished_at": "2026-08-23T06:20:54.004920Z",
+        "completed_updates": 37502,
+        "decision": "replication-parent-ready",
+        "result_sha256": "af3d44d1b209cd768f9aa2e96d0aa158e9b062f2cd6988bc8593b9b2c7993d1f",
+        "model_sha256": "59be412e2f00ff8059ce9b7b90186994ab057071f2cd468a9af6e93bb206dc82",
+        "test_content_bits_per_byte": 1.3553358831035425,
+        "estimated_ec2_usd": 0.906797222222
+      },
+      "final": {
+        "run_id": "sero2-consolidation-replication-seed2-20260822-15d57f5",
+        "finished_at": "2026-08-23T07:13:53.906596Z",
+        "completed_updates": 23428,
+        "decision": "replication-seed-passed",
+        "result_sha256": "6d115f46ef720a99f39f815e9657542b4053be6a0dc438f4f17e085c893f9277",
+        "model_sha256": "e82901cc6a7848fcda9b9e652e89309b51fe942f8b82506576f5d80afa982807",
+        "test_content_bits_per_byte": 1.3274882774199122,
+        "test_end_of_document_top1_accuracy": 0.8910989557434112,
+        "all_gates_passed": true,
+        "estimated_ec2_usd": 0.600526111111
+      }
+    }
+  ],
+  "aggregate": {
+    "staged_test_content_bits_per_byte": {
+      "mean": 1.356128937250236,
+      "sample_stddev": 0.000780939435704671,
+      "range": 0.0015612870749146524
+    },
+    "final_test_content_bits_per_byte": {
+      "mean": 1.3284973669528224,
+      "sample_stddev": 0.0014712826840455944,
+      "minimum": 1.3274882774199122,
+      "maximum": 1.3301855402388312,
+      "range": 0.0026972628189190218
+    },
+    "final_test_end_of_document_top1_accuracy": {
+      "mean": 0.8876181004475385,
+      "sample_stddev": 0.006464445549477859,
+      "minimum": 0.8801591248135257,
+      "maximum": 0.8915962207856788
+    },
+    "consolidation_test_bpb_relative_change": {
+      "mean": -0.02037548724408879,
+      "sample_stddev": 0.000622010451014438
+    },
+    "final_source_test_content_bits_per_byte": {
+      "english-wikibooks": {"mean": 1.5542106996975547, "sample_stddev": 0.0014504400000842706},
+      "english-wikinews": {"mean": 1.4921098805669317, "sample_stddev": 0.0012896323457596943},
+      "simple-wikipedia": {"mean": 1.500599367162563, "sample_stddev": 0.0019765130687113093},
+      "mdn-web-docs": {"mean": 1.1624670988067014, "sample_stddev": 0.0012808575693346114},
+      "openassistant-english": {"mean": 1.3480553309817678, "sample_stddev": 0.002335303886501619},
+      "gsm8k": {"mean": 1.0750520803716577, "sample_stddev": 0.002137331235607258}
+    },
+    "worst_case_gate_margin": {
+      "metric": "english-wikinews test content bits per byte",
+      "margin_below_maximum": 0.016600499474906716
+    },
+    "new_replication_compute_usd": 3.008778333333,
+    "all_three_seed_compute_usd": 4.513586666666
+  },
+  "decision": {
+    "all_three_seeds_passed_every_frozen_gate": true,
+    "promote_two_stage_curriculum_recipe": true,
+    "open_model_scale_experiment": true,
+    "reason": "The staged failure and consolidation recovery both repeated across three seeds with low metric spread."
+  }
+}

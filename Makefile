@@ -148,6 +148,7 @@ endif
 	sero2-curriculum-check sero2-curriculum-result-check \
 	sero2-curriculum-replication-contract-check \
 	sero2-curriculum-consolidation-replication-contract-check \
+	sero2-curriculum-consolidation-replication-result-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
 	zero4-q1-train zero4-q1-eval zero4-q1 zero4-q2-data zero4-q2-check \
@@ -361,6 +362,9 @@ sero2-curriculum-replication-contract-check:
 
 sero2-curriculum-consolidation-replication-contract-check:
 	node scripts/check_sero2_curriculum_consolidation_replication_contract.mjs
+
+sero2-curriculum-consolidation-replication-result-check:
+	node scripts/check_sero2_curriculum_consolidation_replication_result.mjs
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm
