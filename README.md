@@ -93,6 +93,11 @@ corpus is over 161 MB of unique text and has no exact 12-word training overlap
 with its held-out sets. See
 [`benchmarks/sero2-curriculum-v1/contract.json`](benchmarks/sero2-curriculum-v1/contract.json)
 and [`corpus/SERO_CURRICULUM_RIGHTS.md`](corpus/SERO_CURRICULUM_RIGHTS.md).
+The seed-0 run plus retention consolidation passed every frozen source gate at
+1.3278 test BPB, 22.4% below the control on the expanded held-out set. Longer
+context also helped, but greedy generation still looped on 90% of the prompt
+panel and sampled answers were not reliable. See
+[`benchmarks/sero2-curriculum-eval-v1/RESULT.md`](benchmarks/sero2-curriculum-eval-v1/RESULT.md).
 
 ## Build
 
@@ -106,6 +111,7 @@ make sero-latent-v3-result-check
 make sero1-generation-eval-result-check
 make sero1-optimized-check SERO1_OPTIMIZED_MANIFEST=/path/to/manifest.json
 make sero2-curriculum-check SERO2_CURRICULUM_MANIFEST=/path/to/manifest.json
+make sero2-curriculum-result-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

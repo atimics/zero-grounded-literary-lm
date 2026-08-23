@@ -132,8 +132,11 @@ def generation_metrics(token_ids: Sequence[int], data: bytes) -> dict[str, Any]:
     word_ngrams = {str(n): ngram_metrics(words, n) for n in range(1, 5)}
     token_four = token_ngrams["4"]
     severe_loop = (
-        float(token_four["distinct_ratio"]) < 0.5
-        or int(token_four["maximum_count"]) >= 4
+        int(token_four["total"]) > 0
+        and (
+            float(token_four["distinct_ratio"]) < 0.5
+            or int(token_four["maximum_count"]) >= 4
+        )
     )
     return {
         "tokens": len(token_ids),
@@ -191,6 +194,7 @@ def choose_token(
 def generate(
     model: Sero1Model, tokenizer: Sero1Tokenizer, prompt_ids: Sequence[int],
     new_tokens: int, decoder: dict[str, Any], generator_seed: int, device: torch.device,
+    stop_token_id: int | None = None,
 ) -> dict[str, Any]:
     if not prompt_ids:
         raise ValueError("generation prompts cannot be empty")
@@ -200,6 +204,7 @@ def generate(
     generator.manual_seed(generator_seed)
     entropy_bits: list[float] = []
     chosen_surprisal_bits: list[float] = []
+    ended_at_stop_token = False
     for _ in range(new_tokens):
         prefix = generated[-(model.config.token_context - 1):]
         target = torch.tensor([prefix + [0]], dtype=torch.long, device=device)
@@ -211,10 +216,13 @@ def generate(
         ))).sum().item()))
         token_id = choose_token(logits, continuation, decoder, generator)
         chosen_surprisal_bits.append(float(-torch.log2(raw_probabilities[token_id]).item()))
+        if stop_token_id is not None and token_id == stop_token_id:
+            ended_at_stop_token = True
+            break
         generated.append(token_id)
         continuation.append(token_id)
     data = tokenizer.decode(continuation)
-    return {
+    result = {
         "generated_token_ids": continuation,
         "generated_bytes_hex": data.hex(),
         "text_lossy_utf8": data.decode("utf-8", errors="replace"),
@@ -222,6 +230,9 @@ def generate(
         "mean_chosen_token_surprisal_bits": mean(chosen_surprisal_bits),
         "metrics": generation_metrics(continuation, data),
     }
+    if stop_token_id is not None:
+        result["ended_at_stop_token"] = ended_at_stop_token
+    return result
 
 
 @torch.inference_mode()

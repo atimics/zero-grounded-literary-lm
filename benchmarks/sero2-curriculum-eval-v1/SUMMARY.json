@@ -1,0 +1,80 @@
+{
+  "schema": "sero.curriculum_seed0_summary.v1",
+  "dataset_digest": "dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2fc149a35d8",
+  "dataset": {
+    "unique_utf8_bytes": 161955325,
+    "train_utf8_bytes": 157788446,
+    "train_content_tokens": 59510096,
+    "documents": 73578,
+    "sources": 6
+  },
+  "control": {
+    "model_sha256": "8b6379a04ca1b3c49aa0efb36b2d9bdc448a5cf54ab67ac92f05aa342e96f3fc",
+    "test_content_bits_per_byte": 1.7114582222428933,
+    "test_end_of_document_top1_accuracy": 0.0
+  },
+  "staged_curriculum": {
+    "decision": "seed0-failed-retention-gates",
+    "result_sha256": "ca6693b009eb94aa779dc396229aa8acb510a707f765c2e4da8937d8a3b080a6",
+    "model_sha256": "bf91752d5997c780614cee31b747bc40ef1959d8f35d10e1327757c7130a17fc",
+    "test_content_bits_per_byte": 1.3561537584687084,
+    "test_end_of_document_top1_accuracy": 0.8816509199403282,
+    "failed_sources": ["english-wikibooks", "english-wikinews", "simple-wikipedia"]
+  },
+  "consolidated_curriculum": {
+    "decision": "seed0-passed-open-replication",
+    "result_sha256": "278481f8324b407efcf188f5ae367af3213c8df8481c2fa795da60ebf47347bf",
+    "model_sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7",
+    "test_content_bits_per_byte": 1.327818283199724,
+    "test_end_of_document_top1_accuracy": 0.8915962207856788,
+    "test_source_content_bits_per_byte": {
+      "english-wikibooks": 1.5550870457889838,
+      "english-wikinews": 1.4921099053417708,
+      "simple-wikipedia": 1.5003806775823991,
+      "mdn-web-docs": 1.1617253643443537,
+      "openassistant-english": 1.346254853012611,
+      "gsm8k": 1.0729550350060237
+    },
+    "all_frozen_gates_passed": true
+  },
+  "multi_context_diagnostic": {
+    "result_sha256": "794e7a2c21195ba0e93abeb8aabe464344bff43636512334d1cd4dae95b07508",
+    "artifact_s3_prefix": "s3://zero-training-022118847419/experiments/sero2-curriculum-eval-v1/seed0/794e7a2c21195ba0e93abeb8aabe464344bff43636512334d1cd4dae95b07508/",
+    "cases_per_prompt_length": 24,
+    "prompt_token_lengths": [1, 8, 32, 128],
+    "consolidated_mean_bits_per_byte": [1.7272065546194737, 1.6743361212384285, 1.5768804532656964, 1.4325496182658597],
+    "consolidated_mean_top1_token_accuracy": [0.38671875, 0.3990885416666667, 0.427734375, 0.4641927083333333]
+  },
+  "generation_diagnostic": {
+    "prompts": 10,
+    "greedy_outputs_per_checkpoint": 10,
+    "sampled_outputs_per_checkpoint": 20,
+    "consolidated_greedy_severe_loop_rate": 0.9,
+    "consolidated_sampled_severe_loop_rate": 0.05,
+    "consolidated_greedy_mean_distinct_4": 0.22768372093023256,
+    "consolidated_sampled_mean_distinct_4": 0.9655747939540011,
+    "consolidated_sampled_end_of_document_rate": 0.45,
+    "reliable_reasoning_observed": false
+  },
+  "training": {
+    "model_parameters": 6021312,
+    "staged_raw_bytes": 600008435,
+    "staged_tokens": 228980479,
+    "staged_updates": 37509,
+    "consolidation_raw_bytes": 400001312,
+    "consolidation_tokens": 148050583,
+    "consolidation_updates": 23424,
+    "total_raw_bytes": 1000009747,
+    "total_tokens": 377031062
+  },
+  "aws": {
+    "instance_type": "g5.xlarge",
+    "total_instance_seconds": 6154,
+    "total_estimated_ec2_usd": 1.719701111111
+  },
+  "decisions": {
+    "open_seeds_1_and_2_for_replication": true,
+    "promote_model_now": false,
+    "scale_model_now": false
+  }
+}

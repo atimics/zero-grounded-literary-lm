@@ -141,7 +141,9 @@ async function load() {
       fetch(`${base}/runs`, { cache: "no-store" }),
     ]);
     if (!datasetResponse.ok || !runResponse.ok) throw new Error("The ledger API returned an error.");
-    const datasets = (await datasetResponse.json()).datasets || [];
+    const datasets = ((await datasetResponse.json()).datasets || [])
+      .sort((left, right) => String(right.promoted_at || "")
+        .localeCompare(String(left.promoted_at || "")));
     const runs = (await runResponse.json()).runs || [];
     const dataset = datasets[0]; const run = runs[0];
     $("#datasetCount").textContent = integer.format(datasets.filter((item) => item.status === "ready").length);

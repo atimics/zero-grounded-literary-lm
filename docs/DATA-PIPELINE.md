@@ -106,6 +106,13 @@ node scripts/promote_zero_dataset.mjs \
   --approval-id zero-literary-2026-08-12-v1
 ```
 
+Manifests that seal text before tokenization can pass `--train-tokens` after a
+digest-bound tokenizer run. The catalog publisher derives source and quality
+metadata from split rows and `reports/quality.json` when the manifest does not
+carry the older top-level fields. Existing objects without SHA-256 metadata are
+downloaded and hashed before they are accepted; matching catalog rows can be
+refreshed only when their immutable dataset digest is unchanged.
+
 The manual `Publish immutable ZERO corpus` workflow performs the same build and
 promotion from an exact main-branch commit. It never launches training compute.
 

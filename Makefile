@@ -145,7 +145,7 @@ endif
 	sero1-pretrain-result-check sero1-pretrain-aws-check \
 	sero1-generation-eval-result-check sero1-optimized-contract-check \
 	sero1-optimized-check sero2-curriculum-contract-check \
-	sero2-curriculum-check \
+	sero2-curriculum-check sero2-curriculum-result-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
 	zero4-q1-train zero4-q1-eval zero4-q1 zero4-q2-data zero4-q2-check \
@@ -350,6 +350,9 @@ sero2-curriculum-contract-check:
 sero2-curriculum-check: sero2-curriculum-contract-check
 	$(SERO1_PRETRAIN_PYTHON) experiments/sero2-curriculum/tests.py \
 		--manifest "$(SERO2_CURRICULUM_MANIFEST)"
+
+sero2-curriculum-result-check:
+	node scripts/check_sero2_curriculum_result.mjs
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm
