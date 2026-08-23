@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 import sys
 
@@ -16,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from data import EodTokenizedCorpus, ManifestDocuments  # noqa: E402
 from tokenizer import Sero1Tokenizer  # noqa: E402
-from train import build_schedule  # noqa: E402
+from train import build_schedule, load_contract  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,14 +34,23 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    contract = json.loads(args.contract.read_text(encoding="utf-8"))
+    contract, _ = load_contract(args.contract)
     documents = ManifestDocuments.load(args.manifest)
     tokenizer = Sero1Tokenizer(args.tokenizer)
     corpus = EodTokenizedCorpus(documents, tokenizer, 512)
-    stages, digest = build_schedule(corpus, contract, 0)
-    repeated, repeated_digest = build_schedule(corpus, contract, 0)
+    seeds = [int(seed) for seed in contract.get(
+        "open_seeds", [contract["pilot_seed"]],
+    )]
+    seed = seeds[0]
+    stages, digest = build_schedule(corpus, contract, seed)
+    repeated, repeated_digest = build_schedule(corpus, contract, seed)
     assert digest == repeated_digest
     assert len(digest) == 64
+    seed_digests = {
+        candidate: build_schedule(corpus, contract, candidate)[1]
+        for candidate in seeds
+    }
+    assert len(set(seed_digests.values())) == len(seeds)
     assert [stage["id"] for stage in stages] == [
         rule["id"] for rule in contract["training"]["stages"]
     ]
@@ -69,7 +77,8 @@ def main() -> None:
                for document in corpus.documents["train"])
     print(
         "Sero curriculum mechanics passed: "
-        f"{sum(len(stage['windows']) for stage in stages)} scheduled windows, {digest}"
+        f"{sum(len(stage['windows']) for stage in stages)} scheduled windows, "
+        f"seed digests {seed_digests}"
     )
 
 

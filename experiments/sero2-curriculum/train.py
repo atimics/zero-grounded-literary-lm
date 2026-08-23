@@ -79,9 +79,37 @@ def utc_now() -> str:
 def load_contract(path: Path) -> tuple[dict[str, Any], str]:
     raw = path.resolve().read_bytes()
     contract = json.loads(raw)
-    if contract.get("schema") != "sero.curriculum_pretrain_contract.v1":
+    if contract.get("schema") == "sero.curriculum_pretrain_replication_contract.v1":
+        binding = contract["parent_contract"]
+        parent_path = ROOT / binding["path"]
+        parent_raw = parent_path.read_bytes()
+        if hashlib.sha256(parent_raw).hexdigest() != binding["sha256"]:
+            raise ValueError("replication parent contract hash mismatch")
+        parent = json.loads(parent_raw)
+        if parent.get("schema") != "sero.curriculum_pretrain_contract.v1":
+            raise ValueError("unexpected replication parent contract schema")
+        overrides = {
+            key: value for key, value in contract.items()
+            if key not in {"schema", "parent_contract"}
+        }
+        contract = {
+            **parent, **overrides,
+            "schema": "sero.curriculum_pretrain_contract.v1",
+            "replication_parent_contract": binding,
+        }
+    elif contract.get("schema") != "sero.curriculum_pretrain_contract.v1":
         raise ValueError("unexpected Sero curriculum contract schema")
     return contract, hashlib.sha256(raw).hexdigest()
+
+
+def seed_binding(rule: dict[str, Any], name: str, seed: int) -> Any:
+    by_seed = rule.get(f"{name}_by_seed")
+    if by_seed is not None:
+        try:
+            return by_seed[str(seed)]
+        except KeyError as error:
+            raise ValueError(f"{name} is not bound for seed {seed}") from error
+    return rule[name]
 
 
 def model_config(contract: dict[str, Any]) -> Sero1Config:
@@ -266,8 +294,11 @@ def main() -> None:
     started_at = utc_now()
     wall_started = time.perf_counter()
     contract, contract_digest = load_contract(args.contract)
-    if args.seed != int(contract["pilot_seed"]):
-        raise ValueError("only the frozen diagnostic seed is open")
+    open_seeds = [int(seed) for seed in contract.get(
+        "open_seeds", [contract["pilot_seed"]],
+    )]
+    if args.seed not in open_seeds:
+        raise ValueError(f"seed {args.seed} is not open in the frozen contract")
     device = select_device(args.device)
     seed_everything(args.seed)
     documents = ManifestDocuments.load(args.manifest)
@@ -276,6 +307,10 @@ def main() -> None:
     corpus = EodTokenizedCorpus(documents, tokenizer, config.token_context)
     verify_binding(contract, documents, tokenizer, corpus)
     stages, schedule_digest = build_schedule(corpus, contract, args.seed)
+    expected_schedules = contract.get("expected_schedule_sha256_by_seed")
+    if expected_schedules is not None and \
+            schedule_digest != expected_schedules.get(str(args.seed)):
+        raise RuntimeError("replication schedule hash mismatch")
     model = Sero1Model(config).to(device)
     if parameter_count(model) != int(contract["model"]["expected_parameters"]):
         raise RuntimeError("model parameter count drifted")
@@ -289,14 +324,21 @@ def main() -> None:
     if args.resume is not None:
         if not isinstance(initialization, dict):
             raise ValueError("continuation contract has no initialization binding")
-        if sha256(args.resume) != initialization["checkpoint_sha256"]:
+        checkpoint_sha256 = seed_binding(initialization, "checkpoint_sha256", args.seed)
+        parent_contract_sha256 = seed_binding(
+            initialization, "parent_contract_sha256", args.seed,
+        )
+        parent_schedule_sha256 = seed_binding(
+            initialization, "parent_schedule_sha256", args.seed,
+        )
+        if sha256(args.resume) != checkpoint_sha256:
             raise ValueError("continuation checkpoint hash mismatch")
         checkpoint = torch.load(args.resume, map_location="cpu", weights_only=True)
         if checkpoint.get("schema") != "sero.curriculum_pretrain_checkpoint.v1":
             raise ValueError("continuation checkpoint schema mismatch")
-        if checkpoint.get("contract_sha256") != initialization["parent_contract_sha256"]:
+        if checkpoint.get("contract_sha256") != parent_contract_sha256:
             raise ValueError("continuation parent contract mismatch")
-        if checkpoint.get("schedule_sha256") != initialization["parent_schedule_sha256"]:
+        if checkpoint.get("schedule_sha256") != parent_schedule_sha256:
             raise ValueError("continuation parent schedule mismatch")
         if int(checkpoint.get("seed")) != args.seed:
             raise ValueError("continuation checkpoint seed mismatch")
@@ -305,9 +347,9 @@ def main() -> None:
         model.load_state_dict(checkpoint["model_state"], strict=True)
         initialization_record.update({
             "checkpoint_path": str(args.resume),
-            "checkpoint_sha256": initialization["checkpoint_sha256"],
-            "parent_contract_sha256": initialization["parent_contract_sha256"],
-            "parent_schedule_sha256": initialization["parent_schedule_sha256"],
+            "checkpoint_sha256": checkpoint_sha256,
+            "parent_contract_sha256": parent_contract_sha256,
+            "parent_schedule_sha256": parent_schedule_sha256,
             "optimizer_state_reused": False,
         })
     optimization = contract["optimization"]
@@ -410,7 +452,15 @@ def main() -> None:
         final_validation = checkpoints[-1]["validation"]
         final_test = evaluate(model, corpus, "test", batch_size, device)
         gates = gate_result(contract, final_test)
-        decision = "seed0-passed-open-replication" if gates["passed"] else "seed0-failed-stop"
+        replication_role = contract.get("replication_role")
+        if replication_role == "parent":
+            decision = "replication-parent-ready"
+        elif replication_role == "final":
+            decision = "replication-seed-passed" if gates["passed"] \
+                else "replication-seed-failed"
+        else:
+            decision = "seed0-passed-open-replication" if gates["passed"] \
+                else "seed0-failed-stop"
 
     args.artifact_dir.mkdir(parents=True, exist_ok=True)
     final_path = args.artifact_dir / "model-final.pt"
