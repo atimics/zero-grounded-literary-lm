@@ -65,6 +65,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--artifact-dir", type=Path, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--mode", choices=("calibration", "full"), default="full")
+    parser.add_argument("--resume", type=Path)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
     parser.add_argument("--max-updates", type=int, default=0)
     parser.add_argument("--validation-byte-limit", type=int, default=0)
@@ -127,8 +128,12 @@ def verify_binding(
         raise RuntimeError("end-of-document token mismatch")
     curriculum_path = documents.path.parent / documents.manifest["curriculum"]
     curriculum = json.loads(curriculum_path.read_text(encoding="utf-8"))
-    if curriculum["stages"] != contract["training"]["stages"]:
-        raise RuntimeError("contract stages drifted from the corpus curriculum")
+    if contract["training"].get("stages_must_match_corpus", True):
+        if curriculum["stages"] != contract["training"]["stages"]:
+            raise RuntimeError("contract stages drifted from the corpus curriculum")
+    elif contract["training"].get("parent_schedule_sha256") != \
+            contract["initialization"]["parent_schedule_sha256"]:
+        raise RuntimeError("continuation schedule is not bound to its parent schedule")
 
 
 def stable_number(value: str) -> int:
@@ -274,6 +279,37 @@ def main() -> None:
     model = Sero1Model(config).to(device)
     if parameter_count(model) != int(contract["model"]["expected_parameters"]):
         raise RuntimeError("model parameter count drifted")
+    initialization = contract.get("initialization")
+    train_from_scratch = bool(contract["pilot_decisions"]["train_from_scratch"])
+    if train_from_scratch and args.resume is not None:
+        raise ValueError("the frozen contract requires training from scratch")
+    if not train_from_scratch and args.resume is None:
+        raise ValueError("the frozen continuation contract requires --resume")
+    initialization_record: dict[str, Any] = {"train_from_scratch": train_from_scratch}
+    if args.resume is not None:
+        if not isinstance(initialization, dict):
+            raise ValueError("continuation contract has no initialization binding")
+        if sha256(args.resume) != initialization["checkpoint_sha256"]:
+            raise ValueError("continuation checkpoint hash mismatch")
+        checkpoint = torch.load(args.resume, map_location="cpu", weights_only=True)
+        if checkpoint.get("schema") != "sero.curriculum_pretrain_checkpoint.v1":
+            raise ValueError("continuation checkpoint schema mismatch")
+        if checkpoint.get("contract_sha256") != initialization["parent_contract_sha256"]:
+            raise ValueError("continuation parent contract mismatch")
+        if checkpoint.get("schedule_sha256") != initialization["parent_schedule_sha256"]:
+            raise ValueError("continuation parent schedule mismatch")
+        if int(checkpoint.get("seed")) != args.seed:
+            raise ValueError("continuation checkpoint seed mismatch")
+        if checkpoint.get("model_config") != config.to_dict():
+            raise ValueError("continuation model configuration mismatch")
+        model.load_state_dict(checkpoint["model_state"], strict=True)
+        initialization_record.update({
+            "checkpoint_path": str(args.resume),
+            "checkpoint_sha256": initialization["checkpoint_sha256"],
+            "parent_contract_sha256": initialization["parent_contract_sha256"],
+            "parent_schedule_sha256": initialization["parent_schedule_sha256"],
+            "optimizer_state_reused": False,
+        })
     optimization = contract["optimization"]
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=float(optimization["learning_rate"]),
@@ -402,6 +438,7 @@ def main() -> None:
             **({"device_name": torch.cuda.get_device_name(device), "cuda": torch.version.cuda,
                 "cudnn": torch.backends.cudnn.version()} if device.type == "cuda" else {}),
         },
+        "initialization": initialization_record,
         "data": {
             "manifest_path": str(args.manifest), "dataset_id": documents.manifest["dataset_id"],
             "dataset_version": documents.manifest["version"],

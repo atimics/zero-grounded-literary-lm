@@ -16,6 +16,7 @@ metadata() {
 tag() { metadata "tags/instance/$1"; }
 
 RUN_ID=$(tag RunId)
+EXPERIMENT=$(tag Experiment)
 MODE=$(tag Mode)
 SEED=$(tag Seed)
 SOURCE_COMMIT=$(tag Commit)
@@ -25,6 +26,8 @@ TRAINING_BUCKET=$(tag TrainingBucket)
 CORPUS_BUCKET=$(tag CorpusBucket)
 DATASET_PREFIX=$(tag DatasetPrefix)
 DATASET_DIGEST=$(tag DatasetDigest)
+RESUME_KEY=$(tag ResumeKey)
+RESUME_SHA256=$(tag ResumeSha256)
 AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
@@ -32,7 +35,7 @@ MAX_COMPUTE_USD=$(tag MaxComputeUsd)
 HOURLY_PRICE=$(tag HourlyPrice)
 INSTANCE_ID=$(metadata instance-id)
 INSTANCE_TYPE=$(metadata instance-type)
-RESULT_PREFIX="experiments/sero2-curriculum-v1/${RUN_ID}"
+RESULT_PREFIX="experiments/${EXPERIMENT}/${RUN_ID}"
 STATUS_FILE=/tmp/sero2-curriculum-status.json
 
 export AWS_DEFAULT_REGION SERO_SOURCE_COMMIT="$SOURCE_COMMIT"
@@ -42,6 +45,7 @@ test "$DATASET_DIGEST" = dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2f
 test "$HOURLY_PRICE" = 1.006
 test "$SEED" = 0
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
+[[ "$EXPERIMENT" =~ ^sero2-curriculum(-consolidation)?-v1$ ]]
 [[ "$MODE" =~ ^(calibration|full)$ ]]
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
@@ -53,10 +57,20 @@ case "$MODE" in
     test "$MAX_COMPUTE_USD" = 0.503
     ;;
   full)
-    test "$MAX_INSTANCE_SECONDS" = 10800
-    test "$MAX_COMPUTE_USD" = 3.018
+    if [ "$EXPERIMENT" = sero2-curriculum-consolidation-v1 ]; then
+      test "$MAX_INSTANCE_SECONDS" = 7200
+      test "$MAX_COMPUTE_USD" = 2.012
+    else
+      test "$MAX_INSTANCE_SECONDS" = 10800
+      test "$MAX_COMPUTE_USD" = 3.018
+    fi
     ;;
 esac
+if [ "$EXPERIMENT" = sero2-curriculum-consolidation-v1 ]; then
+  test "$MODE" = calibration || test "$MODE" = full
+  test "$RESUME_KEY" != none
+  [[ "$RESUME_SHA256" =~ ^[0-9a-f]{64}$ ]]
+fi
 
 remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s)))
 test "$remaining" -gt 0
@@ -166,24 +180,34 @@ if not torch.cuda.is_available():
 print(torch.cuda.get_device_name(0))
 PY
 build/sero2-curriculum/aws-venv/bin/pip freeze > build/sero2-curriculum/aws-pip-freeze.txt
+CONTRACT=benchmarks/sero2-curriculum-v1/contract.json
+if [ "$EXPERIMENT" = sero2-curriculum-consolidation-v1 ]; then
+  CONTRACT=benchmarks/sero2-curriculum-consolidation-v1/contract.json
+fi
 build/sero2-curriculum/aws-venv/bin/python experiments/sero2-curriculum/tests.py \
-  --manifest build/sero-pretrain-curriculum-v1/manifest.json
+  --manifest build/sero-pretrain-curriculum-v1/manifest.json --contract "$CONTRACT"
 
 PHASE=training
 write_status running 0
 upload_status
-RESULT_FILE="build/sero2-curriculum/${MODE}/seed0.json"
-ARTIFACT_DIR="build/sero2-curriculum/${MODE}/artifacts"
+RESULT_FILE="build/${EXPERIMENT}/${MODE}/seed0.json"
+ARTIFACT_DIR="build/${EXPERIMENT}/${MODE}/artifacts"
 TRAIN_ARGS=(--mode "$MODE")
 if [ "$MODE" = calibration ]; then
   TRAIN_ARGS+=(--max-updates 128 --validation-byte-limit 131072)
+fi
+if [ "$EXPERIMENT" = sero2-curriculum-consolidation-v1 ]; then
+  aws s3 cp "s3://${TRAINING_BUCKET}/${RESUME_KEY}" /tmp/sero2-parent-model.pt \
+    --only-show-errors
+  test "$(sha256sum /tmp/sero2-parent-model.pt | awk '{print $1}')" = "$RESUME_SHA256"
+  TRAIN_ARGS+=(--resume /tmp/sero2-parent-model.pt)
 fi
 mkdir -p "$(dirname "$RESULT_FILE")" "$ARTIFACT_DIR"
 remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 180))
 test "$remaining" -gt 0
 timeout --signal=TERM --kill-after=30s "${remaining}s" \
   build/sero2-curriculum/aws-venv/bin/python experiments/sero2-curriculum/train.py \
-    --contract benchmarks/sero2-curriculum-v1/contract.json \
+    --contract "$CONTRACT" \
     --manifest build/sero-pretrain-curriculum-v1/manifest.json \
     --tokenizer tokenizers/sero1-byte-bpe-4096.json \
     --output "$RESULT_FILE" --artifact-dir "$ARTIFACT_DIR" \

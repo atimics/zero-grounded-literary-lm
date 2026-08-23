@@ -44,7 +44,7 @@ def main() -> None:
     assert digest == repeated_digest
     assert len(digest) == 64
     assert [stage["id"] for stage in stages] == [
-        "foundations", "breadth", "application",
+        rule["id"] for rule in contract["training"]["stages"]
     ]
     assert [stage["scheduled_raw_bytes"] for stage in stages] == [
         stage["scheduled_raw_bytes"] for stage in repeated
@@ -63,7 +63,8 @@ def main() -> None:
             assert value["target_raw_bytes"] == target
             assert value["scheduled_raw_bytes"] >= target
             assert value["scheduled_raw_bytes"] <= target + maximum_window
-    assert sum(stage["target_raw_bytes"] for stage in stages) == 600000000
+    assert sum(stage["target_raw_bytes"] for stage in stages) == \
+        contract["training"]["total_target_raw_bytes"]
     assert all(document.token_ids[-1] == corpus.eod_token_id
                for document in corpus.documents["train"])
     print(

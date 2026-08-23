@@ -9,6 +9,10 @@ const contract = JSON.parse(fs.readFileSync(
   "benchmarks/sero2-curriculum-v1/contract.json", "utf8"));
 const execution = JSON.parse(fs.readFileSync(
   "benchmarks/sero2-curriculum-v1/aws-execution.json", "utf8"));
+const consolidation = JSON.parse(fs.readFileSync(
+  "benchmarks/sero2-curriculum-consolidation-v1/contract.json", "utf8"));
+const consolidationExecution = JSON.parse(fs.readFileSync(
+  "benchmarks/sero2-curriculum-consolidation-v1/aws-execution.json", "utf8"));
 const tokenizer = fs.readFileSync("tokenizers/sero1-byte-bpe-4096.json");
 const tokenizerDigest = crypto.createHash("sha256").update(tokenizer).digest("hex");
 const trainer = fs.readFileSync("experiments/sero2-curriculum/train.py", "utf8");
@@ -54,8 +58,23 @@ assert.equal(execution.pilot_maximum_ec2_usd, 3.521);
 assert.equal(execution.controls.calibration_must_pass_before_full, true);
 assert.equal(execution.controls.seeds_1_and_2_closed, true);
 
+assert.equal(consolidation.schema, "sero.curriculum_pretrain_contract.v1");
+assert.equal(consolidation.status, "diagnostic-seed0-unrun");
+assert.equal(consolidation.data.dataset_digest, contract.data.dataset_digest);
+assert.equal(consolidation.initialization.checkpoint_sha256,
+  "bf91752d5997c780614cee31b747bc40ef1959d8f35d10e1327757c7130a17fc");
+assert.equal(consolidation.initialization.parent_schedule_sha256,
+  "79139c590c044befe176e818210baf82b311393c8dffa3fcb203317a2053215f");
+assert.equal(consolidation.training.total_target_raw_bytes, 400000000);
+assert.deepEqual(consolidation.training.stages[0].domain_weights,
+  {foundation: 0.60, general: 0.30, technical: 0.05, dialogue: 0.03, reasoning: 0.02});
+assert.equal(consolidation.pilot_decisions.train_from_scratch, false);
+assert.equal(consolidationExecution.full.maximum_instance_seconds, 7200);
+assert.equal(consolidationExecution.controls.immutable_parent_checkpoint, true);
+
 for (const file of ["scripts/aws/sero2-curriculum-user-data.sh",
-  "scripts/aws/sero2-curriculum-run-instances.sh"]) {
+  "scripts/aws/sero2-curriculum-run-instances.sh",
+  "scripts/aws/sero2-curriculum-consolidation-run-instances.sh"]) {
   const check = spawnSync("bash", ["-n", file], { encoding: "utf8" });
   assert.equal(check.status, 0, check.stderr || check.stdout);
 }
