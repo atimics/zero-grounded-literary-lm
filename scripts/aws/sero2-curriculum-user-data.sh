@@ -45,7 +45,8 @@ test "$DATASET_DIGEST" = dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2f
 test "$HOURLY_PRICE" = 1.006
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
 case "$EXPERIMENT" in
-  sero2-curriculum-v1|sero2-curriculum-consolidation-v1)
+  sero2-curriculum-v1|sero2-curriculum-consolidation-v1|\
+  sero20m-curriculum-v1|sero20m-consolidation-v1)
     test "$SEED" = 0
     ;;
   sero2-curriculum-replication-v1|sero2-curriculum-consolidation-replication-v1)
@@ -58,6 +59,10 @@ case "$EXPERIMENT" in
   *consolidation*) IS_CONSOLIDATION=1 ;;
   *) IS_CONSOLIDATION=0 ;;
 esac
+case "$EXPERIMENT" in
+  sero20m-*) IS_SCALE=1 ;;
+  *) IS_SCALE=0 ;;
+esac
 [[ "$MODE" =~ ^(calibration|full)$ ]]
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
@@ -65,11 +70,22 @@ esac
 [[ "$MAX_INSTANCE_SECONDS" =~ ^[0-9]+$ ]]
 case "$MODE" in
   calibration)
-    test "$MAX_INSTANCE_SECONDS" = 1800
-    test "$MAX_COMPUTE_USD" = 0.503
+    if [ "$IS_SCALE" = 1 ]; then
+      test "$MAX_INSTANCE_SECONDS" = 3600
+      test "$MAX_COMPUTE_USD" = 1.006
+    else
+      test "$MAX_INSTANCE_SECONDS" = 1800
+      test "$MAX_COMPUTE_USD" = 0.503
+    fi
     ;;
   full)
-    if [ "$IS_CONSOLIDATION" = 1 ]; then
+    if [ "$IS_SCALE" = 1 ] && [ "$IS_CONSOLIDATION" = 1 ]; then
+      test "$MAX_INSTANCE_SECONDS" = 14400
+      test "$MAX_COMPUTE_USD" = 4.024
+    elif [ "$IS_SCALE" = 1 ]; then
+      test "$MAX_INSTANCE_SECONDS" = 21600
+      test "$MAX_COMPUTE_USD" = 6.036
+    elif [ "$IS_CONSOLIDATION" = 1 ]; then
       test "$MAX_INSTANCE_SECONDS" = 7200
       test "$MAX_COMPUTE_USD" = 2.012
     else
@@ -200,6 +216,10 @@ case "$EXPERIMENT" in
     CONTRACT=benchmarks/sero2-curriculum-replication-v1/contract.json ;;
   sero2-curriculum-consolidation-replication-v1)
     CONTRACT=benchmarks/sero2-curriculum-consolidation-replication-v1/contract.json ;;
+  sero20m-curriculum-v1)
+    CONTRACT=benchmarks/sero20m-curriculum-v1/contract.json ;;
+  sero20m-consolidation-v1)
+    CONTRACT=benchmarks/sero20m-consolidation-v1/contract.json ;;
 esac
 build/sero2-curriculum/aws-venv/bin/python experiments/sero2-curriculum/tests.py \
   --manifest build/sero-pretrain-curriculum-v1/manifest.json --contract "$CONTRACT"

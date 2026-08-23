@@ -1,0 +1,73 @@
+{
+  "schema": "sero.curriculum_pretrain_replication_contract.v1",
+  "parent_contract": {
+    "path": "benchmarks/sero2-curriculum-v1/contract.json",
+    "sha256": "052174b5719628236e1710ead13bde1ac7cdbb92385a15335bfb30b7110c7390"
+  },
+  "experiment": "sero20m-curriculum-v1",
+  "status": "scale-seed0-open",
+  "purpose": "Test whether a 3.32x capacity increase produces a step change while holding the tokenizer, corpus, context, curriculum, optimizer, and evaluation method fixed.",
+  "open_seeds": [0],
+  "replication_role": "parent",
+  "model": {
+    "architecture": "dense-causal-tied-embedding-transformer",
+    "token_context": 512,
+    "dimension": 384,
+    "heads": 8,
+    "layers": 10,
+    "feed_forward": 1600,
+    "dropout": 0.0,
+    "position": "learned-absolute",
+    "normalization": "pre-norm-plus-final-rmsnorm",
+    "private_input_bos": true,
+    "expected_parameters": 20011136
+  },
+  "expected_schedule_sha256_by_seed": {
+    "0": "79139c590c044befe176e818210baf82b311393c8dffa3fcb203317a2053215f"
+  },
+  "evaluation": {
+    "checkpoint_split": "complete-validation",
+    "final_split": "complete-test",
+    "primary_metric": "content-bits-per-raw-byte-excluding-end-of-document-loss",
+    "boundary_metrics_reported_separately": true,
+    "sample_prompts": [
+      "In",
+      "The history of astronomy began with",
+      "Question:\nWhy does ice float on water?\n\nReasoning:\n",
+      "User:\nHow can I debug a web page that will not load?\n\nAssistant:\n",
+      "The JavaScript function returns",
+      "a mountain is an extremely high space is a flicker",
+      "A flicker of light crossed the mountain,",
+      "Write a short poem about a mountain and a flicker of light:\n"
+    ],
+    "sample_new_tokens": 128,
+    "generation_stops_at_end_of_document": true
+  },
+  "baseline": {
+    "experiment": "sero2-curriculum-consolidation-replication-v1",
+    "parameters": 6021312,
+    "three_seed_final_test_content_bits_per_byte_mean": 1.3284973669528224,
+    "three_seed_final_test_content_bits_per_byte_sample_stddev": 0.0014712826840455944,
+    "three_seed_final_end_of_document_top1_accuracy_mean": 0.8876181004475385,
+    "all_three_seeds_passed_every_frozen_gate": true
+  },
+  "scale_hypothesis": {
+    "parameter_multiplier": 3.323385,
+    "total_training_tokens_expected": 377031062,
+    "training_tokens_per_parameter_expected": 18.84106239645765,
+    "primary_success_after_consolidation": "at least five percent lower test content bits per byte than the 6M three-seed mean",
+    "primary_falsifier": "consolidated test content bits per byte above 1.2620724986051812",
+    "generation_is_separate_diagnostic": true
+  },
+  "pilot_decisions": {
+    "train_from_scratch": true,
+    "scale_is_only_model_change": true,
+    "same_tokenizer": true,
+    "same_corpus": true,
+    "same_context": true,
+    "same_curriculum": true,
+    "same_optimizer": true,
+    "seed0_only_until_full_scale_result": true,
+    "no_promotion_from_staged_parent": true
+  }
+}
