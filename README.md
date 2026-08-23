@@ -85,6 +85,15 @@ branches after epoch 5 to test a small repeated-four-gram unlikelihood loss.
 Its frozen seed-0 contract is in
 [`benchmarks/sero1-optimized-v1/contract.json`](benchmarks/sero1-optimized-v1/contract.json).
 
+The next fixed-capacity pilot tests a larger, cleaner curriculum before scaling
+the model. It adds MDN technical writing, reviewed OpenAssistant dialogue, and
+GSM8K worked math to the Wikimedia base. Training moves through foundations,
+breadth, and application while replaying general language in every stage. The
+corpus is over 161 MB of unique text and has no exact 12-word training overlap
+with its held-out sets. See
+[`benchmarks/sero2-curriculum-v1/contract.json`](benchmarks/sero2-curriculum-v1/contract.json)
+and [`corpus/SERO_CURRICULUM_RIGHTS.md`](corpus/SERO_CURRICULUM_RIGHTS.md).
+
 ## Build
 
 ```sh
@@ -96,6 +105,7 @@ make sero-latent-v3-contract-check
 make sero-latent-v3-result-check
 make sero1-generation-eval-result-check
 make sero1-optimized-check SERO1_OPTIMIZED_MANIFEST=/path/to/manifest.json
+make sero2-curriculum-check SERO2_CURRICULUM_MANIFEST=/path/to/manifest.json
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

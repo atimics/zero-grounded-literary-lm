@@ -17,6 +17,7 @@ SERO_LATENT_V3_PYTHON ?= python3
 SERO1_PRETRAIN_PYTHON ?= python3
 SERO1_PRETRAIN_MANIFEST ?= $(SERO_CORPUS_OUT)/manifest.json
 SERO1_OPTIMIZED_MANIFEST ?= build/sero-pretrain-v2/manifest.json
+SERO2_CURRICULUM_MANIFEST ?= build/sero-pretrain-curriculum-v1/manifest.json
 SERO0_OUT ?= build/sero0
 ZERO4_Q1_STEPS ?= 4000
 ZERO4_Q1_BATCH ?= 2
@@ -143,7 +144,8 @@ endif
 	sero1-pretrain-contract-check sero1-pretrain-check \
 	sero1-pretrain-result-check sero1-pretrain-aws-check \
 	sero1-generation-eval-result-check sero1-optimized-contract-check \
-	sero1-optimized-check \
+	sero1-optimized-check sero2-curriculum-contract-check \
+	sero2-curriculum-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
 	zero4-q1-train zero4-q1-eval zero4-q1 zero4-q2-data zero4-q2-check \
@@ -341,6 +343,13 @@ sero1-optimized-contract-check:
 sero1-optimized-check: sero1-optimized-contract-check
 	$(SERO1_PRETRAIN_PYTHON) experiments/sero1-optimized/tests.py \
 		--manifest "$(SERO1_OPTIMIZED_MANIFEST)"
+
+sero2-curriculum-contract-check:
+	node scripts/check_sero2_curriculum_contract.mjs
+
+sero2-curriculum-check: sero2-curriculum-contract-check
+	$(SERO1_PRETRAIN_PYTHON) experiments/sero2-curriculum/tests.py \
+		--manifest "$(SERO2_CURRICULUM_MANIFEST)"
 
 zero_lm: zero_lm.c zero1_protocol.h
 	$(CC) $(CFLAGS) zero_lm.c -o $@ -lm
