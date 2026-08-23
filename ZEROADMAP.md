@@ -13,7 +13,7 @@ The active faculty-training decision is tracked in `PROPOSALS.md`, with the
 completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 `ZERO4-BACKLOG.md` is subordinate engineering work.
 
-## State of the system — 2026-08-10
+## State of the system — 2026-08-23
 
 | Layer | Concrete artifact | State |
 | --- | --- | --- |
@@ -55,6 +55,22 @@ the matched Q2.6/Q2.7/Q2.8 evidence and preregister the cheapest disconfirming
 repair from the remaining distributed-sparse and adapter families.
 [`SAT-1`](benchmarks/sat1-v1/PREREGISTRATION.md) remains staged behind a
 three-seed language-preserving five-operation anchor.
+
+## Active direction
+
+The Sero PyTorch/CUDA series is now frozen at its successful 20M scale result.
+It remains evidence that conventional dense training scales compression, but
+its looping generations do not support an intelligence claim. Further Sero
+scale work requires a separate paid scope.
+
+ZERO returns to the main line as a dependency-free C11 model. Work should
+improve the small C model, its corpus, its training loop, and its native/WASM
+runtime before increasing parameter count. The .litq8 deployment uses int8
+matrix weights with floating-point scales and activations; it is quantized, not
+integer-only.
+
+Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
+the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.
 
 ## The channel object
 

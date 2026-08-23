@@ -46,6 +46,21 @@ artifacts. New base-model research is named **Sero**. Sero starts from exact raw
 bytes and makes tokenizer/model tradeoffs explicit rather than inheriting the
 old 128-character normalization contract.
 
+**The Sero series is frozen as of 2026-08-23.** Its PyTorch/CUDA code and
+evidence remain reproducible, but it is no longer the active model line. The
+terminal 20M run passed every frozen source gate and reduced matched-token test
+bits per raw byte by 9.56% versus the 6M model. Generation still looped and was
+not reliably correct. The project now returns to the dependency-free C ZERO
+engine; larger Sero runs require a separate paid scope. See the
+[Sero closure and scale costs](benchmarks/sero-series-closure-v1/README.md)
+and [active model-line boundary](docs/LINEAGE-BOUNDARY.md).
+
+The final scale test trained a 20,011,136-parameter model on the same total
+377,031,062-token schedule. It reached 1.2008 test BPB for a measured two-stage
+EC2 cost of $2.75. This closes Sero with positive scaling evidence and a clear
+generation-quality limitation. See
+[the final 20M result](benchmarks/sero20m-consolidation-v1/RESULT.md).
+
 The first integrated **Sero Latent v1** experiment is complete. Causal learned
 patches beat static patches inside the same local/global architecture, but a
 compute-matched conventional 4,096-token byte-BPE Transformer remained 1.64%
@@ -112,6 +127,7 @@ make sero1-generation-eval-result-check
 make sero1-optimized-check SERO1_OPTIMIZED_MANIFEST=/path/to/manifest.json
 make sero2-curriculum-check SERO2_CURRICULUM_MANIFEST=/path/to/manifest.json
 make sero2-curriculum-result-check
+make sero-series-closure-check
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

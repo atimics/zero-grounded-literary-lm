@@ -1,0 +1,21 @@
+{
+  "schema": "sero.curriculum_pretrain_aws_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "mode": "full",
+  "run_id": "sero20m-consolidation-full-seed0-20260823-88a7ad5",
+  "seed": 0,
+  "instance_id": "i-0f045504f16b8778d",
+  "instance_type": "g5.xlarge",
+  "git_commit": "88a7ad5104a3719f7d99f7d9c1f2cec93863b055",
+  "dataset_digest": "dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2fc149a35d8",
+  "started_at": "2026-08-23T14:43:53Z",
+  "finished_at": "2026-08-23T15:47:35Z",
+  "exit_code": 0,
+  "elapsed_instance_seconds": 3867,
+  "estimated_ec2_usd": 1.080611666667,
+  "result_key": "experiments/sero20m-consolidation-v1/sero20m-consolidation-full-seed0-20260823-88a7ad5/result.json",
+  "result_sha256": "cef1a1893912c59277c76ce05b49baa99fe78659322f1057b8052e09b8523d4e",
+  "model_key": "experiments/sero20m-consolidation-v1/sero20m-consolidation-full-seed0-20260823-88a7ad5/artifacts/model-final.pt",
+  "model_artifact_sha256": "8f3eb73639b14f199170b36df37851a64ad7b9c7dc0779bf98cde3620bbc16ee"
+}

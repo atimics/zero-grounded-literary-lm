@@ -151,6 +151,7 @@ endif
 	sero2-curriculum-consolidation-replication-result-check \
 	sero20m-curriculum-contract-check \
 	sero20m-consolidation-contract-check \
+	sero-series-closure-check \
 	sero20m-scale-generation-contract-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
@@ -374,6 +375,9 @@ sero20m-curriculum-contract-check:
 
 sero20m-consolidation-contract-check:
 	node scripts/check_sero20m_consolidation_contract.mjs
+
+sero-series-closure-check:
+	node scripts/check_sero_series_closure.mjs
 
 sero20m-scale-generation-contract-check:
 	node scripts/check_sero20m_scale_generation_contract.mjs
@@ -2090,6 +2094,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
+check: sero-series-closure-check
 check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero-latent-v3-aws-check sero-latent-v3-result-check sero1-tokenizer-check sero1-pretrain-contract-check sero1-pretrain-aws-check sero1-pretrain-result-check sero1-generation-eval-result-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null

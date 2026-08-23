@@ -93,10 +93,22 @@ quality, showing that over-segmentation was not the only problem. See
 [`PREREGISTRATION.md`](../benchmarks/sero-latent-v3/PREREGISTRATION.md), and
 [`contract.json`](../benchmarks/sero-latent-v3/contract.json).
 
-Sero 1's lossless 4,096-entry byte-BPE remains the current control, not a claim
-that learned tokenization is hopeless. The next main-line step is actual Sero
-language-model training on the promoted corpus, while latent tokenization stays
-a separate research branch. The canonical BPE artifact and dataset binding are
-in
+Sero 1's lossless 4,096-entry byte-BPE remained the control for the later dense
+language-model runs.
+
+## Series closure
+
+Sero 1, the Sero 2 curriculum, and the final 20M scale run completed after the
+tokenizer experiments above. The 20M model trained on 377,031,062 tokens and
+reached 1.2008 held-out bits per raw byte, 9.56% below the matched-token 6M
+model. All frozen retention gates passed. Greedy generation still looped and
+the model did not reason reliably.
+
+Sero is therefore frozen as a successful conventional CUDA scaling
+demonstration, not promoted as an intelligent model. The active base-model line
+returns to the dependency-free C ZERO engine. Larger Sero runs require a
+separate paid scope.
+
+The canonical BPE artifact and dataset binding are in
 [`tokenizers/sero1-tokenizer.json`](../tokenizers/sero1-tokenizer.json); verify
 the locked digest with `make sero1-tokenizer-check`.

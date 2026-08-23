@@ -1,0 +1,109 @@
+{
+  "schema": "sero.dense_scale_cost_estimate.v1",
+  "estimated_on": "2026-08-23",
+  "currency": "USD",
+  "meaning_of_1p": "one quadrillion dense parameters",
+  "actual_20m_anchor": {
+    "parameters": "20011136",
+    "training_tokens": "377031062",
+    "tokens_per_parameter": 18.84106239645765,
+    "instance": "AWS g5.xlarge with one NVIDIA A10G",
+    "estimated_ec2_usd": 2.747497777778
+  },
+  "optimized_cluster_assumptions": {
+    "training_tokens_per_parameter": 20,
+    "training_flops_formula": "6 * parameters * training_tokens",
+    "effective_h100_flops_per_second": 250000000000000,
+    "effective_h100_tflops_per_second": 250,
+    "aws_h100_hour_usd": 4.326,
+    "aws_price_surface": "EC2 Capacity Blocks for ML, p5 H100 per-accelerator price",
+    "operational_multiplier": 1.3
+  },
+  "interpretation": {
+    "optimized_budget": "Estimated H100 compute plus 30 percent for ordinary run overhead.",
+    "current_sero_pipeline_budget": "The measured 20M A10G cost scaled quadratically at constant tokens per parameter, plus 30 percent. This is the safer planning ceiling until a distributed benchmark exists.",
+    "price_tag": "Use the range, with the upper end as the default paid-work budget.",
+    "excluded": [
+      "corpus rights and acquisition",
+      "synthetic-data API spend",
+      "engineering labor",
+      "distributed-training implementation",
+      "storage and network transfer",
+      "failed research runs",
+      "evaluation and deployment"
+    ]
+  },
+  "estimates": [
+    {
+      "label": "100M",
+      "parameters": "100000000",
+      "training_tokens": "2000000000",
+      "training_flops": "1200000000000000000",
+      "h100_hours": 1.3333333333333333,
+      "optimized_budget_usd": 7.4984,
+      "current_sero_pipeline_budget_usd": 89.194323326748
+    },
+    {
+      "label": "1B",
+      "parameters": "1000000000",
+      "training_tokens": "20000000000",
+      "training_flops": "120000000000000000000",
+      "h100_hours": 133.33333333333334,
+      "optimized_budget_usd": 749.84,
+      "current_sero_pipeline_budget_usd": 8919.432332674765
+    },
+    {
+      "label": "10B",
+      "parameters": "10000000000",
+      "training_tokens": "200000000000",
+      "training_flops": "12000000000000000000000",
+      "h100_hours": 13333.333333333334,
+      "optimized_budget_usd": 74984,
+      "current_sero_pipeline_budget_usd": 891943.2332674763
+    },
+    {
+      "label": "100B",
+      "parameters": "100000000000",
+      "training_tokens": "2000000000000",
+      "training_flops": "1200000000000000000000000",
+      "h100_hours": 1333333.3333333333,
+      "optimized_budget_usd": 7498400,
+      "current_sero_pipeline_budget_usd": 89194323.32674764
+    },
+    {
+      "label": "1T",
+      "parameters": "1000000000000",
+      "training_tokens": "20000000000000",
+      "training_flops": "120000000000000000000000000",
+      "h100_hours": 133333333.33333333,
+      "optimized_budget_usd": 749840000,
+      "current_sero_pipeline_budget_usd": 8919432332.674765
+    },
+    {
+      "label": "1P",
+      "parameters": "1000000000000000",
+      "training_tokens": "20000000000000000",
+      "training_flops": "120000000000000000000000000000000",
+      "h100_hours": 133333333333333.33,
+      "optimized_budget_usd": 749840000000000,
+      "current_sero_pipeline_budget_usd": 8919432332674766
+    }
+  ],
+  "sources": [
+    {
+      "name": "Training Compute-Optimal Large Language Models",
+      "url": "https://arxiv.org/abs/2203.15556",
+      "use": "Model and training-token scale together; 20 tokens per parameter is the planning approximation."
+    },
+    {
+      "name": "NVIDIA PyTorch large-scale training measurements",
+      "url": "https://developer.nvidia.com/blog/democratizing-large-scale-mixture-of-experts-training-with-nvidia-pytorch-parallelism/",
+      "use": "Published H100 sustained throughput spans about 190 to 280 TFLOP/s; the estimate uses 250."
+    },
+    {
+      "name": "Amazon EC2 Capacity Blocks for ML pricing",
+      "url": "https://aws.amazon.com/ec2/capacityblocks/pricing/",
+      "use": "The estimate uses the listed 4.326 USD per H100 accelerator-hour."
+    }
+  ]
+}
