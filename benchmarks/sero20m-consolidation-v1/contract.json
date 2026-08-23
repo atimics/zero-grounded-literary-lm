@@ -1,0 +1,110 @@
+{
+  "schema": "sero.curriculum_pretrain_replication_contract.v1",
+  "parent_contract": {
+    "path": "benchmarks/sero2-curriculum-consolidation-v1/contract.json",
+    "sha256": "d6938dc16f946cf91a7cfd6338609530a4e64fc30964badba5a67e134912850e"
+  },
+  "experiment": "sero20m-consolidation-v1",
+  "status": "scale-seed0-final-open",
+  "purpose": "Measure the final scale effect after restoring broad source balance to the frozen 20M staged checkpoint with a fresh optimizer.",
+  "open_seeds": [0],
+  "replication_role": "final",
+  "model": {
+    "architecture": "dense-causal-tied-embedding-transformer",
+    "token_context": 512,
+    "dimension": 384,
+    "heads": 8,
+    "layers": 10,
+    "feed_forward": 1600,
+    "dropout": 0.0,
+    "position": "learned-absolute",
+    "normalization": "pre-norm-plus-final-rmsnorm",
+    "private_input_bos": true,
+    "expected_parameters": 20011136
+  },
+  "initialization": {
+    "checkpoint_sha256": "2c611acc82c043609ca9ed6c9c1eeb155f19e66fd8ba5bac183f125b9b3fdeac",
+    "parent_contract_sha256": "c17afd917da8959a47af2c21544cd72c604d4a89b52ed787a307c3060fb02c23",
+    "parent_schedule_sha256": "79139c590c044befe176e818210baf82b311393c8dffa3fcb203317a2053215f",
+    "parent_result_sha256": "f8d150be8013453994a507d5f1c99d2d16580e3bc058de07507214b11088f270",
+    "optimizer_state_reused": false
+  },
+  "training": {
+    "batch_size": 16,
+    "total_target_raw_bytes": 400000000,
+    "stages_must_match_corpus": false,
+    "parent_schedule_sha256": "79139c590c044befe176e818210baf82b311393c8dffa3fcb203317a2053215f",
+    "stages": [
+      {
+        "id": "retention-consolidation",
+        "target_raw_bytes": 400000000,
+        "domain_weights": {
+          "foundation": 0.60,
+          "general": 0.30,
+          "technical": 0.05,
+          "dialogue": 0.03,
+          "reasoning": 0.02
+        }
+      }
+    ],
+    "windowing": "non-overlapping-token-windows-within-source-documents",
+    "sampling": "deterministic-per-domain-cycle-with-replacement-then-stage-shuffle",
+    "tail_windows": "padded-and-loss-masked",
+    "precision": "bfloat16-on-cuda",
+    "gradient_clip": 1.0,
+    "checkpoint_after_each_stage": true
+  },
+  "expected_schedule_sha256_by_seed": {
+    "0": "c889af19be110b9fd905bb7fec6679fb1eda01cb27911b6e5b883e35c54b33d0"
+  },
+  "evaluation": {
+    "checkpoint_split": "complete-validation",
+    "final_split": "complete-test",
+    "primary_metric": "content-bits-per-raw-byte-excluding-end-of-document-loss",
+    "boundary_metrics_reported_separately": true,
+    "sample_prompts": [
+      "In",
+      "The history of astronomy began with",
+      "Question:\nWhy does ice float on water?\n\nReasoning:\n",
+      "User:\nHow can I debug a web page that will not load?\n\nAssistant:\n",
+      "The JavaScript function returns",
+      "a mountain is an extremely high space is a flicker",
+      "A flicker of light crossed the mountain,",
+      "Write a short poem about a mountain and a flicker of light:\n"
+    ],
+    "sample_new_tokens": 128,
+    "generation_stops_at_end_of_document": true
+  },
+  "baseline": {
+    "experiment": "sero2-curriculum-consolidation-replication-v1",
+    "parameters": 6021312,
+    "three_seed_final_test_content_bits_per_byte_mean": 1.3284973669528224,
+    "three_seed_final_test_content_bits_per_byte_sample_stddev": 0.0014712826840455944,
+    "three_seed_final_end_of_document_top1_accuracy_mean": 0.8876181004475385,
+    "all_three_seeds_passed_every_frozen_gate": true
+  },
+  "success_gates": {
+    "maximum_test_content_bits_per_byte": 1.2620724986051812,
+    "maximum_test_source_content_bits_per_byte": {
+      "english-wikibooks": 1.5550870457889838,
+      "english-wikinews": 1.4933995005250933,
+      "simple-wikipedia": 1.5026761303274276,
+      "mdn-web-docs": 1.1639461034857788,
+      "openassistant-english": 1.3506940617133054,
+      "gsm8k": 1.0772275393266557
+    },
+    "minimum_test_end_of_document_top1_accuracy": 0.88,
+    "all_metrics_must_be_finite": true
+  },
+  "pilot_decisions": {
+    "train_from_scratch": false,
+    "model_scale_is_the_only_recipe_change": true,
+    "fresh_optimizer_for_consolidation": true,
+    "same_tokenizer_corpus_context_curriculum_and_optimizer_as_6m": true,
+    "five_percent_overall_improvement_required": true,
+    "no_source_may_leave_the_proven_6m_retention_envelope": true,
+    "generation_screen_is_separate_and_frozen": true,
+    "seed0_only": true,
+    "no_lineage_promotion_without_replication": true
+  }
+}

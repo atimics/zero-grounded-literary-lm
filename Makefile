@@ -150,6 +150,7 @@ endif
 	sero2-curriculum-consolidation-replication-contract-check \
 	sero2-curriculum-consolidation-replication-result-check \
 	sero20m-curriculum-contract-check \
+	sero20m-consolidation-contract-check \
 	sero20m-scale-generation-contract-check \
 	zero3-consolidate zero3-balance zero3-train zero-benchmark \
 	zero-benchmark-check zero4-faculty-data zero4-faculty-check zero4-smoke \
@@ -370,6 +371,9 @@ sero2-curriculum-consolidation-replication-result-check:
 
 sero20m-curriculum-contract-check:
 	node scripts/check_sero20m_curriculum_contract.mjs
+
+sero20m-consolidation-contract-check:
+	node scripts/check_sero20m_consolidation_contract.mjs
 
 sero20m-scale-generation-contract-check:
 	node scripts/check_sero20m_scale_generation_contract.mjs

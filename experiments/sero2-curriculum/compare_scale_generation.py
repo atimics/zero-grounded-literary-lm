@@ -11,8 +11,15 @@ from pathlib import Path
 from typing import Any
 
 
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_CONTRACT = (
+    ROOT / "benchmarks" / "sero20m-scale-generation-v1" / "comparison-contract.json"
+)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--scale", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -58,6 +65,21 @@ def main() -> None:
     args = parse_args()
     baseline, baseline_sha = load(args.baseline)
     scale, scale_sha = load(args.scale)
+    comparison_raw = args.contract.resolve().read_bytes()
+    comparison = json.loads(comparison_raw)
+    if comparison.get("schema") != "sero.scale_generation_comparison_contract.v1":
+        raise ValueError("unexpected scale-generation comparison contract schema")
+    if baseline_sha != comparison["baseline"]["result_sha256"]:
+        raise ValueError("baseline result hash mismatch")
+    if baseline["checkpoints"][0]["sha256"] != comparison["baseline"]["checkpoint_sha256"]:
+        raise ValueError("baseline checkpoint hash mismatch")
+    candidate = comparison["scale_candidate"]
+    if scale_sha != candidate["result_sha256"]:
+        raise ValueError("scale result hash mismatch")
+    if scale["contract_sha256"] != candidate["contract_sha256"]:
+        raise ValueError("scale generation contract hash mismatch")
+    if scale["checkpoints"][0]["sha256"] != candidate["checkpoint_sha256"]:
+        raise ValueError("scale checkpoint hash mismatch")
     for key in ("dataset_digest", "tokenizer_sha256"):
         if baseline[key] != scale[key]:
             raise ValueError(f"matched comparison requires the same {key}")
@@ -114,16 +136,63 @@ def main() -> None:
             ),
         })
 
+    context128 = next(row for row in context if row["prompt_tokens"] == 128)
+    decoder_index = {row["decoder"]: row for row in decoders}
+    thresholds = comparison["diagnostic_thresholds"]
+    reported_prompts = {row["prompt_id"] for row in scale["free_generations"]}
+    checks = {
+        "context_128_content_bits_per_byte": {
+            "value": context128["reference_bits_per_byte"]["scale"],
+            "maximum": thresholds["maximum_context_128_content_bits_per_byte"],
+        },
+        "greedy_severe_loop_rate": {
+            "value": decoder_index["greedy"]["severe_loop_rate"]["scale"],
+            "maximum": thresholds["maximum_greedy_severe_loop_rate"],
+        },
+        "greedy_token_distinct_4": {
+            "value": decoder_index["greedy"]["token_distinct_4"]["scale"],
+            "minimum": thresholds["minimum_greedy_token_distinct_4"],
+        },
+        "sample_t08_p90_severe_loop_rate": {
+            "value": decoder_index["sample-t08-p90"]["severe_loop_rate"]["scale"],
+            "maximum": thresholds["maximum_sample_t08_p90_severe_loop_rate"],
+        },
+        "sample_t08_p90_r11_severe_loop_rate": {
+            "value": decoder_index["sample-t08-p90-r11"]["severe_loop_rate"]["scale"],
+            "maximum": thresholds["maximum_sample_t08_p90_r11_severe_loop_rate"],
+        },
+        "mountain_flicker_output_reported": {
+            "value": "mountain-flicker" in reported_prompts,
+            "required": thresholds["mountain_flicker_output_must_be_reported"],
+        },
+        "mountain_poem_output_reported": {
+            "value": "mountain-poem" in reported_prompts,
+            "required": thresholds["mountain_poem_output_must_be_reported"],
+        },
+    }
+    for check in checks.values():
+        if "maximum" in check:
+            check["passed"] = check["value"] <= check["maximum"]
+        elif "minimum" in check:
+            check["passed"] = check["value"] >= check["minimum"]
+        else:
+            check["passed"] = check["value"] is check["required"]
+
     result = {
         "schema": "sero.scale_generation_comparison.v1",
         "experiment": "sero20m-scale-generation-v1",
         "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "baseline_result_sha256": baseline_sha,
         "scale_result_sha256": scale_sha,
+        "comparison_contract_sha256": hashlib.sha256(comparison_raw).hexdigest(),
         "dataset_digest": baseline["dataset_digest"],
         "tokenizer_sha256": baseline["tokenizer_sha256"],
         "context_comparison": context,
         "decoder_comparison": decoders,
+        "diagnostic_checks": checks,
+        "all_frozen_diagnostic_thresholds_passed": all(
+            check["passed"] for check in checks.values()
+        ),
         "interpretation_rule": (
             "Generation is a diagnostic. Lower held-out BPB is predictive improvement; "
             "sample quality and repetition metrics do not by themselves prove intelligence."
@@ -163,6 +232,15 @@ def main() -> None:
             f"{format_percent(loops['scale'])} | {format_percent(distinct['baseline'])} | "
             f"{format_percent(distinct['scale'])} |"
         )
+    lines.extend([
+        "",
+        "## Frozen diagnostic checks",
+        "",
+        "| Check | Result |",
+        "| :--- | :---: |",
+    ])
+    for name, check in checks.items():
+        lines.append(f"| {name.replace('_', ' ')} | {'pass' if check['passed'] else 'fail'} |")
     lines.extend([
         "",
         "## Selected 20M outputs",
