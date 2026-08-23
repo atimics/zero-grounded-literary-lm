@@ -51,6 +51,11 @@ def main() -> None:
         for candidate in seeds
     }
     assert len(set(seed_digests.values())) == len(seeds)
+    expected_digests = contract.get("expected_schedule_sha256_by_seed")
+    if expected_digests is not None:
+        assert seed_digests == {
+            int(candidate): digest for candidate, digest in expected_digests.items()
+        }
     assert [stage["id"] for stage in stages] == [
         rule["id"] for rule in contract["training"]["stages"]
     ]

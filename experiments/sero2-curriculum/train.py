@@ -126,7 +126,7 @@ def model_config(contract: dict[str, Any]) -> Sero1Config:
 
 def verify_binding(
     contract: dict[str, Any], documents: ManifestDocuments,
-    tokenizer: Sero1Tokenizer, corpus: EodTokenizedCorpus,
+    tokenizer: Sero1Tokenizer, corpus: EodTokenizedCorpus, seed: int,
 ) -> None:
     data = contract["data"]
     observed = {
@@ -159,8 +159,8 @@ def verify_binding(
     if contract["training"].get("stages_must_match_corpus", True):
         if curriculum["stages"] != contract["training"]["stages"]:
             raise RuntimeError("contract stages drifted from the corpus curriculum")
-    elif contract["training"].get("parent_schedule_sha256") != \
-            contract["initialization"]["parent_schedule_sha256"]:
+    elif seed_binding(contract["training"], "parent_schedule_sha256", seed) != \
+            seed_binding(contract["initialization"], "parent_schedule_sha256", seed):
         raise RuntimeError("continuation schedule is not bound to its parent schedule")
 
 
@@ -305,7 +305,7 @@ def main() -> None:
     tokenizer = Sero1Tokenizer(args.tokenizer)
     config = model_config(contract)
     corpus = EodTokenizedCorpus(documents, tokenizer, config.token_context)
-    verify_binding(contract, documents, tokenizer, corpus)
+    verify_binding(contract, documents, tokenizer, corpus, args.seed)
     stages, schedule_digest = build_schedule(corpus, contract, args.seed)
     expected_schedules = contract.get("expected_schedule_sha256_by_seed")
     if expected_schedules is not None and \
