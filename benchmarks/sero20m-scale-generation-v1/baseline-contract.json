@@ -1,0 +1,53 @@
+{
+  "schema": "sero.generation_eval_contract.v1",
+  "experiment": "sero20m-scale-generation-v1-baseline-6m",
+  "status": "matched-scale-diagnostic",
+  "source_experiment": "sero2-curriculum-consolidation-v1",
+  "checkpoint_sha256_by_seed": {
+    "0": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7"
+  },
+  "tokenizer_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+  "held_out_context": {
+    "split": "test",
+    "documents_per_source": 2,
+    "prompt_token_lengths": [1, 8, 32, 128],
+    "continuation_tokens": 64,
+    "selection": "first eligible documents by id; continuation offset from sha256(document id)"
+  },
+  "free_generation": {
+    "new_tokens": 128,
+    "stop_token_id": 188,
+    "prompts": [
+      {"id": "control-the", "category": "one-token-control", "text": "The"},
+      {"id": "control-in", "category": "one-token-control", "text": "In"},
+      {"id": "control-a", "category": "one-token-control", "text": "A"},
+      {"id": "history", "category": "knowledge", "text": "The history of astronomy began with"},
+      {"id": "official-report", "category": "knowledge", "text": "According to the official report, the government"},
+      {"id": "scientists", "category": "knowledge", "text": "Scientists at the university discovered that"},
+      {"id": "chapter", "category": "knowledge", "text": "The purpose of this chapter is to explain"},
+      {"id": "minister", "category": "knowledge", "text": "The minister said on Tuesday that"},
+      {"id": "story", "category": "creative", "text": "Once upon a time, a young inventor"},
+      {"id": "dialogue", "category": "dialogue", "text": "She opened the door and whispered,"},
+      {"id": "question-answer", "category": "reasoning", "text": "Question:\nWhy does ice float on water?\n\nReasoning:\n"},
+      {"id": "arithmetic", "category": "reasoning", "text": "Question:\nA box has 12 red balls and 7 blue balls. How many balls are there?\n\nReasoning:\n"},
+      {"id": "assistant", "category": "assistant", "text": "User:\nHow can I debug a web page that will not load?\n\nAssistant:\n"},
+      {"id": "code", "category": "code", "text": "function fibonacci(n) {\n  if (n < 2) return n;\n  "},
+      {"id": "photosynthesis", "category": "long-form", "text": "Photosynthesis is the process by which green plants use sunlight to convert water and carbon dioxide into energy. During this process,"},
+      {"id": "committee", "category": "long-form", "text": "The committee met on Tuesday to discuss the proposed changes. After several hours of debate, the members agreed that"},
+      {"id": "mountain-flicker", "category": "user-challenge", "text": "a mountain is an extremely high space is a flicker"},
+      {"id": "mountain-poem", "category": "creative", "text": "Write a short poem about a mountain and a flicker of light:\n"}
+    ],
+    "decoders": [
+      {"id": "greedy", "temperature": null, "top_p": null, "repetition_penalty": 1.0, "repeats": 1},
+      {"id": "sample-t08-p90", "temperature": 0.8, "top_p": 0.9, "repetition_penalty": 1.0, "repeats": 2},
+      {"id": "sample-t08-p90-r11", "temperature": 0.8, "top_p": 0.9, "repetition_penalty": 1.1, "repeats": 2}
+    ]
+  },
+  "reporting": {
+    "title": "Sero 6M matched scale-generation baseline",
+    "scope": "This diagnostic freezes the 6M baseline on the same curriculum test documents and prompts that will be used for the 20M model.",
+    "severe_loop_rule": "token distinct-4 below 0.5 or one token 4-gram occurs at least 4 times",
+    "sampling_is_diagnostic_not_a_promotion_gate": true,
+    "report_every_seed": true
+  }
+}

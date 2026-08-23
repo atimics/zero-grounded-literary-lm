@@ -55,6 +55,32 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def load_contract(path: Path) -> tuple[dict[str, Any], bytes]:
+    raw = path.resolve().read_bytes()
+    contract = json.loads(raw)
+    if contract.get("schema") == "sero.generation_eval_replication_contract.v1":
+        binding = contract["parent_contract"]
+        parent_raw = (ROOT / binding["path"]).read_bytes()
+        if hashlib.sha256(parent_raw).hexdigest() != binding["sha256"]:
+            raise ValueError("generation evaluation parent contract hash mismatch")
+        parent = json.loads(parent_raw)
+        if parent.get("schema") != "sero.generation_eval_contract.v1":
+            raise ValueError("unexpected generation evaluation parent schema")
+        overrides = {
+            key: value for key, value in contract.items()
+            if key not in {"schema", "parent_contract"}
+        }
+        contract = {
+            **parent,
+            **overrides,
+            "schema": "sero.generation_eval_contract.v1",
+            "replication_parent_contract": binding,
+        }
+    elif contract.get("schema") != "sero.generation_eval_contract.v1":
+        raise ValueError("unexpected generation evaluation contract schema")
+    return contract, raw
+
+
 def select_device(requested: str) -> torch.device:
     if requested != "auto":
         device = torch.device(requested)
@@ -86,10 +112,16 @@ def parse_checkpoints(values: Sequence[str]) -> dict[int, Path]:
 
 def load_model(path: Path, expected_seed: int, device: torch.device) -> Sero1Model:
     checkpoint = torch.load(path, map_location="cpu", weights_only=True)
-    if checkpoint.get("schema") != "sero.pretrain_v1_checkpoint.v1":
+    schema = checkpoint.get("schema")
+    if schema not in {
+        "sero.pretrain_v1_checkpoint.v1",
+        "sero.curriculum_pretrain_checkpoint.v1",
+    }:
         raise ValueError(f"unexpected checkpoint schema in {path}")
-    if int(checkpoint.get("seed")) != expected_seed or checkpoint.get("mode") != "full":
+    if int(checkpoint.get("seed")) != expected_seed:
         raise ValueError(f"checkpoint identity mismatch for seed {expected_seed}")
+    if schema == "sero.pretrain_v1_checkpoint.v1" and checkpoint.get("mode") != "full":
+        raise ValueError(f"checkpoint is not a full run for seed {expected_seed}")
     config = Sero1Config(**checkpoint["model_config"])
     model = Sero1Model(config)
     model.load_state_dict(checkpoint["model_state"], strict=True)
@@ -417,10 +449,9 @@ def render_report(result: dict[str, Any]) -> str:
         if int(summary["prompt_tokens"]) == 1
     )
     lines = [
-        "# Sero 1 expanded generation evaluation",
+        f"# {result['reporting']['title']}",
         "",
-        "This is a post-training diagnostic, not a new promotion gate. It evaluates the exact",
-        "three promoted Sero 1 checkpoints.",
+        result["reporting"]["scope"],
         "",
         "## Held-out context test",
         "",
@@ -514,10 +545,7 @@ def main() -> None:
     args = parse_args()
     started_at = utc_now()
     wall_started = time.perf_counter()
-    contract_raw = args.contract.resolve().read_bytes()
-    contract = json.loads(contract_raw)
-    if contract.get("schema") != "sero.generation_eval_contract.v1":
-        raise ValueError("unexpected generation evaluation contract schema")
+    contract, contract_raw = load_contract(args.contract)
     checkpoints = parse_checkpoints(args.checkpoint)
     expected_hashes = {
         int(seed): value for seed, value in contract["checkpoint_sha256_by_seed"].items()
@@ -540,6 +568,11 @@ def main() -> None:
         decoder for decoder in contract["free_generation"]["decoders"]
         if decoder["id"] == "greedy"
     )
+    free_stop_token_id = contract["free_generation"].get("stop_token_id")
+    if free_stop_token_id is not None:
+        free_stop_token_id = int(free_stop_token_id)
+        if not 0 <= free_stop_token_id < tokenizer.vocab_size:
+            raise ValueError("free-generation stop token is outside the vocabulary")
     for seed, checkpoint_path in sorted(checkpoints.items()):
         print(f"loading seed {seed}: {checkpoint_path}", flush=True)
         model = load_model(checkpoint_path, seed, device)
@@ -581,7 +614,7 @@ def main() -> None:
                         model, tokenizer, prompt_ids,
                         int(contract["free_generation"]["new_tokens"]), decoder,
                         deterministic_seed("free", seed, prompt["id"], decoder["id"], repeat),
-                        device,
+                        device, stop_token_id=free_stop_token_id,
                     )
                     generation.pop("generated_token_ids")
                     free_rows.append({
@@ -621,6 +654,16 @@ def main() -> None:
         "held_out_cases": public_held_out_cases(cases),
         "held_out_evaluations": held_out_rows,
         "free_generations": free_rows,
+        "reporting": {
+            "title": contract.get("reporting", {}).get(
+                "title", "Sero 1 expanded generation evaluation",
+            ),
+            "scope": contract.get("reporting", {}).get(
+                "scope",
+                "This is a post-training diagnostic, not a new promotion gate. It evaluates "
+                "the exact frozen checkpoints.",
+            ),
+        },
         "summaries": {
             "held_out_by_prompt_length": summary_rows(held_out_rows, ["prompt_tokens"]),
             "held_out_by_seed_prompt_length": summary_rows(
