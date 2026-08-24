@@ -1,0 +1,65 @@
+{
+  "schema": "zero.c32_throughput_contract.v1",
+  "experiment": "zero5-c32-throughput-v1",
+  "status": "authorized-unrun",
+  "purpose": "Find a faster byte-identical Linux/OpenBLAS continuation configuration for the frozen C3.2 run.",
+  "diagnostic_only": true,
+  "scientific_inference_allowed": false,
+  "source": {
+    "commit": "c90e11e032399b584c5c9ac6639465b32d47a6e1",
+    "archive_sha256": "48f84fe14144f562d3a890b480e696466470e9037de9c2fac32b327c3518bc62",
+    "assets_sha256": "cafedf89ab5ed298036114ab82cb4ffa785265f8c80294925c14bd8478c7f4b7",
+    "user_data": "scripts/aws/zero5-c32-throughput-user-data.sh",
+    "user_data_sha256": "79235bc68954aa4633747255694b88cbd169e544308fa4f971cf6192e1a9b53f"
+  },
+  "parent": {
+    "experiment": "zero5-c32-v1",
+    "contract_sha256": "f47f9283ee8a111bb816079803824bee77de930eac9e4ef5ecdbb8733dd01b7e",
+    "run_id": "zero5-c32-aws-20260824-44d34a7",
+    "arm": "C",
+    "update": 3000,
+    "active_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720"
+  },
+  "venue": {
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "hourly_usd": 0.68,
+    "maximum_instance_seconds": 720,
+    "maximum_compute_usd": 0.14,
+    "automatic_shutdown": true
+  },
+  "replay": {
+    "start_update": 3000,
+    "updates": 20,
+    "batch_sequences": 4,
+    "compute_token_exposures": 40960,
+    "validation_packs": 1,
+    "data_order": "identical packs 12000 through 12079",
+    "optimizer_rng_and_schedule": "restored from the exact active checkpoint"
+  },
+  "reference": {
+    "name": "o2-t16-a",
+    "compiler_flags": "-O2 -std=c11 -Wall -Wextra -Wpedantic",
+    "openblas_threads": 16,
+    "repeat": "o2-t16-b"
+  },
+  "candidates": [
+    {"name": "o2-t16-a", "compiler": "o2", "threads": 16},
+    {"name": "o2-t8", "compiler": "o2", "threads": 8},
+    {"name": "o2-t4", "compiler": "o2", "threads": 4},
+    {"name": "o2-t2", "compiler": "o2", "threads": 2},
+    {"name": "o2-t1", "compiler": "o2", "threads": 1},
+    {"name": "o2-t16-b", "compiler": "o2", "threads": 16},
+    {"name": "o3-native-t16", "compiler": "o3-native", "threads": 16},
+    {"name": "o3-native-t8", "compiler": "o3-native", "threads": 8},
+    {"name": "o3-native-t4", "compiler": "o3-native", "threads": 4}
+  ],
+  "decision": {
+    "eligibility": "The output active checkpoint must be byte-identical to o2-t16-a after the same 20 updates.",
+    "selection": "Choose the eligible configuration with the highest measured training tokens per second.",
+    "reference_repeat_maximum_relative_drift": 0.1,
+    "continuation_approval": false,
+    "test_metrics_opened": false
+  }
+}

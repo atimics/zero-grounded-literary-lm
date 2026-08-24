@@ -301,6 +301,9 @@ zero5-c31-run: zero5_c31_lm zero5-c31-check
 zero5-c32-check: zero5_c32_lm
 	node scripts/check_zero5_c32.mjs
 
+zero5-c32-throughput-check:
+	node scripts/check_zero5_c32_throughput.mjs
+
 zero5-c32-run: zero5_c32_lm zero5-c32-check
 	node scripts/run_zero5_c32.mjs \
 		--import-dir "$(ZERO5_C32_IMPORT_DIR)" \
