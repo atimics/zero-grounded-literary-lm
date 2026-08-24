@@ -26,6 +26,7 @@ BASELINE_CACHE_SHA256=$(tag BaselineCacheSha256)
 TRAINING_BUCKET=$(tag TrainingBucket)
 DATASET_DIGEST=$(tag DatasetDigest)
 CONTRACT_SHA256=$(tag ContractSha256)
+CONTINUATION_SHA256=$(tag ContinuationSha256)
 AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
@@ -47,15 +48,16 @@ test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$DATASET_DIGEST" = 4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d
 test "$MAX_INSTANCE_SECONDS" -le 9000
 test "$MAX_INSTANCE_SECONDS" -gt 0
-test "$MAX_COMPUTE_USD" = 1.70
-awk -v prior="$PRIOR_COMPUTE_USD" 'BEGIN { exit !(prior >= 0 && prior < 1.70) }'
+test "$MAX_COMPUTE_USD" = 5.42
+awk -v prior="$PRIOR_COMPUTE_USD" 'BEGIN { exit !(prior >= 0 && prior < 5.42) }'
 test "$HOURLY_PRICE" = 0.68
-test "$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v1
+test "$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v2
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
+[[ "$CONTINUATION_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
 if [ "$BASELINE_CACHE_KEY" = none ] || \
     [ "$BASELINE_CACHE_SHA256" = none ]; then
@@ -88,6 +90,7 @@ write_status() {
     --arg instance_type "$INSTANCE_TYPE" --arg git_commit "$SOURCE_COMMIT" \
     --arg dataset_digest "$DATASET_DIGEST" \
     --arg contract_sha256 "$CONTRACT_SHA256" \
+    --arg continuation_sha256 "$CONTINUATION_SHA256" \
     --arg started_at "$STARTED_AT" \
     --arg finished_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg result_key "$result_key" --arg result_sha256 "$result_sha256" \
@@ -96,7 +99,8 @@ write_status() {
     '{schema:"zero.c32_aws_status.v1",status:$status,phase:$phase,
       run_id:$run_id,instance_id:$instance_id,instance_type:$instance_type,
       git_commit:$git_commit,dataset_digest:$dataset_digest,
-      contract_sha256:$contract_sha256,started_at:$started_at,
+      contract_sha256:$contract_sha256,
+      continuation_sha256:$continuation_sha256,started_at:$started_at,
       finished_at:$finished_at,exit_code:$exit_code,
       elapsed_instance_seconds:$elapsed,estimated_ec2_usd:$cost,
       result_key:(if $result_key=="" then null else $result_key end),
@@ -155,6 +159,8 @@ cd /opt/zero/repo
 test "$(cat SOURCE_COMMIT)" = "$SOURCE_COMMIT"
 test "$(sha256sum benchmarks/zero5-c32-v1/contract.json | awk '{print $1}')" = \
   "$CONTRACT_SHA256"
+test "$(sha256sum benchmarks/zero5-c32-v1/aws-continuation.json | awk '{print $1}')" = \
+  "$CONTINUATION_SHA256"
 
 PHASE=assets
 write_status running 0
@@ -169,8 +175,9 @@ PHASE=environment
 write_status running 0
 upload_status
 export LITERARY_BACKEND=openblas
-export OPENBLAS_NUM_THREADS=16
-export OMP_NUM_THREADS=16
+export OPENBLAS_NUM_THREADS=8
+export OMP_NUM_THREADS=8
+export OPENBLAS_DYNAMIC=0
 make zero5_c32_lm
 node scripts/check_zero5_c32.mjs
 

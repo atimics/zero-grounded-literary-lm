@@ -80,6 +80,8 @@ const contractPath = "benchmarks/zero5-c32-v1/contract.json";
 const importPath = "benchmarks/zero5-c32-v1/import.json";
 const resultPath = "benchmarks/zero5-c32-v1/result.json";
 const awsExecutionPath = "benchmarks/zero5-c32-v1/aws-execution.json";
+const awsContinuationPath =
+  "benchmarks/zero5-c32-v1/aws-continuation.json";
 const localPartialPath = "benchmarks/zero5-c32-v1/local-partial-run.json";
 const awsScripts = [
   "scripts/aws/zero5-c32-publish-baseline-cache.sh",
@@ -204,6 +206,47 @@ assert.ok(awsExecution.maximum_instance_seconds *
 assert.equal(awsExecution.controls.contract_bound_checkpoints, true);
 assert.equal(awsExecution.controls.byte_exact_resume_test_required, true);
 assert.equal(awsExecution.controls.provenance_bound_baseline_cache, true);
+const awsContinuationBytes = fs.readFileSync(awsContinuationPath);
+const awsContinuation = JSON.parse(awsContinuationBytes);
+const throughputContractBytes = fs.readFileSync(
+  awsContinuation.optimization_evidence.benchmark_contract);
+const throughputResultBytes = fs.readFileSync(
+  awsContinuation.optimization_evidence.benchmark_result);
+const throughputResult = JSON.parse(throughputResultBytes);
+assert.equal(awsContinuation.schema, "zero.c32_aws_continuation.v1");
+assert.equal(awsContinuation.status, "authorized");
+assert.equal(awsContinuation.scientific_change, false);
+assert.equal(awsContinuation.parent.scientific_contract_sha256,
+  sha256(contractBytes));
+assert.equal(awsContinuation.parent.active_arm, "C");
+assert.equal(awsContinuation.parent.completed_update, 3000);
+assert.equal(awsContinuation.parent.arm_d_started, false);
+assert.match(awsContinuation.parent.active_checkpoint_sha256,
+  /^[0-9a-f]{64}$/);
+assert.equal(awsContinuation.optimization_evidence.benchmark_contract_sha256,
+  sha256(throughputContractBytes));
+assert.equal(awsContinuation.optimization_evidence.benchmark_result_sha256,
+  sha256(throughputResultBytes));
+assert.equal(throughputResult.fastest_byte_identical_candidate.threads, 8);
+assert.equal(throughputResult.fastest_byte_identical_candidate.compiler, "o2");
+assert.ok(throughputResult.candidates.every(candidate =>
+  candidate.byte_identical_to_reference));
+assert.equal(awsContinuation.environment.openblas_threads, 8);
+assert.equal(awsContinuation.environment.omp_threads, 8);
+assert.equal(awsContinuation.environment.openblas_dynamic, false);
+assert.equal(awsContinuation.budget.maximum_total_c32_ec2_usd, 5.42);
+assert.equal(awsContinuation.budget.maximum_additional_ec2_usd,
+  awsContinuation.budget.maximum_total_c32_ec2_usd -
+    awsContinuation.parent.prior_ec2_usd);
+assert.ok(awsContinuation.budget.maximum_segment_seconds *
+  awsContinuation.environment.on_demand_usd_per_hour / 3600 <=
+    awsContinuation.budget.maximum_segment_ec2_usd);
+assert.equal(sha256(fs.readFileSync(
+  awsContinuation.implementation.user_data)),
+awsContinuation.implementation.user_data_sha256);
+assert.equal(sha256(fs.readFileSync(
+  awsContinuation.implementation.launcher)),
+awsContinuation.implementation.launcher_sha256);
 for (const script of awsScripts) {
   run("bash", ["-n", script]);
   assert.ok((fs.statSync(script).mode & 0o111) !== 0,
@@ -220,9 +263,18 @@ assert.match(awsLauncher, /launch-\$\{launch_epoch\}\.json/);
 assert.match(awsLauncher, /BaselineCacheKey/);
 assert.match(awsUserData, /test "\$INSTANCE_TYPE" = c6i\.4xlarge/);
 assert.match(awsUserData, /export LITERARY_BACKEND=openblas/);
+assert.match(awsUserData, /export OPENBLAS_NUM_THREADS=8/);
+assert.match(awsUserData, /export OMP_NUM_THREADS=8/);
+assert.match(awsUserData, /export OPENBLAS_DYNAMIC=0/);
+assert.match(awsUserData, /test "\$MAX_COMPUTE_USD" = 5\.42/);
+assert.match(awsUserData,
+  /test "\$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v2/);
+assert.match(awsUserData, /aws-continuation\.json/);
 assert.match(awsUserData, /--resume-run/);
 assert.match(awsUserData, /publish_zero_telemetry\.mjs/);
 assert.match(awsUserData, /zero5_c32_baseline_cache\.mjs --mode install/);
+assert.match(awsLauncher, /max_usd=5\.42/);
+assert.match(awsLauncher, /if \(value > 9000\) value=9000/);
 
 const localPartial = JSON.parse(fs.readFileSync(localPartialPath));
 assert.equal(localPartial.schema, "zero.c32_local_partial_run.v1");
