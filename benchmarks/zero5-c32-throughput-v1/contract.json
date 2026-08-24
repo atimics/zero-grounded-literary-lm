@@ -10,7 +10,7 @@
     "archive_sha256": "48f84fe14144f562d3a890b480e696466470e9037de9c2fac32b327c3518bc62",
     "assets_sha256": "cafedf89ab5ed298036114ab82cb4ffa785265f8c80294925c14bd8478c7f4b7",
     "user_data": "scripts/aws/zero5-c32-throughput-user-data.sh",
-    "user_data_sha256": "c9b7ed5ef62a8328a973606e96fc4b5072c992fed41aa03290165fd9477e6660"
+    "user_data_sha256": "b362f732a87eb9da7acb711f4539e86f3fc6bd80c13fce95a38286299433d062"
   },
   "parent": {
     "experiment": "zero5-c32-v1",
@@ -25,9 +25,9 @@
     "instance_type": "c6i.4xlarge",
     "purchase_option": "on-demand",
     "hourly_usd": 0.68,
-    "maximum_instance_seconds": 620,
-    "maximum_compute_usd": 0.12,
-    "prior_compute_usd": 0.019456,
+    "maximum_instance_seconds": 500,
+    "maximum_compute_usd": 0.095,
+    "prior_compute_usd": 0.040989,
     "maximum_total_compute_usd": 0.14,
     "automatic_shutdown": true
   },
@@ -42,6 +42,17 @@
       "estimated_compute_usd": 0.019456,
       "status": "failed-without-terminal-report",
       "finding": "The failure path put the small status and boot log after a bulk sync of temporary checkpoints. No result was admitted."
+    },
+    {
+      "attempt": 2,
+      "run_id": "zero5-c32-throughput-20260824-b29cd77",
+      "instance_id": "i-023e2589329f1aafd",
+      "launched_at": "2026-08-24T21:32:40Z",
+      "observed_terminal_at": "2026-08-24T21:34:34Z",
+      "observed_instance_seconds": 114,
+      "estimated_compute_usd": 0.021533,
+      "status": "failed-before-first-status",
+      "finding": "Bootstrap failed before the AWS CLI was installed. The next retry installs reporting first and uploads its boot log before installing build packages."
     }
   ],
   "replay": {
