@@ -45,9 +45,9 @@ ERROR_COMMAND=
 export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
-test "$MAX_INSTANCE_SECONDS" = 450
-test "$MAX_COMPUTE_USD" = 0.085
-test "$PRIOR_COMPUTE_USD" = 0.050433
+test "$MAX_INSTANCE_SECONDS" = 430
+test "$MAX_COMPUTE_USD" = 0.082
+test "$PRIOR_COMPUTE_USD" = 0.057233
 test "$TOTAL_MAX_COMPUTE_USD" = 0.14
 test "$HOURLY_PRICE" = 0.68
 [[ "$RUN_ID" =~ ^zero5-c32-throughput-[a-z0-9-]+$ ]]
@@ -174,7 +174,7 @@ PHASE=raw-reporting
 raw_s3_put "$BOOT_LOG" "${RESULT_PREFIX}/bootstrap.log"
 if ! command -v aws >/dev/null 2>&1; then
   AWS_CLI_VERSION=2.34.7
-  AWS_CLI_SHA256=d6b6e2291456704a441e970bbdb69466629510dd0b578e8812f7856eac64abba1
+  AWS_CLI_SHA256=d6b6e2291456704a441e970bbdb69466629510dd0b578e8812f7856ac64abba1
   curl --fail --silent --show-error --location \
     "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_VERSION}.zip" \
     --output /tmp/awscliv2.zip
@@ -273,8 +273,6 @@ run_candidate o2-t4 zero5_c32_lm_o2 4
 run_candidate o2-t2 zero5_c32_lm_o2 2
 run_candidate o2-t1 zero5_c32_lm_o2 1
 run_candidate o2-t16-b zero5_c32_lm_o2 16
-run_candidate o3-native-t16 zero5_c32_lm_o3_native 16
-run_candidate o3-native-t8 zero5_c32_lm_o3_native 8
 run_candidate o3-native-t4 zero5_c32_lm_o3_native 4
 
 reference_sha256=$(awk -F '\t' '$1=="o2-t16-a" {print $6}' "$TSV")

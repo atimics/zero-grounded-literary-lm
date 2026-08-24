@@ -25,23 +25,24 @@ assert.equal(spawnSync("bash", ["-n", contract.source.user_data]).status, 0);
 assert.ok((fs.statSync(contract.source.user_data).mode & 0o111) !== 0);
 assert.ok(contract.venue.maximum_instance_seconds *
   contract.venue.hourly_usd / 3600 <= contract.venue.maximum_compute_usd);
-assert.equal(contract.venue.maximum_compute_usd, 0.085);
+assert.equal(contract.venue.maximum_compute_usd, 0.082);
 assert.ok(contract.venue.prior_compute_usd +
   contract.venue.maximum_instance_seconds *
     contract.venue.hourly_usd / 3600 <=
   contract.venue.maximum_total_compute_usd);
 assert.equal(contract.venue.maximum_total_compute_usd, 0.14);
-assert.equal(contract.attempts.length, 3);
+assert.equal(contract.attempts.length, 4);
 assert.equal(contract.attempts[0].status,
   "failed-without-terminal-report");
 assert.equal(contract.attempts[1].status, "failed-before-first-status");
 assert.equal(contract.attempts[2].status, "failed-before-aws-cli");
+assert.equal(contract.attempts[3].status, "failed-checksum-format");
 assert.ok(Math.abs(contract.attempts.reduce((sum, attempt) =>
   sum + attempt.estimated_compute_usd, 0) -
     contract.venue.prior_compute_usd) < 1e-9);
 assert.equal(contract.replay.compute_token_exposures,
   contract.replay.updates * contract.replay.batch_sequences * 512);
-assert.equal(contract.candidates.length, 9);
+assert.equal(contract.candidates.length, 7);
 assert.equal(new Set(contract.candidates.map(candidate => candidate.name)).size,
   contract.candidates.length);
 assert.ok(contract.candidates.some(candidate => candidate.name ===

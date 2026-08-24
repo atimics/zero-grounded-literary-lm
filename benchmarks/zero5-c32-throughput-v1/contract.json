@@ -10,7 +10,7 @@
     "archive_sha256": "48f84fe14144f562d3a890b480e696466470e9037de9c2fac32b327c3518bc62",
     "assets_sha256": "cafedf89ab5ed298036114ab82cb4ffa785265f8c80294925c14bd8478c7f4b7",
     "user_data": "scripts/aws/zero5-c32-throughput-user-data.sh",
-    "user_data_sha256": "30b6a1750f89969ea5b760be49b4e0c3c646bc96eefd6ec417e0f4059d717d27"
+    "user_data_sha256": "e204f4ced6cce76a6abb66d876692c93e620ba3103c622fb3a0e97e424c5dbe4"
   },
   "parent": {
     "experiment": "zero5-c32-v1",
@@ -25,9 +25,9 @@
     "instance_type": "c6i.4xlarge",
     "purchase_option": "on-demand",
     "hourly_usd": 0.68,
-    "maximum_instance_seconds": 450,
-    "maximum_compute_usd": 0.085,
-    "prior_compute_usd": 0.050433,
+    "maximum_instance_seconds": 430,
+    "maximum_compute_usd": 0.082,
+    "prior_compute_usd": 0.057233,
     "maximum_total_compute_usd": 0.14,
     "automatic_shutdown": true
   },
@@ -64,6 +64,17 @@
       "estimated_compute_usd": 0.009444,
       "status": "failed-before-aws-cli",
       "finding": "The reporter-first bootstrap still stopped before the AWS CLI became usable. The final bounded retry writes the boot log directly with a signed S3 request and does not depend on installed reporting tools."
+    },
+    {
+      "attempt": 4,
+      "run_id": "zero5-c32-throughput-20260824-726cb6b",
+      "instance_id": "i-0b40c941bf8cbc955",
+      "launched_at": "2026-08-24T21:44:07Z",
+      "observed_terminal_at": "2026-08-24T21:44:43Z",
+      "observed_instance_seconds": 36,
+      "estimated_compute_usd": 0.0068,
+      "status": "failed-checksum-format",
+      "finding": "The recovered boot log proved the pinned AWS CLI checksum had 65 characters because of one extra 'e'. The checksum is corrected to the verified 64-character value."
     }
   ],
   "replay": {
@@ -88,8 +99,6 @@
     {"name": "o2-t2", "compiler": "o2", "threads": 2},
     {"name": "o2-t1", "compiler": "o2", "threads": 1},
     {"name": "o2-t16-b", "compiler": "o2", "threads": 16},
-    {"name": "o3-native-t16", "compiler": "o3-native", "threads": 16},
-    {"name": "o3-native-t8", "compiler": "o3-native", "threads": 8},
     {"name": "o3-native-t4", "compiler": "o3-native", "threads": 4}
   ],
   "decision": {
