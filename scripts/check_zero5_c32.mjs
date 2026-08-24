@@ -76,6 +76,13 @@ function writeTinyPaired(file) {
 const contractPath = "benchmarks/zero5-c32-v1/contract.json";
 const importPath = "benchmarks/zero5-c32-v1/import.json";
 const resultPath = "benchmarks/zero5-c32-v1/result.json";
+const awsExecutionPath = "benchmarks/zero5-c32-v1/aws-execution.json";
+const localPartialPath = "benchmarks/zero5-c32-v1/local-partial-run.json";
+const awsScripts = [
+  "scripts/aws/zero5-c32-run-instance.sh",
+  "scripts/aws/zero5-c32-stage.sh",
+  "scripts/aws/zero5-c32-user-data.sh",
+];
 const contractBytes = fs.readFileSync(contractPath);
 const contract = JSON.parse(contractBytes);
 const importBytes = fs.readFileSync(importPath);
@@ -84,6 +91,10 @@ const imported = JSON.parse(importBytes);
 assert.equal(contract.schema, "zero.c32_braid_experiment.v1");
 assert.equal(contract.status, "preregistered-unrun");
 assert.equal(contract.authorized, true);
+assert.equal(contract.amendment.parent_source_commit, "361c861");
+assert.equal(contract.amendment.scientific_change, false);
+assert.equal(contract.execution.backend, "openblas");
+assert.equal(contract.execution.checkpoint_every_updates, 250);
 assert.equal(sha256(fs.readFileSync(contract.implementation.trainer)),
   contract.implementation.trainer_sha256);
 assert.equal(sha256(fs.readFileSync(contract.implementation.importer)),
@@ -121,6 +132,40 @@ assert.deepEqual(contract.arms.C.answer_weights,
   { claim: 1, cloze: 1, retrieval: 1 });
 assert.deepEqual(contract.arms.D.answer_weights, imported.answer_weights.D);
 
+const awsExecution = JSON.parse(fs.readFileSync(awsExecutionPath));
+assert.equal(awsExecution.schema, "zero.c32_aws_execution.v1");
+assert.equal(awsExecution.status, "authorized-unrun");
+assert.equal(awsExecution.purchase_option, "on-demand");
+assert.equal(awsExecution.instance_type, "c6i.4xlarge");
+assert.equal(awsExecution.maximum_instance_seconds, 9000);
+assert.equal(awsExecution.maximum_ec2_usd, 1.7);
+assert.ok(awsExecution.maximum_instance_seconds *
+  awsExecution.on_demand_usd_per_hour / 3600 <=
+    awsExecution.maximum_ec2_usd);
+assert.equal(awsExecution.controls.contract_bound_checkpoints, true);
+assert.equal(awsExecution.controls.byte_exact_resume_test_required, true);
+for (const script of awsScripts) {
+  run("bash", ["-n", script]);
+  assert.ok((fs.statSync(script).mode & 0o111) !== 0,
+    script + " must be executable");
+}
+const awsUserData = fs.readFileSync(awsScripts[2], "utf8");
+assert.match(awsUserData, /test "\$INSTANCE_TYPE" = c6i\.4xlarge/);
+assert.match(awsUserData, /export LITERARY_BACKEND=openblas/);
+assert.match(awsUserData, /--resume-run/);
+assert.match(awsUserData, /publish_zero_telemetry\.mjs/);
+
+const localPartial = JSON.parse(fs.readFileSync(localPartialPath));
+assert.equal(localPartial.schema, "zero.c32_local_partial_run.v1");
+assert.equal(localPartial.official_result, false);
+assert.equal(localPartial.arm_d.completed_updates, 2500);
+assert.equal(localPartial.arm_d.next_pack, 10000);
+const localPartialCheckpoint = "build/zero5-c32-v1/run/D/best.ckpt";
+if (fs.existsSync(localPartialCheckpoint)) {
+  assert.equal(sha256(fs.readFileSync(localPartialCheckpoint)),
+    localPartial.arm_d.checkpoint_sha256);
+}
+
 for (const task of ["claim", "cloze", "retrieval"]) {
   const baseline = contract.baselines.completion[task].nats_per_target_token;
   assert.ok(Math.abs(
@@ -148,6 +193,7 @@ if (fs.existsSync(localImport)) {
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "zero5-c32-check-"));
 try {
+  const runContractSha256 = "0".repeat(64);
   const packed = path.join(temporary, "tiny.z5pack");
   const paired = path.join(temporary, "tiny.z5pair");
   const checkpoint = path.join(temporary, "best.ckpt");
@@ -157,6 +203,7 @@ try {
     "--preset", "literary", "--context", "512", "--dim", "8",
     "--heads", "2", "--layers", "1", "--ff", "16", "--vocab", "128",
     "--packed-train", packed, "--packed-validation", packed,
+    "--run-contract-sha256", runContractSha256,
     "--steps", "1", "--batch", "4", "--lr", "0.0001",
     "--warmup", "1", "--report", "1", "--validation", "4",
     "--best", checkpoint, "--claim-answer-weight", "3.009199423",
@@ -177,6 +224,39 @@ try {
     "--init", checkpoint, "--packed-validation", corrupt,
     "--eval-only", "--validation", "4",
   ], 1);
+
+  const resumePacked = path.join(temporary, "resume.z5pack");
+  const continuous = path.join(temporary, "continuous.ckpt");
+  const continuousBest = path.join(temporary, "continuous-best.ckpt");
+  const resumed = path.join(temporary, "resumed.ckpt");
+  const resumedBest = path.join(temporary, "resumed-best.ckpt");
+  writeTinyPack(resumePacked, 8);
+  const resumeArgs = [
+    "--preset", "literary", "--context", "512", "--dim", "8",
+    "--heads", "2", "--layers", "1", "--ff", "16", "--vocab", "128",
+    "--packed-train", resumePacked, "--packed-validation", resumePacked,
+    "--run-contract-sha256", runContractSha256,
+    "--steps", "4", "--batch", "2", "--lr", "0.0001",
+    "--warmup", "1", "--schedule-total", "4", "--cosine",
+    "--report", "1", "--validation", "4", "--save-every", "1",
+    "--seed", "17", "--tokens", "0",
+  ];
+  run("./zero5_c32_lm", [...resumeArgs, "--save", continuous,
+    "--best", continuousBest]);
+  const paused = run("./zero5_c32_lm", [...resumeArgs, "--save", resumed,
+    "--best", resumedBest, "--max-run-steps", "2"]);
+  assert.match(paused,
+    /packed paused completed-steps=2 total-steps=4 next-pack=4 attempt-steps=2/);
+  const continued = run("./zero5_c32_lm", [...resumeArgs,
+    "--resume", resumed, "--save", resumed, "--best", resumedBest]);
+  assert.match(continued,
+    /packed resume completed-steps=2 next-pack=4/);
+  assert.equal(sha256(fs.readFileSync(resumed)),
+    sha256(fs.readFileSync(continuous)));
+  assert.equal(sha256(fs.readFileSync(resumedBest)),
+    sha256(fs.readFileSync(continuousBest)));
+  run("./zero5_c32_lm", [...resumeArgs, "--resume", resumed,
+    "--run-contract-sha256", "1".repeat(64), "--save", resumed], 1);
   assert.match(run("./zero5_c32_lm", ["--self-test"]),
     /35 finite-difference gradient checks passed/);
 } finally {

@@ -1,0 +1,29 @@
+{
+  "schema": "zero.c32_aws_execution.v1",
+  "experiment": "zero5-c32-v1",
+  "status": "authorized-unrun",
+  "region": "us-east-1",
+  "instance_type": "c6i.4xlarge",
+  "backend": "openblas",
+  "openblas_threads": 16,
+  "purchase_option": "on-demand",
+  "on_demand_usd_per_hour": 0.68,
+  "maximum_instance_seconds": 9000,
+  "maximum_ec2_usd": 1.7,
+  "checkpoint_every_updates": 250,
+  "state_sync_seconds": 30,
+  "arms": ["C", "D"],
+  "official_result_policy": "Both arms restart from the frozen C2 checkpoint and run on the same Linux/OpenBLAS build. The partial macOS run is excluded.",
+  "controls": {
+    "immutable_source_archive": true,
+    "immutable_private_asset_archive": true,
+    "contract_bound_checkpoints": true,
+    "byte_exact_resume_test_required": true,
+    "automatic_instance_shutdown": true,
+    "private_s3_checkpointing": true,
+    "dashboard_telemetry": true,
+    "spot_instances": false,
+    "gpu": false
+  },
+  "approval_id": "zero5-c32-aws-2026-08-24-v1"
+}

@@ -16,15 +16,35 @@
   },
   "implementation": {
     "trainer": "zero5_c32_lm.c",
-    "trainer_sha256": "2752317c304817f5dbc666ca95cc0d3e783ee7d449afee380fd66b71414efd5f",
+    "trainer_sha256": "82c4fd923885911ee4abea2ac2f4de2cfa70c17501d209af943e7d70358525df",
     "importer": "scripts/prepare_zero5_c32.mjs",
     "importer_sha256": "21392a6cd44f93b3bb106d6584e5f01be2edffb83b94632d5188682cd43f8be9",
     "runner": "scripts/run_zero5_c32.mjs",
-    "runner_sha256": "b0a54d3ff55b20737b81afe25885deaa1c6fa616923d49beef34caa0ce4e9be9",
+    "runner_sha256": "f15db4bac11bb2baab1b0ab070dfad109f3aaac1a97d5fca61a26e08ddf0a89d",
     "model_and_training": "C11",
     "orchestration": "Node.js",
     "python": false,
     "pytorch": false
+  },
+  "amendment": {
+    "reason": "The first laptop-hosted attempt was interrupted. Before any official result, packed checkpoints were made resumable and the official venue was moved to AWS.",
+    "parent_source_commit": "361c861",
+    "parent_contract_sha256": "3722164a8cb9593557fb4c0b4e8709e0266fa4662191a933a49154b3cc41ed94",
+    "parent_trainer_sha256": "2752317c304817f5dbc666ca95cc0d3e783ee7d449afee380fd66b71414efd5f",
+    "local_partial_receipt": "benchmarks/zero5-c32-v1/local-partial-run.json",
+    "scientific_change": false,
+    "execution_change": "Version-5 checkpoints bind the contract, pack cursor, total updates, batch size, optimizer state, RNG state, and historical best-validation state.",
+    "official_result_policy": "Restart C and D from the same C2 checkpoint on one Linux/OpenBLAS venue. Exclude the partial macOS run."
+  },
+  "execution": {
+    "venue": "aws-ec2",
+    "execution_contract": "benchmarks/zero5-c32-v1/aws-execution.json",
+    "backend": "openblas",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "checkpoint_every_updates": 250,
+    "resume_equivalence": "The check suite must prove that a forced pause and resume produce byte-identical final and best checkpoints relative to uninterrupted training.",
+    "dashboard": true
   },
   "input": {
     "import_manifest": "benchmarks/zero5-c32-v1/import.json",

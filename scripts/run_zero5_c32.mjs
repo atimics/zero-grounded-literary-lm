@@ -57,14 +57,28 @@ function runCaptured(program, args) {
   });
 }
 
-function runStreaming(program, args, prefix) {
+function runStreaming(program, args, prefix, logFile) {
   return new Promise((resolve, reject) => {
     const child = spawn(program, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
+    const log = fs.openSync(logFile, "a");
+    let closed = false;
+    const closeLog = () => {
+      if (!closed) {
+        fs.closeSync(log);
+        closed = true;
+      }
+    };
+    const forward = signal => {
+      if (!child.killed) child.kill(signal);
+    };
+    process.once("SIGINT", forward);
+    process.once("SIGTERM", forward);
     child.stdout.on("data", chunk => {
       const value = chunk.toString();
       stdout += value;
+      fs.writeSync(log, value);
       process.stdout.write(value.split("\n").map((line, index, lines) =>
         index + 1 === lines.length && line === "" ? "" : prefix + line)
         .join("\n"));
@@ -72,11 +86,21 @@ function runStreaming(program, args, prefix) {
     child.stderr.on("data", chunk => {
       const value = chunk.toString();
       stderr += value;
+      fs.writeSync(log, value);
       process.stderr.write(prefix + value);
     });
-    child.on("error", reject);
-    child.on("close", code => code === 0 ? resolve(stdout) :
-      reject(new Error(program + " failed: " + (stderr || stdout).trim())));
+    child.on("error", error => {
+      closeLog();
+      reject(error);
+    });
+    child.on("close", code => {
+      process.removeListener("SIGINT", forward);
+      process.removeListener("SIGTERM", forward);
+      closeLog();
+      if (code === 0) resolve(stdout);
+      else reject(new Error(program + " failed: " +
+        (stderr || stdout).trim()));
+    });
   });
 }
 
@@ -98,6 +122,7 @@ function close(observed, expected, tolerance = 0.0001) {
 
 const contractPath = "benchmarks/zero5-c32-v1/contract.json";
 const contractBytes = fs.readFileSync(contractPath);
+const contractSha256 = sha256(contractBytes);
 const contract = JSON.parse(contractBytes);
 if (contract.status !== "preregistered-unrun" || !contract.authorized) {
   fail("C3.2 contract is not authorized");
@@ -105,7 +130,9 @@ if (contract.status !== "preregistered-unrun" || !contract.authorized) {
 if (sha256(fs.readFileSync(contract.implementation.trainer)) !==
     contract.implementation.trainer_sha256 ||
     sha256(fs.readFileSync(contract.implementation.importer)) !==
-      contract.implementation.importer_sha256) {
+      contract.implementation.importer_sha256 ||
+    sha256(fs.readFileSync(contract.implementation.runner)) !==
+      contract.implementation.runner_sha256) {
   fail("C3.2 implementation drifted from the contract");
 }
 
@@ -123,8 +150,27 @@ const c2Directory = path.resolve(option("--c2-dir",
 const c2ImportDirectory = path.resolve(option("--c2-import-dir",
   "build/zero5-c2-v1/import-final"));
 const out = path.resolve(option("--out", "build/zero5-c32-v1/run"));
-if (fs.existsSync(out)) fail("output directory already exists: " + out);
-fs.mkdirSync(out, { recursive: true });
+const resumeRun = process.argv.includes("--resume-run");
+const executionPath = path.join(out, "execution.json");
+if (fs.existsSync(out) && fs.readdirSync(out).length > 0) {
+  if (!resumeRun) fail("output directory already exists: " + out);
+  if (!fs.existsSync(executionPath)) {
+    fail("resume output has no execution identity: " + executionPath);
+  }
+  const execution = JSON.parse(fs.readFileSync(executionPath));
+  if (execution.schema !== "zero.c32_execution.v1" ||
+      execution.contract_sha256 !== contractSha256) {
+    fail("resume output belongs to a different C3.2 contract");
+  }
+} else {
+  fs.mkdirSync(out, { recursive: true });
+  fs.writeFileSync(executionPath, JSON.stringify({
+    schema: "zero.c32_execution.v1",
+    experiment: contract.experiment,
+    contract_sha256: contractSha256,
+    status: "running",
+  }, null, 2) + "\n");
+}
 
 const tokenizer = path.join(c0Directory, "byte-bpe512.sero");
 const initialCheckpoint = path.join(c2Directory, "best.ckpt");
@@ -219,24 +265,41 @@ async function allCompletion(checkpoint) {
   return Object.fromEntries(entries);
 }
 
-process.stdout.write("C3.2 reproducing frozen C2 baselines\n");
-const baseline = {
-  combined_selection_nats_per_token: evaluatePacked(initialCheckpoint,
-    files.validation, contract.evaluation.selection_validation_packs),
-  combined_final_nats_per_token: evaluatePacked(initialCheckpoint,
-    files.validation, contract.evaluation.final_validation_packs),
-  members: Object.fromEntries(Object.entries(files.tasks).map(
-    ([task, value]) => [task, evaluatePacked(initialCheckpoint, value.packed,
-      contract.evaluation.member_validation_packs)])),
-  completion: await allCompletion(initialCheckpoint),
-  paired: Object.fromEntries(await Promise.all(["claim", "retrieval"].map(
-    async task => [task,
-      await evaluatePaired(initialCheckpoint, files.tasks[task].paired)]))),
-  atlas_nats_per_token: evaluateLegacy(initialCheckpoint, atlasTrain,
-    atlasValidation, contract.evaluation.atlas_windows),
-  anchor_nats_per_token: evaluateLegacy(initialCheckpoint, anchorTrain,
-    anchorValidation, contract.evaluation.anchor_windows),
-};
+const baselinePath = path.join(out, "baseline.json");
+let baseline;
+if (fs.existsSync(baselinePath)) {
+  const cached = JSON.parse(fs.readFileSync(baselinePath));
+  if (cached.schema !== "zero.c32_baseline_cache.v1" ||
+      cached.contract_sha256 !== contractSha256) {
+    fail("cached baseline belongs to a different C3.2 contract");
+  }
+  baseline = cached.baseline;
+  process.stdout.write("C3.2 using verified frozen C2 baseline cache\n");
+} else {
+  process.stdout.write("C3.2 reproducing frozen C2 baselines\n");
+  baseline = {
+    combined_selection_nats_per_token: evaluatePacked(initialCheckpoint,
+      files.validation, contract.evaluation.selection_validation_packs),
+    combined_final_nats_per_token: evaluatePacked(initialCheckpoint,
+      files.validation, contract.evaluation.final_validation_packs),
+    members: Object.fromEntries(Object.entries(files.tasks).map(
+      ([task, value]) => [task, evaluatePacked(initialCheckpoint, value.packed,
+        contract.evaluation.member_validation_packs)])),
+    completion: await allCompletion(initialCheckpoint),
+    paired: Object.fromEntries(await Promise.all(["claim", "retrieval"].map(
+      async task => [task,
+        await evaluatePaired(initialCheckpoint, files.tasks[task].paired)]))),
+    atlas_nats_per_token: evaluateLegacy(initialCheckpoint, atlasTrain,
+      atlasValidation, contract.evaluation.atlas_windows),
+    anchor_nats_per_token: evaluateLegacy(initialCheckpoint, anchorTrain,
+      anchorValidation, contract.evaluation.anchor_windows),
+  };
+  fs.writeFileSync(baselinePath, JSON.stringify({
+    schema: "zero.c32_baseline_cache.v1",
+    contract_sha256: contractSha256,
+    baseline,
+  }, null, 2) + "\n");
+}
 if (!close(baseline.combined_selection_nats_per_token,
       contract.baselines.combined_selection_nats_per_token) ||
     !close(baseline.combined_final_nats_per_token,
@@ -275,14 +338,43 @@ const armDefinitions = [
 const arms = {};
 for (const definition of armDefinitions) {
   const armDirectory = path.join(out, definition.id);
-  fs.mkdirSync(armDirectory);
+  const armResultPath = path.join(armDirectory, "result.json");
+  const trainingLog = path.join(armDirectory, "training.log");
+  const activeCheckpoint = path.join(armDirectory, "active.ckpt");
   const bestCheckpoint = path.join(armDirectory, "best.ckpt");
+  if (fs.existsSync(armResultPath)) {
+    const completed = JSON.parse(fs.readFileSync(armResultPath));
+    if (completed.definition?.answer_weights == null ||
+        JSON.stringify(completed.definition.answer_weights) !==
+          JSON.stringify(definition.weights) ||
+        !fs.existsSync(bestCheckpoint) ||
+        artifact(bestCheckpoint).sha256 !== completed.checkpoint.sha256) {
+      fail(definition.id + " completed arm state is corrupt or mismatched");
+    }
+    arms[definition.id] = completed;
+    process.stdout.write("C3.2 arm " + definition.id +
+      " already complete; verified cached result\n");
+    continue;
+  }
+  fs.mkdirSync(armDirectory, { recursive: true });
+  const resumingArm = fs.existsSync(activeCheckpoint);
+  if (resumingArm && !resumeRun) {
+    fail(definition.id + " has a partial checkpoint but --resume-run was not set");
+  }
+  if (resumingArm && !fs.existsSync(bestCheckpoint)) {
+    fail(definition.id + " resume is missing its historical best checkpoint");
+  }
+  if (!resumingArm && fs.existsSync(trainingLog)) {
+    fail(definition.id + " has a log without a resumable checkpoint");
+  }
   process.stdout.write("C3.2 arm " + definition.id + " starting\n");
   const training = contract.training;
-  const log = await runStreaming("./zero5_c32_lm", [
-    "--init", initialCheckpoint, ...common,
+  await runStreaming("./zero5_c32_lm", [
+    resumingArm ? "--resume" : "--init",
+    resumingArm ? activeCheckpoint : initialCheckpoint, ...common,
     "--packed-train", files.interleaved,
     "--packed-validation", files.validation,
+    "--run-contract-sha256", contractSha256,
     "--steps", String(training.updates),
     "--batch", String(training.batch_sequences),
     "--lr", String(training.peak_learning_rate),
@@ -294,12 +386,14 @@ for (const definition of armDefinitions) {
     "--report", String(training.report_every_updates),
     "--validation", String(contract.evaluation.selection_validation_packs),
     "--best", bestCheckpoint, "--seed", String(training.seed),
+    "--save", activeCheckpoint, "--save-every",
+    String(contract.execution.checkpoint_every_updates),
     "--claim-answer-weight", String(definition.weights.claim),
     "--cloze-answer-weight", String(definition.weights.cloze),
     "--retrieval-answer-weight", String(definition.weights.retrieval),
     "--tokens", "0",
-  ], "[" + definition.id + "] ");
-  fs.writeFileSync(path.join(armDirectory, "training.log"), log);
+  ], "[" + definition.id + "] ", trainingLog);
+  const log = fs.readFileSync(trainingLog, "utf8");
   if (!fs.existsSync(bestCheckpoint)) fail(definition.id + " saved no checkpoint");
   const modelMatch = log.match(
     /zero5_lm: backend=([^ ]+).*positions=([^ ]+) parameters=(\d+) trainable-scope=all/,
@@ -483,7 +577,7 @@ for (const definition of armDefinitions) {
     gates,
     all_gates_pass: allGatesPass,
   };
-  fs.writeFileSync(path.join(armDirectory, "result.json"),
+  fs.writeFileSync(armResultPath,
     JSON.stringify(arms[definition.id], null, 2) + "\n");
   process.stdout.write("C3.2 arm " + definition.id + " complete gates=" +
     (allGatesPass ? "pass" : "fail") + "\n");
@@ -540,4 +634,11 @@ const result = {
 };
 fs.writeFileSync(path.join(out, "result.json"),
   JSON.stringify(result, null, 2) + "\n");
+fs.writeFileSync(executionPath, JSON.stringify({
+  schema: "zero.c32_execution.v1",
+  experiment: contract.experiment,
+  contract_sha256: contractSha256,
+  status: "complete",
+  result_sha256: artifact(path.join(out, "result.json")).sha256,
+}, null, 2) + "\n");
 process.stdout.write(JSON.stringify(result) + "\n");

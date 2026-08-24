@@ -28,7 +28,7 @@
 
 #define DEFAULT_VOCAB_SIZE 256
 #define MAX_VOCAB_SIZE 2048
-#define CHECKPOINT_VERSION 4U
+#define CHECKPOINT_VERSION 5U
 #define RMS_EPSILON 1.0e-5f
 #define BPE_BASE_TOKENS 128
 #define BPE_MAX_MERGES (MAX_VOCAB_SIZE - BPE_BASE_TOKENS)
@@ -257,6 +257,8 @@ typedef struct {
     const char *paired_eval_path;
     const char *packed_train_path;
     const char *packed_validation_path;
+    const char *run_contract_sha256;
+    long max_run_steps;
     float claim_answer_weight;
     float cloze_answer_weight;
     float retrieval_answer_weight;
@@ -1740,6 +1742,18 @@ typedef struct {
     uint32_t transaction_mode;
 } CheckpointOrchestration;
 
+typedef struct {
+    CheckpointOrchestration base;
+    uint32_t packed_mode;
+    uint32_t packed_batch;
+    uint64_t packed_total_steps;
+    uint64_t packed_completed_steps;
+    uint64_t packed_best_update;
+    float packed_best_validation;
+    uint32_t reserved;
+    char run_contract_sha256[64];
+} CheckpointOrchestrationV5;
+
 static const char CHECKPOINT_MAGIC[8] = {'Z', 'E', 'R', 'O', 'L', 'M', '2', '\0'};
 static const char TEACHER_MAGIC[8] = {'Z', 'E', 'R', 'O', 'T', 'C', 'H', '1'};
 
@@ -1761,7 +1775,7 @@ static CheckpointHeader checkpoint_read_header(FILE *file, const char *path)
     }
     if (memcmp(header.magic, CHECKPOINT_MAGIC, sizeof(header.magic)) != 0 ||
         (header.version != 1U && header.version != 2U &&
-         header.version != 3U &&
+         header.version != 3U && header.version != 4U &&
          header.version != CHECKPOINT_VERSION) ||
         header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
         fail("unsupported or corrupt checkpoint");
@@ -1786,7 +1800,7 @@ static CheckpointHeader artifact_read_header(FILE *file, const char *path,
     } else if (memcmp(header.magic, CHECKPOINT_MAGIC,
                       sizeof(header.magic)) != 0 ||
                (header.version != 1U && header.version != 2U &&
-                header.version != 3U &&
+                header.version != 3U && header.version != 4U &&
                 header.version != CHECKPOINT_VERSION) ||
                header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
         fail("unsupported or corrupt model artifact");
@@ -1845,13 +1859,26 @@ static Config artifact_peek(const char *path)
     return cfg;
 }
 
+static int checkpoint_orchestration_read(FILE *file, uint32_t version,
+                                         CheckpointOrchestrationV5 *state)
+{
+    memset(state, 0, sizeof(*state));
+    state->packed_best_validation = INFINITY;
+    if (version < 4U) return 1;
+    if (version == 4U) {
+        return read_items(file, &state->base, sizeof(state->base), 1);
+    }
+    return read_items(file, state, sizeof(*state), 1);
+}
+
 static void checkpoint_save(const char *path, const Model *model, uint64_t step,
                             const Rng *rng, uint64_t attempts,
                             uint32_t consecutive_rejections,
-                            uint32_t transaction_mode)
+                            uint32_t transaction_mode,
+                            const CheckpointOrchestrationV5 *packed_state)
 {
     CheckpointHeader header;
-    CheckpointOrchestration orchestration;
+    CheckpointOrchestrationV5 orchestration;
     char *temporary;
     FILE *file;
     int parameter_index;
@@ -1880,9 +1907,12 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
          CHECKPOINT_TRAINABLE_SCOPE_SHIFT);
     header.step = step;
     header.rng_state = rng->state;
-    orchestration.attempts = attempts;
-    orchestration.consecutive_rejections = consecutive_rejections;
-    orchestration.transaction_mode = transaction_mode;
+    memset(&orchestration, 0, sizeof(orchestration));
+    orchestration.packed_best_validation = INFINITY;
+    if (packed_state != NULL) orchestration = *packed_state;
+    orchestration.base.attempts = attempts;
+    orchestration.base.consecutive_rejections = consecutive_rejections;
+    orchestration.base.transaction_mode = transaction_mode;
 
     if (!write_items(file, &header, sizeof(header), 1) ||
         !write_items(file, &orchestration, sizeof(orchestration), 1)) {
@@ -1921,10 +1951,11 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
 static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng,
                                 uint64_t *attempts,
                                 uint32_t *consecutive_rejections,
-                                uint32_t *transaction_mode)
+                                uint32_t *transaction_mode,
+                                CheckpointOrchestrationV5 *resume_state)
 {
     CheckpointHeader header;
-    CheckpointOrchestration orchestration = {0, 0, 0};
+    CheckpointOrchestrationV5 orchestration;
     FILE *file = fopen(path, "rb");
     int parameter_index;
     if (file == NULL) {
@@ -1946,8 +1977,8 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng,
         (int)header.parameter_count != model->parameter_count) {
         fail("checkpoint architecture does not match model");
     }
-    if (header.version >= 4U &&
-        !read_items(file, &orchestration, sizeof(orchestration), 1)) {
+    if (!checkpoint_orchestration_read(file, header.version,
+                                       &orchestration)) {
         fclose(file);
         fail("checkpoint orchestration state is corrupt or incomplete");
     }
@@ -1973,9 +2004,10 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng,
         fail_path("close", path);
     }
     rng->state = header.rng_state;
-    *attempts = header.version >= 4U ? orchestration.attempts : header.step;
-    *consecutive_rejections = orchestration.consecutive_rejections;
-    *transaction_mode = orchestration.transaction_mode;
+    *attempts = header.version >= 4U ? orchestration.base.attempts : header.step;
+    *consecutive_rejections = orchestration.base.consecutive_rejections;
+    *transaction_mode = orchestration.base.transaction_mode;
+    if (resume_state != NULL) *resume_state = orchestration;
     return header.step;
 }
 
@@ -2002,8 +2034,9 @@ static uint64_t artifact_load_weights(const char *path, Model *model)
         fail("model artifact architecture does not match model");
     }
     if (!weight_only && header.version >= 4U) {
-        CheckpointOrchestration orchestration;
-        if (!read_items(file, &orchestration, sizeof(orchestration), 1)) {
+        CheckpointOrchestrationV5 orchestration;
+        if (!checkpoint_orchestration_read(file, header.version,
+                                           &orchestration)) {
             fclose(file);
             fail("model artifact orchestration state is corrupt");
         }
@@ -2668,26 +2701,72 @@ static float evaluate_packed(Model *model, const PackedSet *set, int batches)
     return (float)(total_loss / (double)total_targets);
 }
 
+static void packed_checkpoint_save(const char *path, const Model *model,
+                                   uint64_t update, const Rng *rng,
+                                   uint64_t completed_steps,
+                                   uint64_t best_update,
+                                   float best_validation,
+                                   const Options *options)
+{
+    CheckpointOrchestrationV5 state;
+    memset(&state, 0, sizeof(state));
+    state.packed_mode = 1U;
+    state.packed_batch = (uint32_t)options->batch;
+    state.packed_total_steps = (uint64_t)options->steps;
+    state.packed_completed_steps = completed_steps;
+    state.packed_best_update = best_update;
+    state.packed_best_validation = best_validation;
+    memcpy(state.run_contract_sha256, options->run_contract_sha256,
+           sizeof(state.run_contract_sha256));
+    checkpoint_save(path, model, update, rng, completed_steps, 0U, 0U,
+                    &state);
+}
+
 static void train_packed(Model *model, Rng *rng, uint64_t *update,
                          const PackedSet *train, const PackedSet *validation,
-                         const Options *options)
+                         const Options *options,
+                         const CheckpointOrchestrationV5 *resume_state)
 {
     float *mask = zero_alloc((size_t)train->context, sizeof(*mask));
     uint64_t required_packs = (uint64_t)options->steps *
                               (uint64_t)options->batch;
-    uint64_t completed_steps = 0;
+    uint64_t completed_steps =
+        resume_state != NULL ? resume_state->packed_completed_steps : 0U;
+    uint64_t attempt_steps = 0;
     uint64_t interval_compute_tokens = 0;
     uint64_t interval_active_targets = 0;
     double interval_loss = 0.0;
     uint64_t interval_sequences = 0;
     double training_start = wall_seconds();
     double interval_start = training_start;
-    float best_validation = INFINITY;
+    float best_validation = resume_state != NULL
+                                ? resume_state->packed_best_validation
+                                : INFINITY;
+    uint64_t best_update =
+        resume_state != NULL ? resume_state->packed_best_update : 0U;
     if (required_packs != train->pack_count) {
         fail("packed run must consume every declared pack exactly once");
     }
+    if (completed_steps > (uint64_t)options->steps ||
+        completed_steps * (uint64_t)options->batch > train->pack_count) {
+        fail("packed checkpoint cursor exceeds the declared run");
+    }
+    if (completed_steps != *update) {
+        fail("packed checkpoint cursor does not match the optimizer update");
+    }
     signal(SIGINT, on_interrupt);
-    while (completed_steps < (uint64_t)options->steps && !interrupted) {
+    signal(SIGTERM, on_interrupt);
+    if (completed_steps > 0U) {
+        printf("packed resume completed-steps=%llu next-pack=%llu "
+               "best-update=%llu best-val=%.9g\n",
+               (unsigned long long)completed_steps,
+               (unsigned long long)(completed_steps *
+                                    (uint64_t)options->batch),
+               (unsigned long long)best_update, best_validation);
+    }
+    while (completed_steps < (uint64_t)options->steps && !interrupted &&
+           (options->max_run_steps == 0 ||
+            attempt_steps < (uint64_t)options->max_run_steps)) {
         int batch;
         float gradient_norm;
         float current_lr = options->learning_rate;
@@ -2715,6 +2794,7 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
             }
         }
         ++completed_steps;
+        ++attempt_steps;
         {
             long schedule_step = options->schedule_offset +
                                  (long)completed_steps;
@@ -2763,35 +2843,60 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
             interval_start = now;
             if (validation_loss < best_validation - 1.0e-5f) {
                 best_validation = validation_loss;
+                best_update = *update;
                 if (options->best_path != NULL) {
-                    checkpoint_save(options->best_path, model, *update, rng,
-                                    completed_steps, 0U, 0U);
+                    packed_checkpoint_save(options->best_path, model, *update,
+                                           rng, completed_steps, best_update,
+                                           best_validation, options);
                     printf("saved best %s (val %.4f)\n", options->best_path,
                            best_validation);
                 }
             }
         }
+        if (options->save_path != NULL && options->save_every > 0 &&
+            completed_steps % (uint64_t)options->save_every == 0U) {
+            packed_checkpoint_save(options->save_path, model, *update, rng,
+                                   completed_steps, best_update,
+                                   best_validation, options);
+            printf("saved %s\n", options->save_path);
+            fflush(stdout);
+        }
     }
-    printf("packed sampling sequences=%u compute-token-exposures=%llu "
-           "active-targets=%llu answer-targets=%llu "
-           "claim-answer-targets=%llu cloze-answer-targets=%llu "
-           "retrieval-answer-targets=%llu padding-targets=%llu wraps=0 "
-           "claim-answer-weight=%.9g cloze-answer-weight=%.9g "
-           "retrieval-answer-weight=%.9g\n",
-           train->pack_count,
-           (unsigned long long)((uint64_t)train->pack_count *
-                                (uint64_t)train->context),
-           (unsigned long long)train->active_targets,
-           (unsigned long long)train->answer_targets,
-           (unsigned long long)train->answer_targets_by_task[0],
-           (unsigned long long)train->answer_targets_by_task[1],
-           (unsigned long long)train->answer_targets_by_task[2],
-           (unsigned long long)((uint64_t)train->pack_count *
-                                    (uint64_t)train->context -
-                                train->active_targets),
-           options->claim_answer_weight,
-           options->cloze_answer_weight,
-           options->retrieval_answer_weight);
+    if (options->save_path != NULL && attempt_steps > 0U) {
+        packed_checkpoint_save(options->save_path, model, *update, rng,
+                               completed_steps, best_update, best_validation,
+                               options);
+        printf("saved %s\n", options->save_path);
+    }
+    if (completed_steps == (uint64_t)options->steps) {
+        printf("packed sampling sequences=%u compute-token-exposures=%llu "
+               "active-targets=%llu answer-targets=%llu "
+               "claim-answer-targets=%llu cloze-answer-targets=%llu "
+               "retrieval-answer-targets=%llu padding-targets=%llu wraps=0 "
+               "claim-answer-weight=%.9g cloze-answer-weight=%.9g "
+               "retrieval-answer-weight=%.9g\n",
+               train->pack_count,
+               (unsigned long long)((uint64_t)train->pack_count *
+                                    (uint64_t)train->context),
+               (unsigned long long)train->active_targets,
+               (unsigned long long)train->answer_targets,
+               (unsigned long long)train->answer_targets_by_task[0],
+               (unsigned long long)train->answer_targets_by_task[1],
+               (unsigned long long)train->answer_targets_by_task[2],
+               (unsigned long long)((uint64_t)train->pack_count *
+                                        (uint64_t)train->context -
+                                    train->active_targets),
+               options->claim_answer_weight,
+               options->cloze_answer_weight,
+               options->retrieval_answer_weight);
+    } else {
+        printf("packed paused completed-steps=%llu total-steps=%ld "
+               "next-pack=%llu attempt-steps=%llu\n",
+               (unsigned long long)completed_steps, options->steps,
+               (unsigned long long)(completed_steps *
+                                    (uint64_t)options->batch),
+               (unsigned long long)attempt_steps);
+    }
     printf("training time %.2f seconds\n", wall_seconds() - training_start);
     if (interrupted) {
         printf("interrupted after update %llu\n",
@@ -4265,6 +4370,20 @@ static float parse_float(const char *text, const char *option)
     return value;
 }
 
+static int valid_sha256(const char *text)
+{
+    size_t index;
+    if (text == NULL || strlen(text) != 64U) return 0;
+    for (index = 0; index < 64U; ++index) {
+        char value = text[index];
+        if (!((value >= '0' && value <= '9') ||
+              (value >= 'a' && value <= 'f'))) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 static void parse_distill_weights(const char *text,
                                   float weights[MAX_FACULTY_TEACHERS])
 {
@@ -4344,6 +4463,8 @@ static void print_usage(const char *program)
     printf("  --sequential         consume one plain training stream in order\n");
     printf("  --packed-train F     consume one record-safe Z5PKV2 pack set exactly once\n");
     printf("  --packed-validation F use a record-safe Z5PKV2 validation pack set\n");
+    printf("  --run-contract-sha256 H bind packed checkpoints to one contract\n");
+    printf("  --max-run-steps N    pause a packed attempt after N updates; 0 disables\n");
     printf("  --claim-answer-weight X weighted claim answers (default: 1)\n");
     printf("  --cloze-answer-weight X weighted cloze answers (default: 1)\n");
     printf("  --retrieval-answer-weight X weighted retrieval answers (default: 1)\n");
@@ -4741,6 +4862,7 @@ int main(int argc, char **argv)
     uint64_t checkpoint_attempts = 0;
     uint32_t checkpoint_rejections = 0;
     uint32_t checkpoint_transaction_mode = 0;
+    CheckpointOrchestrationV5 checkpoint_resume_state;
     TransactionState transaction = {0};
     int sequential_range_index = -1;
     size_t sequential_offset = 0;
@@ -4748,6 +4870,8 @@ int main(int argc, char **argv)
     uint64_t sequential_wraps = 0;
 
     memset(&options, 0, sizeof(options));
+    memset(&checkpoint_resume_state, 0, sizeof(checkpoint_resume_state));
+    checkpoint_resume_state.packed_best_validation = INFINITY;
     options.steps = 1000;
     options.batch = 1;
     options.learning_rate = 3.0e-4f;
@@ -4911,6 +5035,13 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "--packed-validation") == 0 &&
                    i + 1 < argc) {
             options.packed_validation_path = argv[++i];
+        } else if (strcmp(argv[i], "--run-contract-sha256") == 0 &&
+                   i + 1 < argc) {
+            options.run_contract_sha256 = argv[++i];
+        } else if (strcmp(argv[i], "--max-run-steps") == 0 &&
+                   i + 1 < argc) {
+            options.max_run_steps =
+                parse_long(argv[++i], "--max-run-steps");
         } else if (strcmp(argv[i], "--claim-answer-weight") == 0 &&
                    i + 1 < argc) {
             options.claim_answer_weight =
@@ -5047,9 +5178,8 @@ int main(int argc, char **argv)
         (options.resume_path != NULL || options.schedule_offset != 0)) {
         fail("--sequential requires one uninterrupted phase initialized with fresh optimizer state");
     }
-    if (options.packed_train_path != NULL &&
-        (options.resume_path != NULL || options.schedule_offset != 0)) {
-        fail("--packed-train requires one uninterrupted phase initialized with fresh optimizer state");
+    if (options.packed_train_path != NULL && options.schedule_offset != 0) {
+        fail("--packed-train owns its global schedule and rejects --schedule-offset");
     }
     if ((options.packed_train_path != NULL ||
          options.packed_validation_path != NULL) &&
@@ -5062,6 +5192,17 @@ int main(int argc, char **argv)
     if (options.packed_train_path != NULL &&
         options.packed_validation_path == NULL) {
         fail("--packed-train requires --packed-validation");
+    }
+    if (options.packed_train_path != NULL &&
+        !valid_sha256(options.run_contract_sha256)) {
+        fail("--packed-train requires a lowercase 64-character --run-contract-sha256");
+    }
+    if (options.run_contract_sha256 != NULL &&
+        !valid_sha256(options.run_contract_sha256)) {
+        fail("--run-contract-sha256 must be 64 lowercase hexadecimal characters");
+    }
+    if (options.max_run_steps != 0 && options.packed_train_path == NULL) {
+        fail("--max-run-steps is available only for packed training");
     }
     if (explicit_validation_count > 0 &&
         (foundation_count > 0 || options.teacher_count > 0 ||
@@ -5126,6 +5267,7 @@ int main(int argc, char **argv)
         options.warmup < 0 || options.schedule_offset < 0 ||
         options.schedule_total < 0 || options.report_every < 1 ||
         options.validation_batches < 1 || options.save_every < 0 ||
+        options.max_run_steps < 0 ||
         options.generate_tokens < 0 || options.temperature < 0.0f ||
         options.top_k < 0 || options.top_k > cfg.vocab ||
         options.dropout < 0.0f || options.dropout >= 1.0f ||
@@ -5222,7 +5364,8 @@ int main(int argc, char **argv)
         update = checkpoint_load(options.resume_path, &model, &rng,
                                  &checkpoint_attempts,
                                  &checkpoint_rejections,
-                                 &checkpoint_transaction_mode);
+                                 &checkpoint_transaction_mode,
+                                 &checkpoint_resume_state);
         if (!options.eval_only && checkpoint_transaction_mode != 0U &&
             checkpoint_transaction_mode !=
                 (uint32_t)options.transaction_mode) {
@@ -5317,8 +5460,27 @@ int main(int argc, char **argv)
                    (unsigned long long)packed_train.record_count,
                    (unsigned long long)packed_train.active_targets,
                    (unsigned long long)packed_train.answer_targets);
+            if (options.resume_path != NULL) {
+                if (checkpoint_resume_state.packed_mode != 1U ||
+                    checkpoint_transaction_mode != 0U) {
+                    fail("packed resume requires a version-5 packed checkpoint");
+                }
+                if (checkpoint_resume_state.packed_batch !=
+                        (uint32_t)options.batch ||
+                    checkpoint_resume_state.packed_total_steps !=
+                        (uint64_t)options.steps ||
+                    checkpoint_resume_state.packed_completed_steps !=
+                        checkpoint_attempts ||
+                    memcmp(checkpoint_resume_state.run_contract_sha256,
+                           options.run_contract_sha256, 64U) != 0) {
+                    fail("packed checkpoint does not match the run contract, batch, total steps, or cursor");
+                }
+            }
             train_packed(&model, &rng, &update, &packed_train,
-                         &packed_validation, &options);
+                         &packed_validation, &options,
+                         options.resume_path != NULL
+                             ? &checkpoint_resume_state
+                             : NULL);
             packed_set_destroy(&packed_train);
         }
         packed_set_destroy(&packed_validation);
@@ -5719,7 +5881,7 @@ int main(int argc, char **argv)
                             options.transaction_mode != TRANSACTION_DISABLED
                                 ? transaction.consecutive_rejections
                                 : 0,
-                            (uint32_t)options.transaction_mode);
+                            (uint32_t)options.transaction_mode, NULL);
                         printf("saved best %s (val %.4f)\n", options.best_path,
                                best_validation);
                     }
@@ -5743,7 +5905,7 @@ int main(int argc, char **argv)
                     options.transaction_mode != TRANSACTION_DISABLED
                         ? transaction.consecutive_rejections
                         : 0,
-                    (uint32_t)options.transaction_mode);
+                    (uint32_t)options.transaction_mode, NULL);
                 printf("saved %s\n", options.save_path);
             }
             }
@@ -5771,7 +5933,7 @@ int main(int argc, char **argv)
                 options.transaction_mode != TRANSACTION_DISABLED
                     ? transaction.consecutive_rejections
                     : 0,
-                (uint32_t)options.transaction_mode);
+                (uint32_t)options.transaction_mode, NULL);
             printf("saved %s\n", options.save_path);
         }
         }
