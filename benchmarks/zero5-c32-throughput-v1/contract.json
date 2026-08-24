@@ -10,7 +10,7 @@
     "archive_sha256": "48f84fe14144f562d3a890b480e696466470e9037de9c2fac32b327c3518bc62",
     "assets_sha256": "cafedf89ab5ed298036114ab82cb4ffa785265f8c80294925c14bd8478c7f4b7",
     "user_data": "scripts/aws/zero5-c32-throughput-user-data.sh",
-    "user_data_sha256": "b362f732a87eb9da7acb711f4539e86f3fc6bd80c13fce95a38286299433d062"
+    "user_data_sha256": "30b6a1750f89969ea5b760be49b4e0c3c646bc96eefd6ec417e0f4059d717d27"
   },
   "parent": {
     "experiment": "zero5-c32-v1",
@@ -25,9 +25,9 @@
     "instance_type": "c6i.4xlarge",
     "purchase_option": "on-demand",
     "hourly_usd": 0.68,
-    "maximum_instance_seconds": 500,
-    "maximum_compute_usd": 0.095,
-    "prior_compute_usd": 0.040989,
+    "maximum_instance_seconds": 450,
+    "maximum_compute_usd": 0.085,
+    "prior_compute_usd": 0.050433,
     "maximum_total_compute_usd": 0.14,
     "automatic_shutdown": true
   },
@@ -53,6 +53,17 @@
       "estimated_compute_usd": 0.021533,
       "status": "failed-before-first-status",
       "finding": "Bootstrap failed before the AWS CLI was installed. The next retry installs reporting first and uploads its boot log before installing build packages."
+    },
+    {
+      "attempt": 3,
+      "run_id": "zero5-c32-throughput-20260824-823d76e",
+      "instance_id": "i-0f5159567dfc6a502",
+      "launched_at": "2026-08-24T21:38:28Z",
+      "observed_terminal_at": "2026-08-24T21:39:18Z",
+      "observed_instance_seconds": 50,
+      "estimated_compute_usd": 0.009444,
+      "status": "failed-before-aws-cli",
+      "finding": "The reporter-first bootstrap still stopped before the AWS CLI became usable. The final bounded retry writes the boot log directly with a signed S3 request and does not depend on installed reporting tools."
     }
   ],
   "replay": {

@@ -45,9 +45,9 @@ ERROR_COMMAND=
 export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
-test "$MAX_INSTANCE_SECONDS" = 500
-test "$MAX_COMPUTE_USD" = 0.095
-test "$PRIOR_COMPUTE_USD" = 0.040989
+test "$MAX_INSTANCE_SECONDS" = 450
+test "$MAX_COMPUTE_USD" = 0.085
+test "$PRIOR_COMPUTE_USD" = 0.050433
 test "$TOTAL_MAX_COMPUTE_USD" = 0.14
 test "$HOURLY_PRICE" = 0.68
 [[ "$RUN_ID" =~ ^zero5-c32-throughput-[a-z0-9-]+$ ]]
@@ -71,6 +71,40 @@ test "$age" -ge 0
 test "$age" -lt "$MAX_INSTANCE_SECONDS"
 remaining=$((MAX_INSTANCE_SECONDS - age))
 ( sleep "$remaining"; shutdown -h now ) &
+
+raw_s3_put() {
+  local file=$1
+  local key=$2
+  local role_name credentials access_key secret_key session_token
+  local host rc
+  { set +x; } 2>/dev/null
+  role_name=$(metadata iam/security-credentials/)
+  credentials=$(metadata "iam/security-credentials/${role_name}")
+  access_key=$(sed -n \
+    's/.*"AccessKeyId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    <<< "$credentials")
+  secret_key=$(sed -n \
+    's/.*"SecretAccessKey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    <<< "$credentials")
+  session_token=$(sed -n \
+    's/.*"Token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    <<< "$credentials")
+  test -n "$access_key"
+  test -n "$secret_key"
+  test -n "$session_token"
+  host="${TRAINING_BUCKET}.s3.${AWS_DEFAULT_REGION}.amazonaws.com"
+  if curl --fail --silent --show-error --request PUT \
+    --aws-sigv4 "aws:amz:${AWS_DEFAULT_REGION}:s3" \
+    --user "${access_key}:${secret_key}" \
+    --header "x-amz-security-token: ${session_token}" \
+    --upload-file "$file" "https://${host}/${key}"; then
+    rc=0
+  else
+    rc=$?
+  fi
+  set -x
+  return "$rc"
+}
 
 publish_status() {
   status=$1
@@ -104,6 +138,7 @@ finish() {
   exit_code=$?
   trap - EXIT
   set +e
+  raw_s3_put "$BOOT_LOG" "${RESULT_PREFIX}/bootstrap.log"
   if command -v aws >/dev/null 2>&1; then
     if [ "$TERMINAL_WRITTEN" -eq 0 ]; then
       publish_status failed "$PHASE" "$exit_code"
@@ -135,6 +170,8 @@ finish() {
 trap finish EXIT
 
 export DEBIAN_FRONTEND=noninteractive
+PHASE=raw-reporting
+raw_s3_put "$BOOT_LOG" "${RESULT_PREFIX}/bootstrap.log"
 if ! command -v aws >/dev/null 2>&1; then
   AWS_CLI_VERSION=2.34.7
   AWS_CLI_SHA256=d6b6e2291456704a441e970bbdb69466629510dd0b578e8812f7856eac64abba1

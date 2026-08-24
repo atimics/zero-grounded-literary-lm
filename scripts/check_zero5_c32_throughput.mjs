@@ -25,16 +25,17 @@ assert.equal(spawnSync("bash", ["-n", contract.source.user_data]).status, 0);
 assert.ok((fs.statSync(contract.source.user_data).mode & 0o111) !== 0);
 assert.ok(contract.venue.maximum_instance_seconds *
   contract.venue.hourly_usd / 3600 <= contract.venue.maximum_compute_usd);
-assert.equal(contract.venue.maximum_compute_usd, 0.095);
+assert.equal(contract.venue.maximum_compute_usd, 0.085);
 assert.ok(contract.venue.prior_compute_usd +
   contract.venue.maximum_instance_seconds *
     contract.venue.hourly_usd / 3600 <=
   contract.venue.maximum_total_compute_usd);
 assert.equal(contract.venue.maximum_total_compute_usd, 0.14);
-assert.equal(contract.attempts.length, 2);
+assert.equal(contract.attempts.length, 3);
 assert.equal(contract.attempts[0].status,
   "failed-without-terminal-report");
 assert.equal(contract.attempts[1].status, "failed-before-first-status");
+assert.equal(contract.attempts[2].status, "failed-before-aws-cli");
 assert.ok(Math.abs(contract.attempts.reduce((sum, attempt) =>
   sum + attempt.estimated_compute_usd, 0) -
     contract.venue.prior_compute_usd) < 1e-9);
