@@ -196,6 +196,23 @@ if [ "$START_EVENT_EXISTS" -eq 0 ]; then
     '{status:"running",experiment:$experiment,seed:0,note:$note}' \
     > /tmp/zero5-c32-start.json
   publish_event 0 run.started /tmp/zero5-c32-start.json
+else
+  last_c=0
+  last_d=0
+  test ! -f "$OUT/telemetry-C-update" || \
+    last_c=$(cat "$OUT/telemetry-C-update")
+  test ! -f "$OUT/telemetry-D-update" || \
+    last_d=$(cat "$OUT/telemetry-D-update")
+  if [ "$last_d" -gt 0 ]; then
+    resume_sequence=$((10000 + last_d + 2))
+  else
+    resume_sequence=$((last_c + 2))
+  fi
+  jq -n --arg experiment zero5-c32-v1 \
+    --arg note "AWS/OpenBLAS C3.2 run resumed from durable state." \
+    '{status:"running",experiment:$experiment,seed:0,note:$note}' \
+    > /tmp/zero5-c32-resume.json
+  publish_event "$resume_sequence" phase.started /tmp/zero5-c32-resume.json
 fi
 
 sync_state() {
