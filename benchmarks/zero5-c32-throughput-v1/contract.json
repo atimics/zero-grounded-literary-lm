@@ -1,7 +1,7 @@
 {
   "schema": "zero.c32_throughput_contract.v1",
   "experiment": "zero5-c32-throughput-v1",
-  "status": "authorized-unrun",
+  "status": "authorized-retry",
   "purpose": "Find a faster byte-identical Linux/OpenBLAS continuation configuration for the frozen C3.2 run.",
   "diagnostic_only": true,
   "scientific_inference_allowed": false,
@@ -10,7 +10,7 @@
     "archive_sha256": "48f84fe14144f562d3a890b480e696466470e9037de9c2fac32b327c3518bc62",
     "assets_sha256": "cafedf89ab5ed298036114ab82cb4ffa785265f8c80294925c14bd8478c7f4b7",
     "user_data": "scripts/aws/zero5-c32-throughput-user-data.sh",
-    "user_data_sha256": "79235bc68954aa4633747255694b88cbd169e544308fa4f971cf6192e1a9b53f"
+    "user_data_sha256": "c9b7ed5ef62a8328a973606e96fc4b5072c992fed41aa03290165fd9477e6660"
   },
   "parent": {
     "experiment": "zero5-c32-v1",
@@ -25,10 +25,25 @@
     "instance_type": "c6i.4xlarge",
     "purchase_option": "on-demand",
     "hourly_usd": 0.68,
-    "maximum_instance_seconds": 720,
-    "maximum_compute_usd": 0.14,
+    "maximum_instance_seconds": 620,
+    "maximum_compute_usd": 0.12,
+    "prior_compute_usd": 0.019456,
+    "maximum_total_compute_usd": 0.14,
     "automatic_shutdown": true
   },
+  "attempts": [
+    {
+      "attempt": 1,
+      "run_id": "zero5-c32-throughput-20260824-2c59836",
+      "instance_id": "i-0c0eee563f23d36d0",
+      "launched_at": "2026-08-24T21:23:59Z",
+      "observed_terminal_at": "2026-08-24T21:25:42Z",
+      "observed_instance_seconds": 103,
+      "estimated_compute_usd": 0.019456,
+      "status": "failed-without-terminal-report",
+      "finding": "The failure path put the small status and boot log after a bulk sync of temporary checkpoints. No result was admitted."
+    }
+  ],
   "replay": {
     "start_update": 3000,
     "updates": 20,

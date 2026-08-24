@@ -28,6 +28,8 @@ AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
 MAX_COMPUTE_USD=$(tag MaxComputeUsd)
+PRIOR_COMPUTE_USD=$(tag PriorComputeUsd)
+TOTAL_MAX_COMPUTE_USD=$(tag TotalMaxComputeUsd)
 HOURLY_PRICE=$(tag HourlyPrice)
 INSTANCE_ID=$(metadata instance-id)
 INSTANCE_TYPE=$(metadata instance-type)
@@ -36,12 +38,17 @@ RESULT_ROOT=/tmp/zero5-c32-throughput
 STATUS_FILE="$RESULT_ROOT/status.json"
 RESULT_FILE="$RESULT_ROOT/result.json"
 TERMINAL_WRITTEN=0
+PHASE=bootstrap
+ERROR_LINE=0
+ERROR_COMMAND=
 
 export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
-test "$MAX_INSTANCE_SECONDS" = 720
-test "$MAX_COMPUTE_USD" = 0.14
+test "$MAX_INSTANCE_SECONDS" = 620
+test "$MAX_COMPUTE_USD" = 0.12
+test "$PRIOR_COMPUTE_USD" = 0.019456
+test "$TOTAL_MAX_COMPUTE_USD" = 0.14
 test "$HOURLY_PRICE" = 0.68
 [[ "$RUN_ID" =~ ^zero5-c32-throughput-[a-z0-9-]+$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
@@ -50,11 +57,48 @@ test "$HOURLY_PRICE" = 0.68
 [[ "$CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
 awk -v seconds="$MAX_INSTANCE_SECONDS" -v price="$HOURLY_PRICE" \
-  -v ceiling="$MAX_COMPUTE_USD" \
-  'BEGIN { exit !(seconds * price / 3600 <= ceiling) }'
+  -v ceiling="$MAX_COMPUTE_USD" -v prior="$PRIOR_COMPUTE_USD" \
+  -v total="$TOTAL_MAX_COMPUTE_USD" \
+  'BEGIN {
+    attempt = seconds * price / 3600
+    exit !(attempt <= ceiling && prior + attempt <= total)
+  }'
 
 mkdir -p "$RESULT_ROOT"
-( sleep "$MAX_INSTANCE_SECONDS"; shutdown -h now ) &
+now_epoch=$(date +%s)
+age=$((now_epoch - LAUNCH_EPOCH))
+test "$age" -ge 0
+test "$age" -lt "$MAX_INSTANCE_SECONDS"
+remaining=$((MAX_INSTANCE_SECONDS - age))
+( sleep "$remaining"; shutdown -h now ) &
+
+publish_status() {
+  status=$1
+  phase=$2
+  exit_code=${3:-0}
+  elapsed=$(($(date +%s) - LAUNCH_EPOCH))
+  attempt_cost=$(awk -v seconds="$elapsed" -v price="$HOURLY_PRICE" \
+    'BEGIN { printf "%.6f", seconds * price / 3600 }')
+  cumulative_cost=$(awk -v prior="$PRIOR_COMPUTE_USD" \
+    -v attempt="$attempt_cost" \
+    'BEGIN { printf "%.6f", prior + attempt }')
+  jq -n --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
+    --arg status "$status" --arg phase "$phase" \
+    --arg error_command "$ERROR_COMMAND" --argjson error_line "$ERROR_LINE" \
+    --argjson exit_code "$exit_code" --argjson elapsed "$elapsed" \
+    --argjson attempt_cost "$attempt_cost" \
+    --argjson cumulative_cost "$cumulative_cost" \
+    '{schema:"zero.c32_throughput_status.v1",status:$status,phase:$phase,
+      run_id:$run_id,instance_id:$instance_id,exit_code:$exit_code,
+      error_line:$error_line,error_command:$error_command,
+      elapsed_instance_seconds:$elapsed,attempt_compute_usd:$attempt_cost,
+      cumulative_compute_usd:$cumulative_cost}' > "$STATUS_FILE"
+  aws s3 cp "$STATUS_FILE" \
+    "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/status.json" \
+    --only-show-errors
+}
+
+trap 'ERROR_LINE=$LINENO; ERROR_COMMAND=$BASH_COMMAND' ERR
 
 finish() {
   exit_code=$?
@@ -62,16 +106,27 @@ finish() {
   set +e
   if command -v aws >/dev/null 2>&1; then
     if [ "$TERMINAL_WRITTEN" -eq 0 ]; then
-      jq -n --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
-        --argjson exit_code "$exit_code" \
-        '{schema:"zero.c32_throughput_status.v1",status:"failed",
-          run_id:$run_id,instance_id:$instance_id,exit_code:$exit_code}' \
-        > "$STATUS_FILE"
+      publish_status failed "$PHASE" "$exit_code"
     fi
-    aws s3 sync "$RESULT_ROOT/" \
-      "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/" --only-show-errors
     aws s3 cp "$BOOT_LOG" \
       "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/bootstrap.log" \
+      --only-show-errors
+    test ! -f "$RESULT_FILE" || aws s3 cp "$RESULT_FILE" \
+      "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/result.json" \
+      --only-show-errors
+    test ! -f "$RESULT_ROOT/candidates.tsv" || \
+      aws s3 cp "$RESULT_ROOT/candidates.tsv" \
+        "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/candidates.tsv" \
+        --only-show-errors
+    for log in "$RESULT_ROOT"/*/training.log; do
+      test -f "$log" || continue
+      candidate=$(basename "$(dirname "$log")")
+      aws s3 cp "$log" \
+        "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/logs/${candidate}.log" \
+        --only-show-errors
+    done
+    aws s3 cp "$STATUS_FILE" \
+      "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/status.json" \
       --only-show-errors
   fi
   shutdown -h now
@@ -95,6 +150,9 @@ if ! command -v aws >/dev/null 2>&1; then
     --install-dir /usr/local/aws-cli
 fi
 
+PHASE=source
+publish_status running "$PHASE"
+
 install -d -m 0755 /opt/zero/repo
 aws s3 cp "s3://${TRAINING_BUCKET}/${SOURCE_KEY}" /tmp/source.tar.gz \
   --only-show-errors
@@ -103,6 +161,8 @@ tar -xzf /tmp/source.tar.gz -C /opt/zero/repo
 cd /opt/zero/repo
 test "$(sha256sum benchmarks/zero5-c32-v1/contract.json | awk '{print $1}')" = \
   f47f9283ee8a111bb816079803824bee77de930eac9e4ef5ecdbb8733dd01b7e
+PHASE=assets
+publish_status running "$PHASE"
 aws s3 cp "s3://${TRAINING_BUCKET}/${ASSET_KEY}" /tmp/assets.tar.gz \
   --only-show-errors
 test "$(sha256sum /tmp/assets.tar.gz | awk '{print $1}')" = "$ASSET_SHA256"
@@ -112,6 +172,8 @@ aws s3 cp "s3://${TRAINING_BUCKET}/${CHECKPOINT_KEY}" \
 test "$(sha256sum "$RESULT_ROOT/input.ckpt" | awk '{print $1}')" = \
   "$CHECKPOINT_SHA256"
 
+PHASE=compile
+publish_status running "$PHASE"
 export LITERARY_BACKEND=openblas
 make zero5_c32_lm
 mv zero5_c32_lm zero5_c32_lm_o2
@@ -131,6 +193,8 @@ run_candidate() {
   binary=$2
   threads=$3
   directory="$RESULT_ROOT/$name"
+  PHASE="candidate-$name"
+  publish_status running "$PHASE"
   mkdir -p "$directory"
   cp "$RESULT_ROOT/input.ckpt" "$directory/active.ckpt"
   cp "$RESULT_ROOT/input.ckpt" "$directory/best.ckpt"
@@ -181,13 +245,19 @@ candidates=$(jq -Rn --arg reference "$reference_sha256" \
 fastest=$(jq '[.[] | select(.byte_identical_to_reference)] |
   sort_by(.tokens_per_second) | last' <<< "$candidates")
 elapsed=$(($(date +%s) - LAUNCH_EPOCH))
-cost=$(awk -v seconds="$elapsed" -v price="$HOURLY_PRICE" \
+attempt_cost=$(awk -v seconds="$elapsed" -v price="$HOURLY_PRICE" \
   'BEGIN { printf "%.6f", seconds * price / 3600 }')
+cumulative_cost=$(awk -v prior="$PRIOR_COMPUTE_USD" \
+  -v attempt="$attempt_cost" \
+  'BEGIN { printf "%.6f", prior + attempt }')
 jq -n --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
   --arg instance_type "$INSTANCE_TYPE" --arg backend OpenBLAS \
   --arg input_checkpoint_sha256 "$CHECKPOINT_SHA256" \
   --arg contract_sha256 "$CONTRACT_SHA256" \
-  --argjson elapsed_seconds "$elapsed" --argjson compute_usd "$cost" \
+  --argjson elapsed_seconds "$elapsed" \
+  --argjson attempt_compute_usd "$attempt_cost" \
+  --argjson prior_compute_usd "$PRIOR_COMPUTE_USD" \
+  --argjson cumulative_compute_usd "$cumulative_cost" \
   --argjson candidates "$candidates" --argjson fastest "$fastest" \
   '{schema:"zero.c32_throughput_result.v1",status:"complete",
     diagnostic_only:true,run_id:$run_id,instance_id:$instance_id,
@@ -195,13 +265,12 @@ jq -n --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
     input_checkpoint_sha256:$input_checkpoint_sha256,
     benchmark_contract_sha256:$contract_sha256,
     replay:{start_update:3000,updates:20,batch_sequences:4},
-    elapsed_instance_seconds:$elapsed_seconds,compute_usd:$compute_usd,
+    elapsed_instance_seconds:$elapsed_seconds,
+    attempt_compute_usd:$attempt_compute_usd,
+    prior_compute_usd:$prior_compute_usd,
+    cumulative_compute_usd:$cumulative_compute_usd,
     candidates:$candidates,fastest_byte_identical_candidate:$fastest}' \
   > "$RESULT_FILE"
-jq -n --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
-  --arg result_sha256 "$(sha256sum "$RESULT_FILE" | awk '{print $1}')" \
-  --argjson compute_usd "$cost" \
-  '{schema:"zero.c32_throughput_status.v1",status:"complete",
-    run_id:$run_id,instance_id:$instance_id,
-    result_sha256:$result_sha256,compute_usd:$compute_usd}' > "$STATUS_FILE"
+PHASE=complete
+publish_status complete "$PHASE"
 TERMINAL_WRITTEN=1

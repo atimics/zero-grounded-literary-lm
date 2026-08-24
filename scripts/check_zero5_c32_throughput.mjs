@@ -13,7 +13,7 @@ const directory = "benchmarks/zero5-c32-throughput-v1";
 const contract = JSON.parse(fs.readFileSync(`${directory}/contract.json`));
 const parentBytes = fs.readFileSync("benchmarks/zero5-c32-v1/contract.json");
 assert.equal(contract.schema, "zero.c32_throughput_contract.v1");
-assert.equal(contract.status, "authorized-unrun");
+assert.ok(["authorized-retry", "complete"].includes(contract.status));
 assert.equal(contract.diagnostic_only, true);
 assert.equal(contract.scientific_inference_allowed, false);
 assert.equal(sha256(parentBytes), contract.parent.contract_sha256);
@@ -25,7 +25,17 @@ assert.equal(spawnSync("bash", ["-n", contract.source.user_data]).status, 0);
 assert.ok((fs.statSync(contract.source.user_data).mode & 0o111) !== 0);
 assert.ok(contract.venue.maximum_instance_seconds *
   contract.venue.hourly_usd / 3600 <= contract.venue.maximum_compute_usd);
-assert.equal(contract.venue.maximum_compute_usd, 0.14);
+assert.equal(contract.venue.maximum_compute_usd, 0.12);
+assert.ok(contract.venue.prior_compute_usd +
+  contract.venue.maximum_instance_seconds *
+    contract.venue.hourly_usd / 3600 <=
+  contract.venue.maximum_total_compute_usd);
+assert.equal(contract.venue.maximum_total_compute_usd, 0.14);
+assert.equal(contract.attempts.length, 1);
+assert.equal(contract.attempts[0].status,
+  "failed-without-terminal-report");
+assert.equal(contract.attempts[0].estimated_compute_usd,
+  contract.venue.prior_compute_usd);
 assert.equal(contract.replay.compute_token_exposures,
   contract.replay.updates * contract.replay.batch_sequences * 512);
 assert.equal(contract.candidates.length, 9);
@@ -46,7 +56,14 @@ if (fs.existsSync(resultPath)) {
   assert.equal(result.diagnostic_only, true);
   assert.equal(result.input_checkpoint_sha256,
     contract.parent.active_checkpoint_sha256);
-  assert.ok(result.compute_usd <= contract.venue.maximum_compute_usd);
+  assert.equal(result.benchmark_contract_sha256,
+    sha256(fs.readFileSync(`${directory}/contract.json`)));
+  assert.ok(result.attempt_compute_usd <=
+    contract.venue.maximum_compute_usd);
+  assert.equal(result.prior_compute_usd,
+    contract.venue.prior_compute_usd);
+  assert.ok(result.cumulative_compute_usd <=
+    contract.venue.maximum_total_compute_usd);
   assert.equal(result.candidates.length, contract.candidates.length);
   assert.deepEqual(result.candidates.map(candidate => candidate.name),
     contract.candidates.map(candidate => candidate.name));
