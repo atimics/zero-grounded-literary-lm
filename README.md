@@ -3,7 +3,7 @@
 Read [**The ZERO Manifesto**](MANIFESTO.md) and the
 [mathematical foundations](FOUNDATIONS.md).
 
-This project contains two dependency-free neural language models together with
+This project contains dependency-free neural language models together with
 checked corpus generators, validators, faculty-controller experiments, and a
 small browser runtime:
 
@@ -11,6 +11,9 @@ small browser runtime:
   to inspect.
 - `literary_lm`: a configurable decoder-only transformer designed to train on
   collections such as Shakespeare, William Blake, and Aleister Crowley.
+- `zero5_lm`: the active C transformer fork for lossless byte tokenizers and
+  immutable Braid corpus releases. The hash-pinned `literary_lm.c` remains
+  unchanged.
 - `logic_corpus`: a reproducible generator for compact natural-deduction
   proofs over hereditarily finite sets.
 - `brainfuck_corpus`: an interpreter-checked generator for execution,
@@ -22,7 +25,7 @@ small browser runtime:
   exports into multi-speaker channels with explicit reply edges and learned
   lossy-memory transitions.
 
-Both are written in C11. On macOS, `literary_lm` automatically uses Apple's
+They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
 when its development package is installed and otherwise retains the portable C
 fallback. Set `LITERARY_BACKEND=portable`, `openblas`, or `accelerate` to make
@@ -33,11 +36,53 @@ runs a mixed-format export—row-wise int8 matrices with floating-point scales
 and normalization gains—entirely in the browser using the same C inference
 code compiled to WebAssembly. No prompt or generated text is sent to a server.
 
-`bpe_tokenizer` is the companion corpus normalizer and experimental byte-pair
+`bpe_tokenizer` is the historical corpus normalizer and experimental byte-pair
 trainer. Tests at 256, 512, and 2,048 vocabulary entries overfit fragments on
-this corpus, so the final preset uses its cleaned 128-character ASCII stream
+that small literary corpus, so its final preset uses a cleaned 128-character ASCII stream
 with no merges. The smaller vocabulary reallocates capacity to the transformer
 while keeping the total parameter count unchanged.
+
+## ZERO.5 corpus and tokenizer gate
+
+ZERO.5-C0 establishes the new data path before model training. A C reader
+verifies a released `braid.release/v2` manifest and its governed train,
+validation, and test artifacts, checks every decoded document against its
+content hash, preserves the official splits, and emits exact little-endian token streams. The
+lossless C tokenizer then compares raw bytes with a frozen 512-entry byte-BPE
+vocabulary. End-of-document and channel tokens cannot be merged.
+
+The 512-token arm keeps the historical 4,852,992-parameter budget exactly by
+using a 1,024-wide feed-forward layer. The governed Corpus 1 run is complete:
+byte-BPE512 reduced validation content tokens by 57.07% versus byte264 and is
+the selected ZERO.5 tokenizer. Corpus 1 is still too small for broad
+pretraining. The separate three-seed C1 run reached a mean 2.9707 validation
+bits per raw byte and reproduced seed 0 byte for byte, but generations remained
+mostly gibberish. See [the C0 tokenizer result](benchmarks/zero5-c0-v1/RESULT.md)
+and [the C1 training result](benchmarks/zero5-c1-v1/RESULT.md).
+
+The fixed-size C2 Atlas continuation passed. One ordered pass reduced Atlas
+validation loss from 4.9819 to 2.2786 nats per token and also improved the C1
+anchor distribution. Generation became more prose-shaped but was not coherent.
+See [the C2 result](benchmarks/zero5-c2-v1/RESULT.md) and
+[generation samples](benchmarks/zero5-c2-v1/GENERATION.md).
+
+The fixed-size C3 task continuation is complete with a no-go. Combined C3
+validation loss improved 39.13%, but claim-answer improvement missed its gate,
+cloze-answer loss became worse, and retrieval A/B accuracy reached only 52.05%
+against a frozen 55% gate. C2 and C1 retention passed. The evidence points to
+interference from presenting claims, cloze, and retrieval as three solid
+blocks. See [the C3 result](benchmarks/zero5-c3-v1/RESULT.md) and
+[task samples](benchmarks/zero5-c3-v1/GENERATION.md).
+
+The fixed-size C3.1 braid is also complete with a no-go under its conjunctive
+gate, but it produced a large curriculum result. Smoothly interleaving the
+exact same packs improved combined validation loss by 41.75% versus C2 and
+fixed the C3 cloze regression. Four-times answer weighting improved cloze
+answer loss by 26.80% and retrieval answer loss by 95.97%, while retaining C2
+Atlas and C1 anchors. Claim improvement reached only 7.28%, and retrieval
+choice reached 54.77% against the frozen 55% gate, so no arm was eligible for
+promotion or replication. See [the C3.1 result](benchmarks/zero5-c31-v1/RESULT.md)
+and [generation diagnostic](benchmarks/zero5-c31-v1/GENERATION.md).
 
 ## Sero model lineage
 
@@ -128,6 +173,14 @@ make sero1-optimized-check SERO1_OPTIMIZED_MANIFEST=/path/to/manifest.json
 make sero2-curriculum-check SERO2_CURRICULUM_MANIFEST=/path/to/manifest.json
 make sero2-curriculum-result-check
 make sero-series-closure-check
+make zero5-c0-check
+make zero5-c1-check
+make zero5-c2-check
+make zero5-c3-check
+make zero5-c31-check
+# For another verified RELEASED Braid collection:
+make zero5-c0-run BRAID_RELEASE=/path/to/release \
+  ZERO5_BRAID_COLLECTION_ID=collection-id ZERO5_BRAID_COMMIT=commit
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

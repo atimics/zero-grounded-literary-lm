@@ -19,6 +19,31 @@ SERO1_PRETRAIN_MANIFEST ?= $(SERO_CORPUS_OUT)/manifest.json
 SERO1_OPTIMIZED_MANIFEST ?= build/sero-pretrain-v2/manifest.json
 SERO2_CURRICULUM_MANIFEST ?= build/sero-pretrain-curriculum-v1/manifest.json
 SERO0_OUT ?= build/sero0
+ZERO5_C0_OUT ?= build/zero5-c0-v1
+ZERO5_C0_MAX_TOKENS ?= 8000000
+ZERO5_BRAID_COLLECTION_ID ?=
+ZERO5_BRAID_COMMIT ?=
+ZERO5_C1_OUT ?= build/zero5-c1-v1
+ZERO5_C1_C0_DIR ?= build/zero5-c0-v1/corpus-one
+ZERO5_C2_IMPORT_DIR ?= build/zero5-c2-v1/import-final
+ZERO5_C2_C0_DIR ?= build/zero5-c0-v1/corpus-one
+ZERO5_C2_C1_DIR ?= build/zero5-c1-v1
+ZERO5_C2_OUT ?= build/zero5-c2-v1/run
+ZERO5_C3_IMPORT_DIR ?= build/zero5-c3-v1/import-final
+ZERO5_C3_C0_DIR ?= build/zero5-c0-v1/corpus-one
+ZERO5_C3_C2_DIR ?= build/zero5-c2-v1/run
+ZERO5_C3_C2_IMPORT_DIR ?= build/zero5-c2-v1/import-final
+ZERO5_C3_OUT ?= build/zero5-c3-v1/run
+ZERO5_C31_IMPORT_DIR ?= build/zero5-c31-v1/import-final
+ZERO5_C31_C0_DIR ?= build/zero5-c0-v1/corpus-one
+ZERO5_C31_C2_DIR ?= build/zero5-c2-v1/run
+ZERO5_C31_C2_IMPORT_DIR ?= build/zero5-c2-v1/import-final
+ZERO5_C31_OUT ?= build/zero5-c31-v1/run
+ZERO5_C32_IMPORT_DIR ?= build/zero5-c32-v1/import-final
+ZERO5_C32_C0_DIR ?= build/zero5-c0-v1/corpus-one
+ZERO5_C32_C2_DIR ?= build/zero5-c2-v1/run
+ZERO5_C32_C2_IMPORT_DIR ?= build/zero5-c2-v1/import-final
+ZERO5_C32_OUT ?= build/zero5-c32-v1/run
 ZERO4_Q1_STEPS ?= 4000
 ZERO4_Q1_BATCH ?= 2
 ZERO4_Q1_SEED ?= 1
@@ -133,7 +158,12 @@ endif
 	zero-data-build zero-data-pipeline-check \
 	sero-corpus-plan-check sero-corpus-prepare sero-corpus-build \
 	sero-corpus-result-check \
-	sero0-tokenizer sero0-check \
+	sero0-tokenizer sero0-check zero5-c0-check zero5-c0-run \
+	zero5-c1-check zero5-c1-run \
+	zero5-c2-check zero5-c2-run \
+	zero5-c3-check zero5-c3-run \
+	zero5-c31-check zero5-c31-run \
+	zero5-c32-check zero5-c32-run \
 	sero-latent-v1-check sero-latent-v1-pilot \
 	sero-latent-v1-conventional sero-latent-v1-result-check \
 	sero-latent-v2-check sero-latent-v2-run sero-latent-v2-result-check \
@@ -204,10 +234,13 @@ endif
 	$(MONKEY_PREFIX)-literary.ckpt $(MONKEY_PREFIX)-balanced.ckpt \
 	$(MONKEY_TRACE_PREFIX)-brainfuck.ckpt
 
-all: zero_lm literary_lm bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
+all: zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm bpe_tokenizer sero_tokenizer zero5_braid logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
 
 sero_tokenizer: sero_tokenizer.c
 	$(CC) $(CFLAGS) sero_tokenizer.c -o $@
+
+zero5_braid: zero5_braid.c
+	$(CC) $(CFLAGS) zero5_braid.c -o $@
 
 sero0-tokenizer: sero_tokenizer
 	mkdir -p "$(SERO0_OUT)"
@@ -215,6 +248,66 @@ sero0-tokenizer: sero_tokenizer
 
 sero0-check: sero_tokenizer
 	node scripts/check_sero0.mjs
+
+zero5-c0-check: zero5_braid sero_tokenizer bpe_tokenizer zero5_lm
+	node scripts/check_zero5_c0.mjs
+
+zero5-c0-run: zero5_braid sero_tokenizer bpe_tokenizer zero5_lm
+	test -n "$(BRAID_RELEASE)"
+	node scripts/run_zero5_c0.mjs --release "$(BRAID_RELEASE)" \
+		--out "$(ZERO5_C0_OUT)" \
+		--maximum-tokenizer-training-tokens "$(ZERO5_C0_MAX_TOKENS)" \
+		--collection-id "$(ZERO5_BRAID_COLLECTION_ID)" \
+		--braid-commit "$(ZERO5_BRAID_COMMIT)"
+
+zero5-c1-check:
+	node scripts/check_zero5_c1.mjs
+
+zero5-c1-run: zero5_lm zero5-c1-check
+	node scripts/run_zero5_c1.mjs \
+		--c0-dir "$(ZERO5_C1_C0_DIR)" --out "$(ZERO5_C1_OUT)"
+
+zero5-c2-check: zero5_c2_lm
+	node scripts/check_zero5_c2.mjs
+
+zero5-c2-run: zero5_c2_lm zero5-c2-check
+	node scripts/run_zero5_c2.mjs \
+		--import-dir "$(ZERO5_C2_IMPORT_DIR)" \
+		--c0-dir "$(ZERO5_C2_C0_DIR)" \
+		--c1-dir "$(ZERO5_C2_C1_DIR)" --out "$(ZERO5_C2_OUT)"
+
+zero5-c3-check: zero5_c3_lm
+	node scripts/check_zero5_c3.mjs
+
+zero5-c3-run: zero5_c3_lm zero5-c3-check
+	node scripts/run_zero5_c3.mjs \
+		--import-dir "$(ZERO5_C3_IMPORT_DIR)" \
+		--c0-dir "$(ZERO5_C3_C0_DIR)" \
+		--c2-dir "$(ZERO5_C3_C2_DIR)" \
+		--c2-import-dir "$(ZERO5_C3_C2_IMPORT_DIR)" \
+		--out "$(ZERO5_C3_OUT)"
+
+zero5-c31-check: zero5_c31_lm
+	node scripts/check_zero5_c31.mjs
+
+zero5-c31-run: zero5_c31_lm zero5-c31-check
+	node scripts/run_zero5_c31.mjs \
+		--import-dir "$(ZERO5_C31_IMPORT_DIR)" \
+		--c0-dir "$(ZERO5_C31_C0_DIR)" \
+		--c2-dir "$(ZERO5_C31_C2_DIR)" \
+		--c2-import-dir "$(ZERO5_C31_C2_IMPORT_DIR)" \
+		--out "$(ZERO5_C31_OUT)"
+
+zero5-c32-check: zero5_c32_lm
+	node scripts/check_zero5_c32.mjs
+
+zero5-c32-run: zero5_c32_lm zero5-c32-check
+	node scripts/run_zero5_c32.mjs \
+		--import-dir "$(ZERO5_C32_IMPORT_DIR)" \
+		--c0-dir "$(ZERO5_C32_C0_DIR)" \
+		--c2-dir "$(ZERO5_C32_C2_DIR)" \
+		--c2-import-dir "$(ZERO5_C32_C2_IMPORT_DIR)" \
+		--out "$(ZERO5_C32_OUT)"
 
 zero-data-build: $(ZERO_DATA_OUT)/manifest.json
 
@@ -387,6 +480,21 @@ zero_lm: zero_lm.c zero1_protocol.h
 
 literary_lm: literary_lm.c channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) literary_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5_lm: zero5_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5_c2_lm: zero5_c2_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c2_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5_c3_lm: zero5_c3_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c3_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5_c31_lm: zero5_c31_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c31_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5_c32_lm: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS)
 
 graded_plasticity_audit: graded_plasticity_audit.c literary_lm.c \
 		channel_protocol.h zero1_protocol.h
@@ -2094,7 +2202,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: sero-series-closure-check
+check: sero-series-closure-check zero5-c0-check zero5-c1-check zero5-c2-check zero5-c3-check zero5-c31-check zero5-c32-check
 check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero-latent-v3-aws-check sero-latent-v3-result-check sero1-tokenizer-check sero1-pretrain-contract-check sero1-pretrain-aws-check sero1-pretrain-result-check sero1-generation-eval-result-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
@@ -2158,5 +2266,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
+	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
 	rm -f docs/literary.js docs/literary.wasm

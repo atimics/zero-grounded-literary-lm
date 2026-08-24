@@ -1,0 +1,86 @@
+{
+  "schema": "zero.c_training_experiment.v1",
+  "experiment": "zero5-c1-v1",
+  "status": "preregistered-unrun",
+  "authorized": true,
+  "purpose": "Test whether the selected ZERO.5 C tokenizer and trainer learn reproducible held-out structure from governed Corpus 1 data.",
+  "claim_boundary": {
+    "may_claim": "A three-seed from-scratch C training run learned held-out structure from Corpus 1 under the frozen schedule.",
+    "may_not_claim": [
+      "general language-model pretraining",
+      "factual recall on the sealed test split",
+      "reasoning or intelligence",
+      "production model promotion"
+    ]
+  },
+  "implementation": {
+    "trainer": "zero5_lm.c",
+    "trainer_sha256": "24688b7f164b7bd804713f02701e320269be64300041782c295edb5b24530651",
+    "orchestration": "scripts/run_zero5_c1.mjs",
+    "model_and_training": "C11",
+    "python": false,
+    "pytorch": false
+  },
+  "input": {
+    "c0_result": "benchmarks/zero5-c0-v1/result.json",
+    "c0_result_sha256": "e3c0bd90196387d0791674c6b38ecf97134f229f99757c94c8b4f095d339508f",
+    "collection_id": "braid-corpus-one-v0.1.0-296620cd725547ec5a49a22f28d2816892d5d6c4893518cd48fd83df04804516",
+    "braid_commit": "90c78b9",
+    "tokenizer": "byte-bpe512",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "train_tokens_sha256": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+    "validation_tokens_sha256": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a",
+    "train_tokens": 80352,
+    "validation_tokens": 9891,
+    "validation_raw_bytes": 22807,
+    "test_policy": "The test artifact remains sealed. The runner receives no test path and must report test_metrics_opened=false."
+  },
+  "model": {
+    "initialization": "fresh deterministic random initialization per seed",
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary"
+  },
+  "training": {
+    "seeds": [0, 1, 2],
+    "repeat_seed_for_determinism": 0,
+    "updates": 300,
+    "batch_sequences": 4,
+    "tokens_per_sequence": 512,
+    "token_exposures_per_seed": 614400,
+    "train_stream_equivalents": 7.646356033452808,
+    "optimizer": "AdamW",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1.0,
+    "warmup_updates": 30,
+    "schedule": "cosine over all 300 updates",
+    "residual_dropout": 0.1,
+    "report_every_updates": 25,
+    "validation_windows": 19,
+    "selection": "lowest validation cross-entropy among the fixed reports; no early stopping"
+  },
+  "baselines": {
+    "uniform_validation_nats_per_token": 6.238324625039508,
+    "uniform_validation_bits_per_raw_byte": 3.903143771649055
+  },
+  "gates": {
+    "all_three_seeds_complete": true,
+    "every_seed_validation_nats_per_token_maximum": 5.4,
+    "mean_validation_nats_per_token_maximum": 5.2,
+    "maximum_seed_spread_nats_per_token": 0.25,
+    "seed_zero_repeat_checkpoint_must_be_byte_identical": true,
+    "test_metrics_opened": false
+  },
+  "after_result": {
+    "broad_pretraining_authorized": false,
+    "test_evaluation_authorized": false,
+    "next_if_pass": "Use the result as a training-stack proof while Braid grows a source-balanced corpus large enough for broad pretraining.",
+    "next_if_fail": "Diagnose optimizer or data-format failure at fixed model size before adding data or parameters."
+  }
+}

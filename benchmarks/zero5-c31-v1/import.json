@@ -1,0 +1,204 @@
+{
+  "schema": "zero.c31_import.v1",
+  "view": {
+    "id": "braid-corpus-three-zero5-512-v0.1.0-2676ac6e59f651e54d23c2bb7132e5995702e2fa5439182612d26d7f1b9005a9",
+    "braid_commit": "608688d5e4033dafea69c24fe80d97da996e0e05",
+    "manifest": {
+      "sha256": "58d1e35ae6437f414108ab1f8943f9c0e826385be48659422c8c57aa624c68aa",
+      "bytes": 5190,
+      "digest": "2676ac6e59f651e54d23c2bb7132e5995702e2fa5439182612d26d7f1b9005a9"
+    },
+    "parent_collection_id": "braid-corpus-three-v0.1.0-094452561c87bfb5e2ae8a343e1bc9745b1d4dd86ac97a3037cca20f2aedd20f",
+    "train_jsonl": {
+      "path": "data/train.jsonl",
+      "sha256": "9cfdbd4607c8d1367b3fdcba090cf0f1dc28f51a32f28d55682376902da1c1e5",
+      "bytes": 135158291,
+      "records": 79694
+    },
+    "validation_jsonl": {
+      "path": "data/validation.jsonl",
+      "sha256": "4efcf81cb063619d3cd1152fb8b28f09c8a393179a0d640d31d029c77b2dd151",
+      "bytes": 17260036,
+      "records": 10139
+    },
+    "test_jsonl": {
+      "path": "data/test.jsonl",
+      "sha256": "4446e1a32d89eba189ed4d599826265340a45248d9369eec03fab783a3fdb77a",
+      "bytes": 17199087,
+      "records": 10167
+    },
+    "official_artifacts_verified": true
+  },
+  "tokenizer": {
+    "id": "zero5-byte-bpe512",
+    "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "vocabulary_size": 512
+  },
+  "model_target": {
+    "context": 512,
+    "reserved_boundary_tokens": 1,
+    "packing": "complete records only; task-local greedy packs"
+  },
+  "schedules": {
+    "V": "claim packs, then cloze packs, then retrieval packs",
+    "A": "smooth deterministic interleave of the exact V task packs",
+    "B": "exact A pack order; runtime answer-token weight 4"
+  },
+  "outputs": {
+    "train_blocked": {
+      "sha256": "667fbfc57b3ff7fd63932952edf21dc1d94f32eda6fc6f3ec3ff74f2b962ff1d",
+      "bytes": 58087232,
+      "packs": 37768,
+      "real_packs": 37767,
+      "padding_packs": 1,
+      "records": 79694,
+      "active_targets": 17401380,
+      "answer_targets": 3842455,
+      "compute_token_exposures": 19337216,
+      "padding_targets": 1935836,
+      "task_packs": {
+        "claim": 11157,
+        "cloze": 10660,
+        "retrieval": 15950
+      },
+      "task_runs": 3,
+      "maximum_same_task_pack_run": 15950
+    },
+    "train_interleaved": {
+      "sha256": "8e4edec9852be7e2d5643f809b96efbb7521a1244ac795e7bb3b2057ad0838e8",
+      "bytes": 58087232,
+      "packs": 37768,
+      "real_packs": 37767,
+      "padding_packs": 1,
+      "records": 79694,
+      "active_targets": 17401380,
+      "answer_targets": 3842455,
+      "compute_token_exposures": 19337216,
+      "padding_targets": 1935836,
+      "task_packs": {
+        "claim": 11157,
+        "cloze": 10660,
+        "retrieval": 15950
+      },
+      "task_runs": 36779,
+      "maximum_same_task_pack_run": 2
+    },
+    "validation_interleaved": {
+      "sha256": "4410fc9065baa9f52524a983ea9b34239ae893a84cca210c2cff11324693a9ad",
+      "bytes": 7414746,
+      "packs": 4821,
+      "real_packs": 4821,
+      "padding_packs": 0,
+      "records": 10139,
+      "active_targets": 2217792,
+      "answer_targets": 497196,
+      "compute_token_exposures": 2468352,
+      "padding_targets": 250560,
+      "task_packs": {
+        "claim": 1437,
+        "cloze": 1361,
+        "retrieval": 2023
+      },
+      "task_runs": 4714,
+      "maximum_same_task_pack_run": 2
+    },
+    "validation_tasks": {
+      "claim": {
+        "sha256": "804272d19a826f93c384c813375acb30d187fd6a1843ecb137a0b3b7ea24fcf4",
+        "bytes": 2210154,
+        "packs": 1437,
+        "real_packs": 1437,
+        "padding_packs": 0,
+        "records": 4561,
+        "active_targets": 634796,
+        "answer_targets": 460920,
+        "compute_token_exposures": 735744,
+        "padding_targets": 100948,
+        "task_packs": {
+          "claim": 1437,
+          "cloze": 0,
+          "retrieval": 0
+        },
+        "task_runs": 1,
+        "maximum_same_task_pack_run": 1437
+      },
+      "cloze": {
+        "sha256": "abd19d82a96b6a09e787ef611540b90d929897acb06969dfa15970a539328d66",
+        "bytes": 2093266,
+        "packs": 1361,
+        "real_packs": 1361,
+        "padding_packs": 0,
+        "records": 3555,
+        "active_targets": 579906,
+        "answer_targets": 24138,
+        "compute_token_exposures": 696832,
+        "padding_targets": 116926,
+        "task_packs": {
+          "claim": 0,
+          "cloze": 1361,
+          "retrieval": 0
+        },
+        "task_runs": 1,
+        "maximum_same_task_pack_run": 1361
+      },
+      "retrieval": {
+        "sha256": "864aeb6640389a192e21deea02217bca2faa1db4d53015ea0ece2e93c9aff52b",
+        "bytes": 3111422,
+        "packs": 2023,
+        "real_packs": 2023,
+        "padding_packs": 0,
+        "records": 2023,
+        "active_targets": 1003090,
+        "answer_targets": 12138,
+        "compute_token_exposures": 1035776,
+        "padding_targets": 32686,
+        "task_packs": {
+          "claim": 0,
+          "cloze": 0,
+          "retrieval": 2023
+        },
+        "task_runs": 1,
+        "maximum_same_task_pack_run": 2023
+      }
+    },
+    "completion_validation": {
+      "claim": {
+        "sha256": "2ca43d3691db1e6292924d0a5bae249fa78d93180caf9af0ff98137a0990b71f",
+        "bytes": 1333470,
+        "records": 4561,
+        "target_tokens": 460920
+      },
+      "cloze": {
+        "sha256": "c6348fce4878ae2e64678229cf3c64196659a66f65d2676c76c2bd1b1e60b8c1",
+        "bytes": 1209606,
+        "records": 3555,
+        "target_tokens": 24138
+      },
+      "retrieval": {
+        "sha256": "619ae44357701811e5cb0af4c0fb1c95dab66747a31c9d3b44da9a3ad9383ad2",
+        "bytes": 2034526,
+        "records": 2023,
+        "target_tokens": 12138
+      }
+    }
+  },
+  "answer_spans": {
+    "train_target_tokens": 3842455,
+    "validation_target_tokens": 497196,
+    "claims": "derived from the final Supported claim field",
+    "cloze": "derived from the final Answer field",
+    "retrieval": "derived and matched to the released answerTokenSpan"
+  },
+  "test": {
+    "records": 10167,
+    "artifact_hash_verified": true,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "metrics_opened": false
+  },
+  "rights": {
+    "license": "CC-BY-SA-4.0",
+    "published_by_zero": false
+  }
+}

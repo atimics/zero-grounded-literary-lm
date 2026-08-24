@@ -1,0 +1,115 @@
+{
+  "schema": "zero.corpus_tokenizer_experiment.v1",
+  "experiment": "zero5-c0-v1",
+  "status": "complete-selected-byte-bpe512",
+  "model_line": "ZERO",
+  "purpose": "Choose the lossless tokenizer and document contract for the next dependency-free C model before authorizing full training.",
+  "implementation_boundary": {
+    "model_and_training": "C11",
+    "model_trainer": "zero5_lm.c",
+    "frozen_historical_trainer": "literary_lm.c",
+    "braid_release_reader": "C11",
+    "tokenizer_training_and_encoding": "C11",
+    "orchestration_and_contract_checks": "Node.js",
+    "python": false,
+    "pytorch": false
+  },
+  "data": {
+    "schema": "braid.release/v2",
+    "required_status": "RELEASED",
+    "artifacts": [
+      "data/train.jsonl",
+      "data/validation.jsonl",
+      "data/test.jsonl"
+    ],
+    "verify_artifact_sha256_and_bytes": true,
+    "text_field": "text",
+    "document_boundary_token": 256,
+    "external_validation_file_is_never_sampled_for_training": true,
+    "split": {
+      "method": "preserve Braid governed split artifacts",
+      "training_artifact": "data/train.jsonl",
+      "validation_artifact": "data/validation.jsonl",
+      "sealed_test_artifact": "data/test.jsonl"
+    },
+    "release_binding": "The execution result must record collection id, Braid source commit, releaseId, release digest, release.json SHA-256, and all governed JSONL artifact hashes."
+  },
+  "tokenizer_training": {
+    "training_split_only": true,
+    "maximum_training_tokens": 8000000,
+    "deterministic_pair_tie_break": "highest count, then lowest left token id, then lowest right token id",
+    "merges_may_not_cross_document_or_channel_tokens": true
+  },
+  "arms": [
+    {
+      "id": "ascii128-control",
+      "kind": "historical-normalized-ascii",
+      "vocabulary_size": 128,
+      "lossless": false,
+      "explicit_document_boundary": false,
+      "model": {
+        "context": 512,
+        "dimension": 256,
+        "heads": 8,
+        "layers": 6,
+        "feed_forward": 1056,
+        "parameters": 4852992
+      }
+    },
+    {
+      "id": "byte264",
+      "kind": "lossless-byte",
+      "vocabulary_size": 264,
+      "lossless": true,
+      "explicit_document_boundary": true,
+      "model": {
+        "context": 512,
+        "dimension": 256,
+        "heads": 8,
+        "layers": 6,
+        "feed_forward": 1045,
+        "parameters": 4854016,
+        "parameter_delta_from_control": 1024
+      }
+    },
+    {
+      "id": "byte-bpe512",
+      "kind": "lossless-byte-bpe",
+      "vocabulary_size": 512,
+      "lossless": true,
+      "explicit_document_boundary": true,
+      "model": {
+        "context": 512,
+        "dimension": 256,
+        "heads": 8,
+        "layers": 6,
+        "feed_forward": 1024,
+        "parameters": 4852992,
+        "parameter_delta_from_control": 0
+      }
+    }
+  ],
+  "mechanics_gates": {
+    "reject_non_released_braid_input": true,
+    "reject_braid_artifact_hash_mismatch": true,
+    "exact_utf8_and_control_byte_roundtrip": true,
+    "governed_document_splits_preserved": true,
+    "document_tokens_preserved_by_merges": true,
+    "c_trainer_accepts_byte264_and_byte_bpe512": true,
+    "full_repository_check": true
+  },
+  "selection_rule": {
+    "eligible_arms": ["byte264", "byte-bpe512"],
+    "primary": "lowest validation content tokens per raw UTF-8 byte",
+    "ties": [
+      "smaller vocabulary",
+      "smaller parameter delta",
+      "faster C encoding"
+    ],
+    "ascii_control_cannot_win": "It is retained to measure the cost of the old normalization contract, but it is lossy and lacks an explicit document token."
+  },
+  "training_authority": {
+    "full_model_training_authorized": false,
+    "reason": "C0 selected and bound the tokenizer. ZERO.5 model training still requires its own frozen experiment contract."
+  }
+}

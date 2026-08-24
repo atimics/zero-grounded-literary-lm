@@ -1,0 +1,127 @@
+{
+  "schema": "zero.c_continued_training_experiment.v1",
+  "experiment": "zero5-c2-v1",
+  "status": "preregistered-unrun",
+  "authorized": true,
+  "purpose": "Test whether a full ordered pass over Braid Corpus 2 Atlas produces a step change in held-out prose learning at the fixed ZERO.5 model size while retaining the C1 anchor signal.",
+  "claim_boundary": {
+    "may_claim": "A seed-0 continued-training pilot did or did not improve held-out Atlas prose while retaining the C1 anchor distribution.",
+    "may_not_claim": [
+      "three-seed replication",
+      "contamination-free factual generalization",
+      "reasoning or intelligence",
+      "production model promotion",
+      "permission to publish the dataset or checkpoint"
+    ]
+  },
+  "implementation": {
+    "trainer": "zero5_c2_lm.c",
+    "trainer_sha256": "30846886a4bcdb83b863198c2dd8ac9da6ebe9b41f515b7abf74f04777491ca4",
+    "importer": "scripts/prepare_zero5_c2.mjs",
+    "importer_sha256": "e877fbe43e03ecc9b566e0c5cd3115f91c61b12f0c36433e70af196600f00d31",
+    "runner": "scripts/run_zero5_c2.mjs",
+    "model_and_training": "C11",
+    "orchestration": "Node.js",
+    "python": false,
+    "pytorch": false
+  },
+  "input": {
+    "import_manifest": "benchmarks/zero5-c2-v1/import.json",
+    "import_manifest_sha256": "2cc42c2f0473b9b08a8708d54ecb8dd7e958576d9f5692bbfcf6b3e587f5b45d",
+    "collection_id": "braid-corpus-two-v0.1.0-fe3befe6c31c14ed9c4582101487fa9601b5b93152aab35026d32722797a2f80",
+    "braid_commit": "eaad3d9785f2c202b1c080e9675f1c7fcdb4a7ab",
+    "rights": {
+      "anchors": "CC0-1.0",
+      "atlas": "CC-BY-SA-4.0",
+      "dataset_published": false,
+      "checkpoint_publication_authorized": false
+    },
+    "stage_order": [
+      "C1 anchor checkpoint",
+      "C2 Atlas train in frozen source-document curriculum order"
+    ],
+    "tokenizer": {
+      "id": "byte-bpe512",
+      "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+      "retrained": false
+    },
+    "atlas_train": {
+      "documents": 5317,
+      "raw_bytes": 37986061,
+      "tokens": 21348611,
+      "tokens_sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79"
+    },
+    "atlas_validation": {
+      "documents": 717,
+      "raw_bytes": 5135086,
+      "tokens": 2880179,
+      "tokens_sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c"
+    },
+    "test_policy": "The 101 anchor test records and 641 Atlas test chunks remain sealed. The runner accepts no test path."
+  },
+  "initialization": {
+    "c1_result": "benchmarks/zero5-c1-v1/result.json",
+    "c1_result_sha256": "3aff6a11ef5aa13329c5246ade87d9e5e52a954b3aeb4633155f259dd2c1de3c",
+    "seed": 0,
+    "checkpoint_sha256": "551db1c441068196ee95c697477dd414fc1df267c17fa38c2f79f211092fc569",
+    "source_update": 300,
+    "optimizer": "fresh AdamW state for the Atlas stage"
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary"
+  },
+  "baselines": {
+    "atlas_validation_selection_windows": 64,
+    "atlas_validation_selection_nats_per_token": 4.9852,
+    "atlas_validation_final_windows": 128,
+    "atlas_validation_final_nats_per_token": 4.9819,
+    "atlas_validation_final_bits_per_raw_byte": 4.031264582440012,
+    "anchor_validation_windows": 19,
+    "anchor_validation_nats_per_token": 4.7048
+  },
+  "training": {
+    "seed": 0,
+    "updates": 10425,
+    "batch_sequences": 4,
+    "tokens_per_sequence": 512,
+    "token_exposures": 21350400,
+    "atlas_stream_equivalents": 1.000083799362872,
+    "sampling": "sequential ordered stream with one tail-covering window before wrap",
+    "expected_stream_wraps": 1,
+    "optimizer": "AdamW",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1.0,
+    "warmup_updates": 400,
+    "schedule": "cosine over all 10425 Atlas updates",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_windows": 64,
+    "final_atlas_validation_windows": 128,
+    "final_anchor_validation_windows": 19,
+    "selection": "lowest Atlas validation cross-entropy among fixed reports; no early stopping"
+  },
+  "gates": {
+    "full_ordered_atlas_pass": true,
+    "atlas_validation_final_nats_per_token_maximum": 4.48371,
+    "atlas_relative_improvement_minimum": 0.1,
+    "anchor_validation_nats_per_token_maximum": 5.17528,
+    "anchor_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "after_result": {
+    "replication_seeds_authorized": false,
+    "broad_model_promotion_authorized": false,
+    "checkpoint_publication_authorized": false,
+    "next_if_pass": "Preregister seeds 1 and 2 under the unchanged ordered Atlas schedule, then evaluate generation separately.",
+    "next_if_fail": "Diagnose data order, optimization, and anchor forgetting at fixed model size before adding parameters or epochs."
+  }
+}

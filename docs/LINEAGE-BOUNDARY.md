@@ -6,15 +6,31 @@ This boundary took effect on 2026-08-23.
 
 ZERO is again the active base-model research line.
 
-- literary_lm.c owns float32 training, backward propagation, AdamW, and
-  checkpoints in dependency-free C11.
+- literary_lm.c remains the hash-pinned historical float32 trainer.
+- zero5_lm.c owns active float32 training, backward propagation, AdamW,
+  lossless token inputs, and checkpoints in dependency-free C11.
 - literary_infer.c owns native and WebAssembly inference.
 - export_literary.c writes row-wise int8 matrix weights.
 - The deployed .litq8 format is **not integer-only**. It uses int8 matrix
   weights with floating-point row scales, normalization values, and
   activations.
-- The immediate work is small-model data, training, and runtime improvement,
-  with corpus inputs supplied through cenetex/braid.
+- ZERO.5-C0 is complete: the C path verified Braid Corpus 1 and selected
+  byte-BPE512 over byte264 at matched model size.
+- ZERO.5-C1 is complete: three from-scratch C seeds learned a stable validation
+  signal, and seed 0 reproduced byte for byte. Generation remained incoherent.
+- ZERO.5-C2 is complete: one ordered Atlas pass at the same 4.85M parameters
+  reduced held-out Atlas loss by 54.26% and improved the C1 anchor distribution.
+- ZERO.5-C3 is complete with a no-go: combined task loss improved 39.13%, but
+  claim and cloze answer gates failed and retrieval A/B accuracy was 52.05%.
+- ZERO.5-C3.1 is complete with a no-go under its conjunctive gate. Smooth
+  interleaving improved combined validation loss by 41.75% and fixed the cloze
+  regression. Four-times answer weighting retained that gain, improved
+  retrieval answer loss by 95.97%, and reached 54.77% retrieval choice, but
+  claim improvement reached only 7.28%.
+- The immediate work is a Braid data-definition repair: condition claims on
+  exact evidence with short verifiable targets, pair both passage orders for
+  retrieval, and balance answer loss by task. No further training is currently
+  authorized.
 
 PyTorch is not part of the active ZERO engine.
 

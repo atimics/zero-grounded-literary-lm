@@ -1,0 +1,113 @@
+{
+  "schema": "sero.arithmetic_continuation_eval_contract.v1",
+  "experiment": "sero20m-arithmetic-continuation-v1",
+  "status": "frozen-post-training-diagnostic",
+  "purpose": "Measure whether arithmetic claims inside completion text are true, without treating the model as an assistant or scoring whether it answered a prompt.",
+  "model_order": ["sero-6m-consolidated", "sero-20m-staged"],
+  "checkpoints": {
+    "sero-6m-consolidated": {
+      "seed": 0,
+      "parameters": 6018176,
+      "sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7"
+    },
+    "sero-20m-staged": {
+      "seed": 0,
+      "parameters": 20011136,
+      "sha256": "2c611acc82c043609ca9ed6c9c1eeb155f19e66fd8ba5bac183f125b9b3fdeac"
+    }
+  },
+  "tokenizer_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+  "prompt_boundary_policy": {
+    "scored_region": "generated continuation bytes only",
+    "prompt_equations_scored": false,
+    "boundary_crossing_equations_scored": false,
+    "expected_answer": null,
+    "relevance_to_prefix_scored": false,
+    "reason": "A base completion model continues documents. It does not have an assistant response boundary or an obligation to answer a question."
+  },
+  "generation": {
+    "new_tokens": 96,
+    "stop_token_id": 188,
+    "paired_randomness_across_models": true,
+    "prompts": [
+      {
+        "id": "notes-open",
+        "category": "digit-free-prefix",
+        "text": "Arithmetic notes:\n"
+      },
+      {
+        "id": "checks-open",
+        "category": "digit-free-prefix",
+        "text": "The calculations below can be checked directly:\n"
+      },
+      {
+        "id": "examples-open",
+        "category": "digit-free-prefix",
+        "text": "Worked examples:\n"
+      },
+      {
+        "id": "derivation-open",
+        "category": "digit-free-prefix",
+        "text": "A numerical derivation follows:\n"
+      },
+      {
+        "id": "addition-demo",
+        "category": "equation-demonstration-prefix",
+        "text": "Arithmetic facts:\n2 + 3 = 5\n4 + 7 = 11\n"
+      },
+      {
+        "id": "subtraction-demo",
+        "category": "equation-demonstration-prefix",
+        "text": "Subtraction examples:\n9 - 4 = 5\n15 - 7 = 8\n"
+      },
+      {
+        "id": "multiplication-demo",
+        "category": "equation-demonstration-prefix",
+        "text": "Multiplication examples:\n3 x 4 = 12\n6 x 5 = 30\n"
+      },
+      {
+        "id": "mixed-demo",
+        "category": "equation-demonstration-prefix",
+        "text": "Worked calculations:\n8 x 3 = 24\n19 - 6 = 13\n"
+      }
+    ],
+    "decoders": [
+      {
+        "id": "greedy",
+        "temperature": null,
+        "top_p": null,
+        "repetition_penalty": 1.0,
+        "repeats": 1
+      },
+      {
+        "id": "sample-t08-p90-r11",
+        "temperature": 0.8,
+        "top_p": 0.9,
+        "repetition_penalty": 1.1,
+        "repeats": 4
+      }
+    ]
+  },
+  "scoring": {
+    "accepted_number_forms": "signed integers and finite decimals, with optional thousands commas",
+    "accepted_operators": ["+", "-", "−", "*", "x", "X", "×", "/", "÷"],
+    "accepted_relations": ["=", "≈"],
+    "exact_relation_uses_rational_arithmetic": true,
+    "approximate_relation_tolerance": 0.000001,
+    "primary_metrics": [
+      "arithmetic_continuation_rate",
+      "equations_per_1000_generated_tokens",
+      "equation_truth_precision",
+      "all_equations_true_rate_among_arithmetic_continuations"
+    ],
+    "binding_diagnostic": "fraction of false equations repairable by one operand swap, operator replacement, or number replacement using only numbers generated in the same continuation",
+    "interpretation": "Truth precision must be read together with arithmetic yield. The binding diagnostic is not arithmetic credit."
+  },
+  "claims_not_supported": [
+    "question-answer accuracy",
+    "word-problem accuracy",
+    "general mathematical reasoning",
+    "natural-language arithmetic fact checking",
+    "causal proof of emergence"
+  ]
+}

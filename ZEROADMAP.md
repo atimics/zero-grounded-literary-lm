@@ -13,7 +13,7 @@ The active faculty-training decision is tracked in `PROPOSALS.md`, with the
 completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 `ZERO4-BACKLOG.md` is subordinate engineering work.
 
-## State of the system — 2026-08-23
+## State of the system — 2026-08-24
 
 | Layer | Concrete artifact | State |
 | --- | --- | --- |
@@ -32,6 +32,12 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Language-preserving quantity repair | Q2.7 top-FFN and Q2.8 fixed graded-plasticity interventions from immutable ZERO.3 | both resolved no-go; no follow-up training authorized |
 | Dialogue training ablation | fixed contract for A/B/C/D candidates | specified, not trained |
 | Hidden human channel evaluation | consented, channel-level split | not yet collected |
+| Braid-to-C corpus contract | verified release, governed split preservation, lossless byte streams | Corpus 1 verified and evaluated |
+| Lossless C tokenizer | byte264 and parameter-matched byte-BPE512 | C0 complete; byte-BPE512 selected at 57.07% fewer validation content tokens |
+| Native C training proof | three seeds plus exact determinism repeat | C1 passed at 2.9707 mean validation bits/raw byte; generation still incoherent |
+| Atlas corpus scale | one ordered C2 pass at fixed 4.85M parameters | C2 passed; Atlas validation loss fell 54.26% and C1 anchors improved |
+| Evidence-task curriculum | claims, cloze, retrieval with answer-only gates | C3 no-go; combined loss improved 39.13%, but cloze regressed and retrieval choice stayed at 52.05% |
+| Record-safe task braid | same C3.1 packs under blocked order, smooth interleaving, and 4x answer loss | C3.1 no-go; interleaving improved combined loss 41.75% and fixed cloze, while the best retrieval choice reached 54.77% and claim gain reached 7.28% |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -68,6 +74,17 @@ improve the small C model, its corpus, its training loop, and its native/WASM
 runtime before increasing parameter count. The .litq8 deployment uses int8
 matrix weights with floating-point scales and activations; it is quantized, not
 integer-only.
+
+ZERO.5-C0 through C3.1 are complete. `zero5_lm.c` is separated from the
+hash-pinned historical `literary_lm.c`. C2 proved that corpus scale produces a
+large gain in the unchanged 4.85M model. C3 showed that easy whole-record loss
+can hide weak answers and that solid task blocks cause interference. C3.1 then
+showed that a smooth braid fixes the cloze regression and improves combined
+loss by more than 40%; explicit answer weight raised retrieval choice to
+54.77%, five correct choices short of the frozen gate. The next gate is a Braid
+data-definition repair at the same model size: evidence-grounded short claim
+targets, passage-order-paired retrieval, and task-balanced answer loss. No
+C3.2 training or parameter-scale run is authorized yet.
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.

@@ -1,0 +1,220 @@
+{
+  "schema": "zero.c_continued_training_result.v1",
+  "experiment": "zero5-c2-v1",
+  "status": "complete",
+  "contract_sha256": "f1dd47396dc1e659234ce02040ae870d5eee10c699f6789fb76bf667ead684c3",
+  "implementation": {
+    "trainer_sha256": "30846886a4bcdb83b863198c2dd8ac9da6ebe9b41f515b7abf74f04777491ca4",
+    "runner_sha256": "16fbc1589a6cf555754b38bbd29ebfda90f7711e1a209d3970213538a60d3801"
+  },
+  "input": {
+    "import_manifest_sha256": "2cc42c2f0473b9b08a8708d54ecb8dd7e958576d9f5692bbfcf6b3e587f5b45d",
+    "initial_checkpoint_sha256": "551db1c441068196ee95c697477dd414fc1df267c17fa38c2f79f211092fc569"
+  },
+  "model": {
+    "backend": "Accelerate",
+    "positions": "rotary",
+    "parameters": 4852992
+  },
+  "baselines": {
+    "atlas_selection_nats_per_token": 4.9852,
+    "atlas_final_nats_per_token": 4.9819,
+    "anchor_nats_per_token": 4.7048
+  },
+  "training": {
+    "seed": 0,
+    "completed_updates": 10425,
+    "ordered_windows": 41700,
+    "token_exposures": 21350400,
+    "ordered_stream_wraps": 1,
+    "best_report_update": 10425,
+    "reports": [
+      {
+        "update": 500,
+        "train_nats_per_token": 4.3337,
+        "atlas_validation_nats_per_token": 3.9635,
+        "gradient_norm": 1.413,
+        "learning_rate": 0.000299926
+      },
+      {
+        "update": 1000,
+        "train_nats_per_token": 3.4819,
+        "atlas_validation_nats_per_token": 3.3745,
+        "gradient_norm": 1.206,
+        "learning_rate": 0.000297356
+      },
+      {
+        "update": 1500,
+        "train_nats_per_token": 3.0296,
+        "atlas_validation_nats_per_token": 3.1051,
+        "gradient_norm": 1.124,
+        "learning_rate": 0.000291176
+      },
+      {
+        "update": 2000,
+        "train_nats_per_token": 2.8073,
+        "atlas_validation_nats_per_token": 2.8868,
+        "gradient_norm": 1.122,
+        "learning_rate": 0.000281536
+      },
+      {
+        "update": 2500,
+        "train_nats_per_token": 2.6918,
+        "atlas_validation_nats_per_token": 2.7889,
+        "gradient_norm": 1.241,
+        "learning_rate": 0.000268674
+      },
+      {
+        "update": 3000,
+        "train_nats_per_token": 2.622,
+        "atlas_validation_nats_per_token": 2.7426,
+        "gradient_norm": 1.01,
+        "learning_rate": 0.000252905
+      },
+      {
+        "update": 3500,
+        "train_nats_per_token": 2.571,
+        "atlas_validation_nats_per_token": 2.6422,
+        "gradient_norm": 1.183,
+        "learning_rate": 0.000234614
+      },
+      {
+        "update": 4000,
+        "train_nats_per_token": 2.5066,
+        "atlas_validation_nats_per_token": 2.6161,
+        "gradient_norm": 1.289,
+        "learning_rate": 0.000214249
+      },
+      {
+        "update": 4500,
+        "train_nats_per_token": 2.4496,
+        "atlas_validation_nats_per_token": 2.5746,
+        "gradient_norm": 0.892,
+        "learning_rate": 0.000192311
+      },
+      {
+        "update": 5000,
+        "train_nats_per_token": 2.429,
+        "atlas_validation_nats_per_token": 2.5171,
+        "gradient_norm": 1.145,
+        "learning_rate": 0.000169336
+      },
+      {
+        "update": 5500,
+        "train_nats_per_token": 2.3991,
+        "atlas_validation_nats_per_token": 2.5254,
+        "gradient_norm": 1.005,
+        "learning_rate": 0.000145887
+      },
+      {
+        "update": 6000,
+        "train_nats_per_token": 2.4081,
+        "atlas_validation_nats_per_token": 2.4621,
+        "gradient_norm": 0.943,
+        "learning_rate": 0.00012254
+      },
+      {
+        "update": 6500,
+        "train_nats_per_token": 2.3761,
+        "atlas_validation_nats_per_token": 2.4428,
+        "gradient_norm": 1.146,
+        "learning_rate": 0.0000998644
+      },
+      {
+        "update": 7000,
+        "train_nats_per_token": 2.3191,
+        "atlas_validation_nats_per_token": 2.4266,
+        "gradient_norm": 1.152,
+        "learning_rate": 0.0000784176
+      },
+      {
+        "update": 7500,
+        "train_nats_per_token": 2.2982,
+        "atlas_validation_nats_per_token": 2.3856,
+        "gradient_norm": 0.959,
+        "learning_rate": 0.0000587246
+      },
+      {
+        "update": 8000,
+        "train_nats_per_token": 2.2959,
+        "atlas_validation_nats_per_token": 2.3637,
+        "gradient_norm": 1.343,
+        "learning_rate": 0.000041268
+      },
+      {
+        "update": 8500,
+        "train_nats_per_token": 2.3133,
+        "atlas_validation_nats_per_token": 2.3469,
+        "gradient_norm": 1.46,
+        "learning_rate": 0.0000264754
+      },
+      {
+        "update": 9000,
+        "train_nats_per_token": 2.3647,
+        "atlas_validation_nats_per_token": 2.3323,
+        "gradient_norm": 1.234,
+        "learning_rate": 0.0000147093
+      },
+      {
+        "update": 9500,
+        "train_nats_per_token": 2.3942,
+        "atlas_validation_nats_per_token": 2.323,
+        "gradient_norm": 0.994,
+        "learning_rate": 0.00000625795
+      },
+      {
+        "update": 10000,
+        "train_nats_per_token": 2.4285,
+        "atlas_validation_nats_per_token": 2.317,
+        "gradient_norm": 1.265,
+        "learning_rate": 0.0000013284
+      },
+      {
+        "update": 10425,
+        "train_nats_per_token": 2.3646,
+        "atlas_validation_nats_per_token": 2.3161,
+        "gradient_norm": 0.975,
+        "learning_rate": 0
+      }
+    ]
+  },
+  "validation": {
+    "atlas_selection_nats_per_token": 2.3161,
+    "atlas_final_nats_per_token": 2.2786,
+    "atlas_bits_per_raw_byte": 1.8438024604162688,
+    "atlas_relative_improvement": 0.5426242999658766,
+    "anchor_nats_per_token": 3.6942,
+    "anchor_relative_regression": -0.21480190443802072
+  },
+  "checkpoint": {
+    "sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "bytes": 58236384
+  },
+  "test": {
+    "anchor_records": 101,
+    "atlas_records": 641,
+    "metrics_opened": false
+  },
+  "rights": {
+    "atlas_license": "CC-BY-SA-4.0",
+    "dataset_published": false,
+    "checkpoint_published": false,
+    "publication_review_required": true
+  },
+  "gates": {
+    "full_ordered_atlas_pass": true,
+    "atlas_validation_final_nats_per_token": true,
+    "atlas_relative_improvement": true,
+    "anchor_validation_nats_per_token": true,
+    "anchor_relative_regression": true,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "decision": {
+    "all_gates_pass": true,
+    "outcome": "pass-c2-pilot",
+    "replication_seeds_authorized": false,
+    "broad_model_promotion_authorized": false,
+    "checkpoint_publication_authorized": false
+  }
+}
