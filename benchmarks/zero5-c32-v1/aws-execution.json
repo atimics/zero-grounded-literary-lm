@@ -21,6 +21,7 @@
     "byte_exact_resume_test_required": true,
     "automatic_instance_shutdown": true,
     "private_s3_checkpointing": true,
+    "provenance_bound_baseline_cache": true,
     "dashboard_telemetry": true,
     "spot_instances": false,
     "gpu": false

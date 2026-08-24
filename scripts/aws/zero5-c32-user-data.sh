@@ -21,6 +21,8 @@ SOURCE_KEY=$(tag SourceKey)
 SOURCE_SHA256=$(tag SourceSha256)
 ASSET_KEY=$(tag AssetKey)
 ASSET_SHA256=$(tag AssetSha256)
+BASELINE_CACHE_KEY=$(tag BaselineCacheKey)
+BASELINE_CACHE_SHA256=$(tag BaselineCacheSha256)
 TRAINING_BUCKET=$(tag TrainingBucket)
 DATASET_DIGEST=$(tag DatasetDigest)
 CONTRACT_SHA256=$(tag ContractSha256)
@@ -55,6 +57,14 @@ test "$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v1
 [[ "$ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$LAUNCH_EPOCH" =~ ^[0-9]+$ ]]
+if [ "$BASELINE_CACHE_KEY" = none ] || \
+    [ "$BASELINE_CACHE_SHA256" = none ]; then
+  test "$BASELINE_CACHE_KEY" = none
+  test "$BASELINE_CACHE_SHA256" = none
+else
+  [[ "$BASELINE_CACHE_KEY" =~ ^experiments/zero5-c32-v1/baselines/[a-z0-9-]+\.json$ ]]
+  [[ "$BASELINE_CACHE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+fi
 
 remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s)))
 test "$remaining" -gt 0
@@ -168,6 +178,15 @@ OUT=build/zero5-c32-aws-v1/run
 install -d -m 0755 "$(dirname "$OUT")"
 aws s3 sync "s3://${TRAINING_BUCKET}/${STATE_PREFIX}/" "$OUT/" \
   --only-show-errors || true
+if [ "$BASELINE_CACHE_KEY" != none ]; then
+  aws s3 cp "s3://${TRAINING_BUCKET}/${BASELINE_CACHE_KEY}" \
+    /tmp/zero5-c32-baseline-cache.json --only-show-errors
+  test "$(sha256sum /tmp/zero5-c32-baseline-cache.json | awk '{print $1}')" = \
+    "$BASELINE_CACHE_SHA256"
+  node scripts/zero5_c32_baseline_cache.mjs --mode install \
+    --input /tmp/zero5-c32-baseline-cache.json \
+    --output "$OUT/baseline.json" --backend openblas
+fi
 
 START_EVENT_EXISTS=0
 START_MARKER_STAGED=0

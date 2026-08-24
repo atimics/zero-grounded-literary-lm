@@ -6,6 +6,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  createCacheObject, validateBaseline, verifyCacheObject,
+} from "./zero5_c32_baseline_cache.mjs";
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -79,10 +82,12 @@ const resultPath = "benchmarks/zero5-c32-v1/result.json";
 const awsExecutionPath = "benchmarks/zero5-c32-v1/aws-execution.json";
 const localPartialPath = "benchmarks/zero5-c32-v1/local-partial-run.json";
 const awsScripts = [
+  "scripts/aws/zero5-c32-publish-baseline-cache.sh",
   "scripts/aws/zero5-c32-run-instance.sh",
   "scripts/aws/zero5-c32-stage.sh",
   "scripts/aws/zero5-c32-user-data.sh",
 ];
+const baselineCacheScript = "scripts/zero5_c32_baseline_cache.mjs";
 const contractBytes = fs.readFileSync(contractPath);
 const contract = JSON.parse(contractBytes);
 const importBytes = fs.readFileSync(importPath);
@@ -132,6 +137,60 @@ assert.deepEqual(contract.arms.C.answer_weights,
   { claim: 1, cloze: 1, retrieval: 1 });
 assert.deepEqual(contract.arms.D.answer_weights, imported.answer_weights.D);
 
+const baselineFixture = {
+  combined_selection_nats_per_token:
+    contract.baselines.combined_selection_nats_per_token,
+  combined_final_nats_per_token:
+    contract.baselines.combined_final_nats_per_token,
+  members: Object.fromEntries(["claim", "cloze", "retrieval"].map(task =>
+    [task, contract.baselines.members[task].nats_per_token])),
+  completion: Object.fromEntries(["claim", "cloze", "retrieval"].map(task =>
+    [task, {
+      schema: "zero.c3_completion_eval.v1",
+      records: imported.outputs.completion_validation[task].records,
+      target_tokens: imported.outputs.completion_validation[task].target_tokens,
+      ...contract.baselines.completion[task],
+    }])),
+  paired: Object.fromEntries(["claim", "retrieval"].map(task =>
+    [task, {
+      schema: "zero.c32_paired_choice_eval.v1",
+      pairs: imported.outputs.paired_validation[task].pairs,
+      records: imported.outputs.paired_validation[task].records,
+      target_tokens: imported.outputs.paired_validation[task].target_tokens,
+      nats_per_target_token: 1,
+      top1_token_accuracy: 0.5,
+      teacher_forced_exact_accuracy: 0,
+      ...contract.baselines.paired[task],
+    }])),
+  atlas_nats_per_token: contract.baselines.atlas_nats_per_token,
+  anchor_nats_per_token: contract.baselines.anchor_nats_per_token,
+};
+validateBaseline(baselineFixture, contract, imported);
+const bindingFixture = {
+  schema: "zero.c32_baseline_binding.v1",
+  experiment: contract.experiment,
+  contract_sha256: sha256(contractBytes),
+  backend: "openblas",
+  implementation: { trainer: { sha256: "1".repeat(64), bytes: 1 } },
+  import_manifest_sha256: sha256(importBytes),
+  evaluation_sha256: "2".repeat(64),
+  artifacts: { tokenizer: { sha256: contract.input.tokenizer_sha256,
+    bytes: 1016 } },
+};
+const cacheFixture = createCacheObject({ baseline: baselineFixture,
+  binding: bindingFixture, sourceRunId: "unit-test-run" });
+const cacheReceipt = verifyCacheObject(cacheFixture, bindingFixture, contract,
+  imported);
+assert.match(cacheReceipt.cache_id, /^[0-9a-f]{64}$/);
+const tamperedCache = structuredClone(cacheFixture);
+tamperedCache.baseline.completion.claim.nats_per_target_token += 1;
+assert.throws(() => verifyCacheObject(tamperedCache, bindingFixture, contract,
+  imported), /baseline payload hash changed/);
+const wrongBinding = structuredClone(bindingFixture);
+wrongBinding.backend = "accelerate";
+assert.throws(() => verifyCacheObject(cacheFixture, wrongBinding, contract,
+  imported), /baseline cache binding does not match/);
+
 const awsExecution = JSON.parse(fs.readFileSync(awsExecutionPath));
 assert.equal(awsExecution.schema, "zero.c32_aws_execution.v1");
 assert.equal(awsExecution.status, "authorized-unrun");
@@ -144,20 +203,26 @@ assert.ok(awsExecution.maximum_instance_seconds *
     awsExecution.maximum_ec2_usd);
 assert.equal(awsExecution.controls.contract_bound_checkpoints, true);
 assert.equal(awsExecution.controls.byte_exact_resume_test_required, true);
+assert.equal(awsExecution.controls.provenance_bound_baseline_cache, true);
 for (const script of awsScripts) {
   run("bash", ["-n", script]);
   assert.ok((fs.statSync(script).mode & 0o111) !== 0,
     script + " must be executable");
 }
-const awsUserData = fs.readFileSync(awsScripts[2], "utf8");
-const awsLauncher = fs.readFileSync(awsScripts[0], "utf8");
+run("node", ["--check", baselineCacheScript]);
+const awsUserData = fs.readFileSync(
+  "scripts/aws/zero5-c32-user-data.sh", "utf8");
+const awsLauncher = fs.readFileSync(
+  "scripts/aws/zero5-c32-run-instance.sh", "utf8");
 assert.match(awsLauncher, /execution\.lock/);
 assert.match(awsLauncher, /--if-none-match '\*'/);
 assert.match(awsLauncher, /launch-\$\{launch_epoch\}\.json/);
+assert.match(awsLauncher, /BaselineCacheKey/);
 assert.match(awsUserData, /test "\$INSTANCE_TYPE" = c6i\.4xlarge/);
 assert.match(awsUserData, /export LITERARY_BACKEND=openblas/);
 assert.match(awsUserData, /--resume-run/);
 assert.match(awsUserData, /publish_zero_telemetry\.mjs/);
+assert.match(awsUserData, /zero5_c32_baseline_cache\.mjs --mode install/);
 
 const localPartial = JSON.parse(fs.readFileSync(localPartialPath));
 assert.equal(localPartial.schema, "zero.c32_local_partial_run.v1");
@@ -192,6 +257,32 @@ if (fs.existsSync(localImport)) {
   };
   for (const [file, expected] of Object.entries(paths)) {
     assert.equal(sha256(fs.readFileSync(path.join(localImport, file))), expected);
+  }
+  const cacheCheck = fs.mkdtempSync(path.join(os.tmpdir(),
+    "zero5-c32-cache-check-"));
+  try {
+    const source = path.join(cacheCheck, "baseline.json");
+    const cache = path.join(cacheCheck, "cache.json");
+    const installed = path.join(cacheCheck, "installed.json");
+    fs.writeFileSync(source, JSON.stringify({
+      schema: "zero.c32_baseline_cache.v1",
+      contract_sha256: sha256(contractBytes),
+      baseline: baselineFixture,
+    }, null, 2) + "\n");
+    const created = JSON.parse(run("node", [baselineCacheScript,
+      "--mode", "create", "--input", source, "--output", cache,
+      "--backend", "openblas", "--source-run-id", "cache-check-run"]));
+    assert.equal(created.schema, "zero.c32_baseline_cache_receipt.v1");
+    fs.copyFileSync(source, installed);
+    const verified = JSON.parse(run("node", [baselineCacheScript,
+      "--mode", "install", "--input", cache, "--output", installed,
+      "--backend", "openblas"]));
+    assert.equal(verified.cache_id, created.cache_id);
+    assert.equal(verified.installed, true);
+    assert.equal(JSON.parse(fs.readFileSync(installed)).provenance.cache_id,
+      created.cache_id);
+  } finally {
+    fs.rmSync(cacheCheck, { recursive: true, force: true });
   }
 }
 
