@@ -150,6 +150,10 @@ for (const script of awsScripts) {
     script + " must be executable");
 }
 const awsUserData = fs.readFileSync(awsScripts[2], "utf8");
+const awsLauncher = fs.readFileSync(awsScripts[0], "utf8");
+assert.match(awsLauncher, /execution\.lock/);
+assert.match(awsLauncher, /--if-none-match '\*'/);
+assert.match(awsLauncher, /launch-\$\{launch_epoch\}\.json/);
 assert.match(awsUserData, /test "\$INSTANCE_TYPE" = c6i\.4xlarge/);
 assert.match(awsUserData, /export LITERARY_BACKEND=openblas/);
 assert.match(awsUserData, /--resume-run/);
