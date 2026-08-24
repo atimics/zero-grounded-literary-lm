@@ -28,6 +28,7 @@ AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
 MAX_COMPUTE_USD=$(tag MaxComputeUsd)
+PRIOR_COMPUTE_USD=$(tag PriorComputeUsd)
 HOURLY_PRICE=$(tag HourlyPrice)
 APPROVAL_ID=$(tag ApprovalId)
 INSTANCE_ID=$(metadata instance-id)
@@ -42,8 +43,10 @@ export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$DATASET_DIGEST" = 4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d
-test "$MAX_INSTANCE_SECONDS" = 9000
+test "$MAX_INSTANCE_SECONDS" -le 9000
+test "$MAX_INSTANCE_SECONDS" -gt 0
 test "$MAX_COMPUTE_USD" = 1.70
+awk -v prior="$PRIOR_COMPUTE_USD" 'BEGIN { exit !(prior >= 0 && prior < 1.70) }'
 test "$HOURLY_PRICE" = 0.68
 test "$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v1
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
@@ -60,7 +63,8 @@ test "$remaining" -gt 0
 elapsed_seconds() { printf '%s\n' "$(($(date +%s) - LAUNCH_EPOCH))"; }
 estimated_cost() {
   awk -v seconds="$1" -v price="$HOURLY_PRICE" \
-    'BEGIN { printf "%.12f", seconds * price / 3600 }'
+    -v prior="$PRIOR_COMPUTE_USD" \
+    'BEGIN { printf "%.12f", prior + seconds * price / 3600 }'
 }
 write_status() {
   status=$1
@@ -165,6 +169,16 @@ install -d -m 0755 "$(dirname "$OUT")"
 aws s3 sync "s3://${TRAINING_BUCKET}/${STATE_PREFIX}/" "$OUT/" \
   --only-show-errors || true
 
+START_EVENT_EXISTS=0
+START_MARKER_STAGED=0
+if [ -f "$OUT/telemetry-started" ]; then
+  START_EVENT_EXISTS=1
+  if [ ! -f "$OUT/execution.json" ]; then
+    mv "$OUT/telemetry-started" /tmp/zero5-c32-telemetry-started
+    START_MARKER_STAGED=1
+  fi
+fi
+
 publish_event() {
   sequence=$1
   kind=$2
@@ -176,15 +190,12 @@ publish_event() {
     --bucket "$TRAINING_BUCKET" --region "$AWS_DEFAULT_REGION" || true
 }
 
-if [ ! -f "$OUT/telemetry-started" ]; then
+if [ "$START_EVENT_EXISTS" -eq 0 ]; then
   jq -n --arg experiment zero5-c32-v1 \
     --arg note "Clean AWS/OpenBLAS C3.2 C/D run started." \
     '{status:"running",experiment:$experiment,seed:0,note:$note}' \
     > /tmp/zero5-c32-start.json
   publish_event 0 run.started /tmp/zero5-c32-start.json
-  NEED_START_MARKER=1
-else
-  NEED_START_MARKER=0
 fi
 
 sync_state() {
@@ -239,13 +250,17 @@ set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
   node scripts/run_zero5_c32.mjs "${runner_args[@]}" &
 RUNNER_PID=$!
-if [ "$NEED_START_MARKER" -eq 1 ]; then
-  for _ in 1 2 3 4 5; do
-    test -d "$OUT" && break
+if [ ! -f "$OUT/telemetry-started" ]; then
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    test -f "$OUT/execution.json" && break
     sleep 1
   done
-  test -d "$OUT"
-  touch "$OUT/telemetry-started"
+  test -f "$OUT/execution.json"
+  if [ "$START_MARKER_STAGED" -eq 1 ]; then
+    mv /tmp/zero5-c32-telemetry-started "$OUT/telemetry-started"
+  else
+    touch "$OUT/telemetry-started"
+  fi
 fi
 monitor &
 MONITOR_PID=$!

@@ -11,9 +11,9 @@ done
 
 action=${1:-}
 test "$action" = dry-run || test "$action" = launch || test "$action" = resume
-max_seconds=9000
 max_usd=1.70
 hourly_price=0.68
+prior_compute_usd=0
 
 test "$ZERO5_REGION" = us-east-1
 test "$ZERO5_APPROVAL_ID" = zero5-c32-aws-2026-08-24-v1
@@ -27,6 +27,7 @@ test "$ZERO5_APPROVAL_ID" = zero5-c32-aws-2026-08-24-v1
 launch_epoch=$(date +%s)
 lock_key=experiments/zero5-c32-v1/execution.lock
 if [ "$action" = launch ]; then
+  max_seconds=9000
   lock_file=$(mktemp)
   jq -n --arg run_id "$ZERO5_RUN_ID" \
     --arg source_commit "$ZERO5_SOURCE_COMMIT" \
@@ -49,8 +50,19 @@ elif [ "$action" = resume ]; then
   test "$(jq -r .schema "$lock_file")" = zero.c32_aws_execution_lock.v1
   test "$(jq -r .run_id "$lock_file")" = "$ZERO5_RUN_ID"
   test "$(jq -r .contract_sha256 "$lock_file")" = "$ZERO5_CONTRACT_SHA256"
+  prior_status=$(mktemp)
+  aws s3 cp \
+    "s3://${ZERO5_TRAINING_BUCKET}/experiments/zero5-c32-v1/${ZERO5_RUN_ID}/status.json" \
+    "$prior_status" --region "$ZERO5_REGION" --only-show-errors
+  test "$(jq -r .status "$prior_status")" = recoverable
+  prior_compute_usd=$(jq -r .estimated_ec2_usd "$prior_status")
+  max_seconds=$(awk -v ceiling="$max_usd" -v prior="$prior_compute_usd" \
+    -v price="$hourly_price" \
+    'BEGIN { value=int((ceiling-prior)*3600/price); if (value < 1) exit 1; print value }')
+else
+  max_seconds=9000
 fi
-tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero5-c32},{Key=Experiment,Value=zero5-c32-v1},{Key=Commit,Value=${ZERO5_SOURCE_COMMIT}},{Key=RunId,Value=${ZERO5_RUN_ID}},{Key=SourceKey,Value=${ZERO5_SOURCE_KEY}},{Key=SourceSha256,Value=${ZERO5_SOURCE_SHA256}},{Key=AssetKey,Value=${ZERO5_ASSET_KEY}},{Key=AssetSha256,Value=${ZERO5_ASSET_SHA256}},{Key=TrainingBucket,Value=${ZERO5_TRAINING_BUCKET}},{Key=DatasetDigest,Value=4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d},{Key=ContractSha256,Value=${ZERO5_CONTRACT_SHA256}},{Key=Region,Value=${ZERO5_REGION}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${max_seconds}},{Key=MaxComputeUsd,Value=${max_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${ZERO5_APPROVAL_ID}}]"
+tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero5-c32},{Key=Experiment,Value=zero5-c32-v1},{Key=Commit,Value=${ZERO5_SOURCE_COMMIT}},{Key=RunId,Value=${ZERO5_RUN_ID}},{Key=SourceKey,Value=${ZERO5_SOURCE_KEY}},{Key=SourceSha256,Value=${ZERO5_SOURCE_SHA256}},{Key=AssetKey,Value=${ZERO5_ASSET_KEY}},{Key=AssetSha256,Value=${ZERO5_ASSET_SHA256}},{Key=TrainingBucket,Value=${ZERO5_TRAINING_BUCKET}},{Key=DatasetDigest,Value=4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d},{Key=ContractSha256,Value=${ZERO5_CONTRACT_SHA256}},{Key=Region,Value=${ZERO5_REGION}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${max_seconds}},{Key=MaxComputeUsd,Value=${max_usd}},{Key=PriorComputeUsd,Value=${prior_compute_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${ZERO5_APPROVAL_ID}}]"
 
 request=(ec2 run-instances
   --region "$ZERO5_REGION"
