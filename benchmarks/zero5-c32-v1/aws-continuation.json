@@ -3,7 +3,7 @@
   "experiment": "zero5-c32-v1",
   "status": "authorized",
   "scientific_change": false,
-  "purpose": "Resume the frozen C3.2 C-then-D run with the byte-identical fastest verified OpenBLAS thread count.",
+  "purpose": "Finish the frozen C3.2 C-then-D run with the byte-identical fastest verified OpenBLAS thread count.",
   "parent": {
     "run_id": "zero5-c32-aws-20260824-44d34a7",
     "scientific_contract_sha256": "f47f9283ee8a111bb816079803824bee77de930eac9e4ef5ecdbb8733dd01b7e",
@@ -37,18 +37,34 @@
     "on_demand_usd_per_hour": 0.68
   },
   "budget": {
-    "maximum_total_c32_ec2_usd": 5.42,
-    "maximum_additional_ec2_usd": 3.754,
+    "maximum_total_c32_ec2_usd": 6.75,
+    "maximum_additional_ec2_usd": 5.084,
     "maximum_segment_seconds": 9000,
     "maximum_segment_ec2_usd": 1.7,
     "automatic_shutdown": true,
     "recoverable_segments": true
   },
+  "budget_amendment": {
+    "status": "authorized",
+    "scientific_change": false,
+    "reason": "The original execution ceiling ended safely before Arm D and its frozen evaluation could complete.",
+    "resume_from": {
+      "active_arm": "D",
+      "completed_update": 5000,
+      "active_checkpoint_sha256": "3049f548984576b2c617201b01336adb89b9915508d63edfa3240660deb2b776",
+      "prior_ec2_usd": 4.998188888889
+    },
+    "previous_maximum_total_c32_ec2_usd": 5.42,
+    "maximum_total_c32_ec2_usd": 6.75,
+    "maximum_increment_ec2_usd": 1.33,
+    "approved_on": "2026-08-25",
+    "approval_id": "zero5-c32-aws-2026-08-25-v3"
+  },
   "implementation": {
     "user_data": "scripts/aws/zero5-c32-user-data.sh",
-    "user_data_sha256": "1157f39d9228fb993560bb0985a5c9bd7cd47b4aeacf8c9c44f553b4af6bf5b2",
+    "user_data_sha256": "6e606c1771a9cd924516f9f23ad44ae09c7621c5bf65c4324e40ed6f4c5eb8e3",
     "launcher": "scripts/aws/zero5-c32-run-instance.sh",
-    "launcher_sha256": "e6cb424cec54b36a54a312ead378c1dd6cb1bbad65cea94672b8ee83a6a4e271",
+    "launcher_sha256": "48a94120152c796bfcffae52bbf4754aec559b04243dfad4fd888388857f721d",
     "source_archive": "immutable archive of the commit containing this contract"
   },
   "invariants": {
@@ -62,5 +78,5 @@
     "same_arm_order": true,
     "test_metrics_opened": false
   },
-  "approval_id": "zero5-c32-aws-2026-08-24-v2"
+  "approval_id": "zero5-c32-aws-2026-08-25-v3"
 }

@@ -48,10 +48,10 @@ test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$DATASET_DIGEST" = 4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d
 test "$MAX_INSTANCE_SECONDS" -le 9000
 test "$MAX_INSTANCE_SECONDS" -gt 0
-test "$MAX_COMPUTE_USD" = 5.42
-awk -v prior="$PRIOR_COMPUTE_USD" 'BEGIN { exit !(prior >= 0 && prior < 5.42) }'
+test "$MAX_COMPUTE_USD" = 6.75
+awk -v prior="$PRIOR_COMPUTE_USD" 'BEGIN { exit !(prior >= 0 && prior < 6.75) }'
 test "$HOURLY_PRICE" = 0.68
-test "$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v2
+test "$APPROVAL_ID" = zero5-c32-aws-2026-08-25-v3
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]

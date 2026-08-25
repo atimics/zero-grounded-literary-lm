@@ -234,13 +234,33 @@ assert.ok(throughputResult.candidates.every(candidate =>
 assert.equal(awsContinuation.environment.openblas_threads, 8);
 assert.equal(awsContinuation.environment.omp_threads, 8);
 assert.equal(awsContinuation.environment.openblas_dynamic, false);
-assert.equal(awsContinuation.budget.maximum_total_c32_ec2_usd, 5.42);
+assert.equal(awsContinuation.budget.maximum_total_c32_ec2_usd, 6.75);
 assert.equal(awsContinuation.budget.maximum_additional_ec2_usd,
   awsContinuation.budget.maximum_total_c32_ec2_usd -
     awsContinuation.parent.prior_ec2_usd);
 assert.ok(awsContinuation.budget.maximum_segment_seconds *
   awsContinuation.environment.on_demand_usd_per_hour / 3600 <=
     awsContinuation.budget.maximum_segment_ec2_usd);
+assert.equal(awsContinuation.budget_amendment.status, "authorized");
+assert.equal(awsContinuation.budget_amendment.scientific_change, false);
+assert.equal(awsContinuation.budget_amendment.resume_from.active_arm, "D");
+assert.equal(awsContinuation.budget_amendment.resume_from.completed_update,
+  5000);
+assert.equal(
+  awsContinuation.budget_amendment.resume_from.active_checkpoint_sha256,
+  "3049f548984576b2c617201b01336adb89b9915508d63edfa3240660deb2b776");
+assert.equal(awsContinuation.budget_amendment.resume_from.prior_ec2_usd,
+  4.998188888889);
+assert.equal(
+  awsContinuation.budget_amendment.previous_maximum_total_c32_ec2_usd,
+  5.42);
+assert.equal(awsContinuation.budget_amendment.maximum_total_c32_ec2_usd,
+  awsContinuation.budget.maximum_total_c32_ec2_usd);
+assert.equal(awsContinuation.budget_amendment.maximum_increment_ec2_usd,
+  awsContinuation.budget.maximum_total_c32_ec2_usd -
+    awsContinuation.budget_amendment.previous_maximum_total_c32_ec2_usd);
+assert.equal(awsContinuation.budget_amendment.approval_id,
+  awsContinuation.approval_id);
 assert.equal(sha256(fs.readFileSync(
   awsContinuation.implementation.user_data)),
 awsContinuation.implementation.user_data_sha256);
@@ -266,14 +286,14 @@ assert.match(awsUserData, /export LITERARY_BACKEND=openblas/);
 assert.match(awsUserData, /export OPENBLAS_NUM_THREADS=8/);
 assert.match(awsUserData, /export OMP_NUM_THREADS=8/);
 assert.match(awsUserData, /export OPENBLAS_DYNAMIC=0/);
-assert.match(awsUserData, /test "\$MAX_COMPUTE_USD" = 5\.42/);
+assert.match(awsUserData, /test "\$MAX_COMPUTE_USD" = 6\.75/);
 assert.match(awsUserData,
-  /test "\$APPROVAL_ID" = zero5-c32-aws-2026-08-24-v2/);
+  /test "\$APPROVAL_ID" = zero5-c32-aws-2026-08-25-v3/);
 assert.match(awsUserData, /aws-continuation\.json/);
 assert.match(awsUserData, /--resume-run/);
 assert.match(awsUserData, /publish_zero_telemetry\.mjs/);
 assert.match(awsUserData, /zero5_c32_baseline_cache\.mjs --mode install/);
-assert.match(awsLauncher, /max_usd=5\.42/);
+assert.match(awsLauncher, /max_usd=6\.75/);
 assert.match(awsLauncher, /if \(value > 9000\) value=9000/);
 
 const localPartial = JSON.parse(fs.readFileSync(localPartialPath));

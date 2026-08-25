@@ -11,14 +11,14 @@ done
 
 action=${1:-}
 test "$action" = dry-run || test "$action" = resume
-max_usd=5.42
+max_usd=6.75
 hourly_price=0.68
 prior_compute_usd=0
 baseline_cache_key=${ZERO5_BASELINE_CACHE_KEY:-none}
 baseline_cache_sha256=${ZERO5_BASELINE_CACHE_SHA256:-none}
 
 test "$ZERO5_REGION" = us-east-1
-test "$ZERO5_APPROVAL_ID" = zero5-c32-aws-2026-08-24-v2
+test "$ZERO5_APPROVAL_ID" = zero5-c32-aws-2026-08-25-v3
 [[ "$ZERO5_AMI" =~ ^ami-[0-9a-f]+$ ]]
 [[ "$ZERO5_SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$ZERO5_SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
