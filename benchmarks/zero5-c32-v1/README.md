@@ -11,6 +11,11 @@ answer-token mass across tasks.
 The contract was frozen before training. The test split stays sealed. This is
 a single-seed pilot, not a broad model promotion.
 
+The run is complete. It was a no-go under the frozen paired gates. Read
+`RESULT.md` for the human report, `result.json` for the exact machine result,
+and `aws-result.json` for the AWS execution receipt. The result points to a
+small C3.3 paired-invariance screen, not a larger model.
+
 Run the preflight with `make zero5-c32-check`. Run the authorized experiment
 with `make zero5-c32-run`.
 

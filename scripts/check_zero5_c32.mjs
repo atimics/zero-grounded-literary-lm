@@ -82,6 +82,9 @@ const resultPath = "benchmarks/zero5-c32-v1/result.json";
 const awsExecutionPath = "benchmarks/zero5-c32-v1/aws-execution.json";
 const awsContinuationPath =
   "benchmarks/zero5-c32-v1/aws-continuation.json";
+const awsResultPath = "benchmarks/zero5-c32-v1/aws-result.json";
+const dashboardPayloadPath =
+  "benchmarks/zero5-c32-v1/dashboard-payload.json";
 const localPartialPath = "benchmarks/zero5-c32-v1/local-partial-run.json";
 const awsScripts = [
   "scripts/aws/zero5-c32-publish-baseline-cache.sh",
@@ -431,7 +434,10 @@ try {
 }
 
 if (fs.existsSync(resultPath)) {
-  const result = JSON.parse(fs.readFileSync(resultPath));
+  const resultBytes = fs.readFileSync(resultPath);
+  const result = JSON.parse(resultBytes);
+  assert.equal(sha256(resultBytes),
+    "e87305b52d229a71483c49a9aed09258211e118dd14b2f09855b77f89a059688");
   assert.equal(result.schema, "zero.c32_braid_result.v1");
   assert.equal(result.status, "complete");
   assert.equal(result.contract_sha256, sha256(contractBytes));
@@ -442,8 +448,39 @@ if (fs.existsSync(resultPath)) {
     assert.equal(arm.training.wraps, 0);
   }
   assert.equal(result.test.metrics_opened, false);
+  assert.deepEqual(result.decision.eligible_arms, []);
+  assert.equal(result.decision.preferred_arm, null);
+  assert.equal(result.decision.outcome, "no-go");
   assert.equal(result.decision.broad_model_promotion_authorized, false);
   assert.equal(result.decision.checkpoint_publication_authorized, false);
+  assert.ok(result.arms.D.validation.mean_paired_choice_accuracy >
+    result.arms.C.validation.mean_paired_choice_accuracy);
+  assert.ok(result.arms.D.validation.mean_pair_exact_accuracy >
+    result.arms.C.validation.mean_pair_exact_accuracy);
+  assert.equal(result.arms.D.gates.claim_position_gap, true);
+  assert.equal(result.arms.D.gates.claim_swap_consistency, false);
+  assert.equal(result.arms.D.gates.retrieval_swap_consistency, false);
+  assert.equal(result.arms.D.gates.claim_pair_exact, false);
+  assert.equal(result.arms.D.gates.retrieval_pair_exact, false);
+
+  const awsResult = JSON.parse(fs.readFileSync(awsResultPath));
+  assert.equal(awsResult.schema, "zero.c32_aws_result_receipt.v1");
+  assert.equal(awsResult.status, "complete");
+  assert.equal(awsResult.exit_code, 0);
+  assert.equal(awsResult.ec2_usd, 6.5484);
+  assert.equal(awsResult.result.sha256, sha256(resultBytes));
+  assert.equal(awsResult.scientific_contract_sha256,
+    result.contract_sha256);
+  assert.equal(awsResult.test_metrics_opened, false);
+
+  const dashboardPayload = JSON.parse(fs.readFileSync(dashboardPayloadPath));
+  assert.equal(dashboardPayload.metric_kind, "paired-invariance");
+  assert.equal(dashboardPayload.mean_choice_accuracy,
+    result.arms.D.validation.mean_paired_choice_accuracy);
+  assert.equal(dashboardPayload.mean_pair_exact_accuracy,
+    result.arms.D.validation.mean_pair_exact_accuracy);
+  assert.equal(dashboardPayload.result_sha256, sha256(resultBytes));
+  assert.equal(dashboardPayload.test_metrics_opened, false);
 }
 
 console.log(fs.existsSync(resultPath)
