@@ -150,13 +150,16 @@ assert.doesNotMatch(fs.readFileSync(contract.implementation.runner, "utf8"),
 
 const awsExecution = JSON.parse(fs.readFileSync(awsExecutionPath));
 assert.equal(awsExecution.schema, "zero.c33_aws_execution.v1");
-assert.equal(awsExecution.status, "authorized-unrun");
+assert.equal(awsExecution.status, "authorized-retry");
 assert.equal(awsExecution.scientific_contract_sha256,
   sha256(fs.readFileSync(contractPath)));
 assert.equal(awsExecution.approval_id, "zero5-c33-aws-2026-08-26-v1");
 assert.deepEqual(awsExecution.scope.arms, ["E"]);
 assert.deepEqual(awsExecution.scope.seeds, [0]);
 assert.equal(awsExecution.scope.test_metrics_opened, false);
+assert.equal(awsExecution.prior_attempt.completed_training_updates, 0);
+assert.equal(awsExecution.prior_attempt.ec2_usd,
+  contract.execution_amendment.failed_attempt_ec2_usd);
 assert.ok(awsExecution.maximum_segment_seconds *
   awsExecution.on_demand_usd_per_hour / 3600 <=
     awsExecution.maximum_segment_ec2_usd);

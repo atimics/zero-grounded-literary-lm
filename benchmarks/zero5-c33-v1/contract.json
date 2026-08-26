@@ -33,15 +33,26 @@
     "result_sha256": "e87305b52d229a71483c49a9aed09258211e118dd14b2f09855b77f89a059688",
     "reuse_reason": "C3.2 D has the same trainer, initialization, seed, records, targets, answer weights, batch size, updates, and compute. C3.3 changes only which four existing packs share an optimizer update."
   },
+  "execution_amendment": {
+    "parent_contract_sha256": "f81e01ec67bc761918c796d80837eeeb12ea3e04b14f02ab617ecf9fbda1630d",
+    "scientific_change": false,
+    "failed_run_id": "zero5-c33-aws-20260826-327bfcd",
+    "failed_instance_id": "i-02df4bc11de2c04c3",
+    "failed_attempt_ec2_usd": 0.012277777778,
+    "completed_training_updates": 0,
+    "cause": "The first-run telemetry marker made the output directory non-empty before the runner created execution.json.",
+    "correction": "Start the runner first, wait for its contract-bound execution file, then persist the telemetry marker.",
+    "budget_policy": "The failed attempt remains inside the unchanged $3.40 total ceiling."
+  },
   "execution": {
     "venue": "aws-ec2",
     "execution_contract": "benchmarks/zero5-c33-v1/aws-execution.json",
     "stage_script": "scripts/aws/zero5-c33-stage.sh",
     "stage_script_sha256": "0efcb29ac9d975c9ab86a782c73ed7d0cfd1e23cbe50b53623b8762ec86c436f",
     "launcher": "scripts/aws/zero5-c33-run-instance.sh",
-    "launcher_sha256": "babde31787e68378c87067569d055b5c91ad26244465a8e388f82456880befbd",
+    "launcher_sha256": "04d3a06727cf688daaae53ce819f80838bb2a377a696f4833e2e4f6ba6d23ae6",
     "user_data": "scripts/aws/zero5-c33-user-data.sh",
-    "user_data_sha256": "0338cdad3ae447b2a67b09ad4bc112b55218e3a07c0cde4e1604b68ef7cd9d3e",
+    "user_data_sha256": "ae1a7bfe8aa62889ef94407084a091bcf972e1c365c015e0bf8802eac8436f23",
     "backend": "openblas",
     "instance_type": "c6i.4xlarge",
     "purchase_option": "on-demand",

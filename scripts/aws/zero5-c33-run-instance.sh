@@ -13,9 +13,9 @@ action=${1:-}
 test "$action" = dry-run || test "$action" = launch || test "$action" = resume
 max_usd=3.4
 hourly_price=0.68
-prior_compute_usd=0
+prior_compute_usd=${ZERO5_PRIOR_COMPUTE_USD:-0}
 max_segment_seconds=9000
-lock_key=experiments/zero5-c33-v1/execution.lock
+lock_key=experiments/zero5-c33-v1/execution-v2.lock
 
 test "$ZERO5_REGION" = us-east-1
 test "$ZERO5_APPROVAL_ID" = zero5-c33-aws-2026-08-26-v1
@@ -25,6 +25,8 @@ test "$ZERO5_APPROVAL_ID" = zero5-c33-aws-2026-08-26-v1
 [[ "$ZERO5_ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ZERO5_CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ZERO5_RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
+awk -v prior="$prior_compute_usd" -v ceiling="$max_usd" \
+  'BEGIN { exit !(prior >= 0 && prior < ceiling) }'
 
 if [ "$action" = resume ]; then
   lock_file=$(mktemp)

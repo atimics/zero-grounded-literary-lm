@@ -1,9 +1,9 @@
 {
   "schema": "zero.c33_aws_execution.v1",
-  "status": "authorized-unrun",
+  "status": "authorized-retry",
   "experiment": "zero5-c33-v1",
   "approval_id": "zero5-c33-aws-2026-08-26-v1",
-  "scientific_contract_sha256": "f81e01ec67bc761918c796d80837eeeb12ea3e04b14f02ab617ecf9fbda1630d",
+  "scientific_contract_sha256": "f06365554a16ec0557503fe35ff6e074a0720312dd4295e3d54e1a7df6fa73d1",
   "region": "us-east-1",
   "instance_type": "c6i.4xlarge",
   "purchase_option": "on-demand",
@@ -12,7 +12,14 @@
   "maximum_segment_ec2_usd": 1.7,
   "maximum_total_instance_seconds": 18000,
   "maximum_total_ec2_usd": 3.4,
-  "segments": "Launch once, then resume only from a recoverable contract-bound checkpoint until complete or the total cap is exhausted.",
+  "prior_attempt": {
+    "run_id": "zero5-c33-aws-20260826-327bfcd",
+    "instance_id": "i-02df4bc11de2c04c3",
+    "status": "stopped-before-training",
+    "completed_training_updates": 0,
+    "ec2_usd": 0.012277777778
+  },
+  "segments": "Relaunch after the recorded zero-update bootstrap correction, then resume only from a recoverable contract-bound checkpoint until complete or the total cap is exhausted.",
   "environment": {
     "backend": "openblas",
     "openblas_threads": 8,

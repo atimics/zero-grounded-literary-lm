@@ -181,14 +181,22 @@ publish_event() {
     --bucket "$TRAINING_BUCKET" --region "$AWS_DEFAULT_REGION" || true
 }
 
+START_EVENT_EXISTS=0
+START_MARKER_STAGED=0
+if [ -f "$OUT/telemetry-started" ]; then
+  START_EVENT_EXISTS=1
+  if [ ! -f "$OUT/execution.json" ]; then
+    mv "$OUT/telemetry-started" /tmp/zero5-c33-telemetry-started
+    START_MARKER_STAGED=1
+  fi
+fi
 last_update=0
 test ! -f "$OUT/telemetry-E-update" || last_update=$(cat "$OUT/telemetry-E-update")
-if [ ! -f "$OUT/telemetry-started" ]; then
+if [ "$START_EVENT_EXISTS" -eq 0 ]; then
   jq -n '{status:"running",experiment:"zero5-c33-v1",seed:0,arm:"E",
     note:"Pair-atomic C3.3 screen started on AWS/OpenBLAS."}' \
     > /tmp/zero5-c33-event.json
   publish_event 0 run.started /tmp/zero5-c33-event.json
-  touch "$OUT/telemetry-started"
 else
   jq -n '{status:"running",experiment:"zero5-c33-v1",seed:0,arm:"E",
     note:"Pair-atomic C3.3 screen resumed from contract-bound state."}' \
@@ -241,6 +249,18 @@ set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
   node scripts/run_zero5_c33.mjs "${runner_args[@]}" &
 RUNNER_PID=$!
+if [ ! -f "$OUT/telemetry-started" ]; then
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    test -f "$OUT/execution.json" && break
+    sleep 1
+  done
+  test -f "$OUT/execution.json"
+  if [ "$START_MARKER_STAGED" -eq 1 ]; then
+    mv /tmp/zero5-c33-telemetry-started "$OUT/telemetry-started"
+  else
+    touch "$OUT/telemetry-started"
+  fi
+fi
 monitor &
 MONITOR_PID=$!
 wait "$RUNNER_PID"
