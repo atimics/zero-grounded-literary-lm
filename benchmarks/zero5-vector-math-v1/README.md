@@ -22,6 +22,14 @@ frozen reported-metric tolerances against the unmodified trainer. It does not
 require bit-identical checkpoints across variants because libmvec may round
 differently from scalar libm.
 
+Checkpoint version 6 records the exact transcendental implementation. The
+trainer prints that identity as `math-backend=...`, and
+`--require-math-backend NAME` makes a frozen run fail before training if the
+binary does not match. A training resume also fails if a version-6 checkpoint
+was written by another math backend. Version-5 and older checkpoints remain
+readable, but a strict math-bound run cannot resume them because they do not
+contain this identity. Loading their weights with `--init` remains supported.
+
 Verify mechanics with:
 
 ```sh

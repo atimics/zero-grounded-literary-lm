@@ -103,10 +103,10 @@ for (const file of Object.values(assets)) {
 }
 
 const variants = [
-  ["baseline", "zero5_c32_lm_fast"],
-  ["vector-tanh", "zero5_c32_lm_vector_tanh"],
-  ["vector-exp", "zero5_c32_lm_vector_exp"],
-  ["vector-both", "zero5_c32_lm_vector_math"],
+  ["baseline", "zero5_c32_lm_fast", "scalar-array"],
+  ["vector-tanh", "zero5_c32_lm_vector_tanh", "gnu-libmvec-tanh"],
+  ["vector-exp", "zero5_c32_lm_vector_exp", "gnu-libmvec-exp"],
+  ["vector-both", "zero5_c32_lm_vector_math", "gnu-libmvec-tanh-exp"],
 ];
 if (!process.argv.includes("--skip-build")) {
   run("make", ["-B", ...variants.map(([, binary]) => binary)]);
@@ -137,11 +137,12 @@ const measurements = Object.fromEntries(variants.map(([name]) => [name, []]));
 try {
   for (let repetition = 0; repetition < repetitions; ++repetition) {
     const ordered = repetition % 2 === 0 ? variants : [...variants].reverse();
-    for (const [name, binary] of ordered) {
+    for (const [name, binary, mathBackend] of ordered) {
       const prefix = path.join(temporary, `${repetition}-${name}`);
       process.stdout.write(`Running ${name}, repetition ${repetition + 1}...\n`);
       const output = run(path.resolve(binary), [
-        ...common, "--best", `${prefix}-best.ckpt`,
+        ...common, "--require-math-backend", mathBackend,
+        "--best", `${prefix}-best.ckpt`,
         "--save", `${prefix}-active.ckpt`,
       ]);
       measurements[name].push({
@@ -176,10 +177,11 @@ if (!allMetricsWithinTolerance) fail("a vector variant exceeded metric tolerance
 
 const baselineThroughput = mean(measurements.baseline
   .map(measurement => measurement.tokens_per_second));
-const summarized = Object.fromEntries(variants.map(([name]) => {
+const summarized = Object.fromEntries(variants.map(([name, , mathBackend]) => {
   const runs = measurements[name];
   const throughput = mean(runs.map(run => run.tokens_per_second));
   return [name, {
+    math_backend: mathBackend,
     runs,
     mean_tokens_per_second: throughput,
     throughput_change_from_baseline: throughput / baselineThroughput - 1,

@@ -395,7 +395,10 @@ try {
   ]);
   assert.match(mechanics,
     /packed sampling sequences=4 compute-token-exposures=2048 active-targets=16 answer-targets=3 claim-answer-targets=1 cloze-answer-targets=1 retrieval-answer-targets=1 padding-targets=2032 wraps=0 claim-answer-weight=3\.00919938 cloze-answer-weight=1 retrieval-answer-weight=1\.9414525/);
+  assert.match(mechanics, /math-backend=scalar-elementwise/);
   assert.ok(fs.existsSync(checkpoint));
+  assert.equal(fs.readFileSync(checkpoint).readUInt32LE(8), 6,
+    "new checkpoints must use the math-bound version-6 format");
   assert.match(run("./zero5_c32_lm", [
     "--init", checkpoint, "--paired-eval", paired,
   ]), /"schema":"zero\.c32_paired_choice_eval\.v1"/);
@@ -482,6 +485,8 @@ try {
     const vectorRepeat = path.join(temporary, "vector-repeat.ckpt");
     const vectorOutput = run(vectorBinary, [...parallelArgs,
       "--save", vector]);
+    assert.match(vectorOutput,
+      /math-backend=(accelerate-vforce|gnu-libmvec-tanh-exp)/);
     const referenceMetrics = packedReport(parallelOutput);
     const vectorMetrics = packedReport(vectorOutput);
     assert.ok(referenceMetrics.every((value, index) =>
@@ -491,6 +496,8 @@ try {
     run(vectorBinary, [...parallelArgs, "--save", vectorRepeat]);
     assert.equal(sha256(fs.readFileSync(vector)),
       sha256(fs.readFileSync(vectorRepeat)));
+    run(vectorBinary, [...parallelArgs, "--resume", parallel,
+      "--save", vector], 1);
   }
 
   const corrupt = path.join(temporary, "corrupt.z5pack");
@@ -513,6 +520,7 @@ try {
     "--heads", "2", "--layers", "1", "--ff", "16", "--vocab", "128",
     "--packed-train", resumePacked, "--packed-validation", resumePacked,
     "--run-contract-sha256", runContractSha256,
+    "--require-math-backend", "scalar-elementwise",
     "--steps", "4", "--batch", "2", "--lr", "0.0001",
     "--warmup", "1", "--schedule-total", "4", "--cosine",
     "--report", "1", "--validation", "4", "--save-every", "1",
@@ -534,8 +542,11 @@ try {
     sha256(fs.readFileSync(continuousBest)));
   run("./zero5_c32_lm", [...resumeArgs, "--resume", resumed,
     "--run-contract-sha256", "1".repeat(64), "--save", resumed], 1);
-  assert.match(run("./zero5_c32_lm", ["--self-test"]),
+  assert.match(run("./zero5_c32_lm", [
+    "--require-math-backend", "scalar-elementwise", "--self-test"]),
     /35 finite-difference gradient checks passed/);
+  run("./zero5_c32_lm", [
+    "--require-math-backend", "scalar-array", "--self-test"], 1);
 } finally {
   fs.rmSync(temporary, { recursive: true, force: true });
 }
