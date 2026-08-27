@@ -1,0 +1,51 @@
+{
+  "schema": "zero.c33_parallel_comparison.v1",
+  "status": "complete",
+  "scientific_parent": {
+    "experiment": "zero5-c33-v1",
+    "result_sha256": "7c0ee03f157ed0bdefa24b99e08e20fab8cb0c863ef448e22a17f1675c9caa57",
+    "status_sha256": "c9cbcfcdf60d78162f8afcf613cd4e1ee3df87203fe53c1f6ae895a73b42398f",
+    "contract_sha256": "f06365554a16ec0557503fe35ff6e074a0720312dd4295e3d54e1a7df6fa73d1",
+    "checkpoint_sha256": "47bd123f21d052e3bb81aa608c14b9f1d5e28764e42dafef57160b73fe613296",
+    "final_interval_tokens_per_second": 1721,
+    "final_validation_nats_per_token": 1.5873,
+    "total_ec2_usd": 2.757022222223,
+    "training_log": {
+      "s3_key": "experiments/zero5-c33-v1/zero5-c33-aws-20260826-6920785/state/E/training.log",
+      "sha256": "2554972cfc4ba7f237664bcea8fbb8bca28e8150aeb024f8b1e9c10cde05ce10"
+    }
+  },
+  "performance_replay": {
+    "experiment": "zero5-c33-parallel-v1",
+    "run_id": "zero5-c33-parallel-aws-20260826-6e6c6a9-r1",
+    "result_sha256": "7d28b7f098e48482afc1b1b42a24f5c856a999f2a5def4d75c7ad669dc4d3eca",
+    "status_sha256": "354fe074835d1ede61a21811821917ada5fc64884715337fb2016b528b40fdc3",
+    "contract_sha256": "bfa863dc4dbd4e7aad8a42ae819fe26ab0ab3efd346235ad7cf72a672054aa2b",
+    "checkpoint_sha256": "0e9b4e2f67040e9daabbf2196e8e69e6907b8c9e4809a88159461cfe7c4545f7",
+    "aggregate_compute_tokens_per_second": 4634.931294289584,
+    "final_interval_tokens_per_second": 4573,
+    "final_validation_nats_per_token": 1.5873,
+    "total_ec2_usd": 0.847733333334,
+    "training_log": {
+      "s3_key": "experiments/zero5-c33-parallel-v1/zero5-c33-parallel-aws-20260826-6e6c6a9-r1/state/training.log",
+      "sha256": "c2c76eac84ec4e24f28f3c54c87d64a8cfbd6a8a2ce5fa6887d4324ea77b71fe"
+    }
+  },
+  "comparison": {
+    "final_interval_speedup": 2.6571760604299826,
+    "aggregate_to_parent_final_speedup": 2.6931617049910423,
+    "validation_nats_difference": 0,
+    "total_ec2_savings_usd": 1.909288888889,
+    "total_ec2_cost_reduction_fraction": 0.692518498218535,
+    "speed_gate_passed": true,
+    "quality_closeness_gate_passed": true,
+    "budget_gate_passed": true
+  },
+  "claim_boundary": {
+    "performance_result_only": true,
+    "scientific_replication": false,
+    "numerically_identical_to_serial": false,
+    "test_metrics_opened": false,
+    "checkpoint_published": false
+  }
+}

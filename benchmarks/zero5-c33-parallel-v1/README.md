@@ -29,3 +29,6 @@ The first bootstrap stopped before update 1 because its calibration command
 did not pass the required contract hash. Its $0.017377777778 cost remains part
 of the same $1.20 ceiling. The corrected retry subtracts that amount before it
 computes its automatic shutdown time.
+
+The corrected replay is complete. See `RESULT.md` for the verified performance
+comparison and `comparison.json` for the machine-readable result boundary.
