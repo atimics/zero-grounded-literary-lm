@@ -115,6 +115,23 @@ typedef struct {
     float *attention_matrix;
 } Work;
 
+#if defined(USE_PHASE_PROFILE)
+typedef struct {
+    double forward_seconds;
+    double backward_seconds;
+    double linear_forward_seconds;
+    double linear_backward_seconds;
+    double attention_forward_seconds;
+    double attention_backward_seconds;
+    double norm_forward_seconds;
+    double norm_backward_seconds;
+    double gelu_forward_seconds;
+    double gelu_backward_seconds;
+    double rope_seconds;
+    double output_softmax_loss_seconds;
+} PhaseProfile;
+#endif
+
 typedef struct {
     Config cfg;
     int trainable_scope;
@@ -131,6 +148,9 @@ typedef struct {
     float *rope_cos;
     float *rope_sin;
     Work work;
+#if defined(USE_PHASE_PROFILE)
+    PhaseProfile phase_profile;
+#endif
 } Model;
 
 #if defined(USE_TENSOR_BATCH)
@@ -395,6 +415,21 @@ static double wall_seconds(void)
     return (double)value.tv_sec + (double)value.tv_nsec * 1.0e-9;
 }
 
+#if defined(USE_PHASE_PROFILE)
+static _Thread_local PhaseProfile *active_phase_profile;
+#define PHASE_START(name) \
+    double name = active_phase_profile != NULL ? wall_seconds() : 0.0
+#define PHASE_FINISH(field, name)                                      \
+    do {                                                               \
+        if (active_phase_profile != NULL) {                             \
+            active_phase_profile->field += wall_seconds() - (name);    \
+        }                                                              \
+    } while (0)
+#else
+#define PHASE_START(name) ((void)0)
+#define PHASE_FINISH(field, name) ((void)0)
+#endif
+
 static void rng_seed(Rng *rng, uint64_t seed)
 {
     uint64_t z = seed + UINT64_C(1);
@@ -498,6 +533,7 @@ static void parameter_ones(Parameter *parameter)
 static void linear_forward(int rows, int input, int output, const float *x,
                            const float *w, float *y)
 {
+    PHASE_START(profile_start);
 #if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows, output, input,
                 1.0f, x, input, w, input, 0.0f, y, output);
@@ -515,6 +551,7 @@ static void linear_forward(int rows, int input, int output, const float *x,
         }
     }
 #endif
+    PHASE_FINISH(linear_forward_seconds, profile_start);
 }
 
 /* Accumulates into both gw and dx; callers zero scratch dx when required. */
@@ -522,6 +559,7 @@ static void linear_backward(int rows, int input, int output, const float *x,
                             const float *w, const float *dy, float *gw,
                             float *dx)
 {
+    PHASE_START(profile_start);
 #if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, output, input, rows,
                 1.0f, dy, output, x, input, 1.0f, gw, input);
@@ -550,11 +588,13 @@ static void linear_backward(int rows, int input, int output, const float *x,
         }
     }
 #endif
+    PHASE_FINISH(linear_backward_seconds, profile_start);
 }
 
 static void rmsnorm_forward(const float *x, const float *gamma, float *y,
                             int rows, int width)
 {
+    PHASE_START(profile_start);
     int row;
     int i;
     for (row = 0; row < rows; ++row) {
@@ -569,6 +609,7 @@ static void rmsnorm_forward(const float *x, const float *gamma, float *y,
             y[row * width + i] = x[row * width + i] * inverse * gamma[i];
         }
     }
+    PHASE_FINISH(norm_forward_seconds, profile_start);
 }
 
 /* Accumulates gradients into dx and dgamma. */
@@ -576,6 +617,7 @@ static void rmsnorm_backward(const float *x, const float *gamma,
                              const float *dy, float *dx, float *dgamma,
                              int rows, int width)
 {
+    PHASE_START(profile_start);
     int row;
     int i;
     for (row = 0; row < rows; ++row) {
@@ -599,6 +641,7 @@ static void rmsnorm_backward(const float *x, const float *gamma,
                 x[row * width + i] * coefficient;
         }
     }
+    PHASE_FINISH(norm_backward_seconds, profile_start);
 }
 
 #if !defined(USE_VECTOR_MATH)
@@ -626,6 +669,7 @@ static float gelu_derivative_from_tanh(float x, float t)
 static void gelu_forward_array(const float *input, float *output,
                                float *tanh_cache, int count)
 {
+    PHASE_START(profile_start);
     int i;
 #if defined(USE_VECTOR_MATH)
     const float c = 0.7978845608028654f;
@@ -650,6 +694,7 @@ static void gelu_forward_array(const float *input, float *output,
         output[i] = gelu_from_tanh(x, t);
     }
 #endif
+    PHASE_FINISH(gelu_forward_seconds, profile_start);
 }
 
 static void softmax_prefix_inplace(float *row, int count)
@@ -1036,6 +1081,7 @@ static void model_zero_grad(Model *model)
 static void rope_apply(const Model *model, float *values, int stride,
                        int inverse)
 {
+    PHASE_START(profile_start);
     const Config *cfg = &model->cfg;
     int head_width = cfg->dim / cfg->heads;
     int pair_count = head_width / 2;
@@ -1057,10 +1103,12 @@ static void rope_apply(const Model *model, float *values, int stride,
             }
         }
     }
+    PHASE_FINISH(rope_seconds, profile_start);
 }
 
 static void attention_forward(const Config *cfg, LayerCache *cache)
 {
+    PHASE_START(profile_start);
     int head;
     int time;
     int source;
@@ -1117,12 +1165,14 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
         }
     }
 #endif
+    PHASE_FINISH(attention_forward_seconds, profile_start);
 }
 
 static void attention_backward(const Config *cfg, const LayerCache *cache,
                                const float *datt, float *dq, float *dk,
                                float *dv, float *scratch)
 {
+    PHASE_START(profile_start);
     int head;
     int time;
     int source;
@@ -1208,6 +1258,7 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
         }
     }
 #endif
+    PHASE_FINISH(attention_backward_seconds, profile_start);
 }
 
 /* Forward returns mean next-token cross entropy when targets is non-NULL. */
@@ -1324,6 +1375,7 @@ static float model_forward_masked(Model *model, const Token *tokens,
     linear_forward(cfg->context, cfg->dim, cfg->vocab, model->final_n,
                    model->token_embedding.w, model->probs);
 
+    PHASE_START(softmax_start);
     for (time = 0; time < cfg->context; ++time) {
         float *row = &model->probs[time * cfg->vocab];
         softmax_prefix_inplace(row, cfg->vocab);
@@ -1337,6 +1389,7 @@ static float model_forward_masked(Model *model, const Token *tokens,
                     logf(probability) / loss_weight;
         }
     }
+    PHASE_FINISH(output_softmax_loss_seconds, softmax_start);
     return loss;
 }
 
@@ -1494,11 +1547,13 @@ static void model_backward_blended_masked(
         }
         linear_backward(cfg->context, cfg->ff, cfg->dim, cache->fact,
                         layer->w2.w, work->tmp_td, layer->w2.g, work->dact);
+        PHASE_START(gelu_backward_start);
         for (i = 0; i < (int)tf; ++i) {
             work->dfpre[i] = work->dact[i] *
                 gelu_derivative_from_tanh(cache->fpre[i],
                                           cache->gelu_tanh[i]);
         }
+        PHASE_FINISH(gelu_backward_seconds, gelu_backward_start);
         memset(work->dn2, 0, td * sizeof(float));
         linear_backward(cfg->context, cfg->dim, cfg->ff, cache->n2,
                         layer->w1.w, work->dfpre, layer->w1.g, work->dn2);
@@ -3396,6 +3451,13 @@ struct PackedParallelBatch {
     float optimizer_batch_scale;
     float optimizer_clip_scale;
     float optimizer_correction;
+#if defined(USE_PHASE_PROFILE)
+    uint64_t profiled_updates;
+    double setup_wall_seconds;
+    double train_wave_wall_seconds;
+    double gradient_merge_wall_seconds;
+    double optimizer_wall_seconds;
+#endif
 };
 
 enum {
@@ -3410,11 +3472,21 @@ static void packed_parallel_merge_slice(PackedParallelBatch *parallel,
 static void *packed_worker_run(void *argument)
 {
     PackedWorkerTask *task = (PackedWorkerTask *)argument;
+#if defined(USE_PHASE_PROFILE)
+    active_phase_profile = &task->model->phase_profile;
+#endif
+    PHASE_START(forward_start);
     task->loss = model_forward_masked(task->model, task->tokens,
                                       task->targets, task->dropout, NULL,
                                       task->mask);
+    PHASE_FINISH(forward_seconds, forward_start);
+    PHASE_START(backward_start);
     model_backward_masked(task->model, task->tokens, task->targets,
                           task->mask);
+    PHASE_FINISH(backward_seconds, backward_start);
+#if defined(USE_PHASE_PROFILE)
+    active_phase_profile = NULL;
+#endif
     return NULL;
 }
 
@@ -3512,6 +3584,9 @@ static float packed_parallel_optimizer_update(
     PackedParallelBatch *parallel, uint64_t step, float learning_rate,
     float weight_decay, float clip_limit, float batch_scale)
 {
+#if defined(USE_PHASE_PROFILE)
+    double profile_start = wall_seconds();
+#endif
     Model *model = parallel->models[0];
     float gradient_norm = optimizer_prepare(
         model, step, learning_rate, clip_limit, batch_scale,
@@ -3525,6 +3600,9 @@ static float packed_parallel_optimizer_update(
                           parallel->optimizer_correction, 0,
                           parallel->count, 1);
     packed_parallel_wait(parallel);
+#if defined(USE_PHASE_PROFILE)
+    parallel->optimizer_wall_seconds += wall_seconds() - profile_start;
+#endif
     return gradient_norm;
 }
 
@@ -3678,9 +3756,15 @@ static void packed_parallel_merge_slice(PackedParallelBatch *parallel,
 
 static void packed_parallel_merge_gradients(PackedParallelBatch *parallel)
 {
+#if defined(USE_PHASE_PROFILE)
+    double profile_start = wall_seconds();
+#endif
     packed_parallel_start(parallel, parallel->count, PACKED_JOB_MERGE);
     packed_parallel_merge_slice(parallel, 0, parallel->count);
     packed_parallel_wait(parallel);
+#if defined(USE_PHASE_PROFILE)
+    parallel->gradient_merge_wall_seconds += wall_seconds() - profile_start;
+#endif
 }
 
 static void packed_parallel_train_update(
@@ -3690,6 +3774,9 @@ static void packed_parallel_train_update(
 {
     int worker;
     int batch_start;
+#if defined(USE_PHASE_PROFILE)
+    double setup_start = wall_seconds();
+#endif
     for (batch_start = 0; batch_start < options->batch;
          batch_start += parallel->count) {
         int wave = options->batch - batch_start;
@@ -3722,17 +3809,100 @@ static void packed_parallel_train_update(
                 *interval_active_targets += active;
             }
         }
+#if defined(USE_PHASE_PROFILE)
+        parallel->setup_wall_seconds += wall_seconds() - setup_start;
+        {
+            double train_start = wall_seconds();
+#endif
         packed_parallel_start(parallel, wave, PACKED_JOB_TRAIN);
         (void)packed_worker_run(&parallel->tasks[0]);
         packed_parallel_wait(parallel);
+#if defined(USE_PHASE_PROFILE)
+            parallel->train_wave_wall_seconds += wall_seconds() - train_start;
+        }
+#endif
         for (worker = 0; worker < wave; ++worker) {
             if (parallel->tasks[worker].active != 0U) {
                 *interval_loss += parallel->tasks[worker].loss;
             }
         }
+#if defined(USE_PHASE_PROFILE)
+        setup_start = wall_seconds();
+#endif
     }
+#if defined(USE_PHASE_PROFILE)
+    parallel->setup_wall_seconds += wall_seconds() - setup_start;
+#endif
     packed_parallel_merge_gradients(parallel);
+#if defined(USE_PHASE_PROFILE)
+    ++parallel->profiled_updates;
+#endif
 }
+
+#if defined(USE_PHASE_PROFILE)
+static void packed_parallel_print_phase_profile(
+    const PackedParallelBatch *parallel)
+{
+    PhaseProfile total = {0};
+    double worker_total;
+    double kernel_total;
+    double unattributed;
+    int worker;
+    for (worker = 0; worker < parallel->count; ++worker) {
+        const PhaseProfile *source =
+            &parallel->models[worker]->phase_profile;
+#define ADD_PHASE(field) total.field += source->field
+        ADD_PHASE(forward_seconds);
+        ADD_PHASE(backward_seconds);
+        ADD_PHASE(linear_forward_seconds);
+        ADD_PHASE(linear_backward_seconds);
+        ADD_PHASE(attention_forward_seconds);
+        ADD_PHASE(attention_backward_seconds);
+        ADD_PHASE(norm_forward_seconds);
+        ADD_PHASE(norm_backward_seconds);
+        ADD_PHASE(gelu_forward_seconds);
+        ADD_PHASE(gelu_backward_seconds);
+        ADD_PHASE(rope_seconds);
+        ADD_PHASE(output_softmax_loss_seconds);
+#undef ADD_PHASE
+    }
+    worker_total = total.forward_seconds + total.backward_seconds;
+    kernel_total = total.linear_forward_seconds +
+                   total.linear_backward_seconds +
+                   total.attention_forward_seconds +
+                   total.attention_backward_seconds +
+                   total.norm_forward_seconds +
+                   total.norm_backward_seconds +
+                   total.gelu_forward_seconds +
+                   total.gelu_backward_seconds + total.rope_seconds +
+                   total.output_softmax_loss_seconds;
+    unattributed = worker_total - kernel_total;
+    if (unattributed < 0.0) unattributed = 0.0;
+    printf("phase-profile {\"schema\":\"zero.cpu_phase_profile.v1\","
+           "\"updates\":%llu,\"workers\":%d,"
+           "\"wall_seconds\":{"
+           "\"input_setup\":%.9f,\"train_wave\":%.9f,"
+           "\"gradient_merge\":%.9f,\"optimizer\":%.9f},"
+           "\"worker_cpu_seconds\":{"
+           "\"forward\":%.9f,\"backward\":%.9f,"
+           "\"linear_forward\":%.9f,\"linear_backward\":%.9f,"
+           "\"attention_forward\":%.9f,\"attention_backward\":%.9f,"
+           "\"norm_forward\":%.9f,\"norm_backward\":%.9f,"
+           "\"gelu_forward\":%.9f,\"gelu_backward\":%.9f,"
+           "\"rope\":%.9f,\"output_softmax_loss\":%.9f,"
+           "\"unattributed\":%.9f}}\n",
+           (unsigned long long)parallel->profiled_updates, parallel->count,
+           parallel->setup_wall_seconds, parallel->train_wave_wall_seconds,
+           parallel->gradient_merge_wall_seconds,
+           parallel->optimizer_wall_seconds, total.forward_seconds,
+           total.backward_seconds, total.linear_forward_seconds,
+           total.linear_backward_seconds, total.attention_forward_seconds,
+           total.attention_backward_seconds, total.norm_forward_seconds,
+           total.norm_backward_seconds, total.gelu_forward_seconds,
+           total.gelu_backward_seconds, total.rope_seconds,
+           total.output_softmax_loss_seconds, unattributed);
+}
+#endif
 
 #if defined(USE_TENSOR_BATCH)
 static void packed_tensor_train_update(
@@ -3997,6 +4167,11 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
                (unsigned long long)attempt_steps);
     }
     printf("training time %.2f seconds\n", wall_seconds() - training_start);
+#if defined(USE_PHASE_PROFILE)
+    if (options->parallel_batch > 1) {
+        packed_parallel_print_phase_profile(&parallel);
+    }
+#endif
     if (interrupted) {
         printf("interrupted after update %llu\n",
                (unsigned long long)*update);

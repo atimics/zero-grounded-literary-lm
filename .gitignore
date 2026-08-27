@@ -8,6 +8,7 @@ zero5_c3_lm
 zero5_c31_lm
 zero5_c32_lm
 zero5_c32_lm_fast
+zero5_c32_lm_profile
 zero5_c32_lm_qkv
 zero5_c32_lm_qkv_backward
 zero5_c32_lm_qkv_forward
