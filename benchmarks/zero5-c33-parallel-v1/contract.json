@@ -2,7 +2,7 @@
   "schema": "zero.c33_parallel_replay.v1",
   "experiment": "zero5-c33-parallel-v1",
   "status": "preregistered-unrun",
-  "authorized": false,
+  "authorized": true,
   "purpose": "Measure the speed and cost of the optimized C trainer on the frozen C3.3 workload without treating changed floating-point accumulation as a new model result.",
   "claim_boundary": {
     "may_claim": "The optimized C executable completed the same ordered seed-0 C3.3 workload at the measured speed, cost, and validation loss.",
@@ -117,9 +117,9 @@
     "durable_state_sync": true
   },
   "authorization": {
-    "status": "awaiting-explicit-dollar-cap-approval",
-    "approval_id": null,
-    "approved_by": null,
-    "approved_at": null
+    "status": "authorized",
+    "approval_id": "zero5-c33-parallel-2026-08-26-v1",
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-27T03:50:19Z"
   }
 }

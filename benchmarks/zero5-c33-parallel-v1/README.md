@@ -22,5 +22,5 @@ The fastest configuration runs the full frozen workload. This avoids silently
 turning 4 workers × 8 BLAS threads into 32 competing compute threads.
 
 The sealed test set stays closed. Private data and checkpoints stay private.
-The requested EC2 ceiling is $1.20; the contract remains unauthorized until
-that exact new spend is approved.
+The EC2 ceiling is $1.20. It was explicitly approved on 2026-08-27 UTC before
+any replay compute was launched.
