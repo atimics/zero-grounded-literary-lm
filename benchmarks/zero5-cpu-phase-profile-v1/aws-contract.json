@@ -1,7 +1,7 @@
 {
   "schema": "zero.aws_cpu_phase_profile_contract.v1",
   "experiment": "zero5-cpu-phase-profile-v1",
-  "status": "awaiting-explicit-authorization",
+  "status": "authorized",
   "purpose": "Measure the winning four-worker C trainer on c6i.4xlarge and select the next CPU optimization from phase and hardware-counter evidence.",
   "claim_boundary": {
     "may_claim": "The measured profile identifies where this exact C3.3 performance workload spent time on the stated AWS CPU.",
@@ -81,10 +81,10 @@
     "launcher": "scripts/aws/zero5-cpu-profile-run-instance.sh"
   },
   "authorization": {
-    "status": "awaiting-explicit-user-approval",
+    "status": "authorized",
     "approval_id": "zero5-cpu-profile-2026-08-27-v1",
     "requested_maximum_ec2_usd": 0.06,
-    "approved_by": null,
-    "approved_at": null
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-27T21:35:11Z"
   }
 }
