@@ -62,9 +62,11 @@ node scripts/benchmark_zero5_tensor.mjs \
 ```
 
 The AWS calibration is authorized by `aws-contract.json` for at most $0.15 of
-EC2 compute. The instance is limited to 780 seconds at $0.68/hour, or $0.1474
-before provider rounding. It uploads every completed candidate immediately and
-terminates itself on success, failure, or the hard time limit.
+total EC2 compute. The first attempt stopped at $0.035511 when its 50-update
+candidate exceeded the process guard. The retry uses 10 updates per candidate
+and is limited to another 606 seconds, or $0.114467. The combined hard maximum
+is $0.149978 before provider rounding. It uploads every completed candidate
+immediately and terminates itself on success, failure, or the hard time limit.
 
 The launch path is:
 

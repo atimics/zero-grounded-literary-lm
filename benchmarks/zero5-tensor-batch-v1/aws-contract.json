@@ -1,7 +1,7 @@
 {
   "schema": "zero.aws_tensor_batch_calibration_contract.v1",
   "experiment": "zero5-tensor-batch-v1",
-  "status": "authorized",
+  "status": "authorized-retry",
   "purpose": "Select the fastest OpenBLAS thread count for the tensor-batch C trainer on c6i.4xlarge without changing the frozen C3.3 model, data, or scientific result.",
   "claim_boundary": {
     "may_claim": "The measured tensor implementation and OpenBLAS thread count were fastest in this short performance calibration.",
@@ -27,7 +27,7 @@
     "validation_pack_sha256": "4fedd425e3d69608c6f4eaa7002474a4c2cfdf845c708c77b2d15ec585566cb6"
   },
   "workload": {
-    "updates_per_candidate": 50,
+    "updates_per_candidate": 10,
     "batch_sequences": 4,
     "context_tokens": 512,
     "baseline": {
@@ -47,14 +47,24 @@
     "instance_type": "c6i.4xlarge",
     "purchase_option": "on-demand",
     "on_demand_usd_per_hour": 0.68,
-    "maximum_instance_seconds": 780,
+    "maximum_instance_seconds": 606,
+    "maximum_retry_ec2_usd": 0.114466666667,
     "maximum_total_ec2_usd": 0.15,
-    "maximum_computed_ec2_usd": 0.147333333333,
+    "maximum_computed_total_ec2_usd": 0.149977777778,
     "automatic_termination": true,
     "durable_result_upload": true,
     "user_data": "scripts/aws/zero5-tensor-calibration-user-data.sh",
-    "user_data_sha256": "90eac69c356caaefadb7968766375a37d873acffa86d407f51ed1e7057ab9501",
+    "user_data_sha256": "f7c51cd4b21236810807e8f10af4f370021d3efc87f119dd775d8bab7ba8c624",
     "launcher": "scripts/aws/zero5-tensor-calibration-run-instance.sh"
+  },
+  "execution_amendment": {
+    "failed_run_id": "zero5-tensor-aws-20260827-ed67d1e",
+    "failed_instance_id": "i-0e71965a7adad1c90",
+    "failed_attempt_ec2_usd": 0.035511111111,
+    "completed_thread_candidates": 0,
+    "cause": "The first 50-update candidate exceeded its 115-second process guard.",
+    "correction": "Use 10 updates per candidate and charge the retry against the unchanged original total cap.",
+    "scientific_change": false
   },
   "authorization": {
     "status": "authorized",
