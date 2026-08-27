@@ -26,6 +26,8 @@ AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
 MAX_COMPUTE_USD=$(tag MaxComputeUsd)
+PRIOR_COMPUTE_USD=$(tag PriorComputeUsd)
+TOTAL_COMPUTE_CAP_USD=$(tag TotalComputeCapUsd)
 HOURLY_PRICE=$(tag HourlyPrice)
 APPROVAL_ID=$(tag ApprovalId)
 INSTANCE_ID=$(metadata instance-id)
@@ -40,8 +42,10 @@ export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$SOURCE_COMMIT" = ed67d1e114d0b7284107a6c80d2e99cc55d98fd8
-test "$MAX_INSTANCE_SECONDS" = 780
-test "$MAX_COMPUTE_USD" = 0.15
+test "$MAX_INSTANCE_SECONDS" = 606
+test "$MAX_COMPUTE_USD" = 0.114466666667
+test "$PRIOR_COMPUTE_USD" = 0.035511111111
+test "$TOTAL_COMPUTE_CAP_USD" = 0.15
 test "$HOURLY_PRICE" = 0.68
 test "$APPROVAL_ID" = zero5-tensor-calibration-2026-08-27-v1
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
@@ -64,6 +68,8 @@ write_status() {
   result_sha256=${4:-}
   elapsed=$(elapsed_seconds)
   cost=$(estimated_cost "$elapsed")
+  total_cost=$(awk -v prior="$PRIOR_COMPUTE_USD" -v retry="$cost" \
+    'BEGIN { printf "%.12f", prior + retry }')
   completed=0
   if [ -d "$OUT" ]; then
     completed=$(find "$OUT" -maxdepth 1 -name 'threads-*.json' | wc -l)
@@ -73,12 +79,14 @@ write_status() {
     --arg git_commit "$SOURCE_COMMIT" --arg approval_id "$APPROVAL_ID" \
     --arg result_key "$result_key" --arg result_sha256 "$result_sha256" \
     --argjson exit_code "$exit_code" --argjson elapsed "$elapsed" \
-    --argjson cost "$cost" --argjson completed "$completed" \
+    --argjson cost "$cost" --argjson prior_cost "$PRIOR_COMPUTE_USD" \
+    --argjson total_cost "$total_cost" --argjson completed "$completed" \
     '{schema:"zero.aws_tensor_batch_calibration_status.v1",status:$status,
       phase:$phase,run_id:$run_id,instance_id:$instance_id,
       git_commit:$git_commit,approval_id:$approval_id,exit_code:$exit_code,
       completed_thread_candidates:$completed,
-      elapsed_instance_seconds:$elapsed,estimated_ec2_usd:$cost,
+      elapsed_instance_seconds:$elapsed,estimated_retry_ec2_usd:$cost,
+      prior_attempt_ec2_usd:$prior_cost,estimated_total_ec2_usd:$total_cost,
       result_key:(if $result_key=="" then null else $result_key end),
       result_sha256:(if $result_sha256=="" then null else $result_sha256 end)}' \
     > "$STATUS_FILE"
@@ -159,14 +167,14 @@ upload_status
 for threads in 1 2 4 8 16; do
   remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 90))
   test "$remaining" -gt 0
-  candidate_timeout=115
+  candidate_timeout=75
   if [ "$remaining" -lt "$candidate_timeout" ]; then
     candidate_timeout=$remaining
   fi
   set +e
   timeout --signal=TERM --kill-after=15s "${candidate_timeout}s" \
     node scripts/benchmark_zero5_tensor.mjs \
-      --asset-root /opt/zero/repo --updates 50 --blas-threads "$threads" \
+      --asset-root /opt/zero/repo --updates 10 --blas-threads "$threads" \
       --skip-build --out "$OUT/threads-${threads}.json" \
       > "$OUT/threads-${threads}.log" 2>&1
   candidate_exit=$?
@@ -191,7 +199,7 @@ jq -s '
   {schema:"zero.aws_tensor_batch_calibration.v1",
    source_commit:"ed67d1e114d0b7284107a6c80d2e99cc55d98fd8",
    instance_type:"c6i.4xlarge",backend:"OpenBLAS",
-   dynamic_threading:false,updates_per_candidate:50,
+   dynamic_threading:false,updates_per_candidate:10,
    baseline:.[0].parallel,candidates:$candidates,
    selected:($candidates | sort_by(.tokens_per_second) | reverse | .[0]),
    all_metrics_within_tolerance:([.[].comparison.same_reported_metrics] | all)}
@@ -202,8 +210,11 @@ upload_file "$OUT/result.json" result.json
 
 PHASE=complete
 write_status complete 0 "$result_key" "$result_sha256"
-awk -v cost="$(jq -r .estimated_ec2_usd "$STATUS_FILE")" \
-  -v ceiling="$MAX_COMPUTE_USD" 'BEGIN { exit !(cost <= ceiling) }'
+awk -v retry="$(jq -r .estimated_retry_ec2_usd "$STATUS_FILE")" \
+  -v retry_ceiling="$MAX_COMPUTE_USD" \
+  -v total="$(jq -r .estimated_total_ec2_usd "$STATUS_FILE")" \
+  -v total_ceiling="$TOTAL_COMPUTE_CAP_USD" \
+  'BEGIN { exit !(retry <= retry_ceiling && total <= total_ceiling) }'
 upload_status
 upload_file "$BOOT_LOG" bootstrap.log
 TERMINAL_WRITTEN=1

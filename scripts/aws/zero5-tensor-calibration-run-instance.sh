@@ -15,7 +15,9 @@ region=$(jq -r .execution.region "$contract")
 instance_type=$(jq -r .execution.instance_type "$contract")
 hourly_price=$(jq -r .execution.on_demand_usd_per_hour "$contract")
 max_seconds=$(jq -r .execution.maximum_instance_seconds "$contract")
-max_usd=$(jq -r .execution.maximum_total_ec2_usd "$contract")
+max_usd=$(jq -r .execution.maximum_retry_ec2_usd "$contract")
+total_cap_usd=$(jq -r .execution.maximum_total_ec2_usd "$contract")
+prior_compute_usd=$(jq -r .execution_amendment.failed_attempt_ec2_usd "$contract")
 source_commit=$(jq -r .source.git_commit "$contract")
 source_key=$(jq -r .source.archive_key "$contract")
 source_sha256=$(jq -r .source.archive_sha256 "$contract")
@@ -28,23 +30,28 @@ user_data=scripts/aws/zero5-tensor-calibration-user-data.sh
 test "$region" = us-east-1
 test "$instance_type" = c6i.4xlarge
 test "$hourly_price" = 0.68
-test "$max_seconds" = 780
-test "$max_usd" = 0.15
+test "$max_seconds" = 606
+test "$max_usd" = 0.114466666667
+test "$prior_compute_usd" = 0.035511111111
+test "$total_cap_usd" = 0.15
 test "$source_commit" = ed67d1e114d0b7284107a6c80d2e99cc55d98fd8
 test "$approval_id" = zero5-tensor-calibration-2026-08-27-v1
-test "$(jq -r .status "$contract")" = authorized
-test "$(jq -r .authorization.maximum_total_ec2_usd "$contract")" = "$max_usd"
+test "$(jq -r .status "$contract")" = authorized-retry
+test "$(jq -r .authorization.maximum_total_ec2_usd "$contract")" = "$total_cap_usd"
 test "$(sha256sum "$user_data" | awk '{print $1}')" = \
   "$(jq -r .execution.user_data_sha256 "$contract")"
 [[ "$ZERO5_AMI" =~ ^ami-[0-9a-f]+$ ]]
 [[ "$ZERO5_SECURITY_GROUP_ID" =~ ^sg-[0-9a-f]+$ ]]
 [[ "$ZERO5_SUBNET_ID" =~ ^subnet-[0-9a-f]+$ ]]
 [[ "$ZERO5_RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
-awk -v seconds="$max_seconds" -v price="$hourly_price" -v cap="$max_usd" \
-  'BEGIN { exit !(seconds * price / 3600 <= cap) }'
+awk -v seconds="$max_seconds" -v price="$hourly_price" \
+  -v retry_cap="$max_usd" -v prior="$prior_compute_usd" \
+  -v total_cap="$total_cap_usd" \
+  'BEGIN { retry=seconds*price/3600;
+    exit !(retry <= retry_cap && prior + retry <= total_cap) }'
 
 launch_epoch=$(date +%s)
-tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero5-tensor-calibration},{Key=Experiment,Value=zero5-tensor-batch-v1},{Key=Commit,Value=${source_commit}},{Key=RunId,Value=${ZERO5_RUN_ID}},{Key=SourceKey,Value=${source_key}},{Key=SourceSha256,Value=${source_sha256}},{Key=AssetKey,Value=${asset_key}},{Key=AssetSha256,Value=${asset_sha256}},{Key=TrainingBucket,Value=${ZERO5_TRAINING_BUCKET}},{Key=ContractSha256,Value=${contract_sha256}},{Key=Region,Value=${region}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${max_seconds}},{Key=MaxComputeUsd,Value=${max_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${approval_id}}]"
+tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero5-tensor-calibration-retry},{Key=Experiment,Value=zero5-tensor-batch-v1},{Key=Commit,Value=${source_commit}},{Key=RunId,Value=${ZERO5_RUN_ID}},{Key=SourceKey,Value=${source_key}},{Key=SourceSha256,Value=${source_sha256}},{Key=AssetKey,Value=${asset_key}},{Key=AssetSha256,Value=${asset_sha256}},{Key=TrainingBucket,Value=${ZERO5_TRAINING_BUCKET}},{Key=ContractSha256,Value=${contract_sha256}},{Key=Region,Value=${region}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${max_seconds}},{Key=MaxComputeUsd,Value=${max_usd}},{Key=PriorComputeUsd,Value=${prior_compute_usd}},{Key=TotalComputeCapUsd,Value=${total_cap_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${approval_id}}]"
 
 request=(ec2 run-instances
   --region "$region"
@@ -73,16 +80,22 @@ if [ "$action" = dry-run ]; then
   exit 0
 fi
 
-lock_key=experiments/zero5-tensor-batch-v1/execution.lock
+lock_key=experiments/zero5-tensor-batch-v1/execution-v2.lock
 lock=$(mktemp)
 jq -n --arg run_id "$ZERO5_RUN_ID" \
   --arg contract_sha256 "$contract_sha256" \
   --arg approval_id "$approval_id" \
   --arg source_sha256 "$source_sha256" \
   --arg asset_sha256 "$asset_sha256" \
+  --argjson prior_compute_usd "$prior_compute_usd" \
+  --argjson maximum_retry_usd "$max_usd" \
+  --argjson maximum_total_usd "$total_cap_usd" \
   '{schema:"zero.aws_tensor_batch_execution_lock.v1",run_id:$run_id,
     contract_sha256:$contract_sha256,approval_id:$approval_id,
-    source_sha256:$source_sha256,asset_sha256:$asset_sha256}' > "$lock"
+    source_sha256:$source_sha256,asset_sha256:$asset_sha256,
+    prior_compute_usd:$prior_compute_usd,
+    maximum_retry_usd:$maximum_retry_usd,
+    maximum_total_usd:$maximum_total_usd}' > "$lock"
 aws s3api put-object --region "$region" \
   --bucket "$ZERO5_TRAINING_BUCKET" --key "$lock_key" --body "$lock" \
   --content-type application/json --if-none-match '*' \
@@ -100,13 +113,18 @@ jq -n --arg run_id "$ZERO5_RUN_ID" --arg instance_id "$instance_id" \
   --arg launched_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --argjson launch_epoch "$launch_epoch" \
   --argjson maximum_seconds "$max_seconds" \
-  --argjson maximum_usd "$max_usd" \
+  --argjson prior_compute_usd "$prior_compute_usd" \
+  --argjson maximum_retry_usd "$max_usd" \
+  --argjson maximum_total_usd "$total_cap_usd" \
   '{schema:"zero.aws_tensor_batch_launch.v1",run_id:$run_id,
     instance_id:$instance_id,source_commit:$source_commit,
     source_sha256:$source_sha256,asset_sha256:$asset_sha256,
     contract_sha256:$contract_sha256,approval_id:$approval_id,
     launched_at:$launched_at,launch_epoch:$launch_epoch,
-    maximum_instance_seconds:$maximum_seconds,maximum_ec2_usd:$maximum_usd}' \
+    prior_compute_usd:$prior_compute_usd,
+    maximum_instance_seconds:$maximum_seconds,
+    maximum_retry_ec2_usd:$maximum_retry_usd,
+    maximum_total_ec2_usd:$maximum_total_usd}' \
   > "$receipt"
 receipt_sha256=$(sha256sum "$receipt" | awk '{print $1}')
 aws s3api put-object --region "$region" \
