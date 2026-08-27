@@ -16,5 +16,10 @@ loss in choice, completion, position balance, Atlas retention, or C1 anchor
 retention.
 
 Run `make zero5-c33-check` before any paid run. The contract authorizes one
-seed-0 arm only, capped at $3.40 of on-demand EC2 compute. A pass authorizes a
-separate three-seed replication, not broad promotion.
+seed-0 arm only, capped at $3.40 of on-demand EC2 compute.
+
+The run is complete. Pair-atomic batching did not pass: mean swap consistency
+fell by 11.83 points and mean pair-exact accuracy fell by 6.40 points relative
+to C3.2 D. Completion quality and Atlas/C1 retention were largely preserved,
+but the primary relational gates failed. No replication or broad promotion is
+authorized. See [RESULT.md](RESULT.md) for the plain-English result.

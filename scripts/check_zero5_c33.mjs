@@ -26,6 +26,8 @@ const importPath = "benchmarks/zero5-c33-v1/import.json";
 const controlPath = "benchmarks/zero5-c32-v1/result.json";
 const awsExecutionPath = "benchmarks/zero5-c33-v1/aws-execution.json";
 const sourceLockPath = "benchmarks/zero5-c33-v1/source-lock.json";
+const resultPath = "benchmarks/zero5-c33-v1/result.json";
+const statusPath = "benchmarks/zero5-c33-v1/status.json";
 const contract = JSON.parse(fs.readFileSync(contractPath));
 const importedBytes = fs.readFileSync(importPath);
 const imported = JSON.parse(importedBytes);
@@ -179,6 +181,107 @@ for (const script of [contract.execution.stage_script,
   run("bash", ["-n", script]);
   assert.ok((fs.statSync(script).mode & 0o111) !== 0,
     script + " must be executable");
+}
+
+if (fs.existsSync(resultPath) || fs.existsSync(statusPath)) {
+  assert.ok(fs.existsSync(resultPath) && fs.existsSync(statusPath));
+  const resultBytes = fs.readFileSync(resultPath);
+  const result = JSON.parse(resultBytes);
+  const status = JSON.parse(fs.readFileSync(statusPath));
+  const arm = result.arms.E;
+  const validation = arm.validation;
+  const expectedGates = {
+    full_pack_pass:
+      arm.training.pack_sequences === contract.training.pack_sequences &&
+      arm.training.compute_token_exposures ===
+        contract.training.compute_token_exposures &&
+      arm.training.active_targets === contract.training.active_targets &&
+      arm.training.answer_targets === contract.training.answer_targets &&
+      JSON.stringify(arm.training.answer_targets_by_task) ===
+        JSON.stringify(contract.training.answer_targets_by_task) &&
+      arm.training.padding_targets === contract.training.padding_targets &&
+      arm.training.wraps === 0,
+    combined_nll_retention: validation.combined_final_nats_per_token <=
+      contract.gates.combined_validation_nats_per_token_maximum,
+    claim_completion_retention:
+      validation.completion.claim.nats_per_target_token <=
+        contract.gates.completion_nats_per_target_token_maximum.claim,
+    cloze_completion_retention:
+      validation.completion.cloze.nats_per_target_token <=
+        contract.gates.completion_nats_per_target_token_maximum.cloze,
+    retrieval_completion_retention:
+      validation.completion.retrieval.nats_per_target_token <=
+        contract.gates.completion_nats_per_target_token_maximum.retrieval,
+    claim_choice_retention: validation.paired.claim.choice_accuracy >=
+      contract.gates.paired_choice_accuracy_minimum.claim,
+    retrieval_choice_retention: validation.paired.retrieval.choice_accuracy >=
+      contract.gates.paired_choice_accuracy_minimum.retrieval,
+    claim_position_gap: Math.abs(validation.paired.claim.position_a_accuracy -
+      validation.paired.claim.position_b_accuracy) <=
+        contract.gates.paired_position_gap_maximum.claim,
+    retrieval_position_gap:
+      Math.abs(validation.paired.retrieval.position_a_accuracy -
+        validation.paired.retrieval.position_b_accuracy) <=
+          contract.gates.paired_position_gap_maximum.retrieval,
+    mean_swap_step: validation.mean_swap_consistency_accuracy >=
+      contract.gates.mean_swap_consistency_accuracy_minimum,
+    claim_swap_retention:
+      validation.paired.claim.swap_consistency_accuracy >=
+        contract.gates.swap_consistency_accuracy_minimum.claim,
+    retrieval_swap_retention:
+      validation.paired.retrieval.swap_consistency_accuracy >=
+        contract.gates.swap_consistency_accuracy_minimum.retrieval,
+    mean_pair_exact_step: validation.mean_pair_exact_accuracy >=
+      contract.gates.mean_pair_exact_accuracy_minimum,
+    claim_pair_exact_retention:
+      validation.paired.claim.pair_exact_accuracy >=
+        contract.gates.pair_exact_accuracy_minimum.claim,
+    retrieval_pair_exact_retention:
+      validation.paired.retrieval.pair_exact_accuracy >=
+        contract.gates.pair_exact_accuracy_minimum.retrieval,
+    atlas_retention_nats_per_token: validation.atlas_nats_per_token <=
+      contract.gates.atlas_nats_per_token_maximum,
+    atlas_relative_regression: validation.atlas_relative_regression <=
+      contract.gates.atlas_relative_regression_maximum,
+    anchor_retention_nats_per_token: validation.anchor_nats_per_token <=
+      contract.gates.anchor_nats_per_token_maximum,
+    anchor_relative_regression: validation.anchor_relative_regression <=
+      contract.gates.anchor_relative_regression_maximum,
+    finite_metrics: [validation.combined_final_nats_per_token,
+      validation.atlas_nats_per_token, validation.anchor_nats_per_token,
+      ...Object.values(validation.members),
+      ...Object.values(validation.completion).flatMap(value =>
+        [value.nats_per_target_token, value.top1_token_accuracy,
+          value.last_target_token_accuracy]),
+      ...Object.values(validation.paired).flatMap(value =>
+        [value.forced_choice_nats, value.choice_accuracy,
+          value.position_a_accuracy, value.position_b_accuracy,
+          value.swap_consistency_accuracy, value.pair_exact_accuracy])]
+      .every(Number.isFinite),
+    test_metrics_opened: false,
+  };
+  assert.equal(result.schema, "zero.c33_pair_atomic_result.v1");
+  assert.equal(result.status, "complete");
+  assert.equal(result.contract_sha256, sha256(fs.readFileSync(contractPath)));
+  assert.equal(result.implementation.trainer_sha256,
+    contract.implementation.trainer_sha256);
+  assert.equal(result.test.metrics_opened, false);
+  assert.deepEqual(arm.gates, expectedGates);
+  assert.equal(arm.all_gates_pass, false);
+  assert.equal(result.decision.outcome, "no-go");
+  assert.equal(result.decision.replication_authorized, false);
+  assert.equal(result.decision.broad_model_promotion_authorized, false);
+  assert.ok(close(result.comparisons
+    .pair_atomic_E_minus_D_mean_swap_consistency_accuracy,
+  validation.mean_swap_consistency_accuracy -
+    contract.control_c32_D.mean_swap_consistency_accuracy));
+  assert.equal(status.schema, "zero.c33_aws_status.v1");
+  assert.equal(status.status, "complete");
+  assert.equal(status.contract_sha256, result.contract_sha256);
+  assert.equal(status.git_commit, sourceLock.git_commit);
+  assert.equal(status.result_sha256, sha256(resultBytes));
+  assert.ok(status.estimated_ec2_usd <=
+    contract.execution.maximum_total_ec2_usd);
 }
 
 console.log("ZERO.5-C3.3 frozen pair-atomic screen passed");

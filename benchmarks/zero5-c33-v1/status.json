@@ -1,0 +1,18 @@
+{
+  "schema": "zero.c33_aws_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-c33-aws-20260826-6920785",
+  "instance_id": "i-0ea7a96bb547b6f5d",
+  "instance_type": "c6i.4xlarge",
+  "git_commit": "6920785e121d10d4097fec82985bad8b2362185e",
+  "dataset_digest": "4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d",
+  "contract_sha256": "f06365554a16ec0557503fe35ff6e074a0720312dd4295e3d54e1a7df6fa73d1",
+  "started_at": "2026-08-27T02:39:28Z",
+  "finished_at": "2026-08-27T04:14:20Z",
+  "exit_code": 0,
+  "elapsed_instance_seconds": 5710,
+  "estimated_ec2_usd": 2.757022222223,
+  "result_key": "experiments/zero5-c33-v1/zero5-c33-aws-20260826-6920785/result.json",
+  "result_sha256": "7c0ee03f157ed0bdefa24b99e08e20fab8cb0c863ef448e22a17f1675c9caa57"
+}
