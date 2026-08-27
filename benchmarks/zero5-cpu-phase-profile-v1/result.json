@@ -1,0 +1,74 @@
+{
+  "schema": "zero.cpu_phase_profile_benchmark.v1",
+  "recorded_at": "2026-08-27T21:42:05.012Z",
+  "scientific_status": "performance-only; does not replace the frozen C3.3 run",
+  "platform": {
+    "os": "linux",
+    "architecture": "x64",
+    "release": "6.17.0-1019-aws",
+    "cpu": "Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz"
+  },
+  "workload": {
+    "source": "C3.3 frozen training packs",
+    "updates": 100,
+    "sequences_per_update": 4,
+    "context_tokens": 512,
+    "parallel_workers": 4,
+    "blas_threads_per_worker": 1,
+    "dynamic_threading": false
+  },
+  "baseline": {
+    "update": 100,
+    "train_loss": 2.2614,
+    "validation_loss": 1.9747,
+    "gradient_norm": 1.158,
+    "learning_rate": 0.0001,
+    "tokens_per_second": 5054,
+    "active_targets_per_second": 4521,
+    "elapsed_seconds": 42.17,
+    "checkpoint_sha256": "d598e071751ce37858ab94fd4e9ea7ef031d0f2e4fe83098b84d569d78c7d08d"
+  },
+  "profiled": {
+    "update": 100,
+    "train_loss": 2.2614,
+    "validation_loss": 1.9747,
+    "gradient_norm": 1.158,
+    "learning_rate": 0.0001,
+    "tokens_per_second": 5070,
+    "active_targets_per_second": 4535,
+    "elapsed_seconds": 42.03,
+    "checkpoint_sha256": "d598e071751ce37858ab94fd4e9ea7ef031d0f2e4fe83098b84d569d78c7d08d",
+    "phase_profile": {
+      "schema": "zero.cpu_phase_profile.v1",
+      "updates": 100,
+      "workers": 4,
+      "wall_seconds": {
+        "input_setup": 2.411053419,
+        "train_wave": 36.883474827,
+        "gradient_merge": 0.212815285,
+        "optimizer": 0.781014204
+      },
+      "worker_cpu_seconds": {
+        "forward": 80.444320202,
+        "backward": 66.343150854,
+        "linear_forward": 19.724949837,
+        "linear_backward": 37.749266148,
+        "attention_forward": 32.842562914,
+        "attention_backward": 23.011399508,
+        "norm_forward": 1.04552722,
+        "norm_backward": 2.02497077,
+        "gelu_forward": 25.295774698,
+        "gelu_backward": 1.308074713,
+        "rope": 0.480657339,
+        "output_softmax_loss": 0.637627125,
+        "unattributed": 2.666660786
+      }
+    }
+  },
+  "comparison": {
+    "same_reported_metrics": true,
+    "checkpoint_bit_identical": true,
+    "profiler_elapsed_overhead_fraction": -0.003319895660422123,
+    "profiler_throughput_overhead_fraction": -0.003165809259991992
+  }
+}

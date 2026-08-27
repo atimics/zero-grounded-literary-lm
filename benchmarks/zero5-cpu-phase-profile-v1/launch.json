@@ -1,0 +1,14 @@
+{
+  "schema": "zero.aws_cpu_phase_profile_launch.v1",
+  "run_id": "zero5-cpu-profile-20260827-b7a716a",
+  "instance_id": "i-052076d0d4e5222f3",
+  "source_commit": "756860b3a8d0bdb0b76d719f6b293f7d412959f8",
+  "source_sha256": "bb061da66584d6272b2b26d5de99cbcafea5d68119c28e932e90d563b83e2600",
+  "asset_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+  "contract_sha256": "82bc3d9eef4398ade4dcfd00db2cb0109d3fecb2ba73f3ceea38535f6ea133be",
+  "approval_id": "zero5-cpu-profile-2026-08-27-v1",
+  "launched_at": "2026-08-27T21:39:36Z",
+  "launch_epoch": 1787866774,
+  "maximum_instance_seconds": 317,
+  "maximum_ec2_usd": 0.06
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "zero.aws_cpu_phase_profile_comparison.v1",
+  "status": "complete",
+  "contract_sha256": "82bc3d9eef4398ade4dcfd00db2cb0109d3fecb2ba73f3ceea38535f6ea133be",
+  "artifacts": {
+    "run_id": "zero5-cpu-profile-20260827-b7a716a",
+    "instance_id": "i-052076d0d4e5222f3",
+    "source_commit": "756860b3a8d0bdb0b76d719f6b293f7d412959f8",
+    "source_archive_sha256": "bb061da66584d6272b2b26d5de99cbcafea5d68119c28e932e90d563b83e2600",
+    "asset_archive_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+    "launch_sha256": "24ae7171a525ab4043e664122c60d61bbe7b9622ddae922309adc42fd8682aaa",
+    "status_sha256": "d838e2a97dd7b51163badb9e81a1c2540fe8b2fc81d7fd17fdf2fb6717618abe",
+    "result_sha256": "1b55adb340a5a5cd1120944c6c0ff9fb3844a547ce1cdcdce5616bd48ca7440c",
+    "perf_sha256": "082e62e0fcae68d30202719eda96a1c080c70bb0707d611fd5c4d41ae645192e"
+  },
+  "performance": {
+    "baseline_tokens_per_second": 5054,
+    "profiled_tokens_per_second": 5070,
+    "profiler_elapsed_overhead_fraction": -0.003319895660422123,
+    "wall_seconds": {
+      "tracked_total": 40.288357735,
+      "input_setup": 2.411053419,
+      "input_setup_fraction": 0.05984491685808846,
+      "train_wave": 36.883474827,
+      "train_wave_fraction": 0.9154871754665233,
+      "gradient_merge": 0.212815285,
+      "gradient_merge_fraction": 0.005282302306780786,
+      "optimizer": 0.781014204,
+      "optimizer_fraction": 0.019385605368607613
+    },
+    "worker_cpu_seconds": {
+      "tracked_total": 146.787471056,
+      "linear": 57.474215985,
+      "linear_fraction": 0.3915471502542159,
+      "attention": 55.853962422,
+      "attention_fraction": 0.38050905857415773,
+      "gelu": 26.603849411,
+      "gelu_fraction": 0.18124060057448993,
+      "rmsnorm": 3.07049799,
+      "rmsnorm_fraction": 0.020917984129780343,
+      "rope_fraction": 0.0032745120243718026,
+      "output_softmax_loss_fraction": 0.004343879763121899,
+      "unattributed_fraction": 0.018166814693487417
+    },
+    "hardware_counters": {
+      "available": false,
+      "reason": "The EC2 guest exposed task-clock and software counters but not cycles, instructions, cache, or branch PMU counters.",
+      "cpus_utilized": 3.607,
+      "context_switches": 3808,
+      "cpu_migrations": 52,
+      "page_faults": 440629
+    }
+  },
+  "gates": {
+    "reported_metrics_match": true,
+    "checkpoints_bit_identical": true,
+    "profiler_overhead_below_five_percent": true,
+    "budget_passed": true,
+    "instance_terminated": true,
+    "sealed_test_stayed_closed": true
+  },
+  "cost": {
+    "elapsed_instance_seconds": 153,
+    "estimated_ec2_usd": 0.0289,
+    "approved_maximum_ec2_usd": 0.06
+  },
+  "decision": {
+    "do_not_target_first": [
+      "gradient merge",
+      "optimizer"
+    ],
+    "next_experiment": "Vectorize Linux tanh for GELU and exp for attention softmax without changing the mathematical formulas.",
+    "reason": "Linear algebra and attention use 77.21% of worker CPU, while scalar Linux GELU alone uses 18.12%. Merge and optimizer together use only 2.47% of tracked wall time.",
+    "gelu_only_perfect_speedup_upper_bound": 1.2213600243266325,
+    "after_vector_math": [
+      "blocked causal attention",
+      "OpenBLAS versus BLIS or oneMKL calibration"
+    ]
+  },
+  "claim_boundary": {
+    "performance_result_only": true,
+    "scientific_replication": false,
+    "test_metrics_opened": false,
+    "private_assets_published": false
+  }
+}
