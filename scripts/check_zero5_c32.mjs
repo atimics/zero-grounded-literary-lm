@@ -374,6 +374,7 @@ if (fs.existsSync(localImport)) {
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "zero5-c32-check-"));
 try {
   const tensorBinary = process.env.ZERO5_TENSOR_BINARY ?? null;
+  const profileBinary = process.env.ZERO5_PROFILE_BINARY ?? null;
   const runContractSha256 = "0".repeat(64);
   const packed = path.join(temporary, "tiny.z5pack");
   const paired = path.join(temporary, "tiny.z5pair");
@@ -445,6 +446,34 @@ try {
         value !== "--tensor-batch" && values[index - 1] !== "--tensor-batch"),
       "--resume", tensor, "--save", tensor,
     ], 1);
+  }
+
+  if (profileBinary !== null) {
+    const profile = path.join(temporary, "profile.ckpt");
+    const profileRepeat = path.join(temporary, "profile-repeat.ckpt");
+    const profileOutput = run(profileBinary, [...parallelArgs,
+      "--save", profile]);
+    const profileMatch = profileOutput.match(/^phase-profile (\{.*\})$/m);
+    assert.notEqual(profileMatch, null, "profile output is missing");
+    const profileReport = JSON.parse(profileMatch[1]);
+    assert.equal(profileReport.schema, "zero.cpu_phase_profile.v1");
+    assert.equal(profileReport.updates, 1);
+    assert.equal(profileReport.workers, 4);
+    for (const group of [profileReport.wall_seconds,
+      profileReport.worker_cpu_seconds]) {
+      for (const value of Object.values(group)) {
+        assert.ok(Number.isFinite(value) && value >= 0);
+      }
+    }
+    const referenceMetrics = packedReport(parallelOutput);
+    const profileMetrics = packedReport(profileOutput);
+    assert.ok(referenceMetrics.every((value, index) =>
+      Math.abs(value - profileMetrics[index]) <=
+        (index === 2 ? 0.001 : 0.0001)),
+    `profile metrics drifted: reference=${referenceMetrics} profile=${profileMetrics}`);
+    run(profileBinary, [...parallelArgs, "--save", profileRepeat]);
+    assert.equal(sha256(fs.readFileSync(profile)),
+      sha256(fs.readFileSync(profileRepeat)));
   }
 
   const corrupt = path.join(temporary, "corrupt.z5pack");
