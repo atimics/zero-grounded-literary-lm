@@ -1,0 +1,15 @@
+{
+  "schema": "zero.c33_parallel_aws_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-c33-parallel-aws-20260826-6e6c6a9-r1",
+  "instance_id": "i-0a0c266abca888a80",
+  "git_commit": "6e6c6a9051bbc14613daf64cf6923f26f085df58",
+  "contract_sha256": "bfa863dc4dbd4e7aad8a42ae819fe26ab0ab3efd346235ad7cf72a672054aa2b",
+  "exit_code": 0,
+  "prior_compute_usd": 0.017377777778,
+  "elapsed_instance_seconds": 4396,
+  "estimated_ec2_usd": 0.847733333334,
+  "result_key": "experiments/zero5-c33-parallel-v1/zero5-c33-parallel-aws-20260826-6e6c6a9-r1/result.json",
+  "result_sha256": "7d28b7f098e48482afc1b1b42a24f5c856a999f2a5def4d75c7ad669dc4d3eca"
+}
