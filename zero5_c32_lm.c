@@ -61,6 +61,7 @@ typedef struct {
     size_t count;
     int decay;
     int trainable;
+    int owns_storage;
     float *w;
     float *g;
     float *m;
@@ -81,6 +82,7 @@ typedef struct {
 typedef struct {
     float *x;
     float *n1;
+    float *qkv;
     float *q;
     float *k;
     float *v;
@@ -101,6 +103,7 @@ typedef struct {
     float *dr1;
     float *dn2;
     float *datt;
+    float *dqkv;
     float *dq;
     float *dk;
     float *dv;
@@ -413,18 +416,48 @@ static void parameter_create(Parameter *parameter, const char *name,
     parameter->count = count;
     parameter->decay = decay;
     parameter->trainable = 1;
+    parameter->owns_storage = 1;
     parameter->w = zero_alloc(count, sizeof(float));
     parameter->g = zero_alloc(count, sizeof(float));
     parameter->m = zero_alloc(count, sizeof(float));
     parameter->v = zero_alloc(count, sizeof(float));
 }
 
+#if defined(USE_FUSED_QKV_FORWARD) || defined(USE_FUSED_QKV_BACKWARD)
+static void parameter_create_qkv(Parameter *q, Parameter *k, Parameter *v,
+                                 const char *q_name, const char *k_name,
+                                 const char *v_name, size_t count, int decay)
+{
+    Parameter *parameters[3] = {q, k, v};
+    const char *names[3] = {q_name, k_name, v_name};
+    float *weights = zero_alloc(3U * count, sizeof(float));
+    float *gradients = zero_alloc(3U * count, sizeof(float));
+    float *first_moment = zero_alloc(3U * count, sizeof(float));
+    float *second_moment = zero_alloc(3U * count, sizeof(float));
+    int index;
+    for (index = 0; index < 3; ++index) {
+        Parameter *parameter = parameters[index];
+        parameter->name = names[index];
+        parameter->count = count;
+        parameter->decay = decay;
+        parameter->trainable = 1;
+        parameter->owns_storage = index == 0;
+        parameter->w = weights + (size_t)index * count;
+        parameter->g = gradients + (size_t)index * count;
+        parameter->m = first_moment + (size_t)index * count;
+        parameter->v = second_moment + (size_t)index * count;
+    }
+}
+#endif
+
 static void parameter_destroy(Parameter *parameter)
 {
-    free(parameter->w);
-    free(parameter->g);
-    free(parameter->m);
-    free(parameter->v);
+    if (parameter->owns_storage) {
+        free(parameter->w);
+        free(parameter->g);
+        free(parameter->m);
+        free(parameter->v);
+    }
     memset(parameter, 0, sizeof(*parameter));
 }
 
@@ -647,9 +680,15 @@ static void layer_parameters_create(TransformerLayer *layer, int index,
     snprintf(names + 7 * name_width, name_width, "layer.%d.w2", index);
 
     parameter_create(&layer->norm1, names + 0 * name_width, cfg->dim, 0);
+#if defined(USE_FUSED_QKV_FORWARD) || defined(USE_FUSED_QKV_BACKWARD)
+    parameter_create_qkv(&layer->wq, &layer->wk, &layer->wv,
+                         names + 1 * name_width, names + 2 * name_width,
+                         names + 3 * name_width, dd, 1);
+#else
     parameter_create(&layer->wq, names + 1 * name_width, dd, 1);
     parameter_create(&layer->wk, names + 2 * name_width, dd, 1);
     parameter_create(&layer->wv, names + 3 * name_width, dd, 1);
+#endif
     parameter_create(&layer->wo, names + 4 * name_width, dd, 1);
     parameter_create(&layer->norm2, names + 5 * name_width, cfg->dim, 0);
     parameter_create(&layer->w1, names + 6 * name_width, fd, 1);
@@ -687,6 +726,9 @@ static void cache_create(LayerCache *cache, const Config *cfg)
     size_t htt = (size_t)cfg->heads * cfg->context * cfg->context;
     cache->x = zero_alloc(td, sizeof(float));
     cache->n1 = zero_alloc(td, sizeof(float));
+#if defined(USE_FUSED_QKV_FORWARD)
+    cache->qkv = zero_alloc(3U * td, sizeof(float));
+#endif
     cache->q = zero_alloc(td, sizeof(float));
     cache->k = zero_alloc(td, sizeof(float));
     cache->v = zero_alloc(td, sizeof(float));
@@ -705,6 +747,7 @@ static void cache_destroy(LayerCache *cache)
 {
     free(cache->x);
     free(cache->n1);
+    free(cache->qkv);
     free(cache->q);
     free(cache->k);
     free(cache->v);
@@ -730,6 +773,9 @@ static void work_create(Work *work, const Config *cfg)
     work->dr1 = zero_alloc(td, sizeof(float));
     work->dn2 = zero_alloc(td, sizeof(float));
     work->datt = zero_alloc(td, sizeof(float));
+#if defined(USE_FUSED_QKV_BACKWARD)
+    work->dqkv = zero_alloc(3U * td, sizeof(float));
+#endif
     work->dq = zero_alloc(td, sizeof(float));
     work->dk = zero_alloc(td, sizeof(float));
     work->dv = zero_alloc(td, sizeof(float));
@@ -747,6 +793,7 @@ static void work_destroy(Work *work)
     free(work->dr1);
     free(work->dn2);
     free(work->datt);
+    free(work->dqkv);
     free(work->dq);
     free(work->dk);
     free(work->dv);
@@ -870,9 +917,11 @@ static void model_worker_create(Model *worker, Model *primary)
          parameter_index < primary->parameter_count; ++parameter_index) {
         Parameter *worker_parameter = worker->parameters[parameter_index];
         Parameter *primary_parameter = primary->parameters[parameter_index];
-        free(worker_parameter->w);
-        free(worker_parameter->m);
-        free(worker_parameter->v);
+        if (worker_parameter->owns_storage) {
+            free(worker_parameter->w);
+            free(worker_parameter->m);
+            free(worker_parameter->v);
+        }
         worker_parameter->w = primary_parameter->w;
         worker_parameter->m = NULL;
         worker_parameter->v = NULL;
@@ -966,7 +1015,8 @@ static void model_zero_grad(Model *model)
     }
 }
 
-static void rope_apply(const Model *model, float *values, int inverse)
+static void rope_apply(const Model *model, float *values, int stride,
+                       int inverse)
 {
     const Config *cfg = &model->cfg;
     int head_width = cfg->dim / cfg->heads;
@@ -978,7 +1028,7 @@ static void rope_apply(const Model *model, float *values, int inverse)
         for (head = 0; head < cfg->heads; ++head) {
             int head_offset = head * head_width;
             for (pair = 0; pair < pair_count; ++pair) {
-                int offset = time * cfg->dim + head_offset + 2 * pair;
+                int offset = time * stride + head_offset + 2 * pair;
                 float c = model->rope_cos[time * pair_count + pair];
                 float s = model->rope_sin[time * pair_count + pair];
                 float a = values[offset];
@@ -998,6 +1048,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
     int source;
     int i;
     int head_width = cfg->dim / cfg->heads;
+    int qkv_stride = cfg->dim;
     float scale = 1.0f / sqrtf((float)head_width);
 
 #if defined(USE_ACCELERATE) || defined(USE_CBLAS)
@@ -1008,7 +1059,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
             &cache->prob[(size_t)head * cfg->context * cfg->context];
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, cfg->context,
                     cfg->context, head_width, scale, cache->q + offset,
-                    cfg->dim, cache->k + offset, cfg->dim, 0.0f, matrix,
+                    qkv_stride, cache->k + offset, qkv_stride, 0.0f, matrix,
                     cfg->context);
         for (time = 0; time < cfg->context; ++time) {
             float *row = matrix + (size_t)time * cfg->context;
@@ -1019,7 +1070,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
         }
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, cfg->context,
                     head_width, cfg->context, 1.0f, matrix, cfg->context,
-                    cache->v + offset, cfg->dim, 0.0f, cache->att + offset,
+                    cache->v + offset, qkv_stride, 0.0f, cache->att + offset,
                     cfg->dim);
     }
 #else
@@ -1031,8 +1082,8 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
             for (source = 0; source <= time; ++source) {
                 float score = 0.0f;
                 for (i = 0; i < head_width; ++i) {
-                    score += cache->q[time * cfg->dim + offset + i] *
-                             cache->k[source * cfg->dim + offset + i];
+                    score += cache->q[time * qkv_stride + offset + i] *
+                             cache->k[source * qkv_stride + offset + i];
                 }
                 row[source] = score * scale;
             }
@@ -1041,7 +1092,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
                 float value = 0.0f;
                 for (source = 0; source <= time; ++source) {
                     value += row[source] *
-                             cache->v[source * cfg->dim + offset + i];
+                             cache->v[source * qkv_stride + offset + i];
                 }
                 cache->att[time * cfg->dim + offset + i] = value;
             }
@@ -1059,6 +1110,7 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
     int source;
     int i;
     int head_width = cfg->dim / cfg->heads;
+    int qkv_stride = cfg->dim;
     float scale = 1.0f / sqrtf((float)head_width);
 
 #if defined(USE_ACCELERATE) || defined(USE_CBLAS)
@@ -1071,7 +1123,8 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
             scratch + (size_t)head * cfg->context * cfg->context;
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, cfg->context,
                     cfg->context, head_width, 1.0f, datt + offset, cfg->dim,
-                    cache->v + offset, cfg->dim, 0.0f, dscore, cfg->context);
+                    cache->v + offset, qkv_stride, 0.0f, dscore,
+                    cfg->context);
         for (time = 0; time < cfg->context; ++time) {
             const float *prob_row = prob + (size_t)time * cfg->context;
             float *gradient_row = dscore + (size_t)time * cfg->context;
@@ -1090,13 +1143,15 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
         }
         cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, cfg->context,
                     head_width, cfg->context, 1.0f, prob, cfg->context,
-                    datt + offset, cfg->dim, 1.0f, dv + offset, cfg->dim);
+                    datt + offset, cfg->dim, 1.0f, dv + offset, qkv_stride);
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, cfg->context,
                     head_width, cfg->context, 1.0f, dscore, cfg->context,
-                    cache->k + offset, cfg->dim, 1.0f, dq + offset, cfg->dim);
+                    cache->k + offset, qkv_stride, 1.0f, dq + offset,
+                    qkv_stride);
         cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, cfg->context,
                     head_width, cfg->context, 1.0f, dscore, cfg->context,
-                    cache->q + offset, cfg->dim, 1.0f, dk + offset, cfg->dim);
+                    cache->q + offset, qkv_stride, 1.0f, dk + offset,
+                    qkv_stride);
     }
 #else
     (void)scratch;
@@ -1111,8 +1166,8 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
                 float dprob = 0.0f;
                 for (i = 0; i < head_width; ++i) {
                     dprob += datt[time * cfg->dim + offset + i] *
-                             cache->v[source * cfg->dim + offset + i];
-                    dv[source * cfg->dim + offset + i] +=
+                             cache->v[source * qkv_stride + offset + i];
+                    dv[source * qkv_stride + offset + i] +=
                         row[source] * datt[time * cfg->dim + offset + i];
                 }
                 weighted_gradient += row[source] * dprob;
@@ -1122,14 +1177,14 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
                 float dscore;
                 for (i = 0; i < head_width; ++i) {
                     dprob += datt[time * cfg->dim + offset + i] *
-                             cache->v[source * cfg->dim + offset + i];
+                             cache->v[source * qkv_stride + offset + i];
                 }
                 dscore = row[source] * (dprob - weighted_gradient) * scale;
                 for (i = 0; i < head_width; ++i) {
-                    dq[time * cfg->dim + offset + i] +=
-                        dscore * cache->k[source * cfg->dim + offset + i];
-                    dk[source * cfg->dim + offset + i] +=
-                        dscore * cache->q[time * cfg->dim + offset + i];
+                    dq[time * qkv_stride + offset + i] +=
+                        dscore * cache->k[source * qkv_stride + offset + i];
+                    dk[source * qkv_stride + offset + i] +=
+                        dscore * cache->q[time * qkv_stride + offset + i];
                 }
             }
         }
@@ -1182,15 +1237,31 @@ static float model_forward_masked(Model *model, const Token *tokens,
 
         rmsnorm_forward(cache->x, layer->norm1.w, cache->n1, cfg->context,
                         cfg->dim);
+#if defined(USE_FUSED_QKV_FORWARD)
+        linear_forward(cfg->context, cfg->dim, 3 * cfg->dim, cache->n1,
+                       layer->wq.w, cache->qkv);
+        for (time = 0; time < cfg->context; ++time) {
+            const float *source = cache->qkv +
+                                  (size_t)time * 3U * cfg->dim;
+            memcpy(cache->q + (size_t)time * cfg->dim, source,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(cache->k + (size_t)time * cfg->dim, source + cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(cache->v + (size_t)time * cfg->dim,
+                   source + 2 * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+        }
+#else
         linear_forward(cfg->context, cfg->dim, cfg->dim, cache->n1,
                        layer->wq.w, cache->q);
         linear_forward(cfg->context, cfg->dim, cfg->dim, cache->n1,
                        layer->wk.w, cache->k);
         linear_forward(cfg->context, cfg->dim, cfg->dim, cache->n1,
                        layer->wv.w, cache->v);
+#endif
         if (cfg->rotary) {
-            rope_apply(model, cache->q, 0);
-            rope_apply(model, cache->k, 0);
+            rope_apply(model, cache->q, cfg->dim, 0);
+            rope_apply(model, cache->k, cfg->dim, 0);
         }
         attention_forward(cfg, cache);
         linear_forward(cfg->context, cfg->dim, cfg->dim, cache->att,
@@ -1430,9 +1501,26 @@ static void model_backward_blended_masked(
         attention_backward(cfg, cache, work->datt, work->dq, work->dk,
                            work->dv, work->attention_matrix);
         if (cfg->rotary) {
-            rope_apply(model, work->dq, 1);
-            rope_apply(model, work->dk, 1);
+            rope_apply(model, work->dq, cfg->dim, 1);
+            rope_apply(model, work->dk, cfg->dim, 1);
         }
+#if defined(USE_FUSED_QKV_BACKWARD)
+        for (time = 0; time < cfg->context; ++time) {
+            float *destination = work->dqkv +
+                                 (size_t)time * 3U * cfg->dim;
+            memcpy(destination, work->dq + (size_t)time * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(destination + cfg->dim,
+                   work->dk + (size_t)time * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(destination + 2 * cfg->dim,
+                   work->dv + (size_t)time * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+        }
+        memset(work->dn1, 0, td * sizeof(float));
+        linear_backward(cfg->context, cfg->dim, 3 * cfg->dim, cache->n1,
+                        layer->wq.w, work->dqkv, layer->wq.g, work->dn1);
+#else
         memset(work->dn1, 0, td * sizeof(float));
         linear_backward(cfg->context, cfg->dim, cfg->dim, cache->n1,
                         layer->wq.w, work->dq, layer->wq.g, work->dn1);
@@ -1440,6 +1528,7 @@ static void model_backward_blended_masked(
                         layer->wk.w, work->dk, layer->wk.g, work->dn1);
         linear_backward(cfg->context, cfg->dim, cfg->dim, cache->n1,
                         layer->wv.w, work->dv, layer->wv.g, work->dn1);
+#endif
         rmsnorm_backward(cache->x, layer->norm1.w, work->dn1, dx,
                          layer->norm1.g, cfg->context, cfg->dim);
 
