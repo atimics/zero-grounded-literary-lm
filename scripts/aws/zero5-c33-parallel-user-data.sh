@@ -28,6 +28,7 @@ AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
 MAX_COMPUTE_USD=$(tag MaxComputeUsd)
+PRIOR_COMPUTE_USD=$(tag PriorComputeUsd)
 HOURLY_PRICE=$(tag HourlyPrice)
 APPROVAL_ID=$(tag ApprovalId)
 INSTANCE_ID=$(metadata instance-id)
@@ -42,7 +43,8 @@ export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$DATASET_DIGEST" = 4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d
-test "$MAX_INSTANCE_SECONDS" = 6352
+test "$MAX_INSTANCE_SECONDS" -gt 0
+test "$MAX_INSTANCE_SECONDS" -le 6352
 test "$MAX_COMPUTE_USD" = 1.2
 test "$HOURLY_PRICE" = 0.68
 test "$APPROVAL_ID" = zero5-c33-parallel-2026-08-26-v1
@@ -51,6 +53,7 @@ test "$APPROVAL_ID" = zero5-c33-parallel-2026-08-26-v1
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
+awk -v prior="$PRIOR_COMPUTE_USD" 'BEGIN { exit !(prior >= 0 && prior < 1.2) }'
 
 remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s)))
 test "$remaining" -gt 0
@@ -58,7 +61,8 @@ test "$remaining" -gt 0
 elapsed_seconds() { printf '%s\n' "$(($(date +%s) - LAUNCH_EPOCH))"; }
 estimated_cost() {
   awk -v seconds="$1" -v price="$HOURLY_PRICE" \
-    'BEGIN { printf "%.12f", seconds * price / 3600 }'
+    -v prior="$PRIOR_COMPUTE_USD" \
+    'BEGIN { printf "%.12f", prior + seconds * price / 3600 }'
 }
 write_status() {
   status=$1
@@ -70,12 +74,14 @@ write_status() {
   jq -n --arg status "$status" --arg phase "$PHASE" \
     --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
     --arg git_commit "$SOURCE_COMMIT" --arg contract_sha256 "$CONTRACT_SHA256" \
+    --argjson prior_compute_usd "$PRIOR_COMPUTE_USD" \
     --arg result_key "$result_key" --arg result_sha256 "$result_sha256" \
     --argjson exit_code "$exit_code" --argjson elapsed "$elapsed" \
     --argjson cost "$cost" \
     '{schema:"zero.c33_parallel_aws_status.v1",status:$status,phase:$phase,
       run_id:$run_id,instance_id:$instance_id,git_commit:$git_commit,
       contract_sha256:$contract_sha256,exit_code:$exit_code,
+      prior_compute_usd:$prior_compute_usd,
       elapsed_instance_seconds:$elapsed,estimated_ec2_usd:$cost,
       result_key:(if $result_key=="" then null else $result_key end),
       result_sha256:(if $result_sha256=="" then null else $result_sha256 end)}' \

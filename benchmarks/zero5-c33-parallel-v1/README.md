@@ -24,3 +24,8 @@ turning 4 workers × 8 BLAS threads into 32 competing compute threads.
 The sealed test set stays closed. Private data and checkpoints stay private.
 The EC2 ceiling is $1.20. It was explicitly approved on 2026-08-27 UTC before
 any replay compute was launched.
+
+The first bootstrap stopped before update 1 because its calibration command
+did not pass the required contract hash. Its $0.017377777778 cost remains part
+of the same $1.20 ceiling. The corrected retry subtracts that amount before it
+computes its automatic shutdown time.
