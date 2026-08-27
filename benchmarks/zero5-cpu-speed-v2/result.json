@@ -1,0 +1,54 @@
+{
+  "schema": "zero.cpu_speed_result.v2",
+  "status": "measured-local",
+  "recorded_at": "2026-08-27T14:42:00Z",
+  "source": {
+    "base_commit": "1aac4001b2a836a7f2cdf379c6a226887db88363",
+    "trainer": "zero5_c32_lm.c",
+    "optimized_trainer_sha256": "6a4a197b9ab34088989cfb315d6b4d47f3cdfcf56eea01bebe3773ccbe410e05"
+  },
+  "machine": {
+    "os": "macOS 26.3.1",
+    "architecture": "arm64",
+    "linear_algebra_backend": "Accelerate"
+  },
+  "workload": {
+    "source": "frozen C3.3 training and validation packs",
+    "updates_per_run": 500,
+    "runs_per_trainer": 2,
+    "sequences_per_update": 4,
+    "context_tokens": 512,
+    "compute_token_exposures_per_run": 1024000,
+    "validation_sequences": 8
+  },
+  "previous_parallel": {
+    "tokens_per_second": [26548, 26292],
+    "elapsed_seconds": [38.77, 39.14],
+    "mean_tokens_per_second": 26420.0,
+    "mean_elapsed_seconds": 38.955
+  },
+  "optimized_parallel": {
+    "optimization": "persistent workers plus parallel fixed-order gradient merge and AdamW element updates",
+    "tokens_per_second": [27403, 27154],
+    "elapsed_seconds": [37.56, 37.93],
+    "mean_tokens_per_second": 27278.5,
+    "mean_elapsed_seconds": 37.745,
+    "train_loss": 1.8923,
+    "validation_loss": 1.8726,
+    "gradient_norm": 1.513
+  },
+  "comparison": {
+    "throughput_change": 0.032494322482967464,
+    "elapsed_time_reduction": 0.03106148119625196,
+    "projected_local_full_run_seconds_previous": 731.9158213474641,
+    "projected_local_full_run_seconds_optimized": 708.881206811225
+  },
+  "correctness": {
+    "previous_checkpoint_sha256": "a6e93218920440af7c07b4b2b617bf184a2dd3b1b8dadfb1932694db97a4043a",
+    "optimized_checkpoint_sha256": "a6e93218920440af7c07b4b2b617bf184a2dd3b1b8dadfb1932694db97a4043a",
+    "checkpoint_bit_identical": true,
+    "reported_metrics_match": true,
+    "finite_difference_gradient_checks_per_build": 35,
+    "c32_mechanics_tests_passed": true
+  }
+}

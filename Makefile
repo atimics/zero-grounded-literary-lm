@@ -552,6 +552,9 @@ zero5-cpu-speed-check: zero5_c32_lm zero5_c32_lm_fast
 	./zero5_c32_lm_fast --self-test
 	node scripts/benchmark_zero5_cpu.mjs --self-test
 
+zero5-cpu-speed-v2-check: zero5-cpu-speed-check
+	node scripts/check_zero5_cpu_speed_v2.mjs
+
 graded_plasticity_audit: graded_plasticity_audit.c literary_lm.c \
 		channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) graded_plasticity_audit.c -o $@ \
