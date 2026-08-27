@@ -375,6 +375,7 @@ const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "zero5-c32-check-"));
 try {
   const tensorBinary = process.env.ZERO5_TENSOR_BINARY ?? null;
   const profileBinary = process.env.ZERO5_PROFILE_BINARY ?? null;
+  const vectorBinary = process.env.ZERO5_VECTOR_BINARY ?? null;
   const runContractSha256 = "0".repeat(64);
   const packed = path.join(temporary, "tiny.z5pack");
   const paired = path.join(temporary, "tiny.z5pair");
@@ -474,6 +475,22 @@ try {
     run(profileBinary, [...parallelArgs, "--save", profileRepeat]);
     assert.equal(sha256(fs.readFileSync(profile)),
       sha256(fs.readFileSync(profileRepeat)));
+  }
+
+  if (vectorBinary !== null) {
+    const vector = path.join(temporary, "vector.ckpt");
+    const vectorRepeat = path.join(temporary, "vector-repeat.ckpt");
+    const vectorOutput = run(vectorBinary, [...parallelArgs,
+      "--save", vector]);
+    const referenceMetrics = packedReport(parallelOutput);
+    const vectorMetrics = packedReport(vectorOutput);
+    assert.ok(referenceMetrics.every((value, index) =>
+      Math.abs(value - vectorMetrics[index]) <=
+        (index === 2 ? 0.005 : 0.0001)),
+    `vector metrics drifted: reference=${referenceMetrics} vector=${vectorMetrics}`);
+    run(vectorBinary, [...parallelArgs, "--save", vectorRepeat]);
+    assert.equal(sha256(fs.readFileSync(vector)),
+      sha256(fs.readFileSync(vectorRepeat)));
   }
 
   const corrupt = path.join(temporary, "corrupt.z5pack");

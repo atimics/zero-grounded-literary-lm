@@ -11,6 +11,10 @@
 #include "channel_protocol.h"
 #include "zero1_protocol.h"
 
+#if defined(USE_GNU_LIBMVEC)
+#include <immintrin.h>
+#endif
+
 #if defined(USE_ACCELERATE)
 #include <Accelerate/Accelerate.h>
 #elif defined(USE_CBLAS)
@@ -666,6 +670,79 @@ static float gelu_derivative_from_tanh(float x, float t)
            0.5f * x * (1.0f - t * t) * c * (1.0f + 3.0f * a * x * x);
 }
 
+#if defined(USE_GNU_LIBMVEC) && defined(USE_LIBMVEC_TANH)
+extern __m256 _ZGVdN8v_tanhf(__m256);
+
+static void libmvec_tanhf_inplace(float *values, int count)
+{
+    int i = 0;
+    for (; i + 8 <= count; i += 8) {
+        __m256 value = _mm256_loadu_ps(values + i);
+        value = _ZGVdN8v_tanhf(value);
+        _mm256_storeu_ps(values + i, value);
+    }
+    for (; i < count; ++i) values[i] = tanhf(values[i]);
+}
+#endif
+
+#if defined(USE_GNU_LIBMVEC) && defined(USE_LIBMVEC_EXP)
+extern __m256 _ZGVdN8v_expf(__m256);
+
+static void libmvec_expf_inplace(float *values, int count)
+{
+    int i = 0;
+    for (; i + 8 <= count; i += 8) {
+        __m256 value = _mm256_loadu_ps(values + i);
+        value = _ZGVdN8v_expf(value);
+        _mm256_storeu_ps(values + i, value);
+    }
+    for (; i < count; ++i) values[i] = expf(values[i]);
+}
+#endif
+
+#if defined(USE_GNU_LIBMVEC) && \
+    (defined(USE_LIBMVEC_TANH) || defined(USE_LIBMVEC_EXP))
+static int libmvec_self_test(void)
+{
+    float values[17];
+    float reference[17];
+    int i;
+#if defined(USE_LIBMVEC_TANH)
+    for (i = 0; i < 17; ++i) {
+        values[i] = -4.0f + 0.5f * i;
+        reference[i] = tanhf(values[i]);
+    }
+    libmvec_tanhf_inplace(values, 17);
+    for (i = 0; i < 17; ++i) {
+        if (!isfinite(values[i]) ||
+            fabsf(values[i] - reference[i]) >
+                5.0e-6f * (1.0f + fabsf(reference[i]))) {
+            fprintf(stderr, "libmvec tanh mismatch at %d: %.9g != %.9g\n",
+                    i, values[i], reference[i]);
+            return 0;
+        }
+    }
+#endif
+#if defined(USE_LIBMVEC_EXP)
+    for (i = 0; i < 17; ++i) {
+        values[i] = -0.5f * i;
+        reference[i] = expf(values[i]);
+    }
+    libmvec_expf_inplace(values, 17);
+    for (i = 0; i < 17; ++i) {
+        if (!isfinite(values[i]) ||
+            fabsf(values[i] - reference[i]) >
+                5.0e-6f * (1.0f + fabsf(reference[i]))) {
+            fprintf(stderr, "libmvec exp mismatch at %d: %.9g != %.9g\n",
+                    i, values[i], reference[i]);
+            return 0;
+        }
+    }
+#endif
+    return 1;
+}
+#endif
+
 static void gelu_forward_array(const float *input, float *output,
                                float *tanh_cache, int count)
 {
@@ -680,6 +757,8 @@ static void gelu_forward_array(const float *input, float *output,
     }
 #if defined(USE_ACCELERATE)
     vvtanhf(tanh_cache, tanh_cache, &count);
+#elif defined(USE_GNU_LIBMVEC) && defined(USE_LIBMVEC_TANH)
+    libmvec_tanhf_inplace(tanh_cache, count);
 #else
     for (i = 0; i < count; ++i) tanh_cache[i] = tanhf(tanh_cache[i]);
 #endif
@@ -709,6 +788,8 @@ static void softmax_prefix_inplace(float *row, int count)
     for (i = 0; i < count; ++i) row[i] -= maximum;
 #if defined(USE_ACCELERATE)
     vvexpf(row, row, &count);
+#elif defined(USE_GNU_LIBMVEC) && defined(USE_LIBMVEC_EXP)
+    libmvec_expf_inplace(row, count);
 #else
     for (i = 0; i < count; ++i) row[i] = expf(row[i]);
 #endif
@@ -5794,6 +5875,11 @@ static int run_self_test(void)
     int failures = 0;
     int checks = 0;
     const float epsilon = 0.001f;
+
+#if defined(USE_GNU_LIBMVEC) && \
+    (defined(USE_LIBMVEC_TANH) || defined(USE_LIBMVEC_EXP))
+    if (!libmvec_self_test()) ++failures;
+#endif
 
     rng_seed(&rng, 0);
     model_create(&model, cfg, &rng);
