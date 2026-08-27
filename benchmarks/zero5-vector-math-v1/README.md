@@ -41,6 +41,6 @@ node scripts/benchmark_zero5_vector_math.mjs \
 This is a performance experiment, not a C3.3 scientific replication. The
 sealed test set stays closed.
 
-The proposed AWS package is locked in `aws-contract.json` and verified with
-`make zero5-vector-math-aws-check`. It cannot launch until the contract records
-fresh explicit approval for its $0.07 maximum.
+The AWS package is locked in `aws-contract.json` and verified with
+`make zero5-vector-math-aws-check`. The completed result is explained in
+`RESULT.md` and verified with `make zero5-vector-math-aws-result-check`.

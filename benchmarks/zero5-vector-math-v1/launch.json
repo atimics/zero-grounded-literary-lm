@@ -1,0 +1,14 @@
+{
+  "schema": "zero.aws_vector_math_launch.v1",
+  "run_id": "zero5-vector-math-20260827-a157393",
+  "instance_id": "i-0248641a48f46b74d",
+  "source_commit": "3aab305be314b2d62b5087a2e1bb89372bf2b489",
+  "source_sha256": "8a37d51b8e67efe73c806a898539f33000a68744b6899278698b277985f7d03c",
+  "asset_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+  "contract_sha256": "13d759069a40595d1d9d37d6fc507ced999568d8dcccda09393cea3f38b4eeb8",
+  "approval_id": "zero5-vector-math-2026-08-27-v1",
+  "launched_at": "2026-08-27T23:04:53Z",
+  "launch_epoch": 1787871890,
+  "maximum_instance_seconds": 370,
+  "maximum_ec2_usd": 0.07
+}
