@@ -26,5 +26,8 @@ Check the parser and comparison mechanics with:
 node scripts/benchmark_zero5_vector_validation.mjs --self-test
 ```
 
-The AWS execution contract will be frozen separately after this benchmark
-implementation is committed. No compute is authorized by this file.
+The spend-locked AWS package is in `aws-contract.json`. It projects $0.1473 of
+EC2 use and has a hard 900-second/$0.17 ceiling with automatic termination.
+The source, assets, math backends, validation reads, gates, and closed test-set
+policy are frozen. Its status is `awaiting-explicit-authorization`; preparing
+and checking the package launches no compute.

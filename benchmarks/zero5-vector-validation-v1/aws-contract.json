@@ -1,0 +1,84 @@
+{
+  "schema": "zero.aws_vector_validation_contract.v1",
+  "experiment": "zero5-vector-validation-v1",
+  "status": "awaiting-explicit-authorization",
+  "purpose": "Confirm over 1000 updates that the 28.14% GNU libmvec speed candidate keeps a useful C3.3 validation-loss trajectory.",
+  "claim_boundary": {
+    "may_claim": "The vector math candidate did or did not satisfy the frozen speed and validation-loss promotion guards on this exact performance replay.",
+    "may_not_claim": [
+      "a new model result",
+      "a scientific C3.3 replication",
+      "general model quality equivalence",
+      "permission to inspect the sealed test set",
+      "permission to publish private data or checkpoints"
+    ]
+  },
+  "source": {
+    "git_commit": "a0645209d53184f7d87247e5b15c0d6f09523fca",
+    "archive_key": "experiments/zero5-vector-validation-v1/inputs/source-a0645209d53184f7d87247e5b15c0d6f09523fca-7fefc72b40cdd5eec03488ccfe08648f2d3ba52e724a3f3c84edf53b5c76c28c.tar.gz",
+    "archive_sha256": "7fefc72b40cdd5eec03488ccfe08648f2d3ba52e724a3f3c84edf53b5c76c28c"
+  },
+  "assets": {
+    "archive_key": "experiments/zero5-tensor-batch-v1/inputs/assets-4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c.tar.gz",
+    "archive_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "train_pack_sha256": "74698853c019ccf38865d74931c44e8f1f436ee0567eee194979cbcbcdeb4ed8",
+    "validation_pack_sha256": "4fedd425e3d69608c6f4eaa7002474a4c2cfdf845c708c77b2d15ec585566cb6"
+  },
+  "workload": {
+    "arms": {
+      "baseline": {
+        "binary": "zero5_c32_lm_fast",
+        "math_backend": "scalar-array"
+      },
+      "vector": {
+        "binary": "zero5_c32_lm_vector_math",
+        "math_backend": "gnu-libmvec-tanh-exp"
+      }
+    },
+    "updates_per_arm": 1000,
+    "report_every_updates": 100,
+    "validation_batches_per_report": 16,
+    "batch_sequences": 4,
+    "parallel_workers": 4,
+    "context_tokens": 512,
+    "openblas_threads_per_worker": 1,
+    "dynamic_threading": false,
+    "checkpoint_version": 6,
+    "gates": {
+      "minimum_vector_speed_gain_fraction": 0.15,
+      "maximum_final_validation_loss_delta": 0.01,
+      "maximum_mean_validation_loss_delta": 0.01,
+      "maximum_single_point_validation_loss_delta": 0.02,
+      "all_metrics_finite": true,
+      "exact_math_backend_required": true
+    },
+    "decision": "Promote vector math as the Linux production default only if every gate passes. Otherwise retain the scalar-array default.",
+    "test_set_policy": "The sealed test set stays closed."
+  },
+  "execution": {
+    "venue": "aws-ec2",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "on_demand_usd_per_hour": 0.68,
+    "projected_instance_seconds": 780,
+    "projected_ec2_usd": 0.147333333333,
+    "maximum_instance_seconds": 900,
+    "proposed_maximum_ec2_usd": 0.17,
+    "maximum_computed_ec2_usd": 0.17,
+    "automatic_termination": true,
+    "durable_result_upload": true,
+    "user_data": "scripts/aws/zero5-vector-validation-user-data.sh",
+    "user_data_sha256": "79713ff9b248ebbd13bdd28a5fb642eab2abf5cf687460ce61bdcf74ea8ec2c3",
+    "launcher": "scripts/aws/zero5-vector-validation-run-instance.sh"
+  },
+  "authorization": {
+    "status": "awaiting-explicit-user-approval",
+    "approval_id": "zero5-vector-validation-2026-08-27-v1",
+    "requested_maximum_ec2_usd": 0.17,
+    "approved_by": null,
+    "approved_at": null
+  }
+}
