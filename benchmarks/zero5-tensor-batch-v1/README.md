@@ -73,3 +73,7 @@ The launch path is:
 - `scripts/aws/zero5-tensor-calibration-run-instance.sh`
 - `scripts/aws/zero5-tensor-calibration-user-data.sh`
 - `make zero5-tensor-aws-check`
+
+The completed AWS result is in `RESULT.md`, with machine-readable result,
+status, comparison, cost, and artifact hashes beside it. Verify it with
+`make zero5-tensor-aws-result-check`.

@@ -1,0 +1,15 @@
+{
+  "schema": "zero.aws_tensor_batch_calibration_status.v1",
+  "status": "failed",
+  "phase": "calibration",
+  "run_id": "zero5-tensor-aws-20260827-ed67d1e",
+  "instance_id": "i-0e71965a7adad1c90",
+  "git_commit": "ed67d1e114d0b7284107a6c80d2e99cc55d98fd8",
+  "approval_id": "zero5-tensor-calibration-2026-08-27-v1",
+  "exit_code": 1,
+  "completed_thread_candidates": 0,
+  "elapsed_instance_seconds": 188,
+  "estimated_ec2_usd": 0.035511111111,
+  "result_key": null,
+  "result_sha256": null
+}

@@ -1,0 +1,58 @@
+{
+  "schema": "zero.aws_tensor_batch_calibration_comparison.v1",
+  "status": "complete",
+  "contract_sha256": "1c2cbf69d381a9d34c2dfb4a99986ba9e00a6ac33f9728aeae27561e9ef7a2d1",
+  "attempts": {
+    "first": {
+      "run_id": "zero5-tensor-aws-20260827-ed67d1e",
+      "instance_id": "i-0e71965a7adad1c90",
+      "contract_sha256": "73cc729d58cf7ebcfb4026cafdd40f5fb07a81869a5b8f3d9013e86f787056df",
+      "launch_sha256": "93486e4d1bb047ae391edd842ef3caf5b17ecea2f13b4c6e7d4741f0204adfad",
+      "status_sha256": "f6ce3f9ce04360dab65f6b4c7bcf768ec47323b8d50ee2b2ea2df0b551f32c4e",
+      "completed_candidates": 0,
+      "ec2_usd": 0.035511111111
+    },
+    "retry": {
+      "run_id": "zero5-tensor-aws-20260827-ed67d1e-r1",
+      "instance_id": "i-0ce07c49b3876c6d2",
+      "launch_sha256": "466f4c38b5bdd0acd77da053efe07bd3c97b77dcdc3bf553f04ea238cf55dcf7",
+      "status_sha256": "c773033f547454a785ef3c6095b8fe22b113f1099017740f1dab205f44fa9bbc",
+      "result_sha256": "3aa00d4352ab4b80b87a375bafbc7098373bb53b954b30a4aa1171fc012615e4",
+      "candidate_sha256": {
+        "1": "9eb91b5bc16703811d9857b44e57cce0d0920ceee798dbf92ae75f37c341b11e",
+        "2": "33c578bb6a49e927159c3598dd7d9f56a59bc771c0394e5ef8813257cef09abf",
+        "4": "7adc52d726439dcc999614af41c7d8e04ef98fc6648a1444884fe4320d528cc3",
+        "8": "72265e807b5c677d154ad9d0a79c1a4940f7eb276fa2ba2dad13b84098a70ec4",
+        "16": "b1e2cf6d042344655e40cb8ce4bb3db122d0a166a6a5d3f3f5afe27b88f60b95"
+      },
+      "completed_candidates": 5,
+      "ec2_usd": 0.043633333333
+    }
+  },
+  "performance": {
+    "parallel_baseline_tokens_per_second": 5135,
+    "fastest_tensor_tokens_per_second": 2835,
+    "fastest_tensor_threads": 8,
+    "fastest_tensor_variant": "tensor",
+    "tensor_to_parallel_ratio": 0.552093476144,
+    "tensor_slower_fraction": 0.447906523856,
+    "required_tokens_per_second": 5905.25,
+    "qkv_improved_any_candidate": false
+  },
+  "gates": {
+    "reported_metrics_match": true,
+    "tensor_at_least_15_percent_faster": false,
+    "qkv_fusion_improves_tensor": false,
+    "combined_budget_passed": true
+  },
+  "cost": {
+    "combined_estimated_ec2_usd": 0.079144444444,
+    "approved_maximum_ec2_usd": 0.15
+  },
+  "claim_boundary": {
+    "performance_result_only": true,
+    "scientific_replication": false,
+    "test_metrics_opened": false,
+    "private_assets_published": false
+  }
+}
