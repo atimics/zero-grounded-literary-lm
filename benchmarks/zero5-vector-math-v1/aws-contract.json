@@ -1,7 +1,7 @@
 {
   "schema": "zero.aws_vector_math_contract.v1",
   "experiment": "zero5-vector-math-v1",
-  "status": "awaiting-explicit-authorization",
+  "status": "authorized",
   "purpose": "Measure whether GNU libmvec tanh and exp improve the winning four-worker C trainer on c6i.4xlarge.",
   "claim_boundary": {
     "may_claim": "The fastest admitted vector-math variant improved or did not improve this exact C3.3 performance workload on the stated AWS CPU.",
@@ -65,10 +65,10 @@
     "launcher": "scripts/aws/zero5-vector-math-run-instance.sh"
   },
   "authorization": {
-    "status": "awaiting-explicit-user-approval",
+    "status": "authorized",
     "approval_id": "zero5-vector-math-2026-08-27-v1",
     "requested_maximum_ec2_usd": 0.07,
-    "approved_by": null,
-    "approved_at": null
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-27T23:00:43Z"
   }
 }
