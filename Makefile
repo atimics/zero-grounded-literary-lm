@@ -3,6 +3,13 @@ CFLAGS ?= -O2 -std=c11 -Wall -Wextra -Wpedantic
 LITERARY_BACKEND ?= auto
 EMCC ?= emcc
 UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+CPU_FAST_CFLAGS := -O3 -mcpu=native -flto -fno-math-errno \
+	-DUSE_VECTOR_MATH
+else
+CPU_FAST_CFLAGS := -O3 -march=native -flto -fno-math-errno \
+	-DUSE_VECTOR_MATH
+endif
 KJV_URL := https://www.gutenberg.org/ebooks/30.txt.utf-8
 ZERO2_CHECKPOINT ?= literary-v8-consolidated.ckpt
 ZERO3_STEPS ?= 6000
@@ -161,6 +168,7 @@ endif
 
 .PHONY: all check clean web channel-data zero3-data zero3-stage1 \
 	zero-data-build zero-data-pipeline-check \
+	zero5-cpu-speed-check \
 	sero-corpus-plan-check sero-corpus-prepare sero-corpus-build \
 	sero-corpus-result-check \
 	sero0-tokenizer sero0-check zero5-c0-check zero5-c0-run \
@@ -515,6 +523,15 @@ zero5_c31_lm: zero5_c31_lm.c channel_protocol.h zero1_protocol.h
 
 zero5_c32_lm: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5_c32_lm_fast: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(LITERARY_CFLAGS) \
+		zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS)
+
+zero5-cpu-speed-check: zero5_c32_lm zero5_c32_lm_fast
+	./zero5_c32_lm --self-test
+	./zero5_c32_lm_fast --self-test
+	node scripts/benchmark_zero5_cpu.mjs --self-test
 
 graded_plasticity_audit: graded_plasticity_audit.c literary_lm.c \
 		channel_protocol.h zero1_protocol.h
@@ -2286,5 +2303,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
+	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
 	rm -f docs/literary.js docs/literary.wasm

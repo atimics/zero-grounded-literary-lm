@@ -89,6 +89,7 @@ typedef struct {
     float *n2;
     float *fpre;
     float *fact;
+    float *gelu_tanh;
     float *attention_mask;
     float *feed_forward_mask;
 } LayerCache;
@@ -547,21 +548,80 @@ static void rmsnorm_backward(const float *x, const float *gamma,
     }
 }
 
-static float gelu(float x)
+#if !defined(USE_VECTOR_MATH)
+static float gelu_tanh_value(float x)
 {
     const float c = 0.7978845608028654f;
     const float a = 0.044715f;
-    return 0.5f * x * (1.0f + tanhf(c * (x + a * x * x * x)));
+    return tanhf(c * (x + a * x * x * x));
+}
+#endif
+
+static float gelu_from_tanh(float x, float t)
+{
+    return 0.5f * x * (1.0f + t);
 }
 
-static float gelu_derivative(float x)
+static float gelu_derivative_from_tanh(float x, float t)
 {
     const float c = 0.7978845608028654f;
     const float a = 0.044715f;
-    float u = c * (x + a * x * x * x);
-    float t = tanhf(u);
     return 0.5f * (1.0f + t) +
            0.5f * x * (1.0f - t * t) * c * (1.0f + 3.0f * a * x * x);
+}
+
+static void gelu_forward_array(const float *input, float *output,
+                               float *tanh_cache, int count)
+{
+    int i;
+#if defined(USE_VECTOR_MATH)
+    const float c = 0.7978845608028654f;
+    const float a = 0.044715f;
+    for (i = 0; i < count; ++i) {
+        float x = input[i];
+        tanh_cache[i] = c * (x + a * x * x * x);
+    }
+#if defined(USE_ACCELERATE)
+    vvtanhf(tanh_cache, tanh_cache, &count);
+#else
+    for (i = 0; i < count; ++i) tanh_cache[i] = tanhf(tanh_cache[i]);
+#endif
+    for (i = 0; i < count; ++i) {
+        output[i] = gelu_from_tanh(input[i], tanh_cache[i]);
+    }
+#else
+    for (i = 0; i < count; ++i) {
+        float x = input[i];
+        float t = gelu_tanh_value(x);
+        tanh_cache[i] = t;
+        output[i] = gelu_from_tanh(x, t);
+    }
+#endif
+}
+
+static void softmax_prefix_inplace(float *row, int count)
+{
+    float maximum = row[0];
+    float total = 0.0f;
+    int i;
+    for (i = 1; i < count; ++i) {
+        if (row[i] > maximum) maximum = row[i];
+    }
+#if defined(USE_VECTOR_MATH)
+    for (i = 0; i < count; ++i) row[i] -= maximum;
+#if defined(USE_ACCELERATE)
+    vvexpf(row, row, &count);
+#else
+    for (i = 0; i < count; ++i) row[i] = expf(row[i]);
+#endif
+    for (i = 0; i < count; ++i) total += row[i];
+#else
+    for (i = 0; i < count; ++i) {
+        row[i] = expf(row[i] - maximum);
+        total += row[i];
+    }
+#endif
+    for (i = 0; i < count; ++i) row[i] /= total;
 }
 
 static void layer_parameters_create(TransformerLayer *layer, int index,
@@ -634,6 +694,7 @@ static void cache_create(LayerCache *cache, const Config *cfg)
     cache->n2 = zero_alloc(td, sizeof(float));
     cache->fpre = zero_alloc(tf, sizeof(float));
     cache->fact = zero_alloc(tf, sizeof(float));
+    cache->gelu_tanh = zero_alloc(tf, sizeof(float));
     cache->attention_mask = zero_alloc(td, sizeof(float));
     cache->feed_forward_mask = zero_alloc(td, sizeof(float));
 }
@@ -651,6 +712,7 @@ static void cache_destroy(LayerCache *cache)
     free(cache->n2);
     free(cache->fpre);
     free(cache->fact);
+    free(cache->gelu_tanh);
     free(cache->attention_mask);
     free(cache->feed_forward_mask);
     memset(cache, 0, sizeof(*cache));
@@ -898,16 +960,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
                     cfg->context);
         for (time = 0; time < cfg->context; ++time) {
             float *row = matrix + (size_t)time * cfg->context;
-            float maximum = -INFINITY;
-            float total = 0.0f;
-            for (source = 0; source <= time; ++source) {
-                if (row[source] > maximum) maximum = row[source];
-            }
-            for (source = 0; source <= time; ++source) {
-                row[source] = expf(row[source] - maximum);
-                total += row[source];
-            }
-            for (source = 0; source <= time; ++source) row[source] /= total;
+            softmax_prefix_inplace(row, time + 1);
             for (source = time + 1; source < cfg->context; ++source) {
                 row[source] = 0.0f;
             }
@@ -923,8 +976,6 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
         for (time = 0; time < cfg->context; ++time) {
             float *row = &cache->prob[((size_t)head * cfg->context + time) *
                                      cfg->context];
-            float maximum = -INFINITY;
-            float total = 0.0f;
             for (source = 0; source <= time; ++source) {
                 float score = 0.0f;
                 for (i = 0; i < head_width; ++i) {
@@ -932,17 +983,8 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
                              cache->k[source * cfg->dim + offset + i];
                 }
                 row[source] = score * scale;
-                if (row[source] > maximum) {
-                    maximum = row[source];
-                }
             }
-            for (source = 0; source <= time; ++source) {
-                row[source] = expf(row[source] - maximum);
-                total += row[source];
-            }
-            for (source = 0; source <= time; ++source) {
-                row[source] /= total;
-            }
+            softmax_prefix_inplace(row, time + 1);
             for (i = 0; i < head_width; ++i) {
                 float value = 0.0f;
                 for (source = 0; source <= time; ++source) {
@@ -1116,9 +1158,8 @@ static float model_forward_masked(Model *model, const Token *tokens,
                         cfg->dim);
         linear_forward(cfg->context, cfg->dim, cfg->ff, cache->n2,
                        layer->w1.w, cache->fpre);
-        for (i = 0; i < (int)tf; ++i) {
-            cache->fact[i] = gelu(cache->fpre[i]);
-        }
+        gelu_forward_array(cache->fpre, cache->fact, cache->gelu_tanh,
+                           (int)tf);
         linear_forward(cfg->context, cfg->ff, cfg->dim, cache->fact,
                        layer->w2.w, model->work.tmp_td);
         for (i = 0; i < (int)td; ++i) {
@@ -1140,21 +1181,7 @@ static float model_forward_masked(Model *model, const Token *tokens,
 
     for (time = 0; time < cfg->context; ++time) {
         float *row = &model->probs[time * cfg->vocab];
-        float maximum = row[0];
-        float total = 0.0f;
-        int token;
-        for (token = 1; token < cfg->vocab; ++token) {
-            if (row[token] > maximum) {
-                maximum = row[token];
-            }
-        }
-        for (token = 0; token < cfg->vocab; ++token) {
-            row[token] = expf(row[token] - maximum);
-            total += row[token];
-        }
-        for (token = 0; token < cfg->vocab; ++token) {
-            row[token] /= total;
-        }
+        softmax_prefix_inplace(row, cfg->vocab);
         if (targets != NULL &&
             (loss_mask == NULL || loss_mask[time] != 0)) {
             float probability = row[targets[time]];
@@ -1323,8 +1350,9 @@ static void model_backward_blended_masked(
         linear_backward(cfg->context, cfg->ff, cfg->dim, cache->fact,
                         layer->w2.w, work->tmp_td, layer->w2.g, work->dact);
         for (i = 0; i < (int)tf; ++i) {
-            work->dfpre[i] =
-                work->dact[i] * gelu_derivative(cache->fpre[i]);
+            work->dfpre[i] = work->dact[i] *
+                gelu_derivative_from_tanh(cache->fpre[i],
+                                          cache->gelu_tanh[i]);
         }
         memset(work->dn2, 0, td * sizeof(float));
         linear_backward(cfg->context, cfg->dim, cfg->ff, cache->n2,

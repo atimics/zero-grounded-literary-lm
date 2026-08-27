@@ -1,0 +1,56 @@
+{
+  "schema": "zero.cpu_speed_result.v1",
+  "status": "measured-local",
+  "recorded_at": "2026-08-27T03:15:03Z",
+  "source": {
+    "base_commit": "6920785e121d10d4097fec82985bad8b2362185e",
+    "trainer": "zero5_c32_lm.c"
+  },
+  "machine": {
+    "os": "macOS 26.3.1",
+    "architecture": "arm64",
+    "linear_algebra_backend": "Accelerate"
+  },
+  "workload": {
+    "source": "frozen C3.3 training and validation packs",
+    "updates": 200,
+    "sequences_per_update": 4,
+    "context_tokens": 512,
+    "compute_token_exposures": 409600,
+    "validation_sequences": 8
+  },
+  "old_trainer": {
+    "tokens_per_second": 6324,
+    "elapsed_seconds": 64.89
+  },
+  "strict": {
+    "optimization": "reuse forward GELU tanh in backward",
+    "tokens_per_second": 7796,
+    "elapsed_seconds": 52.92,
+    "train_loss": 2.0549,
+    "validation_loss": 1.8532,
+    "gradient_norm": 1.512,
+    "checkpoint_sha256": "3e1c380704e47d1be30d04718d52189f406faf1cdd7f757ce54ffd303cdcfe7a",
+    "throughput_change_from_old": 0.232764073371284,
+    "elapsed_time_reduction_from_old": 0.18446601941747577
+  },
+  "fast": {
+    "optimization": "strict optimization plus native O3, LTO, and Accelerate vector tanh/exp",
+    "tokens_per_second": 11025,
+    "elapsed_seconds": 37.44,
+    "train_loss": 2.0549,
+    "validation_loss": 1.8532,
+    "gradient_norm": 1.512,
+    "checkpoint_sha256": "128fcfad34fcca2c0ae4da6713ebce662be94de7d6740f4e2c8d107a0b2a8b18",
+    "throughput_change_from_old": 0.7433586337760911,
+    "elapsed_time_reduction_from_old": 0.4230235783633842
+  },
+  "correctness": {
+    "strict_50_update_old_checkpoint_sha256": "4e08ab6c3b5212aeff2704f8241bc0ef9aad755b4be49bd42f03921074d5c084",
+    "strict_50_update_new_checkpoint_sha256": "4e08ab6c3b5212aeff2704f8241bc0ef9aad755b4be49bd42f03921074d5c084",
+    "strict_checkpoint_bit_identical": true,
+    "fast_reported_metrics_match_strict": true,
+    "fast_checkpoint_bit_identical": false,
+    "finite_difference_gradient_checks_per_build": 35
+  }
+}
