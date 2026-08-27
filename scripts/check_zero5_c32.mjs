@@ -24,6 +24,14 @@ function run(program, args, expectedStatus = 0) {
   return result.stdout;
 }
 
+function packedReport(output) {
+  const match = output.match(
+    /update\s+\d+\s+train\s+([0-9.]+)\s+val\s+([0-9.]+)\s+grad\s+([0-9.]+)/,
+  );
+  assert.notEqual(match, null, "packed trainer output has no update report");
+  return match.slice(1).map(Number);
+}
+
 function u32(values) {
   const bytes = Buffer.alloc(values.length * 4);
   values.forEach((value, index) => bytes.writeUInt32LE(value, index * 4));
@@ -365,6 +373,7 @@ if (fs.existsSync(localImport)) {
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "zero5-c32-check-"));
 try {
+  const tensorBinary = process.env.ZERO5_TENSOR_BINARY ?? null;
   const runContractSha256 = "0".repeat(64);
   const packed = path.join(temporary, "tiny.z5pack");
   const paired = path.join(temporary, "tiny.z5pair");
@@ -400,8 +409,9 @@ try {
     "--lr", "0.0001", "--warmup", "1", "--report", "1",
     "--validation", "4", "--seed", "17", "--tokens", "0",
   ];
-  assert.match(run("./zero5_c32_lm", [...parallelArgs,
-    "--save", parallel]), /packed parallel-batch=4 private-caches=3/);
+  const parallelOutput = run("./zero5_c32_lm", [...parallelArgs,
+    "--save", parallel]);
+  assert.match(parallelOutput, /packed parallel-batch=4 private-caches=3/);
   run("./zero5_c32_lm", [...parallelArgs, "--save", parallelRepeat]);
   assert.equal(sha256(fs.readFileSync(parallel)),
     sha256(fs.readFileSync(parallelRepeat)));
@@ -410,6 +420,32 @@ try {
       value !== "--parallel-batch" && values[index - 1] !== "--parallel-batch"),
     "--resume", parallel, "--save", parallel,
   ], 1);
+
+  if (tensorBinary !== null) {
+    const tensor = path.join(temporary, "tensor.ckpt");
+    const tensorRepeat = path.join(temporary, "tensor-repeat.ckpt");
+    const tensorArgs = parallelArgs.flatMap((value, index, values) => {
+      if (value === "--parallel-batch") return ["--tensor-batch"];
+      if (values[index - 1] === "--parallel-batch") return [value];
+      return [value];
+    });
+    const tensorOutput = run(tensorBinary, [...tensorArgs, "--save", tensor]);
+    assert.match(tensorOutput,
+      /packed tensor-batch=4 contiguous-rows=2048 attention-domains=4 private-caches=0 optimizer-workers=4/);
+    const referenceMetrics = packedReport(parallelOutput);
+    const tensorMetrics = packedReport(tensorOutput);
+    assert.ok(referenceMetrics.every((value, index) =>
+      Math.abs(value - tensorMetrics[index]) <= (index === 2 ? 0.001 : 0.0001)),
+    `tensor metrics drifted: reference=${referenceMetrics} tensor=${tensorMetrics}`);
+    run(tensorBinary, [...tensorArgs, "--save", tensorRepeat]);
+    assert.equal(sha256(fs.readFileSync(tensor)),
+      sha256(fs.readFileSync(tensorRepeat)));
+    run(tensorBinary, [
+      ...tensorArgs.filter((value, index, values) =>
+        value !== "--tensor-batch" && values[index - 1] !== "--tensor-batch"),
+      "--resume", tensor, "--save", tensor,
+    ], 1);
+  }
 
   const corrupt = path.join(temporary, "corrupt.z5pack");
   const corruptBytes = fs.readFileSync(packed);
