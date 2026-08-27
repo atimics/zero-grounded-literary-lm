@@ -29,10 +29,10 @@ result, not a C3.3 scientific replication. The sealed test set stayed closed.
 ## Decision
 
 The combined vector path is a strong promotion candidate, but the production
-default is not changed by this result. Before promotion, the math mode should
-be bound into checkpoint or run identity so a resume cannot silently switch
-between scalar and vector math. A longer validation replay should then confirm
-the path before it is used for a new scientific lineage result.
+default is not changed by this result. Checkpoint version 6 now binds the exact
+math backend and rejects a mismatched training resume. A longer validation
+replay still needs to confirm the path before it is used for a new scientific
+lineage result.
 
 After that, the next major kernel target is blocked causal attention.
 

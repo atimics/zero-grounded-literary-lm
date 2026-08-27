@@ -2,6 +2,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,7 @@
 
 #define DEFAULT_VOCAB_SIZE 256
 #define MAX_VOCAB_SIZE 2048
-#define CHECKPOINT_VERSION 5U
+#define CHECKPOINT_VERSION 6U
 #define RMS_EPSILON 1.0e-5f
 #define BPE_BASE_TOKENS 128
 #define BPE_MAX_MERGES (MAX_VOCAB_SIZE - BPE_BASE_TOKENS)
@@ -44,6 +45,56 @@
 #define CHECKPOINT_TRAINABLE_SCOPE_SHIFT 8U
 #define CHECKPOINT_TRAINABLE_SCOPE_MASK (UINT32_C(0xff) << CHECKPOINT_TRAINABLE_SCOPE_SHIFT)
 #define PACKED_TENSOR_BATCH_FLAG UINT32_C(0x80000000)
+
+enum {
+    MATH_BACKEND_UNBOUND = 0,
+    MATH_BACKEND_SCALAR_ELEMENTWISE = 1,
+    MATH_BACKEND_SCALAR_ARRAY = 2,
+    MATH_BACKEND_ACCELERATE_VFORCE = 3,
+    MATH_BACKEND_GNU_LIBMVEC_TANH = 4,
+    MATH_BACKEND_GNU_LIBMVEC_EXP = 5,
+    MATH_BACKEND_GNU_LIBMVEC_TANH_EXP = 6
+};
+
+static uint32_t math_backend_id(void)
+{
+#if defined(USE_VECTOR_MATH) && defined(USE_ACCELERATE)
+    return MATH_BACKEND_ACCELERATE_VFORCE;
+#elif defined(USE_VECTOR_MATH) && defined(USE_GNU_LIBMVEC) && \
+    defined(USE_LIBMVEC_TANH) && defined(USE_LIBMVEC_EXP)
+    return MATH_BACKEND_GNU_LIBMVEC_TANH_EXP;
+#elif defined(USE_VECTOR_MATH) && defined(USE_GNU_LIBMVEC) && \
+    defined(USE_LIBMVEC_TANH)
+    return MATH_BACKEND_GNU_LIBMVEC_TANH;
+#elif defined(USE_VECTOR_MATH) && defined(USE_GNU_LIBMVEC) && \
+    defined(USE_LIBMVEC_EXP)
+    return MATH_BACKEND_GNU_LIBMVEC_EXP;
+#elif defined(USE_VECTOR_MATH)
+    return MATH_BACKEND_SCALAR_ARRAY;
+#else
+    return MATH_BACKEND_SCALAR_ELEMENTWISE;
+#endif
+}
+
+static const char *math_backend_name(void)
+{
+    switch (math_backend_id()) {
+    case MATH_BACKEND_SCALAR_ELEMENTWISE:
+        return "scalar-elementwise";
+    case MATH_BACKEND_SCALAR_ARRAY:
+        return "scalar-array";
+    case MATH_BACKEND_ACCELERATE_VFORCE:
+        return "accelerate-vforce";
+    case MATH_BACKEND_GNU_LIBMVEC_TANH:
+        return "gnu-libmvec-tanh";
+    case MATH_BACKEND_GNU_LIBMVEC_EXP:
+        return "gnu-libmvec-exp";
+    case MATH_BACKEND_GNU_LIBMVEC_TANH_EXP:
+        return "gnu-libmvec-tanh-exp";
+    default:
+        return "unbound";
+    }
+}
 
 typedef uint16_t Token;
 
@@ -306,6 +357,7 @@ typedef struct {
     const char *packed_train_path;
     const char *packed_validation_path;
     const char *run_contract_sha256;
+    const char *required_math_backend;
     long max_run_steps;
     float claim_answer_weight;
     float cloze_answer_weight;
@@ -2521,7 +2573,12 @@ typedef struct {
     float packed_best_validation;
     uint32_t reserved;
     char run_contract_sha256[64];
-} CheckpointOrchestrationV5;
+    uint32_t math_backend;
+    uint32_t reserved_v6;
+} CheckpointOrchestrationV6;
+
+#define CHECKPOINT_ORCHESTRATION_V5_SIZE \
+    offsetof(CheckpointOrchestrationV6, math_backend)
 
 static const char CHECKPOINT_MAGIC[8] = {'Z', 'E', 'R', 'O', 'L', 'M', '2', '\0'};
 static const char TEACHER_MAGIC[8] = {'Z', 'E', 'R', 'O', 'T', 'C', 'H', '1'};
@@ -2545,6 +2602,7 @@ static CheckpointHeader checkpoint_read_header(FILE *file, const char *path)
     if (memcmp(header.magic, CHECKPOINT_MAGIC, sizeof(header.magic)) != 0 ||
         (header.version != 1U && header.version != 2U &&
          header.version != 3U && header.version != 4U &&
+         header.version != 5U &&
          header.version != CHECKPOINT_VERSION) ||
         header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
         fail("unsupported or corrupt checkpoint");
@@ -2570,6 +2628,7 @@ static CheckpointHeader artifact_read_header(FILE *file, const char *path,
                       sizeof(header.magic)) != 0 ||
                (header.version != 1U && header.version != 2U &&
                 header.version != 3U && header.version != 4U &&
+                header.version != 5U &&
                 header.version != CHECKPOINT_VERSION) ||
                header.vocab < 2 || header.vocab > MAX_VOCAB_SIZE) {
         fail("unsupported or corrupt model artifact");
@@ -2629,13 +2688,17 @@ static Config artifact_peek(const char *path)
 }
 
 static int checkpoint_orchestration_read(FILE *file, uint32_t version,
-                                         CheckpointOrchestrationV5 *state)
+                                         CheckpointOrchestrationV6 *state)
 {
     memset(state, 0, sizeof(*state));
     state->packed_best_validation = INFINITY;
     if (version < 4U) return 1;
     if (version == 4U) {
         return read_items(file, &state->base, sizeof(state->base), 1);
+    }
+    if (version == 5U) {
+        return read_items(file, state, 1,
+                          CHECKPOINT_ORCHESTRATION_V5_SIZE);
     }
     return read_items(file, state, sizeof(*state), 1);
 }
@@ -2644,10 +2707,10 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
                             const Rng *rng, uint64_t attempts,
                             uint32_t consecutive_rejections,
                             uint32_t transaction_mode,
-                            const CheckpointOrchestrationV5 *packed_state)
+                            const CheckpointOrchestrationV6 *packed_state)
 {
     CheckpointHeader header;
-    CheckpointOrchestrationV5 orchestration;
+    CheckpointOrchestrationV6 orchestration;
     char *temporary;
     FILE *file;
     int parameter_index;
@@ -2682,6 +2745,7 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
     orchestration.base.attempts = attempts;
     orchestration.base.consecutive_rejections = consecutive_rejections;
     orchestration.base.transaction_mode = transaction_mode;
+    orchestration.math_backend = math_backend_id();
 
     if (!write_items(file, &header, sizeof(header), 1) ||
         !write_items(file, &orchestration, sizeof(orchestration), 1)) {
@@ -2721,10 +2785,10 @@ static uint64_t checkpoint_load(const char *path, Model *model, Rng *rng,
                                 uint64_t *attempts,
                                 uint32_t *consecutive_rejections,
                                 uint32_t *transaction_mode,
-                                CheckpointOrchestrationV5 *resume_state)
+                                CheckpointOrchestrationV6 *resume_state)
 {
     CheckpointHeader header;
-    CheckpointOrchestrationV5 orchestration;
+    CheckpointOrchestrationV6 orchestration;
     FILE *file = fopen(path, "rb");
     int parameter_index;
     if (file == NULL) {
@@ -2803,7 +2867,7 @@ static uint64_t artifact_load_weights(const char *path, Model *model)
         fail("model artifact architecture does not match model");
     }
     if (!weight_only && header.version >= 4U) {
-        CheckpointOrchestrationV5 orchestration;
+        CheckpointOrchestrationV6 orchestration;
         if (!checkpoint_orchestration_read(file, header.version,
                                            &orchestration)) {
             fclose(file);
@@ -3477,7 +3541,7 @@ static void packed_checkpoint_save(const char *path, const Model *model,
                                    float best_validation,
                                    const Options *options)
 {
-    CheckpointOrchestrationV5 state;
+    CheckpointOrchestrationV6 state;
     memset(&state, 0, sizeof(state));
     state.packed_mode = 1U;
     state.packed_batch = (uint32_t)options->batch;
@@ -4030,7 +4094,7 @@ static void packed_tensor_train_update(
 static void train_packed(Model *model, Rng *rng, uint64_t *update,
                          const PackedSet *train, const PackedSet *validation,
                          const Options *options,
-                         const CheckpointOrchestrationV5 *resume_state)
+                         const CheckpointOrchestrationV6 *resume_state)
 {
     float *mask = zero_alloc((size_t)train->context, sizeof(*mask));
     PackedParallelBatch parallel = {0};
@@ -5827,6 +5891,7 @@ static void print_usage(const char *program)
     printf("  --packed-train F     consume one record-safe Z5PKV2 pack set exactly once\n");
     printf("  --packed-validation F use a record-safe Z5PKV2 validation pack set\n");
     printf("  --run-contract-sha256 H bind packed checkpoints to one contract\n");
+    printf("  --require-math-backend N fail unless the compiled math backend is N\n");
     printf("  --max-run-steps N    pause a packed attempt after N updates; 0 disables\n");
     printf("  --claim-answer-weight X weighted claim answers (default: 1)\n");
     printf("  --cloze-answer-weight X weighted cloze answers (default: 1)\n");
@@ -6230,7 +6295,7 @@ int main(int argc, char **argv)
     uint64_t checkpoint_attempts = 0;
     uint32_t checkpoint_rejections = 0;
     uint32_t checkpoint_transaction_mode = 0;
-    CheckpointOrchestrationV5 checkpoint_resume_state;
+    CheckpointOrchestrationV6 checkpoint_resume_state;
     TransactionState transaction = {0};
     int sequential_range_index = -1;
     size_t sequential_offset = 0;
@@ -6416,6 +6481,9 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "--run-contract-sha256") == 0 &&
                    i + 1 < argc) {
             options.run_contract_sha256 = argv[++i];
+        } else if (strcmp(argv[i], "--require-math-backend") == 0 &&
+                   i + 1 < argc) {
+            options.required_math_backend = argv[++i];
         } else if (strcmp(argv[i], "--max-run-steps") == 0 &&
                    i + 1 < argc) {
             options.max_run_steps =
@@ -6578,6 +6646,14 @@ int main(int argc, char **argv)
     if (options.run_contract_sha256 != NULL &&
         !valid_sha256(options.run_contract_sha256)) {
         fail("--run-contract-sha256 must be 64 lowercase hexadecimal characters");
+    }
+    if (options.required_math_backend != NULL &&
+        strcmp(options.required_math_backend, math_backend_name()) != 0) {
+        fprintf(stderr,
+                "error: required math backend '%s' does not match compiled "
+                "backend '%s'\n",
+                options.required_math_backend, math_backend_name());
+        exit(EXIT_FAILURE);
     }
     if (options.max_run_steps != 0 && options.packed_train_path == NULL) {
         fail("--max-run-steps is available only for packed training");
@@ -6768,6 +6844,16 @@ int main(int argc, char **argv)
                                  &checkpoint_rejections,
                                  &checkpoint_transaction_mode,
                                  &checkpoint_resume_state);
+        if (!options.eval_only && options.steps > 0 &&
+            checkpoint_resume_state.math_backend != MATH_BACKEND_UNBOUND &&
+            checkpoint_resume_state.math_backend != math_backend_id()) {
+            fail("checkpoint math backend does not match this training binary");
+        }
+        if (!options.eval_only && options.steps > 0 &&
+            options.required_math_backend != NULL &&
+            checkpoint_resume_state.math_backend == MATH_BACKEND_UNBOUND) {
+            fail("strict math backend resume requires a version-6 checkpoint");
+        }
         if (!options.eval_only && checkpoint_transaction_mode != 0U &&
             checkpoint_transaction_mode !=
                 (uint32_t)options.transaction_mode) {
@@ -6825,9 +6911,11 @@ int main(int argc, char **argv)
 #else
     printf("zero5_lm: backend=portable-C");
 #endif
-    printf(" context=%d vocab=%d dim=%d heads=%d layers=%d ff=%d positions=%s "
+    printf(" math-backend=%s context=%d vocab=%d dim=%d heads=%d layers=%d "
+           "ff=%d positions=%s "
            "parameters=%zu trainable-scope=%s trainable-parameters=%zu\n",
-           cfg.context, cfg.vocab, cfg.dim, cfg.heads, cfg.layers, cfg.ff,
+           math_backend_name(), cfg.context, cfg.vocab, cfg.dim, cfg.heads,
+           cfg.layers, cfg.ff,
            cfg.rotary ? "rotary" : "learned",
            model_parameter_total(&model),
            trainable_scope_name(model.trainable_scope),
