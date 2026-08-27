@@ -1476,22 +1476,21 @@ static void model_backward(Model *model, const Token *tokens,
     model_backward_masked(model, tokens, targets, NULL);
 }
 
-static float optimizer_update(Model *model, uint64_t step, float learning_rate,
-                              float weight_decay, float clip_limit,
-                              float batch_scale)
+static float optimizer_prepare(const Model *model, uint64_t step,
+                               float learning_rate, float clip_limit,
+                               float batch_scale, float *clip_scale,
+                               float *correction)
 {
     const float beta1 = 0.9f;
     const float beta2 = 0.999f;
-    const float epsilon = 1.0e-8f;
     double sum_squares = 0.0;
     float gradient_norm;
-    float clip_scale = 1.0f;
-    float correction;
     int parameter_index;
 
+    *clip_scale = 1.0f;
     for (parameter_index = 0; parameter_index < model->parameter_count;
          ++parameter_index) {
-        Parameter *parameter = model->parameters[parameter_index];
+        const Parameter *parameter = model->parameters[parameter_index];
         size_t i;
         if (!parameter->trainable) continue;
         for (i = 0; i < parameter->count; ++i) {
@@ -1501,18 +1500,40 @@ static float optimizer_update(Model *model, uint64_t step, float learning_rate,
     }
     gradient_norm = (float)sqrt(sum_squares);
     if (clip_limit > 0.0f && gradient_norm > clip_limit) {
-        clip_scale = clip_limit / gradient_norm;
+        *clip_scale = clip_limit / gradient_norm;
     }
-    correction = learning_rate *
-                 sqrtf(1.0f - powf(beta2, (float)step)) /
-                 (1.0f - powf(beta1, (float)step));
+    *correction = learning_rate *
+                  sqrtf(1.0f - powf(beta2, (float)step)) /
+                  (1.0f - powf(beta1, (float)step));
+    return gradient_norm;
+}
+
+static void optimizer_apply_slice(Model *model, float learning_rate,
+                                  float weight_decay, float batch_scale,
+                                  float clip_scale, float correction,
+                                  int slice, int slices,
+                                  int clear_gradients)
+{
+    const float beta1 = 0.9f;
+    const float beta2 = 0.999f;
+    const float epsilon = 1.0e-8f;
+    int parameter_index;
 
     for (parameter_index = 0; parameter_index < model->parameter_count;
          ++parameter_index) {
         Parameter *parameter = model->parameters[parameter_index];
+        size_t begin = parameter->count * (size_t)slice / (size_t)slices;
+        size_t end = parameter->count * (size_t)(slice + 1) /
+                     (size_t)slices;
         size_t i;
-        if (!parameter->trainable) continue;
-        for (i = 0; i < parameter->count; ++i) {
+        if (!parameter->trainable) {
+            if (clear_gradients && end > begin) {
+                memset(parameter->g + begin, 0,
+                       (end - begin) * sizeof(*parameter->g));
+            }
+            continue;
+        }
+        for (i = begin; i < end; ++i) {
             float gradient = parameter->g[i] * batch_scale * clip_scale;
             parameter->m[i] = beta1 * parameter->m[i] + (1.0f - beta1) * gradient;
             parameter->v[i] =
@@ -1522,8 +1543,22 @@ static float optimizer_update(Model *model, uint64_t step, float learning_rate,
                     (sqrtf(parameter->v[i]) + epsilon) +
                 (parameter->decay ? learning_rate * weight_decay * parameter->w[i]
                                   : 0.0f);
+            if (clear_gradients) parameter->g[i] = 0.0f;
         }
     }
+}
+
+static float optimizer_update(Model *model, uint64_t step, float learning_rate,
+                              float weight_decay, float clip_limit,
+                              float batch_scale, int clear_gradients)
+{
+    float clip_scale;
+    float correction;
+    float gradient_norm = optimizer_prepare(
+        model, step, learning_rate, clip_limit, batch_scale, &clip_scale,
+        &correction);
+    optimizer_apply_slice(model, learning_rate, weight_decay, batch_scale,
+                          clip_scale, correction, 0, 1, clear_gradients);
     return gradient_norm;
 }
 
@@ -2809,6 +2844,8 @@ static void packed_checkpoint_save(const char *path, const Model *model,
                     &state);
 }
 
+typedef struct PackedParallelBatch PackedParallelBatch;
+
 typedef struct {
     Model *model;
     const Token *tokens;
@@ -2817,16 +2854,40 @@ typedef struct {
     float dropout;
     float loss;
     uint64_t active;
+    PackedParallelBatch *parallel;
+    int worker;
 } PackedWorkerTask;
 
-typedef struct {
+struct PackedParallelBatch {
     int count;
     Model **models;
     Model *private_models;
     float *masks;
     pthread_t *threads;
     PackedWorkerTask *tasks;
-} PackedParallelBatch;
+    pthread_mutex_t mutex;
+    pthread_cond_t start_condition;
+    pthread_cond_t done_condition;
+    uint64_t generation;
+    int wave;
+    int pending;
+    int stop;
+    int job;
+    float optimizer_learning_rate;
+    float optimizer_weight_decay;
+    float optimizer_batch_scale;
+    float optimizer_clip_scale;
+    float optimizer_correction;
+};
+
+enum {
+    PACKED_JOB_TRAIN = 0,
+    PACKED_JOB_OPTIMIZER = 1,
+    PACKED_JOB_MERGE = 2
+};
+
+static void packed_parallel_merge_slice(PackedParallelBatch *parallel,
+                                        int slice, int slices);
 
 static void *packed_worker_run(void *argument)
 {
@@ -2837,6 +2898,116 @@ static void *packed_worker_run(void *argument)
     model_backward_masked(task->model, task->tokens, task->targets,
                           task->mask);
     return NULL;
+}
+
+static void *packed_worker_loop(void *argument)
+{
+    PackedWorkerTask *task = (PackedWorkerTask *)argument;
+    PackedParallelBatch *parallel = task->parallel;
+    uint64_t observed_generation = 0U;
+    if (pthread_mutex_lock(&parallel->mutex) != 0) {
+        fail("could not lock a parallel batch worker");
+    }
+    for (;;) {
+        int active;
+        while (!parallel->stop &&
+               parallel->generation == observed_generation) {
+            if (pthread_cond_wait(&parallel->start_condition,
+                                  &parallel->mutex) != 0) {
+                fail("could not wait for a parallel batch worker");
+            }
+        }
+        if (parallel->stop) break;
+        observed_generation = parallel->generation;
+        active = task->worker < parallel->wave;
+        if (pthread_mutex_unlock(&parallel->mutex) != 0) {
+            fail("could not unlock a parallel batch worker");
+        }
+        if (active) {
+            if (parallel->job == PACKED_JOB_TRAIN) {
+                (void)packed_worker_run(task);
+            } else if (parallel->job == PACKED_JOB_OPTIMIZER) {
+                optimizer_apply_slice(
+                    parallel->models[0], parallel->optimizer_learning_rate,
+                    parallel->optimizer_weight_decay,
+                    parallel->optimizer_batch_scale,
+                    parallel->optimizer_clip_scale,
+                    parallel->optimizer_correction, task->worker,
+                    parallel->count, 1);
+            } else {
+                packed_parallel_merge_slice(parallel, task->worker,
+                                            parallel->count);
+            }
+        }
+        if (pthread_mutex_lock(&parallel->mutex) != 0) {
+            fail("could not lock a completed parallel batch worker");
+        }
+        if (active) {
+            --parallel->pending;
+            if (parallel->pending == 0 &&
+                pthread_cond_signal(&parallel->done_condition) != 0) {
+                fail("could not signal a completed parallel batch wave");
+            }
+        }
+    }
+    if (pthread_mutex_unlock(&parallel->mutex) != 0) {
+        fail("could not unlock a stopped parallel batch worker");
+    }
+    return NULL;
+}
+
+static void packed_parallel_start(PackedParallelBatch *parallel, int wave,
+                                  int job)
+{
+    if (pthread_mutex_lock(&parallel->mutex) != 0) {
+        fail("could not lock the parallel batch worker pool");
+    }
+    parallel->wave = wave;
+    parallel->pending = wave - 1;
+    parallel->job = job;
+    ++parallel->generation;
+    if (pthread_cond_broadcast(&parallel->start_condition) != 0) {
+        fail("could not start a parallel batch wave");
+    }
+    if (pthread_mutex_unlock(&parallel->mutex) != 0) {
+        fail("could not unlock the parallel batch worker pool");
+    }
+}
+
+static void packed_parallel_wait(PackedParallelBatch *parallel)
+{
+    if (pthread_mutex_lock(&parallel->mutex) != 0) {
+        fail("could not lock the completed parallel batch wave");
+    }
+    while (parallel->pending != 0) {
+        if (pthread_cond_wait(&parallel->done_condition,
+                              &parallel->mutex) != 0) {
+            fail("could not wait for a parallel batch wave");
+        }
+    }
+    if (pthread_mutex_unlock(&parallel->mutex) != 0) {
+        fail("could not unlock the completed parallel batch wave");
+    }
+}
+
+static float packed_parallel_optimizer_update(
+    PackedParallelBatch *parallel, uint64_t step, float learning_rate,
+    float weight_decay, float clip_limit, float batch_scale)
+{
+    Model *model = parallel->models[0];
+    float gradient_norm = optimizer_prepare(
+        model, step, learning_rate, clip_limit, batch_scale,
+        &parallel->optimizer_clip_scale, &parallel->optimizer_correction);
+    parallel->optimizer_learning_rate = learning_rate;
+    parallel->optimizer_weight_decay = weight_decay;
+    parallel->optimizer_batch_scale = batch_scale;
+    packed_parallel_start(parallel, parallel->count, PACKED_JOB_OPTIMIZER);
+    optimizer_apply_slice(model, learning_rate, weight_decay, batch_scale,
+                          parallel->optimizer_clip_scale,
+                          parallel->optimizer_correction, 0,
+                          parallel->count, 1);
+    packed_parallel_wait(parallel);
+    return gradient_norm;
 }
 
 static void packed_parallel_create(PackedParallelBatch *parallel,
@@ -2853,19 +3024,54 @@ static void packed_parallel_create(PackedParallelBatch *parallel,
     parallel->threads = zero_alloc((size_t)(count - 1),
                                    sizeof(*parallel->threads));
     parallel->tasks = zero_alloc((size_t)count, sizeof(*parallel->tasks));
+    if (pthread_mutex_init(&parallel->mutex, NULL) != 0 ||
+        pthread_cond_init(&parallel->start_condition, NULL) != 0 ||
+        pthread_cond_init(&parallel->done_condition, NULL) != 0) {
+        fail("could not initialize the parallel batch worker pool");
+    }
     parallel->models[0] = primary;
     for (worker = 1; worker < count; ++worker) {
         Model *private_model = &parallel->private_models[worker - 1];
         model_worker_create(private_model, primary);
         parallel->models[worker] = private_model;
+        parallel->tasks[worker].parallel = parallel;
+        parallel->tasks[worker].worker = worker;
+        if (pthread_create(&parallel->threads[worker - 1], NULL,
+                           packed_worker_loop,
+                           &parallel->tasks[worker]) != 0) {
+            fail("could not create a persistent parallel batch worker");
+        }
+    }
+    for (worker = 0; worker < count; ++worker) {
+        model_zero_grad(parallel->models[worker]);
     }
 }
 
 static void packed_parallel_destroy(PackedParallelBatch *parallel)
 {
     int worker;
+    if (pthread_mutex_lock(&parallel->mutex) != 0) {
+        fail("could not lock the parallel batch worker pool for shutdown");
+    }
+    parallel->stop = 1;
+    if (pthread_cond_broadcast(&parallel->start_condition) != 0) {
+        fail("could not stop the parallel batch worker pool");
+    }
+    if (pthread_mutex_unlock(&parallel->mutex) != 0) {
+        fail("could not unlock the parallel batch worker pool for shutdown");
+    }
+    for (worker = 1; worker < parallel->count; ++worker) {
+        if (pthread_join(parallel->threads[worker - 1], NULL) != 0) {
+            fail("could not join a persistent parallel batch worker");
+        }
+    }
     for (worker = 1; worker < parallel->count; ++worker) {
         model_worker_destroy(parallel->models[worker]);
+    }
+    if (pthread_cond_destroy(&parallel->done_condition) != 0 ||
+        pthread_cond_destroy(&parallel->start_condition) != 0 ||
+        pthread_mutex_destroy(&parallel->mutex) != 0) {
+        fail("could not destroy the parallel batch worker pool");
     }
     free(parallel->models);
     free(parallel->private_models);
@@ -2875,25 +3081,54 @@ static void packed_parallel_destroy(PackedParallelBatch *parallel)
     memset(parallel, 0, sizeof(*parallel));
 }
 
-static void packed_parallel_merge_gradients(PackedParallelBatch *parallel)
+static void packed_parallel_merge_slice(PackedParallelBatch *parallel,
+                                        int slice, int slices)
 {
     Model *primary = parallel->models[0];
-    int worker;
     int parameter_index;
-    for (worker = 1; worker < parallel->count; ++worker) {
-        Model *source = parallel->models[worker];
-        for (parameter_index = 0;
-             parameter_index < primary->parameter_count; ++parameter_index) {
-            Parameter *destination = primary->parameters[parameter_index];
-            const Parameter *worker_parameter =
+    for (parameter_index = 0;
+         parameter_index < primary->parameter_count; ++parameter_index) {
+        Parameter *destination = primary->parameters[parameter_index];
+        size_t begin = destination->count * (size_t)slice / (size_t)slices;
+        size_t end = destination->count * (size_t)(slice + 1) /
+                     (size_t)slices;
+        int worker;
+        for (worker = 1; worker < parallel->count; ++worker) {
+            Model *source = parallel->models[worker];
+            Parameter *worker_parameter =
                 source->parameters[parameter_index];
-            size_t i;
-            if (!destination->trainable) continue;
-            for (i = 0; i < destination->count; ++i) {
-                destination->g[i] += worker_parameter->g[i];
+            if (destination->trainable) {
+#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
+                size_t offset = begin;
+                while (offset < end) {
+                    size_t remaining = end - offset;
+                    int chunk = remaining > (size_t)INT32_MAX
+                                    ? INT32_MAX
+                                    : (int)remaining;
+                    cblas_saxpy(chunk, 1.0f, worker_parameter->g + offset, 1,
+                                destination->g + offset, 1);
+                    offset += (size_t)chunk;
+                }
+#else
+                size_t i;
+                for (i = begin; i < end; ++i) {
+                    destination->g[i] += worker_parameter->g[i];
+                }
+#endif
+            }
+            if (end > begin) {
+                memset(worker_parameter->g + begin, 0,
+                       (end - begin) * sizeof(*worker_parameter->g));
             }
         }
     }
+}
+
+static void packed_parallel_merge_gradients(PackedParallelBatch *parallel)
+{
+    packed_parallel_start(parallel, parallel->count, PACKED_JOB_MERGE);
+    packed_parallel_merge_slice(parallel, 0, parallel->count);
+    packed_parallel_wait(parallel);
 }
 
 static void packed_parallel_train_update(
@@ -2903,9 +3138,6 @@ static void packed_parallel_train_update(
 {
     int worker;
     int batch_start;
-    for (worker = 0; worker < parallel->count; ++worker) {
-        model_zero_grad(parallel->models[worker]);
-    }
     for (batch_start = 0; batch_start < options->batch;
          batch_start += parallel->count) {
         int wave = options->batch - batch_start;
@@ -2938,23 +3170,9 @@ static void packed_parallel_train_update(
                 *interval_active_targets += active;
             }
         }
-        for (worker = 1; worker < wave; ++worker) {
-            if (pthread_create(&parallel->threads[worker - 1], NULL,
-                               packed_worker_run,
-                               &parallel->tasks[worker]) != 0) {
-                int started;
-                for (started = 1; started < worker; ++started) {
-                    (void)pthread_join(parallel->threads[started - 1], NULL);
-                }
-                fail("could not create a parallel batch worker");
-            }
-        }
+        packed_parallel_start(parallel, wave, PACKED_JOB_TRAIN);
         (void)packed_worker_run(&parallel->tasks[0]);
-        for (worker = 1; worker < wave; ++worker) {
-            if (pthread_join(parallel->threads[worker - 1], NULL) != 0) {
-                fail("could not join a parallel batch worker");
-            }
-        }
+        packed_parallel_wait(parallel);
         for (worker = 0; worker < wave; ++worker) {
             if (parallel->tasks[worker].active != 0U) {
                 *interval_loss += parallel->tasks[worker].loss;
@@ -3070,9 +3288,16 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
                 current_lr *= 0.5f * (1.0f + cosf(pi * progress));
             }
         }
-        gradient_norm = optimizer_update(
-            model, *update + 1U, current_lr, options->weight_decay,
-            options->clip, 1.0f / options->batch);
+        if (options->parallel_batch > 1) {
+            gradient_norm = packed_parallel_optimizer_update(
+                &parallel, *update + 1U, current_lr,
+                options->weight_decay, options->clip,
+                1.0f / options->batch);
+        } else {
+            gradient_norm = optimizer_update(
+                model, *update + 1U, current_lr, options->weight_decay,
+                options->clip, 1.0f / options->batch, 0);
+        }
         ++*update;
         interval_compute_tokens +=
             (uint64_t)train->context * (uint64_t)options->batch;
@@ -3901,7 +4126,7 @@ static int transaction_decide_attempt(
                 (void)optimizer_update(
                     model, proposed_update, learning_rate * scale,
                     options->weight_decay, options->clip,
-                    1.0f / options->batch);
+                    1.0f / options->batch, 0);
             }
             state->tangent_projection_applied[trial_index] = 0;
             state->tangent_projection_coefficients[trial_index] = 0.0;
@@ -5007,7 +5232,7 @@ static int run_self_test(void)
             }
             (void)optimizer_update(
                 &model, 1, ldexpf(0.001f, -trial_index),
-                0.01f, 1.0f, 1.0f);
+                0.01f, 1.0f, 1.0f, 0);
             {
                 int projection_applied;
                 double coefficient;
@@ -6070,7 +6295,7 @@ int main(int argc, char **argv)
             gradient_norm = optimizer_update(
                 &model, update + 1, current_lr, options.weight_decay,
                 options.clip,
-                1.0f / options.batch);
+                1.0f / options.batch, 0);
             if (options.transaction_mode != TRANSACTION_DISABLED) {
                 accepted = transaction_decide_attempt(
                     &transaction, &model, &corpus, text_ranges, text_count,
