@@ -1,0 +1,129 @@
+{
+  "schema": "zero.c2_import.v1",
+  "collection": {
+    "id": "braid-corpus-two-v0.1.0-fe3befe6c31c14ed9c4582101487fa9601b5b93152aab35026d32722797a2f80",
+    "braid_commit": "eaad3d9785f2c202b1c080e9675f1c7fcdb4a7ab",
+    "collection_json": {
+      "sha256": "0520013f5247c86e33e8ea402f1be9da4f540a8f2541f43b2c772c39bb57314d",
+      "bytes": 2252
+    },
+    "training_recipe": {
+      "sha256": "162660269b37fac40d05cc1555c68e1100e8277dadd294aef17f2f2545fc93f8",
+      "bytes": 572
+    },
+    "official_verification": true
+  },
+  "stages": [
+    {
+      "order": 1,
+      "member": "anchors",
+      "split": "train"
+    },
+    {
+      "order": 2,
+      "member": "atlas",
+      "split": "train"
+    }
+  ],
+  "rights": {
+    "anchors": "CC0-1.0",
+    "atlas": "CC-BY-SA-4.0",
+    "public_dataset_published": false,
+    "model_publication_requires_review": true
+  },
+  "members": {
+    "anchors": {
+      "schema": "zero.braid_import.v2",
+      "release_id": "braid-corpus-one-core-v0.1.0-416c54dd2130335ea1075ec7477efc75d35761ab1a001232e7a5e52e2f3e8b3f",
+      "release_digest": "416c54dd2130335ea1075ec7477efc75d35761ab1a001232e7a5e52e2f3e8b3f",
+      "release_manifest_sha256": "4e300c628869f7e2c94740af2eb60950fc18a9584835282ef09fd86b834fb92d",
+      "split_authority": "braid",
+      "train": {
+        "artifact_sha256": "d96a192a517d31f48554bbd9bbde49a765405d06651e5d662d6d5c80dae3b082",
+        "artifact_bytes": 1453554,
+        "documents": 797,
+        "raw_bytes": 183186,
+        "base_tokens": 183983
+      },
+      "validation": {
+        "artifact_sha256": "ce9402fcb6c0d79c8e7e8c15be73e1acf47ea3d445a7259b72c814459ceedafd",
+        "artifact_bytes": 184739,
+        "documents": 101,
+        "raw_bytes": 22807,
+        "base_tokens": 22908
+      },
+      "test": {
+        "artifact_sha256": "932ac349a758188202e78f2a57fb7e780ae0f053569bce2e42d05a8779430b30",
+        "artifact_bytes": 183023,
+        "documents": 101,
+        "raw_bytes": 22786,
+        "tokenizer_metrics_opened": false
+      }
+    },
+    "atlas": {
+      "schema": "zero.braid_import.v2",
+      "release_id": "braid-corpus-two-atlas-v0.1.0-1659abc6c7fc263d2d96868af5526d781de4a4ca743dc95e52c12b9b08e41d93",
+      "release_digest": "1659abc6c7fc263d2d96868af5526d781de4a4ca743dc95e52c12b9b08e41d93",
+      "release_manifest_sha256": "2204f643341e78e9d9fce23fa08b7a1b1df6dc1e92723dc6fcc9c9d4d3b9c241",
+      "split_authority": "braid",
+      "train": {
+        "artifact_sha256": "4b0a1de44838762e78ee31a58c72a8176d7d168d1f5574190d7549e33b9e1a9b",
+        "artifact_bytes": 47890697,
+        "documents": 5317,
+        "raw_bytes": 37986061,
+        "base_tokens": 37991378
+      },
+      "validation": {
+        "artifact_sha256": "94195c15f11848762423d0dcc0b35f02d3083b8bae0220b645dac3171135c0c2",
+        "artifact_bytes": 6485382,
+        "documents": 717,
+        "raw_bytes": 5135086,
+        "base_tokens": 5135803
+      },
+      "test": {
+        "artifact_sha256": "2f7336dac086637c7d45a1e8cba97cb55972a7e28197aede878807b77ebbc83f",
+        "artifact_bytes": 5784314,
+        "documents": 641,
+        "raw_bytes": 4590472,
+        "tokenizer_metrics_opened": false
+      }
+    }
+  },
+  "tokenizer": {
+    "id": "byte-bpe512",
+    "artifact": {
+      "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+      "bytes": 1016
+    },
+    "retrained": false
+  },
+  "derived": {
+    "atlas_train_tokens": {
+      "sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+      "bytes": 42697222,
+      "tokens": 21348611,
+      "recode": {
+        "schema": "sero.token_recode.v1",
+        "input_tokens": 37991378,
+        "tokens": 21348611,
+        "tokens_per_input_token": 0.561933052
+      }
+    },
+    "atlas_validation_tokens": {
+      "sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+      "bytes": 5760358,
+      "tokens": 2880179,
+      "recode": {
+        "schema": "sero.token_recode.v1",
+        "input_tokens": 5135803,
+        "tokens": 2880179,
+        "tokens_per_input_token": 0.560804026
+      }
+    }
+  },
+  "test": {
+    "anchors_records": 101,
+    "atlas_records": 641,
+    "tokenizer_metrics_opened": false
+  }
+}

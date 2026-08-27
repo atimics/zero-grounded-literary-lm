@@ -1,0 +1,200 @@
+{
+  "schema": "zero.c3_continued_training_experiment.v1",
+  "experiment": "zero5-c3-v1",
+  "status": "preregistered-unrun",
+  "authorized": true,
+  "purpose": "Test whether one ordered C2-to-C3 continuation pass produces a step change in evidence-linked completion learning at the fixed ZERO.5 model size while retaining the C2 Atlas and C1 anchor distributions.",
+  "claim_boundary": {
+    "may_claim": "A seed-0 C3 pilot did or did not improve held-out C3 answer completions while retaining the earlier Atlas and anchor distributions.",
+    "may_not_claim": [
+      "C3 task structure is better than an equal number of additional Atlas prose tokens",
+      "three-seed replication",
+      "factual truth or contamination-free generalization",
+      "deep semantic retrieval",
+      "reasoning or intelligence",
+      "production model promotion",
+      "permission to publish the dataset or checkpoint"
+    ]
+  },
+  "implementation": {
+    "trainer": "zero5_c3_lm.c",
+    "trainer_sha256": "56ff9bea694e1f26d62e3def063daffe3ac0e488cbaebe3707c8e7240589a5fc",
+    "importer": "scripts/prepare_zero5_c3.mjs",
+    "importer_sha256": "abd9ad60ef1f2fcbada8ea24ace315399821ae171ac902f82fc8c3215284429e",
+    "runner": "scripts/run_zero5_c3.mjs",
+    "runner_sha256": "47bd68df695702bbe8037d57a13eff385fe08bfff951f15f6a33bb25c5dc23a6",
+    "model_and_training": "C11",
+    "orchestration": "Node.js",
+    "python": false,
+    "pytorch": false
+  },
+  "input": {
+    "import_manifest": "benchmarks/zero5-c3-v1/import.json",
+    "import_manifest_sha256": "289cd375601fb3e3003685493c4b66141a2af3523b5c200da91db0cf87f99f6f",
+    "collection_id": "braid-corpus-three-v0.1.0-094452561c87bfb5e2ae8a343e1bc9745b1d4dd86ac97a3037cca20f2aedd20f",
+    "braid_commit": "7e8489a2a4edac688403d29f7f4225f7294fb8e2",
+    "rights": {
+      "claims": "CC-BY-SA-4.0",
+      "cloze": "CC-BY-SA-4.0",
+      "retrieval": "CC-BY-SA-4.0",
+      "dataset_published": false,
+      "checkpoint_publication_authorized": false
+    },
+    "stage_order": [
+      "claims official text",
+      "cloze official text",
+      "retrieval context-safe view"
+    ],
+    "context_view": {
+      "model_context": 512,
+      "original_retrieval_train_records_over_context": 15401,
+      "original_retrieval_train_over_context_fraction": 0.965519403172215,
+      "passage_prefix_code_points_each": 210,
+      "compacted_retrieval_train_records_over_context": 0,
+      "compacted_retrieval_train_maximum_tokens": 504,
+      "test_view_created": false
+    },
+    "lineage_bridge": {
+      "active_c2_collection_id": "braid-corpus-two-v0.1.0-fe3befe6c31c14ed9c4582101487fa9601b5b93152aab35026d32722797a2f80",
+      "c3_upstream_c2_collection_id": "braid-corpus-two-v0.1.0-d3fb8df48d2ad66b78dee76ec7b26e262554d8b4de12b18f781533ec19eb45b5",
+      "atlas_train_jsonl_sha256": "4b0a1de44838762e78ee31a58c72a8176d7d168d1f5574190d7549e33b9e1a9b",
+      "all_six_split_files_byte_identical": true
+    },
+    "tokenizer": {
+      "id": "byte-bpe512",
+      "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+      "retrained": false
+    },
+    "train": {
+      "records": 79694,
+      "tokens": 15541470,
+      "tokens_sha256": "086aaf1c5652e59f6b5119c844e98b4b85f461525f68fcc82437cefd187c34dc"
+    },
+    "validation": {
+      "records": 10139,
+      "tokens": 1981647,
+      "tokens_sha256": "80915ebcbf8dc6b8d0780d0b7894db68199cb992f46c0ad516fd8eea0616e441"
+    },
+    "completion_validation": {
+      "claims": {
+        "records": 4561,
+        "target_tokens": 460920,
+        "sha256": "2ca43d3691db1e6292924d0a5bae249fa78d93180caf9af0ff98137a0990b71f"
+      },
+      "cloze": {
+        "records": 3555,
+        "target_tokens": 24138,
+        "sha256": "c6348fce4878ae2e64678229cf3c64196659a66f65d2676c76c2bd1b1e60b8c1"
+      },
+      "retrieval": {
+        "records": 2023,
+        "target_tokens": 12138,
+        "sha256": "c1051733eed0dca27298e97855ba048a207670effeb932769dbe38605f777d1b"
+      }
+    },
+    "test_policy": "The 4,585 claim, 3,556 cloze, and 2,026 retrieval test records remain sealed. No compact test view exists and the runner accepts no C3 test path."
+  },
+  "initialization": {
+    "c2_result": "benchmarks/zero5-c2-v1/result.json",
+    "c2_result_sha256": "38e6835efa099d6883a5c2192aa052234412448a93230d5d2d252b108acbf5cb",
+    "seed": 0,
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "optimizer": "fresh AdamW state for the C3 stage"
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary"
+  },
+  "baselines": {
+    "combined_selection_windows": 64,
+    "combined_selection_nats_per_token": 2.784,
+    "combined_final_windows": 128,
+    "combined_final_nats_per_token": 2.7818,
+    "member_windows": 64,
+    "members": {
+      "claims": { "nats_per_token": 2.6853 },
+      "cloze": { "nats_per_token": 2.9631 },
+      "retrieval": { "nats_per_token": 2.7779 }
+    },
+    "completion": {
+      "claims": {
+        "nats_per_target_token": 2.43561122,
+        "top1_token_accuracy": 0.397739304,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0.659065994
+      },
+      "cloze": {
+        "nats_per_target_token": 2.92072008,
+        "top1_token_accuracy": 0.310713398,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0.251476793
+      },
+      "retrieval": {
+        "nats_per_target_token": 2.82842029,
+        "top1_token_accuracy": 0.169797331,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0
+      }
+    },
+    "atlas_windows": 128,
+    "atlas_nats_per_token": 2.2786,
+    "anchor_windows": 19,
+    "anchor_nats_per_token": 3.6942
+  },
+  "training": {
+    "seed": 0,
+    "updates": 7589,
+    "batch_sequences": 4,
+    "tokens_per_sequence": 512,
+    "token_exposures": 15542272,
+    "c3_stream_equivalents": 1.0000516038701617,
+    "sampling": "sequential ordered stream with one tail-covering window before wrap",
+    "expected_stream_wraps": 1,
+    "optimizer": "AdamW",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 300,
+    "schedule": "cosine over all 7,589 C3 updates",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_windows": 64,
+    "final_validation_windows": 128,
+    "final_member_windows": 64,
+    "final_atlas_windows": 128,
+    "final_anchor_windows": 19,
+    "selection": "lowest combined C3 validation cross-entropy among fixed reports; no early stopping"
+  },
+  "gates": {
+    "full_ordered_c3_pass": true,
+    "combined_validation_nats_per_token_maximum": 2.50362,
+    "combined_relative_improvement_minimum": 0.1,
+    "completion_nats_per_target_token_maximum": {
+      "claims": 2.192050098,
+      "cloze": 2.628648072,
+      "retrieval": 2.545578261
+    },
+    "retrieval_choice_accuracy_minimum": 0.55,
+    "atlas_nats_per_token_maximum": 2.50646,
+    "atlas_relative_regression_maximum": 0.1,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "anchor_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "after_result": {
+    "token_matched_atlas_control_authorized": false,
+    "replication_seeds_authorized": false,
+    "broad_model_promotion_authorized": false,
+    "checkpoint_publication_authorized": false,
+    "next_if_pass": "Preregister a token-matched Atlas continuation control from the same C2 checkpoint before claiming task-structure superiority, then separately decide replication.",
+    "next_if_fail": "Diagnose task formatting, context compaction, optimization, and retention at fixed model size before changing parameters or adding epochs."
+  }
+}

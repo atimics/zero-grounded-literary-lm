@@ -1,0 +1,102 @@
+{
+  "schema": "zero.c32_throughput_result.v1",
+  "status": "complete",
+  "diagnostic_only": true,
+  "run_id": "zero5-c32-throughput-20260824-f0af875",
+  "instance_id": "i-03a03444b9e68fb6b",
+  "instance_type": "c6i.4xlarge",
+  "backend": "OpenBLAS",
+  "input_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+  "benchmark_contract_sha256": "da93655697ab3410faa1820d7488df3d4b3864801bce6573584508f7fbc85fe4",
+  "replay": {
+    "start_update": 3000,
+    "updates": 20,
+    "batch_sequences": 4
+  },
+  "elapsed_instance_seconds": 313,
+  "attempt_compute_usd": 0.059122,
+  "prior_compute_usd": 0.067244,
+  "cumulative_compute_usd": 0.126366,
+  "candidates": [
+    {
+      "name": "o2-t16-a",
+      "threads": 16,
+      "compiler": "o2",
+      "tokens_per_second": 1201,
+      "elapsed_seconds": 35,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    },
+    {
+      "name": "o2-t8",
+      "threads": 8,
+      "compiler": "o2",
+      "tokens_per_second": 1724,
+      "elapsed_seconds": 25,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    },
+    {
+      "name": "o2-t4",
+      "threads": 4,
+      "compiler": "o2",
+      "tokens_per_second": 1561,
+      "elapsed_seconds": 28,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    },
+    {
+      "name": "o2-t2",
+      "threads": 2,
+      "compiler": "o2",
+      "tokens_per_second": 1349,
+      "elapsed_seconds": 31,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    },
+    {
+      "name": "o2-t1",
+      "threads": 1,
+      "compiler": "o2",
+      "tokens_per_second": 1100,
+      "elapsed_seconds": 38,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    },
+    {
+      "name": "o2-t16-b",
+      "threads": 16,
+      "compiler": "o2",
+      "tokens_per_second": 1217,
+      "elapsed_seconds": 34,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    },
+    {
+      "name": "o3-native-t4",
+      "threads": 4,
+      "compiler": "o3-native",
+      "tokens_per_second": 1672,
+      "elapsed_seconds": 26,
+      "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+      "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+      "byte_identical_to_reference": true
+    }
+  ],
+  "fastest_byte_identical_candidate": {
+    "name": "o2-t8",
+    "threads": 8,
+    "compiler": "o2",
+    "tokens_per_second": 1724,
+    "elapsed_seconds": 25,
+    "active_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+    "best_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+    "byte_identical_to_reference": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "zero.c33_source_lock.v1",
+  "experiment": "zero5-c33-v1",
+  "git_commit": "6920785e121d10d4097fec82985bad8b2362185e",
+  "trainer": {
+    "path": "zero5_c32_lm.c",
+    "sha256": "82c4fd923885911ee4abea2ac2f4de2cfa70c17501d209af943e7d70358525df"
+  }
+}

@@ -1,0 +1,294 @@
+{
+  "schema": "zero.c33_pair_atomic_experiment.v1",
+  "experiment": "zero5-c33-v1",
+  "status": "preregistered-unrun",
+  "authorized": true,
+  "purpose": "Test whether putting both orientations of every mirrored training pair in the same optimizer update creates a step improvement in swap consistency without changing the model, tokenizer, records, loss weights, or compute budget.",
+  "claim_boundary": {
+    "may_claim": "A seed-0 fixed-model screen did or did not show that pair-atomic minibatches improve held-out mirrored invariance relative to the frozen C3.2 D control.",
+    "may_not_claim": [
+      "reasoning, intelligence, factual truth, or deep semantic retrieval",
+      "that a direct consistency penalty was tested",
+      "three-seed replication",
+      "production or broad model promotion",
+      "permission to publish the dataset or checkpoints"
+    ]
+  },
+  "implementation": {
+    "trainer": "zero5_c32_lm.c",
+    "trainer_sha256": "82c4fd923885911ee4abea2ac2f4de2cfa70c17501d209af943e7d70358525df",
+    "importer": "scripts/prepare_zero5_c33.mjs",
+    "importer_sha256": "5a02d533b6b510d82b9979683df28c463fcba000822dc1b3c8d029fc2eaaa84b",
+    "runner": "scripts/run_zero5_c33.mjs",
+    "runner_sha256": "b85bd27d1947d8a0962f645411913fb2baf613d638f26a94969b09bbe1492023",
+    "model_and_training": "C11",
+    "orchestration": "Node.js",
+    "python": false,
+    "pytorch": false
+  },
+  "control_source": {
+    "experiment": "zero5-c32-v1",
+    "arm": "D",
+    "result": "benchmarks/zero5-c32-v1/result.json",
+    "result_sha256": "e87305b52d229a71483c49a9aed09258211e118dd14b2f09855b77f89a059688",
+    "reuse_reason": "C3.2 D has the same trainer, initialization, seed, records, targets, answer weights, batch size, updates, and compute. C3.3 changes only which four existing packs share an optimizer update."
+  },
+  "execution_amendment": {
+    "parent_contract_sha256": "f81e01ec67bc761918c796d80837eeeb12ea3e04b14f02ab617ecf9fbda1630d",
+    "scientific_change": false,
+    "failed_run_id": "zero5-c33-aws-20260826-327bfcd",
+    "failed_instance_id": "i-02df4bc11de2c04c3",
+    "failed_attempt_ec2_usd": 0.012277777778,
+    "completed_training_updates": 0,
+    "cause": "The first-run telemetry marker made the output directory non-empty before the runner created execution.json.",
+    "correction": "Start the runner first, wait for its contract-bound execution file, then persist the telemetry marker.",
+    "budget_policy": "The failed attempt remains inside the unchanged $3.40 total ceiling."
+  },
+  "execution": {
+    "venue": "aws-ec2",
+    "execution_contract": "benchmarks/zero5-c33-v1/aws-execution.json",
+    "stage_script": "scripts/aws/zero5-c33-stage.sh",
+    "stage_script_sha256": "0efcb29ac9d975c9ab86a782c73ed7d0cfd1e23cbe50b53623b8762ec86c436f",
+    "launcher": "scripts/aws/zero5-c33-run-instance.sh",
+    "launcher_sha256": "04d3a06727cf688daaae53ce819f80838bb2a377a696f4833e2e4f6ba6d23ae6",
+    "user_data": "scripts/aws/zero5-c33-user-data.sh",
+    "user_data_sha256": "ae1a7bfe8aa62889ef94407084a091bcf972e1c365c015e0bf8802eac8436f23",
+    "backend": "openblas",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "openblas_threads": 8,
+    "omp_threads": 8,
+    "dynamic_threading": false,
+    "checkpoint_every_updates": 250,
+    "maximum_total_ec2_usd": 3.4,
+    "dashboard": true
+  },
+  "input": {
+    "import_manifest": "benchmarks/zero5-c33-v1/import.json",
+    "import_manifest_sha256": "4c6a92edcb1868b2a98f4390a898be66fd386c0a45dd4e0dbaf63ac03d68db58",
+    "release_id": "braid-corpus-three-repair-zero5-512-v0.1.0-4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d",
+    "release_manifest_sha256": "d3f038ccaa3e848075a20dbb69c12e5da3355b651d1b16f6283757de7cb85954",
+    "braid_head": "d2e437a1895ebbbf4c1cb3a64346e1ab535a6a25",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "records": {
+      "train": 55065,
+      "validation": 10137,
+      "test": 10166
+    },
+    "train_packs": {
+      "sha256": "74698853c019ccf38865d74931c44e8f1f436ee0567eee194979cbcbcdeb4ed8",
+      "packs": 37768,
+      "records": 55065,
+      "active_targets": 16643752,
+      "answer_targets": 343240,
+      "answer_targets_by_task": {
+        "claim": 61743,
+        "cloze": 185797,
+        "retrieval": 95700
+      },
+      "compute_token_exposures": 19337216,
+      "padding_targets": 2693464,
+      "task_packs": {
+        "claim": 11170,
+        "cloze": 10660,
+        "retrieval": 15938
+      },
+      "task_runs": 14840,
+      "maximum_same_task_pack_run": 4
+    },
+    "paired_training": {
+      "optimizer_batches": 9442,
+      "mirrored_pairs": 13588,
+      "pair_cross_batch_leakage": 0,
+      "objective": "For each mirrored pair, average the ordinary task-balanced cross-entropy gradients of both orientations inside one optimizer update.",
+      "direct_consistency_penalty": false
+    },
+    "validation_packs_sha256": "4fedd425e3d69608c6f4eaa7002474a4c2cfdf845c708c77b2d15ec585566cb6",
+    "test_policy": "The released test artifact hash is verified without parsing. No test row is tokenized or packed, and the runner accepts no C3.3 test path.",
+    "rights": {
+      "license": "CC-BY-SA-4.0",
+      "dataset_published_by_zero": false,
+      "checkpoint_publication_authorized": false
+    }
+  },
+  "initialization": {
+    "c2_result": "benchmarks/zero5-c2-v1/result.json",
+    "c2_result_sha256": "38e6835efa099d6883a5c2192aa052234412448a93230d5d2d252b108acbf5cb",
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "seed": 0,
+    "optimizer": "fresh AdamW state"
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary"
+  },
+  "arms": {
+    "E": {
+      "pack_order": "pair-atomic and task-smoothed",
+      "answer_weights": {
+        "claim": 3.009199423,
+        "cloze": 1,
+        "retrieval": 1.941452456
+      },
+      "role": "isolates pair-atomic minibatching relative to frozen C3.2 D"
+    }
+  },
+  "training": {
+    "seed": 0,
+    "updates": 9442,
+    "batch_sequences": 4,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 16643752,
+    "answer_targets": 343240,
+    "answer_targets_by_task": {
+      "claim": 61743,
+      "cloze": 185797,
+      "retrieval": 95700
+    },
+    "padding_targets": 2693464,
+    "passes": 1,
+    "optimizer": "AdamW",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 300,
+    "schedule": "cosine over all 9,442 updates",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection": "lowest ordinary combined packed-validation cross-entropy among fixed reports; no early stopping"
+  },
+  "evaluation": {
+    "selection_validation_packs": 64,
+    "final_validation_packs": 128,
+    "member_validation_packs": 64,
+    "atlas_windows": 128,
+    "anchor_windows": 19,
+    "completion_validation": "exhaustive teacher-forced answer metrics over all 10,137 C3.2 validation records",
+    "paired_choice_validation": "exhaustive tokenizer-level correct-versus-alternate suffix likelihood for all 2,280 claim pairs and 1,011 retrieval pairs"
+  },
+  "baselines": {
+    "combined_selection_nats_per_token": 2.6568,
+    "combined_final_nats_per_token": 2.6603,
+    "members": {
+      "claim": { "nats_per_token": 2.6171 },
+      "cloze": { "nats_per_token": 2.951 },
+      "retrieval": { "nats_per_token": 2.6078 }
+    },
+    "completion": {
+      "claim": {
+        "nats_per_target_token": 3.18746091,
+        "top1_token_accuracy": 0.0909090909,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0
+      },
+      "cloze": {
+        "nats_per_target_token": 2.92072008,
+        "top1_token_accuracy": 0.310713398,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0.251476793
+      },
+      "retrieval": {
+        "nats_per_target_token": 2.83608388,
+        "top1_token_accuracy": 0.181833168,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0
+      }
+    },
+    "paired": {
+      "claim": {
+        "forced_choice_nats": 0.706502358,
+        "choice_accuracy": 0.497587719,
+        "position_a_accuracy": 0.429824561,
+        "position_b_accuracy": 0.565350877,
+        "swap_consistency_accuracy": 0.287280702,
+        "pair_exact_accuracy": 0.14122807
+      },
+      "retrieval": {
+        "forced_choice_nats": 0.705837631,
+        "choice_accuracy": 0.49901088,
+        "position_a_accuracy": 0.997032641,
+        "position_b_accuracy": 0.000989119683,
+        "swap_consistency_accuracy": 0.00395647873,
+        "pair_exact_accuracy": 0.000989119683
+      }
+    },
+    "atlas_nats_per_token": 2.2786,
+    "anchor_nats_per_token": 3.6942
+  },
+  "control_c32_D": {
+    "combined_final_nats_per_token": 1.5643,
+    "completion_nats_per_target_token": {
+      "claim": 0.131374088,
+      "cloze": 2.30564857,
+      "retrieval": 0.115728191
+    },
+    "paired_choice_accuracy": {
+      "claim": 0.582236842,
+      "retrieval": 0.53165183
+    },
+    "position_gap": {
+      "claim": 0.027631579,
+      "retrieval": 0.15529179
+    },
+    "swap_consistency_accuracy": {
+      "claim": 0.217105263,
+      "retrieval": 0.397626113
+    },
+    "pair_exact_accuracy": {
+      "claim": 0.190789474,
+      "retrieval": 0.230464886
+    },
+    "mean_swap_consistency_accuracy": 0.307365688,
+    "mean_paired_choice_accuracy": 0.556944336,
+    "mean_pair_exact_accuracy": 0.21062718
+  },
+  "gates": {
+    "full_pack_pass": true,
+    "combined_validation_nats_per_token_maximum": 1.579943,
+    "completion_nats_per_target_token_maximum": {
+      "claim": 0.1379427924,
+      "cloze": 2.4209309985,
+      "retrieval": 0.1215146006
+    },
+    "paired_choice_accuracy_minimum": {
+      "claim": 0.572236842,
+      "retrieval": 0.52165183
+    },
+    "paired_position_gap_maximum": {
+      "claim": 0.1,
+      "retrieval": 0.16
+    },
+    "mean_swap_consistency_accuracy_minimum": 0.407365688,
+    "swap_consistency_accuracy_minimum": {
+      "claim": 0.207105263,
+      "retrieval": 0.387626113
+    },
+    "mean_pair_exact_accuracy_minimum": 0.26062718,
+    "pair_exact_accuracy_minimum": {
+      "claim": 0.180789474,
+      "retrieval": 0.220464886
+    },
+    "atlas_nats_per_token_maximum": 2.50646,
+    "atlas_relative_regression_maximum": 0.1,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "anchor_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "decision": {
+    "primary_gate": "Mean swap consistency must improve by at least 10 percentage points over C3.2 D.",
+    "guardrails": "Choice may regress by at most one point per task; pair exact must improve by at least five mean points; ordinary completion, position gap, and retention gates must pass.",
+    "single_seed": true,
+    "replication_authorized_if_pass": true,
+    "broad_model_promotion_authorized": false,
+    "checkpoint_publication_authorized": false
+  }
+}

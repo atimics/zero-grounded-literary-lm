@@ -1,0 +1,86 @@
+{
+  "schema": "sero.series_closure.v1",
+  "status": "frozen",
+  "frozen_on": "2026-08-23",
+  "decision": "conventional-cuda-scaling-demonstrated-return-to-zero-c",
+  "preservation_policy": {
+    "delete_code_or_evidence": false,
+    "rewrite_historical_contracts": false,
+    "rename_historical_models": false,
+    "new_main_line_training_authorized": false,
+    "larger_sero_runs_require_paid_separate_scope": true
+  },
+  "frozen_lineage": [
+    "sero0",
+    "sero-latent-v1",
+    "sero-latent-v2",
+    "sero-latent-v3",
+    "sero1-pretrain-v1",
+    "sero2-curriculum-v1",
+    "sero20m-curriculum-v1",
+    "sero20m-consolidation-v1"
+  ],
+  "terminal_result": {
+    "experiment": "sero20m-consolidation-v1",
+    "contract": {
+      "path": "benchmarks/sero20m-consolidation-v1/contract.json",
+      "sha256": "dd52ab69d27f380377b427b53cf963916100e8340e6ec59258ae4bc62603e527"
+    },
+    "parent_result": {
+      "path": "benchmarks/sero20m-consolidation-v1/parent-result.json",
+      "sha256": "f8d150be8013453994a507d5f1c99d2d16580e3bc058de07507214b11088f270"
+    },
+    "parent_status": {
+      "path": "benchmarks/sero20m-consolidation-v1/parent-status.json",
+      "sha256": "326a9637c2c7bae6748b47f8074dd2d2d7b341376bc59ec1c73fb4d7ec3bd1c5"
+    },
+    "result": {
+      "path": "benchmarks/sero20m-consolidation-v1/result.json",
+      "sha256": "cef1a1893912c59277c76ce05b49baa99fe78659322f1057b8052e09b8523d4e",
+      "aws_source_sha256": "cef1a1893912c59277c76ce05b49baa99fe78659322f1057b8052e09b8523d4e"
+    },
+    "status": {
+      "path": "benchmarks/sero20m-consolidation-v1/status.json",
+      "sha256": "7eac0b22bac7661986ed2deb78bd88269690e20c01d14da10e046ac313f7009d",
+      "aws_source_sha256": "7eac0b22bac7661986ed2deb78bd88269690e20c01d14da10e046ac313f7009d"
+    },
+    "parameters": 20011136,
+    "total_training_raw_bytes": 1000009747,
+    "total_training_tokens": 377031062,
+    "tokens_per_parameter": 18.84106239645765,
+    "total_training_seconds": 8973.81009904997,
+    "total_instance_seconds": 9832,
+    "total_estimated_ec2_usd": 2.747497777778,
+    "final_test_content_bits_per_byte": 1.2008475651809019,
+    "final_test_end_of_document_top1_accuracy": 0.9119840875186475,
+    "model_artifact_sha256": "8f3eb73639b14f199170b36df37851a64ad7b9c7dc0779bf98cde3620bbc16ee"
+  },
+  "matched_6m_comparison": {
+    "parameters": 6018176,
+    "total_training_tokens": 377031062,
+    "test_content_bits_per_byte": 1.327818283199724,
+    "20m_relative_bpb_reduction": 0.09562356508064732
+  },
+  "claim_boundary": {
+    "supported": [
+      "The conventional PyTorch/CUDA pipeline completed a 20,011,136-parameter dense run.",
+      "At matched token exposure, the 20M checkpoint had lower held-out bits per raw byte than the 6M checkpoint.",
+      "The final 20M checkpoint passed all frozen source-retention gates."
+    ],
+    "not_supported": [
+      "The 20M model is intelligent.",
+      "The 20M model reasons reliably.",
+      "Scaling alone will repair generation loops.",
+      "The PyTorch Sero checkpoint can run in the C ZERO runtime."
+    ]
+  },
+  "active_direction": {
+    "model_line": "ZERO",
+    "implementation": "dependency-free C11",
+    "training_precision": "float32",
+    "deployed_quantized_precision": "int8 matrix weights with floating-point row scales and activations",
+    "integer_only_sibling": "Solomon in the separate NSRL Rust repository",
+    "research_control_plane": "ilXyr",
+    "corpus_system": "cenetex/braid"
+  }
+}

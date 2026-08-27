@@ -1,0 +1,50 @@
+{
+  "schema": "sero.generation_eval_contract.v1",
+  "experiment": "sero1-generation-eval-v1",
+  "status": "diagnostic",
+  "source_experiment": "sero1-pretrain-v1",
+  "checkpoint_sha256_by_seed": {
+    "0": "9092ae74acbcf6a145c9a51ad3b15223f58155b8bfde4f1b8490f77717f29ab1",
+    "1": "6b72c4ab02afbee32a7153eb59211adc94cb422bb8a33723be395cd19691b688",
+    "2": "7e42aa3979ae0fc74b9913806487b6d3b7235a9e07e669f6ab390562fde16e78"
+  },
+  "tokenizer_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+  "held_out_context": {
+    "split": "test",
+    "documents_per_source": 4,
+    "prompt_token_lengths": [1, 8, 32, 128],
+    "continuation_tokens": 64,
+    "selection": "first eligible documents by id; continuation offset from sha256(document id)"
+  },
+  "free_generation": {
+    "new_tokens": 128,
+    "prompts": [
+      {"id": "control-the", "category": "one-token-control", "text": "The"},
+      {"id": "control-in", "category": "one-token-control", "text": "In"},
+      {"id": "control-a", "category": "one-token-control", "text": "A"},
+      {"id": "history", "category": "in-domain", "text": "The history of astronomy began with"},
+      {"id": "official-report", "category": "in-domain", "text": "According to the official report, the government"},
+      {"id": "scientists", "category": "in-domain", "text": "Scientists at the university discovered that"},
+      {"id": "chapter", "category": "in-domain", "text": "The purpose of this chapter is to explain"},
+      {"id": "nineteenth-century", "category": "in-domain", "text": "During the nineteenth century, the region became"},
+      {"id": "minister", "category": "in-domain", "text": "The minister said on Tuesday that"},
+      {"id": "story", "category": "out-of-domain", "text": "Once upon a time, a young inventor"},
+      {"id": "dialogue", "category": "out-of-domain", "text": "She opened the door and whispered,"},
+      {"id": "question-answer", "category": "out-of-domain", "text": "Question: Why does ice float on water?\nAnswer:"},
+      {"id": "assistant", "category": "out-of-domain", "text": "User: How can I learn a new language?\nAssistant:"},
+      {"id": "code", "category": "out-of-domain", "text": "def fibonacci(n):\n    if n < 2:\n        "},
+      {"id": "photosynthesis", "category": "long-form", "text": "Photosynthesis is the process by which green plants use sunlight to convert water and carbon dioxide into energy. During this process,"},
+      {"id": "committee", "category": "long-form", "text": "The committee met on Tuesday to discuss the proposed changes. After several hours of debate, the members agreed that"}
+    ],
+    "decoders": [
+      {"id": "greedy", "temperature": null, "top_p": null, "repetition_penalty": 1.0, "repeats": 1},
+      {"id": "sample-t08-p90", "temperature": 0.8, "top_p": 0.9, "repetition_penalty": 1.0, "repeats": 3},
+      {"id": "sample-t08-p90-r11", "temperature": 0.8, "top_p": 0.9, "repetition_penalty": 1.1, "repeats": 3}
+    ]
+  },
+  "reporting": {
+    "severe_loop_rule": "token distinct-4 below 0.5 or one token 4-gram occurs at least 4 times",
+    "sampling_is_diagnostic_not_a_promotion_gate": true,
+    "report_every_seed": true
+  }
+}

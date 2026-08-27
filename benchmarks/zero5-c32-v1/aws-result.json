@@ -1,0 +1,21 @@
+{
+  "schema": "zero.c32_aws_result_receipt.v1",
+  "experiment": "zero5-c32-v1",
+  "run_id": "zero5-c32-aws-20260824-44d34a7",
+  "status": "complete",
+  "exit_code": 0,
+  "finished_at": "2026-08-26T01:25:39Z",
+  "source_commit": "2c0ae75e3827db519e64df7224f11f1b7a8da7fe",
+  "region": "us-east-1",
+  "instance_type": "c6i.4xlarge",
+  "purchase_option": "on-demand",
+  "ec2_usd": 6.5484,
+  "result": {
+    "s3_bucket": "zero-training-022118847419",
+    "s3_key": "experiments/zero5-c32-v1/zero5-c32-aws-20260824-44d34a7/result.json",
+    "sha256": "e87305b52d229a71483c49a9aed09258211e118dd14b2f09855b77f89a059688",
+    "bytes": 23248
+  },
+  "scientific_contract_sha256": "f47f9283ee8a111bb816079803824bee77de930eac9e4ef5ecdbb8733dd01b7e",
+  "test_metrics_opened": false
+}

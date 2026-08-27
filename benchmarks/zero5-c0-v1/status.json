@@ -1,0 +1,26 @@
+{
+  "schema": "zero.c0_mechanics_status.v1",
+  "status": "pass",
+  "recorded_on": "2026-08-23",
+  "source_sha256": {
+    "literary_lm.c": "5f4c47e0fedcc0f96d5eafcd8f45f6bfc4808a1d1af7434cb188693449ff53e3",
+    "zero5_lm.c": "24688b7f164b7bd804713f02701e320269be64300041782c295edb5b24530651",
+    "zero5_braid.c": "7c724181a70fa593588f2a02ee97746288a0ff8765d03cfd8bf435c8c10b0ba2",
+    "sero_tokenizer.c": "b7d32b4a9a174e927c8fbe5c7b703249ae417505a4094bf4ef809b6e96bca6e9",
+    "scripts/run_zero5_c0.mjs": "9b0e9b190bab3d72cf121030e677eaec6ac45b0feb3162f2db25ecd01750e12b"
+  },
+  "gates": {
+    "adversarial_fixture": true,
+    "address_and_undefined_behavior_sanitizers": true,
+    "frozen_sero0_hash_contract": true,
+    "full_repository_check": true,
+    "deterministic_real_rerun": true
+  },
+  "real_braid_release_evaluated": true,
+  "result": {
+    "path": "benchmarks/zero5-c0-v1/result.json",
+    "sha256": "e3c0bd90196387d0791674c6b38ecf97134f229f99757c94c8b4f095d339508f"
+  },
+  "full_model_training_authorized": false,
+  "next": "ZERO.5-C1 passed the small C training proof. Expand Braid before broad pretraining; do not treat Corpus 1 as a general language corpus."
+}

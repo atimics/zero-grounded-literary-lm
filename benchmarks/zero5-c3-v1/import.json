@@ -1,0 +1,427 @@
+{
+  "schema": "zero.c3_import.v1",
+  "collection": {
+    "id": "braid-corpus-three-v0.1.0-094452561c87bfb5e2ae8a343e1bc9745b1d4dd86ac97a3037cca20f2aedd20f",
+    "braid_commit": "7e8489a2a4edac688403d29f7f4225f7294fb8e2",
+    "collection_json": {
+      "sha256": "de6d8bd005c6103f8e49cff268125d285faa34126c4eba06fe8ed7364778e969",
+      "bytes": 2755
+    },
+    "training_recipe": {
+      "sha256": "c2d35b77f8153c4f47a34b4fdb630758a8da9a98bdfadc8f3cc3a96dddd506fe",
+      "bytes": 795
+    },
+    "official_verification": true
+  },
+  "lineage_bridge": {
+    "active_collection_id": "braid-corpus-two-v0.1.0-fe3befe6c31c14ed9c4582101487fa9601b5b93152aab35026d32722797a2f80",
+    "c3_upstream_collection_id": "braid-corpus-two-v0.1.0-d3fb8df48d2ad66b78dee76ec7b26e262554d8b4de12b18f781533ec19eb45b5",
+    "splits": {
+      "anchors": {
+        "train": {
+          "sha256": "d96a192a517d31f48554bbd9bbde49a765405d06651e5d662d6d5c80dae3b082",
+          "bytes": 1453554
+        },
+        "validation": {
+          "sha256": "ce9402fcb6c0d79c8e7e8c15be73e1acf47ea3d445a7259b72c814459ceedafd",
+          "bytes": 184739
+        },
+        "test": {
+          "sha256": "932ac349a758188202e78f2a57fb7e780ae0f053569bce2e42d05a8779430b30",
+          "bytes": 183023
+        }
+      },
+      "atlas": {
+        "train": {
+          "sha256": "4b0a1de44838762e78ee31a58c72a8176d7d168d1f5574190d7549e33b9e1a9b",
+          "bytes": 47890697
+        },
+        "validation": {
+          "sha256": "94195c15f11848762423d0dcc0b35f02d3083b8bae0220b645dac3171135c0c2",
+          "bytes": 6485382
+        },
+        "test": {
+          "sha256": "2f7336dac086637c7d45a1e8cba97cb55972a7e28197aede878807b77ebbc83f",
+          "bytes": 5784314
+        }
+      }
+    }
+  },
+  "stages": [
+    {
+      "order": 1,
+      "member": "claims",
+      "split": "train",
+      "view": "official text"
+    },
+    {
+      "order": 2,
+      "member": "cloze",
+      "split": "train",
+      "view": "official text"
+    },
+    {
+      "order": 3,
+      "member": "retrieval",
+      "split": "train",
+      "view": "query, balanced 210-code-point exact passage prefixes, answer"
+    }
+  ],
+  "rights": {
+    "claims": "CC-BY-SA-4.0",
+    "cloze": "CC-BY-SA-4.0",
+    "retrieval": "CC-BY-SA-4.0",
+    "public_dataset_published": false,
+    "model_publication_requires_review": true
+  },
+  "members": {
+    "claims": {
+      "schema": "zero.braid_import.v2",
+      "release_id": "braid-corpus-three-claims-v0.1.0-5cce01f6bc97fa3a98055445ce1134174a8141b7b52eab8fb3eb7e7ee6758143",
+      "release_digest": "5cce01f6bc97fa3a98055445ce1134174a8141b7b52eab8fb3eb7e7ee6758143",
+      "release_manifest_sha256": "0ae8c9376f1fdd58739e8d2aa1482e0caef4d54fc407c0f1effc62dc24e44472",
+      "split_authority": "braid",
+      "train": {
+        "artifact_sha256": "00190f1ccf2e6975ada3575f09ecc3980bcc6cc998d860e8dc45f881399320fc",
+        "artifact_bytes": 123809806,
+        "documents": 35854,
+        "raw_bytes": 8665600,
+        "base_tokens": 8701454
+      },
+      "validation": {
+        "artifact_sha256": "dd77f7a690915a0cfaaeb40acdf5fa8c7a5297fc6e0d39c531347140abbb3186",
+        "artifact_bytes": 15835643,
+        "documents": 4561,
+        "raw_bytes": 1116148,
+        "base_tokens": 1120709
+      },
+      "test": {
+        "artifact_sha256": "3fd8eecbd77ca7e7e31ff8b529343e618ae3f4c2ae05ff88b3ab69e9885443e1",
+        "artifact_bytes": 15790023,
+        "documents": 4585,
+        "raw_bytes": 1094815,
+        "tokenizer_metrics_opened": false
+      }
+    },
+    "cloze": {
+      "schema": "zero.braid_import.v2",
+      "release_id": "braid-corpus-three-cloze-v0.1.0-60897d325bb9362addf41ea5b34bcb9145f2ec72f6d0f4edeef1703b87449a14",
+      "release_digest": "60897d325bb9362addf41ea5b34bcb9145f2ec72f6d0f4edeef1703b87449a14",
+      "release_manifest_sha256": "c7115eec22fceb61bcac0eeb198decd0ece0090b33bf9bb884324ba15c5423b8",
+      "split_authority": "braid",
+      "train": {
+        "artifact_sha256": "f71fc93ef000ff5c8ace8ba1690ce7d86736450896c7fe0276ce4a313a0bd3e3",
+        "artifact_bytes": 98304128,
+        "documents": 27889,
+        "raw_bytes": 7965220,
+        "base_tokens": 7993109
+      },
+      "validation": {
+        "artifact_sha256": "1b44dfb327fa32f4594b4c7c0bf54fc14f15f4d5af8f9adfcc8985924f050319",
+        "artifact_bytes": 12587946,
+        "documents": 3555,
+        "raw_bytes": 1024598,
+        "base_tokens": 1028153
+      },
+      "test": {
+        "artifact_sha256": "66168e689d44460fbf4873adadaf6acbbbdfcac521922cf8a18e2f359c33918e",
+        "artifact_bytes": 12505451,
+        "documents": 3556,
+        "raw_bytes": 1008907,
+        "tokenizer_metrics_opened": false
+      }
+    },
+    "retrieval": {
+      "schema": "zero.braid_import.v2",
+      "release_id": "braid-corpus-three-retrieval-v0.1.0-40c9315f9a5a9cdbea7dfd66602cee2ce21a062fc0850ce970373a1162adb60f",
+      "release_digest": "40c9315f9a5a9cdbea7dfd66602cee2ce21a062fc0850ce970373a1162adb60f",
+      "release_manifest_sha256": "1f2b43b0b9a1e37bfe3e771c666cfeaf916ff4a22064e13d6247f7c8d78823ae",
+      "split_authority": "braid",
+      "train": {
+        "artifact_sha256": "3860351e0f24151375929132dc8ec4d971b03e6b6df69004efcf7e512d23fc82",
+        "artifact_bytes": 136747407,
+        "documents": 15951,
+        "raw_bytes": 27202783,
+        "base_tokens": 27218734
+      },
+      "validation": {
+        "artifact_sha256": "a6609378432fb02d2e2dcb62415f75c4c189205b5c9c647c23debec53be0d457",
+        "artifact_bytes": 17346951,
+        "documents": 2023,
+        "raw_bytes": 3442562,
+        "base_tokens": 3444585
+      },
+      "test": {
+        "artifact_sha256": "3c6c1e3ab2dcd7dacf08875f3a0e77ba886bb752481ed7c698a63254be81686a",
+        "artifact_bytes": 17099872,
+        "documents": 2026,
+        "raw_bytes": 3367388,
+        "tokenizer_metrics_opened": false
+      }
+    }
+  },
+  "tokenizer": {
+    "id": "byte-bpe512",
+    "artifact": {
+      "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+      "bytes": 1016
+    },
+    "retrained": false
+  },
+  "context_audit": {
+    "model_context": 512,
+    "original": {
+      "claims": {
+        "train": {
+          "records": 35854,
+          "content_tokens": 4917950,
+          "boundary_tokens": 35854,
+          "stream_tokens": 4953804,
+          "minimum": 69,
+          "p50": 136,
+          "p90": 171,
+          "p95": 182,
+          "p99": 208,
+          "maximum": 376,
+          "mean": 137.16600658225025,
+          "over_context": 0,
+          "over_context_fraction": 0
+        },
+        "validation": {
+          "records": 4561,
+          "content_tokens": 630235,
+          "boundary_tokens": 4561,
+          "stream_tokens": 634796,
+          "minimum": 70,
+          "p50": 137,
+          "p90": 170,
+          "p95": 181,
+          "p99": 204,
+          "maximum": 306,
+          "mean": 138.17912738434555,
+          "over_context": 0,
+          "over_context_fraction": 0
+        }
+      },
+      "cloze": {
+        "train": {
+          "records": 27889,
+          "content_tokens": 4497874,
+          "boundary_tokens": 27889,
+          "stream_tokens": 4525763,
+          "minimum": 95,
+          "p50": 161,
+          "p90": 191,
+          "p95": 200,
+          "p99": 222,
+          "maximum": 373,
+          "mean": 161.27770805694,
+          "over_context": 0,
+          "over_context_fraction": 0
+        },
+        "validation": {
+          "records": 3555,
+          "content_tokens": 576351,
+          "boundary_tokens": 3555,
+          "stream_tokens": 579906,
+          "minimum": 99,
+          "p50": 162,
+          "p90": 190,
+          "p95": 200,
+          "p99": 219,
+          "maximum": 304,
+          "mean": 162.1240506329114,
+          "over_context": 0,
+          "over_context_fraction": 0
+        }
+      },
+      "retrieval": {
+        "train": {
+          "records": 15951,
+          "content_tokens": 15148050,
+          "boundary_tokens": 15951,
+          "stream_tokens": 15164001,
+          "minimum": 243,
+          "p50": 943,
+          "p90": 1306,
+          "p95": 1401,
+          "p99": 1489,
+          "maximum": 1654,
+          "mean": 949.6614632311454,
+          "over_context": 15401,
+          "over_context_fraction": 0.965519403172215
+        },
+        "validation": {
+          "records": 2023,
+          "content_tokens": 1912338,
+          "boundary_tokens": 2023,
+          "stream_tokens": 1914361,
+          "minimum": 330,
+          "p50": 934,
+          "p90": 1299,
+          "p95": 1390,
+          "p99": 1476,
+          "maximum": 1540,
+          "mean": 945.2980721700445,
+          "over_context": 1955,
+          "over_context_fraction": 0.9663865546218487
+        }
+      }
+    },
+    "retrieval_compaction": {
+      "passage_prefix_code_points_each": 210,
+      "preserves": [
+        "instruction",
+        "query",
+        "equal exact prefix from passage A",
+        "equal exact prefix from passage B",
+        "answer"
+      ],
+      "train": {
+        "base": {
+          "records": 15951,
+          "raw_bytes": 10726133,
+          "base_tokens": 10742084
+        },
+        "base_artifact": {
+          "sha256": "13c0babe8ea1fa891d88c6e27c42864738f3a19bc72dbe6d1edd4a0430e4659d",
+          "bytes": 21484168
+        },
+        "tokens": {
+          "sha256": "1465d77b4368931671d45efcf573a43ec772207be62874c9dc350ee5f8da0823",
+          "bytes": 12123806,
+          "tokens": 6061903
+        },
+        "recode": {
+          "schema": "sero.token_recode.v1",
+          "input_tokens": 10742084,
+          "tokens": 6061903,
+          "tokens_per_input_token": 0.564313498
+        },
+        "record_lengths": {
+          "records": 15951,
+          "content_tokens": 6045952,
+          "boundary_tokens": 15951,
+          "stream_tokens": 6061903,
+          "minimum": 261,
+          "p50": 379,
+          "p90": 397,
+          "p95": 404,
+          "p99": 419,
+          "maximum": 504,
+          "mean": 379.0327879129835,
+          "over_context": 0,
+          "over_context_fraction": 0
+        }
+      },
+      "validation": {
+        "base": {
+          "records": 2023,
+          "raw_bytes": 1359361,
+          "base_tokens": 1361384
+        },
+        "base_artifact": {
+          "sha256": "a2ce6e46894cb4634f690d81b1dff8aa523e1bffa0abddeeaa2201c12e06f039",
+          "bytes": 2722768
+        },
+        "tokens": {
+          "sha256": "5986a9a6bd16b023e87f33a24069b4437f03f49773a9b48570cbaa79ec824ba3",
+          "bytes": 1533890,
+          "tokens": 766945
+        },
+        "recode": {
+          "schema": "sero.token_recode.v1",
+          "input_tokens": 1361384,
+          "tokens": 766945,
+          "tokens_per_input_token": 0.563356849
+        },
+        "record_lengths": {
+          "records": 2023,
+          "content_tokens": 764922,
+          "boundary_tokens": 2023,
+          "stream_tokens": 766945,
+          "minimum": 315,
+          "p50": 377,
+          "p90": 395,
+          "p95": 402,
+          "p99": 416,
+          "maximum": 459,
+          "mean": 378.11270390509145,
+          "over_context": 0,
+          "over_context_fraction": 0
+        }
+      },
+      "test_view_created": false
+    }
+  },
+  "derived": {
+    "train_tokens": {
+      "sha256": "086aaf1c5652e59f6b5119c844e98b4b85f461525f68fcc82437cefd187c34dc",
+      "bytes": 31082940,
+      "tokens": 15541470,
+      "order": [
+        "claims",
+        "cloze",
+        "retrieval-compact"
+      ]
+    },
+    "validation_tokens": {
+      "sha256": "80915ebcbf8dc6b8d0780d0b7894db68199cb992f46c0ad516fd8eea0616e441",
+      "bytes": 3963294,
+      "tokens": 1981647,
+      "order": [
+        "claims",
+        "cloze",
+        "retrieval-compact"
+      ]
+    },
+    "completion_validation": {
+      "claims": {
+        "sha256": "2ca43d3691db1e6292924d0a5bae249fa78d93180caf9af0ff98137a0990b71f",
+        "bytes": 1333470,
+        "records": 4561,
+        "target_tokens": 460920,
+        "sequence_tokens": {
+          "minimum": 70,
+          "p50": 137,
+          "p90": 170,
+          "p99": 204,
+          "maximum": 306
+        }
+      },
+      "cloze": {
+        "sha256": "c6348fce4878ae2e64678229cf3c64196659a66f65d2676c76c2bd1b1e60b8c1",
+        "bytes": 1209606,
+        "records": 3555,
+        "target_tokens": 24138,
+        "sequence_tokens": {
+          "minimum": 99,
+          "p50": 162,
+          "p90": 190,
+          "p99": 219,
+          "maximum": 304
+        }
+      },
+      "retrieval": {
+        "sha256": "c1051733eed0dca27298e97855ba048a207670effeb932769dbe38605f777d1b",
+        "bytes": 1562236,
+        "records": 2023,
+        "target_tokens": 12138,
+        "sequence_tokens": {
+          "minimum": 315,
+          "p50": 377,
+          "p90": 395,
+          "p99": 416,
+          "maximum": 459
+        }
+      }
+    }
+  },
+  "test": {
+    "claims_records": 4585,
+    "cloze_records": 3556,
+    "retrieval_records": 2026,
+    "compact_view_created": false,
+    "tokenizer_metrics_opened": false
+  }
+}

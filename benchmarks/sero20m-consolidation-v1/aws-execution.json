@@ -1,0 +1,21 @@
+{
+  "schema": "sero.curriculum_pretrain_aws_execution.v1",
+  "region": "us-east-1",
+  "instance_type": "g5.xlarge",
+  "on_demand_usd_per_hour": 1.006,
+  "seed": 0,
+  "full": {
+    "maximum_instance_seconds": 14400,
+    "maximum_ec2_usd": 4.024
+  },
+  "maximum_ec2_usd": 4.024,
+  "controls": {
+    "immutable_source_archive": true,
+    "immutable_dataset_digest": true,
+    "immutable_parent_checkpoint": true,
+    "automatic_instance_shutdown": true,
+    "reuse_staged_20m_hardware_calibration": true,
+    "fresh_optimizer": true,
+    "seed0_only": true
+  }
+}

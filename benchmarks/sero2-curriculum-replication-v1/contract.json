@@ -1,0 +1,30 @@
+{
+  "schema": "sero.curriculum_pretrain_replication_contract.v1",
+  "experiment": "sero2-curriculum-replication-v1",
+  "status": "replication-seeds-1-and-2-open",
+  "purpose": "Replicate the exact staged seed-0 curriculum recipe at fixed capacity before model scale-up.",
+  "parent_contract": {
+    "path": "benchmarks/sero2-curriculum-v1/contract.json",
+    "sha256": "052174b5719628236e1710ead13bde1ac7cdbb92385a15335bfb30b7110c7390"
+  },
+  "open_seeds": [1, 2],
+  "replication_role": "parent",
+  "expected_schedule_sha256_by_seed": {
+    "1": "508e7b680d9404cefc2e28832b52269369e0e51cf26b5e3811b56d9b6bb8195c",
+    "2": "b6d0bbc6dfa256e43e9ece91118a798885f3763522617a764fb59a4a6bd1bf1d"
+  },
+  "seed0_evidence": {
+    "final_decision": "seed0-passed-open-replication",
+    "consolidated_result_sha256": "278481f8324b407efcf188f5ae367af3213c8df8481c2fa795da60ebf47347bf",
+    "consolidated_model_sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7",
+    "all_frozen_gates_passed": true
+  },
+  "pilot_decisions": {
+    "train_from_scratch": true,
+    "same_model_capacity_as_sero1": true,
+    "seed0_gate_satisfied": true,
+    "run_exact_recipe_without_retuning": true,
+    "scale_only_after_both_replication_seeds_finish": true,
+    "no_promotion_from_intermediate_parent": true
+  }
+}

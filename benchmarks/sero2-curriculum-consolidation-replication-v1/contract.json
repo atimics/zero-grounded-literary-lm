@@ -1,0 +1,89 @@
+{
+  "schema": "sero.curriculum_pretrain_replication_contract.v1",
+  "parent_contract": {
+    "path": "benchmarks/sero2-curriculum-consolidation-v1/contract.json",
+    "sha256": "d6938dc16f946cf91a7cfd6338609530a4e64fc30964badba5a67e134912850e"
+  },
+  "experiment": "sero2-curriculum-consolidation-replication-v1",
+  "status": "replication-seeds-1-and-2-open",
+  "purpose": "Test whether the seed-0 retention consolidation result repeats for staged curriculum seeds 1 and 2 without changing capacity, data, optimization, or gates.",
+  "open_seeds": [1, 2],
+  "replication_role": "final",
+  "initialization": {
+    "checkpoint_sha256_by_seed": {
+      "1": "68720e9f8c01b383605eb15a91d12717a9828cdb757c936362a4a2ec5c2463d9",
+      "2": "59be412e2f00ff8059ce9b7b90186994ab057071f2cd468a9af6e93bb206dc82"
+    },
+    "parent_contract_sha256_by_seed": {
+      "1": "2b3a7f0ebbd1ce0370424544d2b5b349454e9f51962c21e0185b40333e5a77ac",
+      "2": "2b3a7f0ebbd1ce0370424544d2b5b349454e9f51962c21e0185b40333e5a77ac"
+    },
+    "parent_schedule_sha256_by_seed": {
+      "1": "508e7b680d9404cefc2e28832b52269369e0e51cf26b5e3811b56d9b6bb8195c",
+      "2": "b6d0bbc6dfa256e43e9ece91118a798885f3763522617a764fb59a4a6bd1bf1d"
+    },
+    "parent_result_sha256_by_seed": {
+      "1": "23a6002cd09f765bd50a4a44eddb5c26b20243f66c6c021413fd9d0e730be066",
+      "2": "af3d44d1b209cd768f9aa2e96d0aa158e9b062f2cd6988bc8593b9b2c7993d1f"
+    },
+    "optimizer_state_reused": false
+  },
+  "training": {
+    "batch_size": 16,
+    "total_target_raw_bytes": 400000000,
+    "stages_must_match_corpus": false,
+    "parent_schedule_sha256_by_seed": {
+      "1": "508e7b680d9404cefc2e28832b52269369e0e51cf26b5e3811b56d9b6bb8195c",
+      "2": "b6d0bbc6dfa256e43e9ece91118a798885f3763522617a764fb59a4a6bd1bf1d"
+    },
+    "stages": [
+      {
+        "id": "retention-consolidation",
+        "target_raw_bytes": 400000000,
+        "domain_weights": {
+          "foundation": 0.60,
+          "general": 0.30,
+          "technical": 0.05,
+          "dialogue": 0.03,
+          "reasoning": 0.02
+        }
+      }
+    ],
+    "windowing": "non-overlapping-token-windows-within-source-documents",
+    "sampling": "deterministic-per-domain-cycle-with-replacement-then-stage-shuffle",
+    "tail_windows": "padded-and-loss-masked",
+    "precision": "bfloat16-on-cuda",
+    "gradient_clip": 1.0,
+    "checkpoint_after_each_stage": true
+  },
+  "expected_schedule_sha256_by_seed": {
+    "1": "72216d8f21e8fd0d43fe131996dc4fdfd090a40ab6484de836b93bc18cd60167",
+    "2": "c1902ccc5b4b49eaadaba25813f9b0cea28f09bbdae919fab160e112703af974"
+  },
+  "seed0_evidence": {
+    "result_s3_key": "experiments/sero2-curriculum-consolidation-v1/sero2-consolidation-full-seed0-20260822-81b0d2b/result.json",
+    "result_sha256": "278481f8324b407efcf188f5ae367af3213c8df8481c2fa795da60ebf47347bf",
+    "model_sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7",
+    "decision": "seed0-passed-open-replication"
+  },
+  "parent_evidence_by_seed": {
+    "1": {
+      "run_id": "sero2-curriculum-replication-seed1-20260822-252dd08",
+      "result_s3_key": "experiments/sero2-curriculum-replication-v1/sero2-curriculum-replication-seed1-20260822-252dd08/result.json",
+      "model_s3_key": "experiments/sero2-curriculum-replication-v1/sero2-curriculum-replication-seed1-20260822-252dd08/artifacts/model-final.pt"
+    },
+    "2": {
+      "run_id": "sero2-curriculum-replication-seed2-20260822-252dd08",
+      "result_s3_key": "experiments/sero2-curriculum-replication-v1/sero2-curriculum-replication-seed2-20260822-252dd08/result.json",
+      "model_s3_key": "experiments/sero2-curriculum-replication-v1/sero2-curriculum-replication-seed2-20260822-252dd08/artifacts/model-final.pt"
+    }
+  },
+  "pilot_decisions": {
+    "train_from_scratch": false,
+    "same_model_capacity_as_sero1": true,
+    "fresh_optimizer_for_consolidation": true,
+    "seeds_1_and_2_open": true,
+    "do_not_scale_model_until_replication_passes": true,
+    "no_promotion_until_three_seed_evidence": true
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "zero.c32_local_partial_run.v1",
+  "status": "interrupted-exploratory",
+  "official_result": false,
+  "reason": "The laptop-hosted run was interrupted after arm C completed and arm D reached update 2500. The official AWS result restarts both arms on one Linux/OpenBLAS backend.",
+  "source_commit": "361c861",
+  "contract_sha256": "3722164a8cb9593557fb4c0b4e8709e0266fa4662191a933a49154b3cc41ed94",
+  "trainer_sha256": "2752317c304817f5dbc666ca95cc0d3e783ee7d449afee380fd66b71414efd5f",
+  "backend": "accelerate",
+  "arm_c": {
+    "status": "complete-exploratory",
+    "result_sha256": "91c350f7b4ccc73bca1cbe5d22880ec601a0d6141be3cdae5c7c8e76ebcb2f02",
+    "checkpoint_sha256": "195fcda7b7711df45a63b19def2251618d2925c79ec7a0db7c03ce7fff86f6c6"
+  },
+  "arm_d": {
+    "status": "interrupted",
+    "completed_updates": 2500,
+    "total_updates": 9442,
+    "next_pack": 10000,
+    "checkpoint_bytes": 58236384,
+    "checkpoint_sha256": "2209010ab2c057752b37e6360c9632838efb12ceeb198b065aa711a938cf5712",
+    "last_observed_validation_nats_per_token": 1.7935
+  },
+  "rights": {
+    "checkpoint_publication_authorized": false,
+    "private_recovery_archive_allowed": true
+  }
+}

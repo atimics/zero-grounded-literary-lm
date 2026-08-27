@@ -70,7 +70,8 @@ try {
 
 for (const script of ["scripts/build_zero_corpus.mjs", "scripts/promote_zero_dataset.mjs",
   "scripts/publish_zero_telemetry.mjs", "scripts/materialize_zero_dataset.mjs",
-  "scripts/import_q34_telemetry.mjs", "docs/dashboard/dashboard.js"])
+  "scripts/import_q34_telemetry.mjs", "scripts/import_sero2_curriculum_telemetry.mjs",
+  "docs/dashboard/dashboard.js"])
   run("node", ["--check", script]);
 
 const template = fs.readFileSync("infra/zero-data-plane.yaml", "utf8");

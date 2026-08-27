@@ -1,0 +1,20 @@
+{
+  "status": "completed",
+  "experiment": "zero5-c32-v1",
+  "seed": 0,
+  "update": 9442,
+  "loss": 1.5643,
+  "accuracy": 0.556944336,
+  "decision": "no-go",
+  "compute_usd": 6.5484,
+  "metric_kind": "paired-invariance",
+  "mean_choice_accuracy": 0.556944336,
+  "mean_swap_consistency_accuracy": 0.307365688,
+  "mean_pair_exact_accuracy": 0.21062718,
+  "claim_position_gap": 0.027631579,
+  "retrieval_position_gap": 0.15529179,
+  "task_balance_D_minus_C_mean_choice_accuracy": 0.0362047085,
+  "result_sha256": "e87305b52d229a71483c49a9aed09258211e118dd14b2f09855b77f89a059688",
+  "test_metrics_opened": false,
+  "note": "Task balancing removed most claim position bias, but per-example swap consistency failed. C3.3 trains original and mirrored examples as one paired unit."
+}

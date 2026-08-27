@@ -1,0 +1,122 @@
+{
+  "schema": "zero.c32_throughput_contract.v1",
+  "experiment": "zero5-c32-throughput-v1",
+  "status": "authorized-retry",
+  "purpose": "Find a faster byte-identical Linux/OpenBLAS continuation configuration for the frozen C3.2 run.",
+  "diagnostic_only": true,
+  "scientific_inference_allowed": false,
+  "source": {
+    "commit": "c90e11e032399b584c5c9ac6639465b32d47a6e1",
+    "archive_sha256": "48f84fe14144f562d3a890b480e696466470e9037de9c2fac32b327c3518bc62",
+    "assets_sha256": "cafedf89ab5ed298036114ab82cb4ffa785265f8c80294925c14bd8478c7f4b7",
+    "user_data": "scripts/aws/zero5-c32-throughput-user-data.sh",
+    "user_data_sha256": "f18a6c58ceaec283697562b453a23d31cf7a0d5e39f0792bcc0120230b8785de"
+  },
+  "parent": {
+    "experiment": "zero5-c32-v1",
+    "contract_sha256": "f47f9283ee8a111bb816079803824bee77de930eac9e4ef5ecdbb8733dd01b7e",
+    "run_id": "zero5-c32-aws-20260824-44d34a7",
+    "arm": "C",
+    "update": 3000,
+    "active_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720"
+  },
+  "venue": {
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "hourly_usd": 0.68,
+    "maximum_instance_seconds": 380,
+    "maximum_compute_usd": 0.072,
+    "prior_compute_usd": 0.067244,
+    "maximum_total_compute_usd": 0.14,
+    "automatic_shutdown": true
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "run_id": "zero5-c32-throughput-20260824-2c59836",
+      "instance_id": "i-0c0eee563f23d36d0",
+      "launched_at": "2026-08-24T21:23:59Z",
+      "observed_terminal_at": "2026-08-24T21:25:42Z",
+      "observed_instance_seconds": 103,
+      "estimated_compute_usd": 0.019456,
+      "status": "failed-without-terminal-report",
+      "finding": "The failure path put the small status and boot log after a bulk sync of temporary checkpoints. No result was admitted."
+    },
+    {
+      "attempt": 2,
+      "run_id": "zero5-c32-throughput-20260824-b29cd77",
+      "instance_id": "i-023e2589329f1aafd",
+      "launched_at": "2026-08-24T21:32:40Z",
+      "observed_terminal_at": "2026-08-24T21:34:34Z",
+      "observed_instance_seconds": 114,
+      "estimated_compute_usd": 0.021533,
+      "status": "failed-before-first-status",
+      "finding": "Bootstrap failed before the AWS CLI was installed. The next retry installs reporting first and uploads its boot log before installing build packages."
+    },
+    {
+      "attempt": 3,
+      "run_id": "zero5-c32-throughput-20260824-823d76e",
+      "instance_id": "i-0f5159567dfc6a502",
+      "launched_at": "2026-08-24T21:38:28Z",
+      "observed_terminal_at": "2026-08-24T21:39:18Z",
+      "observed_instance_seconds": 50,
+      "estimated_compute_usd": 0.009444,
+      "status": "failed-before-aws-cli",
+      "finding": "The reporter-first bootstrap still stopped before the AWS CLI became usable. The final bounded retry writes the boot log directly with a signed S3 request and does not depend on installed reporting tools."
+    },
+    {
+      "attempt": 4,
+      "run_id": "zero5-c32-throughput-20260824-726cb6b",
+      "instance_id": "i-0b40c941bf8cbc955",
+      "launched_at": "2026-08-24T21:44:07Z",
+      "observed_terminal_at": "2026-08-24T21:44:43Z",
+      "observed_instance_seconds": 36,
+      "estimated_compute_usd": 0.0068,
+      "status": "failed-checksum-format",
+      "finding": "The recovered boot log proved the pinned AWS CLI checksum had 65 characters because of one extra 'e'. The checksum is corrected to the verified 64-character value."
+    },
+    {
+      "attempt": 5,
+      "run_id": "zero5-c32-throughput-20260824-f1798e7",
+      "instance_id": "i-0429e3c451540b164",
+      "launched_at": "2026-08-24T21:47:38Z",
+      "observed_terminal_at": "2026-08-24T21:48:31Z",
+      "observed_instance_seconds": 53,
+      "estimated_compute_usd": 0.010011,
+      "status": "failed-installer-permission",
+      "finding": "The checksum passed. Python's ZIP extractor did not preserve the AWS installer's executable bit. The final retry uses the proven order: raw reporting, package installation, then the system unzip tool."
+    }
+  ],
+  "replay": {
+    "start_update": 3000,
+    "updates": 20,
+    "batch_sequences": 4,
+    "compute_token_exposures": 40960,
+    "validation_packs": 1,
+    "data_order": "identical packs 12000 through 12079",
+    "optimizer_rng_and_schedule": "restored from the exact active checkpoint"
+  },
+  "reference": {
+    "name": "o2-t16-a",
+    "compiler_flags": "-O2 -std=c11 -Wall -Wextra -Wpedantic",
+    "openblas_threads": 16,
+    "repeat": "o2-t16-b"
+  },
+  "candidates": [
+    {"name": "o2-t16-a", "compiler": "o2", "threads": 16},
+    {"name": "o2-t8", "compiler": "o2", "threads": 8},
+    {"name": "o2-t4", "compiler": "o2", "threads": 4},
+    {"name": "o2-t2", "compiler": "o2", "threads": 2},
+    {"name": "o2-t1", "compiler": "o2", "threads": 1},
+    {"name": "o2-t16-b", "compiler": "o2", "threads": 16},
+    {"name": "o3-native-t4", "compiler": "o3-native", "threads": 4}
+  ],
+  "decision": {
+    "eligibility": "The output active checkpoint must be byte-identical to o2-t16-a after the same 20 updates.",
+    "selection": "Choose the eligible configuration with the highest measured training tokens per second.",
+    "reference_repeat_maximum_relative_drift": 0.1,
+    "continuation_approval": false,
+    "test_metrics_opened": false
+  }
+}

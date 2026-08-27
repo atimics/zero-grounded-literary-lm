@@ -1,0 +1,82 @@
+{
+  "schema": "zero.c32_aws_continuation.v1",
+  "experiment": "zero5-c32-v1",
+  "status": "authorized",
+  "scientific_change": false,
+  "purpose": "Finish the frozen C3.2 C-then-D run with the byte-identical fastest verified OpenBLAS thread count.",
+  "parent": {
+    "run_id": "zero5-c32-aws-20260824-44d34a7",
+    "scientific_contract_sha256": "f47f9283ee8a111bb816079803824bee77de930eac9e4ef5ecdbb8733dd01b7e",
+    "status": "recoverable",
+    "active_arm": "C",
+    "completed_update": 3000,
+    "active_checkpoint_sha256": "0ee9230c3a5cba7b4260eb9e36fa7f1bf6565aff8f216303d8f6d436e77b2720",
+    "arm_d_started": false,
+    "prior_ec2_usd": 1.666
+  },
+  "optimization_evidence": {
+    "benchmark_contract": "benchmarks/zero5-c32-throughput-v1/contract.json",
+    "benchmark_contract_sha256": "da93655697ab3410faa1820d7488df3d4b3864801bce6573584508f7fbc85fe4",
+    "benchmark_result": "benchmarks/zero5-c32-throughput-v1/result.json",
+    "benchmark_result_sha256": "6da73dfdbb99a7f37dfe2135f075e49a92335da60ab76c233209548dc1243320",
+    "verified_start_update": 3000,
+    "verified_updates": 20,
+    "winner_tokens_per_second": 1724,
+    "reference_tokens_per_second_mean": 1209,
+    "output_checkpoint_sha256": "cd19e8229e44bc76b68a0db573d90e03f6662bd0fcb30ed8dae6e517d16328d4",
+    "all_candidates_byte_identical": true
+  },
+  "environment": {
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "backend": "openblas",
+    "openblas_threads": 8,
+    "omp_threads": 8,
+    "openblas_dynamic": false,
+    "on_demand_usd_per_hour": 0.68
+  },
+  "budget": {
+    "maximum_total_c32_ec2_usd": 6.75,
+    "maximum_additional_ec2_usd": 5.084,
+    "maximum_segment_seconds": 9000,
+    "maximum_segment_ec2_usd": 1.7,
+    "automatic_shutdown": true,
+    "recoverable_segments": true
+  },
+  "budget_amendment": {
+    "status": "authorized",
+    "scientific_change": false,
+    "reason": "The original execution ceiling ended safely before Arm D and its frozen evaluation could complete.",
+    "resume_from": {
+      "active_arm": "D",
+      "completed_update": 5000,
+      "active_checkpoint_sha256": "3049f548984576b2c617201b01336adb89b9915508d63edfa3240660deb2b776",
+      "prior_ec2_usd": 4.998188888889
+    },
+    "previous_maximum_total_c32_ec2_usd": 5.42,
+    "maximum_total_c32_ec2_usd": 6.75,
+    "maximum_increment_ec2_usd": 1.33,
+    "approved_on": "2026-08-25",
+    "approval_id": "zero5-c32-aws-2026-08-25-v3"
+  },
+  "implementation": {
+    "user_data": "scripts/aws/zero5-c32-user-data.sh",
+    "user_data_sha256": "6e606c1771a9cd924516f9f23ad44ae09c7621c5bf65c4324e40ed6f4c5eb8e3",
+    "launcher": "scripts/aws/zero5-c32-run-instance.sh",
+    "launcher_sha256": "48a94120152c796bfcffae52bbf4754aec559b04243dfad4fd888388857f721d",
+    "source_archive": "immutable archive of the commit containing this contract"
+  },
+  "invariants": {
+    "same_scientific_contract": true,
+    "same_tokenizer": true,
+    "same_packed_data": true,
+    "same_pack_order": true,
+    "same_optimizer_state": true,
+    "same_rng_state": true,
+    "same_schedule": true,
+    "same_arm_order": true,
+    "test_metrics_opened": false
+  },
+  "approval_id": "zero5-c32-aws-2026-08-25-v3"
+}

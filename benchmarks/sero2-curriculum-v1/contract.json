@@ -1,0 +1,141 @@
+{
+  "schema": "sero.curriculum_pretrain_contract.v1",
+  "experiment": "sero2-curriculum-v1",
+  "status": "diagnostic-seed0-unrun",
+  "pilot_seed": 0,
+  "purpose": "Measure the curriculum corpus and staged sampling change at fixed Sero 1 capacity before any model scale-up.",
+  "data": {
+    "dataset_id": "sero-pretrain-curriculum",
+    "dataset_version": "2026-08-22.v1",
+    "dataset_digest": "dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2fc149a35d8",
+    "parent_dataset_digest": "0cefd7a464177abec1ce32349aca957ac2a82d4d53cb0c9a7775defb13ace82d",
+    "curriculum_sha256": "a66e426248eacf5e80f3ef4e46b12276ecf1d3cc188e0e100942362b583425fc",
+    "source_registry_sha256": "6b654b981267fa2cdc2cc47bd5077233eccf7fbfda71c7354acd07fad457645b",
+    "unique_training_bytes": 157788446,
+    "unique_validation_bytes": 1895703,
+    "unique_test_bytes": 2271176,
+    "unique_total_bytes": 161955325,
+    "training_documents": 70743,
+    "validation_documents": 824,
+    "test_documents": 2011,
+    "exact_12_word_train_eval_matches": 0,
+    "documents_present_in_multiple_splits": 0,
+    "source_text_contains_reserved_nul": false
+  },
+  "domains": {
+    "foundation": ["english-wikibooks", "simple-wikipedia"],
+    "general": ["english-wikinews"],
+    "technical": ["mdn-web-docs"],
+    "dialogue": ["openassistant-english"],
+    "reasoning": ["gsm8k"]
+  },
+  "tokenizer": {
+    "artifact": "tokenizers/sero1-byte-bpe-4096.json",
+    "artifact_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+    "vocabulary_size": 4096,
+    "maximum_token_bytes": 8,
+    "end_of_document_byte_hex": "00",
+    "end_of_document_token_id": 188,
+    "end_of_document_in_training_loss": true,
+    "end_of_document_in_content_bpb": false
+  },
+  "model": {
+    "architecture": "dense-causal-tied-embedding-transformer",
+    "token_context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1056,
+    "dropout": 0.0,
+    "position": "learned-absolute",
+    "normalization": "pre-norm-plus-final-rmsnorm",
+    "private_input_bos": true,
+    "expected_parameters": 6021312
+  },
+  "training": {
+    "batch_size": 16,
+    "total_target_raw_bytes": 600000000,
+    "stages": [
+      {
+        "id": "foundations",
+        "target_raw_bytes": 200000000,
+        "domain_weights": {"foundation": 0.55, "general": 0.20, "technical": 0.20, "dialogue": 0.03, "reasoning": 0.02}
+      },
+      {
+        "id": "breadth",
+        "target_raw_bytes": 200000000,
+        "domain_weights": {"foundation": 0.35, "general": 0.20, "technical": 0.30, "dialogue": 0.10, "reasoning": 0.05}
+      },
+      {
+        "id": "application",
+        "target_raw_bytes": 200000000,
+        "domain_weights": {"foundation": 0.25, "general": 0.15, "technical": 0.25, "dialogue": 0.25, "reasoning": 0.10}
+      }
+    ],
+    "windowing": "non-overlapping-token-windows-within-source-documents",
+    "sampling": "deterministic-per-domain-cycle-with-replacement-then-stage-shuffle",
+    "tail_windows": "padded-and-loss-masked",
+    "precision": "bfloat16-on-cuda",
+    "gradient_clip": 1.0,
+    "checkpoint_after_each_stage": true
+  },
+  "optimization": {
+    "objective": "next-token-cross-entropy-including-end-of-document",
+    "optimizer": "AdamW",
+    "learning_rate": 0.0003,
+    "betas": [0.9, 0.95],
+    "epsilon": 1e-8,
+    "weight_decay": 0.1,
+    "warmup_fraction": 0.02,
+    "minimum_learning_rate_ratio": 0.1,
+    "schedule": "linear-warmup-cosine-decay-over-all-curriculum-updates"
+  },
+  "evaluation": {
+    "checkpoint_split": "complete-validation",
+    "final_split": "complete-test",
+    "primary_metric": "content-bits-per-raw-byte-excluding-end-of-document-loss",
+    "boundary_metrics_reported_separately": true,
+    "sample_prompts": [
+      "In",
+      "The history of astronomy began with",
+      "Question:\nWhy does ice float on water?\n\nReasoning:\n",
+      "User:\nHow can I debug a web page that will not load?\n\nAssistant:\n",
+      "The JavaScript function returns"
+    ],
+    "sample_new_tokens": 128,
+    "generation_stops_at_end_of_document": true
+  },
+  "baseline": {
+    "checkpoint_sha256": "8b6379a04ca1b3c49aa0efb36b2d9bdc448a5cf54ab67ac92f05aa342e96f3fc",
+    "test_content_bits_per_byte": 1.71145822,
+    "test_source_content_bits_per_byte": {
+      "english-wikibooks": 1.56556166,
+      "english-wikinews": 1.48254660,
+      "simple-wikipedia": 1.49339347,
+      "mdn-web-docs": 2.23900187,
+      "openassistant-english": 1.61227055,
+      "gsm8k": 1.83620303
+    },
+    "test_end_of_document_top1_accuracy": 0.0
+  },
+  "success_gates": {
+    "maximum_test_content_bits_per_byte": 1.60,
+    "maximum_test_source_content_bits_per_byte": {
+      "mdn-web-docs": 2.00,
+      "openassistant-english": 1.55,
+      "gsm8k": 1.75,
+      "english-wikibooks": 1.59,
+      "english-wikinews": 1.51,
+      "simple-wikipedia": 1.52
+    },
+    "minimum_test_end_of_document_top1_accuracy": 0.50,
+    "all_metrics_must_be_finite": true
+  },
+  "pilot_decisions": {
+    "train_from_scratch": true,
+    "same_model_capacity_as_sero1": true,
+    "do_not_open_seeds_1_and_2_until_seed0_passes": true,
+    "do_not_scale_model_until_seed0_passes": true,
+    "no_promotion_from_this_pilot": true
+  }
+}

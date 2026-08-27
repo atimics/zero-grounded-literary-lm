@@ -3,7 +3,7 @@
 Read [**The ZERO Manifesto**](MANIFESTO.md) and the
 [mathematical foundations](FOUNDATIONS.md).
 
-This project contains two dependency-free neural language models together with
+This project contains dependency-free neural language models together with
 checked corpus generators, validators, faculty-controller experiments, and a
 small browser runtime:
 
@@ -11,6 +11,9 @@ small browser runtime:
   to inspect.
 - `literary_lm`: a configurable decoder-only transformer designed to train on
   collections such as Shakespeare, William Blake, and Aleister Crowley.
+- `zero5_lm`: the active C transformer fork for lossless byte tokenizers and
+  immutable Braid corpus releases. The hash-pinned `literary_lm.c` remains
+  unchanged.
 - `logic_corpus`: a reproducible generator for compact natural-deduction
   proofs over hereditarily finite sets.
 - `brainfuck_corpus`: an interpreter-checked generator for execution,
@@ -22,7 +25,7 @@ small browser runtime:
   exports into multi-speaker channels with explicit reply edges and learned
   lossy-memory transitions.
 
-Both are written in C11. On macOS, `literary_lm` automatically uses Apple's
+They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
 when its development package is installed and otherwise retains the portable C
 fallback. Set `LITERARY_BACKEND=portable`, `openblas`, or `accelerate` to make
@@ -33,11 +36,53 @@ runs a mixed-format export—row-wise int8 matrices with floating-point scales
 and normalization gains—entirely in the browser using the same C inference
 code compiled to WebAssembly. No prompt or generated text is sent to a server.
 
-`bpe_tokenizer` is the companion corpus normalizer and experimental byte-pair
+`bpe_tokenizer` is the historical corpus normalizer and experimental byte-pair
 trainer. Tests at 256, 512, and 2,048 vocabulary entries overfit fragments on
-this corpus, so the final preset uses its cleaned 128-character ASCII stream
+that small literary corpus, so its final preset uses a cleaned 128-character ASCII stream
 with no merges. The smaller vocabulary reallocates capacity to the transformer
 while keeping the total parameter count unchanged.
+
+## ZERO.5 corpus and tokenizer gate
+
+ZERO.5-C0 establishes the new data path before model training. A C reader
+verifies a released `braid.release/v2` manifest and its governed train,
+validation, and test artifacts, checks every decoded document against its
+content hash, preserves the official splits, and emits exact little-endian token streams. The
+lossless C tokenizer then compares raw bytes with a frozen 512-entry byte-BPE
+vocabulary. End-of-document and channel tokens cannot be merged.
+
+The 512-token arm keeps the historical 4,852,992-parameter budget exactly by
+using a 1,024-wide feed-forward layer. The governed Corpus 1 run is complete:
+byte-BPE512 reduced validation content tokens by 57.07% versus byte264 and is
+the selected ZERO.5 tokenizer. Corpus 1 is still too small for broad
+pretraining. The separate three-seed C1 run reached a mean 2.9707 validation
+bits per raw byte and reproduced seed 0 byte for byte, but generations remained
+mostly gibberish. See [the C0 tokenizer result](benchmarks/zero5-c0-v1/RESULT.md)
+and [the C1 training result](benchmarks/zero5-c1-v1/RESULT.md).
+
+The fixed-size C2 Atlas continuation passed. One ordered pass reduced Atlas
+validation loss from 4.9819 to 2.2786 nats per token and also improved the C1
+anchor distribution. Generation became more prose-shaped but was not coherent.
+See [the C2 result](benchmarks/zero5-c2-v1/RESULT.md) and
+[generation samples](benchmarks/zero5-c2-v1/GENERATION.md).
+
+The fixed-size C3 task continuation is complete with a no-go. Combined C3
+validation loss improved 39.13%, but claim-answer improvement missed its gate,
+cloze-answer loss became worse, and retrieval A/B accuracy reached only 52.05%
+against a frozen 55% gate. C2 and C1 retention passed. The evidence points to
+interference from presenting claims, cloze, and retrieval as three solid
+blocks. See [the C3 result](benchmarks/zero5-c3-v1/RESULT.md) and
+[task samples](benchmarks/zero5-c3-v1/GENERATION.md).
+
+The fixed-size C3.1 braid is also complete with a no-go under its conjunctive
+gate, but it produced a large curriculum result. Smoothly interleaving the
+exact same packs improved combined validation loss by 41.75% versus C2 and
+fixed the C3 cloze regression. Four-times answer weighting improved cloze
+answer loss by 26.80% and retrieval answer loss by 95.97%, while retaining C2
+Atlas and C1 anchors. Claim improvement reached only 7.28%, and retrieval
+choice reached 54.77% against the frozen 55% gate, so no arm was eligible for
+promotion or replication. See [the C3.1 result](benchmarks/zero5-c31-v1/RESULT.md)
+and [generation diagnostic](benchmarks/zero5-c31-v1/GENERATION.md).
 
 ## Sero model lineage
 
@@ -45,6 +90,21 @@ Historical ZERO names remain attached to their released experiments and
 artifacts. New base-model research is named **Sero**. Sero starts from exact raw
 bytes and makes tokenizer/model tradeoffs explicit rather than inheriting the
 old 128-character normalization contract.
+
+**The Sero series is frozen as of 2026-08-23.** Its PyTorch/CUDA code and
+evidence remain reproducible, but it is no longer the active model line. The
+terminal 20M run passed every frozen source gate and reduced matched-token test
+bits per raw byte by 9.56% versus the 6M model. Generation still looped and was
+not reliably correct. The project now returns to the dependency-free C ZERO
+engine; larger Sero runs require a separate paid scope. See the
+[Sero closure and scale costs](benchmarks/sero-series-closure-v1/README.md)
+and [active model-line boundary](docs/LINEAGE-BOUNDARY.md).
+
+The final scale test trained a 20,011,136-parameter model on the same total
+377,031,062-token schedule. It reached 1.2008 test BPB for a measured two-stage
+EC2 cost of $2.75. This closes Sero with positive scaling evidence and a clear
+generation-quality limitation. See
+[the final 20M result](benchmarks/sero20m-consolidation-v1/RESULT.md).
 
 The first integrated **Sero Latent v1** experiment is complete. Causal learned
 patches beat static patches inside the same local/global architecture, but a
@@ -70,6 +130,35 @@ became too short. This rejects the tested one-stage embedding-router design,
 not all learned tokenization. See
 [`benchmarks/sero-latent-v3/RESULTS.md`](benchmarks/sero-latent-v3/RESULTS.md).
 
+**Sero 1 is the first promoted dense base model in the Sero lineage.** Its
+three 6.02M-parameter seeds reached a mean 1.6181 test BPB after 135.5M token
+exposures each. A post-training generation diagnostic found that 128 tokens of
+real held-out context reduced continuation loss by 0.1135 BPB versus one token,
+but greedy generation still looped in 91.7% of those cases. Sampling sharply
+reduced repetition without making the content reliable. See
+[`benchmarks/sero1-pretrain-v1/RESULT.md`](benchmarks/sero1-pretrain-v1/RESULT.md)
+and
+[`benchmarks/sero1-generation-eval-v1/RESULT.md`](benchmarks/sero1-generation-eval-v1/RESULT.md).
+The next diagnostic rebuilds the corpus with original articles as documents,
+adds an explicit end-of-document target, doubles the training schedule, and
+branches after epoch 5 to test a small repeated-four-gram unlikelihood loss.
+Its frozen seed-0 contract is in
+[`benchmarks/sero1-optimized-v1/contract.json`](benchmarks/sero1-optimized-v1/contract.json).
+
+The next fixed-capacity pilot tests a larger, cleaner curriculum before scaling
+the model. It adds MDN technical writing, reviewed OpenAssistant dialogue, and
+GSM8K worked math to the Wikimedia base. Training moves through foundations,
+breadth, and application while replaying general language in every stage. The
+corpus is over 161 MB of unique text and has no exact 12-word training overlap
+with its held-out sets. See
+[`benchmarks/sero2-curriculum-v1/contract.json`](benchmarks/sero2-curriculum-v1/contract.json)
+and [`corpus/SERO_CURRICULUM_RIGHTS.md`](corpus/SERO_CURRICULUM_RIGHTS.md).
+The seed-0 run plus retention consolidation passed every frozen source gate at
+1.3278 test BPB, 22.4% below the control on the expanded held-out set. Longer
+context also helped, but greedy generation still looped on 90% of the prompt
+panel and sampled answers were not reliable. See
+[`benchmarks/sero2-curriculum-eval-v1/RESULT.md`](benchmarks/sero2-curriculum-eval-v1/RESULT.md).
+
 ## Build
 
 ```sh
@@ -79,6 +168,19 @@ make sero-latent-v1-result-check
 make sero-latent-v2-result-check
 make sero-latent-v3-contract-check
 make sero-latent-v3-result-check
+make sero1-generation-eval-result-check
+make sero1-optimized-check SERO1_OPTIMIZED_MANIFEST=/path/to/manifest.json
+make sero2-curriculum-check SERO2_CURRICULUM_MANIFEST=/path/to/manifest.json
+make sero2-curriculum-result-check
+make sero-series-closure-check
+make zero5-c0-check
+make zero5-c1-check
+make zero5-c2-check
+make zero5-c3-check
+make zero5-c31-check
+# For another verified RELEASED Braid collection:
+make zero5-c0-run BRAID_RELEASE=/path/to/release \
+  ZERO5_BRAID_COLLECTION_ID=collection-id ZERO5_BRAID_COMMIT=commit
 ```
 
 `make check` includes finite-difference checks of the hand-written transformer

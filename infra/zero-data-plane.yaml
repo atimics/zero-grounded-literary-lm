@@ -197,7 +197,9 @@ Resources:
                              "training_bytes", "latent_bits_per_byte",
                              "bpe_bits_per_byte", "latent_to_bpe_bpb_ratio",
                              "bytes_per_chunk", "bytes_per_bpe_token",
-                             "estimated_compute_ratio"]
+                             "estimated_compute_ratio", "training_tokens",
+                             "epoch", "validation_bits_per_byte",
+                             "test_bits_per_byte", "tokens_per_parameter"]
                   result["payload_json"] = json.dumps(
                       {key: payload[key] for key in allowed if key in payload},
                       separators=(",", ":"))

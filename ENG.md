@@ -22,9 +22,10 @@ Every engineering decision follows from this bet:
 - **No tensor library.** Forward and backward passes are explicit loops or
   BLAS calls (Accelerate on macOS, portable C elsewhere). You can trace a
   gradient from the softmax back to the embedding table by reading one file.
-- **No Python.** Training, inference, tokenization, and evaluation are all C
-  binaries. The only JavaScript is the browser chat UI and a few data
-  generation/evaluation scripts.
+- **No Python in the active ZERO engine.** ZERO training, inference,
+  tokenization, and core evaluation are C binaries. Historical Sero scale
+  experiments used Python and PyTorch, but that series is now frozen and is not
+  the C runtime.
 - **Preallocated core model buffers.** Forward, backward, and optimizer working
   memory is allocated in `model_create` and reused. Balanced validation and the
   optional faculty/replay gradient-cosine probe allocate temporary masks and,

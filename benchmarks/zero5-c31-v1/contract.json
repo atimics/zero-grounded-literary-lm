@@ -1,0 +1,192 @@
+{
+  "schema": "zero.c31_braid_experiment.v1",
+  "experiment": "zero5-c31-v1",
+  "status": "preregistered-unrun",
+  "authorized": true,
+  "purpose": "Separate richer context-view evidence, task-order interference, and answer-token weighting at the fixed ZERO.5 model size with complete-record packing and equal compute across V, A, and B.",
+  "claim_boundary": {
+    "may_claim": "A seed-0 fixed-view pilot did or did not show that interleaving and/or answer weighting improves held-out C3 answer completion while retaining C2 Atlas and C1 anchors.",
+    "may_not_claim": [
+      "reasoning, intelligence, factual truth, or deep semantic retrieval",
+      "three-seed replication",
+      "that the new context view alone caused any A-versus-old-C3 gain",
+      "production or broad model promotion",
+      "permission to publish the dataset or checkpoints"
+    ]
+  },
+  "implementation": {
+    "trainer": "zero5_c31_lm.c",
+    "trainer_sha256": "19be9518c821f5a1e306f43ec12e0bf9f3384c04736f34b5600363f286acba7a",
+    "importer": "scripts/prepare_zero5_c31.mjs",
+    "importer_sha256": "a1e07b91799ca6df0567e2b01862d4798eca52f5aba1e47fc8fb9e9f8d1726c1",
+    "runner": "scripts/run_zero5_c31.mjs",
+    "runner_sha256": "0e092616cef128edc23cc7c88370d266560b464eae7696910faf007dce81b6f9",
+    "model_and_training": "C11",
+    "orchestration": "Node.js",
+    "python": false,
+    "pytorch": false
+  },
+  "input": {
+    "import_manifest": "benchmarks/zero5-c31-v1/import.json",
+    "import_manifest_sha256": "b97ee63107a0bb93e6238c744fc495560ca626d24c3aa0732acb027873222cb0",
+    "view_id": "braid-corpus-three-zero5-512-v0.1.0-2676ac6e59f651e54d23c2bb7132e5995702e2fa5439182612d26d7f1b9005a9",
+    "view_manifest_sha256": "58d1e35ae6437f414108ab1f8943f9c0e826385be48659422c8c57aa624c68aa",
+    "parent_collection_id": "braid-corpus-three-v0.1.0-094452561c87bfb5e2ae8a343e1bc9745b1d4dd86ac97a3037cca20f2aedd20f",
+    "braid_commit": "608688d5e4033dafea69c24fe80d97da996e0e05",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "records": {
+      "train": 79694,
+      "validation": 10139,
+      "test": 10167
+    },
+    "train_packs": {
+      "blocked_sha256": "667fbfc57b3ff7fd63932952edf21dc1d94f32eda6fc6f3ec3ff74f2b962ff1d",
+      "interleaved_sha256": "8e4edec9852be7e2d5643f809b96efbb7521a1244ac795e7bb3b2057ad0838e8",
+      "packs": 37768,
+      "real_packs": 37767,
+      "padding_packs": 1,
+      "active_targets": 17401380,
+      "answer_targets": 3842455,
+      "compute_token_exposures": 19337216,
+      "padding_targets": 1935836,
+      "task_packs": {
+        "claim": 11157,
+        "cloze": 10660,
+        "retrieval": 15950
+      },
+      "blocked_task_runs": 3,
+      "interleaved_task_runs": 36779,
+      "interleaved_maximum_same_task_pack_run": 2
+    },
+    "validation_packs_sha256": "4410fc9065baa9f52524a983ea9b34239ae893a84cca210c2cff11324693a9ad",
+    "packing": "Each pack starts with a document token, contains only complete records separated by document tokens, and masks trailing padding. No record is split. Task-local packs are identical between V and A/B.",
+    "test_policy": "The released test artifact hash is verified without parsing. No test row is tokenized or packed, and the runner accepts no C3.1 test path.",
+    "rights": {
+      "license": "CC-BY-SA-4.0",
+      "dataset_published_by_zero": false,
+      "checkpoint_publication_authorized": false
+    }
+  },
+  "initialization": {
+    "c2_result": "benchmarks/zero5-c2-v1/result.json",
+    "c2_result_sha256": "38e6835efa099d6883a5c2192aa052234412448a93230d5d2d252b108acbf5cb",
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "seed": 0,
+    "optimizer": "fresh AdamW state for every arm"
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary"
+  },
+  "arms": {
+    "V": {
+      "pack_order": "all claim packs, all cloze packs, all retrieval packs",
+      "answer_weight": 1,
+      "role": "new-view blocked-order control"
+    },
+    "A": {
+      "pack_order": "smooth deterministic task interleave; maximum same-task run two packs",
+      "answer_weight": 1,
+      "role": "isolates order relative to V"
+    },
+    "B": {
+      "pack_order": "byte-identical A pack order",
+      "answer_weight": 4,
+      "role": "isolates answer weighting relative to A"
+    }
+  },
+  "training": {
+    "seed": 0,
+    "updates": 9442,
+    "batch_sequences": 4,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 17401380,
+    "answer_targets": 3842455,
+    "padding_targets": 1935836,
+    "passes": 1,
+    "optimizer": "AdamW",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 300,
+    "schedule": "cosine over all 9,442 updates",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection": "lowest ordinary combined packed-validation cross-entropy among fixed reports; no early stopping"
+  },
+  "evaluation": {
+    "selection_validation_packs": 64,
+    "final_validation_packs": 128,
+    "member_validation_packs": 64,
+    "atlas_windows": 128,
+    "anchor_windows": 19,
+    "completion_validation": "exhaustive teacher-forced answer metrics over all 10,139 C3 validation records",
+    "retrieval_choice_metric": "last answer token A/B accuracy over all 2,023 retrieval validation records"
+  },
+  "baselines": {
+    "combined_selection_nats_per_token": 2.7317,
+    "combined_final_nats_per_token": 2.6958,
+    "members": {
+      "claim": { "nats_per_token": 2.6670 },
+      "cloze": { "nats_per_token": 2.9510 },
+      "retrieval": { "nats_per_token": 2.6208 }
+    },
+    "completion": {
+      "claim": {
+        "nats_per_target_token": 2.43561122,
+        "top1_token_accuracy": 0.397739304,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0.659065994
+      },
+      "cloze": {
+        "nats_per_target_token": 2.92072008,
+        "top1_token_accuracy": 0.310713398,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0.251476793
+      },
+      "retrieval": {
+        "nats_per_target_token": 2.83576403,
+        "top1_token_accuracy": 0.181331356,
+        "teacher_forced_exact_accuracy": 0,
+        "last_target_token_accuracy": 0
+      }
+    },
+    "atlas_nats_per_token": 2.2786,
+    "anchor_nats_per_token": 3.6942
+  },
+  "gates": {
+    "full_pack_pass": true,
+    "combined_validation_nats_per_token_maximum": 2.42622,
+    "combined_relative_improvement_minimum": 0.1,
+    "completion_nats_per_target_token_maximum": {
+      "claim": 2.192050098,
+      "cloze": 2.628648072,
+      "retrieval": 2.552187627
+    },
+    "retrieval_choice_accuracy_minimum": 0.55,
+    "atlas_nats_per_token_maximum": 2.50646,
+    "atlas_relative_regression_maximum": 0.1,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "anchor_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "decision": {
+    "arm_eligibility": "An arm must pass every gate. Failed gates are never averaged away.",
+    "preferred_arm": "Among eligible arms, choose the lowest mean log answer-loss ratio versus C2; ties prefer V, then A, then B.",
+    "interleaving_support": "A must pass every gate and have a lower normalized answer score than V.",
+    "answer_weight_support": "B must pass every gate and have a lower normalized answer score than A.",
+    "single_seed": true,
+    "replication_authorized": false,
+    "broad_model_promotion_authorized": false,
+    "checkpoint_publication_authorized": false
+  }
+}

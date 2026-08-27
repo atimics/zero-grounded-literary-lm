@@ -1,0 +1,38 @@
+{
+  "schema": "sero.scale_generation_comparison_contract.v1",
+  "experiment": "sero20m-scale-generation-v1",
+  "status": "scale-result-open",
+  "purpose": "Measure whether 3.32x model capacity improves matched held-out prediction and reduces the frozen 6M generation failures.",
+  "baseline": {
+    "model_parameters": 6021312,
+    "checkpoint_sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7",
+    "contract_sha256": "5751cc3cb3304767c32fe708ff28d969e075baaaae0e73921c9b9470480aaaaf",
+    "result_sha256": "1e916f09609e6c5ff55f371f381dc2f9168ce6432f30bcf6a8939a18f4ce5223",
+    "context_128_content_bits_per_byte": 1.4312911040735337,
+    "greedy_severe_loop_rate": 0.9444444444444444,
+    "greedy_token_distinct_4": 0.20733875338753388,
+    "sample_t08_p90_severe_loop_rate": 0.5277777777777778,
+    "sample_t08_p90_r11_severe_loop_rate": 0.05555555555555555
+  },
+  "scale_candidate": {
+    "model_parameters": 20011136,
+    "checkpoint_sha256": null,
+    "contract_sha256": null,
+    "result_sha256": null
+  },
+  "diagnostic_thresholds": {
+    "maximum_context_128_content_bits_per_byte": 1.3597265488698569,
+    "maximum_greedy_severe_loop_rate": 0.7444444444444445,
+    "minimum_greedy_token_distinct_4": 0.25917344173441736,
+    "maximum_sample_t08_p90_severe_loop_rate": 0.3277777777777778,
+    "maximum_sample_t08_p90_r11_severe_loop_rate": 0.05555555555555555,
+    "mountain_flicker_output_must_be_reported": true,
+    "mountain_poem_output_must_be_reported": true
+  },
+  "interpretation": {
+    "thresholds_are_frozen_before_scale_output": true,
+    "generation_is_not_a_model_promotion_gate": true,
+    "passing_is_evidence_of_more_usable_behavior_not_proof_of_general_intelligence": true,
+    "failing_does_not_erase_a_real_predictive_loss_improvement": true
+  }
+}

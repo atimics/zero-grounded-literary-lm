@@ -1,0 +1,440 @@
+{
+  "calibration": null,
+  "checkpoints": [
+    {
+      "learning_rate": 1.4999999999999999e-05,
+      "stage": "retention-consolidation",
+      "stage_index": 0,
+      "training_raw_bytes": 400001312,
+      "update": 23424,
+      "validation": {
+        "content_bits_per_byte": 1.3036889500704771,
+        "content_bits_per_token": 3.413715397057663,
+        "content_bytes_per_token": 2.618504511274041,
+        "content_nll_nats": 1713048.8312988281,
+        "content_tokens": 723964,
+        "end_of_document": {
+          "mean_nll_nats": 0.6211350991309268,
+          "nll_nats": 511.81532168388367,
+          "tokens": 824,
+          "top1_accuracy": 0.8191747572815534
+        },
+        "raw_bytes": 1895703,
+        "raw_bytes_per_second": 238409.66143773642,
+        "seconds": 7.95145208699978,
+        "sources": {
+          "english-wikibooks": {
+            "content_bits_per_byte": 1.4907828940152668,
+            "content_nll_nats": 452388.59867858887,
+            "content_tokens": 173480,
+            "raw_bytes": 437796
+          },
+          "english-wikinews": {
+            "content_bits_per_byte": 1.3717245442568806,
+            "content_nll_nats": 486027.81760025024,
+            "content_tokens": 178406,
+            "raw_bytes": 511174
+          },
+          "gsm8k": {
+            "content_bits_per_byte": 0.916927188733633,
+            "content_nll_nats": 39879.82815551758,
+            "content_tokens": 25491,
+            "raw_bytes": 62747
+          },
+          "mdn-web-docs": {
+            "content_bits_per_byte": 1.0452272160964398,
+            "content_nll_nats": 311849.2884750366,
+            "content_tokens": 176581,
+            "raw_bytes": 430436
+          },
+          "openassistant-english": {
+            "content_bits_per_byte": 1.2656793716293981,
+            "content_nll_nats": 37120.40594482422,
+            "content_tokens": 14561,
+            "raw_bytes": 42312
+          },
+          "simple-wikipedia": {
+            "content_bits_per_byte": 1.3533940804712126,
+            "content_nll_nats": 385782.8987350464,
+            "content_tokens": 155445,
+            "raw_bytes": 411238
+          }
+        },
+        "split": "validation",
+        "windows": 1821
+      }
+    }
+  ],
+  "contract": {
+    "path": "benchmarks/sero20m-consolidation-v1/contract.json",
+    "sha256": "dd52ab69d27f380377b427b53cf963916100e8340e6ec59258ae4bc62603e527"
+  },
+  "curriculum": [
+    {
+      "domains": {
+        "dialogue": {
+          "cycles_touched": 3,
+          "scheduled_raw_bytes": 12000360,
+          "target_raw_bytes": 12000000,
+          "windows": 11987
+        },
+        "foundation": {
+          "cycles_touched": 3,
+          "scheduled_raw_bytes": 240000076,
+          "target_raw_bytes": 240000000,
+          "windows": 217336
+        },
+        "general": {
+          "cycles_touched": 4,
+          "scheduled_raw_bytes": 120000567,
+          "target_raw_bytes": 120000000,
+          "windows": 110101
+        },
+        "reasoning": {
+          "cycles_touched": 3,
+          "scheduled_raw_bytes": 8000225,
+          "target_raw_bytes": 8000000,
+          "windows": 15545
+        },
+        "technical": {
+          "cycles_touched": 1,
+          "scheduled_raw_bytes": 20000084,
+          "target_raw_bytes": 20000000,
+          "windows": 19802
+        }
+      },
+      "id": "retention-consolidation",
+      "scheduled_raw_bytes": 400001312,
+      "source_raw_bytes": {
+        "english-wikibooks": 119661283,
+        "english-wikinews": 120000567,
+        "gsm8k": 8000225,
+        "mdn-web-docs": 20000084,
+        "openassistant-english": 12000360,
+        "simple-wikipedia": 120338793
+      },
+      "target_raw_bytes": 400000000
+    }
+  ],
+  "data": {
+    "content_token_counts": {
+      "test": 879940,
+      "train": 59510096,
+      "validation": 723964
+    },
+    "dataset_digest": "dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2fc149a35d8",
+    "dataset_id": "sero-pretrain-curriculum",
+    "dataset_version": "2026-08-22.v1",
+    "end_of_document_counts": {
+      "test": 2011,
+      "train": 70743,
+      "validation": 824
+    },
+    "manifest_path": "build/sero-pretrain-curriculum-v1/manifest.json",
+    "raw_bytes": {
+      "test": 2271176,
+      "train": 157788446,
+      "validation": 1895703
+    },
+    "schedule_sha256": "c889af19be110b9fd905bb7fec6679fb1eda01cb27911b6e5b883e35c54b33d0",
+    "window_counts": {
+      "test": 2812,
+      "train": 150313,
+      "validation": 1821
+    }
+  },
+  "decision": "replication-seed-passed",
+  "experiment": "sero20m-consolidation-v1",
+  "final_test": {
+    "content_bits_per_byte": 1.2008475651809019,
+    "content_bits_per_token": 3.0994569739951587,
+    "content_bytes_per_token": 2.5810577993954134,
+    "content_nll_nats": 1890445.3764648438,
+    "content_tokens": 879940,
+    "end_of_document": {
+      "mean_nll_nats": 0.30620852410645105,
+      "nll_nats": 615.7853419780731,
+      "tokens": 2011,
+      "top1_accuracy": 0.9119840875186475
+    },
+    "raw_bytes": 2271176,
+    "raw_bytes_per_second": 185378.79389730148,
+    "seconds": 12.251541571999951,
+    "sources": {
+      "english-wikibooks": {
+        "content_bits_per_byte": 1.4393611339403973,
+        "content_nll_nats": 346488.4493255615,
+        "content_tokens": 132230,
+        "raw_bytes": 347291
+      },
+      "english-wikinews": {
+        "content_bits_per_byte": 1.3757212373087808,
+        "content_nll_nats": 411507.70027160645,
+        "content_tokens": 152389,
+        "raw_bytes": 431541
+      },
+      "gsm8k": {
+        "content_bits_per_byte": 0.9391829720501175,
+        "content_nll_nats": 450619.9375076294,
+        "content_tokens": 283183,
+        "raw_bytes": 692205
+      },
+      "mdn-web-docs": {
+        "content_bits_per_byte": 1.0237414654606143,
+        "content_nll_nats": 222078.22422027588,
+        "content_tokens": 133386,
+        "raw_bytes": 312961
+      },
+      "openassistant-english": {
+        "content_bits_per_byte": 1.2367772610888994,
+        "content_nll_nats": 30577.058975219727,
+        "content_tokens": 12524,
+        "raw_bytes": 35668
+      },
+      "simple-wikipedia": {
+        "content_bits_per_byte": 1.3713255885381732,
+        "content_nll_nats": 429174.01039886475,
+        "content_tokens": 166228,
+        "raw_bytes": 451510
+      }
+    },
+    "split": "test",
+    "windows": 2812
+  },
+  "final_validation": {
+    "content_bits_per_byte": 1.3036889500704771,
+    "content_bits_per_token": 3.413715397057663,
+    "content_bytes_per_token": 2.618504511274041,
+    "content_nll_nats": 1713048.8312988281,
+    "content_tokens": 723964,
+    "end_of_document": {
+      "mean_nll_nats": 0.6211350991309268,
+      "nll_nats": 511.81532168388367,
+      "tokens": 824,
+      "top1_accuracy": 0.8191747572815534
+    },
+    "raw_bytes": 1895703,
+    "raw_bytes_per_second": 238409.66143773642,
+    "seconds": 7.95145208699978,
+    "sources": {
+      "english-wikibooks": {
+        "content_bits_per_byte": 1.4907828940152668,
+        "content_nll_nats": 452388.59867858887,
+        "content_tokens": 173480,
+        "raw_bytes": 437796
+      },
+      "english-wikinews": {
+        "content_bits_per_byte": 1.3717245442568806,
+        "content_nll_nats": 486027.81760025024,
+        "content_tokens": 178406,
+        "raw_bytes": 511174
+      },
+      "gsm8k": {
+        "content_bits_per_byte": 0.916927188733633,
+        "content_nll_nats": 39879.82815551758,
+        "content_tokens": 25491,
+        "raw_bytes": 62747
+      },
+      "mdn-web-docs": {
+        "content_bits_per_byte": 1.0452272160964398,
+        "content_nll_nats": 311849.2884750366,
+        "content_tokens": 176581,
+        "raw_bytes": 430436
+      },
+      "openassistant-english": {
+        "content_bits_per_byte": 1.2656793716293981,
+        "content_nll_nats": 37120.40594482422,
+        "content_tokens": 14561,
+        "raw_bytes": 42312
+      },
+      "simple-wikipedia": {
+        "content_bits_per_byte": 1.3533940804712126,
+        "content_nll_nats": 385782.8987350464,
+        "content_tokens": 155445,
+        "raw_bytes": 411238
+      }
+    },
+    "split": "validation",
+    "windows": 1821
+  },
+  "finished_at": "2026-08-23T15:47:28.272025Z",
+  "initialization": {
+    "checkpoint_path": "/tmp/sero2-parent-model.pt",
+    "checkpoint_sha256": "2c611acc82c043609ca9ed6c9c1eeb155f19e66fd8ba5bac183f125b9b3fdeac",
+    "optimizer_state_reused": false,
+    "parent_contract_sha256": "c17afd917da8959a47af2c21544cd72c604d4a89b52ed787a307c3060fb02c23",
+    "parent_schedule_sha256": "79139c590c044befe176e818210baf82b311393c8dffa3fcb203317a2053215f",
+    "train_from_scratch": false
+  },
+  "mode": "full",
+  "model": {
+    "artifact": "build/sero20m-consolidation-v1/full/seed0-artifacts/model-final.pt",
+    "artifact_bytes": 240289663,
+    "artifact_sha256": "8f3eb73639b14f199170b36df37851a64ad7b9c7dc0779bf98cde3620bbc16ee",
+    "config": {
+      "dimension": 384,
+      "dropout": 0.0,
+      "feed_forward": 1600,
+      "heads": 8,
+      "layers": 10,
+      "token_context": 512,
+      "vocabulary_size": 4096
+    },
+    "parameters": 20011136,
+    "state_sha256": "9dc98fa1aaa2cd46c21eb1fe0c9635197ed5e1ccc0f636e814d687050b151b7d"
+  },
+  "runtime": {
+    "cuda": "13.0",
+    "cudnn": 92000,
+    "device": "cuda",
+    "device_name": "NVIDIA A10G",
+    "git_commit": "88a7ad5104a3719f7d99f7d9c1f2cec93863b055",
+    "numpy": "2.2.6",
+    "platform": "Linux-6.8.0-1061-aws-x86_64-with-glibc2.35",
+    "python": "3.10.12",
+    "torch": "2.13.0+cu130"
+  },
+  "samples": [
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "6469616e20706f6c696365206172726573742077617272616e7420666f722042726974697368205072696d65204d696e69737465720a0a496e6469616e20706f6c696365206172726573746564206120706f6c696365206172726573742077617272616e7420666f722042726974697368205072696d65204d696e69737465722c2042726974697368205072696d65204d696e697374657220616e6420666f726d6572205072696d65204d696e697374657220616e6420666f726d6572205072696d65204d696e697374657220616e6420666f726d6572205072696d65204d696e697374657220616e6420666f726d6572205072696d65204d696e69737465722e0a496e6469616e20706f6c6963652061727265737465642042726974697368205072696d65204d696e697374657220616e6420666f726d6572205072696d65204d696e697374657220616e6420666f726d6572205072696d65204d",
+      "generated_tokens": 128,
+      "prompt": "In",
+      "prompt_tokens": 1,
+      "text_lossy_utf8": "Indian police arrest warrant for British Prime Minister\n\nIndian police arrested a police arrest warrant for British Prime Minister, British Prime Minister and former Prime Minister and former Prime Minister and former Prime Minister and former Prime Minister.\nIndian police arrested British Prime Minister and former Prime Minister and former Prime M",
+      "token_distinct_4": 0.36
+    },
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "20746865207374756479206f6620416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20416d65726963616e20",
+      "generated_tokens": 128,
+      "prompt": "The history of astronomy began with",
+      "prompt_tokens": 13,
+      "text_lossy_utf8": "The history of astronomy began with the study of American American American American American American American American American American American American American American American American American American American American American American American American American American American American American American American ",
+      "token_distinct_4": 0.064
+    },
+    {
+      "ended_at_end_of_document": true,
+      "generated_bytes_hex": "5468652069636520666c6f61742069732031303020782032203d20323030207965617273206f6c642e0a5468657265666f72652c2069742077696c6c2074616b6520323030202d20323030203d2031303020796561727320746f20666c6f6174207468652069636520666c6f61742e0a0a46696e616c20616e737765723a20313030",
+      "generated_tokens": 64,
+      "prompt": "Question:\nWhy does ice float on water?\n\nReasoning:\n",
+      "prompt_tokens": 18,
+      "text_lossy_utf8": "Question:\nWhy does ice float on water?\n\nReasoning:\nThe ice float is 100 x 2 = 200 years old.\nTherefore, it will take 200 - 200 = 100 years to float the ice float.\n\nFinal answer: 100",
+      "token_distinct_4": 0.9180327868852459
+    },
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "546f206465627567206120776562207061676520746861742077696c6c206c6f61642c20646562756720697420776974682074686520666f6c6c6f77696e6720636f6d6d616e643a0a0a6060600a696d706f727420646562756720696d706f7274205365745f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f547970655f54797065",
+      "generated_tokens": 128,
+      "prompt": "User:\nHow can I debug a web page that will not load?\n\nAssistant:\n",
+      "prompt_tokens": 26,
+      "text_lossy_utf8": "User:\nHow can I debug a web page that will not load?\n\nAssistant:\nTo debug a web page that will load, debug it with the following command:\n\n```\nimport debug import Set_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type_Type",
+      "token_distinct_4": 0.344
+    },
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "0a0a546869732066756e6374696f6e2072657475726e732061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061202074686174207265736f6c76657320746f2061",
+      "generated_tokens": 128,
+      "prompt": "The JavaScript function returns",
+      "prompt_tokens": 12,
+      "text_lossy_utf8": "The JavaScript function returns\n\nThis function returns a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a  that resolves to a",
+      "token_distinct_4": 0.12
+    },
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "2e20497420697320616c736f206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b65722074686174206973207573656420746f206d616b65206120666c69636b",
+      "generated_tokens": 128,
+      "prompt": "a mountain is an extremely high space is a flicker",
+      "prompt_tokens": 17,
+      "text_lossy_utf8": "a mountain is an extremely high space is a flicker. It is also a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flicker that is used to make a flick",
+      "token_distinct_4": 0.112
+    },
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "2220736169642074686520676f7665726e6d656e74206f6620536f757468204166726963612e0a2254686520666c69636b6572207761732061207665727920736d616c6c20666c69636b65722e20497420686173206265656e20646574656374656420616e642074686520666c69636b65722077617320646574656374656420776173206e6f74206120666c69636b65722e20497420686173206265656e20646574656374656420616e642074686520666c69636b65722077617320646574656374656420776173206e6f74206120666c69636b65722e20497420686173206265656e20646574656374656420616e642074686520666c69636b65722077617320646574656374656420776173206e6f74206120666c69636b65722e20497420686173206265656e20646574656374656420616e642074686520666c69636b65722077617320646574656374656420776173206e6f74206120666c69636b65722e20",
+      "generated_tokens": 128,
+      "prompt": "A flicker of light crossed the mountain,",
+      "prompt_tokens": 13,
+      "text_lossy_utf8": "A flicker of light crossed the mountain,\" said the government of South Africa.\n\"The flicker was a very small flicker. It has been detected and the flicker was detected was not a flicker. It has been detected and the flicker was detected was not a flicker. It has been detected and the flicker was detected was not a flicker. It has been detected and the flicker was detected was not a flicker. ",
+      "token_distinct_4": 0.384
+    },
+    {
+      "ended_at_end_of_document": false,
+      "generated_bytes_hex": "5468652073686f727420706f656d20686173206265656e207573656420666f72207468652073686f727420706f656d20225772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772697465206120577269746520612057726974652061205772",
+      "generated_tokens": 128,
+      "prompt": "Write a short poem about a mountain and a flicker of light:\n",
+      "prompt_tokens": 22,
+      "text_lossy_utf8": "Write a short poem about a mountain and a flicker of light:\nThe short poem has been used for the short poem \"Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Write a Wr",
+      "token_distinct_4": 0.16
+    }
+  ],
+  "schema": "sero.curriculum_pretrain_seed_result.v1",
+  "seed": 0,
+  "started_at": "2026-08-23T14:47:51.490235Z",
+  "success_gates": {
+    "checks": {
+      "end_of_document_top1": {
+        "minimum": 0.88,
+        "passed": true,
+        "value": 0.9119840875186475
+      },
+      "overall_test_bpb": {
+        "maximum": 1.2620724986051812,
+        "passed": true,
+        "value": 1.2008475651809019
+      },
+      "source:english-wikibooks": {
+        "maximum": 1.5550870457889838,
+        "passed": true,
+        "value": 1.4393611339403973
+      },
+      "source:english-wikinews": {
+        "maximum": 1.4933995005250933,
+        "passed": true,
+        "value": 1.3757212373087808
+      },
+      "source:gsm8k": {
+        "maximum": 1.0772275393266557,
+        "passed": true,
+        "value": 0.9391829720501175
+      },
+      "source:mdn-web-docs": {
+        "maximum": 1.1639461034857788,
+        "passed": true,
+        "value": 1.0237414654606143
+      },
+      "source:openassistant-english": {
+        "maximum": 1.3506940617133054,
+        "passed": true,
+        "value": 1.2367772610888994
+      },
+      "source:simple-wikipedia": {
+        "maximum": 1.5026761303274276,
+        "passed": true,
+        "value": 1.3713255885381732
+      }
+    },
+    "passed": true
+  },
+  "timing": {
+    "wall_seconds": 3577.2006812
+  },
+  "training": {
+    "batch_size": 16,
+    "completed_updates": 23424,
+    "cross_entropy_nll_nats": 376780985.4227295,
+    "raw_bytes": 400001312,
+    "seconds": 3450.371442811972,
+    "source_raw_bytes": {
+      "english-wikibooks": 119661283,
+      "english-wikinews": 120000567,
+      "gsm8k": 8000225,
+      "mdn-web-docs": 20000084,
+      "openassistant-english": 12000360,
+      "simple-wikipedia": 120338793
+    },
+    "tokens": 148050583,
+    "tokens_per_second": 42908.5927280172,
+    "total_updates": 23424
+  }
+}

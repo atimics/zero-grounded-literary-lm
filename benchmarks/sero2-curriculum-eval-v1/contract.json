@@ -1,0 +1,57 @@
+{
+  "schema": "sero.optimized_generation_eval_contract.v1",
+  "experiment": "sero2-curriculum-eval-v1",
+  "status": "post-training-diagnostic",
+  "dataset_digest": "dcad26c0cc44f449d87eb8af0d62d0518dc120a62aad049ff541c2fc149a35d8",
+  "tokenizer_sha256": "59d13ac8133835e85b3414df5ec06c9145c860ceb1e7cc65efc90f50acc7caf1",
+  "token_context": 512,
+  "checkpoint_order": ["sero1-control", "staged-curriculum", "consolidated-curriculum"],
+  "checkpoints": {
+    "sero1-control": {
+      "sha256": "8b6379a04ca1b3c49aa0efb36b2d9bdc448a5cf54ab67ac92f05aa342e96f3fc",
+      "schema": "sero.optimized_pretrain_checkpoint.v1",
+      "seed": 0,
+      "mode": "base"
+    },
+    "staged-curriculum": {
+      "sha256": "bf91752d5997c780614cee31b747bc40ef1959d8f35d10e1327757c7130a17fc",
+      "schema": "sero.curriculum_pretrain_checkpoint.v1",
+      "seed": 0
+    },
+    "consolidated-curriculum": {
+      "sha256": "0d68e038d25bc639bf0751373aeb182042c138aefb64eedbb3b529b1da1b7ea7",
+      "schema": "sero.curriculum_pretrain_checkpoint.v1",
+      "seed": 0
+    }
+  },
+  "held_out_context": {
+    "split": "test",
+    "documents_per_source": 4,
+    "prompt_token_lengths": [1, 8, 32, 128],
+    "continuation_tokens": 64,
+    "selection": "first eligible documents by id; continuation offset from sha256(document id)"
+  },
+  "free_generation": {
+    "new_tokens": 128,
+    "prompts": [
+      {"id": "control-in", "category": "control", "text": "In"},
+      {"id": "history", "category": "foundation", "text": "The history of astronomy began with"},
+      {"id": "official-report", "category": "general", "text": "According to the official report, the government"},
+      {"id": "web-debug", "category": "dialogue", "text": "User:\nHow can I debug a web page that will not load?\n\nAssistant:\n"},
+      {"id": "ice", "category": "reasoning", "text": "Question:\nWhy does ice float on water?\n\nReasoning:\n"},
+      {"id": "arithmetic", "category": "reasoning", "text": "Question:\nA box has 12 red balls and 8 blue balls. Five balls are removed. How many remain?\n\nReasoning:\n"},
+      {"id": "javascript", "category": "technical", "text": "The JavaScript function returns"},
+      {"id": "css", "category": "technical", "text": "To center an element with CSS"},
+      {"id": "story", "category": "creative", "text": "Once upon a time, a young inventor"},
+      {"id": "photosynthesis", "category": "explanation", "text": "Photosynthesis is the process by which green plants"}
+    ],
+    "decoders": [
+      {"id": "greedy", "temperature": null, "top_p": null, "repetition_penalty": 1.0, "repeats": 1},
+      {"id": "sample-t08-p90-r11", "temperature": 0.8, "top_p": 0.9, "repetition_penalty": 1.1, "repeats": 2}
+    ]
+  },
+  "reporting": {
+    "generation_is_diagnostic_not_a_promotion_gate": true,
+    "compare_same_held_out_continuations_for_all_models": true
+  }
+}
