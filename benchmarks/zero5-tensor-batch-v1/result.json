@@ -1,0 +1,112 @@
+{
+  "schema": "zero.aws_tensor_batch_calibration.v1",
+  "source_commit": "ed67d1e114d0b7284107a6c80d2e99cc55d98fd8",
+  "instance_type": "c6i.4xlarge",
+  "backend": "OpenBLAS",
+  "dynamic_threading": false,
+  "updates_per_candidate": 10,
+  "baseline": {
+    "update": 10,
+    "train_loss": 2.7735,
+    "validation_loss": 2.6366,
+    "gradient_norm": 2.295,
+    "learning_rate": 0.00001,
+    "tokens_per_second": 5135,
+    "active_targets_per_second": 4657,
+    "elapsed_seconds": 5.5,
+    "backend": "OpenBLAS",
+    "blas_threads": 1,
+    "checkpoint_sha256": "2729a9e2482ee7bacde9d7432b44d68258a6dd1c837f64e8b7dae365d923de45"
+  },
+  "candidates": [
+    {
+      "threads": 1,
+      "variant": "tensor",
+      "tokens_per_second": 1472,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 1,
+      "variant": "tensor-qkv",
+      "tokens_per_second": 1463,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 16,
+      "variant": "tensor",
+      "tokens_per_second": 2030,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 16,
+      "variant": "tensor-qkv",
+      "tokens_per_second": 2014,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 2,
+      "variant": "tensor",
+      "tokens_per_second": 1952,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 2,
+      "variant": "tensor-qkv",
+      "tokens_per_second": 1853,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 4,
+      "variant": "tensor",
+      "tokens_per_second": 2439,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 4,
+      "variant": "tensor-qkv",
+      "tokens_per_second": 2423,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 8,
+      "variant": "tensor",
+      "tokens_per_second": 2835,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    },
+    {
+      "threads": 8,
+      "variant": "tensor-qkv",
+      "tokens_per_second": 2781,
+      "train_loss": 2.7735,
+      "validation_loss": 2.6366,
+      "gradient_norm": 2.295
+    }
+  ],
+  "selected": {
+    "threads": 8,
+    "variant": "tensor",
+    "tokens_per_second": 2835,
+    "train_loss": 2.7735,
+    "validation_loss": 2.6366,
+    "gradient_norm": 2.295
+  },
+  "all_metrics_within_tolerance": true
+}

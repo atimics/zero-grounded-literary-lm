@@ -1,0 +1,17 @@
+{
+  "schema": "zero.aws_tensor_batch_calibration_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-tensor-aws-20260827-ed67d1e-r1",
+  "instance_id": "i-0ce07c49b3876c6d2",
+  "git_commit": "ed67d1e114d0b7284107a6c80d2e99cc55d98fd8",
+  "approval_id": "zero5-tensor-calibration-2026-08-27-v1",
+  "exit_code": 0,
+  "completed_thread_candidates": 5,
+  "elapsed_instance_seconds": 231,
+  "estimated_retry_ec2_usd": 0.043633333333,
+  "prior_attempt_ec2_usd": 0.035511111111,
+  "estimated_total_ec2_usd": 0.079144444444,
+  "result_key": "experiments/zero5-tensor-batch-v1/zero5-tensor-aws-20260827-ed67d1e-r1/result.json",
+  "result_sha256": "3aa00d4352ab4b80b87a375bafbc7098373bb53b954b30a4aa1171fc012615e4"
+}
