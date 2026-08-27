@@ -10,11 +10,22 @@ for name in ZERO5_AMI ZERO5_SECURITY_GROUP_ID ZERO5_SUBNET_ID \
 done
 
 action=${1:-}
-test "$action" = dry-run || test "$action" = launch
+test "$action" = dry-run || test "$action" = launch || \
+  test "$action" = retry-dry-run || test "$action" = retry
 max_usd=1.2
 hourly_price=0.68
-max_seconds=6352
-lock_key=experiments/zero5-c33-parallel-v1/execution.lock
+prior_compute_usd=${ZERO5_PRIOR_COMPUTE_USD:-0}
+lock_version=v1
+if [ "$action" = retry ] || [ "$action" = retry-dry-run ]; then
+  lock_version=v2
+  expected_prior=$(jq -r .execution_amendment.failed_attempt_ec2_usd \
+    benchmarks/zero5-c33-parallel-v1/contract.json)
+  test "$prior_compute_usd" = "$expected_prior"
+fi
+max_seconds=$(awk -v ceiling="$max_usd" -v prior="$prior_compute_usd" \
+  -v price="$hourly_price" \
+  'BEGIN { value=int((ceiling-prior)*3600/price); if (value < 1) exit 1; print value }')
+lock_key="experiments/zero5-c33-parallel-v1/execution-${lock_version}.lock"
 
 test "$ZERO5_REGION" = us-east-1
 test "$ZERO5_APPROVAL_ID" = zero5-c33-parallel-2026-08-26-v1
@@ -26,9 +37,11 @@ test "$(jq -r .authorization.approval_id benchmarks/zero5-c33-parallel-v1/contra
 [[ "$ZERO5_ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ZERO5_CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ZERO5_RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
+awk -v prior="$prior_compute_usd" -v ceiling="$max_usd" \
+  'BEGIN { exit !(prior >= 0 && prior < ceiling) }'
 
 launch_epoch=$(date +%s)
-tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero5-c33-parallel},{Key=Experiment,Value=zero5-c33-parallel-v1},{Key=Commit,Value=${ZERO5_SOURCE_COMMIT}},{Key=RunId,Value=${ZERO5_RUN_ID}},{Key=SourceKey,Value=${ZERO5_SOURCE_KEY}},{Key=SourceSha256,Value=${ZERO5_SOURCE_SHA256}},{Key=AssetKey,Value=${ZERO5_ASSET_KEY}},{Key=AssetSha256,Value=${ZERO5_ASSET_SHA256}},{Key=TrainingBucket,Value=${ZERO5_TRAINING_BUCKET}},{Key=DatasetDigest,Value=4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d},{Key=ContractSha256,Value=${ZERO5_CONTRACT_SHA256}},{Key=Region,Value=${ZERO5_REGION}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${max_seconds}},{Key=MaxComputeUsd,Value=${max_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${ZERO5_APPROVAL_ID}}]"
+tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=zero5-c33-parallel},{Key=Experiment,Value=zero5-c33-parallel-v1},{Key=Commit,Value=${ZERO5_SOURCE_COMMIT}},{Key=RunId,Value=${ZERO5_RUN_ID}},{Key=SourceKey,Value=${ZERO5_SOURCE_KEY}},{Key=SourceSha256,Value=${ZERO5_SOURCE_SHA256}},{Key=AssetKey,Value=${ZERO5_ASSET_KEY}},{Key=AssetSha256,Value=${ZERO5_ASSET_SHA256}},{Key=TrainingBucket,Value=${ZERO5_TRAINING_BUCKET}},{Key=DatasetDigest,Value=4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d},{Key=ContractSha256,Value=${ZERO5_CONTRACT_SHA256}},{Key=Region,Value=${ZERO5_REGION}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${max_seconds}},{Key=MaxComputeUsd,Value=${max_usd}},{Key=PriorComputeUsd,Value=${prior_compute_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${ZERO5_APPROVAL_ID}}]"
 
 request=(ec2 run-instances
   --region "$ZERO5_REGION"
@@ -46,7 +59,7 @@ request=(ec2 run-instances
   --output text
   --no-cli-pager)
 
-if [ "$action" = dry-run ]; then
+if [ "$action" = dry-run ] || [ "$action" = retry-dry-run ]; then
   set +e
   output=$(aws "${request[@]}" --dry-run 2>&1)
   status=$?
@@ -63,9 +76,11 @@ jq -n --arg run_id "$ZERO5_RUN_ID" \
   --arg approval_id "$ZERO5_APPROVAL_ID" \
   --arg source_sha256 "$ZERO5_SOURCE_SHA256" \
   --arg asset_sha256 "$ZERO5_ASSET_SHA256" \
+  --argjson prior_compute_usd "$prior_compute_usd" \
   '{schema:"zero.c33_parallel_aws_execution_lock.v1",run_id:$run_id,
     contract_sha256:$contract_sha256,approval_id:$approval_id,
-    source_sha256:$source_sha256,asset_sha256:$asset_sha256}' > "$lock"
+    source_sha256:$source_sha256,asset_sha256:$asset_sha256,
+    prior_compute_usd:$prior_compute_usd}' > "$lock"
 aws s3api put-object --region "$ZERO5_REGION" \
   --bucket "$ZERO5_TRAINING_BUCKET" --key "$lock_key" --body "$lock" \
   --content-type application/json --if-none-match '*' \
@@ -82,12 +97,14 @@ jq -n --arg run_id "$ZERO5_RUN_ID" --arg instance_id "$instance_id" \
   --arg approval_id "$ZERO5_APPROVAL_ID" \
   --arg launched_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --argjson launch_epoch "$launch_epoch" --argjson maximum_seconds "$max_seconds" \
+  --argjson prior_compute_usd "$prior_compute_usd" \
   --argjson maximum_usd "$max_usd" \
   '{schema:"zero.c33_parallel_aws_launch.v1",run_id:$run_id,
     instance_id:$instance_id,source_commit:$source_commit,
     source_sha256:$source_sha256,asset_sha256:$asset_sha256,
     contract_sha256:$contract_sha256,approval_id:$approval_id,
     launched_at:$launched_at,launch_epoch:$launch_epoch,
+    prior_compute_usd:$prior_compute_usd,
     maximum_instance_seconds:$maximum_seconds,maximum_ec2_usd:$maximum_usd}' \
   > "$receipt"
 receipt_sha256=$(sha256sum "$receipt" | awk '{print $1}')

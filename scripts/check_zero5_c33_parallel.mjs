@@ -50,11 +50,19 @@ for (const name of ["stage_script", "launcher", "user_data"]) {
   assert.equal(digest(contract.execution[name]),
     contract.execution[`${name}_sha256`]);
 }
+assert.equal(contract.execution_amendment.completed_training_updates, 0);
+assert.equal(contract.execution_amendment.failed_attempt_ec2_usd,
+  0.017377777778);
+assert.equal(contract.execution_amendment.scientific_change, false);
+assert(contract.execution_amendment.failed_attempt_ec2_usd <
+  contract.execution.maximum_total_ec2_usd);
 assert.equal(contract.evaluation.test_metrics_opened, false);
 assert.match(fs.readFileSync(contract.implementation.trainer, "utf8"),
   /--parallel-batch/);
 assert.match(fs.readFileSync(contract.implementation.runner, "utf8"),
   /deterministic_merge_order/);
+assert.match(fs.readFileSync(contract.implementation.runner, "utf8"),
+  /--max-run-steps/);
 if (contract.authorized) {
   assert.equal(contract.authorization.status, "authorized");
   assert.match(contract.authorization.approval_id, /^[a-z0-9-]+$/);
