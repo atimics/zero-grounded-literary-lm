@@ -1,0 +1,12 @@
+# started on Thu Aug 27 21:40:39 2026
+
+307530823484,,task-clock,307530823484,100.00,3.607,CPUs utilized
+<not supported>,,cycles,0,100.00,,
+<not supported>,,instructions,0,100.00,,
+<not supported>,,cache-references,0,100.00,,
+<not supported>,,cache-misses,0,100.00,,
+<not supported>,,branches,0,100.00,,
+<not supported>,,branch-misses,0,100.00,,
+3808,,context-switches,307530823484,100.00,12.382,/sec
+52,,cpu-migrations,307530823484,100.00,0.169,/sec
+440629,,page-faults,307530823484,100.00,1.433,K/sec

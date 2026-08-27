@@ -63,6 +63,6 @@ node scripts/benchmark_zero5_profile.mjs \
 
 Verify mechanics with `make zero5-cpu-profile-check`.
 
-The proposed AWS package is locked in `aws-contract.json` and verified with
-`make zero5-cpu-profile-aws-check`. It cannot launch until the contract records
-fresh explicit approval for its $0.06 maximum.
+The AWS package is locked in `aws-contract.json` and verified with
+`make zero5-cpu-profile-aws-check`. The completed measurement is explained in
+`RESULT.md` and verified with `make zero5-cpu-profile-aws-result-check`.
