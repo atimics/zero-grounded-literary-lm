@@ -1,0 +1,61 @@
+{
+  "schema": "zero.qkv_fusion_result.v1",
+  "status": "measured-local-no-go",
+  "recorded_at": "2026-08-27T15:09:30.624Z",
+  "source": {
+    "base_commit": "a3e881ba04ab7565dead98b6b0bec867cf7649e6",
+    "trainer": "zero5_c32_lm.c",
+    "trainer_sha256": "cdb7cda7e6df049ab959c009008a9a8a439b72940ca04a1dbda88b8b26cccc49",
+    "benchmark": "scripts/benchmark_zero5_qkv.mjs",
+    "benchmark_sha256": "0b2282c99360c6ff76f05c370cba207bf8e729874944e311daedc21bab9c7cff"
+  },
+  "machine": {
+    "os": "macOS 26.3.1",
+    "architecture": "arm64",
+    "linear_algebra_backend": "Accelerate"
+  },
+  "workload": {
+    "source": "frozen C3.3 training and validation packs",
+    "updates_per_run": 100,
+    "repetitions": 2,
+    "sequences_per_update": 4,
+    "context_tokens": 512
+  },
+  "variants": {
+    "baseline": {
+      "tokens_per_second": [28394, 28187],
+      "elapsed_seconds": [7.49, 7.54],
+      "mean_tokens_per_second": 28290.5,
+      "throughput_change_from_baseline": 0.0
+    },
+    "forward": {
+      "tokens_per_second": [28202, 28256],
+      "elapsed_seconds": [7.54, 7.52],
+      "mean_tokens_per_second": 28229.0,
+      "throughput_change_from_baseline": -0.00217387462222296
+    },
+    "backward": {
+      "tokens_per_second": [28445, 27568],
+      "elapsed_seconds": [7.48, 7.72],
+      "mean_tokens_per_second": 28006.5,
+      "throughput_change_from_baseline": -0.01003870557254205
+    },
+    "both": {
+      "tokens_per_second": [28235, 28147],
+      "elapsed_seconds": [7.53, 7.56],
+      "mean_tokens_per_second": 28191.0,
+      "throughput_change_from_baseline": -0.0035170817058729487
+    }
+  },
+  "correctness": {
+    "checkpoint_sha256": "a2353b4ed568a24a6faee44cf79c6e827cf8381663f9a4be6f5adb05a52a303b",
+    "checkpoints_bit_identical": true,
+    "reported_metrics_match": true,
+    "finite_difference_gradient_checks_per_fused_build": 35
+  },
+  "decision": {
+    "promote_to_default": false,
+    "reason": "No measured Apple Silicon throughput gain",
+    "next_experiment": "true batch-level tensor layout"
+  }
+}
