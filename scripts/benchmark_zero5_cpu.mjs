@@ -86,6 +86,11 @@ const updates = Number(option("--updates", "50"));
 if (!Number.isInteger(updates) || updates < 1 || updates > 9442) {
   fail("--updates must be an integer from 1 through 9442");
 }
+const parallelWorkers = Number(option("--parallel-workers", "4"));
+if (!Number.isInteger(parallelWorkers) || parallelWorkers < 2 ||
+    parallelWorkers > 4) {
+  fail("--parallel-workers must be an integer from 2 through 4");
+}
 
 const files = {
   initial: path.join(assetRoot, "build/zero5-c2-v1/run/best.ckpt"),
@@ -133,12 +138,13 @@ const common = [
   "--tokens", "0",
 ];
 
-function benchmark(name, binary) {
+function benchmark(name, binary, extra = []) {
   const directory = path.join(temporary, name);
   fs.mkdirSync(directory);
   process.stdout.write(`Running ${name} CPU trainer for ${updates} updates...\n`);
   const output = run(path.resolve(binary), [
     ...common,
+    ...extra,
     "--best", path.join(directory, "best.ckpt"),
     "--save", path.join(directory, "active.ckpt"),
   ]);
@@ -151,11 +157,18 @@ function benchmark(name, binary) {
 
 const strict = benchmark("strict", "zero5_c32_lm");
 const fast = benchmark("fast", "zero5_c32_lm_fast");
+const parallel = benchmark("parallel", "zero5_c32_lm_fast",
+  ["--parallel-batch", String(parallelWorkers)]);
 const sameReportedMetrics =
   close(strict.train_loss, fast.train_loss, 0.0001) &&
   close(strict.validation_loss, fast.validation_loss, 0.0001) &&
-  close(strict.gradient_norm, fast.gradient_norm, 0.001);
-if (!sameReportedMetrics) fail("fast trainer drifted beyond the reporting tolerance");
+  close(strict.gradient_norm, fast.gradient_norm, 0.001) &&
+  close(strict.train_loss, parallel.train_loss, 0.0001) &&
+  close(strict.validation_loss, parallel.validation_loss, 0.0001) &&
+  close(strict.gradient_norm, parallel.gradient_norm, 0.001);
+if (!sameReportedMetrics) {
+  fail("an optimized trainer drifted beyond the reporting tolerance");
+}
 
 const result = {
   schema: "zero.cpu_speed_benchmark.v1",
@@ -166,15 +179,23 @@ const result = {
     updates,
     sequences_per_update: 4,
     context_tokens: 512,
+    parallel_workers: parallelWorkers,
   },
   strict,
   fast,
+  parallel,
   comparison: {
     same_reported_metrics: sameReportedMetrics,
     checkpoint_bit_identical: strict.checkpoint_sha256 === fast.checkpoint_sha256,
     throughput_speedup: fast.tokens_per_second / strict.tokens_per_second,
     elapsed_time_reduction:
       1.0 - fast.elapsed_seconds / strict.elapsed_seconds,
+    parallel_throughput_speedup:
+      parallel.tokens_per_second / strict.tokens_per_second,
+    parallel_over_fast_speedup:
+      parallel.tokens_per_second / fast.tokens_per_second,
+    parallel_elapsed_time_reduction:
+      1.0 - parallel.elapsed_seconds / strict.elapsed_seconds,
   },
 };
 

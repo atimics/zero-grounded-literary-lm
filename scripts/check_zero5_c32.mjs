@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import {
   createCacheObject, validateBaseline, verifyCacheObject,
 } from "./zero5_c32_baseline_cache.mjs";
+import { verifyFrozenGitFile } from "./frozen_source.mjs";
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -97,6 +98,7 @@ const contractBytes = fs.readFileSync(contractPath);
 const contract = JSON.parse(contractBytes);
 const importBytes = fs.readFileSync(importPath);
 const imported = JSON.parse(importBytes);
+const awsResultReceipt = JSON.parse(fs.readFileSync(awsResultPath));
 
 assert.equal(contract.schema, "zero.c32_braid_experiment.v1");
 assert.equal(contract.status, "preregistered-unrun");
@@ -105,8 +107,8 @@ assert.equal(contract.amendment.parent_source_commit, "361c861");
 assert.equal(contract.amendment.scientific_change, false);
 assert.equal(contract.execution.backend, "openblas");
 assert.equal(contract.execution.checkpoint_every_updates, 250);
-assert.equal(sha256(fs.readFileSync(contract.implementation.trainer)),
-  contract.implementation.trainer_sha256);
+verifyFrozenGitFile(awsResultReceipt.source_commit,
+  contract.implementation.trainer, contract.implementation.trainer_sha256);
 assert.equal(sha256(fs.readFileSync(contract.implementation.importer)),
   contract.implementation.importer_sha256);
 assert.equal(sha256(fs.readFileSync(contract.implementation.runner)),
@@ -386,6 +388,29 @@ try {
   assert.match(run("./zero5_c32_lm", [
     "--init", checkpoint, "--paired-eval", paired,
   ]), /"schema":"zero\.c32_paired_choice_eval\.v1"/);
+
+  const parallel = path.join(temporary, "parallel.ckpt");
+  const parallelRepeat = path.join(temporary, "parallel-repeat.ckpt");
+  const parallelArgs = [
+    "--preset", "literary", "--context", "512", "--dim", "8",
+    "--heads", "2", "--layers", "1", "--ff", "16", "--vocab", "128",
+    "--packed-train", packed, "--packed-validation", packed,
+    "--run-contract-sha256", runContractSha256,
+    "--steps", "1", "--batch", "4", "--parallel-batch", "4",
+    "--lr", "0.0001", "--warmup", "1", "--report", "1",
+    "--validation", "4", "--seed", "17", "--tokens", "0",
+  ];
+  assert.match(run("./zero5_c32_lm", [...parallelArgs,
+    "--save", parallel]), /packed parallel-batch=4 private-caches=3/);
+  run("./zero5_c32_lm", [...parallelArgs, "--save", parallelRepeat]);
+  assert.equal(sha256(fs.readFileSync(parallel)),
+    sha256(fs.readFileSync(parallelRepeat)));
+  run("./zero5_c32_lm", [
+    ...parallelArgs.filter((value, index, values) =>
+      value !== "--parallel-batch" && values[index - 1] !== "--parallel-batch"),
+    "--resume", parallel, "--save", parallel,
+  ], 1);
+
   const corrupt = path.join(temporary, "corrupt.z5pack");
   const corruptBytes = fs.readFileSync(packed);
   corruptBytes[corruptBytes.length - 1] = 5;
@@ -463,7 +488,7 @@ if (fs.existsSync(resultPath)) {
   assert.equal(result.arms.D.gates.claim_pair_exact, false);
   assert.equal(result.arms.D.gates.retrieval_pair_exact, false);
 
-  const awsResult = JSON.parse(fs.readFileSync(awsResultPath));
+  const awsResult = awsResultReceipt;
   assert.equal(awsResult.schema, "zero.c32_aws_result_receipt.v1");
   assert.equal(awsResult.status, "complete");
   assert.equal(awsResult.exit_code, 0);

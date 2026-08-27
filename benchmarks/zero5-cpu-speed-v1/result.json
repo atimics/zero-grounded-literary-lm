@@ -45,12 +45,29 @@
     "throughput_change_from_old": 0.7433586337760911,
     "elapsed_time_reduction_from_old": 0.4230235783633842
   },
+  "parallel": {
+    "optimization": "fast build plus four private-cache batch workers",
+    "tokens_per_second": 27118,
+    "elapsed_seconds": 15.36,
+    "train_loss": 2.0549,
+    "validation_loss": 1.8532,
+    "gradient_norm": 1.512,
+    "checkpoint_sha256": "6ea26b26b1f48d7e4dc61e479fdd08596147ebf763d9b1b640c4e10fbac46dc2",
+    "throughput_change_from_old": 3.288108791903858,
+    "throughput_multiple_from_old": 4.288108791903858,
+    "elapsed_time_reduction_from_old": 0.763291724456773
+  },
   "correctness": {
     "strict_50_update_old_checkpoint_sha256": "4e08ab6c3b5212aeff2704f8241bc0ef9aad755b4be49bd42f03921074d5c084",
     "strict_50_update_new_checkpoint_sha256": "4e08ab6c3b5212aeff2704f8241bc0ef9aad755b4be49bd42f03921074d5c084",
     "strict_checkpoint_bit_identical": true,
     "fast_reported_metrics_match_strict": true,
     "fast_checkpoint_bit_identical": false,
+    "parallel_reported_metrics_match_serial": true,
+    "parallel_repeat_checkpoint_sha256": "82ac56ea513682162c7aa1f63259e4057bbb9be4df2a7f2955931e0fa982cc84",
+    "parallel_split_resume_checkpoint_sha256": "82ac56ea513682162c7aa1f63259e4057bbb9be4df2a7f2955931e0fa982cc84",
+    "parallel_repeat_and_resume_bit_identical": true,
+    "parallel_checkpoint_bit_identical_to_serial": false,
     "finite_difference_gradient_checks_per_build": 35
   }
 }

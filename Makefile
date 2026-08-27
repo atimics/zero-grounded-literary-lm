@@ -2,6 +2,7 @@ CC ?= cc
 CFLAGS ?= -O2 -std=c11 -Wall -Wextra -Wpedantic
 LITERARY_BACKEND ?= auto
 EMCC ?= emcc
+ZERO5_THREAD_FLAGS ?= -pthread
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 CPU_FAST_CFLAGS := -O3 -mcpu=native -flto -fno-math-errno \
@@ -522,11 +523,13 @@ zero5_c31_lm: zero5_c31_lm.c channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c31_lm.c -o $@ $(LITERARY_LDLIBS)
 
 zero5_c32_lm: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
-	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS)
+	$(CC) $(CFLAGS) $(ZERO5_THREAD_FLAGS) $(LITERARY_CFLAGS) \
+		zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS) $(ZERO5_THREAD_FLAGS)
 
 zero5_c32_lm_fast: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
-	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(LITERARY_CFLAGS) \
-		zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS)
+	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(ZERO5_THREAD_FLAGS) \
+		$(LITERARY_CFLAGS) zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS) \
+		$(ZERO5_THREAD_FLAGS)
 
 zero5-cpu-speed-check: zero5_c32_lm zero5_c32_lm_fast
 	./zero5_c32_lm --self-test

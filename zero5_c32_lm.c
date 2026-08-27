@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <math.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,7 +18,7 @@
 #endif
 
 /*
- * zero5_c31_lm.c -- the record-safe C3.1 ZERO transformer fork.
+ * zero5_c32_lm.c -- the record-safe C3.2/C3.3 ZERO transformer fork.
  *
  * Input tokens are bytes in [0, 255], either literal bytes or the compact BPE
  * representation produced by bpe_tokenizer.  The model uses pre-normalized
@@ -241,6 +242,7 @@ typedef struct {
 typedef struct {
     long steps;
     int batch;
+    int parallel_batch;
     float learning_rate;
     float weight_decay;
     float clip;
@@ -855,6 +857,56 @@ static void model_destroy(Model *model)
     memset(model, 0, sizeof(*model));
 }
 
+static void model_set_trainable_scope(Model *model, int scope);
+
+static void model_worker_create(Model *worker, Model *primary)
+{
+    Rng initialization_rng;
+    int parameter_index;
+    rng_seed(&initialization_rng, 0);
+    model_create(worker, primary->cfg, &initialization_rng);
+    model_set_trainable_scope(worker, primary->trainable_scope);
+    for (parameter_index = 0;
+         parameter_index < primary->parameter_count; ++parameter_index) {
+        Parameter *worker_parameter = worker->parameters[parameter_index];
+        Parameter *primary_parameter = primary->parameters[parameter_index];
+        free(worker_parameter->w);
+        free(worker_parameter->m);
+        free(worker_parameter->v);
+        worker_parameter->w = primary_parameter->w;
+        worker_parameter->m = NULL;
+        worker_parameter->v = NULL;
+    }
+}
+
+static void model_worker_destroy(Model *worker)
+{
+    int parameter_index;
+    for (parameter_index = 0;
+         parameter_index < worker->parameter_count; ++parameter_index) {
+        worker->parameters[parameter_index]->w = NULL;
+    }
+    model_destroy(worker);
+}
+
+static void model_prepare_dropout(Model *model, float dropout, Rng *rng)
+{
+    size_t td = (size_t)model->cfg.context * model->cfg.dim;
+    int layer_index;
+    size_t i;
+    for (layer_index = 0; layer_index < model->cfg.layers; ++layer_index) {
+        LayerCache *cache = &model->cache[layer_index];
+        for (i = 0; i < td; ++i) {
+            cache->attention_mask[i] =
+                rng_unit(rng) >= dropout ? 1.0f / (1.0f - dropout) : 0.0f;
+        }
+        for (i = 0; i < td; ++i) {
+            cache->feed_forward_mask[i] =
+                rng_unit(rng) >= dropout ? 1.0f / (1.0f - dropout) : 0.0f;
+        }
+    }
+}
+
 static size_t model_parameter_total(const Model *model)
 {
     size_t total = 0;
@@ -1146,9 +1198,11 @@ static float model_forward_masked(Model *model, const Token *tokens,
         for (i = 0; i < (int)td; ++i) {
             float mask = 1.0f;
             if (dropout > 0.0f) {
-                mask = rng_unit(dropout_rng) >= dropout
-                           ? 1.0f / (1.0f - dropout)
-                           : 0.0f;
+                mask = dropout_rng != NULL
+                           ? (rng_unit(dropout_rng) >= dropout
+                                  ? 1.0f / (1.0f - dropout)
+                                  : 0.0f)
+                           : cache->attention_mask[i];
             }
             cache->attention_mask[i] = mask;
             cache->r1[i] = cache->x[i] + model->work.tmp_td[i] * mask;
@@ -1165,9 +1219,11 @@ static float model_forward_masked(Model *model, const Token *tokens,
         for (i = 0; i < (int)td; ++i) {
             float mask = 1.0f;
             if (dropout > 0.0f) {
-                mask = rng_unit(dropout_rng) >= dropout
-                           ? 1.0f / (1.0f - dropout)
-                           : 0.0f;
+                mask = dropout_rng != NULL
+                           ? (rng_unit(dropout_rng) >= dropout
+                                  ? 1.0f / (1.0f - dropout)
+                                  : 0.0f)
+                           : cache->feed_forward_mask[i];
             }
             cache->feed_forward_mask[i] = mask;
             output[i] = cache->r1[i] + model->work.tmp_td[i] * mask;
@@ -2744,10 +2800,168 @@ static void packed_checkpoint_save(const char *path, const Model *model,
     state.packed_completed_steps = completed_steps;
     state.packed_best_update = best_update;
     state.packed_best_validation = best_validation;
+    state.reserved = options->parallel_batch > 1
+                         ? (uint32_t)options->parallel_batch
+                         : 0U;
     memcpy(state.run_contract_sha256, options->run_contract_sha256,
            sizeof(state.run_contract_sha256));
     checkpoint_save(path, model, update, rng, completed_steps, 0U, 0U,
                     &state);
+}
+
+typedef struct {
+    Model *model;
+    const Token *tokens;
+    const Token *targets;
+    const float *mask;
+    float dropout;
+    float loss;
+    uint64_t active;
+} PackedWorkerTask;
+
+typedef struct {
+    int count;
+    Model **models;
+    Model *private_models;
+    float *masks;
+    pthread_t *threads;
+    PackedWorkerTask *tasks;
+} PackedParallelBatch;
+
+static void *packed_worker_run(void *argument)
+{
+    PackedWorkerTask *task = (PackedWorkerTask *)argument;
+    task->loss = model_forward_masked(task->model, task->tokens,
+                                      task->targets, task->dropout, NULL,
+                                      task->mask);
+    model_backward_masked(task->model, task->tokens, task->targets,
+                          task->mask);
+    return NULL;
+}
+
+static void packed_parallel_create(PackedParallelBatch *parallel,
+                                   Model *primary, int count)
+{
+    int worker;
+    memset(parallel, 0, sizeof(*parallel));
+    parallel->count = count;
+    parallel->models = zero_alloc((size_t)count, sizeof(*parallel->models));
+    parallel->private_models =
+        zero_alloc((size_t)(count - 1), sizeof(*parallel->private_models));
+    parallel->masks = zero_alloc((size_t)count * primary->cfg.context,
+                                 sizeof(*parallel->masks));
+    parallel->threads = zero_alloc((size_t)(count - 1),
+                                   sizeof(*parallel->threads));
+    parallel->tasks = zero_alloc((size_t)count, sizeof(*parallel->tasks));
+    parallel->models[0] = primary;
+    for (worker = 1; worker < count; ++worker) {
+        Model *private_model = &parallel->private_models[worker - 1];
+        model_worker_create(private_model, primary);
+        parallel->models[worker] = private_model;
+    }
+}
+
+static void packed_parallel_destroy(PackedParallelBatch *parallel)
+{
+    int worker;
+    for (worker = 1; worker < parallel->count; ++worker) {
+        model_worker_destroy(parallel->models[worker]);
+    }
+    free(parallel->models);
+    free(parallel->private_models);
+    free(parallel->masks);
+    free(parallel->threads);
+    free(parallel->tasks);
+    memset(parallel, 0, sizeof(*parallel));
+}
+
+static void packed_parallel_merge_gradients(PackedParallelBatch *parallel)
+{
+    Model *primary = parallel->models[0];
+    int worker;
+    int parameter_index;
+    for (worker = 1; worker < parallel->count; ++worker) {
+        Model *source = parallel->models[worker];
+        for (parameter_index = 0;
+             parameter_index < primary->parameter_count; ++parameter_index) {
+            Parameter *destination = primary->parameters[parameter_index];
+            const Parameter *worker_parameter =
+                source->parameters[parameter_index];
+            size_t i;
+            if (!destination->trainable) continue;
+            for (i = 0; i < destination->count; ++i) {
+                destination->g[i] += worker_parameter->g[i];
+            }
+        }
+    }
+}
+
+static void packed_parallel_train_update(
+    PackedParallelBatch *parallel, Rng *rng, const PackedSet *train,
+    uint64_t first_pack, const Options *options, double *interval_loss,
+    uint64_t *interval_sequences, uint64_t *interval_active_targets)
+{
+    int worker;
+    int batch_start;
+    for (worker = 0; worker < parallel->count; ++worker) {
+        model_zero_grad(parallel->models[worker]);
+    }
+    for (batch_start = 0; batch_start < options->batch;
+         batch_start += parallel->count) {
+        int wave = options->batch - batch_start;
+        if (wave > parallel->count) wave = parallel->count;
+        for (worker = 0; worker < wave; ++worker) {
+            uint32_t pack = (uint32_t)(first_pack +
+                                       (uint64_t)batch_start +
+                                       (uint64_t)worker);
+            size_t token_start =
+                (size_t)pack * ((size_t)train->context + 1u);
+            float *mask = parallel->masks +
+                          (size_t)worker * train->context;
+            PackedWorkerTask *task = &parallel->tasks[worker];
+            uint64_t active = packed_mask(
+                train, pack, mask, options->claim_answer_weight,
+                options->cloze_answer_weight,
+                options->retrieval_answer_weight);
+            task->model = parallel->models[worker];
+            task->tokens = train->tokens + token_start;
+            task->targets = train->tokens + token_start + 1;
+            task->mask = mask;
+            task->dropout = options->dropout;
+            task->loss = 0.0f;
+            task->active = active;
+            if (options->dropout > 0.0f) {
+                model_prepare_dropout(task->model, options->dropout, rng);
+            }
+            if (active != 0U) {
+                ++*interval_sequences;
+                *interval_active_targets += active;
+            }
+        }
+        for (worker = 1; worker < wave; ++worker) {
+            if (pthread_create(&parallel->threads[worker - 1], NULL,
+                               packed_worker_run,
+                               &parallel->tasks[worker]) != 0) {
+                int started;
+                for (started = 1; started < worker; ++started) {
+                    (void)pthread_join(parallel->threads[started - 1], NULL);
+                }
+                fail("could not create a parallel batch worker");
+            }
+        }
+        (void)packed_worker_run(&parallel->tasks[0]);
+        for (worker = 1; worker < wave; ++worker) {
+            if (pthread_join(parallel->threads[worker - 1], NULL) != 0) {
+                fail("could not join a parallel batch worker");
+            }
+        }
+        for (worker = 0; worker < wave; ++worker) {
+            if (parallel->tasks[worker].active != 0U) {
+                *interval_loss += parallel->tasks[worker].loss;
+            }
+        }
+    }
+    packed_parallel_merge_gradients(parallel);
 }
 
 static void train_packed(Model *model, Rng *rng, uint64_t *update,
@@ -2756,6 +2970,7 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
                          const CheckpointOrchestrationV5 *resume_state)
 {
     float *mask = zero_alloc((size_t)train->context, sizeof(*mask));
+    PackedParallelBatch parallel = {0};
     uint64_t required_packs = (uint64_t)options->steps *
                               (uint64_t)options->batch;
     uint64_t completed_steps =
@@ -2782,6 +2997,11 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
     if (completed_steps != *update) {
         fail("packed checkpoint cursor does not match the optimizer update");
     }
+    if (options->parallel_batch > 1) {
+        packed_parallel_create(&parallel, model, options->parallel_batch);
+        printf("packed parallel-batch=%d private-caches=%d\n",
+               options->parallel_batch, options->parallel_batch - 1);
+    }
     signal(SIGINT, on_interrupt);
     signal(SIGTERM, on_interrupt);
     if (completed_steps > 0U) {
@@ -2798,27 +3018,35 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
         int batch;
         float gradient_norm;
         float current_lr = options->learning_rate;
-        model_zero_grad(model);
-        for (batch = 0; batch < options->batch; ++batch) {
-            uint32_t pack = (uint32_t)(completed_steps *
-                                       (uint64_t)options->batch +
-                                       (uint64_t)batch);
-            size_t token_start =
-                (size_t)pack * ((size_t)train->context + 1u);
-            uint64_t active = packed_mask(
-                train, pack, mask, options->claim_answer_weight,
-                options->cloze_answer_weight,
-                options->retrieval_answer_weight);
-            float loss = model_forward_masked(
-                model, train->tokens + token_start,
-                train->tokens + token_start + 1,
-                options->dropout, rng, mask);
-            model_backward_masked(model, train->tokens + token_start,
-                                  train->tokens + token_start + 1, mask);
-            if (active != 0U) {
-                interval_loss += loss;
-                ++interval_sequences;
-                interval_active_targets += active;
+        if (options->parallel_batch > 1) {
+            packed_parallel_train_update(
+                &parallel, rng, train,
+                completed_steps * (uint64_t)options->batch, options,
+                &interval_loss, &interval_sequences,
+                &interval_active_targets);
+        } else {
+            model_zero_grad(model);
+            for (batch = 0; batch < options->batch; ++batch) {
+                uint32_t pack = (uint32_t)(completed_steps *
+                                           (uint64_t)options->batch +
+                                           (uint64_t)batch);
+                size_t token_start =
+                    (size_t)pack * ((size_t)train->context + 1u);
+                uint64_t active = packed_mask(
+                    train, pack, mask, options->claim_answer_weight,
+                    options->cloze_answer_weight,
+                    options->retrieval_answer_weight);
+                float loss = model_forward_masked(
+                    model, train->tokens + token_start,
+                    train->tokens + token_start + 1,
+                    options->dropout, rng, mask);
+                model_backward_masked(model, train->tokens + token_start,
+                                      train->tokens + token_start + 1, mask);
+                if (active != 0U) {
+                    interval_loss += loss;
+                    ++interval_sequences;
+                    interval_active_targets += active;
+                }
             }
         }
         ++completed_steps;
@@ -2930,6 +3158,7 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
         printf("interrupted after update %llu\n",
                (unsigned long long)*update);
     }
+    if (options->parallel_batch > 1) packed_parallel_destroy(&parallel);
     free(mask);
 }
 
@@ -4477,6 +4706,7 @@ static void print_usage(const char *program)
     printf("training:\n");
     printf("  --steps N            additional optimizer updates (default: 1000)\n");
     printf("  --batch N            sequences accumulated per update (default: 1)\n");
+    printf("  --parallel-batch N   packed sequences run at once; 1 keeps exact serial math\n");
     printf("  --lr X               peak learning rate (default: 0.0003)\n");
     printf("  --weight-decay X     AdamW decay (default: 0.01)\n");
     printf("  --clip X             global gradient norm limit (default: 1)\n");
@@ -4902,6 +5132,7 @@ int main(int argc, char **argv)
     checkpoint_resume_state.packed_best_validation = INFINITY;
     options.steps = 1000;
     options.batch = 1;
+    options.parallel_batch = 1;
     options.learning_rate = 3.0e-4f;
     options.weight_decay = 0.01f;
     options.clip = 1.0f;
@@ -5021,6 +5252,10 @@ int main(int argc, char **argv)
             options.steps = parse_long(argv[++i], "--steps");
         } else if (strcmp(argv[i], "--batch") == 0 && i + 1 < argc) {
             options.batch = (int)parse_long(argv[++i], "--batch");
+        } else if (strcmp(argv[i], "--parallel-batch") == 0 &&
+                   i + 1 < argc) {
+            options.parallel_batch =
+                (int)parse_long(argv[++i], "--parallel-batch");
         } else if (strcmp(argv[i], "--lr") == 0 && i + 1 < argc) {
             options.learning_rate = parse_float(argv[++i], "--lr");
         } else if (strcmp(argv[i], "--weight-decay") == 0 && i + 1 < argc) {
@@ -5290,7 +5525,11 @@ int main(int argc, char **argv)
             fail("active teacher weights must sum to at most one");
         }
     }
-    if (options.steps < 0 || options.batch < 1 || options.learning_rate < 0.0f ||
+    if (options.steps < 0 || options.batch < 1 ||
+        options.parallel_batch < 1 ||
+        options.parallel_batch > options.batch ||
+        options.parallel_batch > 32 ||
+        options.learning_rate < 0.0f ||
         options.weight_decay < 0.0f || options.clip < 0.0f ||
         options.warmup < 0 || options.schedule_offset < 0 ||
         options.schedule_total < 0 || options.report_every < 1 ||
@@ -5319,6 +5558,9 @@ int main(int argc, char **argv)
         (options.schedule_total > 0 &&
          options.schedule_offset + options.steps > options.schedule_total)) {
         fail("invalid training or generation option");
+    }
+    if (options.parallel_batch > 1 && options.packed_train_path == NULL) {
+        fail("--parallel-batch greater than one requires --packed-train");
     }
     if (options.transaction_mode != TRANSACTION_DISABLED &&
         (options.teacher_count == 0 || text_count == 0 ||
@@ -5495,13 +5737,17 @@ int main(int argc, char **argv)
                 }
                 if (checkpoint_resume_state.packed_batch !=
                         (uint32_t)options.batch ||
+                    checkpoint_resume_state.reserved !=
+                        (options.parallel_batch > 1
+                             ? (uint32_t)options.parallel_batch
+                             : 0U) ||
                     checkpoint_resume_state.packed_total_steps !=
                         (uint64_t)options.steps ||
                     checkpoint_resume_state.packed_completed_steps !=
                         checkpoint_attempts ||
                     memcmp(checkpoint_resume_state.run_contract_sha256,
                            options.run_contract_sha256, 64U) != 0) {
-                    fail("packed checkpoint does not match the run contract, batch, total steps, or cursor");
+                    fail("packed checkpoint does not match the run contract, batch mode, total steps, or cursor");
                 }
             }
             train_packed(&model, &rng, &update, &packed_train,

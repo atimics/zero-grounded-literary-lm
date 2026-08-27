@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
+import { verifyFrozenGitFile } from "./frozen_source.mjs";
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -24,11 +25,13 @@ const contractPath = "benchmarks/zero5-c33-v1/contract.json";
 const importPath = "benchmarks/zero5-c33-v1/import.json";
 const controlPath = "benchmarks/zero5-c32-v1/result.json";
 const awsExecutionPath = "benchmarks/zero5-c33-v1/aws-execution.json";
+const sourceLockPath = "benchmarks/zero5-c33-v1/source-lock.json";
 const contract = JSON.parse(fs.readFileSync(contractPath));
 const importedBytes = fs.readFileSync(importPath);
 const imported = JSON.parse(importedBytes);
 const controlBytes = fs.readFileSync(controlPath);
 const control = JSON.parse(controlBytes);
+const sourceLock = JSON.parse(fs.readFileSync(sourceLockPath));
 
 assert.equal(contract.schema, "zero.c33_pair_atomic_experiment.v1");
 assert.equal(contract.status, "preregistered-unrun");
@@ -44,8 +47,13 @@ assert.equal(sha256(fs.readFileSync(contract.execution.launcher)),
   contract.execution.launcher_sha256);
 assert.equal(sha256(fs.readFileSync(contract.execution.user_data)),
   contract.execution.user_data_sha256);
-assert.equal(sha256(fs.readFileSync(contract.implementation.trainer)),
+assert.equal(sourceLock.schema, "zero.c33_source_lock.v1");
+assert.equal(sourceLock.experiment, contract.experiment);
+assert.equal(sourceLock.trainer.path, contract.implementation.trainer);
+assert.equal(sourceLock.trainer.sha256,
   contract.implementation.trainer_sha256);
+verifyFrozenGitFile(sourceLock.git_commit, sourceLock.trainer.path,
+  sourceLock.trainer.sha256);
 assert.equal(sha256(fs.readFileSync(contract.implementation.importer)),
   contract.implementation.importer_sha256);
 assert.equal(sha256(fs.readFileSync(contract.implementation.runner)),
