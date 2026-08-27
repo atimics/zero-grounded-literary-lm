@@ -39,6 +39,7 @@
 #define CHECKPOINT_ROTARY_FLAG UINT32_C(1)
 #define CHECKPOINT_TRAINABLE_SCOPE_SHIFT 8U
 #define CHECKPOINT_TRAINABLE_SCOPE_MASK (UINT32_C(0xff) << CHECKPOINT_TRAINABLE_SCOPE_SHIFT)
+#define PACKED_TENSOR_BATCH_FLAG UINT32_C(0x80000000)
 
 typedef uint16_t Token;
 
@@ -131,6 +132,22 @@ typedef struct {
     float *rope_sin;
     Work work;
 } Model;
+
+#if defined(USE_TENSOR_BATCH)
+typedef struct {
+    int count;
+    LayerCache *cache;
+    float *final_x;
+    float *final_n;
+    float *probs;
+    Work work;
+    Token *tokens;
+    Token *targets;
+    float *loss_masks;
+    float *losses;
+    uint64_t *active_targets;
+} PackedTensorBatch;
+#endif
 
 typedef struct {
     int loaded;
@@ -246,6 +263,7 @@ typedef struct {
     long steps;
     int batch;
     int parallel_batch;
+    int tensor_batch;
     float learning_rate;
     float weight_decay;
     float clip;
@@ -1564,6 +1582,413 @@ static void model_backward(Model *model, const Token *tokens,
 {
     model_backward_masked(model, tokens, targets, NULL);
 }
+
+#if defined(USE_TENSOR_BATCH)
+static void tensor_cache_create(LayerCache *cache, const Config *cfg,
+                                int count)
+{
+    size_t td = (size_t)count * cfg->context * cfg->dim;
+    size_t tf = (size_t)count * cfg->context * cfg->ff;
+    size_t htt = (size_t)count * cfg->heads * cfg->context * cfg->context;
+    memset(cache, 0, sizeof(*cache));
+    cache->x = zero_alloc(td, sizeof(float));
+    cache->n1 = zero_alloc(td, sizeof(float));
+#if defined(USE_FUSED_QKV_FORWARD)
+    cache->qkv = zero_alloc(3U * td, sizeof(float));
+#endif
+    cache->q = zero_alloc(td, sizeof(float));
+    cache->k = zero_alloc(td, sizeof(float));
+    cache->v = zero_alloc(td, sizeof(float));
+    cache->att = zero_alloc(td, sizeof(float));
+    cache->prob = zero_alloc(htt, sizeof(float));
+    cache->r1 = zero_alloc(td, sizeof(float));
+    cache->n2 = zero_alloc(td, sizeof(float));
+    cache->fpre = zero_alloc(tf, sizeof(float));
+    cache->fact = zero_alloc(tf, sizeof(float));
+    cache->gelu_tanh = zero_alloc(tf, sizeof(float));
+    cache->attention_mask = zero_alloc(td, sizeof(float));
+    cache->feed_forward_mask = zero_alloc(td, sizeof(float));
+}
+
+static void tensor_work_create(Work *work, const Config *cfg, int count)
+{
+    size_t td = (size_t)count * cfg->context * cfg->dim;
+    size_t tf = (size_t)count * cfg->context * cfg->ff;
+    size_t htt = (size_t)count * cfg->heads * cfg->context * cfg->context;
+    memset(work, 0, sizeof(*work));
+    work->dy = zero_alloc(td, sizeof(float));
+    work->dx = zero_alloc(td, sizeof(float));
+    work->dr1 = zero_alloc(td, sizeof(float));
+    work->dn2 = zero_alloc(td, sizeof(float));
+    work->datt = zero_alloc(td, sizeof(float));
+#if defined(USE_FUSED_QKV_BACKWARD)
+    work->dqkv = zero_alloc(3U * td, sizeof(float));
+#endif
+    work->dq = zero_alloc(td, sizeof(float));
+    work->dk = zero_alloc(td, sizeof(float));
+    work->dv = zero_alloc(td, sizeof(float));
+    work->dn1 = zero_alloc(td, sizeof(float));
+    work->dact = zero_alloc(tf, sizeof(float));
+    work->dfpre = zero_alloc(tf, sizeof(float));
+    work->tmp_td = zero_alloc(td, sizeof(float));
+    work->attention_matrix = zero_alloc(htt, sizeof(float));
+}
+
+static void packed_tensor_create(PackedTensorBatch *batch,
+                                 const Config *cfg, int count)
+{
+    int layer_index;
+    size_t rows = (size_t)count * cfg->context;
+    memset(batch, 0, sizeof(*batch));
+    batch->count = count;
+    batch->cache = zero_alloc((size_t)cfg->layers, sizeof(*batch->cache));
+    for (layer_index = 0; layer_index < cfg->layers; ++layer_index) {
+        tensor_cache_create(&batch->cache[layer_index], cfg, count);
+    }
+    batch->final_x = zero_alloc(rows * cfg->dim, sizeof(float));
+    batch->final_n = zero_alloc(rows * cfg->dim, sizeof(float));
+    batch->probs = zero_alloc(rows * cfg->vocab, sizeof(float));
+    tensor_work_create(&batch->work, cfg, count);
+    batch->tokens = zero_alloc(rows, sizeof(*batch->tokens));
+    batch->targets = zero_alloc(rows, sizeof(*batch->targets));
+    batch->loss_masks = zero_alloc(rows, sizeof(*batch->loss_masks));
+    batch->losses = zero_alloc((size_t)count, sizeof(*batch->losses));
+    batch->active_targets = zero_alloc((size_t)count,
+                                       sizeof(*batch->active_targets));
+}
+
+static void packed_tensor_destroy(PackedTensorBatch *batch,
+                                  const Config *cfg)
+{
+    int layer_index;
+    for (layer_index = 0; layer_index < cfg->layers; ++layer_index) {
+        cache_destroy(&batch->cache[layer_index]);
+    }
+    free(batch->cache);
+    free(batch->final_x);
+    free(batch->final_n);
+    free(batch->probs);
+    work_destroy(&batch->work);
+    free(batch->tokens);
+    free(batch->targets);
+    free(batch->loss_masks);
+    free(batch->losses);
+    free(batch->active_targets);
+    memset(batch, 0, sizeof(*batch));
+}
+
+static LayerCache tensor_attention_view(LayerCache *cache,
+                                        const Config *cfg, int sequence)
+{
+    LayerCache view;
+    size_t td = (size_t)cfg->context * cfg->dim;
+    size_t htt = (size_t)cfg->heads * cfg->context * cfg->context;
+    memset(&view, 0, sizeof(view));
+    view.q = cache->q + (size_t)sequence * td;
+    view.k = cache->k + (size_t)sequence * td;
+    view.v = cache->v + (size_t)sequence * td;
+    view.att = cache->att + (size_t)sequence * td;
+    view.prob = cache->prob + (size_t)sequence * htt;
+    return view;
+}
+
+static void packed_tensor_prepare_dropout(PackedTensorBatch *batch,
+                                          const Config *cfg, float dropout,
+                                          Rng *rng)
+{
+    size_t td = (size_t)cfg->context * cfg->dim;
+    int sequence;
+    int layer_index;
+    size_t i;
+    for (sequence = 0; sequence < batch->count; ++sequence) {
+        for (layer_index = 0; layer_index < cfg->layers; ++layer_index) {
+            LayerCache *cache = &batch->cache[layer_index];
+            float *attention = cache->attention_mask +
+                               (size_t)sequence * td;
+            float *feed_forward = cache->feed_forward_mask +
+                                  (size_t)sequence * td;
+            for (i = 0; i < td; ++i) {
+                attention[i] = rng_unit(rng) >= dropout
+                                   ? 1.0f / (1.0f - dropout)
+                                   : 0.0f;
+            }
+            for (i = 0; i < td; ++i) {
+                feed_forward[i] = rng_unit(rng) >= dropout
+                                      ? 1.0f / (1.0f - dropout)
+                                      : 0.0f;
+            }
+        }
+    }
+}
+
+static void packed_tensor_forward(Model *model, PackedTensorBatch *batch,
+                                  float dropout)
+{
+    const Config *cfg = &model->cfg;
+    int rows = batch->count * cfg->context;
+    size_t td = (size_t)rows * cfg->dim;
+    size_t tf = (size_t)rows * cfg->ff;
+    int row;
+    int i;
+    int layer_index;
+    LayerCache *first = &batch->cache[0];
+
+    for (row = 0; row < rows; ++row) {
+        int token = batch->tokens[row];
+        int time = row % cfg->context;
+        for (i = 0; i < cfg->dim; ++i) {
+            first->x[(size_t)row * cfg->dim + i] =
+                model->token_embedding.w[(size_t)token * cfg->dim + i];
+            if (!cfg->rotary) {
+                first->x[(size_t)row * cfg->dim + i] +=
+                    model->position_embedding.w[(size_t)time * cfg->dim + i];
+            }
+        }
+    }
+
+    for (layer_index = 0; layer_index < cfg->layers; ++layer_index) {
+        TransformerLayer *layer = &model->layer[layer_index];
+        LayerCache *cache = &batch->cache[layer_index];
+        float *output = layer_index + 1 < cfg->layers
+                            ? batch->cache[layer_index + 1].x
+                            : batch->final_x;
+        int sequence;
+
+        rmsnorm_forward(cache->x, layer->norm1.w, cache->n1, rows,
+                        cfg->dim);
+#if defined(USE_FUSED_QKV_FORWARD)
+        linear_forward(rows, cfg->dim, 3 * cfg->dim, cache->n1,
+                       layer->wq.w, cache->qkv);
+        for (row = 0; row < rows; ++row) {
+            const float *source = cache->qkv +
+                                  (size_t)row * 3U * cfg->dim;
+            memcpy(cache->q + (size_t)row * cfg->dim, source,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(cache->k + (size_t)row * cfg->dim, source + cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(cache->v + (size_t)row * cfg->dim,
+                   source + 2 * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+        }
+#else
+        linear_forward(rows, cfg->dim, cfg->dim, cache->n1,
+                       layer->wq.w, cache->q);
+        linear_forward(rows, cfg->dim, cfg->dim, cache->n1,
+                       layer->wk.w, cache->k);
+        linear_forward(rows, cfg->dim, cfg->dim, cache->n1,
+                       layer->wv.w, cache->v);
+#endif
+        for (sequence = 0; sequence < batch->count; ++sequence) {
+            size_t offset = (size_t)sequence * cfg->context * cfg->dim;
+            LayerCache view = tensor_attention_view(cache, cfg, sequence);
+            if (cfg->rotary) {
+                rope_apply(model, cache->q + offset, cfg->dim, 0);
+                rope_apply(model, cache->k + offset, cfg->dim, 0);
+            }
+            attention_forward(cfg, &view);
+        }
+        linear_forward(rows, cfg->dim, cfg->dim, cache->att,
+                       layer->wo.w, batch->work.tmp_td);
+        for (i = 0; i < (int)td; ++i) {
+            float mask = dropout > 0.0f ? cache->attention_mask[i] : 1.0f;
+            cache->attention_mask[i] = mask;
+            cache->r1[i] = cache->x[i] + batch->work.tmp_td[i] * mask;
+        }
+
+        rmsnorm_forward(cache->r1, layer->norm2.w, cache->n2, rows,
+                        cfg->dim);
+        linear_forward(rows, cfg->dim, cfg->ff, cache->n2,
+                       layer->w1.w, cache->fpre);
+        gelu_forward_array(cache->fpre, cache->fact, cache->gelu_tanh,
+                           (int)tf);
+        linear_forward(rows, cfg->ff, cfg->dim, cache->fact,
+                       layer->w2.w, batch->work.tmp_td);
+        for (i = 0; i < (int)td; ++i) {
+            float mask = dropout > 0.0f ? cache->feed_forward_mask[i] : 1.0f;
+            cache->feed_forward_mask[i] = mask;
+            output[i] = cache->r1[i] + batch->work.tmp_td[i] * mask;
+        }
+    }
+
+    rmsnorm_forward(batch->final_x, model->final_norm.w, batch->final_n,
+                    rows, cfg->dim);
+    linear_forward(rows, cfg->dim, cfg->vocab, batch->final_n,
+                   model->token_embedding.w, batch->probs);
+    for (row = 0; row < rows; ++row) {
+        softmax_prefix_inplace(batch->probs + (size_t)row * cfg->vocab,
+                               cfg->vocab);
+    }
+    for (i = 0; i < batch->count; ++i) {
+        float loss_weight = 0.0f;
+        float loss = 0.0f;
+        int time;
+        for (time = 0; time < cfg->context; ++time) {
+            loss_weight += batch->loss_masks[(size_t)i * cfg->context + time];
+        }
+        if (loss_weight == 0.0f) loss_weight = 1.0f;
+        for (time = 0; time < cfg->context; ++time) {
+            size_t index = (size_t)i * cfg->context + time;
+            float weight = batch->loss_masks[index];
+            if (weight != 0.0f) {
+                float probability = batch->probs[
+                    index * cfg->vocab + batch->targets[index]];
+                if (probability < 1.0e-20f) probability = 1.0e-20f;
+                loss -= weight * logf(probability) / loss_weight;
+            }
+        }
+        batch->losses[i] = loss;
+    }
+}
+
+static void packed_tensor_backward(Model *model, PackedTensorBatch *batch)
+{
+    const Config *cfg = &model->cfg;
+    int rows = batch->count * cfg->context;
+    size_t td = (size_t)rows * cfg->dim;
+    size_t tf = (size_t)rows * cfg->ff;
+    size_t sequence_td = (size_t)cfg->context * cfg->dim;
+    size_t sequence_htt = (size_t)cfg->heads * cfg->context * cfg->context;
+    Work *work = &batch->work;
+    float *dy = work->dy;
+    float *dx = work->dx;
+    int sequence;
+    int row;
+    int token;
+    int i;
+    int layer_index;
+
+    for (sequence = 0; sequence < batch->count; ++sequence) {
+        float loss_weight = 0.0f;
+        int time;
+        for (time = 0; time < cfg->context; ++time) {
+            loss_weight += batch->loss_masks[
+                (size_t)sequence * cfg->context + time];
+        }
+        if (loss_weight == 0.0f) loss_weight = 1.0f;
+        for (time = 0; time < cfg->context; ++time) {
+            size_t index = (size_t)sequence * cfg->context + time;
+            float weight = batch->loss_masks[index];
+            float *probability = batch->probs + index * cfg->vocab;
+            for (token = 0; token < cfg->vocab; ++token) {
+                probability[token] = weight == 0.0f
+                    ? 0.0f
+                    : (probability[token] -
+                       (token == batch->targets[index] ? 1.0f : 0.0f)) *
+                          weight / loss_weight;
+            }
+        }
+    }
+
+    memset(dy, 0, td * sizeof(float));
+    linear_backward(rows, cfg->dim, cfg->vocab, batch->final_n,
+                    model->token_embedding.w, batch->probs,
+                    model->token_embedding.g, dy);
+    memset(dx, 0, td * sizeof(float));
+    rmsnorm_backward(batch->final_x, model->final_norm.w, dy, dx,
+                     model->final_norm.g, rows, cfg->dim);
+    {
+        float *swap = dy;
+        dy = dx;
+        dx = swap;
+    }
+
+    for (layer_index = cfg->layers - 1; layer_index >= 0; --layer_index) {
+        TransformerLayer *layer = &model->layer[layer_index];
+        LayerCache *cache = &batch->cache[layer_index];
+
+        memcpy(work->dr1, dy, td * sizeof(float));
+        memset(work->dact, 0, tf * sizeof(float));
+        for (i = 0; i < (int)td; ++i) {
+            work->tmp_td[i] = dy[i] * cache->feed_forward_mask[i];
+        }
+        linear_backward(rows, cfg->ff, cfg->dim, cache->fact,
+                        layer->w2.w, work->tmp_td, layer->w2.g,
+                        work->dact);
+        for (i = 0; i < (int)tf; ++i) {
+            work->dfpre[i] = work->dact[i] *
+                gelu_derivative_from_tanh(cache->fpre[i],
+                                          cache->gelu_tanh[i]);
+        }
+        memset(work->dn2, 0, td * sizeof(float));
+        linear_backward(rows, cfg->dim, cfg->ff, cache->n2,
+                        layer->w1.w, work->dfpre, layer->w1.g,
+                        work->dn2);
+        rmsnorm_backward(cache->r1, layer->norm2.w, work->dn2,
+                         work->dr1, layer->norm2.g, rows, cfg->dim);
+
+        memcpy(dx, work->dr1, td * sizeof(float));
+        memset(work->datt, 0, td * sizeof(float));
+        for (i = 0; i < (int)td; ++i) {
+            work->tmp_td[i] = work->dr1[i] * cache->attention_mask[i];
+        }
+        linear_backward(rows, cfg->dim, cfg->dim, cache->att,
+                        layer->wo.w, work->tmp_td, layer->wo.g,
+                        work->datt);
+        memset(work->dq, 0, td * sizeof(float));
+        memset(work->dk, 0, td * sizeof(float));
+        memset(work->dv, 0, td * sizeof(float));
+        for (sequence = 0; sequence < batch->count; ++sequence) {
+            size_t offset = (size_t)sequence * sequence_td;
+            LayerCache view = tensor_attention_view(cache, cfg, sequence);
+            attention_backward(cfg, &view, work->datt + offset,
+                               work->dq + offset, work->dk + offset,
+                               work->dv + offset,
+                               work->attention_matrix +
+                                   (size_t)sequence * sequence_htt);
+            if (cfg->rotary) {
+                rope_apply(model, work->dq + offset, cfg->dim, 1);
+                rope_apply(model, work->dk + offset, cfg->dim, 1);
+            }
+        }
+#if defined(USE_FUSED_QKV_BACKWARD)
+        for (row = 0; row < rows; ++row) {
+            float *destination = work->dqkv +
+                                 (size_t)row * 3U * cfg->dim;
+            memcpy(destination, work->dq + (size_t)row * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(destination + cfg->dim,
+                   work->dk + (size_t)row * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+            memcpy(destination + 2 * cfg->dim,
+                   work->dv + (size_t)row * cfg->dim,
+                   (size_t)cfg->dim * sizeof(float));
+        }
+        memset(work->dn1, 0, td * sizeof(float));
+        linear_backward(rows, cfg->dim, 3 * cfg->dim, cache->n1,
+                        layer->wq.w, work->dqkv, layer->wq.g, work->dn1);
+#else
+        memset(work->dn1, 0, td * sizeof(float));
+        linear_backward(rows, cfg->dim, cfg->dim, cache->n1,
+                        layer->wq.w, work->dq, layer->wq.g, work->dn1);
+        linear_backward(rows, cfg->dim, cfg->dim, cache->n1,
+                        layer->wk.w, work->dk, layer->wk.g, work->dn1);
+        linear_backward(rows, cfg->dim, cfg->dim, cache->n1,
+                        layer->wv.w, work->dv, layer->wv.g, work->dn1);
+#endif
+        rmsnorm_backward(cache->x, layer->norm1.w, work->dn1, dx,
+                         layer->norm1.g, rows, cfg->dim);
+        {
+            float *swap = dy;
+            dy = dx;
+            dx = swap;
+        }
+    }
+
+    for (row = 0; row < rows; ++row) {
+        int input_token = batch->tokens[row];
+        int time = row % cfg->context;
+        for (i = 0; i < cfg->dim; ++i) {
+            float gradient = dy[(size_t)row * cfg->dim + i];
+            model->token_embedding.g[(size_t)input_token * cfg->dim + i] +=
+                gradient;
+            if (!cfg->rotary) {
+                model->position_embedding.g[(size_t)time * cfg->dim + i] +=
+                    gradient;
+            }
+        }
+    }
+}
+#endif
 
 static float optimizer_prepare(const Model *model, uint64_t step,
                                float learning_rate, float clip_limit,
@@ -2924,9 +3349,12 @@ static void packed_checkpoint_save(const char *path, const Model *model,
     state.packed_completed_steps = completed_steps;
     state.packed_best_update = best_update;
     state.packed_best_validation = best_validation;
-    state.reserved = options->parallel_batch > 1
-                         ? (uint32_t)options->parallel_batch
-                         : 0U;
+    state.reserved = options->tensor_batch > 1
+                         ? PACKED_TENSOR_BATCH_FLAG |
+                               (uint32_t)options->tensor_batch
+                         : (options->parallel_batch > 1
+                                ? (uint32_t)options->parallel_batch
+                                : 0U);
     memcpy(state.run_contract_sha256, options->run_contract_sha256,
            sizeof(state.run_contract_sha256));
     checkpoint_save(path, model, update, rng, completed_steps, 0U, 0U,
@@ -2949,6 +3377,7 @@ typedef struct {
 
 struct PackedParallelBatch {
     int count;
+    int optimizer_only;
     Model **models;
     Model *private_models;
     float *masks;
@@ -3136,6 +3565,38 @@ static void packed_parallel_create(PackedParallelBatch *parallel,
     }
 }
 
+#if defined(USE_TENSOR_BATCH)
+static void packed_parallel_create_optimizer_pool(
+    PackedParallelBatch *parallel, Model *primary, int count)
+{
+    int worker;
+    memset(parallel, 0, sizeof(*parallel));
+    parallel->count = count;
+    parallel->optimizer_only = 1;
+    parallel->models = zero_alloc((size_t)count, sizeof(*parallel->models));
+    parallel->threads = zero_alloc((size_t)(count - 1),
+                                   sizeof(*parallel->threads));
+    parallel->tasks = zero_alloc((size_t)count, sizeof(*parallel->tasks));
+    if (pthread_mutex_init(&parallel->mutex, NULL) != 0 ||
+        pthread_cond_init(&parallel->start_condition, NULL) != 0 ||
+        pthread_cond_init(&parallel->done_condition, NULL) != 0) {
+        fail("could not initialize the tensor optimizer worker pool");
+    }
+    for (worker = 0; worker < count; ++worker) {
+        parallel->models[worker] = primary;
+        parallel->tasks[worker].parallel = parallel;
+        parallel->tasks[worker].worker = worker;
+    }
+    for (worker = 1; worker < count; ++worker) {
+        if (pthread_create(&parallel->threads[worker - 1], NULL,
+                           packed_worker_loop,
+                           &parallel->tasks[worker]) != 0) {
+            fail("could not create a tensor optimizer worker");
+        }
+    }
+}
+#endif
+
 static void packed_parallel_destroy(PackedParallelBatch *parallel)
 {
     int worker;
@@ -3154,8 +3615,10 @@ static void packed_parallel_destroy(PackedParallelBatch *parallel)
             fail("could not join a persistent parallel batch worker");
         }
     }
-    for (worker = 1; worker < parallel->count; ++worker) {
-        model_worker_destroy(parallel->models[worker]);
+    if (!parallel->optimizer_only) {
+        for (worker = 1; worker < parallel->count; ++worker) {
+            model_worker_destroy(parallel->models[worker]);
+        }
     }
     if (pthread_cond_destroy(&parallel->done_condition) != 0 ||
         pthread_cond_destroy(&parallel->start_condition) != 0 ||
@@ -3271,6 +3734,48 @@ static void packed_parallel_train_update(
     packed_parallel_merge_gradients(parallel);
 }
 
+#if defined(USE_TENSOR_BATCH)
+static void packed_tensor_train_update(
+    PackedTensorBatch *tensor, Model *model, Rng *rng,
+    const PackedSet *train, uint64_t first_pack, const Options *options,
+    double *interval_loss, uint64_t *interval_sequences,
+    uint64_t *interval_active_targets)
+{
+    const Config *cfg = &model->cfg;
+    int sequence;
+    model_zero_grad(model);
+    for (sequence = 0; sequence < tensor->count; ++sequence) {
+        uint32_t pack = (uint32_t)(first_pack + (uint64_t)sequence);
+        size_t token_start =
+            (size_t)pack * ((size_t)train->context + 1U);
+        size_t row_start = (size_t)sequence * cfg->context;
+        float *mask = tensor->loss_masks + row_start;
+        memcpy(tensor->tokens + row_start, train->tokens + token_start,
+               (size_t)cfg->context * sizeof(*tensor->tokens));
+        memcpy(tensor->targets + row_start,
+               train->tokens + token_start + 1,
+               (size_t)cfg->context * sizeof(*tensor->targets));
+        tensor->active_targets[sequence] = packed_mask(
+            train, pack, mask, options->claim_answer_weight,
+            options->cloze_answer_weight,
+            options->retrieval_answer_weight);
+    }
+    if (options->dropout > 0.0f) {
+        packed_tensor_prepare_dropout(tensor, cfg, options->dropout, rng);
+    }
+    packed_tensor_forward(model, tensor, options->dropout);
+    packed_tensor_backward(model, tensor);
+    for (sequence = 0; sequence < tensor->count; ++sequence) {
+        uint64_t active = tensor->active_targets[sequence];
+        if (active != 0U) {
+            *interval_loss += tensor->losses[sequence];
+            ++*interval_sequences;
+            *interval_active_targets += active;
+        }
+    }
+}
+#endif
+
 static void train_packed(Model *model, Rng *rng, uint64_t *update,
                          const PackedSet *train, const PackedSet *validation,
                          const Options *options,
@@ -3278,6 +3783,9 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
 {
     float *mask = zero_alloc((size_t)train->context, sizeof(*mask));
     PackedParallelBatch parallel = {0};
+#if defined(USE_TENSOR_BATCH)
+    PackedTensorBatch tensor = {0};
+#endif
     uint64_t required_packs = (uint64_t)options->steps *
                               (uint64_t)options->batch;
     uint64_t completed_steps =
@@ -3304,7 +3812,20 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
     if (completed_steps != *update) {
         fail("packed checkpoint cursor does not match the optimizer update");
     }
-    if (options->parallel_batch > 1) {
+    if (options->tensor_batch > 1) {
+#if defined(USE_TENSOR_BATCH)
+        packed_tensor_create(&tensor, &model->cfg, options->tensor_batch);
+        packed_parallel_create_optimizer_pool(
+            &parallel, model, options->tensor_batch);
+        printf("packed tensor-batch=%d contiguous-rows=%d "
+               "attention-domains=%d private-caches=0 optimizer-workers=%d\n",
+               options->tensor_batch,
+               options->tensor_batch * model->cfg.context,
+               options->tensor_batch, options->tensor_batch);
+#else
+        fail("this binary was not built with tensor batching");
+#endif
+    } else if (options->parallel_batch > 1) {
         packed_parallel_create(&parallel, model, options->parallel_batch);
         printf("packed parallel-batch=%d private-caches=%d\n",
                options->parallel_batch, options->parallel_batch - 1);
@@ -3325,7 +3846,15 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
         int batch;
         float gradient_norm;
         float current_lr = options->learning_rate;
-        if (options->parallel_batch > 1) {
+        if (options->tensor_batch > 1) {
+#if defined(USE_TENSOR_BATCH)
+            packed_tensor_train_update(
+                &tensor, model, rng, train,
+                completed_steps * (uint64_t)options->batch, options,
+                &interval_loss, &interval_sequences,
+                &interval_active_targets);
+#endif
+        } else if (options->parallel_batch > 1) {
             packed_parallel_train_update(
                 &parallel, rng, train,
                 completed_steps * (uint64_t)options->batch, options,
@@ -3377,7 +3906,7 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
                 current_lr *= 0.5f * (1.0f + cosf(pi * progress));
             }
         }
-        if (options->parallel_batch > 1) {
+        if (options->parallel_batch > 1 || options->tensor_batch > 1) {
             gradient_norm = packed_parallel_optimizer_update(
                 &parallel, *update + 1U, current_lr,
                 options->weight_decay, options->clip,
@@ -3472,7 +4001,12 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
         printf("interrupted after update %llu\n",
                (unsigned long long)*update);
     }
-    if (options->parallel_batch > 1) packed_parallel_destroy(&parallel);
+    if (parallel.count > 0) packed_parallel_destroy(&parallel);
+#if defined(USE_TENSOR_BATCH)
+    if (options->tensor_batch > 1) {
+        packed_tensor_destroy(&tensor, &model->cfg);
+    }
+#endif
     free(mask);
 }
 
@@ -5021,6 +5555,7 @@ static void print_usage(const char *program)
     printf("  --steps N            additional optimizer updates (default: 1000)\n");
     printf("  --batch N            sequences accumulated per update (default: 1)\n");
     printf("  --parallel-batch N   packed sequences run at once; 1 keeps exact serial math\n");
+    printf("  --tensor-batch N     packed sequences in one contiguous tensor; Linux/OpenBLAS experiment\n");
     printf("  --lr X               peak learning rate (default: 0.0003)\n");
     printf("  --weight-decay X     AdamW decay (default: 0.01)\n");
     printf("  --clip X             global gradient norm limit (default: 1)\n");
@@ -5447,6 +5982,7 @@ int main(int argc, char **argv)
     options.steps = 1000;
     options.batch = 1;
     options.parallel_batch = 1;
+    options.tensor_batch = 1;
     options.learning_rate = 3.0e-4f;
     options.weight_decay = 0.01f;
     options.clip = 1.0f;
@@ -5570,6 +6106,10 @@ int main(int argc, char **argv)
                    i + 1 < argc) {
             options.parallel_batch =
                 (int)parse_long(argv[++i], "--parallel-batch");
+        } else if (strcmp(argv[i], "--tensor-batch") == 0 &&
+                   i + 1 < argc) {
+            options.tensor_batch =
+                (int)parse_long(argv[++i], "--tensor-batch");
         } else if (strcmp(argv[i], "--lr") == 0 && i + 1 < argc) {
             options.learning_rate = parse_float(argv[++i], "--lr");
         } else if (strcmp(argv[i], "--weight-decay") == 0 && i + 1 < argc) {
@@ -5843,6 +6383,9 @@ int main(int argc, char **argv)
         options.parallel_batch < 1 ||
         options.parallel_batch > options.batch ||
         options.parallel_batch > 32 ||
+        options.tensor_batch < 1 ||
+        options.tensor_batch > options.batch ||
+        options.tensor_batch > 32 ||
         options.learning_rate < 0.0f ||
         options.weight_decay < 0.0f || options.clip < 0.0f ||
         options.warmup < 0 || options.schedule_offset < 0 ||
@@ -5876,6 +6419,20 @@ int main(int argc, char **argv)
     if (options.parallel_batch > 1 && options.packed_train_path == NULL) {
         fail("--parallel-batch greater than one requires --packed-train");
     }
+    if (options.tensor_batch > 1 && options.packed_train_path == NULL) {
+        fail("--tensor-batch greater than one requires --packed-train");
+    }
+    if (options.tensor_batch > 1 && options.tensor_batch != options.batch) {
+        fail("--tensor-batch must equal --batch in this experiment");
+    }
+    if (options.tensor_batch > 1 && options.parallel_batch > 1) {
+        fail("--tensor-batch and --parallel-batch are separate experiments");
+    }
+#if !defined(USE_TENSOR_BATCH)
+    if (options.tensor_batch > 1) {
+        fail("this binary was not built with tensor batching");
+    }
+#endif
     if (options.transaction_mode != TRANSACTION_DISABLED &&
         (options.teacher_count == 0 || text_count == 0 ||
          options.transaction_log_path == NULL)) {
@@ -6052,9 +6609,12 @@ int main(int argc, char **argv)
                 if (checkpoint_resume_state.packed_batch !=
                         (uint32_t)options.batch ||
                     checkpoint_resume_state.reserved !=
-                        (options.parallel_batch > 1
-                             ? (uint32_t)options.parallel_batch
-                             : 0U) ||
+                        (options.tensor_batch > 1
+                             ? PACKED_TENSOR_BATCH_FLAG |
+                                   (uint32_t)options.tensor_batch
+                             : (options.parallel_batch > 1
+                                    ? (uint32_t)options.parallel_batch
+                                    : 0U)) ||
                     checkpoint_resume_state.packed_total_steps !=
                         (uint64_t)options.steps ||
                     checkpoint_resume_state.packed_completed_steps !=
