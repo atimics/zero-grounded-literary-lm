@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { verifyFrozenGitFile } from "./frozen_source.mjs";
 
 const digest = file => crypto.createHash("sha256")
   .update(fs.readFileSync(file)).digest("hex");
@@ -10,14 +11,26 @@ const contract = JSON.parse(fs.readFileSync(
   "benchmarks/zero5-c33-parallel-v1/contract.json"));
 const parent = JSON.parse(fs.readFileSync(contract.parent.contract));
 const imported = JSON.parse(fs.readFileSync(contract.input.import_manifest));
+const statusPath = "benchmarks/zero5-c33-parallel-v1/status.json";
+const completedStatus = fs.existsSync(statusPath)
+  ? JSON.parse(fs.readFileSync(statusPath))
+  : null;
+const frozenBytes = (file, expectedSha256) =>
+  completedStatus?.status === "complete"
+  ? verifyFrozenGitFile(completedStatus.git_commit, file, expectedSha256)
+  : fs.readFileSync(file);
+const trainerBytes = frozenBytes(contract.implementation.trainer,
+  contract.implementation.trainer_sha256);
+const runnerBytes = frozenBytes(contract.implementation.runner,
+  contract.implementation.runner_sha256);
 
 assert.equal(contract.schema, "zero.c33_parallel_replay.v1");
 assert.equal(contract.status, "preregistered-unrun");
 assert.equal(digest(contract.parent.contract), contract.parent.contract_sha256);
 assert.equal(parent.experiment, "zero5-c33-v1");
-assert.equal(digest(contract.implementation.trainer),
+assert.equal(crypto.createHash("sha256").update(trainerBytes).digest("hex"),
   contract.implementation.trainer_sha256);
-assert.equal(digest(contract.implementation.runner),
+assert.equal(crypto.createHash("sha256").update(runnerBytes).digest("hex"),
   contract.implementation.runner_sha256);
 assert.equal(digest(contract.input.import_manifest),
   contract.input.import_manifest_sha256);
@@ -47,7 +60,11 @@ assert.equal(contract.execution.maximum_total_ec2_usd, 1.2);
 assert(contract.execution.maximum_instance_seconds *
   contract.execution.on_demand_usd_per_hour / 3600 <= 1.2);
 for (const name of ["stage_script", "launcher", "user_data"]) {
-  assert.equal(digest(contract.execution[name]),
+  const bytes = completedStatus?.status === "complete"
+    ? verifyFrozenGitFile(completedStatus.git_commit,
+      contract.execution[name], contract.execution[`${name}_sha256`])
+    : fs.readFileSync(contract.execution[name]);
+  assert.equal(crypto.createHash("sha256").update(bytes).digest("hex"),
     contract.execution[`${name}_sha256`]);
 }
 assert.equal(contract.execution_amendment.completed_training_updates, 0);
@@ -57,12 +74,9 @@ assert.equal(contract.execution_amendment.scientific_change, false);
 assert(contract.execution_amendment.failed_attempt_ec2_usd <
   contract.execution.maximum_total_ec2_usd);
 assert.equal(contract.evaluation.test_metrics_opened, false);
-assert.match(fs.readFileSync(contract.implementation.trainer, "utf8"),
-  /--parallel-batch/);
-assert.match(fs.readFileSync(contract.implementation.runner, "utf8"),
-  /deterministic_merge_order/);
-assert.match(fs.readFileSync(contract.implementation.runner, "utf8"),
-  /--max-run-steps/);
+assert.match(trainerBytes.toString("utf8"), /--parallel-batch/);
+assert.match(runnerBytes.toString("utf8"), /deterministic_merge_order/);
+assert.match(runnerBytes.toString("utf8"), /--max-run-steps/);
 if (contract.authorized) {
   assert.equal(contract.authorization.status, "authorized");
   assert.match(contract.authorization.approval_id, /^[a-z0-9-]+$/);
