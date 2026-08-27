@@ -1,0 +1,61 @@
+{
+  "schema": "zero.aws_vector_math_comparison.v1",
+  "status": "complete",
+  "contract_sha256": "13d759069a40595d1d9d37d6fc507ced999568d8dcccda09393cea3f38b4eeb8",
+  "artifacts": {
+    "run_id": "zero5-vector-math-20260827-a157393",
+    "instance_id": "i-0248641a48f46b74d",
+    "source_commit": "3aab305be314b2d62b5087a2e1bb89372bf2b489",
+    "source_archive_sha256": "8a37d51b8e67efe73c806a898539f33000a68744b6899278698b277985f7d03c",
+    "asset_archive_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+    "launch_sha256": "3a5f2542d17a5843c08630832b7362142425577612285c8ba040251ffdd90945",
+    "status_sha256": "c75fad39c2e75dbd9a67128cccd2a49799f71a19217cf2e9f8939b651b09dc76",
+    "result_sha256": "ca778f2ff3709b2d58b0bc7e055b2da276bd86b92fce7cabf0a304c8bb1830c1"
+  },
+  "performance": {
+    "baseline_tokens_per_second": 5253,
+    "vector_tanh_tokens_per_second": 6057,
+    "vector_tanh_gain_fraction": 0.15305539691604797,
+    "vector_exp_tokens_per_second": 5718.5,
+    "vector_exp_gain_fraction": 0.08861602893584619,
+    "vector_both_tokens_per_second": 6731,
+    "vector_both_gain_fraction": 0.2813630306491528,
+    "fixed_work_time_reduction_fraction": 0.21958104293567082,
+    "selected_variant": "vector-both"
+  },
+  "correctness": {
+    "reported_metrics_within_tolerance": true,
+    "deterministic_checkpoints_per_variant": true,
+    "vector_checkpoints_match_baseline": false,
+    "meaning": "The vector functions preserve reported training behavior but change floating-point rounding, so this is not a bit-identical scientific replay."
+  },
+  "gates": {
+    "speed_gain_at_least_fifteen_percent": true,
+    "reported_metrics_match": true,
+    "deterministic_checkpoints": true,
+    "budget_passed": true,
+    "instance_terminated": true,
+    "sealed_test_stayed_closed": true
+  },
+  "cost": {
+    "elapsed_instance_seconds": 224,
+    "estimated_ec2_usd": 0.042311111111,
+    "approved_maximum_ec2_usd": 0.07
+  },
+  "decision": {
+    "promotion_candidate": true,
+    "production_default_changed": false,
+    "reason": "The combined vector path passed all admission controls and delivered a repeatable 28.14% throughput gain.",
+    "required_before_default": [
+      "bind the vector-math mode into checkpoint or run identity so resume cannot silently change math paths",
+      "run a longer validation replay before using it for a scientific lineage result"
+    ],
+    "next_kernel_target": "blocked causal attention"
+  },
+  "claim_boundary": {
+    "performance_result_only": true,
+    "scientific_replication": false,
+    "test_metrics_opened": false,
+    "private_assets_published": false
+  }
+}

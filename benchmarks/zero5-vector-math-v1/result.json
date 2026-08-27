@@ -1,0 +1,153 @@
+{
+  "schema": "zero.vector_math_benchmark.v1",
+  "recorded_at": "2026-08-27T23:08:32.800Z",
+  "scientific_status": "performance-only; vector math may change float rounding",
+  "platform": {
+    "os": "linux",
+    "architecture": "x64",
+    "release": "6.17.0-1019-aws",
+    "cpu": "Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz"
+  },
+  "workload": {
+    "source": "C3.3 frozen training packs",
+    "updates": 50,
+    "repetitions": 2,
+    "sequences_per_update": 4,
+    "context_tokens": 512,
+    "parallel_workers": 4,
+    "blas_threads_per_worker": 1,
+    "dynamic_threading": false
+  },
+  "variants": {
+    "baseline": {
+      "runs": [
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 5249,
+          "active_targets_per_second": 4785,
+          "elapsed_seconds": 21.05,
+          "checkpoint_sha256": "957bfaecdbbe704dc09eecdab18cade926bfb027ea054ad187ece5a394b25b2f"
+        },
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 5257,
+          "active_targets_per_second": 4792,
+          "elapsed_seconds": 21.02,
+          "checkpoint_sha256": "957bfaecdbbe704dc09eecdab18cade926bfb027ea054ad187ece5a394b25b2f"
+        }
+      ],
+      "mean_tokens_per_second": 5253,
+      "throughput_change_from_baseline": 0,
+      "checkpoint_matches_baseline": true
+    },
+    "vector-tanh": {
+      "runs": [
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 6086,
+          "active_targets_per_second": 5548,
+          "elapsed_seconds": 17.97,
+          "checkpoint_sha256": "c2d734f412e61f32455c4fa9237589d74b989be8aac6cb2b99ddc225963240b0"
+        },
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 6028,
+          "active_targets_per_second": 5495,
+          "elapsed_seconds": 18.14,
+          "checkpoint_sha256": "c2d734f412e61f32455c4fa9237589d74b989be8aac6cb2b99ddc225963240b0"
+        }
+      ],
+      "mean_tokens_per_second": 6057,
+      "throughput_change_from_baseline": 0.15305539691604797,
+      "checkpoint_matches_baseline": false
+    },
+    "vector-exp": {
+      "runs": [
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 5720,
+          "active_targets_per_second": 5215,
+          "elapsed_seconds": 19.22,
+          "checkpoint_sha256": "e8e26a2966ac30f2185f7ba7cff90d3c4726267a51a5b8a39f97ca2a291362ba"
+        },
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 5717,
+          "active_targets_per_second": 5212,
+          "elapsed_seconds": 19.23,
+          "checkpoint_sha256": "e8e26a2966ac30f2185f7ba7cff90d3c4726267a51a5b8a39f97ca2a291362ba"
+        }
+      ],
+      "mean_tokens_per_second": 5718.5,
+      "throughput_change_from_baseline": 0.08861602893584619,
+      "checkpoint_matches_baseline": false
+    },
+    "vector-both": {
+      "runs": [
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 6719,
+          "active_targets_per_second": 6125,
+          "elapsed_seconds": 16.13,
+          "checkpoint_sha256": "4f188a3ec6566fbfa78f32ade198342a070541cd1825a70250fa1e11d6735b3c"
+        },
+        {
+          "update": 50,
+          "train_loss": 2.5108,
+          "validation_loss": 2.1995,
+          "gradient_norm": 1.179,
+          "learning_rate": 0.00005,
+          "tokens_per_second": 6743,
+          "active_targets_per_second": 6147,
+          "elapsed_seconds": 16.08,
+          "checkpoint_sha256": "4f188a3ec6566fbfa78f32ade198342a070541cd1825a70250fa1e11d6735b3c"
+        }
+      ],
+      "mean_tokens_per_second": 6731,
+      "throughput_change_from_baseline": 0.2813630306491528,
+      "checkpoint_matches_baseline": false
+    }
+  },
+  "selected": {
+    "variant": "vector-both",
+    "mean_tokens_per_second": 6731,
+    "throughput_change_from_baseline": 0.2813630306491528
+  },
+  "correctness": {
+    "all_metrics_within_tolerance": true,
+    "deterministic_checkpoints_per_variant": true,
+    "tolerance": {
+      "train_loss": 0.0001,
+      "validation_loss": 0.0001,
+      "gradient_norm": 0.005
+    }
+  }
+}

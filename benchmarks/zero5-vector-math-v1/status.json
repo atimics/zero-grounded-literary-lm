@@ -1,0 +1,14 @@
+{
+  "schema": "zero.aws_vector_math_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-vector-math-20260827-a157393",
+  "instance_id": "i-0248641a48f46b74d",
+  "git_commit": "3aab305be314b2d62b5087a2e1bb89372bf2b489",
+  "approval_id": "zero5-vector-math-2026-08-27-v1",
+  "exit_code": 0,
+  "elapsed_instance_seconds": 224,
+  "estimated_ec2_usd": 0.042311111111,
+  "result_key": "experiments/zero5-vector-math-v1/zero5-vector-math-20260827-a157393/result.json",
+  "result_sha256": "ca778f2ff3709b2d58b0bc7e055b2da276bd86b92fce7cabf0a304c8bb1830c1"
+}
