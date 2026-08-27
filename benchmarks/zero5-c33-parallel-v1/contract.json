@@ -1,0 +1,125 @@
+{
+  "schema": "zero.c33_parallel_replay.v1",
+  "experiment": "zero5-c33-parallel-v1",
+  "status": "preregistered-unrun",
+  "authorized": false,
+  "purpose": "Measure the speed and cost of the optimized C trainer on the frozen C3.3 workload without treating changed floating-point accumulation as a new model result.",
+  "claim_boundary": {
+    "may_claim": "The optimized C executable completed the same ordered seed-0 C3.3 workload at the measured speed, cost, and validation loss.",
+    "may_not_claim": [
+      "an independent C3.3 replication",
+      "a curriculum, reasoning, intelligence, or quality improvement",
+      "numerical identity with serial C3.3",
+      "permission to inspect the sealed test set",
+      "permission to publish the private data or checkpoint"
+    ]
+  },
+  "parent": {
+    "experiment": "zero5-c33-v1",
+    "contract": "benchmarks/zero5-c33-v1/contract.json",
+    "contract_sha256": "f06365554a16ec0557503fe35ff6e074a0720312dd4295e3d54e1a7df6fa73d1",
+    "comparison_policy": "Attach the immutable parent result only after it completes. Compare throughput, cost, and validation closeness; do not reuse its scientific decision."
+  },
+  "implementation": {
+    "language": "C11",
+    "orchestration": "Node.js and shell",
+    "trainer": "zero5_c32_lm.c",
+    "trainer_sha256": "c7c2b822dee154689c4e92b73d577831cc03a6bebadebd19952547445a3c2e81",
+    "runner": "scripts/run_zero5_c33_parallel.mjs",
+    "runner_sha256": "f36bb79d95f0c4eda5320937db7036f9a2c44a4d11ca158f771fffdbfb563e2c",
+    "binary": "zero5_c32_lm_fast",
+    "optimizations": [
+      "cached GELU nonlinear values",
+      "O3, native CPU tuning, and link-time optimization",
+      "private per-sequence model caches and gradients",
+      "fixed-order deterministic gradient reduction"
+    ],
+    "python": false,
+    "pytorch": false
+  },
+  "input": {
+    "import_manifest": "benchmarks/zero5-c33-v1/import.json",
+    "import_manifest_sha256": "4c6a92edcb1868b2a98f4390a898be66fd386c0a45dd4e0dbaf63ac03d68db58",
+    "release_id": "braid-corpus-three-repair-zero5-512-v0.1.0-4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d",
+    "train_packs_sha256": "74698853c019ccf38865d74931c44e8f1f436ee0567eee194979cbcbcdeb4ed8",
+    "validation_packs_sha256": "4fedd425e3d69608c6f4eaa7002474a4c2cfdf845c708c77b2d15ec585566cb6",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "dataset_digest": "4412223f47c07a206ad2703c02ed8bcfd42d27561a287836ed26e9cacccf142d",
+    "test_policy": "The test hash may be checked, but no test record or test metric may be opened."
+  },
+  "initialization": {
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source": "frozen C2 best checkpoint",
+    "optimizer": "fresh AdamW state"
+  },
+  "training": {
+    "seed": 0,
+    "updates": 9442,
+    "batch_sequences": 4,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 16643752,
+    "padding_targets": 2693464,
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 300,
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "answer_weights": {
+      "claim": 3.009199423,
+      "cloze": 1,
+      "retrieval": 1.941452456
+    }
+  },
+  "calibration": {
+    "updates": 50,
+    "validation_packs": 8,
+    "selection": "highest final reported training tokens per second; ties use fewer parallel workers, then fewer BLAS threads",
+    "candidates": [
+      { "parallel_workers": 4, "blas_threads": 1 },
+      { "parallel_workers": 4, "blas_threads": 2 },
+      { "parallel_workers": 2, "blas_threads": 4 }
+    ]
+  },
+  "evaluation": {
+    "validation_packs": 128,
+    "measurements": [
+      "training wall time",
+      "aggregate compute-token throughput",
+      "final interval throughput",
+      "best and final packed-validation loss",
+      "EC2 cost"
+    ],
+    "quality_closeness_gate": "After the parent result is immutable, best validation loss must be within 0.03 nats/token of the parent best checkpoint.",
+    "speed_gate": "Aggregate training throughput must be at least 2x the parent AWS training throughput.",
+    "test_metrics_opened": false
+  },
+  "execution": {
+    "venue": "aws-ec2",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "on_demand_usd_per_hour": 0.68,
+    "parallel_workers": 4,
+    "candidate_blas_threads": [1, 2, 4],
+    "dynamic_threading": false,
+    "checkpoint_every_updates": 250,
+    "stage_script": "scripts/aws/zero5-c33-parallel-stage.sh",
+    "stage_script_sha256": "d89803a7159772ad5a4bb12a15c1abf95e62466b77065b321e2c4121b93d8c8f",
+    "launcher": "scripts/aws/zero5-c33-parallel-run-instance.sh",
+    "launcher_sha256": "66ec98bcb61c2be7afaad015ad7f63023a2d2cd8fc167d54dd2b6a0dcf0042db",
+    "user_data": "scripts/aws/zero5-c33-parallel-user-data.sh",
+    "user_data_sha256": "d0f24c3aeaf24fbbbd941dd931f201a2b6e8af3076fdc784faedf5b60f85594e",
+    "maximum_instance_seconds": 6352,
+    "maximum_total_ec2_usd": 1.2,
+    "automatic_termination": true,
+    "durable_state_sync": true
+  },
+  "authorization": {
+    "status": "awaiting-explicit-dollar-cap-approval",
+    "approval_id": null,
+    "approved_by": null,
+    "approved_at": null
+  }
+}
