@@ -119,16 +119,35 @@ slower pilot rate projects about 31.2 minutes for the primary exposure, and the
 runner enforces a one-hour hard stop. Authorization
 `zero5-c43-local-2026-08-28-v1` permits exactly one primary execution from the
 frozen C2 checkpoint with the selected `cloze-plus-five-v1` weights. AWS, paid
-compute, promotion, publication, independent retries, and test access remain
-unauthorized. Check the authorized contract with:
+compute, promotion, independent retries, and test access remain unauthorized.
+The original training authorization did not permit publication; a later,
+separate approval permits only the result scope described below. Check the
+authorized contract with:
 
 ```bash
 make zero5-c43-contract-check
 ```
 
-The next step is zero-compute local preflight followed by the single authorized
-primary execution. Scale remains a fallback only; any later paid venue would
-need separate authorization and a cost ceiling.
+The single primary execution is complete. Scale remains a fallback only; any
+later paid venue or independent retry would need separate authorization and a
+cost ceiling.
+
+## Public no-go result
+
+The run completed all 28,707 groups in 1,586.99 seconds with exact accounting
+and zero wraps. It improved combined validation by 13.98% and claim choice by
+18.95 points. It remains a no-go because cloze exact accuracy did not improve
+and retrieval choice reached 53.76%, below the 55% floor.
+
+`result.json` contains the complete frozen-validation metrics, accounting, and
+hashes. `RESULT.md` gives the human-readable decision. Publication approval
+`zero5-c43-result-publication-2026-08-28-v1` does not cover corpus contents,
+checkpoint bytes, raw logs, generations, promotion, retries, or sealed-test
+access. Verify the public result with:
+
+```bash
+make zero5-c43-result-check
+```
 
 ## Local verification
 

@@ -155,13 +155,17 @@ validation views. If every gate passes, a separate authorization is still
 required before opening the sealed test. If any gate fails, the test remains
 closed and C4.3 is recorded as a no-go.
 
-## Remaining freeze
+## Result
 
-Braid supplied the source commit, release ID, immutable artifacts, exact task
-counts, group plan, data report, and rights record in PR #15. ZERO has frozen
-the matching imports, pilot selection, implementation hashes, weights, and
-update count. Authorization `zero5-c43-local-2026-08-28-v1` permits one local
-Apple Silicon primary execution with a one-hour hard stop; the slower observed
-pilot rate projects about 31.2 minutes for the primary exposure. It does not
-permit AWS, paid compute, promotion, publication, an independent retry, or
-sealed-test access. Scale remains a fallback and would need new authorization.
+The authorized local primary completed all 28,707 groups in 1,586.99 seconds.
+Combined validation improved by 13.98%, claim choice improved by 18.95 points,
+and all retention, position, swap, pair-exact, finiteness, and sealed-test gates
+passed. Cloze exact accuracy did not improve, and retrieval choice reached
+53.76% against a 55% floor. C4.3 is therefore a no-go and is not eligible for
+promotion.
+
+Separate publication approval
+`zero5-c43-result-publication-2026-08-28-v1` covers only the result metrics,
+accounting, and hashes. Corpus contents, checkpoint bytes, raw logs,
+generations, promotion, an independent retry, and sealed-test access remain
+unauthorized. Scale remains a fallback and would need new authorization.
