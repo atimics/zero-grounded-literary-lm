@@ -1,0 +1,29 @@
+{
+  "schema": "zero.c43_pilot_variant_result.v1",
+  "experiment": "zero5-c43-v1",
+  "variant": "focused-cloze",
+  "status": "complete",
+  "release_id": "braid-corpus-four-three-zero5-512-fixture-v0.0.0",
+  "primary_import_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+  "data_split": "development",
+  "optimizer_groups": 2600,
+  "answer_weights": {
+    "claim": 2.5,
+    "cloze": 3.5,
+    "retrieval": 1
+  },
+  "metrics": {
+    "baseline": {
+      "claim_choice_accuracy": 0.62
+    },
+    "candidate": {
+      "cloze_exact_accuracy": 0.021,
+      "retrieval_choice_accuracy": 0.56,
+      "claim_choice_accuracy": 0.64
+    }
+  },
+  "frozen_validation_scored": false,
+  "test_metrics_opened": false,
+  "promotion_eligible": false
+}
