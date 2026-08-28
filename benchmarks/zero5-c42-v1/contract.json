@@ -233,7 +233,7 @@
     "dynamic_threading": false,
     "checkpoint_every_updates": 250,
     "stage_script": "scripts/aws/zero5-c42-stage.sh",
-    "stage_script_sha256": "91f515386c0731cd284c66a3ce811651e047ad7159169e5469b23bdda11ad9b8",
+    "stage_script_sha256": "ae33e742bb2d6645a86edf2493b5e6de2505a011f58f4206e23486f3e44f24a4",
     "launcher": "scripts/aws/zero5-c42-run-instance.sh",
     "launcher_sha256": "60276cdfe6266359dc19f6713c59cdbc86c1fb69b24ac4dde86b342b5107b149",
     "user_data": "scripts/aws/zero5-c42-user-data.sh",
