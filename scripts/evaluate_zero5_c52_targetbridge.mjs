@@ -100,8 +100,8 @@ function zeroHeadScore(file) {
 function evaluateGates(candidate, c52, control, auxiliary, thresholds) {
   const retrieval = candidate.choice.retrieval;
   const claim = candidate.choice.claim;
-  const gap = Math.abs(retrieval.position_a_accuracy -
-    retrieval.position_b_accuracy);
+  const gap = Math.abs(retrieval.position_0_accuracy -
+    retrieval.position_1_accuracy);
   const c52Gap = Math.abs(c52.candidate.choice_a.top1_token_accuracy -
     c52.candidate.choice_b.top1_token_accuracy);
   const auxNatsReduction = 1 - auxiliary.candidate.nats_per_event /
@@ -151,8 +151,8 @@ function selfTest() {
   const gate = evaluateGates({ combined_nats_per_token: 2,
     evidence_nats_per_token: 1, atlas_nats_per_token: 2,
     anchor_nats_per_token: 2, choice: { retrieval: { choice_accuracy: .55,
-      pair_exact_accuracy: .54, position_a_accuracy: .56,
-      position_b_accuracy: .54 }, claim: { choice_accuracy: .56 } } },
+      pair_exact_accuracy: .54, position_0_accuracy: .56,
+      position_1_accuracy: .54 }, claim: { choice_accuracy: .56 } } },
   { candidate: { choice_a: { top1_token_accuracy: .7 },
     choice_b: { top1_token_accuracy: .5 } } },
   { retrieval_choice_accuracy: .53, retrieval_pair_exact_accuracy: .52,
