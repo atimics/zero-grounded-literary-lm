@@ -1,8 +1,8 @@
 {
   "schema": "zero.c42_experiment_contract.v1",
   "experiment": "zero5-c42-v1",
-  "status": "evaluator-ready-training-blocked",
-  "authorized": false,
+  "status": "authorized-unrun",
+  "authorized": true,
   "purpose": "Test the marker-free C4.2 frontier curriculum on the unchanged 4.85M-parameter ZERO.5 model initialized from the selected C2 checkpoint.",
   "claim_boundary": {
     "may_claim": "The locked C4.2 train and validation release can be imported without opening test data, the C trainer can execute its exact variable-size optimizer groups without extra token exposures, and the frozen validation evaluator and promotion gates are executable.",
@@ -11,7 +11,7 @@
       "reasoning, intelligence, factual truth, or broad model promotion",
       "permission to open the sealed test set",
       "permission to publish private corpus artifacts or checkpoints",
-      "permission to start paid compute"
+      "permission to exceed the approved $1.50 EC2 ceiling"
     ]
   },
   "upstream": {
@@ -40,6 +40,8 @@
     "importer_sha256": "b9bea97241a7b9510d0a105bd301cd2921b41ff04e2ee8303937d91fe8210b6c",
     "evaluator": "scripts/evaluate_zero5_c42.mjs",
     "evaluator_sha256": "9ee5562a28896881c92ae6d378dbc78be47b1d2ec7a396221aee133070e19aa9",
+    "runner": "scripts/run_zero5_c42.mjs",
+    "runner_sha256": "661d31c7ba6963abd54ef94dd0d666a6a15bebb9980f42c24b49c600e6756f9b",
     "model_and_training": "C11",
     "orchestration": "Node.js",
     "python": false,
@@ -121,7 +123,8 @@
     "positions": "rotary"
   },
   "proposed_primary_training": {
-    "status": "blocked-until-assets-and-budget-approval",
+    "status": "authorized",
+    "seed": 0,
     "updates": 27962,
     "maximum_batch_sequences": 2,
     "parallel_workers": 2,
@@ -140,6 +143,8 @@
     "warmup_updates": 1000,
     "schedule": "cosine over all 27,962 update groups",
     "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_packs": 64,
     "checkpoint_selection": "lowest frozen validation loss at fixed reports; no test access",
     "math_backend": "gnu-libmvec-tanh-exp",
     "math_backend_evidence": {
@@ -186,7 +191,7 @@
       "anchor_validation_sha256": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
     },
     "gate_rationale": "Require a 10% combined validation improvement, at least two choice points, five swap-consistency points, three pair-exact points, and one cloze exact-match point over C2. Evidence, Atlas, and C1 may regress by at most 10%. Absolute choice and position floors prevent a weak C2 baseline from making relative gains sufficient.",
-    "training_gate": "The evaluator prerequisite passes. Training still requires staged private assets and separate explicit EC2 budget approval."
+    "training_gate": "The evaluator prerequisite passes and the user explicitly approved a $1.50 EC2 ceiling. The immutable source and private asset archives must still pass staging and zero-compute preflight before launch."
   },
   "gates": {
     "combined_relative_improvement_minimum": 0.1,
@@ -216,8 +221,40 @@
     "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
     "policy": "hash-only; content absent, not parsed, not tokenized, not packed, and not scored"
   },
-  "prerequisites_for_training_authorization": [
-    "the exact source and private asset archives are staged",
-    "a separate EC2 cost ceiling receives explicit user approval"
+  "execution": {
+    "venue": "aws-ec2",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "instance_count": 1,
+    "purchase_option": "on-demand",
+    "on_demand_usd_per_hour": 0.68,
+    "parallel_workers": 2,
+    "blas_threads": 4,
+    "dynamic_threading": false,
+    "checkpoint_every_updates": 250,
+    "stage_script": "scripts/aws/zero5-c42-stage.sh",
+    "stage_script_sha256": "91f515386c0731cd284c66a3ce811651e047ad7159169e5469b23bdda11ad9b8",
+    "launcher": "scripts/aws/zero5-c42-run-instance.sh",
+    "launcher_sha256": "60276cdfe6266359dc19f6713c59cdbc86c1fb69b24ac4dde86b342b5107b149",
+    "user_data": "scripts/aws/zero5-c42-user-data.sh",
+    "user_data_sha256": "e357a8cbd98636e94af847891c821689ae3a01fc12613cea37a38794d68473e7",
+    "maximum_instance_seconds": 7941,
+    "maximum_total_ec2_usd": 1.5,
+    "single_execution_lock": true,
+    "automatic_termination": true,
+    "durable_state_sync": true
+  },
+  "authorization": {
+    "status": "authorized",
+    "approval_id": "zero5-c42-aws-2026-08-28-v1",
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-28T01:54:36Z",
+    "approved_statement": "Approve the $1.50 ceiling."
+  },
+  "prerequisites_for_training_authorization": [],
+  "prelaunch_requirements": [
+    "stage immutable source and private asset archives",
+    "pass the local asset preflight",
+    "pass the AWS EC2 dry run without starting compute"
   ]
 }
