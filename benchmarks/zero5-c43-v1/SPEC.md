@@ -160,8 +160,8 @@ closed and C4.3 is recorded as a no-go.
 Braid supplied the source commit, release ID, immutable artifacts, exact task
 counts, group plan, data report, and rights record in PR #15. ZERO has frozen
 the matching imports, pilot selection, implementation hashes, weights, and
-update count. The two pilot timings select local Apple Silicon execution with
-a one-hour hard stop; the slower observed rate projects about 31.2 minutes for
-the primary exposure. Primary compute remains blocked until training is
-explicitly authorized. Scale is a fallback, and any paid venue would need an
-explicit cost ceiling.
+update count. Authorization `zero5-c43-local-2026-08-28-v1` permits one local
+Apple Silicon primary execution with a one-hour hard stop; the slower observed
+pilot rate projects about 31.2 minutes for the primary exposure. It does not
+permit AWS, paid compute, promotion, publication, an independent retry, or
+sealed-test access. Scale remains a fallback and would need new authorization.

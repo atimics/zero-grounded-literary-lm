@@ -1,0 +1,24 @@
+{
+  "schema": "zero.c43_training_authorization.v1",
+  "approval_id": "zero5-c43-local-2026-08-28-v1",
+  "approved_by": "ratimics",
+  "approved_at": "2026-08-28T16:06:20Z",
+  "source_contract_sha256": "650fddce48ae240a2e1fe0dc622d82cdd0d5eb599ef0cc51f553ea87e7a491e0",
+  "braid_release_id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+  "approved_statement": "I authorize one ZERO.5 C4.3 primary training run using Braid release `braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36` under ZERO contract `650fddce48ae240a2e1fe0dc622d82cdd0d5eb599ef0cc51f553ea87e7a491e0`.\n\nAuthorization is limited to:\n\n- local Apple Silicon execution\n- a 3,600-second hard ceiling\n- initialization from the frozen C2 checkpoint\n- the selected `cloze-plus-five-v1` weights\n- frozen C4.2 validation after training\n\nThis does not authorize AWS, paid compute, sealed-test access, promotion, publication, or an independent retry.",
+  "scope": {
+    "primary_executions": 1,
+    "venue": "local",
+    "compute_resource": "Apple Silicon CPU",
+    "maximum_execution_seconds": 3600,
+    "initialization_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "answer_weight_variant": "cloze-plus-five-v1",
+    "frozen_validation": "C4.2",
+    "aws_use_authorized": false,
+    "paid_compute_authorized": false,
+    "sealed_test_access_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false,
+    "independent_retry_authorized": false
+  }
+}
