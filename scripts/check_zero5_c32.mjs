@@ -376,6 +376,7 @@ try {
   const tensorBinary = process.env.ZERO5_TENSOR_BINARY ?? null;
   const profileBinary = process.env.ZERO5_PROFILE_BINARY ?? null;
   const vectorBinary = process.env.ZERO5_VECTOR_BINARY ?? null;
+  const linearBinary = process.env.ZERO5_LINEAR_BINARY ?? null;
   const attentionBinary = process.env.ZERO5_ATTENTION_BINARY ?? null;
   let vectorReferenceOutput = null;
   let vectorReferenceCheckpoint = null;
@@ -399,6 +400,9 @@ try {
   assert.match(mechanics,
     /packed sampling sequences=4 compute-token-exposures=2048 active-targets=16 answer-targets=3 claim-answer-targets=1 cloze-answer-targets=1 retrieval-answer-targets=1 padding-targets=2032 wraps=0 claim-answer-weight=3\.00919938 cloze-answer-weight=1 retrieval-answer-weight=1\.9414525/);
   assert.match(mechanics, /math-backend=scalar-elementwise/);
+  const linearBackend = mechanics.match(/linear-backend=([a-z0-9-]+)/);
+  assert.notEqual(linearBackend, null, "linear backend identity is missing");
+  assert.ok(["cblas-sgemm", "portable-scalar"].includes(linearBackend[1]));
   assert.match(mechanics, /attention-backend=(dense-blas|scalar-causal)/);
   assert.ok(fs.existsSync(checkpoint));
   assert.equal(fs.readFileSync(checkpoint).readUInt32LE(8), 6,
@@ -506,6 +510,30 @@ try {
       "--save", vector], 1);
   }
 
+  if (linearBinary !== null) {
+    assert.notEqual(vectorReferenceOutput, null,
+      "AVX-512 mechanics require ZERO5_VECTOR_BINARY as the reference");
+    const linear = path.join(temporary, "avx512-linear.ckpt");
+    const linearRepeat = path.join(temporary, "avx512-linear-repeat.ckpt");
+    const linearOutput = run(linearBinary, [...parallelArgs,
+      "--require-linear-backend", "avx512-f32", "--save", linear]);
+    assert.match(linearOutput,
+      /math-backend=avx512-linear-gnu-libmvec-tanh-exp/);
+    assert.match(linearOutput, /linear-backend=avx512-f32/);
+    const referenceMetrics = packedReport(vectorReferenceOutput);
+    const linearMetrics = packedReport(linearOutput);
+    assert.ok(referenceMetrics.every((value, index) =>
+      Math.abs(value - linearMetrics[index]) <=
+        (index === 2 ? 0.005 : 0.0001)),
+    `AVX-512 metrics drifted: reference=${referenceMetrics} linear=${linearMetrics}`);
+    run(linearBinary, [...parallelArgs, "--require-linear-backend",
+      "avx512-f32", "--save", linearRepeat]);
+    assert.equal(sha256(fs.readFileSync(linear)),
+      sha256(fs.readFileSync(linearRepeat)));
+    run(linearBinary, [...parallelArgs, "--resume", vectorReferenceCheckpoint,
+      "--save", linear], 1);
+  }
+
   if (attentionBinary !== null) {
     assert.notEqual(vectorReferenceOutput, null,
       "attention mechanics require ZERO5_VECTOR_BINARY as the dense reference");
@@ -581,6 +609,11 @@ try {
   assert.match(run("./zero5_c32_lm", [
     "--require-math-backend", "scalar-elementwise", "--self-test"]),
     /35 finite-difference gradient checks passed/);
+  assert.match(run("./zero5_c32_lm", [
+    "--require-linear-backend", linearBackend[1], "--self-test"]),
+    /35 finite-difference gradient checks passed/);
+  run("./zero5_c32_lm", [
+    "--require-linear-backend", "wrong", "--self-test"], 1);
   run("./zero5_c32_lm", [
     "--require-math-backend", "scalar-array", "--self-test"], 1);
 } finally {

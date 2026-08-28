@@ -12,7 +12,7 @@
 #include "channel_protocol.h"
 #include "zero1_protocol.h"
 
-#if defined(USE_GNU_LIBMVEC)
+#if defined(USE_GNU_LIBMVEC) || defined(USE_AVX512_LINEAR)
 #include <immintrin.h>
 #endif
 
@@ -53,8 +53,22 @@ enum {
     MATH_BACKEND_ACCELERATE_VFORCE = 3,
     MATH_BACKEND_GNU_LIBMVEC_TANH = 4,
     MATH_BACKEND_GNU_LIBMVEC_EXP = 5,
-    MATH_BACKEND_GNU_LIBMVEC_TANH_EXP = 6
+    MATH_BACKEND_GNU_LIBMVEC_TANH_EXP = 6,
+    MATH_BACKEND_AVX512_LINEAR_SCALAR_ELEMENTWISE = 7,
+    MATH_BACKEND_AVX512_LINEAR_SCALAR_ARRAY = 8,
+    MATH_BACKEND_AVX512_LINEAR_GNU_LIBMVEC_TANH_EXP = 9
 };
+
+enum {
+    LINEAR_BACKEND_PORTABLE_SCALAR = 1,
+    LINEAR_BACKEND_CBLAS_SGEMM = 2,
+    LINEAR_BACKEND_AVX512_F32 = 3
+};
+
+#if defined(USE_AVX512_LINEAR) && \
+    (!defined(__x86_64__) || !defined(__AVX512F__) || !defined(__FMA__))
+#error USE_AVX512_LINEAR requires x86-64 AVX-512F and FMA compiler targets
+#endif
 
 enum {
     ATTENTION_BACKEND_UNBOUND = 0,
@@ -77,7 +91,15 @@ enum {
 
 static uint32_t math_backend_id(void)
 {
-#if defined(USE_VECTOR_MATH) && defined(USE_ACCELERATE)
+#if defined(USE_AVX512_LINEAR) && defined(USE_VECTOR_MATH) && \
+    defined(USE_GNU_LIBMVEC) && defined(USE_LIBMVEC_TANH) && \
+    defined(USE_LIBMVEC_EXP)
+    return MATH_BACKEND_AVX512_LINEAR_GNU_LIBMVEC_TANH_EXP;
+#elif defined(USE_AVX512_LINEAR) && defined(USE_VECTOR_MATH)
+    return MATH_BACKEND_AVX512_LINEAR_SCALAR_ARRAY;
+#elif defined(USE_AVX512_LINEAR)
+    return MATH_BACKEND_AVX512_LINEAR_SCALAR_ELEMENTWISE;
+#elif defined(USE_VECTOR_MATH) && defined(USE_ACCELERATE)
     return MATH_BACKEND_ACCELERATE_VFORCE;
 #elif defined(USE_VECTOR_MATH) && defined(USE_GNU_LIBMVEC) && \
     defined(USE_LIBMVEC_TANH) && defined(USE_LIBMVEC_EXP)
@@ -110,8 +132,39 @@ static const char *math_backend_name(void)
         return "gnu-libmvec-exp";
     case MATH_BACKEND_GNU_LIBMVEC_TANH_EXP:
         return "gnu-libmvec-tanh-exp";
+    case MATH_BACKEND_AVX512_LINEAR_SCALAR_ELEMENTWISE:
+        return "avx512-linear-scalar-elementwise";
+    case MATH_BACKEND_AVX512_LINEAR_SCALAR_ARRAY:
+        return "avx512-linear-scalar-array";
+    case MATH_BACKEND_AVX512_LINEAR_GNU_LIBMVEC_TANH_EXP:
+        return "avx512-linear-gnu-libmvec-tanh-exp";
     default:
         return "unbound";
+    }
+}
+
+static uint32_t linear_backend_id(void)
+{
+#if defined(USE_AVX512_LINEAR)
+    return LINEAR_BACKEND_AVX512_F32;
+#elif defined(USE_ACCELERATE) || defined(USE_CBLAS)
+    return LINEAR_BACKEND_CBLAS_SGEMM;
+#else
+    return LINEAR_BACKEND_PORTABLE_SCALAR;
+#endif
+}
+
+static const char *linear_backend_name(void)
+{
+    switch (linear_backend_id()) {
+    case LINEAR_BACKEND_PORTABLE_SCALAR:
+        return "portable-scalar";
+    case LINEAR_BACKEND_CBLAS_SGEMM:
+        return "cblas-sgemm";
+    case LINEAR_BACKEND_AVX512_F32:
+        return "avx512-f32";
+    default:
+        return "unknown";
     }
 }
 
@@ -416,6 +469,7 @@ typedef struct {
     const char *packed_validation_path;
     const char *run_contract_sha256;
     const char *required_math_backend;
+    const char *required_linear_backend;
     const char *required_attention_backend;
     long max_run_steps;
     float claim_answer_weight;
@@ -645,14 +699,11 @@ static void parameter_ones(Parameter *parameter)
     }
 }
 
-static void linear_forward(int rows, int input, int output, const float *x,
-                           const float *w, float *y)
+#if defined(USE_AVX512_LINEAR) || \
+    (!defined(USE_ACCELERATE) && !defined(USE_CBLAS))
+static void linear_forward_reference(int rows, int input, int output,
+                                     const float *x, const float *w, float *y)
 {
-    PHASE_START(profile_start);
-#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows, output, input,
-                1.0f, x, input, w, input, 0.0f, y, output);
-#else
     int row;
     int out;
     int in;
@@ -665,22 +716,12 @@ static void linear_forward(int rows, int input, int output, const float *x,
             y[row * output + out] = sum;
         }
     }
-#endif
-    PHASE_FINISH(linear_forward_seconds, profile_start);
 }
 
-/* Accumulates into both gw and dx; callers zero scratch dx when required. */
-static void linear_backward(int rows, int input, int output, const float *x,
-                            const float *w, const float *dy, float *gw,
-                            float *dx)
+static void linear_backward_reference(int rows, int input, int output,
+                                      const float *x, const float *w,
+                                      const float *dy, float *gw, float *dx)
 {
-    PHASE_START(profile_start);
-#if defined(USE_ACCELERATE) || defined(USE_CBLAS)
-    cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, output, input, rows,
-                1.0f, dy, output, x, input, 1.0f, gw, input);
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows, input, output,
-                1.0f, dy, output, w, input, 1.0f, dx, input);
-#else
     int row;
     int out;
     int in;
@@ -702,6 +743,259 @@ static void linear_backward(int rows, int input, int output, const float *x,
             dx[row * input + in] += sum;
         }
     }
+}
+#endif
+
+#if defined(USE_AVX512_LINEAR)
+static float avx512_horizontal_sum(__m512 value)
+{
+    float lanes[16];
+    float sum = 0.0f;
+    int lane;
+    _mm512_storeu_ps(lanes, value);
+    for (lane = 0; lane < 16; ++lane) sum += lanes[lane];
+    return sum;
+}
+
+static void linear_forward_avx512(int rows, int input, int output,
+                                  const float *x, const float *w, float *y)
+{
+    int row;
+    int out;
+    int in;
+    if (rows % 4 != 0 || input % 16 != 0 || output % 4 != 0) {
+        linear_forward_reference(rows, input, output, x, w, y);
+        return;
+    }
+    for (row = 0; row < rows; row += 4) {
+        for (out = 0; out < output; out += 4) {
+            __m512 c00 = _mm512_setzero_ps();
+            __m512 c01 = _mm512_setzero_ps();
+            __m512 c02 = _mm512_setzero_ps();
+            __m512 c03 = _mm512_setzero_ps();
+            __m512 c10 = _mm512_setzero_ps();
+            __m512 c11 = _mm512_setzero_ps();
+            __m512 c12 = _mm512_setzero_ps();
+            __m512 c13 = _mm512_setzero_ps();
+            __m512 c20 = _mm512_setzero_ps();
+            __m512 c21 = _mm512_setzero_ps();
+            __m512 c22 = _mm512_setzero_ps();
+            __m512 c23 = _mm512_setzero_ps();
+            __m512 c30 = _mm512_setzero_ps();
+            __m512 c31 = _mm512_setzero_ps();
+            __m512 c32 = _mm512_setzero_ps();
+            __m512 c33 = _mm512_setzero_ps();
+            for (in = 0; in < input; in += 16) {
+                __m512 x0 = _mm512_loadu_ps(x + (size_t)row * input + in);
+                __m512 x1 = _mm512_loadu_ps(x + (size_t)(row + 1) * input + in);
+                __m512 x2 = _mm512_loadu_ps(x + (size_t)(row + 2) * input + in);
+                __m512 x3 = _mm512_loadu_ps(x + (size_t)(row + 3) * input + in);
+                __m512 w0 = _mm512_loadu_ps(w + (size_t)out * input + in);
+                __m512 w1 = _mm512_loadu_ps(w + (size_t)(out + 1) * input + in);
+                __m512 w2 = _mm512_loadu_ps(w + (size_t)(out + 2) * input + in);
+                __m512 w3 = _mm512_loadu_ps(w + (size_t)(out + 3) * input + in);
+                c00 = _mm512_fmadd_ps(x0, w0, c00);
+                c01 = _mm512_fmadd_ps(x0, w1, c01);
+                c02 = _mm512_fmadd_ps(x0, w2, c02);
+                c03 = _mm512_fmadd_ps(x0, w3, c03);
+                c10 = _mm512_fmadd_ps(x1, w0, c10);
+                c11 = _mm512_fmadd_ps(x1, w1, c11);
+                c12 = _mm512_fmadd_ps(x1, w2, c12);
+                c13 = _mm512_fmadd_ps(x1, w3, c13);
+                c20 = _mm512_fmadd_ps(x2, w0, c20);
+                c21 = _mm512_fmadd_ps(x2, w1, c21);
+                c22 = _mm512_fmadd_ps(x2, w2, c22);
+                c23 = _mm512_fmadd_ps(x2, w3, c23);
+                c30 = _mm512_fmadd_ps(x3, w0, c30);
+                c31 = _mm512_fmadd_ps(x3, w1, c31);
+                c32 = _mm512_fmadd_ps(x3, w2, c32);
+                c33 = _mm512_fmadd_ps(x3, w3, c33);
+            }
+            y[(size_t)row * output + out] = avx512_horizontal_sum(c00);
+            y[(size_t)row * output + out + 1] = avx512_horizontal_sum(c01);
+            y[(size_t)row * output + out + 2] = avx512_horizontal_sum(c02);
+            y[(size_t)row * output + out + 3] = avx512_horizontal_sum(c03);
+            y[(size_t)(row + 1) * output + out] = avx512_horizontal_sum(c10);
+            y[(size_t)(row + 1) * output + out + 1] = avx512_horizontal_sum(c11);
+            y[(size_t)(row + 1) * output + out + 2] = avx512_horizontal_sum(c12);
+            y[(size_t)(row + 1) * output + out + 3] = avx512_horizontal_sum(c13);
+            y[(size_t)(row + 2) * output + out] = avx512_horizontal_sum(c20);
+            y[(size_t)(row + 2) * output + out + 1] = avx512_horizontal_sum(c21);
+            y[(size_t)(row + 2) * output + out + 2] = avx512_horizontal_sum(c22);
+            y[(size_t)(row + 2) * output + out + 3] = avx512_horizontal_sum(c23);
+            y[(size_t)(row + 3) * output + out] = avx512_horizontal_sum(c30);
+            y[(size_t)(row + 3) * output + out + 1] = avx512_horizontal_sum(c31);
+            y[(size_t)(row + 3) * output + out + 2] = avx512_horizontal_sum(c32);
+            y[(size_t)(row + 3) * output + out + 3] = avx512_horizontal_sum(c33);
+        }
+    }
+}
+
+static void linear_backward_avx512(int rows, int input, int output,
+                                   const float *x, const float *w,
+                                   const float *dy, float *gw, float *dx)
+{
+    int row;
+    int out;
+    int in;
+    if (rows % 4 != 0 || input % 16 != 0 || output % 4 != 0) {
+        linear_backward_reference(rows, input, output, x, w, dy, gw, dx);
+        return;
+    }
+
+    for (out = 0; out < output; out += 4) {
+        for (in = 0; in < input; in += 16) {
+            __m512 g0 = _mm512_loadu_ps(gw + (size_t)out * input + in);
+            __m512 g1 = _mm512_loadu_ps(gw + (size_t)(out + 1) * input + in);
+            __m512 g2 = _mm512_loadu_ps(gw + (size_t)(out + 2) * input + in);
+            __m512 g3 = _mm512_loadu_ps(gw + (size_t)(out + 3) * input + in);
+            for (row = 0; row < rows; ++row) {
+                __m512 xv = _mm512_loadu_ps(x + (size_t)row * input + in);
+                g0 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)row * output + out]), xv, g0);
+                g1 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)row * output + out + 1]), xv,
+                    g1);
+                g2 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)row * output + out + 2]), xv,
+                    g2);
+                g3 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)row * output + out + 3]), xv,
+                    g3);
+            }
+            _mm512_storeu_ps(gw + (size_t)out * input + in, g0);
+            _mm512_storeu_ps(gw + (size_t)(out + 1) * input + in, g1);
+            _mm512_storeu_ps(gw + (size_t)(out + 2) * input + in, g2);
+            _mm512_storeu_ps(gw + (size_t)(out + 3) * input + in, g3);
+        }
+    }
+
+    for (row = 0; row < rows; row += 4) {
+        for (in = 0; in < input; in += 16) {
+            __m512 d0 = _mm512_loadu_ps(dx + (size_t)row * input + in);
+            __m512 d1 = _mm512_loadu_ps(dx + (size_t)(row + 1) * input + in);
+            __m512 d2 = _mm512_loadu_ps(dx + (size_t)(row + 2) * input + in);
+            __m512 d3 = _mm512_loadu_ps(dx + (size_t)(row + 3) * input + in);
+            for (out = 0; out < output; ++out) {
+                __m512 wv = _mm512_loadu_ps(w + (size_t)out * input + in);
+                d0 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)row * output + out]), wv, d0);
+                d1 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)(row + 1) * output + out]), wv,
+                    d1);
+                d2 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)(row + 2) * output + out]), wv,
+                    d2);
+                d3 = _mm512_fmadd_ps(
+                    _mm512_set1_ps(dy[(size_t)(row + 3) * output + out]), wv,
+                    d3);
+            }
+            _mm512_storeu_ps(dx + (size_t)row * input + in, d0);
+            _mm512_storeu_ps(dx + (size_t)(row + 1) * input + in, d1);
+            _mm512_storeu_ps(dx + (size_t)(row + 2) * input + in, d2);
+            _mm512_storeu_ps(dx + (size_t)(row + 3) * input + in, d3);
+        }
+    }
+}
+
+static int avx512_linear_self_test(void)
+{
+    enum { ROWS = 8, INPUT = 32, OUTPUT = 8 };
+    float x[ROWS * INPUT];
+    float w[OUTPUT * INPUT];
+    float dy[ROWS * OUTPUT];
+    float expected_y[ROWS * OUTPUT];
+    float actual_y[ROWS * OUTPUT];
+    float repeated_y[ROWS * OUTPUT];
+    float expected_gw[OUTPUT * INPUT];
+    float actual_gw[OUTPUT * INPUT];
+    float expected_dx[ROWS * INPUT];
+    float actual_dx[ROWS * INPUT];
+    size_t i;
+    for (i = 0; i < sizeof(x) / sizeof(x[0]); ++i) {
+        x[i] = (float)((int)(i % 19U) - 9) / 17.0f;
+        expected_dx[i] = actual_dx[i] =
+            (float)((int)(i % 7U) - 3) / 101.0f;
+    }
+    for (i = 0; i < sizeof(w) / sizeof(w[0]); ++i) {
+        w[i] = (float)((int)(i % 23U) - 11) / 29.0f;
+        expected_gw[i] = actual_gw[i] =
+            (float)((int)(i % 5U) - 2) / 103.0f;
+    }
+    for (i = 0; i < sizeof(dy) / sizeof(dy[0]); ++i) {
+        dy[i] = (float)((int)(i % 13U) - 6) / 31.0f;
+    }
+    linear_forward_reference(ROWS, INPUT, OUTPUT, x, w, expected_y);
+    linear_forward_avx512(ROWS, INPUT, OUTPUT, x, w, actual_y);
+    linear_forward_avx512(ROWS, INPUT, OUTPUT, x, w, repeated_y);
+    linear_backward_reference(ROWS, INPUT, OUTPUT, x, w, dy, expected_gw,
+                              expected_dx);
+    linear_backward_avx512(ROWS, INPUT, OUTPUT, x, w, dy, actual_gw,
+                           actual_dx);
+    if (memcmp(actual_y, repeated_y, sizeof(actual_y)) != 0) {
+        fprintf(stderr, "AVX-512 linear forward is not deterministic\n");
+        return 0;
+    }
+    for (i = 0; i < sizeof(actual_y) / sizeof(actual_y[0]); ++i) {
+        if (!isfinite(actual_y[i]) ||
+            fabsf(actual_y[i] - expected_y[i]) >
+                3.0e-5f * (1.0f + fabsf(expected_y[i]))) {
+            fprintf(stderr, "AVX-512 linear forward mismatch at %zu\n", i);
+            return 0;
+        }
+    }
+    for (i = 0; i < sizeof(actual_gw) / sizeof(actual_gw[0]); ++i) {
+        if (!isfinite(actual_gw[i]) ||
+            fabsf(actual_gw[i] - expected_gw[i]) >
+                3.0e-5f * (1.0f + fabsf(expected_gw[i]))) {
+            fprintf(stderr,
+                    "AVX-512 linear weight-gradient mismatch at %zu\n", i);
+            return 0;
+        }
+    }
+    for (i = 0; i < sizeof(actual_dx) / sizeof(actual_dx[0]); ++i) {
+        if (!isfinite(actual_dx[i]) ||
+            fabsf(actual_dx[i] - expected_dx[i]) >
+                3.0e-5f * (1.0f + fabsf(expected_dx[i]))) {
+            fprintf(stderr, "AVX-512 linear input-gradient mismatch at %zu\n",
+                    i);
+            return 0;
+        }
+    }
+    return 1;
+}
+#endif
+
+static void linear_forward(int rows, int input, int output, const float *x,
+                           const float *w, float *y)
+{
+    PHASE_START(profile_start);
+#if defined(USE_AVX512_LINEAR)
+    linear_forward_avx512(rows, input, output, x, w, y);
+#elif defined(USE_ACCELERATE) || defined(USE_CBLAS)
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows, output, input,
+                1.0f, x, input, w, input, 0.0f, y, output);
+#else
+    linear_forward_reference(rows, input, output, x, w, y);
+#endif
+    PHASE_FINISH(linear_forward_seconds, profile_start);
+}
+
+/* Accumulates into both gw and dx; callers zero scratch dx when required. */
+static void linear_backward(int rows, int input, int output, const float *x,
+                            const float *w, const float *dy, float *gw,
+                            float *dx)
+{
+    PHASE_START(profile_start);
+#if defined(USE_AVX512_LINEAR)
+    linear_backward_avx512(rows, input, output, x, w, dy, gw, dx);
+#elif defined(USE_ACCELERATE) || defined(USE_CBLAS)
+    cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, output, input, rows,
+                1.0f, dy, output, x, input, 1.0f, gw, input);
+    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows, input, output,
+                1.0f, dy, output, w, input, 1.0f, dx, input);
+#else
+    linear_backward_reference(rows, input, output, x, w, dy, gw, dx);
 #endif
     PHASE_FINISH(linear_backward_seconds, profile_start);
 }
@@ -6315,6 +6609,7 @@ static void print_usage(const char *program)
     printf("  --packed-validation F use a record-safe Z5PKV2 or Z5PKV3 validation set\n");
     printf("  --run-contract-sha256 H bind packed checkpoints to one contract\n");
     printf("  --require-math-backend N fail unless the compiled math backend is N\n");
+    printf("  --require-linear-backend N fail unless the linear backend is N\n");
     printf("  --require-attention-backend N fail unless attention backend is N\n");
     printf("  --max-run-steps N    pause a packed attempt after N updates; 0 disables\n");
     printf("  --claim-answer-weight X weighted claim answers (default: 1)\n");
@@ -6369,6 +6664,13 @@ static int run_self_test(void)
 #if defined(USE_GNU_LIBMVEC) && \
     (defined(USE_LIBMVEC_TANH) || defined(USE_LIBMVEC_EXP))
     if (!libmvec_self_test()) ++failures;
+#endif
+#if defined(USE_AVX512_LINEAR)
+    if (!avx512_linear_self_test()) {
+        ++failures;
+    } else {
+        printf("AVX-512 float linear kernel self-test passed\n");
+    }
 #endif
 
     rng_seed(&rng, 0);
@@ -6909,6 +7211,9 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "--require-math-backend") == 0 &&
                    i + 1 < argc) {
             options.required_math_backend = argv[++i];
+        } else if (strcmp(argv[i], "--require-linear-backend") == 0 &&
+                   i + 1 < argc) {
+            options.required_linear_backend = argv[++i];
         } else if (strcmp(argv[i], "--require-attention-backend") == 0 &&
                    i + 1 < argc) {
             options.required_attention_backend = argv[++i];
@@ -7084,6 +7389,14 @@ int main(int argc, char **argv)
                 "error: required math backend '%s' does not match compiled "
                 "backend '%s'\n",
                 options.required_math_backend, math_backend_name());
+        exit(EXIT_FAILURE);
+    }
+    if (options.required_linear_backend != NULL &&
+        strcmp(options.required_linear_backend, linear_backend_name()) != 0) {
+        fprintf(stderr,
+                "error: required linear backend '%s' does not match compiled "
+                "backend '%s'\n",
+                options.required_linear_backend, linear_backend_name());
         exit(EXIT_FAILURE);
     }
     if (options.required_attention_backend != NULL &&
@@ -7293,9 +7606,10 @@ int main(int argc, char **argv)
             fail("checkpoint math backend does not match this training binary");
         }
         if (!options.eval_only && options.steps > 0 &&
-            options.required_math_backend != NULL &&
+            (options.required_math_backend != NULL ||
+             options.required_linear_backend != NULL) &&
             checkpoint_resume_state.math_backend == MATH_BACKEND_UNBOUND) {
-            fail("strict math backend resume requires a version-6 checkpoint");
+            fail("strict math or linear backend resume requires a version-6 checkpoint");
         }
         if (!options.eval_only && options.steps > 0 &&
             checkpoint_resume_state.attention_backend !=
@@ -7367,11 +7681,11 @@ int main(int argc, char **argv)
 #else
     printf("zero5_lm: backend=portable-C");
 #endif
-    printf(" math-backend=%s attention-backend=%s context=%d vocab=%d dim=%d "
-           "heads=%d layers=%d ff=%d positions=%s "
+    printf(" math-backend=%s linear-backend=%s attention-backend=%s "
+           "context=%d vocab=%d dim=%d heads=%d layers=%d ff=%d positions=%s "
            "parameters=%zu trainable-scope=%s trainable-parameters=%zu\n",
-           math_backend_name(), attention_backend_name(), cfg.context,
-           cfg.vocab, cfg.dim, cfg.heads, cfg.layers, cfg.ff,
+           math_backend_name(), linear_backend_name(), attention_backend_name(),
+           cfg.context, cfg.vocab, cfg.dim, cfg.heads, cfg.layers, cfg.ff,
            cfg.rotary ? "rotary" : "learned",
            model_parameter_total(&model),
            trainable_scope_name(model.trainable_scope),

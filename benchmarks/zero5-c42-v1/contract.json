@@ -35,7 +35,7 @@
   },
   "implementation": {
     "trainer": "zero5_c32_lm.c",
-    "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "trainer_sha256": "38f4cdd53008ef634834f871f2ae36520943067ae25a8b2782264744a540e71a",
     "importer": "scripts/prepare_zero5_c42.mjs",
     "importer_sha256": "b9bea97241a7b9510d0a105bd301cd2921b41ff04e2ee8303937d91fe8210b6c",
     "evaluator": "scripts/evaluate_zero5_c42.mjs",
