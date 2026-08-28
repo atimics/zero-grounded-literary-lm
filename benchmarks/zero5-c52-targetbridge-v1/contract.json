@@ -1,0 +1,167 @@
+{
+  "schema": "zero.c52_targetbridge_contract.v1",
+  "experiment": "zero5-c52-targetbridge-v1",
+  "status": "authorized-unrun",
+  "authorized": true,
+  "authorization": {
+    "training_authorized": true,
+    "authorization_id": "zero5-c52-targetbridge-local-2026-08-28-v1",
+    "record": "benchmarks/zero5-c52-targetbridge-v1/authorization.json",
+    "record_sha256": "848726910fcbd895af9163b139fa23ed12716bcb941c408be2c7157dc036ec64"
+  },
+  "braid": {
+    "release_id": "braid-corpus-five-statebridge-v0.3.0-3ce479213241679af209b402101c24786299f2ff05325838efd42eebf541315c",
+    "source_commit": "f96fb289b2ddf3c22b755bfa378f8ff70afb0293",
+    "target_vocabulary_id": "braid-state-target-vocabulary-v2-618f60e04d3ff6ec0ecdd0741c7812b808a09c03e2ea465eaf2d33e3492ba88e",
+    "target_vocabulary_sha256": "3923f04459eb3769fce7e133f687758b677bca0e3a9d65444a6407e70e9bb578"
+  },
+  "control": {
+    "experiment": "zero5-c51-statebridge-v1",
+    "c51_contract": "benchmarks/zero5-c51-statebridge-v1/contract.json",
+    "c51_contract_sha256": "7bb9616e2d3c47bba90ca995aaebf43fcc613825dae64564627261d8be745b7d",
+    "private_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "retrieval_choice_accuracy": 0.525717112,
+    "retrieval_pair_exact_accuracy": 0.509396637,
+    "claim_choice_accuracy": 0.561403509,
+    "combined_nats_per_token": 2.0801,
+    "c52_choice_orientation_gap": 0.624289196,
+    "new_runner_loss_off_equivalence": {
+      "updates": 10,
+      "answer_weights_matched": true,
+      "base_checkpoint_sha256": "9ffd12488f22b1c392a5a19c93cc4516bc32becf3af5bdf1326f9ea1d7d56c6f",
+      "byte_identical": true
+    }
+  },
+  "verified_target_import": {
+    "receipt": {
+      "sha256": "9951615d08c5051f48594b015c48e61fa1cb3719ca10a378129c940eb29bfdb7",
+      "bytes": 2592
+    },
+    "primary": {
+      "sha256": "e655e97acb700433a9f4d32560cda6ec82bea10d64d2bc55873f9aeb3bcc27eb",
+      "bytes": 2501560,
+      "events": 293606,
+      "raw_events": 316051,
+      "packs": 37768,
+      "matched_c5_packs": 9442,
+      "matched_c5_records": 22445,
+      "choice_a_records": 7880,
+      "choice_b_records": 7880
+    },
+    "evaluation": {
+      "sha256": "4deeea638690148dd814bf0fb22694c998edf5dbe66ba2088a85face3ac4fd1c",
+      "bytes": 6891658,
+      "events": 192438,
+      "records": 14772
+    },
+    "factorized_family_softmax": true,
+    "singleton_families_excluded": true,
+    "prompt_boundary_hidden_state": true,
+    "deterministic": true
+  },
+  "inputs": {
+    "tokenizer": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "initial": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "train": "96cd33db03f5cc4e837d4ff2cdfd2bf4aaf845b731a189ea7d4ae770a730b59f",
+    "validation": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "atlasTrain": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+    "atlasValidation": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+    "anchorTrain": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+    "anchorValidation": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
+  },
+  "model": {
+    "base_parameters": 4852992,
+    "auxiliary_parameters": 193264,
+    "total_parameters": 5046256,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "language_vocabulary": 512,
+    "state_target_vocabulary": 752,
+    "positions": "rotary"
+  },
+  "training": {
+    "seed": 0,
+    "update_groups": 28707,
+    "maximum_batch_sequences": 2,
+    "parallel_workers": 2,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 14850534,
+    "auxiliary_events": 293606,
+    "auxiliary_loss_weight": 0.1,
+    "answer_weights": {
+      "claim": 2.229423406,
+      "cloze": 5.253416128,
+      "retrieval": 1.429401038
+    },
+    "optimizer": "AdamW with fresh state",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 1000,
+    "schedule": "cosine over all 28,707 update groups",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_packs": 64,
+    "checkpoint_selection": "lowest frozen C4.2 validation loss"
+  },
+  "execution": {
+    "venue": "local Apple Silicon",
+    "compute_resource": "Apple Silicon CPU",
+    "math_backend": "accelerate-vforce",
+    "attention_backend": "dense-blas",
+    "blas_threads": 4,
+    "checkpoint_every_updates": 250,
+    "maximum_execution_seconds": 3600,
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null,
+    "independent_retry_authorized": false
+  },
+  "gates": {
+    "auxiliary_nats_reduction": 0.1,
+    "auxiliary_accuracy_gain": 0.05,
+    "retrieval_accuracy_gain": 0.01,
+    "retrieval_pair_gain": 0.01,
+    "maximum_retrieval_orientation_gap": 0.15,
+    "maximum_c52_choice_orientation_gap": 0.574289196,
+    "maximum_claim_accuracy_loss": 0.02,
+    "maximum_combined_nats_increase": 0.1,
+    "maximum_evidence_nats": 2.4,
+    "maximum_atlas_nats": 2.50646,
+    "maximum_anchor_nats": 4.06362
+  },
+  "implementation": {
+    "trainer": "zero5_c51_target_lm.c",
+    "trainer_sha256": "0e573595bc95c336befb084c4d4fdec26974e3c1126fd63ecd6a7268fa0e2990",
+    "importer": "scripts/prepare_zero5_c52_targets.mjs",
+    "importer_sha256": "773ca4dd122a83fa125a9466c60f3262b27b0a4a70e1837e70a98b13b83c2464",
+    "evaluator": "scripts/evaluate_zero5_c52_targetbridge.mjs",
+    "evaluator_sha256": "71e42fe8ff408fc1ef542293e62335f9dd06e5a66b39f5860a70afa7813d5608",
+    "runner": "scripts/run_zero5_c52_targetbridge.mjs",
+    "runner_sha256": "6576c9092a9064f46793d2f562404bfe8afaacf0bb2fe509cf4c86b60f8bb8c6",
+    "c51_evaluator": "scripts/evaluate_zero5_c51.mjs",
+    "c51_evaluator_sha256": "c6e2cdd1ed6da0a4bae906fe63c2ad66918b0d28392da62c185357860456b770"
+  },
+  "claim_boundary": {
+    "verified_state_target_loss": true,
+    "structured_content": true,
+    "symbolic_serialization": false,
+    "promotion_authorized": false,
+    "publication_authorized": false
+  },
+  "evaluation": {
+    "cloze_exact_metric": "reported-retired-not-a-decision-gate",
+    "pass_effect": "authorizes only a frozen multi-seed replication request"
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}

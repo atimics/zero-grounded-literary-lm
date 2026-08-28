@@ -409,6 +409,9 @@ zero5-c43-result-check: zero5-c43-contract-check
 zero5-c51-statebridge-check:
 	node scripts/check_zero5_c51.mjs
 
+zero5-c52-targetbridge-check: zero5_c51_target_lm
+	node scripts/check_zero5_c52_targetbridge.mjs
+
 zero5-c42-run: zero5_c32_lm_vector_math zero5-c42-aws-check
 	node scripts/run_zero5_c42.mjs \
 		--import-dir "$(ZERO5_C42_IMPORT_DIR)" \
@@ -630,6 +633,12 @@ zero5_c32_lm_vector_math: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
 		-DUSE_LIBMVEC_TANH -DUSE_LIBMVEC_EXP $(ZERO5_THREAD_FLAGS) \
 		$(LITERARY_CFLAGS) zero5_c32_lm.c -o $@ $(LITERARY_LDLIBS) \
 		$(ZERO5_THREAD_FLAGS)
+
+zero5_c51_target_lm: zero5_c51_target_lm.c zero5_c32_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(GNU_LIBMVEC_CFLAGS) \
+		-DUSE_LIBMVEC_TANH -DUSE_LIBMVEC_EXP $(ZERO5_THREAD_FLAGS) \
+		$(LITERARY_CFLAGS) zero5_c51_target_lm.c -o $@ \
+		$(LITERARY_LDLIBS) $(ZERO5_THREAD_FLAGS)
 
 zero5_c32_lm_attention_b32: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(GNU_LIBMVEC_CFLAGS) \
@@ -2537,5 +2546,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
+	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_c51_target_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
 	rm -f docs/literary.js docs/literary.wasm
