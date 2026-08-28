@@ -1,0 +1,15 @@
+{
+  "schema": "zero.aws_vector_validation_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-vector-validation-20260827-15960f3",
+  "instance_id": "i-097e2b0a5d02cce25",
+  "git_commit": "a0645209d53184f7d87247e5b15c0d6f09523fca",
+  "contract_sha256": "15960f3680899d06ce14aa49a80bc60c07fff07b4810a786d67cee259122059e",
+  "approval_id": "zero5-vector-validation-2026-08-27-v1",
+  "exit_code": 0,
+  "elapsed_instance_seconds": 806,
+  "estimated_ec2_usd": 0.152244444444,
+  "result_key": "experiments/zero5-vector-validation-v1/zero5-vector-validation-20260827-15960f3/result.json",
+  "result_sha256": "e1d9e4f0974a8265fc6f174ca9ce2c3f8414532fe3c6b83061601711300b24c7"
+}

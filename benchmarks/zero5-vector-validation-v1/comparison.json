@@ -1,0 +1,65 @@
+{
+  "schema": "zero.aws_vector_validation_comparison.v1",
+  "status": "complete",
+  "contract_sha256": "15960f3680899d06ce14aa49a80bc60c07fff07b4810a786d67cee259122059e",
+  "artifacts": {
+    "run_id": "zero5-vector-validation-20260827-15960f3",
+    "instance_id": "i-097e2b0a5d02cce25",
+    "source_commit": "a0645209d53184f7d87247e5b15c0d6f09523fca",
+    "source_archive_sha256": "7fefc72b40cdd5eec03488ccfe08648f2d3ba52e724a3f3c84edf53b5c76c28c",
+    "asset_archive_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+    "launch_sha256": "2d6574c12ca03457afaa569e517dd06c8b55d4331f6fd346a812c410f3544abf",
+    "status_sha256": "429340b31e0e0d862474c92c15fd5c04ecb30aceeef20e136de8fc6d98e66ffd",
+    "result_sha256": "e1d9e4f0974a8265fc6f174ca9ce2c3f8414532fe3c6b83061601711300b24c7",
+    "replay_log_sha256": "af891c72b7fa181288ff644202de6c435c0d548164283680dd94a279c0a1825b",
+    "s3_result_key": "experiments/zero5-vector-validation-v1/zero5-vector-validation-20260827-15960f3/result.json"
+  },
+  "performance": {
+    "baseline_effective_tokens_per_second": 4892.6156859934545,
+    "vector_effective_tokens_per_second": 6384.039900249376,
+    "vector_gain_fraction": 0.3048316708229424,
+    "fixed_work_time_reduction_fraction": 0.23361762106118156,
+    "baseline_elapsed_seconds": 418.59,
+    "vector_elapsed_seconds": 320.8
+  },
+  "validation": {
+    "reported_points": 10,
+    "final_loss": {
+      "baseline": 1.8291,
+      "vector": 1.8291,
+      "delta": 0
+    },
+    "mean_loss_delta": 0,
+    "maximum_point_loss_delta": 0
+  },
+  "gates": {
+    "math_backends_match_contract": true,
+    "checkpoint_version_6": true,
+    "all_metrics_finite": true,
+    "speed_gain_at_least_fifteen_percent": true,
+    "final_validation_loss_passed": true,
+    "mean_validation_loss_passed": true,
+    "every_validation_point_passed": true,
+    "budget_passed": true,
+    "instance_terminated": true,
+    "sealed_test_stayed_closed": true
+  },
+  "cost": {
+    "elapsed_instance_seconds": 806,
+    "estimated_ec2_usd": 0.152244444444,
+    "approved_maximum_ec2_usd": 0.17
+  },
+  "decision": {
+    "eligible_to_promote_vector_math_default": true,
+    "production_default_changed": false,
+    "reason": "The vector path passed every frozen speed, validation, identity, budget, and sealed-test gate over 1,000 updates.",
+    "next_kernel_target": "blocked causal attention"
+  },
+  "claim_boundary": {
+    "performance_validation_only": true,
+    "scientific_replication": false,
+    "new_model_result": false,
+    "test_metrics_opened": false,
+    "private_assets_published": false
+  }
+}

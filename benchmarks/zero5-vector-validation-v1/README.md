@@ -26,8 +26,16 @@ Check the parser and comparison mechanics with:
 node scripts/benchmark_zero5_vector_validation.mjs --self-test
 ```
 
-The spend-locked AWS package is in `aws-contract.json`. It projects $0.1473 of
-EC2 use and has a hard 900-second/$0.17 ceiling with automatic termination.
-The source, assets, math backends, validation reads, gates, and closed test-set
-policy are frozen. Its status is `awaiting-explicit-authorization`; preparing
-and checking the package launches no compute.
+The spend-locked AWS package is in `aws-contract.json`. The replay completed
+inside its hard 900-second/$0.17 ceiling and the instance terminated. The
+source, assets, math backends, validation reads, gates, and closed test-set
+policy were frozen.
+
+The vector path delivered 6,384.04 effective tokens per second, 30.48% above
+the scalar-array baseline. All ten stored validation-loss comparisons had
+zero delta at reported precision, so every promotion gate passed. See
+`RESULT.md` and verify the immutable record with:
+
+```sh
+make zero5-vector-validation-aws-result-check
+```

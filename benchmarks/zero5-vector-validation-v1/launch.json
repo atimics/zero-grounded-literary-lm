@@ -1,0 +1,14 @@
+{
+  "schema": "zero.aws_vector_validation_launch.v1",
+  "run_id": "zero5-vector-validation-20260827-15960f3",
+  "instance_id": "i-097e2b0a5d02cce25",
+  "source_commit": "a0645209d53184f7d87247e5b15c0d6f09523fca",
+  "source_sha256": "7fefc72b40cdd5eec03488ccfe08648f2d3ba52e724a3f3c84edf53b5c76c28c",
+  "asset_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+  "contract_sha256": "15960f3680899d06ce14aa49a80bc60c07fff07b4810a786d67cee259122059e",
+  "approval_id": "zero5-vector-validation-2026-08-27-v1",
+  "launched_at": "2026-08-28T00:37:15Z",
+  "launch_epoch": 1787877432,
+  "maximum_instance_seconds": 900,
+  "maximum_ec2_usd": 0.17
+}
