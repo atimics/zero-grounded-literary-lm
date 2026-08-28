@@ -56,6 +56,25 @@ enum {
     MATH_BACKEND_GNU_LIBMVEC_TANH_EXP = 6
 };
 
+enum {
+    ATTENTION_BACKEND_UNBOUND = 0,
+    ATTENTION_BACKEND_SCALAR_CAUSAL = 1,
+    ATTENTION_BACKEND_DENSE_BLAS = 2,
+    ATTENTION_BACKEND_BLOCKED_CAUSAL_32 = 3,
+    ATTENTION_BACKEND_BLOCKED_CAUSAL_64 = 4,
+    ATTENTION_BACKEND_BLOCKED_CAUSAL_128 = 5
+};
+
+#if defined(USE_BLOCKED_CAUSAL_ATTENTION)
+#ifndef ATTENTION_QUERY_BLOCK
+#define ATTENTION_QUERY_BLOCK 64
+#endif
+#if ATTENTION_QUERY_BLOCK != 32 && ATTENTION_QUERY_BLOCK != 64 && \
+    ATTENTION_QUERY_BLOCK != 128
+#error ATTENTION_QUERY_BLOCK must be 32, 64, or 128
+#endif
+#endif
+
 static uint32_t math_backend_id(void)
 {
 #if defined(USE_VECTOR_MATH) && defined(USE_ACCELERATE)
@@ -91,6 +110,42 @@ static const char *math_backend_name(void)
         return "gnu-libmvec-exp";
     case MATH_BACKEND_GNU_LIBMVEC_TANH_EXP:
         return "gnu-libmvec-tanh-exp";
+    default:
+        return "unbound";
+    }
+}
+
+static uint32_t attention_backend_id(void)
+{
+#if defined(USE_BLOCKED_CAUSAL_ATTENTION) && \
+    (defined(USE_ACCELERATE) || defined(USE_CBLAS))
+#if ATTENTION_QUERY_BLOCK == 32
+    return ATTENTION_BACKEND_BLOCKED_CAUSAL_32;
+#elif ATTENTION_QUERY_BLOCK == 64
+    return ATTENTION_BACKEND_BLOCKED_CAUSAL_64;
+#else
+    return ATTENTION_BACKEND_BLOCKED_CAUSAL_128;
+#endif
+#elif defined(USE_ACCELERATE) || defined(USE_CBLAS)
+    return ATTENTION_BACKEND_DENSE_BLAS;
+#else
+    return ATTENTION_BACKEND_SCALAR_CAUSAL;
+#endif
+}
+
+static const char *attention_backend_name(void)
+{
+    switch (attention_backend_id()) {
+    case ATTENTION_BACKEND_SCALAR_CAUSAL:
+        return "scalar-causal";
+    case ATTENTION_BACKEND_DENSE_BLAS:
+        return "dense-blas";
+    case ATTENTION_BACKEND_BLOCKED_CAUSAL_32:
+        return "blocked-causal-blas-32";
+    case ATTENTION_BACKEND_BLOCKED_CAUSAL_64:
+        return "blocked-causal-blas-64";
+    case ATTENTION_BACKEND_BLOCKED_CAUSAL_128:
+        return "blocked-causal-blas-128";
     default:
         return "unbound";
     }
@@ -358,6 +413,7 @@ typedef struct {
     const char *packed_validation_path;
     const char *run_contract_sha256;
     const char *required_math_backend;
+    const char *required_attention_backend;
     long max_run_steps;
     float claim_answer_weight;
     float cloze_answer_weight;
@@ -1252,10 +1308,45 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
 
 #if defined(USE_ACCELERATE) || defined(USE_CBLAS)
     (void)i;
+#if defined(USE_BLOCKED_CAUSAL_ATTENTION)
+    (void)source;
+#endif
     for (head = 0; head < cfg->heads; ++head) {
         int offset = head * head_width;
         float *matrix =
             &cache->prob[(size_t)head * cfg->context * cfg->context];
+#if defined(USE_BLOCKED_CAUSAL_ATTENTION)
+        int block_start;
+        for (block_start = 0; block_start < cfg->context;
+             block_start += ATTENTION_QUERY_BLOCK) {
+            int rows = cfg->context - block_start;
+            int prefix;
+            if (rows > ATTENTION_QUERY_BLOCK) rows = ATTENTION_QUERY_BLOCK;
+            prefix = block_start + rows;
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows,
+                        prefix, head_width, scale,
+                        cache->q + (size_t)block_start * qkv_stride + offset,
+                        qkv_stride, cache->k + offset, qkv_stride, 0.0f,
+                        matrix + (size_t)block_start * cfg->context,
+                        cfg->context);
+            for (time = block_start; time < prefix; ++time) {
+                float *row = matrix + (size_t)time * cfg->context;
+                softmax_prefix_inplace(row, time + 1);
+                if (time + 1 < prefix) {
+                    memset(row + time + 1, 0,
+                           (size_t)(prefix - time - 1) *
+                               sizeof(*row));
+                }
+            }
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows,
+                        head_width, prefix, 1.0f,
+                        matrix + (size_t)block_start * cfg->context,
+                        cfg->context, cache->v + offset, qkv_stride, 0.0f,
+                        cache->att +
+                            (size_t)block_start * cfg->dim + offset,
+                        cfg->dim);
+        }
+#else
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, cfg->context,
                     cfg->context, head_width, scale, cache->q + offset,
                     qkv_stride, cache->k + offset, qkv_stride, 0.0f, matrix,
@@ -1271,6 +1362,7 @@ static void attention_forward(const Config *cfg, LayerCache *cache)
                     head_width, cfg->context, 1.0f, matrix, cfg->context,
                     cache->v + offset, qkv_stride, 0.0f, cache->att + offset,
                     cfg->dim);
+#endif
     }
 #else
     for (head = 0; head < cfg->heads; ++head) {
@@ -1322,6 +1414,61 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
             &cache->prob[(size_t)head * cfg->context * cfg->context];
         float *dscore =
             scratch + (size_t)head * cfg->context * cfg->context;
+#if defined(USE_BLOCKED_CAUSAL_ATTENTION)
+        int block_start;
+        for (block_start = 0; block_start < cfg->context;
+             block_start += ATTENTION_QUERY_BLOCK) {
+            int rows = cfg->context - block_start;
+            int prefix;
+            if (rows > ATTENTION_QUERY_BLOCK) rows = ATTENTION_QUERY_BLOCK;
+            prefix = block_start + rows;
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows,
+                        prefix, head_width, 1.0f,
+                        datt + (size_t)block_start * cfg->dim + offset,
+                        cfg->dim, cache->v + offset, qkv_stride, 0.0f,
+                        dscore + (size_t)block_start * cfg->context,
+                        cfg->context);
+            for (time = block_start; time < prefix; ++time) {
+                const float *prob_row =
+                    prob + (size_t)time * cfg->context;
+                float *gradient_row =
+                    dscore + (size_t)time * cfg->context;
+                float weighted_gradient = 0.0f;
+                for (source = 0; source <= time; ++source) {
+                    weighted_gradient +=
+                        prob_row[source] * gradient_row[source];
+                }
+                for (source = 0; source <= time; ++source) {
+                    gradient_row[source] =
+                        prob_row[source] *
+                        (gradient_row[source] - weighted_gradient) * scale;
+                }
+                if (time + 1 < prefix) {
+                    memset(gradient_row + time + 1, 0,
+                           (size_t)(prefix - time - 1) *
+                               sizeof(*gradient_row));
+                }
+            }
+            cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, prefix,
+                        head_width, rows, 1.0f,
+                        prob + (size_t)block_start * cfg->context,
+                        cfg->context,
+                        datt + (size_t)block_start * cfg->dim + offset,
+                        cfg->dim, 1.0f, dv + offset, qkv_stride);
+            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, rows,
+                        head_width, prefix, 1.0f,
+                        dscore + (size_t)block_start * cfg->context,
+                        cfg->context, cache->k + offset, qkv_stride, 1.0f,
+                        dq + (size_t)block_start * qkv_stride + offset,
+                        qkv_stride);
+            cblas_sgemm(CblasRowMajor, CblasTrans, CblasNoTrans, prefix,
+                        head_width, rows, 1.0f,
+                        dscore + (size_t)block_start * cfg->context,
+                        cfg->context,
+                        cache->q + (size_t)block_start * qkv_stride + offset,
+                        qkv_stride, 1.0f, dk + offset, qkv_stride);
+        }
+#else
         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, cfg->context,
                     cfg->context, head_width, 1.0f, datt + offset, cfg->dim,
                     cache->v + offset, qkv_stride, 0.0f, dscore,
@@ -1353,6 +1500,7 @@ static void attention_backward(const Config *cfg, const LayerCache *cache,
                     head_width, cfg->context, 1.0f, dscore, cfg->context,
                     cache->q + offset, qkv_stride, 1.0f, dk + offset,
                     qkv_stride);
+#endif
     }
 #else
     (void)scratch;
@@ -2574,7 +2722,7 @@ typedef struct {
     uint32_t reserved;
     char run_contract_sha256[64];
     uint32_t math_backend;
-    uint32_t reserved_v6;
+    uint32_t attention_backend;
 } CheckpointOrchestrationV6;
 
 #define CHECKPOINT_ORCHESTRATION_V5_SIZE \
@@ -2746,6 +2894,7 @@ static void checkpoint_save(const char *path, const Model *model, uint64_t step,
     orchestration.base.consecutive_rejections = consecutive_rejections;
     orchestration.base.transaction_mode = transaction_mode;
     orchestration.math_backend = math_backend_id();
+    orchestration.attention_backend = attention_backend_id();
 
     if (!write_items(file, &header, sizeof(header), 1) ||
         !write_items(file, &orchestration, sizeof(orchestration), 1)) {
@@ -5892,6 +6041,7 @@ static void print_usage(const char *program)
     printf("  --packed-validation F use a record-safe Z5PKV2 validation pack set\n");
     printf("  --run-contract-sha256 H bind packed checkpoints to one contract\n");
     printf("  --require-math-backend N fail unless the compiled math backend is N\n");
+    printf("  --require-attention-backend N fail unless attention backend is N\n");
     printf("  --max-run-steps N    pause a packed attempt after N updates; 0 disables\n");
     printf("  --claim-answer-weight X weighted claim answers (default: 1)\n");
     printf("  --cloze-answer-weight X weighted cloze answers (default: 1)\n");
@@ -6484,6 +6634,9 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "--require-math-backend") == 0 &&
                    i + 1 < argc) {
             options.required_math_backend = argv[++i];
+        } else if (strcmp(argv[i], "--require-attention-backend") == 0 &&
+                   i + 1 < argc) {
+            options.required_attention_backend = argv[++i];
         } else if (strcmp(argv[i], "--max-run-steps") == 0 &&
                    i + 1 < argc) {
             options.max_run_steps =
@@ -6653,6 +6806,16 @@ int main(int argc, char **argv)
                 "error: required math backend '%s' does not match compiled "
                 "backend '%s'\n",
                 options.required_math_backend, math_backend_name());
+        exit(EXIT_FAILURE);
+    }
+    if (options.required_attention_backend != NULL &&
+        strcmp(options.required_attention_backend,
+               attention_backend_name()) != 0) {
+        fprintf(stderr,
+                "error: required attention backend '%s' does not match "
+                "compiled backend '%s'\n",
+                options.required_attention_backend,
+                attention_backend_name());
         exit(EXIT_FAILURE);
     }
     if (options.max_run_steps != 0 && options.packed_train_path == NULL) {
@@ -6854,6 +7017,19 @@ int main(int argc, char **argv)
             checkpoint_resume_state.math_backend == MATH_BACKEND_UNBOUND) {
             fail("strict math backend resume requires a version-6 checkpoint");
         }
+        if (!options.eval_only && options.steps > 0 &&
+            checkpoint_resume_state.attention_backend !=
+                ATTENTION_BACKEND_UNBOUND &&
+            checkpoint_resume_state.attention_backend !=
+                attention_backend_id()) {
+            fail("checkpoint attention backend does not match this training binary");
+        }
+        if (!options.eval_only && options.steps > 0 &&
+            options.required_attention_backend != NULL &&
+            checkpoint_resume_state.attention_backend ==
+                ATTENTION_BACKEND_UNBOUND) {
+            fail("strict attention backend resume requires a bound checkpoint");
+        }
         if (!options.eval_only && checkpoint_transaction_mode != 0U &&
             checkpoint_transaction_mode !=
                 (uint32_t)options.transaction_mode) {
@@ -6911,11 +7087,11 @@ int main(int argc, char **argv)
 #else
     printf("zero5_lm: backend=portable-C");
 #endif
-    printf(" math-backend=%s context=%d vocab=%d dim=%d heads=%d layers=%d "
-           "ff=%d positions=%s "
+    printf(" math-backend=%s attention-backend=%s context=%d vocab=%d dim=%d "
+           "heads=%d layers=%d ff=%d positions=%s "
            "parameters=%zu trainable-scope=%s trainable-parameters=%zu\n",
-           math_backend_name(), cfg.context, cfg.vocab, cfg.dim, cfg.heads,
-           cfg.layers, cfg.ff,
+           math_backend_name(), attention_backend_name(), cfg.context,
+           cfg.vocab, cfg.dim, cfg.heads, cfg.layers, cfg.ff,
            cfg.rotary ? "rotary" : "learned",
            model_parameter_total(&model),
            trainable_scope_name(model.trainable_scope),

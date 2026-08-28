@@ -376,6 +376,9 @@ try {
   const tensorBinary = process.env.ZERO5_TENSOR_BINARY ?? null;
   const profileBinary = process.env.ZERO5_PROFILE_BINARY ?? null;
   const vectorBinary = process.env.ZERO5_VECTOR_BINARY ?? null;
+  const attentionBinary = process.env.ZERO5_ATTENTION_BINARY ?? null;
+  let vectorReferenceOutput = null;
+  let vectorReferenceCheckpoint = null;
   const runContractSha256 = "0".repeat(64);
   const packed = path.join(temporary, "tiny.z5pack");
   const paired = path.join(temporary, "tiny.z5pair");
@@ -396,6 +399,7 @@ try {
   assert.match(mechanics,
     /packed sampling sequences=4 compute-token-exposures=2048 active-targets=16 answer-targets=3 claim-answer-targets=1 cloze-answer-targets=1 retrieval-answer-targets=1 padding-targets=2032 wraps=0 claim-answer-weight=3\.00919938 cloze-answer-weight=1 retrieval-answer-weight=1\.9414525/);
   assert.match(mechanics, /math-backend=scalar-elementwise/);
+  assert.match(mechanics, /attention-backend=(dense-blas|scalar-causal)/);
   assert.ok(fs.existsSync(checkpoint));
   assert.equal(fs.readFileSync(checkpoint).readUInt32LE(8), 6,
     "new checkpoints must use the math-bound version-6 format");
@@ -485,6 +489,8 @@ try {
     const vectorRepeat = path.join(temporary, "vector-repeat.ckpt");
     const vectorOutput = run(vectorBinary, [...parallelArgs,
       "--save", vector]);
+    vectorReferenceOutput = vectorOutput;
+    vectorReferenceCheckpoint = vector;
     assert.match(vectorOutput,
       /math-backend=(accelerate-vforce|gnu-libmvec-tanh-exp)/);
     const referenceMetrics = packedReport(parallelOutput);
@@ -498,6 +504,36 @@ try {
       sha256(fs.readFileSync(vectorRepeat)));
     run(vectorBinary, [...parallelArgs, "--resume", parallel,
       "--save", vector], 1);
+  }
+
+  if (attentionBinary !== null) {
+    assert.notEqual(vectorReferenceOutput, null,
+      "attention mechanics require ZERO5_VECTOR_BINARY as the dense reference");
+    const blocked = path.join(temporary, "blocked-attention.ckpt");
+    const blockedRepeat = path.join(temporary,
+      "blocked-attention-repeat.ckpt");
+    const blockedOutput = run(attentionBinary, [...parallelArgs,
+      "--save", blocked]);
+    const backend = blockedOutput.match(/attention-backend=([a-z0-9-]+)/);
+    assert.notEqual(backend, null, "attention backend identity is missing");
+    assert.ok(["blocked-causal-blas-64", "scalar-causal"]
+      .includes(backend[1]));
+    const referenceMetrics = packedReport(vectorReferenceOutput);
+    const blockedMetrics = packedReport(blockedOutput);
+    assert.ok(referenceMetrics.every((value, index) =>
+      Math.abs(value - blockedMetrics[index]) <=
+        (index === 2 ? 0.005 : 0.0001)),
+    `blocked metrics drifted: reference=${referenceMetrics} blocked=${blockedMetrics}`);
+    run(attentionBinary, [...parallelArgs, "--save", blockedRepeat]);
+    assert.equal(sha256(fs.readFileSync(blocked)),
+      sha256(fs.readFileSync(blockedRepeat)));
+    if (backend[1] === "blocked-causal-blas-64") {
+      run(attentionBinary, [...parallelArgs,
+        "--resume", vectorReferenceCheckpoint, "--save", blocked], 1);
+    } else {
+      assert.equal(sha256(fs.readFileSync(blocked)),
+        sha256(fs.readFileSync(vectorReferenceCheckpoint)));
+    }
   }
 
   const corrupt = path.join(temporary, "corrupt.z5pack");

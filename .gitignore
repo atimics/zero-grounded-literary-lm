@@ -12,6 +12,9 @@ zero5_c32_lm_profile
 zero5_c32_lm_vector_tanh
 zero5_c32_lm_vector_exp
 zero5_c32_lm_vector_math
+zero5_c32_lm_attention_b32
+zero5_c32_lm_attention_b64
+zero5_c32_lm_attention_b128
 zero5_c32_lm_qkv
 zero5_c32_lm_qkv_backward
 zero5_c32_lm_qkv_forward
