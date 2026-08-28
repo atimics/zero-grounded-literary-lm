@@ -21,9 +21,9 @@ function run(program, args) {
   return result.stdout;
 }
 
-assert.equal(contract.schema, "zero.c42_experiment_setup.v1");
+assert.equal(contract.schema, "zero.c42_experiment_contract.v1");
 assert.equal(contract.experiment, "zero5-c42-v1");
-assert.equal(contract.status, "import-verified-training-unrun");
+assert.equal(contract.status, "evaluator-ready-training-blocked");
 assert.equal(contract.authorized, false);
 assert.equal(contract.upstream.pull_request, 11);
 assert.equal(contract.upstream.merge_required_before_training, false);
@@ -39,8 +39,18 @@ assert.equal(sha256(contract.implementation.trainer),
   contract.implementation.trainer_sha256);
 assert.equal(sha256(contract.implementation.importer),
   contract.implementation.importer_sha256);
+assert.equal(sha256(contract.implementation.evaluator),
+  contract.implementation.evaluator_sha256);
 assert.equal(sha256(contract.initialization.result),
   contract.initialization.result_sha256);
+assert.equal(sha256(contract.proposed_primary_training.math_backend_evidence.result),
+  contract.proposed_primary_training.math_backend_evidence.result_sha256);
+const vectorResult = JSON.parse(fs.readFileSync(
+  contract.proposed_primary_training.math_backend_evidence.result));
+assert.equal(vectorResult.decision.eligible_to_promote_vector_math_default,
+  true);
+assert.equal(contract.proposed_primary_training.math_backend,
+  "gnu-libmvec-tanh-exp");
 assert.equal(contract.verified_import.primary_packs.packs, 37768);
 assert.equal(contract.verified_import.primary_packs.compute_token_exposures,
   37768 * 512);
@@ -56,8 +66,14 @@ assert.equal(contract.proposed_primary_training.pack_sequences,
   contract.verified_import.primary_packs.packs);
 assert.equal(contract.proposed_primary_training.compute_token_exposures,
   contract.verified_import.primary_packs.compute_token_exposures);
-assert.equal(contract.evaluation.evaluator_status, "not-yet-implemented");
-assert.match(contract.evaluation.training_gate, /Do not authorize training/u);
+assert.equal(contract.evaluation.evaluator_status, "implemented-frozen");
+assert.match(contract.evaluation.training_gate, /staged private assets/u);
+assert.equal(contract.gates.test_metrics_opened, false);
+assert.equal(contract.prerequisites_for_training_authorization.length, 2);
+for (const source of [contract.evaluation.retention_inputs.c2_import_manifest,
+  contract.evaluation.retention_inputs.c0_result]) {
+  assert.equal(sha256(source.path), source.sha256);
+}
 assert.match(contract.test.policy,
   /content absent, not parsed, not tokenized, not packed, and not scored/u);
 
@@ -74,6 +90,13 @@ const tensorSelfTest = run("node", [
   "--trainer-mode", "tensor",
 ]);
 assert.match(tensorSelfTest, /grouped importer self-test passed/u);
+const evaluatorSelfTest = run("node", [
+  contract.implementation.evaluator,
+  "--self-test",
+]);
+assert.match(evaluatorSelfTest, /evaluator self-test passed/u);
+assert.doesNotMatch(fs.readFileSync(contract.implementation.evaluator, "utf8"),
+  /data\/test\.jsonl/u);
 
 const localImportPath = "build/zero5-c42-v1/import-final/import.json";
 if (fs.existsSync(localImportPath)) {
@@ -93,11 +116,28 @@ if (fs.existsSync(localImportPath)) {
     contract.verified_import.full_packs.sha256);
   assert.equal(imported.outputs.validation.sha256,
     contract.verified_import.validation_packs.sha256);
+  assert.equal(imported.outputs.span_choices.claim.sha256,
+    contract.verified_import.evaluation_artifacts.claim_span_choices.sha256);
+  assert.equal(imported.outputs.span_choices.retrieval.sha256,
+    contract.verified_import.evaluation_artifacts.retrieval_span_choices.sha256);
+  assert.equal(imported.outputs.cloze_completion.sha256,
+    contract.verified_import.evaluation_artifacts.cloze_completion.sha256);
+  assert.equal(imported.outputs.validation_tasks["evidence-bundle"].sha256,
+    contract.verified_import.evaluation_artifacts.evidence_validation.sha256);
   assert.equal(imported.test.content_present, false);
   assert.equal(imported.test.parsed, false);
   assert.equal(imported.test.tokenized, false);
   assert.equal(imported.test.packed, false);
   assert.equal(imported.test.metrics_opened, false);
+  const preflight = run("node", [
+    contract.implementation.evaluator,
+    "--import-dir", "build/zero5-c42-v1/import-final",
+    "--preflight-only",
+  ]);
+  const preflightResult = JSON.parse(preflight.trim());
+  assert.equal(preflightResult.schema, "zero.c42_evaluator_preflight.v1");
+  assert.equal(preflightResult.evaluator_artifacts_verified, true);
+  assert.equal(preflightResult.test_metrics_opened, false);
 }
 
-process.stdout.write("ZERO.5 C4.2 setup checks passed\n");
+process.stdout.write("ZERO.5 C4.2 evaluator and setup checks passed\n");

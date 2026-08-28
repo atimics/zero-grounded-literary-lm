@@ -1,11 +1,11 @@
 {
-  "schema": "zero.c42_experiment_setup.v1",
+  "schema": "zero.c42_experiment_contract.v1",
   "experiment": "zero5-c42-v1",
-  "status": "import-verified-training-unrun",
+  "status": "evaluator-ready-training-blocked",
   "authorized": false,
   "purpose": "Test the marker-free C4.2 frontier curriculum on the unchanged 4.85M-parameter ZERO.5 model initialized from the selected C2 checkpoint.",
   "claim_boundary": {
-    "may_claim": "The locked C4.2 train and validation release can be imported without opening test data, and the C trainer can execute its exact variable-size optimizer groups without extra token exposures.",
+    "may_claim": "The locked C4.2 train and validation release can be imported without opening test data, the C trainer can execute its exact variable-size optimizer groups without extra token exposures, and the frozen validation evaluator and promotion gates are executable.",
     "may_not_claim": [
       "that C4.2 improves the model before a preregistered run completes",
       "reasoning, intelligence, factual truth, or broad model promotion",
@@ -35,9 +35,11 @@
   },
   "implementation": {
     "trainer": "zero5_c32_lm.c",
-    "trainer_sha256": "8e647631e6e804f93b4bb9ba9e661cfb6352533a48a0f9377ce3c2a5dd1a2af1",
+    "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
     "importer": "scripts/prepare_zero5_c42.mjs",
-    "importer_sha256": "f04ad728a564ff9b44ca767478572f9db0743d2dccf3aed660d8dfb6bb156280",
+    "importer_sha256": "b9bea97241a7b9510d0a105bd301cd2921b41ff04e2ee8303937d91fe8210b6c",
+    "evaluator": "scripts/evaluate_zero5_c42.mjs",
+    "evaluator_sha256": "9ee5562a28896881c92ae6d378dbc78be47b1d2ec7a396221aee133070e19aa9",
     "model_and_training": "C11",
     "orchestration": "Node.js",
     "python": false,
@@ -45,7 +47,7 @@
     "compatibility": "Z5PKV2 remains supported without changed math or scheduling. Z5PKV3 adds only content-bound update offsets."
   },
   "verified_import": {
-    "manifest_sha256": "290e588c7a8aa7eb7296dd24cc98b53049bbbce1d829040a7c2c9c80c3825def",
+    "manifest_sha256": "bf8ad23dd4c93acb4708f512cde54a7cf4c741dc1b227f5f053d8366231e6a00",
     "primary_packs": {
       "sha256": "7b6023a6f16bbc4893d1e339dc43983686a1079850bb364814b918621c4c8d27",
       "packs": 37768,
@@ -75,6 +77,28 @@
       "sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
       "packs": 8715,
       "records": 12159
+    },
+    "evaluation_artifacts": {
+      "claim_span_choices": {
+        "sha256": "6bdfbcab7f0a7a91710c61d61700a108f8cf453e4ce74c12efc0c45a4ae10b0d",
+        "pairs": 2280,
+        "records": 4560
+      },
+      "retrieval_span_choices": {
+        "sha256": "8a351a73d1a800c5838d859be4ad170467cc2c912de59ee8b10c012526188250",
+        "pairs": 1011,
+        "records": 2022
+      },
+      "cloze_completion": {
+        "sha256": "e0b0a591bf515dd41968c00e348849558006d078ee4d9d211c3c876a1c683168",
+        "records": 3555,
+        "target_tokens": 23691
+      },
+      "evidence_validation": {
+        "sha256": "1d7d6bff59bf3c063274601072379e0fa59594aa239a95c754454990254f6431",
+        "packs": 1563,
+        "records": 2022
+      }
     }
   },
   "initialization": {
@@ -97,7 +121,7 @@
     "positions": "rotary"
   },
   "proposed_primary_training": {
-    "status": "blocked-until-prerequisites-pass",
+    "status": "blocked-until-assets-and-budget-approval",
     "updates": 27962,
     "maximum_batch_sequences": 2,
     "parallel_workers": 2,
@@ -117,7 +141,14 @@
     "schedule": "cosine over all 27,962 update groups",
     "residual_dropout": 0.1,
     "checkpoint_selection": "lowest frozen validation loss at fixed reports; no test access",
-    "math_backend": "pending zero5-vector-validation-v1 result",
+    "math_backend": "gnu-libmvec-tanh-exp",
+    "math_backend_evidence": {
+      "result": "benchmarks/zero5-vector-validation-v1/result.json",
+      "result_sha256": "e1d9e4f0974a8265fc6f174ca9ce2c3f8414532fe3c6b83061601711300b24c7",
+      "throughput_gain_fraction": 0.3048316708229424,
+      "validation_loss_delta": 0,
+      "eligible": true
+    },
     "attention_backend": "dense-blas"
   },
   "evaluation": {
@@ -132,8 +163,52 @@
       "evidence-retention",
       "c2-retention"
     ],
-    "evaluator_status": "not-yet-implemented",
-    "training_gate": "Do not authorize training until the frozen validation evaluator and promotion gates are executable."
+    "evaluator_status": "implemented-frozen",
+    "combined_validation_packs": 128,
+    "evidence_validation_packs": 128,
+    "atlas_windows": 128,
+    "anchor_windows": 19,
+    "choice_scoring": "For every validation orientation, compare mean causal nats per token over the natural correct and alternative candidate spans. Mirrored orientations must stay paired.",
+    "cloze_scoring": "Exhaustive teacher-forced top-1 exact match over the natural answer span for all 3,555 validation cloze records.",
+    "retention_scoring": "Compare candidate and hash-locked C2 initialization on the same frozen evidence, Atlas, and C1 anchor validation inputs.",
+    "retention_inputs": {
+      "c2_import_manifest": {
+        "path": "benchmarks/zero5-c2-v1/import.json",
+        "sha256": "2cc42c2f0473b9b08a8708d54ecb8dd7e958576d9f5692bbfcf6b3e587f5b45d"
+      },
+      "c0_result": {
+        "path": "benchmarks/zero5-c0-v1/result.json",
+        "sha256": "e3c0bd90196387d0791674c6b38ecf97134f229f99757c94c8b4f095d339508f"
+      },
+      "atlas_train_sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+      "atlas_validation_sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+      "anchor_train_sha256": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+      "anchor_validation_sha256": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
+    },
+    "gate_rationale": "Require a 10% combined validation improvement, at least two choice points, five swap-consistency points, three pair-exact points, and one cloze exact-match point over C2. Evidence, Atlas, and C1 may regress by at most 10%. Absolute choice and position floors prevent a weak C2 baseline from making relative gains sufficient.",
+    "training_gate": "The evaluator prerequisite passes. Training still requires staged private assets and separate explicit EC2 budget approval."
+  },
+  "gates": {
+    "combined_relative_improvement_minimum": 0.1,
+    "choice_accuracy_minimum": {
+      "claim": 0.55,
+      "retrieval": 0.55
+    },
+    "choice_improvement_minimum": 0.02,
+    "position_accuracy_minimum": 0.5,
+    "position_gap_maximum": {
+      "claim": 0.1,
+      "retrieval": 0.15
+    },
+    "swap_improvement_minimum": 0.05,
+    "pair_exact_improvement_minimum": 0.03,
+    "cloze_exact_improvement_minimum": 0.01,
+    "evidence_relative_regression_maximum": 0.1,
+    "atlas_nats_per_token_maximum": 2.50646,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "c2_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
   },
   "test": {
     "records": 12188,
@@ -142,8 +217,6 @@
     "policy": "hash-only; content absent, not parsed, not tokenized, not packed, and not scored"
   },
   "prerequisites_for_training_authorization": [
-    "zero5-vector-validation-v1 selects the production math backend",
-    "the complete frozen validation evaluator and gates are implemented",
     "the exact source and private asset archives are staged",
     "a separate EC2 cost ceiling receives explicit user approval"
   ]

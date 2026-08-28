@@ -411,6 +411,7 @@ typedef struct {
     int eval_only;
     const char *completion_eval_path;
     const char *paired_eval_path;
+    const char *span_choice_eval_path;
     const char *packed_train_path;
     const char *packed_validation_path;
     const char *run_contract_sha256;
@@ -3291,7 +3292,9 @@ static void evaluate_completions(Model *model, const char *path)
         int record_exact = 1;
         if (token_count < 2U ||
             token_count > (uint32_t)model->cfg.context + 1U ||
-            target_start == 0U || target_count == 0U ||
+            (target_start == 0U &&
+             token_count == (uint32_t)model->cfg.context + 1U) ||
+            target_count == 0U ||
             target_start + target_count > token_count || reserved != 0U) {
             fail("invalid completion evaluation record");
         }
@@ -3528,6 +3531,200 @@ static void evaluate_paired_choices(Model *model, const char *path)
            (double)choice_correct / ((double)pair_count * 2.0),
            (double)position_a_correct / (double)position_a_records,
            (double)position_b_correct / (double)position_b_records,
+           (double)swap_consistent / (double)pair_count,
+           (double)pair_exact / (double)pair_count);
+    free(context);
+    free(sequence);
+}
+
+typedef struct {
+    uint32_t target_count;
+    uint64_t correct_tokens;
+    int exact;
+    double loss;
+} SpanScore;
+
+static SpanScore score_span(
+    Model *model, const Token *sequence,
+    uint32_t target_start, uint32_t target_count, uint32_t offset,
+    int top1)
+{
+    SpanScore score = {0};
+    uint32_t token;
+    score.target_count = target_count;
+    score.exact = 1;
+    for (token = target_start; token < target_start + target_count; ++token) {
+        uint32_t time = offset + token - 1U;
+        const float *row =
+            &model->probs[(size_t)time * (size_t)model->cfg.vocab];
+        Token target = sequence[token];
+        float probability = row[target];
+        if (probability < 1.0e-20f) probability = 1.0e-20f;
+        score.loss -= log((double)probability);
+        if (top1) {
+            int best = 0;
+            int candidate;
+            for (candidate = 1; candidate < model->cfg.vocab; ++candidate) {
+                if (row[candidate] > row[best]) best = candidate;
+            }
+            if ((Token)best == target) ++score.correct_tokens;
+            else score.exact = 0;
+        }
+    }
+    return score;
+}
+
+static void evaluate_span_choices(Model *model, const char *path)
+{
+    static const unsigned char magic[8] = {
+        'Z', '5', 'S', 'C', 'V', '1', '\0', '\0'
+    };
+    unsigned char observed_magic[8];
+    FILE *file = fopen(path, "rb");
+    Token *sequence;
+    Token *context;
+    uint32_t version;
+    uint32_t vocab;
+    uint32_t declared_context;
+    uint32_t pair_count;
+    uint64_t correct_target_tokens = 0;
+    uint64_t alternative_target_tokens = 0;
+    uint64_t correct_tokens = 0;
+    uint64_t exact_records = 0;
+    uint64_t choice_correct = 0;
+    uint64_t position_0_correct = 0;
+    uint64_t position_1_correct = 0;
+    uint64_t position_0_records = 0;
+    uint64_t position_1_records = 0;
+    uint64_t swap_consistent = 0;
+    uint64_t pair_exact = 0;
+    double correct_loss = 0.0;
+    double alternative_loss = 0.0;
+    double choice_loss = 0.0;
+    uint32_t pair;
+    if (file == NULL) fail_path("open span-choice evaluation", path);
+    if (fread(observed_magic, 1, sizeof(observed_magic), file) !=
+            sizeof(observed_magic) ||
+        memcmp(observed_magic, magic, sizeof(magic)) != 0) {
+        fail("unsupported or corrupt span-choice evaluation");
+    }
+    version = completion_read_u32(file, path);
+    vocab = completion_read_u32(file, path);
+    declared_context = completion_read_u32(file, path);
+    pair_count = completion_read_u32(file, path);
+    if (version != 1U || vocab != (uint32_t)model->cfg.vocab ||
+        declared_context != (uint32_t)model->cfg.context ||
+        pair_count == 0U) {
+        fail("span-choice evaluation contract does not match the model");
+    }
+    sequence = zero_alloc((size_t)model->cfg.context + 1u,
+                          sizeof(*sequence));
+    context = zero_alloc((size_t)model->cfg.context, sizeof(*context));
+    for (pair = 0; pair < pair_count; ++pair) {
+        uint32_t labels[2];
+        uint32_t predictions[2];
+        int choices_correct[2];
+        uint32_t orientation;
+        for (orientation = 0; orientation < 2U; ++orientation) {
+            uint32_t token_count = completion_read_u32(file, path);
+            uint32_t correct_start = completion_read_u32(file, path);
+            uint32_t correct_count = completion_read_u32(file, path);
+            uint32_t alternative_start = completion_read_u32(file, path);
+            uint32_t alternative_count = completion_read_u32(file, path);
+            uint32_t label = completion_read_u32(file, path);
+            uint32_t offset;
+            uint32_t token;
+            SpanScore correct;
+            SpanScore alternative;
+            double difference;
+            if (token_count < 2U ||
+                token_count > (uint32_t)model->cfg.context + 1U ||
+                correct_start == 0U || correct_count == 0U ||
+                correct_start + correct_count > token_count ||
+                alternative_start == 0U || alternative_count == 0U ||
+                alternative_start + alternative_count > token_count ||
+                label > 1U) {
+                fail("invalid span-choice evaluation record");
+            }
+            for (token = 0; token < token_count; ++token) {
+                sequence[token] = completion_read_u16(file, path);
+                if (sequence[token] >= (Token)model->cfg.vocab) {
+                    fail("span-choice token exceeds model vocabulary");
+                }
+            }
+            offset = (uint32_t)model->cfg.context + 1U - token_count;
+            for (token = 0; token < (uint32_t)model->cfg.context; ++token) {
+                context[token] = (Token)' ';
+            }
+            for (token = 0; token < token_count; ++token) {
+                uint32_t destination = offset + token;
+                if (destination < (uint32_t)model->cfg.context) {
+                    context[destination] = sequence[token];
+                }
+            }
+            (void)model_forward(model, context, NULL, 0.0f, NULL);
+            correct = score_span(model, sequence,
+                                 correct_start, correct_count, offset, 1);
+            alternative = score_span(model, sequence,
+                                     alternative_start, alternative_count,
+                                     offset, 0);
+            difference = correct.loss / (double)correct.target_count -
+                         alternative.loss / (double)alternative.target_count;
+            labels[orientation] = label;
+            predictions[orientation] = difference <= 0.0 ? label : 1U - label;
+            choices_correct[orientation] = difference <= 0.0;
+            correct_loss += correct.loss;
+            alternative_loss += alternative.loss;
+            correct_target_tokens += correct.target_count;
+            alternative_target_tokens += alternative.target_count;
+            correct_tokens += correct.correct_tokens;
+            if (correct.exact) ++exact_records;
+            if (choices_correct[orientation]) ++choice_correct;
+            choice_loss += difference > 0.0
+                               ? difference + log1p(exp(-difference))
+                               : log1p(exp(difference));
+            if (label == 0U) {
+                ++position_0_records;
+                if (choices_correct[orientation]) ++position_0_correct;
+            } else {
+                ++position_1_records;
+                if (choices_correct[orientation]) ++position_1_correct;
+            }
+        }
+        if (labels[0] == labels[1]) {
+            fail("span-choice evaluation labels are not mirrored");
+        }
+        if (predictions[0] != predictions[1]) ++swap_consistent;
+        if (choices_correct[0] && choices_correct[1]) ++pair_exact;
+    }
+    if (position_0_records != pair_count ||
+        position_1_records != pair_count || fgetc(file) != EOF) {
+        fail("span-choice evaluation accounting or trailing bytes are invalid");
+    }
+    if (fclose(file) != 0) fail_path("close span-choice evaluation", path);
+    printf("{\"schema\":\"zero.c42_span_choice_eval.v1\","
+           "\"pairs\":%u,\"records\":%llu,"
+           "\"correct_target_tokens\":%llu,"
+           "\"alternative_target_tokens\":%llu,"
+           "\"correct_nats_per_target_token\":%.9g,"
+           "\"alternative_nats_per_target_token\":%.9g,"
+           "\"top1_token_accuracy\":%.9g,"
+           "\"teacher_forced_exact_accuracy\":%.9g,"
+           "\"forced_choice_nats\":%.9g,\"choice_accuracy\":%.9g,"
+           "\"position_0_accuracy\":%.9g,\"position_1_accuracy\":%.9g,"
+           "\"swap_consistency_accuracy\":%.9g,"
+           "\"pair_exact_accuracy\":%.9g}\n",
+           pair_count, (unsigned long long)pair_count * 2ULL,
+           (unsigned long long)correct_target_tokens,
+           (unsigned long long)alternative_target_tokens,
+           correct_loss / (double)correct_target_tokens,
+           alternative_loss / (double)alternative_target_tokens,
+           (double)correct_tokens / (double)correct_target_tokens,
+           (double)exact_records / ((double)pair_count * 2.0),
+           choice_loss / ((double)pair_count * 2.0),
+           (double)choice_correct / ((double)pair_count * 2.0),
+           (double)position_0_correct / (double)position_0_records,
+           (double)position_1_correct / (double)position_1_records,
            (double)swap_consistent / (double)pair_count,
            (double)pair_exact / (double)pair_count);
     free(context);
@@ -6146,6 +6343,7 @@ static void print_usage(const char *program)
     printf("  --eval-only          read-only validation; never updates or saves\n");
     printf("  --completion-eval F  score answer-only records from a Z5CEV1 file\n");
     printf("  --paired-eval F      score mirrored choices from a Z5PEV1 file\n");
+    printf("  --span-choice-eval F score marker-free mirrored spans from a Z5SCV1 file\n");
     printf("  --generate-only      equivalent to --steps 0\n");
     printf("  --prompt TEXT        generation prefix (default: zero)\n");
     printf("  --tokens N           tokens to generate (default: 256)\n");
@@ -6821,6 +7019,9 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[i], "--paired-eval") == 0 &&
                    i + 1 < argc) {
             options.paired_eval_path = argv[++i];
+        } else if (strcmp(argv[i], "--span-choice-eval") == 0 &&
+                   i + 1 < argc) {
+            options.span_choice_eval_path = argv[++i];
         } else if (strcmp(argv[i], "--generate-only") == 0) {
             options.steps = 0;
         } else if (strcmp(argv[i], "--prompt") == 0 && i + 1 < argc) {
@@ -6916,7 +7117,8 @@ int main(int argc, char **argv)
         }
     }
     if (options.completion_eval_path != NULL ||
-        options.paired_eval_path != NULL) {
+        options.paired_eval_path != NULL ||
+        options.span_choice_eval_path != NULL) {
         options.steps = 0;
         options.generate_tokens = 0;
         if (options.resume_path == NULL && options.init_path == NULL) {
@@ -6925,9 +7127,10 @@ int main(int argc, char **argv)
         if (options.eval_only) {
             fail("completion evaluation and --eval-only are mutually exclusive");
         }
-        if (options.completion_eval_path != NULL &&
-            options.paired_eval_path != NULL) {
-            fail("--completion-eval and --paired-eval are mutually exclusive");
+        if ((options.completion_eval_path != NULL) +
+            (options.paired_eval_path != NULL) +
+            (options.span_choice_eval_path != NULL) > 1) {
+            fail("completion, paired, and span-choice evaluations are mutually exclusive");
         }
     }
     if (options.resume_path != NULL) {
@@ -7179,6 +7382,9 @@ int main(int argc, char **argv)
     }
     if (options.paired_eval_path != NULL) {
         evaluate_paired_choices(&model, options.paired_eval_path);
+    }
+    if (options.span_choice_eval_path != NULL) {
+        evaluate_span_choices(&model, options.span_choice_eval_path);
     }
 
     if (options.packed_validation_path != NULL) {
