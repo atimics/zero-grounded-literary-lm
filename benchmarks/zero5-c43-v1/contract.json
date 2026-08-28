@@ -182,7 +182,7 @@
     "intake_library_sha256": "4027038320161282aaeaa16bf8054f0e0064bd0e4d52ceaf60d6f5c405df6fbe",
     "pilot_runner_sha256": "1aeb256f9a68c73ddbabaa80ecf19a14ba41d3097eccb07d9ab1653056202776",
     "evaluator_sha256": "186659bdfd93f547ef480ec4948cecb9067a3e43df0b0b8a9b84e6e2b5303006",
-    "runner_sha256": "ebcfd6f8331949ba4a7c480e21e2b665d4339088b64d4e51990708add6c62624",
+    "runner_sha256": "2a92ac573be15a1e4b0d1ceda70611ee31dec4b3f29b20b386c98b1f7f242367",
     "model_and_training": "C11",
     "orchestration": "Node.js",
     "pack_format": "Z5PKV3 grouped packs"
@@ -217,13 +217,23 @@
     "cost_ceiling_usd": null
   },
   "execution": {
-    "status": "blocked-not-selected",
+    "status": "frozen-local-unauthorized",
     "scale_policy": "local first; scale only after measured saturation",
-    "venue": null,
-    "compute_resource": null,
-    "blas_threads": null,
+    "venue": "local",
+    "compute_resource": "Apple Silicon CPU",
+    "math_backend": "accelerate-vforce",
+    "attention_backend": "dense-blas",
+    "blas_threads": 4,
     "checkpoint_every_updates": 250,
-    "maximum_execution_seconds": null,
+    "maximum_execution_seconds": 3600,
+    "throughput_evidence": {
+      "development_compute_token_exposures": 755712,
+      "balanced_elapsed_seconds": 73.060036083,
+      "balanced_compute_tokens_per_second": 10343.7,
+      "cloze_plus_five_elapsed_seconds": 71.768870458,
+      "cloze_plus_five_compute_tokens_per_second": 10529.8,
+      "conservative_projected_primary_seconds": 1869.47
+    },
     "automatic_termination_required_for_paid_compute": true
   },
   "evaluation": {
@@ -331,8 +341,6 @@
   },
   "blockers": [
     "Braid and user authorization for primary training",
-    "measured local throughput and runtime-venue selection",
-    "explicit paid-compute ceiling if a paid venue is selected",
     "authorization PR that changes status to authorized-unrun"
   ]
 }

@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 
@@ -51,7 +52,7 @@ function run(program, args, environment = {}) {
   return result.stdout;
 }
 
-function runStreaming(program, args, environment, logFile) {
+function runStreaming(program, args, environment, logFile, maximumSeconds) {
   return new Promise((resolve, reject) => {
     const child = spawn(program, args, {
       stdio: ["ignore", "pipe", "pipe"],
@@ -60,6 +61,13 @@ function runStreaming(program, args, environment, logFile) {
     const log = fs.openSync(logFile, "a");
     let stdout = "";
     let stderr = "";
+    let timedOut = false;
+    let forceTimer = null;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGTERM");
+      forceTimer = setTimeout(() => child.kill("SIGKILL"), 10000);
+    }, maximumSeconds * 1000);
     const write = (stream, chunk) => {
       const value = chunk.toString();
       fs.writeSync(log, value);
@@ -68,11 +76,25 @@ function runStreaming(program, args, environment, logFile) {
     };
     child.stdout.on("data", chunk => { stdout += write(process.stdout, chunk); });
     child.stderr.on("data", chunk => { stderr += write(process.stderr, chunk); });
-    child.on("error", error => { fs.closeSync(log); reject(error); });
-    child.on("close", code => {
+    child.on("error", error => {
+      clearTimeout(timer);
+      if (forceTimer) clearTimeout(forceTimer);
       fs.closeSync(log);
-      code === 0 ? resolve(stdout) : reject(new Error(
+      reject(error);
+    });
+    child.on("close", code => {
+      clearTimeout(timer);
+      if (forceTimer) clearTimeout(forceTimer);
+      fs.closeSync(log);
+      if (timedOut) {
+        reject(new Error(
+          `C4.3 local execution exceeded ${maximumSeconds} seconds`));
+      } else if (code === 0) {
+        resolve(stdout);
+      } else {
+        reject(new Error(
         `${program} failed: ${(stderr || stdout).trim()}`));
+      }
     });
   });
 }
@@ -89,7 +111,7 @@ function parseAccounting(log) {
     padding_targets: Number(match[8]), wraps: Number(match[9]) };
 }
 
-function selfTest() {
+async function selfTest() {
   const accounting = parseAccounting("packed sampling sequences=37768 " +
     "compute-token-exposures=19337216 active-targets=14850534 " +
     "answer-targets=2843431 claim-answer-targets=942560 " +
@@ -98,11 +120,21 @@ function selfTest() {
   assert.equal(accounting.pack_sequences, 37768);
   assert.equal(accounting.answer_targets, 2843431);
   assert.equal(accounting.wraps, 0);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(),
+    "zero-c43-runner-"));
+  try {
+    await assert.rejects(runStreaming(process.execPath,
+      ["-e", "setTimeout(() => {}, 1000)"], {},
+      path.join(directory, "timeout.log"), 0.01),
+    /local execution exceeded/u);
+  } finally {
+    fs.rmSync(directory, { recursive: true });
+  }
   process.stdout.write("ZERO.5 C4.3 runner self-test passed\n");
 }
 
 if (process.argv.includes("--self-test")) {
-  selfTest();
+  await selfTest();
   process.exit(0);
 }
 
@@ -127,6 +159,10 @@ if (contract.execution.venue === "local") {
            !Number.isFinite(contract.training.cost_ceiling_usd) ||
            contract.training.cost_ceiling_usd <= 0) {
   fail("paid C4.3 execution lacks an explicit cost ceiling");
+}
+if (!Number.isSafeInteger(contract.execution.maximum_execution_seconds) ||
+    contract.execution.maximum_execution_seconds <= 0) {
+  fail("C4.3 execution lacks a positive hard time limit");
 }
 if (contract.test.content_present !== false ||
     contract.test.metrics_opened !== false) {
@@ -267,7 +303,7 @@ if (!fs.existsSync(resultPath)) {
     "--cloze-answer-weight", String(training.answer_weights.cloze),
     "--retrieval-answer-weight", String(training.answer_weights.retrieval),
     "--tokens", "0",
-  ], environment, trainingLog);
+  ], environment, trainingLog, contract.execution.maximum_execution_seconds);
   const elapsedSeconds = Number(process.hrtime.bigint() - started) / 1e9;
   const log = fs.readFileSync(trainingLog, "utf8");
   const reports = [...log.matchAll(

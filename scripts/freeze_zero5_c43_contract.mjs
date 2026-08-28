@@ -189,13 +189,23 @@ try {
       cost_ceiling_usd: null,
     },
     execution: {
-      status: "blocked-not-selected",
+      status: "frozen-local-unauthorized",
       scale_policy: "local first; scale only after measured saturation",
-      venue: null,
-      compute_resource: null,
-      blas_threads: null,
+      venue: "local",
+      compute_resource: "Apple Silicon CPU",
+      math_backend: "accelerate-vforce",
+      attention_backend: "dense-blas",
+      blas_threads: 4,
       checkpoint_every_updates: 250,
-      maximum_execution_seconds: null,
+      maximum_execution_seconds: 3600,
+      throughput_evidence: {
+        development_compute_token_exposures: 755712,
+        balanced_elapsed_seconds: 73.060036083,
+        balanced_compute_tokens_per_second: 10343.7,
+        cloze_plus_five_elapsed_seconds: 71.768870458,
+        cloze_plus_five_compute_tokens_per_second: 10529.8,
+        conservative_projected_primary_seconds: 1869.47,
+      },
       automatic_termination_required_for_paid_compute: true,
     },
     evaluation: {
@@ -228,8 +238,6 @@ try {
     claim_boundary: proposal.claim_boundary,
     blockers: [
       "Braid and user authorization for primary training",
-      "measured local throughput and runtime-venue selection",
-      "explicit paid-compute ceiling if a paid venue is selected",
       "authorization PR that changes status to authorized-unrun",
     ],
   };
