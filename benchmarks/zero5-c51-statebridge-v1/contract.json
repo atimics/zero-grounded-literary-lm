@@ -1,0 +1,202 @@
+{
+  "schema": "zero.c51_statebridge_contract.v1",
+  "experiment": "zero5-c51-statebridge-v1",
+  "status": "authorized-unrun",
+  "authorized": true,
+  "authorization": {
+    "training_authorized": true,
+    "authorization_id": "zero5-c51-statebridge-local-2026-08-28-v1",
+    "record": "benchmarks/zero5-c51-statebridge-v1/authorization.json",
+    "record_sha256": "1b1ec5a06041c597305e61f4aad7d337d8e1c1dfd95dbaf9f6ebb1eff676798f"
+  },
+  "braid": {
+    "release_id": "braid-corpus-five-statebridge-v0.3.0-3ce479213241679af209b402101c24786299f2ff05325838efd42eebf541315c",
+    "source_commit": "f96fb289b2ddf3c22b755bfa378f8ff70afb0293",
+    "representation_id": "braid-corpus-five-statebridge-zero5-512-text-c52-v0.3.0-88aa4262ef1fcdada6aa36e99aa7d1c6ccb4e347c5e0ce2c6505b6bfc03b5766",
+    "specification_digest": "4742f968e95c0b7a55a3452088ad628bce1a881c3f58b4ed4b03cbffb3dc15c5",
+    "upstream_contract_digest": "d7e3ad62f3d9f3a8e1d1418b91df063976e439b84ee7f0c5bec5e3e89c1bfeae",
+    "rights": {
+      "corpus_license": "CC0-1.0",
+      "corpus_published_by_zero": false
+    }
+  },
+  "control": {
+    "experiment": "zero5-c43-v1",
+    "contract_path": "benchmarks/zero5-c43-v1/contract.json",
+    "contract_sha256": "0cf7390dbc188d444d723eee6ca7c0ceba3c5c00aec23b1de3f1a827fa3f16dc",
+    "public_result": {
+      "path": "benchmarks/zero5-c43-v1/result.json",
+      "sha256": "ebcf20bf7214f7b99b1425bcd74e3545de7a079268536fde93aeb4d456dbfb74"
+    },
+    "retrieval_choice_accuracy": 0.537586548,
+    "retrieval_pair_exact_accuracy": 0.520276954,
+    "claim_choice_accuracy": 0.708114035,
+    "combined_nats_per_token": 2.0105
+  },
+  "verified_import": {
+    "deterministic": true,
+    "receipt_sha256": "f71c6ecb5d00e0c3ce92dc4832cfdab96740cd550e98fa9a3c5c3f187e87dbaa",
+    "second_receipt_sha256": "28568a5e0666c6f8074d529dae002fb04411c9b9c13a8c048c1a2e7835d146e3",
+    "primary": {
+      "sha256": "96cd33db03f5cc4e837d4ff2cdfd2bf4aaf845b731a189ea7d4ae770a730b59f",
+      "bytes": 58202092,
+      "packs": 37768,
+      "records": 91042,
+      "active_targets": 14850534,
+      "answer_targets": 1589463,
+      "answer_targets_by_task": {
+        "claim": 447614,
+        "cloze": 430769,
+        "retrieval": 711080
+      },
+      "compute_token_exposures": 19337216,
+      "state_target_positions": 409774,
+      "padding_targets": 4486682,
+      "update_groups": 28707,
+      "maximum_packs_per_update": 2
+    },
+    "mixture": {
+      "c5_pack_fraction": 0.25,
+      "c5_packs": 9442,
+      "c5_groups": 4721,
+      "c5_next_state_packs": 3148,
+      "c5_choice_a_packs": 3147,
+      "c5_choice_b_packs": 3147,
+      "c5_records": 22445,
+      "raw_c5_active_targets": 3903100,
+      "input_targets_masked_for_exact_match": 479805,
+      "c5_state_target_positions": 409774,
+      "target_span_loss": "standard causal weight 1",
+      "symbolic_serialization_present": false,
+      "auxiliary_state_head_present": false
+    },
+    "evaluation": {
+      "next_state": {
+        "sha256": "9d15fe661ea4cd4d95a04be1d2a78899edbe51009ec9a67f3caa7d1bdb1b10b8",
+        "records": 4924,
+        "target_tokens": 290827
+      },
+      "choice_a": {
+        "sha256": "aea0432f85f9cfa6f3f542dd0e351e055e5bce19820df816cbe1767ac4554b80",
+        "records": 4924,
+        "target_tokens": 4924
+      },
+      "choice_b": {
+        "sha256": "9fab9b6720d99cddede7b67379e8ba6488a319c9611b383ff884629ba26068fe",
+        "records": 4924,
+        "target_tokens": 4924
+      }
+    }
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc"
+  },
+  "initialization": {
+    "source": "ZERO.5 C2 selected checkpoint",
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "optimizer": "fresh AdamW state"
+  },
+  "implementation": {
+    "trainer": "zero5_c32_lm.c",
+    "importer": "scripts/prepare_zero5_c51.mjs",
+    "evaluator": "scripts/evaluate_zero5_c51.mjs",
+    "runner": "scripts/run_zero5_c51.mjs",
+    "c43_evaluator": "scripts/evaluate_zero5_c43.mjs",
+    "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "importer_sha256": "28cd343a98f7eff7a086613b3e68a32eacbbfa84733a63982dbab4f9f3d2eaab",
+    "evaluator_sha256": "c6e2cdd1ed6da0a4bae906fe63c2ad66918b0d28392da62c185357860456b770",
+    "runner_sha256": "6d8562d824288d66f0a90ec927a87472bf431aa21d8e8dc4771850f5c42a60f3",
+    "c43_evaluator_sha256": "186659bdfd93f547ef480ec4948cecb9067a3e43df0b0b8a9b84e6e2b5303006",
+    "pack_format": "Z5PKV3 grouped packs"
+  },
+  "training": {
+    "seed": 0,
+    "update_groups": 28707,
+    "maximum_batch_sequences": 2,
+    "parallel_workers": 2,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 14850534,
+    "zero_wraps_required": true,
+    "answer_weights": {
+      "claim": 2.229423406,
+      "cloze": 5.253416128,
+      "retrieval": 1.429401038
+    },
+    "optimizer": "AdamW with fresh state",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 1000,
+    "schedule": "cosine over all 28,707 update groups",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_packs": 64,
+    "checkpoint_selection": "lowest frozen C4.2 validation loss",
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null
+  },
+  "execution": {
+    "venue": "local",
+    "compute_resource": "Apple Silicon CPU",
+    "math_backend": "accelerate-vforce",
+    "attention_backend": "dense-blas",
+    "blas_threads": 4,
+    "checkpoint_every_updates": 250,
+    "maximum_execution_seconds": 3600,
+    "independent_retry_authorized": false
+  },
+  "evaluation": {
+    "frozen_c42_validation_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "baseline": "frozen C2",
+    "control": "completed C4.3 seed-0 run",
+    "retention_inputs": {
+      "atlas_train_sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+      "atlas_validation_sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+      "anchor_train_sha256": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+      "anchor_validation_sha256": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
+    },
+    "cloze_exact_metric": "reported-retired-not-a-decision-gate"
+  },
+  "gates": {
+    "retrieval_choice_accuracy_minimum": 0.55,
+    "retrieval_choice_gain_minimum": 0.01,
+    "orientation_accuracy_minimum": 0.5,
+    "orientation_gap_maximum": 0.15,
+    "retrieval_swap_consistency_minimum": 0.94,
+    "retrieval_pair_exact_minimum": 0.53,
+    "claim_regression_maximum": 0.03,
+    "claim_swap_consistency_minimum": 0.94,
+    "combined_regression_from_c43_maximum": 0.05,
+    "c2_relative_regression_maximum": 0.1,
+    "atlas_nats_per_token_maximum": 2.50646,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "c52_next_state_target_nats_improvement_minimum": 0.05
+  },
+  "claim_boundary": {
+    "structured_content_only": true,
+    "symbolic_serialization": false,
+    "verified_state_target_loss": false,
+    "pass_authorizes": "request for frozen multi-seed replication only",
+    "promotion_authorized": false,
+    "checkpoint_publication_authorized": false
+  },
+  "test": {
+    "policy": "C5.2 test content absent from ZERO import; C4 sealed test stays closed",
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
