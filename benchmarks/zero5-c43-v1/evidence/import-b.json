@@ -1,0 +1,99 @@
+{
+  "schema": "zero.c43_import_receipt.v1",
+  "import_id": "zero5-c43-private-b",
+  "release": {
+    "id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+    "source_commit": "b1472ee2382a95c8a924ed82f9d76cc115541877",
+    "manifest_sha256": "1f4fd5095be48e434a8c41a872315aca6090e9979c9b095df5bd5dd24418503d",
+    "membership_digest": "fc1feaeb81da02d1ae7c44fbc0a745f698f1ba1b07dcea4505a108fc4ecb9413",
+    "pack_plan_sha256": "3237a3771d687dd6b9b670fb05e2252be2647c42636c7f330cbb8527353362ef"
+  },
+  "outputs": {
+    "primary": {
+      "sha256": "34d38b1b0ed67f0eb86d04cd9482e507b41d4418ea7e4f86e361452310dca329",
+      "bytes": 58202092,
+      "packs": 37768,
+      "records": 78039,
+      "active_targets": 14850534,
+      "answer_targets": {
+        "claim": 942560,
+        "cloze": 430769,
+        "retrieval": 1470102,
+        "total": 2843431
+      },
+      "answer_targets_by_task": {
+        "claim": 942560,
+        "cloze": 430769,
+        "retrieval": 1470102
+      },
+      "compute_token_exposures": 19337216,
+      "padding_targets": 4486682,
+      "update_groups": 28707,
+      "maximum_packs_per_update": 2,
+      "wraps": 0
+    },
+    "development": {
+      "sha256": "4426d9a51480f658bf5405524fb819a33f979eabe6cc31f446b906c4e9d38749",
+      "bytes": 2274412,
+      "packs": 1476,
+      "records": 3338,
+      "active_targets": 592243,
+      "answer_targets": 128333,
+      "answer_targets_by_task": {
+        "claim": 48450,
+        "cloze": 20939,
+        "retrieval": 58944
+      },
+      "compute_token_exposures": 755712,
+      "padding_targets": 163469,
+      "update_groups": 1061,
+      "maximum_packs_per_update": 2,
+      "evaluation": {
+        "cloze_completion": {
+          "sha256": "e1b361913521282eb7e5654799aed0445befde035874e4e62ae499f11a601f5d",
+          "bytes": 620754,
+          "records": 2508,
+          "target_tokens": 20939
+        },
+        "span_choices": {
+          "claim": {
+            "sha256": "690a01c14a963d02d618546ae478ef0f6b6c39fd00a7d7f9ebd79ab295b660be",
+            "bytes": 349460,
+            "pairs": 257,
+            "records": 514,
+            "correct_target_tokens": 48450,
+            "alternative_target_tokens": 50940,
+            "scoring": "mean causal nats per token over natural candidate spans"
+          },
+          "retrieval": {
+            "sha256": "63ef04608415e476d951b8f58245caf3475363a10a14c633c40545cf0c18af0a",
+            "bytes": 267716,
+            "pairs": 158,
+            "records": 316,
+            "correct_target_tokens": 58944,
+            "alternative_target_tokens": 58944,
+            "scoring": "mean causal nats per token over natural candidate spans"
+          }
+        }
+      }
+    },
+    "frozen_validation": {
+      "combined_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+      "claim_span_choices_sha256": "6bdfbcab7f0a7a91710c61d61700a108f8cf453e4ce74c12efc0c45a4ae10b0d",
+      "retrieval_span_choices_sha256": "8a351a73d1a800c5838d859be4ad170467cc2c912de59ee8b10c012526188250",
+      "cloze_completion_sha256": "e0b0a591bf515dd41968c00e348849558006d078ee4d9d211c3c876a1c683168",
+      "evidence_validation_sha256": "1d7d6bff59bf3c063274601072379e0fa59594aa239a95c754454990254f6431"
+    }
+  },
+  "test": {
+    "records": 12188,
+    "bytes": 22875515,
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}

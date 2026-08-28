@@ -106,6 +106,24 @@ and sealed-test policy. It remains unauthorized with no cost ceiling. A later
 PR must freeze implementation and runtime hashes. Paid compute needs a separate
 explicit approval before launch.
 
+## Frozen primary contract
+
+The completed intake and pilot are frozen in `contract.json` with hash-only
+evidence under `evidence/`. `cloze-plus-five-v1` is the selected answer-weight
+variant. The primary run is fixed at 28,707 pair-atomic update groups and
+19,337,216 compute-token exposures, starting again from C2.
+
+This contract is deliberately not executable yet. The runner refuses to start
+because primary training, a runtime venue, paid compute, promotion, and test
+access are all unauthorized. Check the frozen state with:
+
+```bash
+make zero5-c43-contract-check
+```
+
+The next decision is local throughput measurement and explicit primary
+training authorization. A paid venue also needs a separate cost ceiling.
+
 ## Local verification
 
 Run all proposal and synthetic failure-path checks with:
