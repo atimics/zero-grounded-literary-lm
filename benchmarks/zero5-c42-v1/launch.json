@@ -1,0 +1,14 @@
+{
+  "schema": "zero.c42_aws_launch.v1",
+  "run_id": "zero5-c42-aws-20260828-f1a7195",
+  "instance_id": "i-0e042c73a52797ae2",
+  "source_commit": "f1a7195d581140c047eb24f01d306c7cf56346a6",
+  "source_sha256": "84a10e302b82061f1f61bbf53b47dd609da2ce13b8c90d3a3f76abf37c61b1b5",
+  "asset_sha256": "1dcd1a0c3f623f9ce83aa57073e7ac7be5e575a6354ffa6143c582ad6c5a6be1",
+  "contract_sha256": "80026e32956bb9fe0092fa0b867633850c20bb615c687c4d8eaa9422551a6250",
+  "approval_id": "zero5-c42-aws-2026-08-28-v1",
+  "launched_at": "2026-08-28T04:19:51Z",
+  "launch_epoch": 1787890788,
+  "maximum_instance_seconds": 7941,
+  "maximum_ec2_usd": 1.5
+}

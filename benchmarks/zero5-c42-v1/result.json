@@ -1,0 +1,659 @@
+{
+  "schema": "zero.c42_result.v1",
+  "experiment": "zero5-c42-v1",
+  "status": "complete",
+  "contract_sha256": "80026e32956bb9fe0092fa0b867633850c20bb615c687c4d8eaa9422551a6250",
+  "implementation": {
+    "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "runner_sha256": "661d31c7ba6963abd54ef94dd0d666a6a15bebb9980f42c24b49c600e6756f9b",
+    "math_backend": "gnu-libmvec-tanh-exp",
+    "attention_backend": "dense-blas"
+  },
+  "training": {
+    "completed_updates": 27962,
+    "elapsed_seconds": 4686.608234687,
+    "aggregate_compute_tokens_per_second": 4126.057701362669,
+    "reports": [
+      {
+        "update": 500,
+        "train_nats_per_token": 2.2776,
+        "validation_nats_per_token": 2.2689,
+        "gradient_norm": 3.77,
+        "learning_rate": 0.00015,
+        "tokens_per_second": 4357
+      },
+      {
+        "update": 1000,
+        "train_nats_per_token": 2.3363,
+        "validation_nats_per_token": 2.3272,
+        "gradient_norm": 2.801,
+        "learning_rate": 0.0003,
+        "tokens_per_second": 4162
+      },
+      {
+        "update": 1500,
+        "train_nats_per_token": 2.4002,
+        "validation_nats_per_token": 2.3418,
+        "gradient_norm": 1.733,
+        "learning_rate": 0.000299746,
+        "tokens_per_second": 4121
+      },
+      {
+        "update": 2000,
+        "train_nats_per_token": 2.3704,
+        "validation_nats_per_token": 2.348,
+        "gradient_norm": 2.064,
+        "learning_rate": 0.000298983,
+        "tokens_per_second": 4123
+      },
+      {
+        "update": 2500,
+        "train_nats_per_token": 2.3294,
+        "validation_nats_per_token": 2.3368,
+        "gradient_norm": 4.925,
+        "learning_rate": 0.000297715,
+        "tokens_per_second": 4158
+      },
+      {
+        "update": 3000,
+        "train_nats_per_token": 2.3896,
+        "validation_nats_per_token": 2.3261,
+        "gradient_norm": 2.335,
+        "learning_rate": 0.000295945,
+        "tokens_per_second": 4122
+      },
+      {
+        "update": 3500,
+        "train_nats_per_token": 2.3374,
+        "validation_nats_per_token": 2.3198,
+        "gradient_norm": 1.645,
+        "learning_rate": 0.000293681,
+        "tokens_per_second": 4115
+      },
+      {
+        "update": 4000,
+        "train_nats_per_token": 2.3324,
+        "validation_nats_per_token": 2.3177,
+        "gradient_norm": 5.644,
+        "learning_rate": 0.000290929,
+        "tokens_per_second": 4115
+      },
+      {
+        "update": 4500,
+        "train_nats_per_token": 2.3368,
+        "validation_nats_per_token": 2.2945,
+        "gradient_norm": 5.352,
+        "learning_rate": 0.000287698,
+        "tokens_per_second": 4133
+      },
+      {
+        "update": 5000,
+        "train_nats_per_token": 2.3114,
+        "validation_nats_per_token": 2.2973,
+        "gradient_norm": 1.908,
+        "learning_rate": 0.000284001,
+        "tokens_per_second": 4155
+      },
+      {
+        "update": 5500,
+        "train_nats_per_token": 2.316,
+        "validation_nats_per_token": 2.3034,
+        "gradient_norm": 2.453,
+        "learning_rate": 0.000279848,
+        "tokens_per_second": 4155
+      },
+      {
+        "update": 6000,
+        "train_nats_per_token": 2.3156,
+        "validation_nats_per_token": 2.2742,
+        "gradient_norm": 1.751,
+        "learning_rate": 0.000275256,
+        "tokens_per_second": 4164
+      },
+      {
+        "update": 6500,
+        "train_nats_per_token": 2.2919,
+        "validation_nats_per_token": 2.2677,
+        "gradient_norm": 6.429,
+        "learning_rate": 0.000270238,
+        "tokens_per_second": 4173
+      },
+      {
+        "update": 7000,
+        "train_nats_per_token": 2.2787,
+        "validation_nats_per_token": 2.2591,
+        "gradient_norm": 4.742,
+        "learning_rate": 0.000264812,
+        "tokens_per_second": 4116
+      },
+      {
+        "update": 7500,
+        "train_nats_per_token": 2.2738,
+        "validation_nats_per_token": 2.247,
+        "gradient_norm": 2.083,
+        "learning_rate": 0.000258996,
+        "tokens_per_second": 4121
+      },
+      {
+        "update": 8000,
+        "train_nats_per_token": 2.2713,
+        "validation_nats_per_token": 2.2469,
+        "gradient_norm": 1.715,
+        "learning_rate": 0.000252811,
+        "tokens_per_second": 4114
+      },
+      {
+        "update": 8500,
+        "train_nats_per_token": 2.2358,
+        "validation_nats_per_token": 2.2272,
+        "gradient_norm": 3.593,
+        "learning_rate": 0.000246277,
+        "tokens_per_second": 4116
+      },
+      {
+        "update": 9000,
+        "train_nats_per_token": 2.2608,
+        "validation_nats_per_token": 2.2127,
+        "gradient_norm": 4.421,
+        "learning_rate": 0.000239416,
+        "tokens_per_second": 4118
+      },
+      {
+        "update": 9500,
+        "train_nats_per_token": 2.2419,
+        "validation_nats_per_token": 2.1988,
+        "gradient_norm": 5.234,
+        "learning_rate": 0.000232252,
+        "tokens_per_second": 4116
+      },
+      {
+        "update": 10000,
+        "train_nats_per_token": 2.2211,
+        "validation_nats_per_token": 2.1971,
+        "gradient_norm": 1.742,
+        "learning_rate": 0.000224808,
+        "tokens_per_second": 4140
+      },
+      {
+        "update": 10500,
+        "train_nats_per_token": 2.2303,
+        "validation_nats_per_token": 2.1884,
+        "gradient_norm": 4.288,
+        "learning_rate": 0.000217111,
+        "tokens_per_second": 4117
+      },
+      {
+        "update": 11000,
+        "train_nats_per_token": 2.2041,
+        "validation_nats_per_token": 2.1848,
+        "gradient_norm": 4.366,
+        "learning_rate": 0.000209186,
+        "tokens_per_second": 4105
+      },
+      {
+        "update": 11500,
+        "train_nats_per_token": 2.167,
+        "validation_nats_per_token": 2.1723,
+        "gradient_norm": 1.965,
+        "learning_rate": 0.00020106,
+        "tokens_per_second": 4115
+      },
+      {
+        "update": 12000,
+        "train_nats_per_token": 2.1808,
+        "validation_nats_per_token": 2.1612,
+        "gradient_norm": 1.833,
+        "learning_rate": 0.000192761,
+        "tokens_per_second": 4137
+      },
+      {
+        "update": 12500,
+        "train_nats_per_token": 2.1878,
+        "validation_nats_per_token": 2.1485,
+        "gradient_norm": 2.354,
+        "learning_rate": 0.000184317,
+        "tokens_per_second": 4100
+      },
+      {
+        "update": 13000,
+        "train_nats_per_token": 2.1688,
+        "validation_nats_per_token": 2.1417,
+        "gradient_norm": 4.222,
+        "learning_rate": 0.000175756,
+        "tokens_per_second": 4105
+      },
+      {
+        "update": 13500,
+        "train_nats_per_token": 2.1553,
+        "validation_nats_per_token": 2.1295,
+        "gradient_norm": 4.2,
+        "learning_rate": 0.000167109,
+        "tokens_per_second": 4099
+      },
+      {
+        "update": 14000,
+        "train_nats_per_token": 2.1294,
+        "validation_nats_per_token": 2.1287,
+        "gradient_norm": 1.471,
+        "learning_rate": 0.000158402,
+        "tokens_per_second": 4085
+      },
+      {
+        "update": 14500,
+        "train_nats_per_token": 2.1179,
+        "validation_nats_per_token": 2.1067,
+        "gradient_norm": 2.196,
+        "learning_rate": 0.000149668,
+        "tokens_per_second": 4097
+      },
+      {
+        "update": 15000,
+        "train_nats_per_token": 2.1265,
+        "validation_nats_per_token": 2.0983,
+        "gradient_norm": 1.5,
+        "learning_rate": 0.000140934,
+        "tokens_per_second": 4120
+      },
+      {
+        "update": 15500,
+        "train_nats_per_token": 2.1078,
+        "validation_nats_per_token": 2.0908,
+        "gradient_norm": 1.865,
+        "learning_rate": 0.000132232,
+        "tokens_per_second": 4108
+      },
+      {
+        "update": 16000,
+        "train_nats_per_token": 2.1142,
+        "validation_nats_per_token": 2.0866,
+        "gradient_norm": 1.844,
+        "learning_rate": 0.000123589,
+        "tokens_per_second": 4109
+      },
+      {
+        "update": 16500,
+        "train_nats_per_token": 2.0821,
+        "validation_nats_per_token": 2.0787,
+        "gradient_norm": 1.467,
+        "learning_rate": 0.000115037,
+        "tokens_per_second": 4125
+      },
+      {
+        "update": 17000,
+        "train_nats_per_token": 2.114,
+        "validation_nats_per_token": 2.0682,
+        "gradient_norm": 2.198,
+        "learning_rate": 0.000106603,
+        "tokens_per_second": 4147
+      },
+      {
+        "update": 17500,
+        "train_nats_per_token": 2.0791,
+        "validation_nats_per_token": 2.0593,
+        "gradient_norm": 2.277,
+        "learning_rate": 0.0000983158,
+        "tokens_per_second": 4155
+      },
+      {
+        "update": 18000,
+        "train_nats_per_token": 2.0826,
+        "validation_nats_per_token": 2.053,
+        "gradient_norm": 1.69,
+        "learning_rate": 0.0000902043,
+        "tokens_per_second": 4168
+      },
+      {
+        "update": 18500,
+        "train_nats_per_token": 2.0634,
+        "validation_nats_per_token": 2.0459,
+        "gradient_norm": 2.19,
+        "learning_rate": 0.0000822957,
+        "tokens_per_second": 4118
+      },
+      {
+        "update": 19000,
+        "train_nats_per_token": 2.0695,
+        "validation_nats_per_token": 2.0385,
+        "gradient_norm": 2.077,
+        "learning_rate": 0.0000746169,
+        "tokens_per_second": 4144
+      },
+      {
+        "update": 19500,
+        "train_nats_per_token": 2.0737,
+        "validation_nats_per_token": 2.029,
+        "gradient_norm": 1.425,
+        "learning_rate": 0.0000671938,
+        "tokens_per_second": 4158
+      },
+      {
+        "update": 20000,
+        "train_nats_per_token": 2.0105,
+        "validation_nats_per_token": 2.0256,
+        "gradient_norm": 2.154,
+        "learning_rate": 0.0000600518,
+        "tokens_per_second": 4128
+      },
+      {
+        "update": 20500,
+        "train_nats_per_token": 2.0483,
+        "validation_nats_per_token": 2.0235,
+        "gradient_norm": 2.591,
+        "learning_rate": 0.0000532149,
+        "tokens_per_second": 4090
+      },
+      {
+        "update": 21000,
+        "train_nats_per_token": 2.0485,
+        "validation_nats_per_token": 2.0153,
+        "gradient_norm": 1.742,
+        "learning_rate": 0.0000467064,
+        "tokens_per_second": 4097
+      },
+      {
+        "update": 21500,
+        "train_nats_per_token": 2.006,
+        "validation_nats_per_token": 2.0094,
+        "gradient_norm": 1.522,
+        "learning_rate": 0.0000405485,
+        "tokens_per_second": 4094
+      },
+      {
+        "update": 22000,
+        "train_nats_per_token": 2.0442,
+        "validation_nats_per_token": 2.007,
+        "gradient_norm": 2.009,
+        "learning_rate": 0.000034762,
+        "tokens_per_second": 4093
+      },
+      {
+        "update": 22500,
+        "train_nats_per_token": 2.0151,
+        "validation_nats_per_token": 2.0033,
+        "gradient_norm": 2.222,
+        "learning_rate": 0.0000293665,
+        "tokens_per_second": 4128
+      },
+      {
+        "update": 23000,
+        "train_nats_per_token": 2.0193,
+        "validation_nats_per_token": 2.0006,
+        "gradient_norm": 1.647,
+        "learning_rate": 0.0000243803,
+        "tokens_per_second": 4143
+      },
+      {
+        "update": 23500,
+        "train_nats_per_token": 2.0246,
+        "validation_nats_per_token": 1.998,
+        "gradient_norm": 2.2,
+        "learning_rate": 0.0000198203,
+        "tokens_per_second": 4156
+      },
+      {
+        "update": 24000,
+        "train_nats_per_token": 2.0327,
+        "validation_nats_per_token": 1.9942,
+        "gradient_norm": 2.151,
+        "learning_rate": 0.0000157021,
+        "tokens_per_second": 4142
+      },
+      {
+        "update": 24500,
+        "train_nats_per_token": 2.0081,
+        "validation_nats_per_token": 1.9914,
+        "gradient_norm": 2.187,
+        "learning_rate": 0.0000120396,
+        "tokens_per_second": 4136
+      },
+      {
+        "update": 25000,
+        "train_nats_per_token": 2.0327,
+        "validation_nats_per_token": 1.9899,
+        "gradient_norm": 1.598,
+        "learning_rate": 0.00000884528,
+        "tokens_per_second": 4148
+      },
+      {
+        "update": 25500,
+        "train_nats_per_token": 1.9949,
+        "validation_nats_per_token": 1.988,
+        "gradient_norm": 1.541,
+        "learning_rate": 0.00000612989,
+        "tokens_per_second": 4135
+      },
+      {
+        "update": 26000,
+        "train_nats_per_token": 2.0171,
+        "validation_nats_per_token": 1.9872,
+        "gradient_norm": 2.281,
+        "learning_rate": 0.00000390268,
+        "tokens_per_second": 4134
+      },
+      {
+        "update": 26500,
+        "train_nats_per_token": 1.9829,
+        "validation_nats_per_token": 1.9866,
+        "gradient_norm": 2.037,
+        "learning_rate": 0.0000021712,
+        "tokens_per_second": 4123
+      },
+      {
+        "update": 27000,
+        "train_nats_per_token": 1.9966,
+        "validation_nats_per_token": 1.9863,
+        "gradient_norm": 2.057,
+        "learning_rate": 9.41348e-7,
+        "tokens_per_second": 4126
+      },
+      {
+        "update": 27500,
+        "train_nats_per_token": 2.0265,
+        "validation_nats_per_token": 1.986,
+        "gradient_norm": 2.469,
+        "learning_rate": 2.17286e-7,
+        "tokens_per_second": 4128
+      },
+      {
+        "update": 27962,
+        "train_nats_per_token": 2.0143,
+        "validation_nats_per_token": 1.986,
+        "gradient_norm": 1.914,
+        "learning_rate": 0,
+        "tokens_per_second": 4108
+      }
+    ],
+    "accounting": {
+      "pack_sequences": 37768,
+      "compute_token_exposures": 19337216,
+      "active_targets": 12735377,
+      "answer_targets": 3018930,
+      "claim_answer_targets": 731688,
+      "cloze_answer_targets": 135644,
+      "retrieval_answer_targets": 2151598,
+      "padding_targets": 6601839,
+      "wraps": 0
+    }
+  },
+  "checkpoints": {
+    "active": {
+      "sha256": "1fec9b54677448562a80ef9066341af51947d6ca30ca4aed275204c778748437",
+      "bytes": 58236496
+    },
+    "best": {
+      "sha256": "1fec9b54677448562a80ef9066341af51947d6ca30ca4aed275204c778748437",
+      "bytes": 58236496
+    }
+  },
+  "validation": {
+    "schema": "zero.c42_validation_result.v1",
+    "experiment": "zero5-c42-v1",
+    "contract_sha256": "80026e32956bb9fe0092fa0b867633850c20bb615c687c4d8eaa9422551a6250",
+    "import_manifest_sha256": "bf8ad23dd4c93acb4708f512cde54a7cf4c741dc1b227f5f053d8366231e6a00",
+    "checkpoint": {
+      "sha256": "1fec9b54677448562a80ef9066341af51947d6ca30ca4aed275204c778748437",
+      "bytes": 58236496
+    },
+    "baseline_checkpoint": {
+      "sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+      "bytes": 58236384
+    },
+    "baseline": {
+      "combined_nats_per_token": 2.3373,
+      "evidence_nats_per_token": 2.3086,
+      "cloze": {
+        "schema": "zero.c3_completion_eval.v1",
+        "records": 3555,
+        "target_tokens": 23691,
+        "nats_per_target_token": 2.99572909,
+        "top1_token_accuracy": 0.304799291,
+        "teacher_forced_exact_accuracy": 0.000281293952,
+        "last_target_token_accuracy": 0.325457103
+      },
+      "choice": {
+        "claim": {
+          "schema": "zero.c42_span_choice_eval.v1",
+          "pairs": 2280,
+          "records": 4560,
+          "correct_target_tokens": 438430,
+          "alternative_target_tokens": 450462,
+          "correct_nats_per_target_token": 2.37149441,
+          "alternative_nats_per_target_token": 2.37900838,
+          "top1_token_accuracy": 0.414905458,
+          "teacher_forced_exact_accuracy": 0,
+          "forced_choice_nats": 0.713666269,
+          "choice_accuracy": 0.518640351,
+          "position_0_accuracy": 0.502192982,
+          "position_1_accuracy": 0.535087719,
+          "swap_consistency_accuracy": 0.963596491,
+          "pair_exact_accuracy": 0.500438596
+        },
+        "retrieval": {
+          "schema": "zero.c42_span_choice_eval.v1",
+          "pairs": 1011,
+          "records": 2022,
+          "correct_target_tokens": 370252,
+          "alternative_target_tokens": 371670,
+          "correct_nats_per_target_token": 2.22505149,
+          "alternative_nats_per_target_token": 2.227854,
+          "top1_token_accuracy": 0.439919298,
+          "teacher_forced_exact_accuracy": 0,
+          "forced_choice_nats": 0.704589892,
+          "choice_accuracy": 0.513353116,
+          "position_0_accuracy": 0.483679525,
+          "position_1_accuracy": 0.543026706,
+          "swap_consistency_accuracy": 0.940652819,
+          "pair_exact_accuracy": 0.483679525
+        }
+      },
+      "atlas_nats_per_token": 2.2786,
+      "anchor_nats_per_token": 3.6942
+    },
+    "candidate": {
+      "combined_nats_per_token": 2.018,
+      "evidence_nats_per_token": 2.0922,
+      "cloze": {
+        "schema": "zero.c3_completion_eval.v1",
+        "records": 3555,
+        "target_tokens": 23691,
+        "nats_per_target_token": 3.1867728,
+        "top1_token_accuracy": 0.295724115,
+        "teacher_forced_exact_accuracy": 0.000843881857,
+        "last_target_token_accuracy": 0.358368495
+      },
+      "choice": {
+        "claim": {
+          "schema": "zero.c42_span_choice_eval.v1",
+          "pairs": 2280,
+          "records": 4560,
+          "correct_target_tokens": 438430,
+          "alternative_target_tokens": 450462,
+          "correct_nats_per_target_token": 1.90990403,
+          "alternative_nats_per_target_token": 2.21492031,
+          "top1_token_accuracy": 0.529972858,
+          "teacher_forced_exact_accuracy": 0,
+          "forced_choice_nats": 0.575241339,
+          "choice_accuracy": 0.769078947,
+          "position_0_accuracy": 0.789912281,
+          "position_1_accuracy": 0.748245614,
+          "swap_consistency_accuracy": 0.952192982,
+          "pair_exact_accuracy": 0.745175439
+        },
+        "retrieval": {
+          "schema": "zero.c42_span_choice_eval.v1",
+          "pairs": 1011,
+          "records": 2022,
+          "correct_target_tokens": 370252,
+          "alternative_target_tokens": 371670,
+          "correct_nats_per_target_token": 2.07151812,
+          "alternative_nats_per_target_token": 2.09523211,
+          "top1_token_accuracy": 0.47938161,
+          "teacher_forced_exact_accuracy": 0,
+          "forced_choice_nats": 0.696024755,
+          "choice_accuracy": 0.541543027,
+          "position_0_accuracy": 0.537091988,
+          "position_1_accuracy": 0.545994065,
+          "swap_consistency_accuracy": 0.957467854,
+          "pair_exact_accuracy": 0.520276954
+        }
+      },
+      "atlas_nats_per_token": 2.1884,
+      "anchor_nats_per_token": 3.8247
+    },
+    "derived": {
+      "combined_relative_improvement": 0.1366106190904035,
+      "evidence_relative_regression": -0.09373646365762811,
+      "atlas_relative_regression": -0.039585710524005946,
+      "anchor_relative_regression": 0.035325645606626654,
+      "cloze_exact_improvement": 0.0005625879050000001,
+      "choice_improvement": {
+        "claim": 0.25043859599999996,
+        "retrieval": 0.028189911000000012
+      },
+      "swap_improvement": {
+        "claim": -0.011403508999999978,
+        "retrieval": 0.016815035000000034
+      },
+      "pair_exact_improvement": {
+        "claim": 0.2447368430000001,
+        "retrieval": 0.03659742899999996
+      }
+    },
+    "gates": {
+      "combined_validation_step": true,
+      "cloze_exact_step": false,
+      "evidence_retention": true,
+      "atlas_retention": true,
+      "anchor_retention": true,
+      "claim_choice_accuracy": true,
+      "claim_position_accuracy": true,
+      "claim_swap_consistency": false,
+      "claim_pair_exact": true,
+      "retrieval_choice_accuracy": false,
+      "retrieval_position_accuracy": true,
+      "retrieval_swap_consistency": false,
+      "retrieval_pair_exact": true,
+      "finite_metrics": true,
+      "sealed_test_stayed_closed": true,
+      "test_metrics_opened": false
+    },
+    "eligible_for_promotion": false,
+    "test": {
+      "metrics_opened": false
+    }
+  },
+  "decision": {
+    "eligible_for_promotion": false,
+    "test_metrics_opened": false
+  },
+  "claim_boundary": {
+    "may_claim": "The locked C4.2 train and validation release can be imported without opening test data, the C trainer can execute its exact variable-size optimizer groups without extra token exposures, and the frozen validation evaluator and promotion gates are executable.",
+    "may_not_claim": [
+      "that C4.2 improves the model before a preregistered run completes",
+      "reasoning, intelligence, factual truth, or broad model promotion",
+      "permission to open the sealed test set",
+      "permission to publish private corpus artifacts or checkpoints",
+      "permission to exceed the approved $1.50 EC2 ceiling"
+    ]
+  }
+}
