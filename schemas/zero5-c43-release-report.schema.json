@@ -88,10 +88,10 @@
           "additionalProperties": false,
           "required": [
             "length_band_target_tokens",
-            "exact_duplicate_records",
+            "maximum_derived_per_source_record",
             "source_documents",
             "maximum_source_share",
-            "context_recoverable_failures"
+            "answer_leakage_records"
           ],
           "properties": {
             "length_band_target_tokens": {
@@ -105,14 +105,14 @@
                 "17+": { "type": "integer", "minimum": 0 }
               }
             },
-            "exact_duplicate_records": { "const": 0 },
+            "maximum_derived_per_source_record": { "const": 1 },
             "source_documents": { "type": "integer", "minimum": 2 },
             "maximum_source_share": {
               "type": "number",
               "minimum": 0,
               "exclusiveMaximum": 1
             },
-            "context_recoverable_failures": { "const": 0 }
+            "answer_leakage_records": { "const": 0 }
           }
         },
         "retrieval": {

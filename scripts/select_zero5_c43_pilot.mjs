@@ -38,6 +38,7 @@ try {
   const reportPath = option("--report");
   const firstImportPath = option("--import-a");
   const secondImportPath = option("--import-b");
+  const releaseDirectory = option("--release");
   const variantPaths = options("--variant");
   const out = option("--out");
   if (!reportPath || !firstImportPath || !secondImportPath || !out ||
@@ -48,7 +49,8 @@ try {
   const c42Contract = readJson(proposal.c42_decision.contract);
   const report = readJson(reportPath);
   validateReleaseReport(report, proposal, c42Contract,
-    path.dirname(path.resolve(reportPath)));
+    releaseDirectory ? path.resolve(releaseDirectory) :
+      path.dirname(path.resolve(reportPath)));
   const imports = validateImportPair(readJson(firstImportPath),
     readJson(secondImportPath), report, proposal, c42Contract);
   const entries = variantPaths.map(file => ({

@@ -396,6 +396,8 @@ zero5-c43-spec-check:
 
 zero5-c43-prep-check: zero5-c43-spec-check
 	node scripts/check_zero5_c43_prep.mjs
+	node scripts/prepare_zero5_c43.mjs --self-test
+	node scripts/run_zero5_c43_pilot.mjs --self-test
 
 zero5-c42-run: zero5_c32_lm_vector_math zero5-c42-aws-check
 	node scripts/run_zero5_c42.mjs \
