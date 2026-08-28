@@ -51,15 +51,12 @@ node scripts/run_zero5_c42.mjs \
 
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
-mkdir -p "$stage/source" "$stage/assets"
+mkdir -p "$stage/source"
 git archive "$source_commit" | tar -xf - -C "$stage/source"
 printf '%s\n' "$source_commit" > "$stage/source/SOURCE_COMMIT"
 COPYFILE_DISABLE=1 tar -czf "$stage/source.tar.gz" -C "$stage/source" .
-for file in "${required[@]}"; do
-  mkdir -p "$stage/assets/$(dirname "$file")"
-  cp "$ZERO5_ASSET_ROOT/$file" "$stage/assets/$file"
-done
-COPYFILE_DISABLE=1 tar -czf "$stage/assets.tar.gz" -C "$stage/assets" .
+COPYFILE_DISABLE=1 tar -czf "$stage/assets.tar.gz" \
+  -C "$ZERO5_ASSET_ROOT" "${required[@]}"
 
 source_sha256=$(digest_file "$stage/source.tar.gz")
 asset_sha256=$(digest_file "$stage/assets.tar.gz")
