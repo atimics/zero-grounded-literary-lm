@@ -1,0 +1,14 @@
+{
+  "schema": "zero.aws_avx512_linear_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-avx512-linear-20260828-a1c7f29",
+  "instance_id": "i-0a0a2575e11bab749",
+  "git_commit": "50b029bf4420c155d2863c241b4eb4792cba4f91",
+  "approval_id": "zero5-avx512-linear-2026-08-28-v1",
+  "exit_code": 0,
+  "elapsed_instance_seconds": 126,
+  "estimated_ec2_usd": 0.023800000000,
+  "result_key": "experiments/zero5-avx512-linear-v1/zero5-avx512-linear-20260828-a1c7f29/result.json",
+  "result_sha256": "ebaf1c8651bc6a6cffd2797fd54153abb3fc5f66efe292b2e1ef2a7be8ada27b"
+}

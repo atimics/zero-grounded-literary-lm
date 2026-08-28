@@ -59,3 +59,6 @@ make zero5-avx512-linear-aws-check
 
 The source stage reuses the already-sealed private C3.3 asset archive and
 uploads only the immutable source archive for commit `50b029b`.
+
+The completed measurement is recorded in [RESULT.md](RESULT.md). OpenBLAS won:
+the candidate was 50.01% slower, so the AVX-512 kernel is a no-go.

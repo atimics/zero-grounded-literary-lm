@@ -1,0 +1,112 @@
+{
+  "schema": "zero.avx512_linear_benchmark.v1",
+  "recorded_at": "2026-08-28T02:41:20.769Z",
+  "status": "performance-only; AVX-512 changes float reduction order",
+  "platform": {
+    "os": "linux",
+    "architecture": "x64",
+    "release": "6.17.0-1019-aws",
+    "cpu": "Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz"
+  },
+  "workload": {
+    "source": "C3.3 frozen training packs",
+    "updates": 25,
+    "repetitions": 2,
+    "sequences_per_update": 4,
+    "context_tokens": 512,
+    "parallel_workers": 4,
+    "blas_threads_per_worker": 1,
+    "dynamic_threading": false
+  },
+  "variants": {
+    "openblas": {
+      "runs": [
+        {
+          "update": 25,
+          "train_loss": 2.6987,
+          "validation_loss": 2.4417,
+          "gradient_norm": 1.753,
+          "learning_rate": 0.000025,
+          "tokens_per_second": 6689,
+          "active_targets_per_second": 6197,
+          "elapsed_seconds": 8.54,
+          "math_backend": "gnu-libmvec-tanh-exp",
+          "linear_backend": "cblas-sgemm",
+          "attention_backend": "dense-blas",
+          "checkpoint_version": 6,
+          "checkpoint_sha256": "f76a725ca1ed5ed6a8708c54c3f06b735d5c0f27823b6fe30f8d0e1f28dc17ad"
+        },
+        {
+          "update": 25,
+          "train_loss": 2.6987,
+          "validation_loss": 2.4417,
+          "gradient_norm": 1.753,
+          "learning_rate": 0.000025,
+          "tokens_per_second": 6708,
+          "active_targets_per_second": 6214,
+          "elapsed_seconds": 8.52,
+          "math_backend": "gnu-libmvec-tanh-exp",
+          "linear_backend": "cblas-sgemm",
+          "attention_backend": "dense-blas",
+          "checkpoint_version": 6,
+          "checkpoint_sha256": "f76a725ca1ed5ed6a8708c54c3f06b735d5c0f27823b6fe30f8d0e1f28dc17ad"
+        }
+      ],
+      "mean_tokens_per_second": 6698.5
+    },
+    "avx512": {
+      "runs": [
+        {
+          "update": 25,
+          "train_loss": 2.6987,
+          "validation_loss": 2.4417,
+          "gradient_norm": 1.753,
+          "learning_rate": 0.000025,
+          "tokens_per_second": 3338,
+          "active_targets_per_second": 3092,
+          "elapsed_seconds": 16.98,
+          "math_backend": "avx512-linear-gnu-libmvec-tanh-exp",
+          "linear_backend": "avx512-f32",
+          "attention_backend": "dense-blas",
+          "checkpoint_version": 6,
+          "checkpoint_sha256": "1091531f255975f20fba6255d0a1e66de88451bf89097ccacbd55357e1ac5ec4"
+        },
+        {
+          "update": 25,
+          "train_loss": 2.6987,
+          "validation_loss": 2.4417,
+          "gradient_norm": 1.753,
+          "learning_rate": 0.000025,
+          "tokens_per_second": 3359,
+          "active_targets_per_second": 3112,
+          "elapsed_seconds": 16.88,
+          "math_backend": "avx512-linear-gnu-libmvec-tanh-exp",
+          "linear_backend": "avx512-f32",
+          "attention_backend": "dense-blas",
+          "checkpoint_version": 6,
+          "checkpoint_sha256": "1091531f255975f20fba6255d0a1e66de88451bf89097ccacbd55357e1ac5ec4"
+        }
+      ],
+      "mean_tokens_per_second": 3348.5
+    }
+  },
+  "comparison": {
+    "throughput_change": -0.5001119653653803,
+    "elapsed_time_reduction": -0.9847596717467761
+  },
+  "correctness": {
+    "metrics_within_tolerance": true,
+    "deterministic_checkpoints_per_backend": true,
+    "cross_backend_checkpoint_bit_identical": false,
+    "checkpoint_version": 6,
+    "tolerance": {
+      "train_loss": 0.0001,
+      "validation_loss": 0.0001,
+      "gradient_norm": 0.005
+    }
+  },
+  "claim_boundary": {
+    "scientific_replication": false,
+    "test_metrics_opened": false
+  }
+}

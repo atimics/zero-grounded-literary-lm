@@ -1,0 +1,14 @@
+{
+  "schema": "zero.aws_avx512_linear_launch.v1",
+  "run_id": "zero5-avx512-linear-20260828-a1c7f29",
+  "instance_id": "i-0a0a2575e11bab749",
+  "source_commit": "50b029bf4420c155d2863c241b4eb4792cba4f91",
+  "source_sha256": "b7beb291a5fb7ff805b3ee5d7b7836c1dcf088796f38412ced4f871eee3a0ca3",
+  "asset_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+  "contract_sha256": "15d5c3df52e1c777f9c150e89f6005551e6db73a42650dd80bd7dddbb22b373f",
+  "approval_id": "zero5-avx512-linear-2026-08-28-v1",
+  "launched_at": "2026-08-28T02:39:19Z",
+  "launch_epoch": 1787884756,
+  "maximum_instance_seconds": 370,
+  "maximum_ec2_usd": 0.07
+}
