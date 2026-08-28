@@ -1,0 +1,48 @@
+{
+  "schema": "zero.c43_import_receipt.v1",
+  "import_id": "synthetic-import-b",
+  "release": {
+    "id": "braid-corpus-four-three-zero5-512-fixture-v0.0.0",
+    "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "membership_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "pack_plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "outputs": {
+    "primary": {
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bytes": 19337216,
+      "packs": 37768,
+      "update_groups": 27962,
+      "compute_token_exposures": 19337216,
+      "wraps": 0,
+      "answer_targets": {
+        "claim": 700000,
+        "cloze": 500000,
+        "retrieval": 1800000,
+        "total": 3000000
+      }
+    },
+    "development": {
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "bytes": 122880,
+      "records": 240
+    },
+    "frozen_validation": {
+      "combined_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+      "claim_span_choices_sha256": "6bdfbcab7f0a7a91710c61d61700a108f8cf453e4ce74c12efc0c45a4ae10b0d",
+      "retrieval_span_choices_sha256": "8a351a73d1a800c5838d859be4ad170467cc2c912de59ee8b10c012526188250",
+      "cloze_completion_sha256": "e0b0a591bf515dd41968c00e348849558006d078ee4d9d211c3c876a1c683168",
+      "evidence_validation_sha256": "1d7d6bff59bf3c063274601072379e0fa59594aa239a95c754454990254f6431"
+    }
+  },
+  "test": {
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
