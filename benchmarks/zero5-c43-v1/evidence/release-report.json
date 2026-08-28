@@ -1,0 +1,255 @@
+{
+  "schema": "braid.zero5_c43_release_report.v1",
+  "release": {
+    "status": "released",
+    "id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+    "source_commit": "b1472ee2382a95c8a924ed82f9d76cc115541877",
+    "manifest_sha256": "1f4fd5095be48e434a8c41a872315aca6090e9979c9b095df5bd5dd24418503d",
+    "membership_digest": "fc1feaeb81da02d1ae7c44fbc0a745f698f1ba1b07dcea4505a108fc4ecb9413",
+    "pack_plan_sha256": "3237a3771d687dd6b9b670fb05e2252be2647c42636c7f330cbb8527353362ef",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "marker_free": true,
+    "context": 512
+  },
+  "artifacts": [
+    {
+      "kind": "checksums.sha256",
+      "path": "checksums.sha256",
+      "sha256": "e9ffd6333fd8db670aafbb57ed7ab2033540df4c6976e8ea868d342cbdbe51ce",
+      "bytes": 2212
+    },
+    {
+      "kind": "corpus-four-three.yaml",
+      "path": "corpus-four-three.yaml",
+      "sha256": "edfae74108044b5d1b62e9a3c166b43ffde9baf801ae4d30e38d4ca7e12d73ae",
+      "bytes": 6484
+    },
+    {
+      "kind": "train",
+      "path": "data/train.jsonl",
+      "sha256": "805328643a484b48567eabda886f4e60e1f21c9083697b14a72ae02fb7363ce3",
+      "bytes": 34089314
+    },
+    {
+      "kind": "development",
+      "path": "development/data.jsonl",
+      "sha256": "5eefd930c77bd9551def4d393e817650579ac9109b73763845a25d663e15ccda",
+      "bytes": 1382095
+    },
+    {
+      "kind": "development/metadata.jsonl",
+      "path": "development/metadata.jsonl",
+      "sha256": "54e4ca67c6d9fec11b1a2b021cf97d9b8fa41d3749d34287ca5382a8d1538137",
+      "bytes": 8229150
+    },
+    {
+      "kind": "development/pack-plan.jsonl",
+      "path": "development/pack-plan.jsonl",
+      "sha256": "95b1d825af0f733219fe6a96c000d2afa4507f429603b1db3cfd42fbe83d6dee",
+      "bytes": 466686
+    },
+    {
+      "kind": "experiment-proposal.json",
+      "path": "experiment-proposal.json",
+      "sha256": "9a03fe619ced75d6731289e85b27ea28bcde49b2833c399d676e47058eeb473f",
+      "bytes": 1656
+    },
+    {
+      "kind": "frozen-validation/data.jsonl",
+      "path": "frozen-validation/data.jsonl",
+      "sha256": "3ee99e61019b8f395e6898130f999539ef4803ff399f73c0892b5e72b489e177",
+      "bytes": 7067947
+    },
+    {
+      "kind": "frozen-validation/evaluation-contract.json",
+      "path": "frozen-validation/evaluation-contract.json",
+      "sha256": "8bdc2e081d30c429e82f5ef5d8ea739e8e4d5d5f137904a63559386e0a8ed934",
+      "bytes": 517
+    },
+    {
+      "kind": "frozen-validation/metadata.jsonl",
+      "path": "frozen-validation/metadata.jsonl",
+      "sha256": "f101b7d082c83d0c36ee7a6f15f01f37ec7a33ea05aba5a175c58b3a2bd16b7c",
+      "bytes": 32446870
+    },
+    {
+      "kind": "metadata/train.jsonl",
+      "path": "metadata/train.jsonl",
+      "sha256": "3ee34a2d78e9b884c35528cd21704e9ff8db4a3f07e6956cc5357f3908a6b17e",
+      "bytes": 194564253
+    },
+    {
+      "kind": "pilot-contract.json",
+      "path": "pilot-contract.json",
+      "sha256": "8465f2168a5f86a6d3c61589c8a8a0409ac04390f4632677770f25f06d494db4",
+      "bytes": 616
+    },
+    {
+      "kind": "README.md",
+      "path": "README.md",
+      "sha256": "b071af09f9c3d771a35fec5eb6c562ca84eb90a3313ad31a2c123e92242b7530",
+      "bytes": 938
+    },
+    {
+      "kind": "reports/data-report.json",
+      "path": "reports/data-report.json",
+      "sha256": "821e10d1253b0184f8d3a8e9e8375ad718cd30fde5bb38193b5b8a3728ef1afd",
+      "bytes": 3444
+    },
+    {
+      "kind": "reports/training-report.json",
+      "path": "reports/training-report.json",
+      "sha256": "70829aef06e4f1491f70eca2c828b801728440c2d0d7cfc31122728a92d63440",
+      "bytes": 1243
+    },
+    {
+      "kind": "RIGHTS.md",
+      "path": "RIGHTS.md",
+      "sha256": "ebe4bb6edc09f0eadf459c38e159c3ff0479d28d0240c601744972496fe88203",
+      "bytes": 598
+    },
+    {
+      "kind": "samples/train-samples.json",
+      "path": "samples/train-samples.json",
+      "sha256": "64f0949873a49a227897e069f9a24ea73ec2445e6878ec687110b69dfa9fb537",
+      "bytes": 27784
+    },
+    {
+      "kind": "schemas/data-report.schema.json",
+      "path": "schemas/data-report.schema.json",
+      "sha256": "de5412d5456d34a71ec36107f491abfd9d49366b6353131a3f5a3d1cf52f7052",
+      "bytes": 717
+    },
+    {
+      "kind": "schemas/metadata-record.schema.json",
+      "path": "schemas/metadata-record.schema.json",
+      "sha256": "5cda107fd559ec127d5c9677a508e720e5ba2c1b5c57afac6f86eadf8070eddb",
+      "bytes": 1817
+    },
+    {
+      "kind": "schemas/text-record.schema.json",
+      "path": "schemas/text-record.schema.json",
+      "sha256": "ce728714778faee396407a6ae40e0a2cd2d3a8a94a5a0e368c30113bd23a1179",
+      "bytes": 480
+    },
+    {
+      "kind": "schemas/training-pack.schema.json",
+      "path": "schemas/training-pack.schema.json",
+      "sha256": "eb94b9e82b281f9162be83b13ee12ba65e9d13c0773f33b894c079d19ff4ab1d",
+      "bytes": 1058
+    },
+    {
+      "kind": "sealed/test-commitment.json",
+      "path": "sealed/test-commitment.json",
+      "sha256": "491a0e4fa5ea61d03468d6f6cc4e5f98ab0b8a7879cee69b92479a70180340fe",
+      "bytes": 204
+    },
+    {
+      "kind": "tokenizer/tokenizer.bin",
+      "path": "tokenizer/tokenizer.bin",
+      "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+      "bytes": 1016
+    },
+    {
+      "kind": "training-recipe.json",
+      "path": "training-recipe.json",
+      "sha256": "7e530edb500cf9fe21e7f6c27162710ad0e6cf45692c61c08707708a48a8c77e",
+      "bytes": 1507
+    },
+    {
+      "kind": "training/train-pack-plan.jsonl",
+      "path": "training/train-pack-plan.jsonl",
+      "sha256": "3237a3771d687dd6b9b670fb05e2252be2647c42636c7f330cbb8527353362ef",
+      "bytes": 11519313
+    }
+  ],
+  "primary": {
+    "compute_token_exposures": 19337216,
+    "wraps": 0,
+    "answer_targets": {
+      "claim": 942560,
+      "cloze": 430769,
+      "retrieval": 1470102,
+      "total": 2843431
+    },
+    "cloze": {
+      "length_band_target_tokens": {
+        "1-4": 44123,
+        "17+": 140941,
+        "5-8": 122511,
+        "9-16": 123194
+      },
+      "maximum_derived_per_source_record": 1,
+      "source_documents": 26894,
+      "maximum_source_share": 0.000037183,
+      "answer_leakage_records": 0
+    },
+    "retrieval": {
+      "pairs": 4000,
+      "negative_type_counts": {
+        "entity": 1000,
+        "lexical-confounder": 1200,
+        "numeric": 500,
+        "relation": 1000,
+        "temporal": 300
+      },
+      "answer_span_shortcut_audit_passed": true
+    },
+    "mirroring": {
+      "claim": {
+        "pairs": 5061,
+        "orientation_records": 10122,
+        "position_0_records": 5061,
+        "position_1_records": 5061,
+        "missing_orientations": 0,
+        "group_violations": 0
+      },
+      "retrieval": {
+        "pairs": 4000,
+        "orientation_records": 8000,
+        "position_0_records": 4000,
+        "position_1_records": 4000,
+        "missing_orientations": 0,
+        "group_violations": 0
+      }
+    }
+  },
+  "development": {
+    "records": 3338,
+    "overlap": {
+      "training": {
+        "record": 0,
+        "normalized_text": 0,
+        "source_document": 0
+      },
+      "validation": {
+        "record": 0,
+        "normalized_text": 0,
+        "source_document": 0
+      },
+      "test": {
+        "record": 0,
+        "normalized_text": 0,
+        "source_document": 0
+      }
+    }
+  },
+  "governance": {
+    "provenance_complete": true,
+    "attribution_complete": true,
+    "rights_record_present": true,
+    "artifact_hashes_complete": true,
+    "machine_readable_task_report_present": true
+  },
+  "test": {
+    "records": 12188,
+    "bytes": 22875515,
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}

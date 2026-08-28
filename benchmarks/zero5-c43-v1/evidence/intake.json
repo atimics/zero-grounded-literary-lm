@@ -1,0 +1,14 @@
+{
+  "schema": "zero.c43_intake_check.v1",
+  "status": "pass",
+  "proposal_sha256": "a7efadd35ddc3cb3497c4605fb4f2e85370dda29e183fbcf47c8c0ce6617ad11",
+  "report_sha256": "b565ab6003785ba537d0a6ec33726e932713287b0052960ce2b826ca979040ac",
+  "first_import_sha256": "ffbe57998290e4719986cad65b3ac8129751ddd07f4ae6a74d44e11fe28f4da5",
+  "second_import_sha256": "e10eb2f7eeeeb6c17e1f9c5c3778e976b982f6948b0d31dbd011f76eba107ee4",
+  "release_id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+  "primary_sha256": "34d38b1b0ed67f0eb86d04cd9482e507b41d4418ea7e4f86e361452310dca329",
+  "development_sha256": "4426d9a51480f658bf5405524fb819a33f979eabe6cc31f446b906c4e9d38749",
+  "deterministic": true,
+  "paid_compute_authorized": false,
+  "test_metrics_opened": false
+}

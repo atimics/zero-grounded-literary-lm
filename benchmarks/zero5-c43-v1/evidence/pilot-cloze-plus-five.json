@@ -1,0 +1,249 @@
+{
+  "schema": "zero.c43_pilot_variant_result.v1",
+  "experiment": "zero5-c43-v1",
+  "variant": "cloze-plus-five-v1",
+  "status": "complete",
+  "release_id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+  "primary_import_sha256": "34d38b1b0ed67f0eb86d04cd9482e507b41d4418ea7e4f86e361452310dca329",
+  "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+  "data_split": "development",
+  "optimizer_groups": 1061,
+  "answer_weights": {
+    "claim": 2.229423406,
+    "cloze": 5.253416128,
+    "retrieval": 1.429401038
+  },
+  "run_contract_sha256": "ce3838ba9c9224d5c597aaad04bc34861ecf9f0148cac23fb321dcf1911d0ac0",
+  "implementation": {
+    "trainer_source": "zero5_c32_lm.c",
+    "trainer_source_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "trainer_binary_sha256": "ba1ca4254779adca8879caae41666543b4347d49737b1bf4f3ed25968ce5e993",
+    "runner_sha256": "1aeb256f9a68c73ddbabaa80ecf19a14ba41d3097eccb07d9ab1653056202776",
+    "math_backend": "accelerate-vforce",
+    "attention_backend": "dense-blas"
+  },
+  "training": {
+    "elapsed_seconds": 71.768870458,
+    "warmup_updates": 38,
+    "reports": [
+      {
+        "update": 100,
+        "train_nats_per_token": 2.4018,
+        "validation_nats_per_token": 2.2873,
+        "gradient_norm": 2.669,
+        "learning_rate": 0.000297289,
+        "tokens_per_second": 13593
+      },
+      {
+        "update": 200,
+        "train_nats_per_token": 2.3743,
+        "validation_nats_per_token": 2.2669,
+        "gradient_norm": 2.819,
+        "learning_rate": 0.000281817,
+        "tokens_per_second": 10719
+      },
+      {
+        "update": 300,
+        "train_nats_per_token": 2.4151,
+        "validation_nats_per_token": 2.224,
+        "gradient_norm": 2.255,
+        "learning_rate": 0.000254011,
+        "tokens_per_second": 10665
+      },
+      {
+        "update": 400,
+        "train_nats_per_token": 2.4143,
+        "validation_nats_per_token": 2.2036,
+        "gradient_norm": 2.128,
+        "learning_rate": 0.000216472,
+        "tokens_per_second": 10697
+      },
+      {
+        "update": 500,
+        "train_nats_per_token": 2.3291,
+        "validation_nats_per_token": 2.1705,
+        "gradient_norm": 2.325,
+        "learning_rate": 0.000172714,
+        "tokens_per_second": 10766
+      },
+      {
+        "update": 600,
+        "train_nats_per_token": 2.2971,
+        "validation_nats_per_token": 2.1242,
+        "gradient_norm": 2.027,
+        "learning_rate": 0.000126831,
+        "tokens_per_second": 10833
+      },
+      {
+        "update": 700,
+        "train_nats_per_token": 2.2682,
+        "validation_nats_per_token": 2.1057,
+        "gradient_norm": 3.209,
+        "learning_rate": 0.000083115,
+        "tokens_per_second": 10433
+      },
+      {
+        "update": 800,
+        "train_nats_per_token": 2.2402,
+        "validation_nats_per_token": 2.0867,
+        "gradient_norm": 2.045,
+        "learning_rate": 0.0000456578,
+        "tokens_per_second": 10457
+      },
+      {
+        "update": 900,
+        "train_nats_per_token": 2.2577,
+        "validation_nats_per_token": 2.0739,
+        "gradient_norm": 2.165,
+        "learning_rate": 0.0000179637,
+        "tokens_per_second": 10469
+      },
+      {
+        "update": 1000,
+        "train_nats_per_token": 2.2628,
+        "validation_nats_per_token": 2.069,
+        "gradient_norm": 2.504,
+        "learning_rate": 0.00000262421,
+        "tokens_per_second": 10616
+      },
+      {
+        "update": 1061,
+        "train_nats_per_token": 2.2659,
+        "validation_nats_per_token": 2.0687,
+        "gradient_norm": 2.384,
+        "learning_rate": 0,
+        "tokens_per_second": 9214
+      }
+    ],
+    "accounting": {
+      "pack_sequences": 1476,
+      "compute_token_exposures": 755712,
+      "active_targets": 592243,
+      "answer_targets": 128333,
+      "claim_answer_targets": 48450,
+      "cloze_answer_targets": 20939,
+      "retrieval_answer_targets": 58944,
+      "padding_targets": 163469,
+      "wraps": 0
+    }
+  },
+  "checkpoints": {
+    "active": {
+      "sha256": "e9ea30812291a38e3c91d33d9790290266de2b37f602567267492dbe8c322259",
+      "bytes": 58236496
+    },
+    "best": {
+      "sha256": "e9ea30812291a38e3c91d33d9790290266de2b37f602567267492dbe8c322259",
+      "bytes": 58236496
+    }
+  },
+  "metrics": {
+    "baseline": {
+      "cloze_exact_accuracy": 0.00518341308,
+      "claim_choice_accuracy": 0.531128405,
+      "retrieval_choice_accuracy": 0.503164557,
+      "details": {
+        "cloze": {
+          "schema": "zero.c3_completion_eval.v1",
+          "records": 2508,
+          "target_tokens": 20939,
+          "nats_per_target_token": 2.72983897,
+          "top1_token_accuracy": 0.34648264,
+          "teacher_forced_exact_accuracy": 0.00518341308,
+          "last_target_token_accuracy": 0.420255183
+        },
+        "choice": {
+          "claim": {
+            "schema": "zero.c42_span_choice_eval.v1",
+            "pairs": 257,
+            "records": 514,
+            "correct_target_tokens": 48450,
+            "alternative_target_tokens": 50940,
+            "correct_nats_per_target_token": 2.3886375,
+            "alternative_nats_per_target_token": 2.40265044,
+            "top1_token_accuracy": 0.409680083,
+            "teacher_forced_exact_accuracy": 0,
+            "forced_choice_nats": 0.711057898,
+            "choice_accuracy": 0.531128405,
+            "position_0_accuracy": 0.509727626,
+            "position_1_accuracy": 0.552529183,
+            "swap_consistency_accuracy": 0.957198444,
+            "pair_exact_accuracy": 0.509727626
+          },
+          "retrieval": {
+            "schema": "zero.c42_span_choice_eval.v1",
+            "pairs": 158,
+            "records": 316,
+            "correct_target_tokens": 58944,
+            "alternative_target_tokens": 58944,
+            "correct_nats_per_target_token": 2.16968352,
+            "alternative_nats_per_target_token": 2.17033709,
+            "top1_token_accuracy": 0.450817725,
+            "teacher_forced_exact_accuracy": 0,
+            "forced_choice_nats": 0.704333831,
+            "choice_accuracy": 0.503164557,
+            "position_0_accuracy": 0.481012658,
+            "position_1_accuracy": 0.525316456,
+            "swap_consistency_accuracy": 0.955696203,
+            "pair_exact_accuracy": 0.481012658
+          }
+        }
+      }
+    },
+    "candidate": {
+      "cloze_exact_accuracy": 0.00797448166,
+      "claim_choice_accuracy": 0.6692607,
+      "retrieval_choice_accuracy": 0.5,
+      "details": {
+        "cloze": {
+          "schema": "zero.c3_completion_eval.v1",
+          "records": 2508,
+          "target_tokens": 20939,
+          "nats_per_target_token": 2.4719385,
+          "top1_token_accuracy": 0.394479201,
+          "teacher_forced_exact_accuracy": 0.00797448166,
+          "last_target_token_accuracy": 0.479266348
+        },
+        "choice": {
+          "claim": {
+            "schema": "zero.c42_span_choice_eval.v1",
+            "pairs": 257,
+            "records": 514,
+            "correct_target_tokens": 48450,
+            "alternative_target_tokens": 50940,
+            "correct_nats_per_target_token": 2.16330213,
+            "alternative_nats_per_target_token": 2.32257906,
+            "top1_token_accuracy": 0.458369453,
+            "teacher_forced_exact_accuracy": 0,
+            "forced_choice_nats": 0.637775136,
+            "choice_accuracy": 0.6692607,
+            "position_0_accuracy": 0.661478599,
+            "position_1_accuracy": 0.677042802,
+            "swap_consistency_accuracy": 0.976653696,
+            "pair_exact_accuracy": 0.657587549
+          },
+          "retrieval": {
+            "schema": "zero.c42_span_choice_eval.v1",
+            "pairs": 158,
+            "records": 316,
+            "correct_target_tokens": 58944,
+            "alternative_target_tokens": 58944,
+            "correct_nats_per_target_token": 1.95849706,
+            "alternative_nats_per_target_token": 1.95931342,
+            "top1_token_accuracy": 0.498931189,
+            "teacher_forced_exact_accuracy": 0,
+            "forced_choice_nats": 0.70189521,
+            "choice_accuracy": 0.5,
+            "position_0_accuracy": 0.493670886,
+            "position_1_accuracy": 0.506329114,
+            "swap_consistency_accuracy": 0.987341772,
+            "pair_exact_accuracy": 0.493670886
+          }
+        }
+      }
+    }
+  },
+  "frozen_validation_scored": false,
+  "test_metrics_opened": false,
+  "promotion_eligible": false
+}
