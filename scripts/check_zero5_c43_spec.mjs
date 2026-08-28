@@ -21,7 +21,7 @@ function inUnitInterval(value) {
 
 assert.equal(proposal.schema, "zero.c43_experiment_proposal.v1");
 assert.equal(proposal.experiment, "zero5-c43-v1");
-assert.equal(proposal.status, "proposed-awaiting-braid");
+assert.equal(proposal.status, "release-received-integration-ready");
 assert.equal(proposal.authorized, false);
 assert.equal(proposal.c42_decision.decision, "no-go");
 assert.equal(proposal.c42_decision.decision_is_immutable, true);
@@ -83,6 +83,13 @@ assert.equal(proposal.training_proposal.compute_token_exposures_maximum,
   proposal.training_proposal.primary_compute_token_exposures);
 assert.equal(proposal.training_proposal.paid_compute_authorized, false);
 assert.equal(proposal.training_proposal.cost_ceiling_usd, null);
+assert.equal(proposal.braid_request.status, "received-and-verified");
+assert.equal(proposal.braid_request.pull_request, 15);
+assert.match(proposal.braid_request.source_commit, /^[0-9a-f]{40}$/u);
+for (const field of ["manifest_sha256", "membership_digest",
+  "pack_plan_sha256"]) {
+  assert.match(proposal.braid_request[field], /^[0-9a-f]{64}$/u);
+}
 assert.equal(proposal.braid_request.cloze.answer_target_tokens_minimum,
   3 * c42Contract.verified_import.primary_packs.answer_targets_by_task.cloze);
 assert(proposal.braid_request.cloze.answer_target_share_minimum >

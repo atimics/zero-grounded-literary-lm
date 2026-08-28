@@ -1,7 +1,7 @@
 {
   "schema": "zero.c43_experiment_proposal.v1",
   "experiment": "zero5-c43-v1",
-  "status": "proposed-awaiting-braid",
+  "status": "release-received-integration-ready",
   "authorized": false,
   "purpose": "Test whether broader exact-cloze coverage and harder evidence-dependent retrieval examples clear the real C4.2 weaknesses at fixed model size and primary compute exposure.",
   "supersedes": null,
@@ -45,12 +45,14 @@
   },
   "braid_request": {
     "release": "C4.3",
-    "status": "requested-not-received",
-    "source_commit": null,
-    "release_id": null,
-    "manifest_sha256": null,
-    "membership_digest": null,
-    "pack_plan_sha256": null,
+    "status": "received-and-verified",
+    "pull_request": 15,
+    "merge_commit": "45abf243b8b2acb0e4b74bc1e0dbcd2630907093",
+    "source_commit": "b1472ee2382a95c8a924ed82f9d76cc115541877",
+    "release_id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+    "manifest_sha256": "1f4fd5095be48e434a8c41a872315aca6090e9979c9b095df5bd5dd24418503d",
+    "membership_digest": "fc1feaeb81da02d1ae7c44fbc0a745f698f1ba1b07dcea4505a108fc4ecb9413",
+    "pack_plan_sha256": "3237a3771d687dd6b9b670fb05e2252be2647c42636c7f330cbb8527353362ef",
     "marker_free": true,
     "context": 512,
     "primary_compute_token_exposures": 19337216,
@@ -205,7 +207,6 @@
     "policy": "hash-only; content absent, not parsed, not tokenized, not packed, and not scored"
   },
   "blockers": [
-    "Braid C4.3 governed release and machine-readable report",
     "two matching deterministic imports",
     "pilot result and frozen answer weights",
     "final implementation and artifact hashes",

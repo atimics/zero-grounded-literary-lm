@@ -1,17 +1,38 @@
 # ZERO.5 C4.3 preparation tooling
 
-This directory is blocked while Braid prepares the governed C4.3 corpus. The
-tools here make the handoff deterministic without authorizing training, paid
-compute, promotion, or sealed-test access.
+The governed Braid C4.3 v0.1.1 release is available. These tools verify its
+real handoff, build deterministic private packs, and run the development-only
+weight pilot. They do not authorize primary training, paid compute, promotion,
+or sealed-test access.
+
+## Private import
+
+Run the importer twice into two new directories. It verifies every Braid
+artifact, rebuilds the exact grouped packs, copies only the already-frozen C4.2
+validation binaries, and refuses any test content:
+
+```bash
+node scripts/prepare_zero5_c43.mjs \
+  --release /absolute/path/to/c43-release \
+  --handoff /absolute/path/to/zero-handoff.json \
+  --braid-root /absolute/path/to/braid \
+  --c42-import /absolute/path/to/zero5-c42-v1/import-final \
+  --tokenizer-tool /absolute/path/to/sero_tokenizer \
+  --import-id zero5-c43-private-a \
+  --out /private/path/to/import-a
+```
+
+Repeat with a distinct import ID and output directory, then use the generated
+`release-report.json` and `import.json` files in the intake checker below.
 
 ## Release intake
 
-After Braid provides its release report and ZERO produces two independent
-imports, run:
+After ZERO produces two independent imports, run:
 
 ```bash
 node scripts/check_zero5_c43_release.mjs \
-  --report /absolute/path/to/c43-release/report.json \
+  --release /absolute/path/to/c43-release \
+  --report /absolute/path/to/import-a/release-report.json \
   --import-a /absolute/path/to/import-a.json \
   --import-b /absolute/path/to/import-b.json
 ```
@@ -29,7 +50,7 @@ The checker fails closed on:
 - nondeterministic imports
 - changed validation identities or any test access
 
-The required Braid report shape is defined by
+The normalized ZERO report shape is defined by
 `schemas/zero5-c43-release-report.schema.json` and demonstrated by the
 synthetic fixture at `tests/fixtures/zero5-c43-release/report.json`. Import
 receipts use `zero.c43_import_receipt.v1`, as shown beside the report. The
@@ -44,7 +65,8 @@ variant. Select between one or two completed variants with:
 
 ```bash
 node scripts/select_zero5_c43_pilot.mjs \
-  --report /absolute/path/to/c43-release/report.json \
+  --release /absolute/path/to/c43-release \
+  --report /absolute/path/to/import-a/release-report.json \
   --import-a /absolute/path/to/import-a.json \
   --import-b /absolute/path/to/import-b.json \
   --variant /absolute/path/to/pilot-a.json \
@@ -58,9 +80,11 @@ task imbalance above 10%, frozen-validation scoring, test access, or any claim
 that a pilot can promote a model. Selection order is cloze exact accuracy,
 retrieval choice accuracy, claim choice accuracy, then stable variant ID.
 
-This tool selects already completed pilot results. The exact training command
-cannot be frozen until Braid supplies the real pack plan and development
-artifact.
+Create each result with `scripts/run_zero5_c43_pilot.mjs`. The runner accepts
+only a preregistered Braid variant, starts from the frozen C2 checkpoint, uses
+the development pack only, verifies exact zero-wrap accounting, and writes no
+promotion claim. Pass `--release` to the selector so it can recheck the source
+artifacts.
 
 ## Contract candidate
 
@@ -68,7 +92,8 @@ After pilot selection, build a still-blocked contract candidate:
 
 ```bash
 node scripts/build_zero5_c43_contract_candidate.mjs \
-  --report /absolute/path/to/c43-release/report.json \
+  --release /absolute/path/to/c43-release \
+  --report /absolute/path/to/import-a/release-report.json \
   --import-a /absolute/path/to/import-a.json \
   --import-b /absolute/path/to/import-b.json \
   --pilot-selection /absolute/path/to/pilot-selection.json \
@@ -78,8 +103,8 @@ node scripts/build_zero5_c43_contract_candidate.mjs \
 The generated candidate binds the release, both imports, selected weights,
 fixed model, C2 initialization, C4.2 validation identities, corrected gates,
 and sealed-test policy. It remains unauthorized with no cost ceiling. A later
-PR must freeze implementation and runtime hashes and record an explicit paid
-compute approval before launch.
+PR must freeze implementation and runtime hashes. Paid compute needs a separate
+explicit approval before launch.
 
 ## Local verification
 

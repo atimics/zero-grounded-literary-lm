@@ -25,6 +25,7 @@ try {
   const reportPath = option("--report");
   const firstImportPath = option("--import-a");
   const secondImportPath = option("--import-b");
+  const releaseDirectory = option("--release");
   if (!reportPath || !firstImportPath || !secondImportPath) {
     fail("--report, --import-a, and --import-b are required");
   }
@@ -34,7 +35,8 @@ try {
   const firstImport = readJson(firstImportPath);
   const secondImport = readJson(secondImportPath);
   const release = validateReleaseReport(report, proposal, c42Contract,
-    path.dirname(path.resolve(reportPath)));
+    releaseDirectory ? path.resolve(releaseDirectory) :
+      path.dirname(path.resolve(reportPath)));
   const imports = validateImportPair(firstImport, secondImport, report,
     proposal, c42Contract);
   process.stdout.write(JSON.stringify({

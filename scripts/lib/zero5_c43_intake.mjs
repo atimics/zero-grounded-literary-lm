@@ -56,6 +56,225 @@ export function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
+function requireSame(left, right, label) {
+  requireValue(left === right, `${label} changed`);
+}
+
+function artifactKind(relativePath) {
+  if (relativePath === "data/train.jsonl") return "train";
+  if (relativePath === "development/data.jsonl") return "development";
+  return relativePath;
+}
+
+export function loadBraidC43Release(releaseDirectory, handoffPath,
+  proposal) {
+  const release = path.resolve(releaseDirectory);
+  const handoff = readJson(path.resolve(handoffPath));
+  const manifestPath = path.join(release, "release.json");
+  const manifest = readJson(manifestPath);
+  const dataReport = readJson(path.join(release, "reports/data-report.json"));
+  const trainingReport = readJson(
+    path.join(release, "reports/training-report.json"));
+  const pilotContract = readJson(path.join(release, "pilot-contract.json"));
+
+  requireValue(handoff.schemaVersion === "braid.c43-zero-handoff/v1",
+    "unexpected Braid C4.3 handoff schema");
+  requireValue(manifest.schemaVersion === "braid.c43-release/v1" &&
+    manifest.status === "RELEASED", "Braid C4.3 is not released");
+  requireValue(dataReport.schemaVersion === "braid.c43-data-report/v1",
+    "unexpected Braid C4.3 data report schema");
+  requireValue(trainingReport.schemaVersion ===
+    "braid.c43-training-report/v1",
+  "unexpected Braid C4.3 training report schema");
+  requireValue(pilotContract.schemaVersion ===
+    "braid.c43-pilot-contract/v1",
+  "unexpected Braid C4.3 pilot contract schema");
+
+  const manifestSha256 = sha256File(manifestPath);
+  requireSame(manifest.releaseId, handoff.releaseId, "release ID");
+  requireSame(manifestSha256, handoff.releaseManifestSha256,
+    "release manifest hash");
+  requireSame(manifest.membershipDigest, handoff.membershipDigest,
+    "membership digest");
+  requireSame(manifest.packPlanHash, handoff.packPlanHash,
+    "pack-plan hash");
+  requireSame(manifest.trainingReportHash, handoff.trainingReportHash,
+    "training-report hash");
+  requireSame(manifest.tokenizer.sha256, handoff.tokenizer.sha256,
+    "tokenizer hash");
+  requireSame(manifest.tokenizer.sha256, proposal.fixed_model.tokenizer_sha256,
+    "C4.2 tokenizer identity");
+  commit(handoff.sourceCommit, "Braid source commit");
+  requireSame(handoff.releaseId, proposal.braid_request.release_id,
+    "proposal release ID");
+  requireSame(handoff.sourceCommit, proposal.braid_request.source_commit,
+    "proposal Braid source commit");
+  requireSame(handoff.releaseManifestSha256,
+    proposal.braid_request.manifest_sha256, "proposal manifest hash");
+  requireSame(handoff.membershipDigest,
+    proposal.braid_request.membership_digest, "proposal membership digest");
+  requireSame(handoff.packPlanHash, proposal.braid_request.pack_plan_sha256,
+    "proposal pack-plan hash");
+  requireValue(handoff.status === "release-ready; training-blocked",
+    "Braid handoff crossed its training boundary");
+  for (const field of ["trainingAuthorized", "awsUseAuthorized",
+    "paidComputeAuthorized", "promotionAuthorized",
+    "sealedTestAccessAuthorized"]) {
+    requireValue(handoff.consumerContract?.[field] === false,
+      `Braid handoff ${field} must be false`);
+  }
+  requireValue(!fs.existsSync(path.join(release, "data/test.jsonl")),
+    "sealed test content is present in the C4.3 release");
+
+  const declared = new Map(manifest.artifacts.map(item => [item.path, item]));
+  requireValue(declared.size === manifest.artifacts.length,
+    "release manifest contains duplicate artifact paths");
+  for (const item of manifest.artifacts) {
+    requireValue(typeof item.path === "string" && !path.isAbsolute(item.path) &&
+      !item.path.split(/[\\/]/u).includes(".."),
+    `invalid Braid artifact path: ${item.path}`);
+    const file = path.join(release, item.path);
+    requireValue(fs.existsSync(file), `Braid artifact is missing: ${item.path}`);
+    requireSame(fs.statSync(file).size, item.bytes,
+      `${item.path} byte count`);
+    requireSame(sha256File(file), item.sha256, `${item.path} hash`);
+    requireSame(handoff.artifacts?.[item.path], item.sha256,
+      `${item.path} handoff hash`);
+  }
+  requireValue(Object.keys(handoff.artifacts ?? {}).length === declared.size,
+    "handoff artifact set differs from the release manifest");
+  requireSame(sha256File(path.join(release, "reports/data-report.json")),
+    manifest.dataReportHash, "data-report hash");
+  requireSame(sha256File(path.join(release, "reports/training-report.json")),
+    manifest.trainingReportHash, "training-report hash");
+
+  requireSame(handoff.training.contextTokens, proposal.fixed_model.context,
+    "training context");
+  requireSame(handoff.training.vocabularySize,
+    proposal.fixed_model.vocabulary, "training vocabulary");
+  requireSame(handoff.training.seed, proposal.initialization.seed,
+    "training seed");
+  requireSame(handoff.training.initialization,
+    proposal.initialization.source, "training initialization");
+  requireValue(handoff.training.pairAtomicUpdates === true &&
+    trainingReport.pairAtomic === true &&
+    trainingReport.pairAtomicFailures === 0,
+  "C4.3 pair-atomic training changed");
+  requireSame(trainingReport.computeTokenExposures,
+    proposal.training_proposal.primary_compute_token_exposures,
+  "primary compute exposure");
+  requireValue(trainingReport.wraps === 0 && handoff.training.wraps === 0,
+    "C4.3 release contains data wraps");
+  requireValue(pilotContract.data === "development slice only" &&
+    pilotContract.frozenValidationOpened === false &&
+    pilotContract.sealedTestOpened === false &&
+    pilotContract.promotional === false &&
+    pilotContract.primaryStartsFromPilot === false,
+  "C4.3 pilot crossed its preregistered boundary");
+  requireValue(pilotContract.variants.length >= 1 &&
+    pilotContract.variants.length <=
+      proposal.training_proposal.pilot.weight_variants_maximum,
+  "C4.3 pilot variant count changed");
+  requireValue(trainingReport.development.optimizerGroups <=
+    pilotContract.maximumOptimizerGroups &&
+    pilotContract.maximumOptimizerGroups ===
+      proposal.training_proposal.pilot.maximum_optimizer_groups,
+  "C4.3 development pilot exceeds its group ceiling");
+
+  const raw = dataReport.answerTargets.rawTokensByTask;
+  const band = dataReport.answerTargets.clozeBands;
+  const claim = dataReport.orientation.claim;
+  const retrieval = dataReport.retrieval;
+  const overlap = dataReport.overlap;
+  const report = {
+    schema: "braid.zero5_c43_release_report.v1",
+    release: {
+      status: "released", id: manifest.releaseId,
+      source_commit: handoff.sourceCommit,
+      manifest_sha256: manifestSha256,
+      membership_digest: manifest.membershipDigest,
+      pack_plan_sha256: manifest.packPlanHash,
+      tokenizer_sha256: manifest.tokenizer.sha256,
+      marker_free: dataReport.serializerLeakage.passed,
+      context: handoff.training.contextTokens,
+    },
+    artifacts: manifest.artifacts.map(item => ({
+      kind: artifactKind(item.path), path: item.path,
+      sha256: item.sha256, bytes: item.bytes,
+    })),
+    primary: {
+      compute_token_exposures: trainingReport.computeTokenExposures,
+      wraps: trainingReport.wraps,
+      answer_targets: { ...raw, total: dataReport.answerTargets.totalRawTokens },
+      cloze: {
+        length_band_target_tokens: Object.fromEntries(Object.entries(band)
+          .map(([name, value]) => [name, value.answerTokens])),
+        maximum_derived_per_source_record:
+          dataReport.clozeDuplicates.maximumDerivedPerSourceRecord,
+        source_documents: dataReport.clozeDuplicates.sourceRecords,
+        maximum_source_share: dataReport.clozeDuplicates.largestSourceShare,
+        answer_leakage_records:
+          dataReport.clozeDuplicates.answerLeakageRecords,
+      },
+      retrieval: {
+        pairs: retrieval.logicalPairs,
+        negative_type_counts: retrieval.negativeTypes,
+        answer_span_shortcut_audit_passed:
+          retrieval.answerOnlyShortcutAudit.passed &&
+          retrieval.answerRoleMultiset.identical,
+      },
+      mirroring: {
+        claim: {
+          pairs: claim.first,
+          orientation_records: claim.first + claim.second,
+          position_0_records: claim.first,
+          position_1_records: claim.second,
+          missing_orientations: 0,
+          group_violations: trainingReport.pairAtomicFailures,
+        },
+        retrieval: {
+          pairs: retrieval.logicalPairs,
+          orientation_records: retrieval.records,
+          position_0_records: retrieval.correctPosition.first,
+          position_1_records: retrieval.correctPosition.second,
+          missing_orientations: 0,
+          group_violations: trainingReport.pairAtomicFailures,
+        },
+      },
+    },
+    development: {
+      records: dataReport.counts.developmentRecords,
+      overlap: {
+        training: { record: overlap.developmentTrainRecordIds,
+          normalized_text: overlap.developmentTrainNormalizedText,
+          source_document: overlap.developmentTrainSourceDocuments },
+        validation: { record: 0,
+          normalized_text: overlap.developmentValidationNormalizedText,
+          source_document: overlap.developmentValidationSourceDocuments },
+        test: { record: 0, normalized_text: 0, source_document: 0 },
+      },
+    },
+    governance: {
+      provenance_complete: true,
+      attribution_complete: true,
+      rights_record_present: declared.has("RIGHTS.md"),
+      artifact_hashes_complete: true,
+      machine_readable_task_report_present:
+        declared.has("reports/data-report.json") &&
+        declared.has("reports/training-report.json"),
+    },
+    test: {
+      records: handoff.sealedTest.records,
+      bytes: handoff.sealedTest.bytes,
+      sha256: handoff.sealedTest.sha256,
+      content_present: false, parsed: false, tokenized: false,
+      packed: false, scored: false, metrics_opened: false,
+    },
+  };
+  return { release, handoff, manifest, dataReport, trainingReport,
+    pilotContract, report };
+}
+
 export function writeJsonExclusive(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + "\n", {
@@ -163,17 +382,17 @@ export function validateReleaseReport(report, proposal, c42Contract,
   }
   requireValue(bandTotal === answerTargets.cloze,
     "cloze length bands do not sum to cloze answer targets");
-  integer(cloze.exact_duplicate_records, "cloze exact duplicates");
-  requireValue(cloze.exact_duplicate_records === 0,
-    "cloze release contains exact duplicate records");
+  integer(cloze.maximum_derived_per_source_record,
+    "cloze maximum derived records per source", 1);
+  requireValue(cloze.maximum_derived_per_source_record <= 1,
+    "cloze release derives more than one record per source record");
   integer(cloze.source_documents, "cloze source documents", 2);
   unit(cloze.maximum_source_share, "cloze maximum source share");
   requireValue(cloze.maximum_source_share < 1,
     "all cloze coverage comes from one source");
-  integer(cloze.context_recoverable_failures,
-    "cloze context-recoverable failures");
-  requireValue(cloze.context_recoverable_failures === 0,
-    "some cloze answers are not recoverable from context");
+  integer(cloze.answer_leakage_records, "cloze answer leakage records");
+  requireValue(cloze.answer_leakage_records === 0,
+    "some cloze answers leak into the model-facing context");
 
   const retrieval = primary.retrieval;
   integer(retrieval?.pairs, "retrieval pairs", 1);

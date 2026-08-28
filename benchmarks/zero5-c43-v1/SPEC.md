@@ -2,9 +2,9 @@
 
 ## Status
 
-**Proposed and blocked.** This specification requests a Braid release and
-defines the experiment boundary. It does not authorize training, AWS use, or
-test access.
+**Release received; primary training blocked.** Braid C4.3 v0.1.1 is pinned
+and the integration now accepts its governed handoff. This specification does
+not authorize primary training, AWS use, paid compute, or test access.
 
 C4.2 remains a no-go under its original frozen contract. C4.3 is a new
 experiment; it does not re-score C4.2 under easier rules.
@@ -154,10 +154,10 @@ validation views. If every gate passes, a separate authorization is still
 required before opening the sealed test. If any gate fails, the test remains
 closed and C4.3 is recorded as a no-go.
 
-## Items Braid must fill
+## Remaining freeze
 
-The executable contract remains blocked until Braid provides the C4.3 source
-commit, release ID, immutable artifact hashes, exact task counts, exact group
-plan, data report, and rights record. ZERO must then freeze implementation
+Braid supplied the source commit, release ID, immutable artifacts, exact task
+counts, group plan, data report, and rights record in PR #15. ZERO must now
+record the matching imports and pilot selection, then freeze implementation
 hashes, weights, update count, runtime venue, budget, and authorization in a
 new PR before any primary compute starts.
