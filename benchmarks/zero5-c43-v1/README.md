@@ -2,8 +2,9 @@
 
 The governed Braid C4.3 v0.1.1 release is available. These tools verify its
 real handoff, build deterministic private packs, and run the development-only
-weight pilot. They do not authorize primary training, paid compute, promotion,
-or sealed-test access.
+weight pilot. The primary run now has a separate, hash-bound local
+authorization. Paid compute, promotion, publication, independent retries, and
+sealed-test access remain unauthorized.
 
 ## Private import
 
@@ -115,16 +116,19 @@ variant. The primary run is fixed at 28,707 pair-atomic update groups and
 
 The local Apple Silicon venue is frozen from the two measured pilot runs. The
 slower pilot rate projects about 31.2 minutes for the primary exposure, and the
-runner enforces a one-hour hard stop. It still refuses to start because primary
-training is unauthorized; paid compute, promotion, and test access also remain
-unauthorized. Check the frozen state with:
+runner enforces a one-hour hard stop. Authorization
+`zero5-c43-local-2026-08-28-v1` permits exactly one primary execution from the
+frozen C2 checkpoint with the selected `cloze-plus-five-v1` weights. AWS, paid
+compute, promotion, publication, independent retries, and test access remain
+unauthorized. Check the authorized contract with:
 
 ```bash
 make zero5-c43-contract-check
 ```
 
-The next decision is explicit primary training authorization. Scale remains a
-fallback only; any later paid venue would need a separate cost ceiling.
+The next step is zero-compute local preflight followed by the single authorized
+primary execution. Scale remains a fallback only; any later paid venue would
+need separate authorization and a cost ceiling.
 
 ## Local verification
 

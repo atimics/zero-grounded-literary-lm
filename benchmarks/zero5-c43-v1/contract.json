@@ -1,8 +1,8 @@
 {
   "schema": "zero.c43_experiment_contract.v1",
   "experiment": "zero5-c43-v1",
-  "status": "frozen-awaiting-primary-training-authorization",
-  "authorized": false,
+  "status": "authorized-unrun",
+  "authorized": true,
   "source_proposal_sha256": "a7efadd35ddc3cb3497c4605fb4f2e85370dda29e183fbcf47c8c0ce6617ad11",
   "braid": {
     "pull_request": 15,
@@ -188,7 +188,7 @@
     "pack_format": "Z5PKV3 grouped packs"
   },
   "training": {
-    "status": "frozen-unauthorized",
+    "status": "authorized",
     "seed": 0,
     "update_groups": 28707,
     "maximum_batch_sequences": 2,
@@ -217,7 +217,7 @@
     "cost_ceiling_usd": null
   },
   "execution": {
-    "status": "frozen-local-unauthorized",
+    "status": "authorized-local-unrun",
     "scale_policy": "local first; scale only after measured saturation",
     "venue": "local",
     "compute_resource": "Apple Silicon CPU",
@@ -322,25 +322,33 @@
     "metrics_opened": false
   },
   "authorization": {
-    "training_authorized": false,
+    "status": "authorized",
+    "training_authorized": true,
     "aws_use_authorized": false,
     "paid_compute_authorized": false,
     "promotion_authorized": false,
     "sealed_test_access_authorized": false,
-    "approval_id": null
+    "publication_authorized": false,
+    "independent_retry_authorized": false,
+    "approval_id": "zero5-c43-local-2026-08-28-v1",
+    "record": {
+      "path": "benchmarks/zero5-c43-v1/authorization.json",
+      "sha256": "9c0a2c30c38c68b8f5040f5385997d81c71ec1d384af5c71036b4e67244d2162",
+      "bytes": 1613,
+      "source_contract_sha256": "650fddce48ae240a2e1fe0dc622d82cdd0d5eb599ef0cc51f553ea87e7a491e0"
+    }
   },
   "claim_boundary": {
     "may_claim": "C4.2 identified a real exact-cloze and retrieval-choice shortfall and an impossible claim-swap improvement gate; C4.3 corrects the future gate design without changing the C4.2 no-go.",
     "may_not_claim": [
       "that C4.2 passed under revised rules",
       "that C4.3 data exists before Braid publishes a governed release",
-      "that C4.3 training or paid compute is authorized",
+      "permission to use AWS or paid compute",
       "permission to open the sealed test set",
-      "permission to publish private corpus artifacts or checkpoints"
+      "permission to promote the model",
+      "permission to publish private corpus artifacts, checkpoints, or results",
+      "permission to start an independent retry"
     ]
   },
-  "blockers": [
-    "Braid and user authorization for primary training",
-    "authorization PR that changes status to authorized-unrun"
-  ]
+  "blockers": []
 }

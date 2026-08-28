@@ -3,6 +3,8 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { spawnSync } from "node:child_process";
 
@@ -27,9 +29,8 @@ function run(program, args, expectedStatus = 0) {
 
 assert.equal(contract.schema, "zero.c43_experiment_contract.v1");
 assert.equal(contract.experiment, proposal.experiment);
-assert.equal(contract.status,
-  "frozen-awaiting-primary-training-authorization");
-assert.equal(contract.authorized, false);
+assert.equal(contract.status, "authorized-unrun");
+assert.equal(contract.authorized, true);
 assert.equal(contract.source_proposal_sha256, sha256(proposalPath));
 assert.equal(contract.braid.release_id, proposal.braid_request.release_id);
 assert.equal(contract.braid.source_commit, proposal.braid_request.source_commit);
@@ -55,6 +56,41 @@ for (const evidence of [contract.braid.report,
     `${evidence.path} exposes a user path`);
   assert.equal(text.includes("/private/"), false,
     `${evidence.path} exposes a private path`);
+}
+
+const authorizationEvidence = contract.authorization.record;
+assert.equal(sha256(authorizationEvidence.path), authorizationEvidence.sha256,
+  `${authorizationEvidence.path} hash changed`);
+assert.equal(fs.statSync(authorizationEvidence.path).size,
+  authorizationEvidence.bytes,
+  `${authorizationEvidence.path} size changed`);
+const authorization = JSON.parse(fs.readFileSync(
+  authorizationEvidence.path, "utf8"));
+assert.equal(authorization.schema, "zero.c43_training_authorization.v1");
+assert.equal(authorization.approval_id, contract.authorization.approval_id);
+assert.equal(authorization.source_contract_sha256,
+  "650fddce48ae240a2e1fe0dc622d82cdd0d5eb599ef0cc51f553ea87e7a491e0");
+assert.equal(authorization.source_contract_sha256,
+  authorizationEvidence.source_contract_sha256);
+assert.equal(authorization.braid_release_id, contract.braid.release_id);
+assert.match(authorization.approved_statement,
+  /I authorize one ZERO\.5 C4\.3 primary training run/u);
+assert.equal(authorization.scope.primary_executions, 1);
+assert.equal(authorization.scope.venue, contract.execution.venue);
+assert.equal(authorization.scope.compute_resource,
+  contract.execution.compute_resource);
+assert.equal(authorization.scope.maximum_execution_seconds,
+  contract.execution.maximum_execution_seconds);
+assert.equal(authorization.scope.initialization_checkpoint_sha256,
+  contract.initialization.checkpoint_sha256);
+assert.equal(authorization.scope.answer_weight_variant,
+  contract.pilot.selected_variant);
+assert.equal(authorization.scope.frozen_validation, "C4.2");
+for (const name of ["aws_use_authorized", "paid_compute_authorized",
+  "sealed_test_access_authorized", "promotion_authorized",
+  "publication_authorized", "independent_retry_authorized"]) {
+  assert.equal(authorization.scope[name], false);
+  assert.equal(contract.authorization[name], false);
 }
 
 for (const name of ["trainer", "importer", "intake_library",
@@ -97,7 +133,7 @@ assert.equal(contract.pilot.frozen_validation_scored, false);
 assert.equal(contract.pilot.test_metrics_opened, false);
 assert.equal(contract.pilot.promotion_eligible, false);
 
-assert.equal(contract.training.status, "frozen-unauthorized");
+assert.equal(contract.training.status, "authorized");
 assert.equal(contract.training.update_groups, 28707);
 assert.equal(contract.training.compute_token_exposures, 19337216);
 assert.equal(contract.training.pair_atomic_updates, true);
@@ -105,7 +141,7 @@ assert.equal(contract.training.zero_wraps_required, true);
 assert.equal(contract.training.primary_initialization, "C2-not-C4.2-or-pilot");
 assert.equal(contract.training.paid_compute_authorized, false);
 assert.equal(contract.training.cost_ceiling_usd, null);
-assert.equal(contract.execution.status, "frozen-local-unauthorized");
+assert.equal(contract.execution.status, "authorized-local-unrun");
 assert.equal(contract.execution.venue, "local");
 assert.equal(contract.execution.compute_resource, "Apple Silicon CPU");
 assert.equal(contract.execution.math_backend, "accelerate-vforce");
@@ -130,16 +166,31 @@ assert.equal(contract.test.tokenized, false);
 assert.equal(contract.test.packed, false);
 assert.equal(contract.test.scored, false);
 assert.equal(contract.test.metrics_opened, false);
-for (const value of Object.values(contract.authorization)) {
-  assert(value === false || value === null);
-}
+assert.equal(contract.authorization.status, "authorized");
+assert.equal(contract.authorization.training_authorized, true);
+assert.equal(contract.authorization.approval_id,
+  "zero5-c43-local-2026-08-28-v1");
+assert.deepEqual(contract.blockers, []);
 
 assert.match(run("node", ["scripts/evaluate_zero5_c43.mjs", "--self-test"])
   .stdout, /evaluator self-test passed/u);
 assert.match(run("node", ["scripts/run_zero5_c43.mjs", "--self-test"])
   .stdout, /runner self-test passed/u);
-const blocked = run("node", ["scripts/run_zero5_c43.mjs",
-  "--contract", contractPath], 1);
-assert.match(blocked.stderr, /frozen but not authorized/u);
+const directory = fs.mkdtempSync(path.join(os.tmpdir(),
+  "zero-c43-contract-check-"));
+try {
+  const blockedContract = structuredClone(contract);
+  blockedContract.status = "frozen-awaiting-primary-training-authorization";
+  blockedContract.authorized = false;
+  blockedContract.authorization.training_authorized = false;
+  const blockedPath = path.join(directory, "blocked-contract.json");
+  fs.writeFileSync(blockedPath,
+    JSON.stringify(blockedContract, null, 2) + "\n");
+  const blocked = run("node", ["scripts/run_zero5_c43.mjs",
+    "--contract", blockedPath], 1);
+  assert.match(blocked.stderr, /frozen but not authorized/u);
+} finally {
+  fs.rmSync(directory, { recursive: true });
+}
 
-process.stdout.write("ZERO.5 C4.3 frozen contract checks passed\n");
+process.stdout.write("ZERO.5 C4.3 authorized contract checks passed\n");
