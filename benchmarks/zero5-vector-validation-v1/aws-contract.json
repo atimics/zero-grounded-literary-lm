@@ -1,7 +1,7 @@
 {
   "schema": "zero.aws_vector_validation_contract.v1",
   "experiment": "zero5-vector-validation-v1",
-  "status": "awaiting-explicit-authorization",
+  "status": "authorized",
   "purpose": "Confirm over 1000 updates that the 28.14% GNU libmvec speed candidate keeps a useful C3.3 validation-loss trajectory.",
   "claim_boundary": {
     "may_claim": "The vector math candidate did or did not satisfy the frozen speed and validation-loss promotion guards on this exact performance replay.",
@@ -75,10 +75,10 @@
     "launcher": "scripts/aws/zero5-vector-validation-run-instance.sh"
   },
   "authorization": {
-    "status": "awaiting-explicit-user-approval",
+    "status": "authorized",
     "approval_id": "zero5-vector-validation-2026-08-27-v1",
     "requested_maximum_ec2_usd": 0.17,
-    "approved_by": null,
-    "approved_at": null
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-28T00:10:54Z"
   }
 }
