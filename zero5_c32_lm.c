@@ -315,7 +315,9 @@ typedef struct {
 typedef struct {
     Token *tokens;
     unsigned char *target_classes;
+    uint32_t *update_offsets;
     uint32_t pack_count;
+    uint32_t update_count;
     uint32_t context;
     uint32_t vocab;
     uint64_t record_count;
@@ -3552,8 +3554,11 @@ static uint64_t packed_read_u64(FILE *file, const char *path)
 static void packed_set_load(PackedSet *set, const char *path,
                             const Config *cfg)
 {
-    static const unsigned char magic[8] = {
+    static const unsigned char magic_v2[8] = {
         'Z', '5', 'P', 'K', 'V', '2', '\0', '\0'
+    };
+    static const unsigned char magic_v3[8] = {
+        'Z', '5', 'P', 'K', 'V', '3', '\0', '\0'
     };
     unsigned char observed_magic[8];
     FILE *file = fopen(path, "rb");
@@ -3568,7 +3573,8 @@ static void packed_set_load(PackedSet *set, const char *path,
     memset(set, 0, sizeof(*set));
     if (fread(observed_magic, 1, sizeof(observed_magic), file) !=
             sizeof(observed_magic) ||
-        memcmp(observed_magic, magic, sizeof(magic)) != 0) {
+        (memcmp(observed_magic, magic_v2, sizeof(magic_v2)) != 0 &&
+         memcmp(observed_magic, magic_v3, sizeof(magic_v3)) != 0)) {
         fail("unsupported or corrupt packed set");
     }
     version = packed_read_u32(file, path);
@@ -3581,11 +3587,39 @@ static void packed_set_load(PackedSet *set, const char *path,
     set->answer_targets_by_task[0] = packed_read_u64(file, path);
     set->answer_targets_by_task[1] = packed_read_u64(file, path);
     set->answer_targets_by_task[2] = packed_read_u64(file, path);
-    if (version != 2U || set->vocab != (uint32_t)cfg->vocab ||
+    if ((version != 2U && version != 3U) ||
+        (version == 2U &&
+         memcmp(observed_magic, magic_v2, sizeof(magic_v2)) != 0) ||
+        (version == 3U &&
+         memcmp(observed_magic, magic_v3, sizeof(magic_v3)) != 0) ||
+        set->vocab != (uint32_t)cfg->vocab ||
         set->context != (uint32_t)cfg->context || set->pack_count == 0U ||
         set->record_count == 0U || set->active_targets == 0U ||
         set->answer_targets > set->active_targets) {
         fail("packed set contract does not match the model");
+    }
+    if (version == 3U) {
+        uint32_t update;
+        set->update_count = packed_read_u32(file, path);
+        if (set->update_count == 0U ||
+            set->update_count > set->pack_count) {
+            fail("grouped packed set has an invalid update count");
+        }
+        set->update_offsets = zero_alloc(
+            (size_t)set->update_count + 1U, sizeof(*set->update_offsets));
+        for (update = 0; update <= set->update_count; ++update) {
+            set->update_offsets[update] = packed_read_u32(file, path);
+            if ((update == 0U && set->update_offsets[update] != 0U) ||
+                (update > 0U &&
+                 set->update_offsets[update] <=
+                     set->update_offsets[update - 1U]) ||
+                set->update_offsets[update] > set->pack_count) {
+                fail("grouped packed set has invalid update boundaries");
+            }
+        }
+        if (set->update_offsets[set->update_count] != set->pack_count) {
+            fail("grouped packed set does not consume every pack");
+        }
     }
     if ((size_t)set->pack_count > SIZE_MAX / ((size_t)set->context + 1u)) {
         fail("packed set is too large");
@@ -3631,7 +3665,24 @@ static void packed_set_destroy(PackedSet *set)
 {
     free(set->tokens);
     free(set->target_classes);
+    free(set->update_offsets);
     memset(set, 0, sizeof(*set));
+}
+
+static uint32_t packed_update_start(const PackedSet *set, uint64_t step,
+                                    int fixed_batch)
+{
+    if (set->update_offsets != NULL) return set->update_offsets[step];
+    return (uint32_t)(step * (uint64_t)fixed_batch);
+}
+
+static uint32_t packed_update_size(const PackedSet *set, uint64_t step,
+                                   int fixed_batch)
+{
+    if (set->update_offsets != NULL) {
+        return set->update_offsets[step + 1U] - set->update_offsets[step];
+    }
+    return (uint32_t)fixed_batch;
 }
 
 static uint64_t packed_mask(const PackedSet *set, uint32_t pack,
@@ -4063,7 +4114,8 @@ static void packed_parallel_merge_gradients(PackedParallelBatch *parallel)
 
 static void packed_parallel_train_update(
     PackedParallelBatch *parallel, Rng *rng, const PackedSet *train,
-    uint64_t first_pack, const Options *options, double *interval_loss,
+    uint64_t first_pack, int batch_sequences, const Options *options,
+    double *interval_loss,
     uint64_t *interval_sequences, uint64_t *interval_active_targets)
 {
     int worker;
@@ -4071,9 +4123,9 @@ static void packed_parallel_train_update(
 #if defined(USE_PHASE_PROFILE)
     double setup_start = wall_seconds();
 #endif
-    for (batch_start = 0; batch_start < options->batch;
+    for (batch_start = 0; batch_start < batch_sequences;
          batch_start += parallel->count) {
-        int wave = options->batch - batch_start;
+        int wave = batch_sequences - batch_start;
         if (wave > parallel->count) wave = parallel->count;
         for (worker = 0; worker < wave; ++worker) {
             uint32_t pack = (uint32_t)(first_pack +
@@ -4201,12 +4253,18 @@ static void packed_parallel_print_phase_profile(
 #if defined(USE_TENSOR_BATCH)
 static void packed_tensor_train_update(
     PackedTensorBatch *tensor, Model *model, Rng *rng,
-    const PackedSet *train, uint64_t first_pack, const Options *options,
-    double *interval_loss, uint64_t *interval_sequences,
+    const PackedSet *train, uint64_t first_pack, int batch_sequences,
+    const Options *options, double *interval_loss,
+    uint64_t *interval_sequences,
     uint64_t *interval_active_targets)
 {
     const Config *cfg = &model->cfg;
+    int capacity = tensor->count;
     int sequence;
+    if (batch_sequences <= 0 || batch_sequences > capacity) {
+        fail("grouped tensor batch exceeds its declared capacity");
+    }
+    tensor->count = batch_sequences;
     model_zero_grad(model);
     for (sequence = 0; sequence < tensor->count; ++sequence) {
         uint32_t pack = (uint32_t)(first_pack + (uint64_t)sequence);
@@ -4237,6 +4295,7 @@ static void packed_tensor_train_update(
             *interval_active_targets += active;
         }
     }
+    tensor->count = capacity;
 }
 #endif
 
@@ -4266,11 +4325,27 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
                                 : INFINITY;
     uint64_t best_update =
         resume_state != NULL ? resume_state->packed_best_update : 0U;
-    if (required_packs != train->pack_count) {
+    if (train->update_offsets != NULL) {
+        uint32_t grouped_update;
+        if ((uint64_t)train->update_count != (uint64_t)options->steps) {
+            fail("grouped packed run must consume every declared update");
+        }
+        for (grouped_update = 0; grouped_update < train->update_count;
+             ++grouped_update) {
+            uint32_t grouped_size =
+                train->update_offsets[grouped_update + 1U] -
+                train->update_offsets[grouped_update];
+            if (grouped_size > (uint32_t)options->batch) {
+                fail("grouped packed update exceeds --batch capacity");
+            }
+        }
+        required_packs = train->pack_count;
+    } else if (required_packs != train->pack_count) {
         fail("packed run must consume every declared pack exactly once");
     }
     if (completed_steps > (uint64_t)options->steps ||
-        completed_steps * (uint64_t)options->batch > train->pack_count) {
+        packed_update_start(train, completed_steps, options->batch) >
+            train->pack_count) {
         fail("packed checkpoint cursor exceeds the declared run");
     }
     if (completed_steps != *update) {
@@ -4300,36 +4375,38 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
         printf("packed resume completed-steps=%llu next-pack=%llu "
                "best-update=%llu best-val=%.9g\n",
                (unsigned long long)completed_steps,
-               (unsigned long long)(completed_steps *
-                                    (uint64_t)options->batch),
+               (unsigned long long)packed_update_start(
+                   train, completed_steps, options->batch),
                (unsigned long long)best_update, best_validation);
     }
     while (completed_steps < (uint64_t)options->steps && !interrupted &&
            (options->max_run_steps == 0 ||
             attempt_steps < (uint64_t)options->max_run_steps)) {
         int batch;
+        uint32_t first_pack = packed_update_start(
+            train, completed_steps, options->batch);
+        uint32_t batch_sequences = packed_update_size(
+            train, completed_steps, options->batch);
         float gradient_norm;
         float current_lr = options->learning_rate;
         if (options->tensor_batch > 1) {
 #if defined(USE_TENSOR_BATCH)
             packed_tensor_train_update(
-                &tensor, model, rng, train,
-                completed_steps * (uint64_t)options->batch, options,
+                &tensor, model, rng, train, first_pack,
+                (int)batch_sequences, options,
                 &interval_loss, &interval_sequences,
                 &interval_active_targets);
 #endif
         } else if (options->parallel_batch > 1) {
             packed_parallel_train_update(
-                &parallel, rng, train,
-                completed_steps * (uint64_t)options->batch, options,
+                &parallel, rng, train, first_pack,
+                (int)batch_sequences, options,
                 &interval_loss, &interval_sequences,
                 &interval_active_targets);
         } else {
             model_zero_grad(model);
-            for (batch = 0; batch < options->batch; ++batch) {
-                uint32_t pack = (uint32_t)(completed_steps *
-                                           (uint64_t)options->batch +
-                                           (uint64_t)batch);
+            for (batch = 0; batch < (int)batch_sequences; ++batch) {
+                uint32_t pack = first_pack + (uint32_t)batch;
                 size_t token_start =
                     (size_t)pack * ((size_t)train->context + 1u);
                 uint64_t active = packed_mask(
@@ -4374,15 +4451,15 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
             gradient_norm = packed_parallel_optimizer_update(
                 &parallel, *update + 1U, current_lr,
                 options->weight_decay, options->clip,
-                1.0f / options->batch);
+                1.0f / (float)batch_sequences);
         } else {
             gradient_norm = optimizer_update(
                 model, *update + 1U, current_lr, options->weight_decay,
-                options->clip, 1.0f / options->batch, 0);
+                options->clip, 1.0f / (float)batch_sequences, 0);
         }
         ++*update;
         interval_compute_tokens +=
-            (uint64_t)train->context * (uint64_t)options->batch;
+            (uint64_t)train->context * (uint64_t)batch_sequences;
         if (*update % (uint64_t)options->report_every == 0U ||
             completed_steps == (uint64_t)options->steps) {
             double now = wall_seconds();
@@ -4456,8 +4533,8 @@ static void train_packed(Model *model, Rng *rng, uint64_t *update,
         printf("packed paused completed-steps=%llu total-steps=%ld "
                "next-pack=%llu attempt-steps=%llu\n",
                (unsigned long long)completed_steps, options->steps,
-               (unsigned long long)(completed_steps *
-                                    (uint64_t)options->batch),
+               (unsigned long long)packed_update_start(
+                   train, completed_steps, options->batch),
                (unsigned long long)attempt_steps);
     }
     printf("training time %.2f seconds\n", wall_seconds() - training_start);
@@ -6037,8 +6114,8 @@ static void print_usage(const char *program)
     printf("  --trainable-scope S  all (default) or top-ffn\n");
     printf("  --cosine             cosine-decay the learning rate over this run\n");
     printf("  --sequential         consume one plain training stream in order\n");
-    printf("  --packed-train F     consume one record-safe Z5PKV2 pack set exactly once\n");
-    printf("  --packed-validation F use a record-safe Z5PKV2 validation pack set\n");
+    printf("  --packed-train F     consume one record-safe Z5PKV2 or grouped Z5PKV3 set exactly once\n");
+    printf("  --packed-validation F use a record-safe Z5PKV2 or Z5PKV3 validation set\n");
     printf("  --run-contract-sha256 H bind packed checkpoints to one contract\n");
     printf("  --require-math-backend N fail unless the compiled math backend is N\n");
     printf("  --require-attention-backend N fail unless attention backend is N\n");

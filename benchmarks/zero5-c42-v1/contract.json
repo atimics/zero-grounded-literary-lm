@@ -1,0 +1,150 @@
+{
+  "schema": "zero.c42_experiment_setup.v1",
+  "experiment": "zero5-c42-v1",
+  "status": "import-verified-training-unrun",
+  "authorized": false,
+  "purpose": "Test the marker-free C4.2 frontier curriculum on the unchanged 4.85M-parameter ZERO.5 model initialized from the selected C2 checkpoint.",
+  "claim_boundary": {
+    "may_claim": "The locked C4.2 train and validation release can be imported without opening test data, and the C trainer can execute its exact variable-size optimizer groups without extra token exposures.",
+    "may_not_claim": [
+      "that C4.2 improves the model before a preregistered run completes",
+      "reasoning, intelligence, factual truth, or broad model promotion",
+      "permission to open the sealed test set",
+      "permission to publish private corpus artifacts or checkpoints",
+      "permission to start paid compute"
+    ]
+  },
+  "upstream": {
+    "repository": "https://github.com/cenetex/braid.git",
+    "pull_request": 11,
+    "source_commit": "5dbfec78c53676c6aaa32137f7d30e6f81a53593",
+    "merge_required_before_training": false,
+    "merged_at": "2026-08-28T00:03:44Z",
+    "merge_commit": "f951cc2910a76277baaf1548b2bb4184987ee1a5",
+    "release_id": "braid-corpus-four-two-zero5-512-v0.1.0-f98728ce8a110e3b949fb0fdb3916b0c9c58d7357172b63003e9c1f3e12c3336",
+    "release_manifest_sha256": "931544a5e4988b994562dc07831ff39be9da9de734639e6891a3f17b3368be69",
+    "zero_handoff_sha256": "d0085116aa061584f2a4a051af14840e44398a62695c08edd709083b1a7b322a",
+    "membership_digest": "8adfdaafc143d476fff71630452c0d0fbb80b71f2a8d8a463dc5140b2ab91cde",
+    "pack_plan_sha256": "03fe3d5ef408be8bf08beea5db90c4455490d7cfba0c654585d2e2530a1b55d8",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "rights": {
+      "license": "CC-BY-SA-4.0",
+      "private_by_default": true,
+      "dataset_published_by_zero": false
+    }
+  },
+  "implementation": {
+    "trainer": "zero5_c32_lm.c",
+    "trainer_sha256": "8e647631e6e804f93b4bb9ba9e661cfb6352533a48a0f9377ce3c2a5dd1a2af1",
+    "importer": "scripts/prepare_zero5_c42.mjs",
+    "importer_sha256": "f04ad728a564ff9b44ca767478572f9db0743d2dccf3aed660d8dfb6bb156280",
+    "model_and_training": "C11",
+    "orchestration": "Node.js",
+    "python": false,
+    "pack_format": "Z5PKV3",
+    "compatibility": "Z5PKV2 remains supported without changed math or scheduling. Z5PKV3 adds only content-bound update offsets."
+  },
+  "verified_import": {
+    "manifest_sha256": "290e588c7a8aa7eb7296dd24cc98b53049bbbce1d829040a7c2c9c80c3825def",
+    "primary_packs": {
+      "sha256": "7b6023a6f16bbc4893d1e339dc43983686a1079850bb364814b918621c4c8d27",
+      "packs": 37768,
+      "records": 50585,
+      "update_groups": 27962,
+      "group_sizes": { "one_pack": 18156, "two_packs": 9806 },
+      "compute_token_exposures": 19337216,
+      "active_targets": 12735377,
+      "padding_targets": 6601839,
+      "answer_targets_by_task": {
+        "claim": 731688,
+        "cloze": 135644,
+        "retrieval": 2151598
+      }
+    },
+    "full_packs": {
+      "sha256": "3b0b89623b3f7d1a192a5af3e0e02ae51654ef265f77753ff356e0e988ef7605",
+      "packs": 51145,
+      "records": 70431,
+      "update_groups": 37864,
+      "group_sizes": { "one_pack": 24583, "two_packs": 13281 },
+      "compute_token_exposures": 26186240,
+      "active_targets": 17226577,
+      "padding_targets": 8959663
+    },
+    "validation_packs": {
+      "sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+      "packs": 8715,
+      "records": 12159
+    }
+  },
+  "initialization": {
+    "source": "ZERO.5-C2 selected checkpoint",
+    "result": "benchmarks/zero5-c2-v1/result.json",
+    "result_sha256": "38e6835efa099d6883a5c2192aa052234412448a93230d5d2d252b108acbf5cb",
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "seed": 0,
+    "optimizer": "fresh AdamW state"
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary"
+  },
+  "proposed_primary_training": {
+    "status": "blocked-until-prerequisites-pass",
+    "updates": 27962,
+    "maximum_batch_sequences": 2,
+    "parallel_workers": 2,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "pair_atomic_updates": true,
+    "answer_weights": {
+      "claim": 2.937013754,
+      "cloze": 15.962104801,
+      "retrieval": 1
+    },
+    "optimizer": "AdamW",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 1000,
+    "schedule": "cosine over all 27,962 update groups",
+    "residual_dropout": 0.1,
+    "checkpoint_selection": "lowest frozen validation loss at fixed reports; no test access",
+    "math_backend": "pending zero5-vector-validation-v1 result",
+    "attention_backend": "dense-blas"
+  },
+  "evaluation": {
+    "contract_sha256": "8bdc2e081d30c429e82f5ef5d8ea739e8e4d5d5f137904a63559386e0a8ed934",
+    "required_metrics": [
+      "choice-accuracy",
+      "position-accuracy",
+      "swap-consistency",
+      "pair-exact",
+      "cloze-exact-match",
+      "retrieval-pair-exact",
+      "evidence-retention",
+      "c2-retention"
+    ],
+    "evaluator_status": "not-yet-implemented",
+    "training_gate": "Do not authorize training until the frozen validation evaluator and promotion gates are executable."
+  },
+  "test": {
+    "records": 12188,
+    "bytes": 22875515,
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "policy": "hash-only; content absent, not parsed, not tokenized, not packed, and not scored"
+  },
+  "prerequisites_for_training_authorization": [
+    "zero5-vector-validation-v1 selects the production math backend",
+    "the complete frozen validation evaluator and gates are implemented",
+    "the exact source and private asset archives are staged",
+    "a separate EC2 cost ceiling receives explicit user approval"
+  ]
+}
