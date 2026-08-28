@@ -113,16 +113,18 @@ evidence under `evidence/`. `cloze-plus-five-v1` is the selected answer-weight
 variant. The primary run is fixed at 28,707 pair-atomic update groups and
 19,337,216 compute-token exposures, starting again from C2.
 
-This contract is deliberately not executable yet. The runner refuses to start
-because primary training, a runtime venue, paid compute, promotion, and test
-access are all unauthorized. Check the frozen state with:
+The local Apple Silicon venue is frozen from the two measured pilot runs. The
+slower pilot rate projects about 31.2 minutes for the primary exposure, and the
+runner enforces a one-hour hard stop. It still refuses to start because primary
+training is unauthorized; paid compute, promotion, and test access also remain
+unauthorized. Check the frozen state with:
 
 ```bash
 make zero5-c43-contract-check
 ```
 
-The next decision is local throughput measurement and explicit primary
-training authorization. A paid venue also needs a separate cost ceiling.
+The next decision is explicit primary training authorization. Scale remains a
+fallback only; any later paid venue would need a separate cost ceiling.
 
 ## Local verification
 

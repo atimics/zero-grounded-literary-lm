@@ -105,9 +105,15 @@ assert.equal(contract.training.zero_wraps_required, true);
 assert.equal(contract.training.primary_initialization, "C2-not-C4.2-or-pilot");
 assert.equal(contract.training.paid_compute_authorized, false);
 assert.equal(contract.training.cost_ceiling_usd, null);
-assert.equal(contract.execution.status, "blocked-not-selected");
-assert.equal(contract.execution.venue, null);
-assert.equal(contract.execution.maximum_execution_seconds, null);
+assert.equal(contract.execution.status, "frozen-local-unauthorized");
+assert.equal(contract.execution.venue, "local");
+assert.equal(contract.execution.compute_resource, "Apple Silicon CPU");
+assert.equal(contract.execution.math_backend, "accelerate-vforce");
+assert.equal(contract.execution.blas_threads, 4);
+assert.equal(contract.execution.maximum_execution_seconds, 3600);
+assert(contract.execution.throughput_evidence
+  .conservative_projected_primary_seconds <
+  contract.execution.maximum_execution_seconds);
 
 assert.equal(contract.evaluation.evaluator_status, "implemented-frozen");
 assert.equal(contract.evaluation.reuse_c42_validation_artifacts, true);

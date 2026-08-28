@@ -160,6 +160,8 @@ closed and C4.3 is recorded as a no-go.
 Braid supplied the source commit, release ID, immutable artifacts, exact task
 counts, group plan, data report, and rights record in PR #15. ZERO has frozen
 the matching imports, pilot selection, implementation hashes, weights, and
-update count. Primary compute remains blocked until training is explicitly
-authorized and a measured runtime venue is selected. Any paid venue also needs
-an explicit cost ceiling.
+update count. The two pilot timings select local Apple Silicon execution with
+a one-hour hard stop; the slower observed rate projects about 31.2 minutes for
+the primary exposure. Primary compute remains blocked until training is
+explicitly authorized. Scale is a fallback, and any paid venue would need an
+explicit cost ceiling.
