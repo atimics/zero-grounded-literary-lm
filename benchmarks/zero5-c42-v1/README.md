@@ -23,10 +23,26 @@ The verified local import produced:
 Two independent imports produced identical manifest, primary-pack, full-pack,
 and validation-pack hashes.
 
-Braid PR #11 is merged at the exact pinned source commit. Training remains
-blocked until the vector validation chooses the math backend and the complete
-frozen C4.2 validation evaluator is implemented. A paid run also needs its own
-explicit budget approval.
+Braid PR #11 is merged at the exact pinned source commit. The GNU libmvec
+`tanh` and `exp` path is selected from the completed vector validation. The
+frozen C4.2 evaluator is also implemented.
+
+The importer now creates four private evaluation views without reading test
+content:
+
+- natural-span mirrored choice files for all 2,280 claim pairs and 1,011
+  retrieval pairs
+- an exact-match file for all 3,555 cloze records
+- a record-safe evidence-bundle validation set
+- the existing combined validation set
+
+The evaluator compares a candidate checkpoint with the hash-locked C2
+checkpoint. It measures choice accuracy, both candidate positions, swap
+consistency, pair exactness, cloze exact match, evidence retention, and Atlas
+and C1 retention. The promotion thresholds are frozen in `contract.json`.
+
+Training is still blocked. The remaining requirements are staging the private
+C2 and corpus assets for the run, and separate approval of an EC2 cost ceiling.
 
 Run the local checks:
 
@@ -47,3 +63,16 @@ node scripts/prepare_zero5_c42.mjs \
 ```
 
 The generated corpus packs stay private and ignored under `build/`.
+
+Check only the frozen evaluation inputs:
+
+```bash
+node scripts/evaluate_zero5_c42.mjs \
+  --import-dir build/zero5-c42-v1/import-final \
+  --preflight-only
+```
+
+Score a completed checkpoint by also providing the C2 checkpoint, tokenizer,
+Atlas train and validation token files, and C1 anchor train and validation
+token files. The evaluator writes one hash-bound JSON result when `--out` is
+provided. It never opens the sealed test set.

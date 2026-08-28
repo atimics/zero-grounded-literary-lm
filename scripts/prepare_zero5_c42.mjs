@@ -15,6 +15,8 @@ const TASKS = ["claim", "cloze", "retrieval"];
 const ALL_TASKS = [...TASKS, "evidence-bundle"];
 const PACK_MAGIC_V2 = Buffer.from([90, 53, 80, 75, 86, 50, 0, 0]);
 const PACK_MAGIC_V3 = Buffer.from([90, 53, 80, 75, 86, 51, 0, 0]);
+const COMPLETION_MAGIC = Buffer.from([90, 53, 67, 69, 86, 49, 0, 0]);
+const SPAN_CHOICE_MAGIC = Buffer.from([90, 53, 83, 67, 86, 49, 0, 0]);
 
 function fail(message) {
   throw new Error(message);
@@ -175,6 +177,24 @@ async function loadAlignedSplit({ release, split, out, tokenizerTool,
           (metadata.masks.answer.length === 0)) {
         fail(data.id + " has inconsistent answer-mask task semantics");
       }
+      if (!Array.isArray(metadata.spans?.token) ||
+          !Array.isArray(metadata.spans?.answers)) {
+        fail(data.id + " has no token-level evaluation spans");
+      }
+      for (const span of metadata.spans.token) {
+        if (!span || typeof span.id !== "string" ||
+            !Number.isInteger(span.start) || !Number.isInteger(span.end) ||
+            span.start < 0 || span.end < span.start ||
+            span.end > metadata.view.tokenCount) {
+          fail(data.id + " has an invalid " + span?.id + " token span");
+        }
+      }
+      if (["claim", "retrieval"].includes(metadata.task) &&
+          (!Number.isInteger(metadata.objective.correctChoice) ||
+           metadata.objective.correctChoice < 0 ||
+           metadata.objective.correctChoice > 1)) {
+        fail(data.id + " has no binary choice objective");
+      }
       writer.appendText(data.text);
       rows.push({
         id: data.id,
@@ -183,6 +203,9 @@ async function loadAlignedSplit({ release, split, out, tokenizerTool,
         tokenIdsSha256: metadata.view.tokenIdsSha256,
         languageMasks: metadata.masks.language,
         answerMasks: metadata.masks.answer,
+        tokenSpans: metadata.spans.token,
+        answerSpanIds: metadata.spans.answers,
+        correctChoice: metadata.objective.correctChoice ?? null,
         pairId: metadata.pair?.pairId ?? null,
         orientation: metadata.pair?.orientation ?? null,
         updateGroup: metadata.updateGrouping?.updateGroup ?? null,
@@ -411,6 +434,96 @@ function writePack(file, packs, offsets = null) {
   };
 }
 
+function writeTokens(descriptor, tokenBytes) {
+  fs.writeSync(descriptor, tokenBytes);
+}
+
+function tokenSpan(row, id) {
+  const matches = row.tokenSpans.filter(span => span.id === id);
+  if (matches.length !== 1) {
+    fail(row.id + " does not have exactly one " + id + " token span");
+  }
+  return matches[0];
+}
+
+function writeCompletion(file, rows) {
+  const descriptor = fs.openSync(file, "wx");
+  let targetTokens = 0;
+  try {
+    fs.writeSync(descriptor, COMPLETION_MAGIC);
+    fs.writeSync(descriptor, u32([1, VOCAB, CONTEXT, rows.length]));
+    for (const row of rows) {
+      const answerId = row.answerSpanIds[0];
+      if (row.task !== "cloze" || row.answerSpanIds.length !== 1 ||
+          answerId !== "answer") {
+        fail(row.id + " is not a valid cloze evaluation row");
+      }
+      const target = tokenSpan(row, answerId);
+      fs.writeSync(descriptor, u32([
+        row.tokenCount, target.start, target.end - target.start, 0,
+      ]));
+      writeTokens(descriptor, row.tokenBytes);
+      targetTokens += target.end - target.start;
+    }
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return { ...artifact(file), records: rows.length,
+    target_tokens: targetTokens };
+}
+
+function writeSpanChoices(file, rows, task) {
+  const groups = new Map();
+  for (const row of rows.filter(value => value.task === task)) {
+    if (!row.pairId || !["original", "mirrored"].includes(row.orientation)) {
+      fail(task + " choice row lacks mirrored pair identity: " + row.id);
+    }
+    if (!groups.has(row.pairId)) groups.set(row.pairId, []);
+    groups.get(row.pairId).push(row);
+  }
+  const pairs = [...groups.entries()].sort(([left], [right]) =>
+    left.localeCompare(right));
+  const descriptor = fs.openSync(file, "wx");
+  let correctTargetTokens = 0;
+  let alternativeTargetTokens = 0;
+  try {
+    fs.writeSync(descriptor, SPAN_CHOICE_MAGIC);
+    fs.writeSync(descriptor, u32([1, VOCAB, CONTEXT, pairs.length]));
+    for (const [pairId, members] of pairs) {
+      members.sort((left, right) => left.orientation === right.orientation ? 0 :
+        left.orientation === "original" ? -1 : 1);
+      if (members.length !== 2 || members[0].orientation !== "original" ||
+          members[1].orientation !== "mirrored" ||
+          members[0].correctChoice === members[1].correctChoice) {
+        fail(task + " choice pair is incomplete or did not flip: " + pairId);
+      }
+      for (const row of members) {
+        const correct = tokenSpan(row, "candidate-" + row.correctChoice);
+        const alternative = tokenSpan(row,
+          "candidate-" + (1 - row.correctChoice));
+        if (correct.start === 0 || alternative.start === 0) {
+          fail(row.id + " has an unscorable leading candidate span");
+        }
+        fs.writeSync(descriptor, u32([
+          row.tokenCount,
+          correct.start, correct.end - correct.start,
+          alternative.start, alternative.end - alternative.start,
+          row.correctChoice,
+        ]));
+        writeTokens(descriptor, row.tokenBytes);
+        correctTargetTokens += correct.end - correct.start;
+        alternativeTargetTokens += alternative.end - alternative.start;
+      }
+    }
+  } finally {
+    fs.closeSync(descriptor);
+  }
+  return { ...artifact(file), pairs: pairs.length, records: pairs.length * 2,
+    correct_target_tokens: correctTargetTokens,
+    alternative_target_tokens: alternativeTargetTokens,
+    scoring: "mean causal nats per token over natural candidate spans" };
+}
+
 function readJsonl(file) {
   return fs.readFileSync(file, "utf8").trim().split("\n").map(JSON.parse);
 }
@@ -421,14 +534,24 @@ function selfTest(trainer = null, trainerMode = "parallel") {
     values.forEach((value, index) => bytes.writeUInt16LE(value, index * 2));
     return bytes;
   };
-  const row = (id, task, values, answerMasks, updateGroup, pairId = null) => ({
+  const row = (id, task, values, answerMasks, updateGroup, pairId = null,
+    orientation = null, tokenSpans = [], answerSpanIds = [],
+    correctChoice = null) => ({
     id, task, tokenCount: values.length, tokenBytes: tokenBytes(values),
     languageMasks: [{ start: 0, end: values.length }], answerMasks,
-    updateGroup, pairId,
+    updateGroup, pairId, orientation, tokenSpans, answerSpanIds, correctChoice,
   });
   const rows = [
-    row("a", "claim", [1, 2, 3], [{ start: 2, end: 3 }], "u1", "p1"),
-    row("b", "claim", [4, 5], [{ start: 1, end: 2 }], "u1", "p1"),
+    row("a", "claim", [32, 65, 66, 67, 68], [{ start: 1, end: 3 }],
+      "u1", "p1", "original", [
+        { id: "candidate-0", start: 1, end: 3 },
+        { id: "candidate-1", start: 3, end: 5 },
+      ], ["candidate-0"], 0),
+    row("b", "claim", [32, 67, 68, 65, 66], [{ start: 3, end: 5 }],
+      "u1", "p1", "mirrored", [
+        { id: "candidate-0", start: 1, end: 3 },
+        { id: "candidate-1", start: 3, end: 5 },
+      ], ["candidate-1"], 1),
     row("c", "evidence-bundle", [6, 7, 8, 9], [], "u2"),
   ];
   const plans = rows.map((value, index) => ({
@@ -441,7 +564,7 @@ function selfTest(trainer = null, trainerMode = "parallel") {
   const packs = buildPlannedPacks(rows, plans);
   const offsets = updateOffsets(packs);
   assert.deepEqual(offsets, [0, 2, 3]);
-  assert.equal(packStats(packs).answer_targets, 2);
+  assert.equal(packStats(packs).answer_targets, 4);
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "zero-c42-self-"));
   const file = path.join(directory, "fixture.z5pack");
   const result = writePack(file, packs, offsets);
@@ -451,6 +574,15 @@ function selfTest(trainer = null, trainerMode = "parallel") {
   assert.ok(bytes.subarray(0, 8).equals(PACK_MAGIC_V3));
   assert.equal(bytes.readUInt32LE(8), 3);
   assert.equal(bytes.readUInt32LE(72), 2);
+  const spanChoiceFile = path.join(directory, "claim.span-choice.bin");
+  const spanChoice = writeSpanChoices(spanChoiceFile, rows, "claim");
+  assert.equal(spanChoice.pairs, 1);
+  const cloze = row("d", "cloze", [65, 66],
+    [{ start: 0, end: 2 }], "u3", null, null,
+    [{ id: "answer", start: 0, end: 2 }], ["answer"]);
+  const completionFile = path.join(directory, "cloze.completion.bin");
+  const completion = writeCompletion(completionFile, [cloze]);
+  assert.equal(completion.target_tokens, 2);
   if (trainer) {
     if (!["parallel", "tensor"].includes(trainerMode)) {
       fail("--trainer-mode must be parallel or tensor");
@@ -467,6 +599,7 @@ function selfTest(trainer = null, trainerMode = "parallel") {
     }
     const tokenizerPath = path.join(directory, "tokenizer.bin");
     fs.writeFileSync(tokenizerPath, tokenizer);
+    const checkpointPath = path.join(directory, "fixture.ckpt");
     const batchMode = trainerMode === "tensor"
       ? ["--tensor-batch", "2"]
       : ["--parallel-batch", "2"];
@@ -477,11 +610,23 @@ function selfTest(trainer = null, trainerMode = "parallel") {
       ...batchMode, "--packed-train", file,
       "--packed-validation", file, "--dropout", "0", "--warmup", "0",
       "--report", "1", "--validation", "1", "--seed", "7",
+      "--save", checkpointPath, "--tokens", "0",
       "--run-contract-sha256", "0".repeat(64),
     ]);
     assert.match(output, /update\s+2\s/u);
     assert.match(output,
       /packed sampling sequences=3 compute-token-exposures=1536/u);
+    const completionOutput = run(path.resolve(trainer), [
+      "--init", checkpointPath, "--tokenizer", tokenizerPath,
+      "--completion-eval", completionFile,
+    ]);
+    assert.match(completionOutput, /"schema":"zero.c3_completion_eval.v1"/u);
+    const choiceOutput = run(path.resolve(trainer), [
+      "--init", checkpointPath, "--tokenizer", tokenizerPath,
+      "--span-choice-eval", spanChoiceFile,
+    ]);
+    assert.match(choiceOutput,
+      /"schema":"zero.c42_span_choice_eval.v1"/u);
   }
   fs.rmSync(directory, { recursive: true });
   process.stdout.write("ZERO.5 C4.2 grouped importer self-test passed\n");
@@ -568,6 +713,17 @@ try {
       fullPacks, fullOffsets),
     validation: writePack(
       path.join(out, "validation.z5pack"), validationPacks),
+    validation_tasks: Object.fromEntries(ALL_TASKS.map(task => [task,
+      writePack(path.join(out, task + ".validation.z5pack"),
+        buildValidationPacks(validation.filter(row => row.task === task))),
+    ])),
+    cloze_completion: writeCompletion(
+      path.join(out, "cloze.validation.completion-eval.bin"),
+      validation.filter(row => row.task === "cloze")),
+    span_choices: Object.fromEntries(["claim", "retrieval"].map(task =>
+      [task, writeSpanChoices(
+        path.join(out, task + ".validation.span-choice-eval.bin"),
+        validation, task)])),
   };
   const full = outputs.train_full;
   const primary = outputs.train_primary;
