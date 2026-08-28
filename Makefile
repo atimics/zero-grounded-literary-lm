@@ -208,6 +208,7 @@ endif
 	zero5-c42-check zero5-c42-aws-check zero5-c42-result-check zero5-c42-run \
 	zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check \
 	zero5-c43-result-check zero5-c51-statebridge-check \
+	zero5-c61-shared-state-check \
 	sero-latent-v1-check sero-latent-v1-pilot \
 	sero-latent-v1-conventional sero-latent-v1-result-check \
 	sero-latent-v2-check sero-latent-v2-run sero-latent-v2-result-check \
@@ -411,6 +412,9 @@ zero5-c51-statebridge-check:
 
 zero5-c52-targetbridge-check: zero5_c51_target_lm
 	node scripts/check_zero5_c52_targetbridge.mjs
+
+zero5-c61-shared-state-check: zero5_c61_bottleneck_lm
+	node scripts/check_zero5_c61_shared_state.mjs
 
 zero5-c42-run: zero5_c32_lm_vector_math zero5-c42-aws-check
 	node scripts/run_zero5_c42.mjs \
@@ -638,6 +642,12 @@ zero5_c51_target_lm: zero5_c51_target_lm.c zero5_c32_lm.c channel_protocol.h zer
 	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(GNU_LIBMVEC_CFLAGS) \
 		-DUSE_LIBMVEC_TANH -DUSE_LIBMVEC_EXP $(ZERO5_THREAD_FLAGS) \
 		$(LITERARY_CFLAGS) zero5_c51_target_lm.c -o $@ \
+		$(LITERARY_LDLIBS) $(ZERO5_THREAD_FLAGS)
+
+zero5_c61_bottleneck_lm: zero5_c61_bottleneck_lm.c zero5_c32_lm.c channel_protocol.h zero1_protocol.h
+	$(CC) $(CFLAGS) $(CPU_FAST_CFLAGS) $(GNU_LIBMVEC_CFLAGS) \
+		-DUSE_LIBMVEC_TANH -DUSE_LIBMVEC_EXP $(ZERO5_THREAD_FLAGS) \
+		$(LITERARY_CFLAGS) zero5_c61_bottleneck_lm.c -o $@ \
 		$(LITERARY_LDLIBS) $(ZERO5_THREAD_FLAGS)
 
 zero5_c32_lm_attention_b32: zero5_c32_lm.c channel_protocol.h zero1_protocol.h
@@ -2482,7 +2492,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: sero-series-closure-check zero5-c0-check zero5-c1-check zero5-c2-check zero5-c3-check zero5-c31-check zero5-c32-check zero5-c33-check zero5-c33-parallel-check zero5-c33-parallel-result-check zero5-c42-check zero5-c42-aws-check zero5-c42-result-check zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check zero5-c43-result-check zero5-c51-statebridge-check zero5-cpu-profile-check zero5-cpu-profile-aws-check zero5-cpu-profile-aws-result-check zero5-vector-math-check zero5-vector-math-aws-check zero5-vector-math-aws-result-check zero5-blocked-attention-check zero5-tensor-batch-check zero5-tensor-aws-check zero5-tensor-aws-result-check
+check: sero-series-closure-check zero5-c0-check zero5-c1-check zero5-c2-check zero5-c3-check zero5-c31-check zero5-c32-check zero5-c33-check zero5-c33-parallel-check zero5-c33-parallel-result-check zero5-c42-check zero5-c42-aws-check zero5-c42-result-check zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check zero5-c43-result-check zero5-c51-statebridge-check zero5-c61-shared-state-check zero5-cpu-profile-check zero5-cpu-profile-aws-check zero5-cpu-profile-aws-result-check zero5-vector-math-check zero5-vector-math-aws-check zero5-vector-math-aws-result-check zero5-blocked-attention-check zero5-tensor-batch-check zero5-tensor-aws-check zero5-tensor-aws-result-check
 check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero-latent-v3-aws-check sero-latent-v3-result-check sero1-tokenizer-check sero1-pretrain-contract-check sero1-pretrain-aws-check sero1-pretrain-result-check sero1-generation-eval-result-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
@@ -2546,5 +2556,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_c51_target_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
+	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_c51_target_lm zero5_c61_bottleneck_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot
 	rm -f docs/literary.js docs/literary.wasm
