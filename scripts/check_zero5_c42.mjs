@@ -23,8 +23,8 @@ function run(program, args) {
 
 assert.equal(contract.schema, "zero.c42_experiment_contract.v1");
 assert.equal(contract.experiment, "zero5-c42-v1");
-assert.equal(contract.status, "evaluator-ready-training-blocked");
-assert.equal(contract.authorized, false);
+assert.equal(contract.status, "authorized-unrun");
+assert.equal(contract.authorized, true);
 assert.equal(contract.upstream.pull_request, 11);
 assert.equal(contract.upstream.merge_required_before_training, false);
 assert.equal(contract.upstream.merge_commit,
@@ -41,6 +41,8 @@ assert.equal(sha256(contract.implementation.importer),
   contract.implementation.importer_sha256);
 assert.equal(sha256(contract.implementation.evaluator),
   contract.implementation.evaluator_sha256);
+assert.equal(sha256(contract.implementation.runner),
+  contract.implementation.runner_sha256);
 assert.equal(sha256(contract.initialization.result),
   contract.initialization.result_sha256);
 assert.equal(sha256(contract.proposed_primary_training.math_backend_evidence.result),
@@ -67,9 +69,29 @@ assert.equal(contract.proposed_primary_training.pack_sequences,
 assert.equal(contract.proposed_primary_training.compute_token_exposures,
   contract.verified_import.primary_packs.compute_token_exposures);
 assert.equal(contract.evaluation.evaluator_status, "implemented-frozen");
-assert.match(contract.evaluation.training_gate, /staged private assets/u);
+assert.match(contract.evaluation.training_gate, /\$1\.50 EC2 ceiling/u);
 assert.equal(contract.gates.test_metrics_opened, false);
-assert.equal(contract.prerequisites_for_training_authorization.length, 2);
+assert.equal(contract.prerequisites_for_training_authorization.length, 0);
+assert.equal(contract.prelaunch_requirements.length, 3);
+assert.equal(contract.authorization.status, "authorized");
+assert.equal(contract.authorization.approval_id,
+  "zero5-c42-aws-2026-08-28-v1");
+assert.equal(contract.authorization.approved_statement,
+  "Approve the $1.50 ceiling.");
+assert.equal(contract.execution.instance_count, 1);
+assert.equal(contract.execution.instance_type, "c6i.4xlarge");
+assert.equal(contract.execution.maximum_instance_seconds, 7941);
+assert.equal(contract.execution.maximum_total_ec2_usd, 1.5);
+assert(contract.execution.maximum_instance_seconds *
+  contract.execution.on_demand_usd_per_hour / 3600 <=
+  contract.execution.maximum_total_ec2_usd);
+assert((contract.execution.maximum_instance_seconds + 1) *
+  contract.execution.on_demand_usd_per_hour / 3600 >
+  contract.execution.maximum_total_ec2_usd);
+for (const name of ["stage_script", "launcher", "user_data"]) {
+  assert.equal(sha256(contract.execution[name]),
+    contract.execution[name + "_sha256"]);
+}
 for (const source of [contract.evaluation.retention_inputs.c2_import_manifest,
   contract.evaluation.retention_inputs.c0_result]) {
   assert.equal(sha256(source.path), source.sha256);
@@ -95,6 +117,11 @@ const evaluatorSelfTest = run("node", [
   "--self-test",
 ]);
 assert.match(evaluatorSelfTest, /evaluator self-test passed/u);
+const runnerSelfTest = run("node", [
+  contract.implementation.runner,
+  "--self-test",
+]);
+assert.match(runnerSelfTest, /runner self-test passed/u);
 assert.doesNotMatch(fs.readFileSync(contract.implementation.evaluator, "utf8"),
   /data\/test\.jsonl/u);
 
