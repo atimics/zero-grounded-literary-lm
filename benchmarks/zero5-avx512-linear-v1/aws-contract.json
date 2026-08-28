@@ -1,0 +1,73 @@
+{
+  "schema": "zero.aws_avx512_linear_contract.v1",
+  "experiment": "zero5-avx512-linear-v1",
+  "status": "authorized",
+  "purpose": "Measure whether the AVX-512 float32 linear kernel improves the existing four-worker OpenBLAS trainer on c6i.4xlarge.",
+  "claim_boundary": {
+    "may_claim": "The AVX-512 float32 linear candidate improved or did not improve this exact C3.3 performance workload on the stated AWS CPU.",
+    "may_not_claim": [
+      "a new model result",
+      "a scientific C3.3 replication",
+      "a quality improvement",
+      "permission to inspect the sealed test set",
+      "permission to publish private data or checkpoints"
+    ]
+  },
+  "source": {
+    "git_commit": "50b029bf4420c155d2863c241b4eb4792cba4f91",
+    "archive_key": "experiments/zero5-avx512-linear-v1/inputs/source-50b029bf4420c155d2863c241b4eb4792cba4f91-b7beb291a5fb7ff805b3ee5d7b7836c1dcf088796f38412ced4f871eee3a0ca3.tar.gz",
+    "archive_sha256": "b7beb291a5fb7ff805b3ee5d7b7836c1dcf088796f38412ced4f871eee3a0ca3"
+  },
+  "assets": {
+    "archive_key": "experiments/zero5-tensor-batch-v1/inputs/assets-4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c.tar.gz",
+    "archive_sha256": "4a0524f8563b607bf289431654424103ec2ee259b08600ebae0ee8e6a537a12c",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "train_pack_sha256": "74698853c019ccf38865d74931c44e8f1f436ee0567eee194979cbcbcdeb4ed8",
+    "validation_pack_sha256": "4fedd425e3d69608c6f4eaa7002474a4c2cfdf845c708c77b2d15ec585566cb6"
+  },
+  "workload": {
+    "updates_per_run": 25,
+    "repetitions": 2,
+    "variants": [
+      "openblas",
+      "avx512"
+    ],
+    "batch_sequences": 4,
+    "parallel_workers": 4,
+    "context_tokens": 512,
+    "openblas_threads_per_worker": 1,
+    "dynamic_threading": false,
+    "metric_tolerance": {
+      "train_loss": 0.0001,
+      "validation_loss": 0.0001,
+      "gradient_norm": 0.005
+    },
+    "deterministic_checkpoint_per_variant_required": true,
+    "selection": "Compare mean training tokens per second after metric and determinism controls pass.",
+    "test_set_policy": "The sealed test set stays closed."
+  },
+  "execution": {
+    "venue": "aws-ec2",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "purchase_option": "on-demand",
+    "on_demand_usd_per_hour": 0.68,
+    "maximum_instance_seconds": 370,
+    "proposed_maximum_ec2_usd": 0.07,
+    "maximum_computed_ec2_usd": 0.069888888889,
+    "automatic_termination": true,
+    "durable_result_upload": true,
+    "user_data": "scripts/aws/zero5-avx512-linear-user-data.sh",
+    "user_data_sha256": "7d45f8b58572d2166467119ca7b6dc224f45e735063019690aa0a7e9a38c7fda",
+    "stage": "scripts/aws/zero5-avx512-linear-stage.sh",
+    "launcher": "scripts/aws/zero5-avx512-linear-run-instance.sh"
+  },
+  "authorization": {
+    "status": "authorized",
+    "approval_id": "zero5-avx512-linear-2026-08-28-v1",
+    "requested_maximum_ec2_usd": 0.07,
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-28T01:46:10Z"
+  }
+}

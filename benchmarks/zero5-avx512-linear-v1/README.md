@@ -42,4 +42,20 @@ node scripts/benchmark_zero5_avx512_linear.mjs \
 ```
 
 This is a performance experiment. It does not open the sealed test set and is
-not a new C3.3 scientific result. No paid compute is authorized by this change.
+not a new C3.3 scientific result.
+
+## Bounded AWS run
+
+The checked AWS contract authorizes one on-demand `c6i.4xlarge` run in
+`us-east-1`. It has a 370-second automatic shutdown and a $0.07 EC2 ceiling.
+The launcher uses an atomic S3 lock, immutable source and asset hashes, and an
+instance-side watchdog.
+
+Validate the launch path before staging or running anything:
+
+```sh
+make zero5-avx512-linear-aws-check
+```
+
+The source stage reuses the already-sealed private C3.3 asset archive and
+uploads only the immutable source archive for commit `50b029b`.
