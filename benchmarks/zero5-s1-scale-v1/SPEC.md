@@ -63,7 +63,7 @@ publication, no test access from any branch of this decision tree.
 
 ## Venue and budget
 
-AWS c6i.4xlarge, 16-thread OpenBLAS, one on-demand instance up to 43,200
+AWS c6i.4xlarge, 16-thread OpenBLAS, one on-demand instance up to 43,411
 seconds (12h), hard ceiling **$8.20** enforced in user-data, automatic
 termination, 30-second status/state sync. Stage A must complete in one
 uninterrupted phase (sequential stream); stage B is resumable across

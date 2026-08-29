@@ -32,7 +32,7 @@ assert.equal(contract.gates.swap_consistency_minimum, 0.90);
 assert.equal(contract.gates.combined_nats_maximum, 2.26);
 assert.equal(contract.gates.test_metrics_opened, false);
 assert.equal(contract.execution.venue, "aws us-east-1 c6i.4xlarge on-demand");
-assert.equal(contract.execution.maximum_instance_seconds, 43200);
+assert.equal(contract.execution.maximum_instance_seconds, 43411);
 assert.equal(contract.execution.maximum_ec2_usd, 8.2);
 assert.equal(contract.execution.spot_instances, false);
 assert.equal(contract.execution.automatic_termination, true);

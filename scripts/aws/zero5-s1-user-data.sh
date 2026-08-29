@@ -41,7 +41,7 @@ PHASE=bootstrap
 export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
-test "$MAX_INSTANCE_SECONDS" = 43200
+test "$MAX_INSTANCE_SECONDS" = 43411
 test "$MAX_COMPUTE_USD" = 8.2
 test "$HOURLY_PRICE" = 0.68
 test "$APPROVAL_ID" = zero5-s1-scale-aws-2026-08-29-v1

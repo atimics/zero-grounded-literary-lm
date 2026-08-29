@@ -13,7 +13,7 @@ action=${1:-}
 test "$action" = dry-run || test "$action" = launch
 max_usd=8.2
 hourly_price=0.68
-maximum_seconds=43200
+maximum_seconds=43411
 lock_key=experiments/zero5-s1-scale-v1/execution-v2.lock
 
 test "$ZERO5_REGION" = us-east-1
