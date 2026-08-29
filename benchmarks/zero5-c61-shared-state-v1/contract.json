@@ -1,7 +1,7 @@
 {
   "schema": "zero.c61_shared_state_contract.v1",
   "experiment": "zero5-c61-shared-state-v1",
-  "status": "authorized-unrun",
+  "status": "authorized-unrun-aws",
   "authorized": true,
   "ilxyr": {
     "registration_id": "zero5-c61-shared-state-v1",
@@ -122,16 +122,25 @@
     "checkpoint_selection": "lowest frozen C4.2 validation loss with bridge enabled"
   },
   "execution": {
-    "venue": "local Apple Silicon",
-    "compute_resource": "Apple Silicon CPU",
-    "math_backend": "accelerate-vforce",
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "compute_resource": "c6i.4xlarge CPU",
+    "math_backend": "openblas",
+    "openblas_threads": 16,
     "attention_backend": "dense-blas",
-    "blas_threads": 4,
+    "maximum_instance_seconds": 9000,
+    "maximum_ec2_usd": 1.7,
+    "purchase_option": "on-demand",
+    "on_demand_usd_per_hour": 0.68,
+    "paid_compute_authorized": true,
+    "cost_ceiling_usd": 1.7,
+    "independent_retry_authorized": false,
+    "automatic_termination": true,
+    "state_sync_seconds": 30,
     "checkpoint_every_updates": 250,
-    "maximum_execution_seconds": 3600,
-    "paid_compute_authorized": false,
-    "cost_ceiling_usd": null,
-    "independent_retry_authorized": false
+    "spot_instances": false,
+    "gpu": false,
+    "maximum_execution_seconds": 9000,
+    "blas_threads": 16
   },
   "evaluation": {
     "combined_validation_packs": 128,
@@ -168,7 +177,7 @@
     "evaluator": "scripts/evaluate_zero5_c61_shared_state.mjs",
     "evaluator_sha256": "969e09cc8b19f4b233d43f4757b9440f58de3e681bade7d6cf1810a8adabcc9e",
     "runner": "scripts/run_zero5_c61_shared_state.mjs",
-    "runner_sha256": "fcb378afbeabff7b35aed85fc0c72da18fc3f55d9f0d4e71c1e88995c170b65e",
+    "runner_sha256": "54d64674e5b9bdd5ddddfa1a994f2ad4f0cc3b4f84e872ba1ac3bba355afa4ae",
     "c51_evaluator": "scripts/evaluate_zero5_c51.mjs",
     "c51_evaluator_sha256": "c6e2cdd1ed6da0a4bae906fe63c2ad66918b0d28392da62c185357860456b770"
   },
@@ -190,10 +199,11 @@
     "metrics_opened": false
   },
   "authorization": {
+    "approval_id": "zero5-c61-shared-state-aws-2026-08-29-v1",
     "record": {
-      "path": "benchmarks/zero5-c61-shared-state-v1/authorization.json",
-      "source_contract_sha256": "e06a7fb3fa56890085f00531ff5802e147b018b52bf582cda65938a9a06236e4"
-    },
-    "approval_id": "zero5-c61-shared-state-local-2026-08-28-v1"
+      "path": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
+      "source_contract_sha256": "e06a7fb3fa56890085f00531ff5802e147b018b52bf582cda65938a9a06236e4",
+      "supersedes": "zero5-c61-shared-state-local-2026-08-28-v1 (unused; no run ever executed)"
+    }
   }
 }

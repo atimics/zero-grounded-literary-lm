@@ -1,0 +1,31 @@
+{
+  "schema": "zero.c61_training_authorization.v1",
+  "authorization_id": "zero5-c61-shared-state-aws-2026-08-29-v1",
+  "authorized": true,
+  "authorization_source": "user instruction: 'do it' (2026-08-29, AWS venue per monitoring concern)",
+  "experiment": "zero5-c61-shared-state-v1",
+  "contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
+  "approved_by": "ratimics",
+  "approved_at": "2026-08-29T16:30:00Z",
+  "approved_statement": "I authorize one ZERO.5 C6.1 shared-state bottleneck run on AWS (c6i.4xlarge, us-east-1) under the revised venue contract.\n\nAuthorization is limited to: one on-demand c6i.4xlarge instance, a 9,000-second maximum, a $1.70 hard cost ceiling enforced in user-data, automatic termination, 30-second state sync to S3, initialization from the frozen C2 checkpoint, the frozen C5.1 mixture and target streams, frozen validation after training, and the bridge-on/bridge-off ablation.\n\nThis supersedes the unused local authorization zero5-c61-shared-state-local-2026-08-28-v1 (verified never executed). It does not authorize independent retries, promotion, checkpoint publication, corpus publication, or sealed-test access.",
+  "scope": {
+    "experiment": "zero5-c61-shared-state-v1",
+    "runs": 1,
+    "seed": 0,
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "maximum_execution_seconds": 9000,
+    "paid_compute": true,
+    "starting_checkpoint": "frozen ZERO.5 C2"
+  },
+  "ilxyr": {
+    "registration_id": "zero5-c61-shared-state-v1",
+    "run_authorized": true
+  },
+  "not_authorized": [
+    "independent retries",
+    "promotion",
+    "checkpoint publication",
+    "corpus publication",
+    "sealed-test access"
+  ]
+}
