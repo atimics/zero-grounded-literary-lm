@@ -92,7 +92,7 @@ jq -n --arg source_commit "$source_commit" \
   --arg contract_sha256 "$contract_sha256" \
   --arg source_key "$source_key" --arg source_sha256 "$source_sha256" \
   --arg asset_key "$asset_key" --arg asset_sha256 "$asset_sha256" \
-  '{schema:"zero.c61_aws_stage.v1",source_commit:$source_commit,
+  '{schema:"zero5.s1_aws_stage.v1",source_commit:$source_commit,
     contract_sha256:$contract_sha256,source_key:$source_key,
     source_sha256:$source_sha256,asset_key:$asset_key,
     asset_sha256:$asset_sha256}'
