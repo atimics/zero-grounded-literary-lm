@@ -27,12 +27,13 @@ required=(
   build/zero5-c2-v1/run/best.ckpt
   build/zero5-c2-v1/import-final/atlas.train.byte-bpe512.tok
   build/zero5-c2-v1/import-final/atlas.validation.byte-bpe512.tok
-  build/zero5-c51-v1/import-final/train.mixed.grouped.z5pack
-  build/zero5-c52-targets/import-final/import.json
-  build/zero5-c52-targets/import-final/train.targets.z5aux
-  build/zero5-c52-targets/import-final/validation.targets.z5aueval
+  build/zero5-c43-v1/import-final/import.json
+  build/zero5-c43-v1/import-final/train.primary.grouped.z5pack
   build/zero5-c43-v1/import-final/frozen-validation/validation.z5pack
-  build/zero5-s1-scale-v1/control/matched-control-result.json
+  build/zero5-c43-v1/import-final/frozen-validation/claim.validation.span-choice-eval.bin
+  build/zero5-c43-v1/import-final/frozen-validation/retrieval.validation.span-choice-eval.bin
+  build/zero5-c43-v1/import-final/frozen-validation/cloze.validation.completion-eval.bin
+  build/zero5-c43-v1/import-final/frozen-validation/evidence-bundle.validation.z5pack
 )
 for file in "${required[@]}"; do
   test -f "$ZERO5_ASSET_ROOT/$file" || {
