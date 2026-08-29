@@ -26,11 +26,11 @@ function run(program, args, expected = 0) {
 
 assert.equal(contract.schema, "zero.c61_shared_state_contract.v1");
 assert.equal(contract.experiment, "zero5-c61-shared-state-v1");
-assert.equal(contract.status, "frozen-awaiting-ilxyr-authorization");
-assert.equal(contract.authorized, false);
+assert.equal(contract.status, "authorized-unrun");
+assert.equal(contract.authorized, true);
 assert.equal(contract.ilxyr.system_of_record, "ilxyr");
-assert.equal(contract.ilxyr.registration_state, "blocked");
-assert.equal(contract.ilxyr.run_authorized, false);
+assert.equal(contract.ilxyr.registration_state, "authorized");
+assert.equal(contract.ilxyr.run_authorized, true);
 assert.equal(sha256(contract.specification.path), contract.specification.sha256);
 for (const file of [contractPath, specPath]) {
   const text = fs.readFileSync(file, "utf8");
@@ -89,10 +89,39 @@ assert.match(run("node", [contract.implementation.runner, "--self-test"])
 assert.match(run("./zero5_c61_bottleneck_lm", ["--self-test"]).stdout,
   /Shared-State Bottleneck self-test passed/u);
 
-const blocked = run("node", [contract.implementation.runner,
-  "--contract", contractPath], 1);
-assert.match(blocked.stderr, /training is not authorized/u);
-assert.equal(fs.existsSync(path.join(path.dirname(contractPath),
-  "authorization.json")), false);
+// Authorization evidence: the committed record must match the contract binding.
+const authorizationEvidence = contract.authorization.record;
+const authorization = JSON.parse(fs.readFileSync(
+  authorizationEvidence.path, "utf8"));
+assert.equal(authorization.schema, "zero.c61_training_authorization.v1");
+assert.equal(authorization.authorized, true);
+assert.equal(authorization.contract_sha256, sha256(contractPath));
+assert.equal(authorization.authorization_id, contract.authorization.approval_id);
+assert.equal(authorization.scope.experiment, contract.experiment);
+assert.equal(authorization.scope.runs, 1);
+assert.equal(authorization.scope.seed, contract.training.seed);
+assert.equal(authorization.scope.venue, contract.execution.venue);
+assert.equal(authorization.scope.maximum_execution_seconds,
+  contract.execution.maximum_execution_seconds);
+assert.equal(authorization.scope.paid_compute, false);
+assert.equal(authorization.ilxyr.registration_id, contract.ilxyr.registration_id);
+assert.equal(authorization.ilxyr.run_authorized, true);
+assert.match(authorization.approved_statement,
+  /I authorize one ZERO\.5 C6\.1 shared-state bottleneck run/u);
+for (const item of ["paid compute", "retries", "promotion", "publication",
+  "sealed-test access"]) assert.equal(authorization.not_authorized.join(" ")
+  .includes(item), true);
+
+// The runner must accept the authorization and proceed to artifact
+// verification (fail-fast on authorization is gone; placeholder paths prove
+// the gate opened without requiring private artifacts).
+const placeholder = run("node", [contract.implementation.runner,
+  "--contract", contractPath, "--authorization", authorizationEvidence.path,
+  "--target-import", "/tmp", "--c51-import", "/tmp", "--c43-import", "/tmp",
+  "--c0-dir", "/tmp", "--c2-dir", "/tmp", "--c2-import-dir", "/tmp",
+  "--control-result", "/tmp/absent.json"], 1);
+const combined = `${placeholder.stderr}${placeholder.stdout}`;
+assert.match(combined, /is missing|absent|not found/u);
+assert.doesNotMatch(combined, /not authorized|authorization does not match/u);
 
 process.stdout.write("ZERO.5 C6.1 Shared-State Bottleneck checks passed\n");
