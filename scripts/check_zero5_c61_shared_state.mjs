@@ -26,11 +26,18 @@ function run(program, args, expected = 0) {
 
 assert.equal(contract.schema, "zero.c61_shared_state_contract.v1");
 assert.equal(contract.experiment, "zero5-c61-shared-state-v1");
-assert.equal(contract.status, "authorized-unrun");
+assert.equal(contract.status, "authorized-unrun-aws");
 assert.equal(contract.authorized, true);
 assert.equal(contract.ilxyr.system_of_record, "ilxyr");
 assert.equal(contract.ilxyr.registration_state, "authorized");
 assert.equal(contract.ilxyr.run_authorized, true);
+assert.equal(contract.execution.venue, "aws us-east-1 c6i.4xlarge on-demand");
+assert.equal(contract.execution.paid_compute_authorized, true);
+assert.equal(contract.execution.cost_ceiling_usd, 1.7);
+assert.equal(contract.execution.maximum_instance_seconds, 9000);
+assert.equal(contract.execution.spot_instances, false);
+assert.equal(contract.execution.automatic_termination, true);
+assert.equal(contract.authorization.record.supersedes.includes("unused"), true);
 assert.equal(sha256(contract.specification.path), contract.specification.sha256);
 for (const file of [contractPath, specPath]) {
   const text = fs.readFileSync(file, "utf8");
@@ -64,9 +71,6 @@ assert.equal(contract.training.auxiliary_loss_weight, .1);
 assert.equal(contract.training.bridge_scale, .1);
 assert.equal(contract.verified_target_import.primary.choice_a_records,
   contract.verified_target_import.primary.choice_b_records);
-assert.equal(contract.execution.venue, "local Apple Silicon");
-assert.equal(contract.execution.paid_compute_authorized, false);
-assert.equal(contract.execution.cost_ceiling_usd, null);
 assert.equal(contract.execution.independent_retry_authorized, false);
 assert.equal(contract.claim_boundary.shared_state_bottleneck, true);
 assert.equal(contract.claim_boundary.symbolic_serialization, false);
@@ -96,6 +100,10 @@ const authorization = JSON.parse(fs.readFileSync(
 assert.equal(authorization.schema, "zero.c61_training_authorization.v1");
 assert.equal(authorization.authorized, true);
 assert.equal(authorization.contract_sha256, sha256(contractPath));
+assert.equal(authorization.authorization_id,
+  contract.authorization.approval_id);
+assert.match(authorization.approved_statement,
+  /supersedes the unused local authorization/u);
 assert.equal(authorization.authorization_id, contract.authorization.approval_id);
 assert.equal(authorization.scope.experiment, contract.experiment);
 assert.equal(authorization.scope.runs, 1);
@@ -103,12 +111,12 @@ assert.equal(authorization.scope.seed, contract.training.seed);
 assert.equal(authorization.scope.venue, contract.execution.venue);
 assert.equal(authorization.scope.maximum_execution_seconds,
   contract.execution.maximum_execution_seconds);
-assert.equal(authorization.scope.paid_compute, false);
+assert.equal(authorization.scope.paid_compute, true);
 assert.equal(authorization.ilxyr.registration_id, contract.ilxyr.registration_id);
 assert.equal(authorization.ilxyr.run_authorized, true);
 assert.match(authorization.approved_statement,
-  /I authorize one ZERO\.5 C6\.1 shared-state bottleneck run/u);
-for (const item of ["paid compute", "retries", "promotion", "publication",
+  /I authorize one ZERO\.5 C6\.1 shared-state bottleneck run on AWS/u);
+for (const item of ["retries", "promotion", "publication",
   "sealed-test access"]) assert.equal(authorization.not_authorized.join(" ")
   .includes(item), true);
 

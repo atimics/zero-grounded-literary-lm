@@ -115,7 +115,8 @@ function validateAuthorization(file, contractSha256, contract) {
       authorization.scope?.venue !== contract.execution.venue ||
       authorization.scope?.maximum_execution_seconds !==
         contract.execution.maximum_execution_seconds ||
-      authorization.scope?.paid_compute !== false ||
+      authorization.scope?.paid_compute !==
+        contract.execution.paid_compute_authorized ||
       authorization.ilxyr?.registration_id !== contract.ilxyr.registration_id ||
       authorization.ilxyr?.run_authorized !== true)
     fail("C6.1 authorization does not match the frozen contract");
@@ -149,17 +150,30 @@ const contractBytes = fs.readFileSync(contractPath);
 const contract = JSON.parse(contractBytes);
 const contractSha256 = sha256(contractBytes);
 if (contract.schema !== "zero.c61_shared_state_contract.v1" ||
-    !["frozen-awaiting-ilxyr-authorization", "authorized-unrun"]
-      .includes(contract.status))
+    !["frozen-awaiting-ilxyr-authorization", "authorized-unrun",
+      "authorized-unrun-aws"].includes(contract.status))
   fail("C6.1 contract is not a frozen, unrun registration");
-if (contract.status === "authorized-unrun" &&
+if (["authorized-unrun", "authorized-unrun-aws"].includes(contract.status) &&
     (contract.authorized !== true || contract.ilxyr.run_authorized !== true))
   fail("authorized-unrun contract must set authorized and run_authorized");
-if (contract.execution.venue !== "local Apple Silicon" ||
-    contract.execution.paid_compute_authorized !== false ||
-    contract.execution.cost_ceiling_usd !== null ||
-    contract.execution.independent_retry_authorized !== false)
-  fail("C6.1 execution exceeds the local no-cost boundary");
+const allowedVenues = ["local Apple Silicon",
+  "aws us-east-1 c6i.4xlarge on-demand"];
+if (!allowedVenues.includes(contract.execution.venue))
+  fail("C6.1 execution venue is not recognized");
+if (contract.execution.venue === "local Apple Silicon" &&
+    (contract.execution.paid_compute_authorized !== false ||
+     contract.execution.cost_ceiling_usd !== null))
+  fail("local venue cannot carry paid-compute fields");
+if (contract.execution.venue === "aws us-east-1 c6i.4xlarge on-demand" &&
+    (contract.execution.paid_compute_authorized !== true ||
+     contract.execution.cost_ceiling_usd !== 1.7 ||
+     contract.execution.maximum_instance_seconds !== 9000 ||
+     contract.execution.spot_instances !== false ||
+     contract.execution.gpu !== false ||
+     contract.execution.automatic_termination !== true))
+  fail("AWS venue must carry its frozen cost and termination bounds");
+if (contract.execution.independent_retry_authorized !== false)
+  fail("independent retries are not authorized");
 if (contract.test.content_present !== false ||
     contract.test.metrics_opened !== false ||
     contract.claim_boundary.shared_state_bottleneck !== true ||
