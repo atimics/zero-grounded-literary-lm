@@ -149,9 +149,12 @@ const contractBytes = fs.readFileSync(contractPath);
 const contract = JSON.parse(contractBytes);
 const contractSha256 = sha256(contractBytes);
 if (contract.schema !== "zero.c61_shared_state_contract.v1" ||
-    contract.status !== "frozen-awaiting-ilxyr-authorization" ||
-    contract.authorized !== false || contract.ilxyr.run_authorized !== false)
+    !["frozen-awaiting-ilxyr-authorization", "authorized-unrun"]
+      .includes(contract.status))
   fail("C6.1 contract is not a frozen, unrun registration");
+if (contract.status === "authorized-unrun" &&
+    (contract.authorized !== true || contract.ilxyr.run_authorized !== true))
+  fail("authorized-unrun contract must set authorized and run_authorized");
 if (contract.execution.venue !== "local Apple Silicon" ||
     contract.execution.paid_compute_authorized !== false ||
     contract.execution.cost_ceiling_usd !== null ||
