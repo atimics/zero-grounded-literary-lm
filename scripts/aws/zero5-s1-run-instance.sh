@@ -17,7 +17,7 @@ maximum_seconds=43200
 lock_key=experiments/zero5-s1-scale-v1/execution-v2.lock
 
 test "$ZERO5_REGION" = us-east-1
-test "$ZERO5_APPROVAL_ID" = zero5-s1-shared-state-aws-2026-08-29-v1
+test "$ZERO5_APPROVAL_ID" = zero5-s1-scale-aws-2026-08-29-v1
 test "$(jq -r .authorized benchmarks/zero5-s1-scale-v1/contract.json)" = true
 test "$(jq -r .authorization.approval_id benchmarks/zero5-s1-scale-v1/contract.json)" = "$ZERO5_APPROVAL_ID"
 test "$(jq -r .authorization.approval_id benchmarks/zero5-s1-scale-v1/contract.json)" = "$ZERO5_APPROVAL_ID"

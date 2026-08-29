@@ -76,7 +76,7 @@ write_status() {
     --arg result_key "$result_key" --arg result_sha256 "$result_sha256" \
     --argjson exit_code "$exit_code" --argjson elapsed "$elapsed" \
     --argjson cost "$cost" \
-    '{schema:"zero.c61_aws_status.v1",status:$status,phase:$phase,
+    '{schema:"zero5.s1_aws_status.v1",status:$status,phase:$phase,
       run_id:$run_id,instance_id:$instance_id,git_commit:$git_commit,
       contract_sha256:$contract_sha256,exit_code:$exit_code,
       elapsed_instance_seconds:$elapsed,estimated_ec2_usd:$cost,
@@ -134,9 +134,9 @@ test "$(sha256sum /tmp/source.tar.gz | awk '{print $1}')" = "$SOURCE_SHA256"
 tar -xzf /tmp/source.tar.gz -C /opt/zero/repo
 cd /opt/zero/repo
 test "$(cat SOURCE_COMMIT)" = "$SOURCE_COMMIT"
-test "$(sha256sum benchmarks/zero5-c61-shared-state-v1/contract.json | awk '{print $1}')" = "$CONTRACT_SHA256"
-test "$(jq -r .authorized benchmarks/zero5-c61-shared-state-v1/contract.json)" = true
-test "$(jq -r .authorization.approval_id benchmarks/zero5-c61-shared-state-v1/contract.json)" = "$APPROVAL_ID"
+test "$(sha256sum benchmarks/zero5-s1-scale-v1/contract.json | awk '{print $1}')" = "$CONTRACT_SHA256"
+test "$(jq -r .authorized benchmarks/zero5-s1-scale-v1/contract.json)" = true
+test "$(jq -r .authorization.approval_id benchmarks/zero5-s1-scale-v1/contract.json)" = "$APPROVAL_ID"
 
 PHASE=assets
 write_status running 0
@@ -182,7 +182,7 @@ remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 180))
 test "$remaining" -gt 0
 set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
-  node scripts/run_zero5_c61_shared_state.mjs "${runner_args[@]}" &
+  node scripts/run_zero5_s1_scale.mjs "${runner_args[@]}" &
 RUNNER_PID=$!
 while kill -0 "$RUNNER_PID" 2>/dev/null; do
   sync_state || true
