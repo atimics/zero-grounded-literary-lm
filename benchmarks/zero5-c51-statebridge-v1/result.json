@@ -1,0 +1,111 @@
+{
+  "schema": "zero.c51_public_result.v1",
+  "experiment": "zero5-c51-statebridge-v1",
+  "status": "complete-no-go",
+  "recorded_at": "2026-08-28T22:45:00Z",
+  "contract_sha256": "7bb9616e2d3c47bba90ca995aaebf43fcc613825dae64564627261d8be745b7d",
+  "training_authorization_id": "zero5-c51-statebridge-local-2026-08-28-v1",
+  "source": {
+    "zero_commit": "c16a4b6a14cd376260ff557e06acff46496bd5d7",
+    "private_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "venue": "local Apple Silicon (Accelerate)",
+    "venue_policy": "deterministic byte-identical training across venues is established; AWS replay of the frozen contract is available on request for official-grade provenance"
+  },
+  "training": {
+    "completed_updates": 28707,
+    "elapsed_seconds": 1742.030565375,
+    "aggregate_compute_tokens_per_second": 11100.388468693347,
+    "compute_token_exposures": 19337216,
+    "packs": 37768,
+    "wraps": 0
+  },
+  "checkpoints": {
+    "published": false,
+    "active": {
+      "sha256": "772c985ba273112a618756f13310a6b02214474f76666d211706632c277a0c05",
+      "bytes": 58236496
+    },
+    "best": {
+      "sha256": "dba1f0c27ad97097e3c745e99ca4fc84d9051e60b58d334385014e679547f6ab",
+      "bytes": 58236496
+    }
+  },
+  "validation": {
+    "candidate": {
+      "combined_nats_per_token": 2.0801,
+      "evidence_nats_per_token": 2.101,
+      "atlas_nats_per_token": 2.2026,
+      "anchor_nats_per_token": 3.8591,
+      "cloze_nats_per_target_token": 2.76662207,
+      "claim_choice": {
+        "choice_accuracy": 0.561403509,
+        "position_0_accuracy": 0.573245614,
+        "position_1_accuracy": 0.549561404,
+        "swap_consistency_accuracy": 0.970175439,
+        "pair_exact_accuracy": 0.546491228,
+        "forced_choice_nats": 0.690647769
+      },
+      "retrieval_choice": {
+        "choice_accuracy": 0.525717112,
+        "position_0_accuracy": 0.515331355,
+        "position_1_accuracy": 0.536102868,
+        "swap_consistency_accuracy": 0.96735905,
+        "pair_exact_accuracy": 0.509396637,
+        "forced_choice_nats": 0.702524466
+      }
+    },
+    "controls": {
+      "c43_claim_choice_accuracy": 0.708114035,
+      "c43_retrieval_choice_accuracy": 0.537586548,
+      "c2_claim_choice_accuracy": 0.518640351,
+      "c2_retrieval_choice_accuracy": 0.513353116
+    },
+    "derived": {
+      "retrieval_choice_gain_over_c43": -0.011869436000000011,
+      "retrieval_pair_exact_gain_over_c43": -0.010880316999999917,
+      "claim_choice_change_from_c43": -0.146710526,
+      "combined_change_from_c43": 0.03461825416563036,
+      "atlas_regression_from_c2": -0.033353813745282235,
+      "anchor_regression_from_c2": 0.044637539927453895,
+      "evidence_regression_from_c2": -0.08992462964567283,
+      "c52_next_state_target_nats_improvement": 0.9677351404591022,
+      "c52_choice_top1_gain": {
+        "a": 0.814378554,
+        "b": 0.190089358
+      }
+    },
+    "gates": {
+      "retrieval_choice_floor": false,
+      "retrieval_gain_over_c43": false,
+      "retrieval_orientation_floor": true,
+      "retrieval_orientation_gap": true,
+      "retrieval_swap_consistency": true,
+      "retrieval_pair_exact": false,
+      "claim_retention": false,
+      "claim_swap_consistency": true,
+      "combined_retention": true,
+      "evidence_retention": true,
+      "atlas_retention": true,
+      "anchor_retention": true,
+      "c52_target_learning": true,
+      "finite_metrics": true,
+      "sealed_test_stayed_closed": true,
+      "test_metrics_opened": false
+    },
+    "cloze_exact_metric_status": "reported-retired-not-a-decision-gate",
+    "test_metrics_opened": false
+  },
+  "decision": {
+    "replication_eligible": false,
+    "promotion_eligible": false,
+    "test_metrics_opened": false
+  },
+  "claim_boundary": {
+    "structured_content_only": true,
+    "symbolic_serialization": false,
+    "verified_state_target_loss": false,
+    "pass_authorizes": "request for frozen multi-seed replication only",
+    "promotion_authorized": false,
+    "checkpoint_publication_authorized": false
+  }
+}

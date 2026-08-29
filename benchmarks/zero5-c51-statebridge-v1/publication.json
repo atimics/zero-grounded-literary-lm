@@ -1,0 +1,26 @@
+{
+  "schema": "zero.c5_result_publication_authorization.v1",
+  "approval_id": "zero5-c51-statebridge-v1-result-publication-2026-08-28-v1",
+  "approved_by": "ratimics",
+  "approved_at": "2026-08-28T22:45:00Z",
+  "approved_statement": "lets publish the records",
+  "public_result": {
+    "path": "benchmarks/zero5-c51-statebridge-v1/result.json",
+    "sha256": "5ab8d08743a41bc908b2408daad5f5ef60ab34df2b3016ee94bca2dd7ab5d890"
+  },
+  "scope": {
+    "publish": [
+      "no-go decision",
+      "frozen validation metrics and gates",
+      "exact training accounting",
+      "implementation and private-artifact hashes"
+    ],
+    "keep_private": [
+      "corpus contents",
+      "checkpoint bytes",
+      "raw training logs",
+      "sample generations",
+      "sealed test content"
+    ]
+  }
+}

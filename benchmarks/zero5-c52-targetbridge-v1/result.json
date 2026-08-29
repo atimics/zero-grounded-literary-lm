@@ -1,0 +1,112 @@
+{
+  "schema": "zero.c52_public_result.v1",
+  "experiment": "zero5-c52-targetbridge-v1",
+  "status": "complete-no-go",
+  "recorded_at": "2026-08-28T22:45:00Z",
+  "contract_sha256": "00c30aa5dc04033c0f7eb5375acbaeeba3eeecb92cc5da928bbd6b2ccb427a02",
+  "training_authorization_id": "zero5-c52-targetbridge-local-2026-08-28-v1",
+  "source": {
+    "zero_commit": "c16a4b6a14cd376260ff557e06acff46496bd5d7",
+    "private_result_sha256": "564ec8bfd45539600f655249976cabe8ceab6279f51f7d2bd5f429f3ea655cee",
+    "private_training_log_sha256": "08437dae1122d6af56f3b9a79a9f1088c5b26e820ff18b29b5a5c2a3d143602f",
+    "private_validation_sha256": "19c087cb4605fa923b7213fdde998429303149ee9f4da5d88b00680fe938ce57",
+    "matched_control_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "venue": "local Apple Silicon (Accelerate)",
+    "venue_policy": "deterministic byte-identical training across venues is established; AWS replay of the frozen contract is available on request for official-grade provenance"
+  },
+  "training": {
+    "completed_updates": 28707,
+    "elapsed_seconds": 1621.3,
+    "compute_token_exposures": 19337216,
+    "packs": 37768,
+    "auxiliary_events": 293606,
+    "wraps": 0,
+    "auxiliary_loss_weight": 0.1
+  },
+  "checkpoints": {
+    "published": false,
+    "model": {
+      "sha256": "e6f94a8ca5a20635f44f74cfb9d513def96a832b621b90ac0641fe725349fbff",
+      "bytes": 58236496
+    },
+    "auxiliary_head": {
+      "sha256": "aead0f8fdafe38683e4039d4fcd1422c9371b3d402fc208cf81dd2c408f1f795",
+      "bytes": 2319236
+    }
+  },
+  "validation": {
+    "candidate": {
+      "combined_nats_per_token": 2.0784,
+      "evidence_nats_per_token": 2.1027,
+      "atlas_nats_per_token": 2.1999,
+      "anchor_nats_per_token": 3.8708,
+      "cloze_nats_per_target_token": 2.81446887,
+      "claim_choice": {
+        "choice_accuracy": 0.560745614,
+        "position_0_accuracy": 0.576315789,
+        "position_1_accuracy": 0.545175439,
+        "swap_consistency_accuracy": 0.960964912,
+        "pair_exact_accuracy": 0.54122807,
+        "forced_choice_nats": 0.690125177
+      },
+      "retrieval_choice": {
+        "choice_accuracy": 0.519782394,
+        "position_0_accuracy": 0.513353116,
+        "position_1_accuracy": 0.526211672,
+        "swap_consistency_accuracy": 0.979228487,
+        "pair_exact_accuracy": 0.509396637,
+        "forced_choice_nats": 0.70298634
+      }
+    },
+    "auxiliary": {
+      "control": {
+        "schema": "zero.c52_target_eval.v1",
+        "events": 192438,
+        "nats_per_event": 2.1060600112388737,
+        "accuracy": 0.5724285224331993
+      },
+      "candidate": {
+        "schema": "zero.c52_target_eval.v1",
+        "events": 192438,
+        "nats_per_event": 0.250025248,
+        "accuracy": 0.897301988
+      }
+    },
+    "derived": {
+      "aux_nats_reduction": 0.8812829422401289,
+      "aux_accuracy_gain": 0.32487346556680075,
+      "retrieval_accuracy_gain": -0.0059347180000000055,
+      "retrieval_pair_gain": 0,
+      "retrieval_orientation_gap": null,
+      "c52_choice_orientation_gap": 0.687043054
+    },
+    "gates": {
+      "auxiliary_nats_reduction": true,
+      "auxiliary_accuracy_gain": true,
+      "retrieval_accuracy_gain": false,
+      "retrieval_pair_gain": false,
+      "retrieval_orientation_gap": false,
+      "c52_choice_orientation_gap": false,
+      "claim_retention": true,
+      "combined_retention": true,
+      "evidence_floor": true,
+      "atlas_retention": true,
+      "anchor_retention": true,
+      "test_metrics_opened": false
+    },
+    "cloze_exact_metric_status": "reported-retired-not-a-decision-gate",
+    "test_metrics_opened": false
+  },
+  "decision": {
+    "replication_eligible": false,
+    "promotion_eligible": false,
+    "test_metrics_opened": false
+  },
+  "claim_boundary": {
+    "structured_content_and_verified_state_targets": true,
+    "symbolic_serialization": false,
+    "architectural_state_coupling": false,
+    "pass_authorizes": "request for frozen multi-seed replication only",
+    "promotion_authorized": false
+  }
+}
