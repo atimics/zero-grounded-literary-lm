@@ -193,7 +193,8 @@ if (preflightOnly) {
 
 const budgetRemaining = () => Math.max(0,
   contract.execution.maximum_execution_seconds -
-  Math.round((Date.now() - Number(process.env.S1_LAUNCH_EPOCH || Date.now())) / 1000));
+  Math.round(Date.now() / 1000 -
+    Number(process.env.S1_LAUNCH_EPOCH || Date.now() / 1000)));
 
 // ---------------- Stage A: Atlas pretrain (fresh, sequential) ----------------
 const stageABest = path.join(stageADir, "best.ckpt");

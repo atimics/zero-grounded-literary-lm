@@ -75,7 +75,7 @@
     "trainer": "zero5_c32_lm.c",
     "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
     "runner": "scripts/run_zero5_s1_scale.mjs",
-    "runner_sha256": "0704d2384cb10b68150ba127b1d2999399d6b1597ef65535047b566717170c32",
+    "runner_sha256": "96a4c3a404f4a9bfaf295073a934eddf5456d171988990c6229c079ea4833c30",
     "c43_runner_reference": "scripts/run_zero5_c43.mjs"
   },
   "execution": {

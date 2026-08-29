@@ -4,7 +4,7 @@
   "authorized": true,
   "authorization_source": "user instruction: 'lets kick off the scale control' (2026-08-29)",
   "experiment": "zero5-s1-scale-v1",
-  "contract_sha256": "55aef80f92f37df47504b89ef282290a75e2c053d9b48108ea66f517959e9c75",
+  "contract_sha256": "83027100671303e14c4913de09f0a34b327636c7c26c38042515c8f170efcddd",
   "approved_by": "ratimics",
   "approved_at": "2026-08-29T12:30:00Z",
   "approved_statement": "I authorize one ZERO.5 S1 scale-control run on AWS (c6i.4xlarge, us-east-1) under the frozen contract.\n\nAuthorization covers: one on-demand c6i.4xlarge instance up to 43,411 seconds, a hard $8.20 cost ceiling enforced in user-data, automatic termination, 30-second state sync to S3, a fresh 24,323,264-parameter model (5.01x baseline) trained through the two-stage matched recipe (Atlas pretrain, C4.3 grouped packs), and evaluation on the frozen C4.2 span-choice instruments.\n\nThis is a capacity control, not an architecture claim. No promotion, replication, checkpoint publication, corpus publication, or sealed-test access.",
