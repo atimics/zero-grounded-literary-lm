@@ -1,0 +1,122 @@
+{
+  "schema": "zero.s1_scale_contract.v1",
+  "experiment": "zero5-s1-scale-v1",
+  "status": "authorized-unrun-aws",
+  "authorized": true,
+  "question": "Does retrieval choice survive a 5.01x parameter increase under the matched corpus recipe?",
+  "model": {
+    "preset": "literary",
+    "dim": 448,
+    "heads": 8,
+    "layers": 10,
+    "ff": 1792,
+    "positions": "rotary",
+    "context": 512,
+    "vocab": 512,
+    "parameters": 24323264,
+    "baseline_parameters": 4852992,
+    "scale_factor": 5.012014031756079
+  },
+  "stage_a": {
+    "name": "atlas-pretrain-c2-recipe",
+    "initialization": "fresh seed 0",
+    "train": "build/zero5-c2-v1/import-final/atlas.train.byte-bpe512.tok",
+    "train_sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+    "validation": "build/zero5-c2-v1/import-final/atlas.validation.byte-bpe512.tok",
+    "updates": 10425,
+    "batch": 4,
+    "sampling": "sequential ordered stream",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1.0,
+    "warmup_updates": 400,
+    "schedule": "cosine over all 10425 updates",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_windows": 64,
+    "seed": 0,
+    "declared_controlled_difference": "C1 literary stage omitted; Atlas-only pretraining",
+    "validation_sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c"
+  },
+  "stage_b": {
+    "name": "c43-task-stage",
+    "initialization": "stage A best checkpoint",
+    "contract": "benchmarks/zero5-c43-v1/contract.json",
+    "contract_sha256": "0cf7390dbc188d444d723eee6ca7c0ceba3c5c00aec23b1de3f1a827fa3f16dc",
+    "train": "build/zero5-c43-v1/import-final/train.primary.grouped.z5pack",
+    "train_sha256": "34d38b1b0ed67f0eb86d04cd9482e507b41d4418ea7e4f86e361452310dca329",
+    "validation": "build/zero5-c43-v1/import-final/frozen-validation/validation.z5pack",
+    "validation_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "updates": 28707,
+    "answer_weights": {
+      "claim": 2.937013754,
+      "cloze": 15.962104801,
+      "retrieval": 1
+    }
+  },
+  "evaluation": {
+    "evaluator": "scripts/evaluate_zero5_c43.mjs",
+    "evaluator_sha256": "186659bdfd93f547ef480ec4948cecb9067a3e43df0b0b8a9b84e6e2b5303006",
+    "reuse_c43_contract": "benchmarks/zero5-c43-v1/contract.json",
+    "baseline_checkpoint": "build/zero5-c2-v1/run/best.ckpt",
+    "instruments": "frozen C4.2 span-choice validation"
+  },
+  "gates": {
+    "retrieval_choice_accuracy_minimum": 0.55,
+    "claim_choice_accuracy_minimum": 0.65,
+    "retrieval_orientation_gap_maximum": 0.15,
+    "retrieval_position_floor": 0.5,
+    "swap_consistency_minimum": 0.9,
+    "combined_nats_maximum": 2.26,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "implementation": {
+    "trainer": "zero5_c32_lm.c",
+    "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "runner": "scripts/run_zero5_s1_scale.mjs",
+    "runner_sha256": "0704d2384cb10b68150ba127b1d2999399d6b1597ef65535047b566717170c32",
+    "c43_runner_reference": "scripts/run_zero5_c43.mjs"
+  },
+  "execution": {
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "compute_resource": "c6i.4xlarge CPU",
+    "math_backend": "openblas",
+    "openblas_threads": 4,
+    "parallel_workers": 4,
+    "maximum_instance_seconds": 43200,
+    "maximum_execution_seconds": 43200,
+    "maximum_ec2_usd": 8.2,
+    "cost_ceiling_usd": 8.2,
+    "on_demand_usd_per_hour": 0.68,
+    "purchase_option": "on-demand",
+    "spot_instances": false,
+    "gpu": false,
+    "automatic_termination": true,
+    "state_sync_seconds": 30,
+    "checkpoint_every_updates": 500,
+    "independent_retry_authorized": false,
+    "paid_compute_authorized": true
+  },
+  "authorization": {
+    "approval_id": "zero5-s1-scale-aws-2026-08-29-v1",
+    "record": {
+      "path": "benchmarks/zero5-s1-scale-v1/authorization.json"
+    }
+  },
+  "claim_boundary": {
+    "capacity_control": true,
+    "architecture_claim": false,
+    "promotion_authorized": false,
+    "replication_authorized": false,
+    "publication_authorized": false
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
