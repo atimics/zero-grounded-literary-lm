@@ -14,7 +14,7 @@ test "$action" = dry-run || test "$action" = launch
 max_usd=8.2
 hourly_price=0.68
 maximum_seconds=43411
-lock_key=experiments/zero5-s1-scale-v1/execution-v2.lock
+lock_key=experiments/zero5-s1-scale-v1/execution-v3.lock
 
 test "$ZERO5_REGION" = us-east-1
 test "$ZERO5_APPROVAL_ID" = zero5-s1-scale-aws-2026-08-29-v1
