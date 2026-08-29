@@ -152,7 +152,7 @@ export LITERARY_BACKEND=openblas
 export OPENBLAS_DYNAMIC=0
 export OPENBLAS_NUM_THREADS=16
 export OMP_NUM_THREADS=16
-make zero5_c61_bottleneck_lm
+make zero5_c61_bottleneck_lm zero5_c32_lm_vector_math
 node scripts/check_zero5_c61_shared_state.mjs
 node scripts/run_zero5_c61_shared_state.mjs \
   --contract benchmarks/zero5-c61-shared-state-v1/contract.json \
