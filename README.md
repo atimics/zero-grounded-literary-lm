@@ -29,6 +29,8 @@ small browser runtime:
   final tool.
 - `reasoner1`: an integer graph-recurrent proposer that learns which canonical
   node-and-bond actions should reach the Reasoner-0 verifier.
+- `reasoner2`: a counterexample-conditioned integer policy that repairs
+  rejected Cartan matrices with exact minimum-edit supervision.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -184,11 +186,18 @@ make reasoner1-check
 ./reasoner1 demo
 ./reasoner1 train /tmp/reasoner1.r1p 8
 ./reasoner1 eval /tmp/reasoner1.r1p 8
+make reasoner2-check
+./reasoner2 demo
+./reasoner2 train /tmp/reasoner2.r2p 8
+./reasoner2 eval /tmp/reasoner2.r2p 2 8
+./reasoner2 ablate /tmp/reasoner2.r2p 2 8
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
 and verifier contract. See [`docs/REASONER1.md`](docs/REASONER1.md) for the
-learned proposer, rank curriculum, held-out result, and compression gate.
+learned proposer and rank curriculum. See
+[`docs/REASONER2.md`](docs/REASONER2.md) for exact repair supervision, the
+feedback ablation, and its failed causal-use gate.
 
 ## Build
 

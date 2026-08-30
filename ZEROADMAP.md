@@ -40,6 +40,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Record-safe task braid | same C3.1 packs under blocked order, smooth interleaving, and 4x answer loss | C3.1 no-go; interleaving improved combined loss 41.75% and fixed cloze, while the best retrieval choice reached 54.77% and claim gain reached 7.28% |
 | Reason-first runtime | canonical Cartan matrices, learned control policy, exact Bareiss verifier, sealed Answer IR, language renderer tool | Reasoner-0 enumerates all 31 connected finite types through rank 8 with exact precision/recall and affine boundary negatives; not a base-model capability claim |
 | Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
+| Counterexample repair | learned node/bond edits, exact minimum-distance teacher, two-step verifier loop, feedback ablation | Reasoner-2 is exact on 267 supervised cases; its rank-7 policy solves 69/69 unseen rank-8 cases but only 66 optimally, while masked feedback still solves 66, so causal use and compression do not pass |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -110,6 +111,16 @@ trained only through rank 7 recovers `A8`, `B8`, `C8`, `D8`, and `E8`, but also
 makes one invalid proposal. This is 100% held-out recall and 96.7% precision,
 not an exact generalization pass. No distillation or quantization is authorized.
 See [`docs/REASONER1.md`](docs/REASONER1.md).
+
+Reasoner-2 turns a rejection into another structured action rather than a
+language explanation. Its exact teacher finds minimum one- or two-edit repairs
+over node deletion and directed-bond changes. The fully supervised rank-8
+curriculum repairs all 267 cases minimally. Frozen after rank 7, it solves all
+69 unseen rank-8 cases, but only 66 use the minimum edit count. Masking the
+verifier fields still solves 66 cases and repairs 63 minimally. Feedback helps,
+but it is not causally dominant, so this is a no-go for the feedback-use gate
+and no compression is authorized. See
+[`docs/REASONER2.md`](docs/REASONER2.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.

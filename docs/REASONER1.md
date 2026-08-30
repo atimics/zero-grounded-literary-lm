@@ -159,6 +159,10 @@ labels. A compressed candidate must then preserve:
 
 The comparison must be exact, not statistically close.
 
+Reasoner-2 now implements the next repair experiment described by this gate.
+It learns minimum graph edits from exact counterexamples, but its masked-
+feedback ablation remains too strong. See [`REASONER2.md`](REASONER2.md).
+
 ## Scope
 
 - This is a learned graph-action proposer, not a language model.
