@@ -21,10 +21,10 @@
     "retry": false
   },
   "source": {
-    "implementation_commit": null,
-    "bundle_sha256": null,
-    "bundle_bytes": null,
-    "destination": null
+    "implementation_commit": "b26bd62ee11dba7341d227c2c4cb1f2a2568da65",
+    "bundle_sha256": "a34fb5827ee1740fc39e1e161b64512008a52b9a10219eb9844e8c4f2a737d4e",
+    "bundle_bytes": 37038,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner36-task-blind-tools-v1/source/b26bd62ee11dba7341d227c2c4cb1f2a2568da65.tar.gz"
   },
   "execution": {
     "region": "us-east-1",

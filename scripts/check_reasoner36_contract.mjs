@@ -17,9 +17,21 @@ requireValue(contract.seal.single_domain_episodes === 864, "single-domain count"
 requireValue(contract.seal.mixed_domain_episodes === 1728, "mixed-domain count");
 requireValue(contract.seal.stage_handle_permutations === 15552, "permutation count");
 requireValue(contract.seal.retry === false, "no retry");
-requireValue(contract.source.implementation_commit === null, "source must not be frozen yet");
-requireValue(contract.source.bundle_sha256 === null, "bundle must not exist yet");
-requireValue(contract.source.destination === null, "destination must not exist yet");
+requireValue(
+  contract.source.implementation_commit === "b26bd62ee11dba7341d227c2c4cb1f2a2568da65",
+  "source commit",
+);
+requireValue(
+  contract.source.bundle_sha256 ===
+    "a34fb5827ee1740fc39e1e161b64512008a52b9a10219eb9844e8c4f2a737d4e",
+  "bundle hash",
+);
+requireValue(contract.source.bundle_bytes === 37038, "bundle size");
+requireValue(
+  contract.source.destination ===
+    "s3://zero-training-022118847419/experiments/reasoner36-task-blind-tools-v1/source/b26bd62ee11dba7341d227c2c4cb1f2a2568da65.tar.gz",
+  "destination",
+);
 requireValue(contract.execution.region === "us-east-1", "region");
 requireValue(contract.execution.instance_type === "t3.micro", "instance type");
 requireValue(contract.execution.maximum_instance_seconds === 1800, "time cap");
