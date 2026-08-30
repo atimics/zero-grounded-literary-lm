@@ -31,6 +31,8 @@ small browser runtime:
   node-and-bond actions should reach the Reasoner-0 verifier.
 - `reasoner2`: a counterexample-conditioned integer policy that repairs
   rejected Cartan matrices with exact minimum-edit supervision.
+- `reasoner3`: an exact ICE learner that synthesizes bounded integer
+  invariants from positive, negative, and implication counterexamples.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -191,13 +193,21 @@ make reasoner2-check
 ./reasoner2 train /tmp/reasoner2.r2p 8
 ./reasoner2 eval /tmp/reasoner2.r2p 2 8
 ./reasoner2 ablate /tmp/reasoner2.r2p 2 8
+make reasoner3-check
+./reasoner3 demo
+./reasoner3 train /tmp/reasoner3.r3p 4
+./reasoner3 eval /tmp/reasoner3.r3p 1 4
+./reasoner3 ablate /tmp/reasoner3.r3p 1 4
+./reasoner3 render /tmp/reasoner3.r3p 167
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
 and verifier contract. See [`docs/REASONER1.md`](docs/REASONER1.md) for the
 learned proposer and rank curriculum. See
 [`docs/REASONER2.md`](docs/REASONER2.md) for exact repair supervision, the
-feedback ablation, and its failed causal-use gate.
+feedback ablation, and its failed causal-use gate. See
+[`docs/REASONER3.md`](docs/REASONER3.md) for hidden transition systems,
+counterexample interventions, and its 1,738/1,740 minimum-edit holdout no-go.
 
 ## Build
 

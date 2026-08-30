@@ -41,6 +41,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Reason-first runtime | canonical Cartan matrices, learned control policy, exact Bareiss verifier, sealed Answer IR, language renderer tool | Reasoner-0 enumerates all 31 connected finite types through rank 8 with exact precision/recall and affine boundary negatives; not a base-model capability claim |
 | Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
 | Counterexample repair | learned node/bond edits, exact minimum-distance teacher, two-step verifier loop, feedback ablation | Reasoner-2 is exact on 267 supervised cases; its rank-7 policy solves 69/69 unseen rank-8 cases but only 66 optimally, while masked feedback still solves 66, so causal use and compression do not pass |
+| Hidden invariant synthesis | bounded integer transition systems, exact ICE witnesses, learned atom edits, causal interventions, sealed language output | Reasoner-3 solves all 1,740 unseen stage-4 cases and 1,738 minimally; all 396 witness-interchange pairs pass, but the conjunctive exact holdout gate fails, so compression remains blocked |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -121,6 +122,17 @@ verifier fields still solves 66 cases and repairs 63 minimally. Feedback helps,
 but it is not causally dominant, so this is a no-go for the feedback-use gate
 and no compression is authorized. See
 [`docs/REASONER2.md`](docs/REASONER2.md).
+
+Reasoner-3 changes the object instead of tuning Cartan repair. The verifier
+keeps a bounded integer transition system hidden and returns only positive,
+negative, or implication counterexamples to a learned atom-edit policy. The
+stage-3 policy solves all 1,740 unseen stage-4 repair states and passes 396
+disjoint witness-interchange tests, while an exact no-feedback calculation
+caps a fixed first edit at 50%. Two holdout traces are non-minimal, so the
+frozen conjunctive causal gate remains a no-go. The fully supervised policy is
+exact on all 6,428 repair states, but that replay does not authorize
+compression or language training. See
+[`docs/REASONER3.md`](docs/REASONER3.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.
