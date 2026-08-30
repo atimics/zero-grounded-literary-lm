@@ -65,3 +65,24 @@ that downstream tools cannot lose integer precision:
 
 The work counter fields are diagnostic. They are not scientific metrics and
 must not replace measured elapsed time or memory in the Phase 0 frontier.
+
+## Persistent adapter
+
+Phase 0 should measure uncached query work without charging every query for
+process startup or root-system initialization. Start the persistent adapter:
+
+```sh
+./weight_multiplicity --serve
+```
+
+It prints a ready record, then accepts one tab-separated request per line:
+
+```text
+A2\t1,1\t0,0
+```
+
+The adapter caches only verified Cartan and positive-root data. Every query
+gets a fresh Freudenthal memo table, so multiplicities are not reused between
+requests. Each response is the same stable JSON record as the one-shot query.
+This lets the ilXyr controller time calls and replay the exact input stream in
+a fresh process to check byte identity.

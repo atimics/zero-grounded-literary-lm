@@ -235,17 +235,44 @@ static int run_self_test(void)
     return 0;
 }
 
+static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
+                                   const int32_t highest[WM_MAX_RANK],
+                                   const int32_t target[WM_MAX_RANK],
+                                   char *error, size_t error_capacity)
+{
+    WMBigUInt value;
+    WMQueryStats stats;
+    WMStatus status;
+    char decimal[WM_DECIMAL_CAPACITY];
+    status = wm_weight_multiplicity(oracle, highest, target, &value, &stats,
+                                    error, error_capacity);
+    if (status != WM_OK ||
+        wm_big_to_decimal(&value, decimal, sizeof(decimal)) != WM_OK) {
+        return status == WM_OK ? WM_LIMIT_ERROR : status;
+    }
+    printf("{\"schema_version\":1,\"type\":\"%s\",\"rank\":%u,"
+           "\"highest_weight\":",
+           type, oracle->cartan.rank);
+    print_weight(highest, oracle->cartan.rank);
+    fputs(",\"target_weight\":", stdout);
+    print_weight(target, oracle->cartan.rank);
+    printf(",\"multiplicity\":\"%s\",\"positive_roots\":%u,"
+           "\"memo_entries\":%llu,\"recurrence_terms\":%llu,"
+           "\"maximum_level\":%u}\n",
+           decimal, oracle->positive_roots.count,
+           (unsigned long long)stats.memo_entries,
+           (unsigned long long)stats.recurrence_terms, stats.maximum_level);
+    return WM_OK;
+}
+
 static int run_query(const char *type, const char *highest_text,
                      const char *target_text)
 {
     WMOracle oracle;
     int32_t highest[WM_MAX_RANK] = {0};
     int32_t target[WM_MAX_RANK] = {0};
-    WMBigUInt value;
-    WMQueryStats stats;
     WMStatus status;
     char error[256] = {0};
-    char decimal[WM_DECIMAL_CAPACITY];
     status = wm_oracle_init_type(type, &oracle, error, sizeof(error));
     if (status != WM_OK) {
         fprintf(stderr, "%s: %s\n", wm_status_name(status), error);
@@ -257,40 +284,111 @@ static int run_query(const char *type, const char *highest_text,
                 oracle.cartan.rank);
         return 2;
     }
-    status = wm_weight_multiplicity(&oracle, highest, target, &value, &stats,
-                                    error, sizeof(error));
-    if (status != WM_OK ||
-        wm_big_to_decimal(&value, decimal, sizeof(decimal)) != WM_OK) {
+    status = evaluate_and_print(type, &oracle, highest, target, error,
+                                sizeof(error));
+    if (status != WM_OK) {
         fprintf(stderr, "%s: %s\n", wm_status_name(status), error);
         return 1;
     }
-    printf("{\"schema_version\":1,\"type\":\"%s\",\"rank\":%u,"
-           "\"highest_weight\":",
-           type, oracle.cartan.rank);
-    print_weight(highest, oracle.cartan.rank);
-    fputs(",\"target_weight\":", stdout);
-    print_weight(target, oracle.cartan.rank);
-    printf(",\"multiplicity\":\"%s\",\"positive_roots\":%u,"
-           "\"memo_entries\":%llu,\"recurrence_terms\":%llu,"
-           "\"maximum_level\":%u}\n",
-           decimal, oracle.positive_roots.count,
-           (unsigned long long)stats.memo_entries,
-           (unsigned long long)stats.recurrence_terms, stats.maximum_level);
     return 0;
+}
+
+static int run_server(void)
+{
+    struct CachedOracle {
+        char type[4];
+        WMOracle oracle;
+    } cache[31];
+    size_t cache_count = 0;
+    char line[1024];
+    memset(cache, 0, sizeof(cache));
+    fputs("{\"status\":\"ready\",\"schema_version\":1}\n", stdout);
+    fflush(stdout);
+    while (fgets(line, sizeof(line), stdin) != NULL) {
+        char *highest_text;
+        char *target_text;
+        char *end;
+        size_t index;
+        WMOracle *oracle = NULL;
+        int32_t highest[WM_MAX_RANK] = {0};
+        int32_t target[WM_MAX_RANK] = {0};
+        WMStatus status;
+        char error[256] = {0};
+        end = strpbrk(line, "\r\n");
+        if (end != NULL) *end = '\0';
+        highest_text = strchr(line, '\t');
+        if (highest_text == NULL) {
+            fputs("{\"status\":\"error\",\"code\":\"invalid_request\"}\n",
+                  stdout);
+            fflush(stdout);
+            continue;
+        }
+        *highest_text++ = '\0';
+        target_text = strchr(highest_text, '\t');
+        if (target_text == NULL || strlen(line) >= sizeof(cache[0].type)) {
+            fputs("{\"status\":\"error\",\"code\":\"invalid_request\"}\n",
+                  stdout);
+            fflush(stdout);
+            continue;
+        }
+        *target_text++ = '\0';
+        for (index = 0; index < cache_count; ++index) {
+            if (strcmp(cache[index].type, line) == 0) {
+                oracle = &cache[index].oracle;
+                break;
+            }
+        }
+        if (oracle == NULL) {
+            if (cache_count >= sizeof(cache) / sizeof(cache[0])) {
+                fputs("{\"status\":\"error\",\"code\":\"type_cache_full\"}\n",
+                      stdout);
+                fflush(stdout);
+                continue;
+            }
+            status = wm_oracle_init_type(line, &cache[cache_count].oracle,
+                                         error, sizeof(error));
+            if (status != WM_OK) {
+                printf("{\"status\":\"error\",\"code\":\"%s\"}\n",
+                       wm_status_name(status));
+                fflush(stdout);
+                continue;
+            }
+            memcpy(cache[cache_count].type, line, strlen(line) + 1U);
+            oracle = &cache[cache_count].oracle;
+            ++cache_count;
+        }
+        if (!parse_weight(highest_text, oracle->cartan.rank, highest) ||
+            !parse_weight(target_text, oracle->cartan.rank, target)) {
+            fputs("{\"status\":\"error\",\"code\":\"invalid_weight\"}\n",
+                  stdout);
+            fflush(stdout);
+            continue;
+        }
+        status = evaluate_and_print(line, oracle, highest, target, error,
+                                    sizeof(error));
+        if (status != WM_OK)
+            printf("{\"status\":\"error\",\"code\":\"%s\"}\n",
+                   wm_status_name(status));
+        fflush(stdout);
+    }
+    return ferror(stdin) ? 1 : 0;
 }
 
 static void usage(const char *program)
 {
     fprintf(stderr,
-            "usage:\n  %s --self-test\n  %s query TYPE HIGHEST TARGET\n"
+            "usage:\n  %s --self-test\n  %s --serve\n"
+            "  %s query TYPE HIGHEST TARGET\n"
             "example:\n  %s query A2 1,1 0,0\n",
-            program, program, program);
+            program, program, program, program);
 }
 
 int main(int argc, char **argv)
 {
     if (argc == 2 && strcmp(argv[1], "--self-test") == 0)
         return run_self_test();
+    if (argc == 2 && strcmp(argv[1], "--serve") == 0)
+        return run_server();
     if (argc == 5 && strcmp(argv[1], "query") == 0)
         return run_query(argv[2], argv[3], argv[4]);
     usage(argv[0]);
