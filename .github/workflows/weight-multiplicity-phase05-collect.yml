@@ -1,0 +1,115 @@
+name: Collect weight-multiplicity Phase 0.5 cloud audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Launch workflow run ID
+        required: true
+        type: string
+      expected_commit:
+        description: Exact merged Zero commit used by the launch
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: weight-multiplicity-phase05-cloud-v1
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: AWS · verify and export sealed Phase 0.5 evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: aws
+    env:
+      WM_BUCKET: ${{ secrets.AWS_BUCKET }}
+      WM_REGION: us-east-1
+      WM_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      WM_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      WM_ILXYR_COMMIT: 4e45ed31f6771a8cc03b00244ba008fb1ca7d0a1
+      WM_COLLECTOR_RUN_ID: ${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate collector authority
+        run: |
+          [[ "$WM_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$WM_EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test -n "$WM_BUCKET"
+          git cat-file -e "${WM_EXPECTED_COMMIT}^{commit}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Download and verify terminal evidence
+        run: |
+          root=/tmp/weight-multiplicity-phase05-collection
+          prefix="experiments/weight-multiplicity-phase05-cloud-v1/runs/${WM_SOURCE_RUN_ID}"
+          mkdir -p "$root/results"
+          aws s3 cp "s3://${WM_BUCKET}/${prefix}/launch.json" \
+            "$root/launch.json" --no-cli-pager
+          aws s3 cp "s3://${WM_BUCKET}/${prefix}/terminal-status.json" \
+            "$root/terminal-status.json" --no-cli-pager
+          aws s3 sync "s3://${WM_BUCKET}/${prefix}/results/" \
+            "$root/results/" --only-show-errors
+          jq -e --arg run_id "$WM_SOURCE_RUN_ID" \
+            --arg commit "$WM_EXPECTED_COMMIT" \
+            --arg ilxyr "$WM_ILXYR_COMMIT" \
+            '.schema == "ilxyr.weight_multiplicity_cloud_launch.v1"
+             and .run_id == $run_id and .source_commit == $commit
+             and .ilxyr_commit == $ilxyr and .maximum_ec2_usd == 6.0' \
+            "$root/launch.json" >/dev/null
+          jq -e --arg run_id "$WM_SOURCE_RUN_ID" \
+            --arg commit "$WM_EXPECTED_COMMIT" \
+            --arg ilxyr "$WM_ILXYR_COMMIT" \
+            '.schema == "ilxyr.weight_multiplicity_cloud_status.v1"
+             and .status == "complete" and .phase == "complete"
+             and .run_id == $run_id and .source_commit == $commit
+             and .ilxyr_commit == $ilxyr and .exit_code == 0
+             and .estimated_ec2_usd <= 6.0' \
+            "$root/terminal-status.json" >/dev/null
+          cd "$root/results"
+          sha256sum --check sha256sums.txt
+          gzip -t default-frontier.json.gz presized-frontier.json.gz
+          jq -e '.schema == "ilxyr.weight_multiplicity_memory_policy_comparison.v1"
+            and .same_oracle_executable == true
+            and .evidence_status == "diagnostic_allocator_policy_audit"' \
+            memory-policy-comparison.json >/dev/null
+          instance=$(jq -r .instance_id "$root/launch.json")
+          state=$(aws ec2 describe-instances --instance-ids "$instance" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text --no-cli-pager)
+          test "$state" = terminated
+
+      - name: Acquire one-time collector lock
+        run: |
+          jq -n --arg source_run_id "$WM_SOURCE_RUN_ID" \
+            --arg collector_run_id "$WM_COLLECTOR_RUN_ID" \
+            --arg expected_commit "$WM_EXPECTED_COMMIT" \
+            '{schema:"ilxyr.weight_multiplicity_cloud_collector_lock.v1",
+              source_run_id:$source_run_id,collector_run_id:$collector_run_id,
+              expected_commit:$expected_commit}' \
+            > /tmp/weight-multiplicity-phase05-collector.lock
+          aws s3api put-object --bucket "$WM_BUCKET" \
+            --key experiments/weight-multiplicity-phase05-cloud-v1/collector.lock \
+            --body /tmp/weight-multiplicity-phase05-collector.lock \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Export verified evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: weight-multiplicity-phase05-cloud-${{ inputs.source_run_id }}
+          path: /tmp/weight-multiplicity-phase05-collection
+          if-no-files-found: error
+          retention-days: 30

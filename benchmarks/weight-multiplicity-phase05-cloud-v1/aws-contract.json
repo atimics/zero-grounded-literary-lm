@@ -1,0 +1,54 @@
+{
+  "schema": "zero.weight_multiplicity_phase05_aws_contract.v1",
+  "status": "authorized-unrun",
+  "authorized": true,
+  "authorization": {
+    "approval_id": "weight-multiplicity-phase05-cloud-2026-08-30-v1",
+    "approved_statement": "ok lets do it",
+    "approved_date": "2026-08-30"
+  },
+  "lineage": {
+    "oracle_source_commit": "53eaa6c2fcce514d1183e19445daeaf151e7ec04",
+    "ilxyr_controller_commit": "4e45ed31f6771a8cc03b00244ba008fb1ca7d0a1",
+    "recursive_weyl_canonicalization": false
+  },
+  "execution": {
+    "venue": "aws-ec2",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "instance_count": 1,
+    "purchase_option": "on-demand",
+    "planning_usd_per_hour": 0.68,
+    "maximum_instance_seconds": 31764,
+    "workload_timeout_seconds": 30900,
+    "maximum_total_ec2_usd": 6.0,
+    "automatic_termination": true,
+    "single_execution_lock": true,
+    "immutable_package": true,
+    "launcher": "scripts/aws/weight-multiplicity-phase05-run-instances.sh",
+    "launcher_sha256": "9ba2fbd9f831716f725a98ce355dbb0d51f538a486f34809afe8b781ae3dfdb0",
+    "user_data": "scripts/aws/weight-multiplicity-phase05-user-data.sh",
+    "user_data_sha256": "6049fc7183459acd4cf460d2752058f6172788020181b9fbb8201ae9ec9e6c63",
+    "launch_workflow": ".github/workflows/weight-multiplicity-phase05-launch.yml",
+    "launch_workflow_sha256": "0c431a44bab7f57c50e3fb2e5d74bfec68e38c0d98c531a68e719c92b38a1e16",
+    "collect_workflow": ".github/workflows/weight-multiplicity-phase05-collect.yml",
+    "collect_workflow_sha256": "ff94c969dc0911f84b54312b853cfd24581334068451c4374e1fe4850fe7d630"
+  },
+  "experiments": [
+    {
+      "id": "phase05-cloud-frontier-default-v1",
+      "memo_initial_capacity_entries": 1024,
+      "surface": "complete frozen manifest"
+    },
+    {
+      "id": "phase05-cloud-memory-presized-v1",
+      "memo_initial_capacity_entries": 8388608,
+      "surface": "smallest memory-affected dimension per affected type"
+    }
+  ],
+  "closures": {
+    "corpus_generation": false,
+    "model_training": false,
+    "promotion": false
+  }
+}
