@@ -48,6 +48,9 @@ small browser runtime:
 - `reasoner333`: Reasoner (3,3,3), a sealed composition-transfer test that
   trains a 64-byte shared policy only on isolated relation modules before
   joining unseen modules with bridge constraints.
+- `reasoner34_witness`: Reasoner (3,3,4), an independently sealed test of
+  robustness to every allowed counterexample source along a frozen exact
+  trace.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -232,6 +235,8 @@ make reasoner34-check
 ./reasoner34 development
 make reasoner333-check
 ./reasoner333 development
+make reasoner34-witness-check
+./reasoner34_witness development
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -246,11 +251,13 @@ and the passing 1,674/1,674 sealed 3D test. See
 [`docs/REASONER32.md`](docs/REASONER32.md) for the 16-weight sparse policy and
 its exhaustive action-and-trace equivalence proof. See
 [`docs/REASONER33.md`](docs/REASONER33.md) for the frozen cross-dimension
-transfer contract and sealed cloud boundary. See
+transfer contract and sealed cloud result. See
 [`docs/REASONER34.md`](docs/REASONER34.md) for the exact BFS planning task,
 matched controls, relabeling intervention, and unopened 5-7 gate seal.
 [`docs/REASONER333.md`](docs/REASONER333.md) for the independent composition
 branch and its unopened three-by-three seal.
+[`docs/REASONER34-WITNESS.md`](docs/REASONER34-WITNESS.md) for the independent
+counterexample-order branch and its unopened 4D seal.
 
 ## Build
 

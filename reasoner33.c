@@ -531,6 +531,75 @@ static int semantic_select(const R33Model *model, uint8_t dimensions,
     return best;
 }
 
+uint16_t r33_task_target(uint8_t dimensions, uint32_t program_index)
+{
+    return program_target(dimensions, program_index);
+}
+
+uint32_t r33_task_state_count(uint8_t dimensions)
+{
+    return state_count(dimensions);
+}
+
+R33State r33_task_state(uint8_t dimensions, uint32_t index)
+{
+    return state_from_index(dimensions, index);
+}
+
+int r33_task_holds(uint8_t dimensions, uint16_t mask,
+                   const R33State *state)
+{
+    return invariant_holds(dimensions, mask, state);
+}
+
+R33State r33_task_nearest(uint8_t dimensions, uint16_t target,
+                          const R33State *source)
+{
+    return nearest_safe_state(dimensions, target, source);
+}
+
+uint16_t r33_task_progress_actions(uint8_t dimensions, uint16_t mask,
+                                   const R33Witness *witness)
+{
+    return progress_actions(dimensions, mask, witness);
+}
+
+int r33_task_select(const R33Model *model, uint8_t dimensions,
+                    uint16_t mask, const R33Witness *witness,
+                    uint8_t feedback_mode)
+{
+    return semantic_select(model, dimensions, mask, witness,
+                           feedback_mode);
+}
+
+void r33_task_features(uint8_t dimensions, uint16_t mask,
+                       const R33Witness *witness, int action,
+                       uint8_t feedback_mode,
+                       int16_t features[R33_FEATURE_COUNT])
+{
+    semantic_features(dimensions, mask, witness, action, feedback_mode,
+                      features);
+}
+
+uint16_t r33_task_transform_mask(uint8_t dimensions, uint16_t mask,
+                                 const uint8_t *permutation)
+{
+    return transform_mask(dimensions, mask, permutation);
+}
+
+R33Witness r33_task_transform_witness(uint8_t dimensions,
+                                      R33Witness witness,
+                                      const uint8_t *permutation)
+{
+    return transform_witness(dimensions, witness, permutation);
+}
+
+int r33_task_transform_action(uint8_t dimensions, int action,
+                              const uint8_t *permutation)
+{
+    return transform_action(dimensions, action, permutation);
+}
+
 static R0Status corpus_add(R33Corpus *corpus, uint8_t dimensions,
                            uint16_t target, uint16_t mask)
 {

@@ -101,4 +101,29 @@ R0Status r33_write_result(const R33ExperimentReport *report,
                           const char *path, char *error,
                           size_t error_capacity);
 
+/* Exact task primitives shared by independently sealed follow-up tests. */
+uint16_t r33_task_target(uint8_t dimensions, uint32_t program_index);
+uint32_t r33_task_state_count(uint8_t dimensions);
+R33State r33_task_state(uint8_t dimensions, uint32_t index);
+int r33_task_holds(uint8_t dimensions, uint16_t mask,
+                   const R33State *state);
+R33State r33_task_nearest(uint8_t dimensions, uint16_t target,
+                          const R33State *source);
+uint16_t r33_task_progress_actions(uint8_t dimensions, uint16_t mask,
+                                   const R33Witness *witness);
+int r33_task_select(const R33Model *model, uint8_t dimensions,
+                    uint16_t mask, const R33Witness *witness,
+                    uint8_t feedback_mode);
+void r33_task_features(uint8_t dimensions, uint16_t mask,
+                       const R33Witness *witness, int action,
+                       uint8_t feedback_mode,
+                       int16_t features[R33_FEATURE_COUNT]);
+uint16_t r33_task_transform_mask(uint8_t dimensions, uint16_t mask,
+                                 const uint8_t *permutation);
+R33Witness r33_task_transform_witness(uint8_t dimensions,
+                                      R33Witness witness,
+                                      const uint8_t *permutation);
+int r33_task_transform_action(uint8_t dimensions, int action,
+                              const uint8_t *permutation);
+
 #endif
