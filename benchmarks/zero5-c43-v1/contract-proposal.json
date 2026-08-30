@@ -1,0 +1,216 @@
+{
+  "schema": "zero.c43_experiment_proposal.v1",
+  "experiment": "zero5-c43-v1",
+  "status": "release-received-integration-ready",
+  "authorized": false,
+  "purpose": "Test whether broader exact-cloze coverage and harder evidence-dependent retrieval examples clear the real C4.2 weaknesses at fixed model size and primary compute exposure.",
+  "supersedes": null,
+  "c42_decision": {
+    "experiment": "zero5-c42-v1",
+    "decision": "no-go",
+    "decision_is_immutable": true,
+    "result": "benchmarks/zero5-c42-v1/result.json",
+    "result_sha256": "63e4209b19637e2b09e3798f3cf0c32e84d983f09b33b161b39463c4b3d8c279",
+    "contract": "benchmarks/zero5-c42-v1/contract.json",
+    "contract_sha256": "80026e32956bb9fe0092fa0b867633850c20bb615c687c4d8eaa9422551a6250",
+    "test_metrics_opened": false
+  },
+  "claim_boundary": {
+    "may_claim": "C4.2 identified a real exact-cloze and retrieval-choice shortfall and an impossible claim-swap improvement gate; C4.3 corrects the future gate design without changing the C4.2 no-go.",
+    "may_not_claim": [
+      "that C4.2 passed under revised rules",
+      "that C4.3 data exists before Braid publishes a governed release",
+      "that C4.3 training or paid compute is authorized",
+      "permission to open the sealed test set",
+      "permission to publish private corpus artifacts or checkpoints"
+    ]
+  },
+  "fixed_model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc"
+  },
+  "initialization": {
+    "source": "ZERO.5-C2 selected checkpoint",
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "seed": 0,
+    "optimizer": "fresh AdamW state"
+  },
+  "braid_request": {
+    "release": "C4.3",
+    "status": "received-and-verified",
+    "pull_request": 15,
+    "merge_commit": "45abf243b8b2acb0e4b74bc1e0dbcd2630907093",
+    "source_commit": "b1472ee2382a95c8a924ed82f9d76cc115541877",
+    "release_id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+    "manifest_sha256": "1f4fd5095be48e434a8c41a872315aca6090e9979c9b095df5bd5dd24418503d",
+    "membership_digest": "fc1feaeb81da02d1ae7c44fbc0a745f698f1ba1b07dcea4505a108fc4ecb9413",
+    "pack_plan_sha256": "3237a3771d687dd6b9b670fb05e2252be2647c42636c7f330cbb8527353362ef",
+    "marker_free": true,
+    "context": 512,
+    "primary_compute_token_exposures": 19337216,
+    "cloze": {
+      "answer_target_tokens_minimum": 406932,
+      "answer_target_share_minimum": 0.15,
+      "length_bands": ["1-4", "5-8", "9-16", "17+"],
+      "duplicate_and_source_concentration_report_required": true,
+      "answer_must_be_context_recoverable": true
+    },
+    "retrieval": {
+      "negative_types_required": [
+        "entity",
+        "relation",
+        "numeric",
+        "temporal",
+        "lexical-confounder"
+      ],
+      "negative_type_share_maximum": 0.5,
+      "lexical_confounder_share_minimum": 0.25,
+      "answer_span_shortcut_audit_required": true
+    },
+    "mirroring": {
+      "both_orientations_required": true,
+      "stable_pair_id_required": true,
+      "pair_atomic_update_required": true,
+      "maximum_position_count_difference": 1
+    },
+    "development": {
+      "required": true,
+      "disjoint_from_train_validation_and_test": true,
+      "source_document_disjoint": true
+    },
+    "governance": {
+      "provenance_required": true,
+      "attribution_required": true,
+      "rights_record_required": true,
+      "artifact_hashes_required": true,
+      "machine_readable_task_report_required": true
+    }
+  },
+  "training_proposal": {
+    "primary_compute_token_exposures": 19337216,
+    "compute_token_exposures_maximum": 19337216,
+    "zero_wraps_required": true,
+    "pair_atomic_updates": true,
+    "answer_weight_maximum": 8,
+    "weighted_task_mass_gap_maximum": 0.1,
+    "pilot": {
+      "maximum_optimizer_groups": 2800,
+      "weight_variants_maximum": 2,
+      "development_only": true,
+      "promotion_eligible": false
+    },
+    "primary_initialization": "C2-not-C4.2-or-pilot",
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null
+  },
+  "evaluation": {
+    "reuse_c42_validation_artifacts": true,
+    "reuse_c42_evaluator_semantics": true,
+    "baseline": "frozen C2",
+    "baseline_metrics": {
+      "combined_nats_per_token": 2.3373,
+      "evidence_nats_per_token": 2.3086,
+      "atlas_nats_per_token": 2.2786,
+      "anchor_nats_per_token": 3.6942,
+      "cloze_exact_accuracy": 0.000281293952,
+      "choice_accuracy": {
+        "claim": 0.518640351,
+        "retrieval": 0.513353116
+      },
+      "swap_consistency_accuracy": {
+        "claim": 0.963596491,
+        "retrieval": 0.940652819
+      },
+      "pair_exact_accuracy": {
+        "claim": 0.500438596,
+        "retrieval": 0.483679525
+      }
+    }
+  },
+  "gates": {
+    "combined_relative_improvement_minimum": 0.1,
+    "choice_accuracy_minimum": {
+      "claim": 0.55,
+      "retrieval": 0.55
+    },
+    "choice_improvement_minimum": 0.02,
+    "position_accuracy_minimum": 0.5,
+    "position_gap_maximum": {
+      "claim": 0.1,
+      "retrieval": 0.15
+    },
+    "swap_consistency_minimum": {
+      "claim": 0.95,
+      "retrieval": 0.95
+    },
+    "swap_regression_maximum": {
+      "claim": 0.01,
+      "retrieval": 0.01
+    },
+    "pair_exact_improvement_minimum": 0.03,
+    "cloze_exact_improvement_minimum": 0.01,
+    "evidence_relative_regression_maximum": 0.1,
+    "atlas_nats_per_token_maximum": 2.50646,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "c2_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "gate_sanity": {
+    "bounded_metric_range": [0, 1],
+    "bounded_improvement_checks": [
+      {
+        "metric": "claim-choice",
+        "baseline": 0.518640351,
+        "minimum_improvement": 0.02,
+        "upper_bound": 1
+      },
+      {
+        "metric": "retrieval-choice",
+        "baseline": 0.513353116,
+        "minimum_improvement": 0.02,
+        "upper_bound": 1
+      },
+      {
+        "metric": "claim-pair-exact",
+        "baseline": 0.500438596,
+        "minimum_improvement": 0.03,
+        "upper_bound": 1
+      },
+      {
+        "metric": "retrieval-pair-exact",
+        "baseline": 0.483679525,
+        "minimum_improvement": 0.03,
+        "upper_bound": 1
+      },
+      {
+        "metric": "cloze-exact",
+        "baseline": 0.000281293952,
+        "minimum_improvement": 0.01,
+        "upper_bound": 1
+      }
+    ],
+    "rule": "For a bounded improvement gate, baseline plus minimum improvement must not exceed the metric upper bound. Swap uses an absolute floor plus a maximum regression instead of an improvement gate."
+  },
+  "test": {
+    "records": 12188,
+    "bytes": 22875515,
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "policy": "hash-only; content absent, not parsed, not tokenized, not packed, and not scored"
+  },
+  "blockers": [
+    "two matching deterministic imports",
+    "pilot result and frozen answer weights",
+    "final implementation and artifact hashes",
+    "final executable contract",
+    "explicit paid-compute cost approval"
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "schema": "braid.zero5_c43_release_report.v1",
+  "release": {
+    "status": "released",
+    "id": "braid-corpus-four-three-zero5-512-fixture-v0.0.0",
+    "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "manifest_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "membership_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "pack_plan_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "marker_free": true,
+    "context": 512
+  },
+  "artifacts": [
+    {
+      "kind": "train",
+      "path": "artifacts/train.fixture",
+      "sha256": "49be9ba7c0cdbfad4df8c6c235f08ac388dff68bbe5a34bc02862cad291fab75",
+      "bytes": 89
+    },
+    {
+      "kind": "development",
+      "path": "artifacts/development.fixture",
+      "sha256": "8d829c35b4b5cb62c3c28f16775728c5d16cffe723c4b7ff928e789dfb927216",
+      "bytes": 52
+    }
+  ],
+  "primary": {
+    "compute_token_exposures": 19337216,
+    "wraps": 0,
+    "answer_targets": {
+      "claim": 700000,
+      "cloze": 500000,
+      "retrieval": 1800000,
+      "total": 3000000
+    },
+    "cloze": {
+      "length_band_target_tokens": {
+        "1-4": 160000,
+        "5-8": 170000,
+        "9-16": 120000,
+        "17+": 50000
+      },
+      "maximum_derived_per_source_record": 1,
+      "source_documents": 120,
+      "maximum_source_share": 0.08,
+      "answer_leakage_records": 0
+    },
+    "retrieval": {
+      "pairs": 1000,
+      "negative_type_counts": {
+        "entity": 400,
+        "relation": 350,
+        "numeric": 300,
+        "temporal": 250,
+        "lexical-confounder": 300
+      },
+      "answer_span_shortcut_audit_passed": true
+    },
+    "mirroring": {
+      "claim": {
+        "pairs": 400,
+        "orientation_records": 800,
+        "position_0_records": 400,
+        "position_1_records": 400,
+        "missing_orientations": 0,
+        "group_violations": 0
+      },
+      "retrieval": {
+        "pairs": 1000,
+        "orientation_records": 2000,
+        "position_0_records": 1000,
+        "position_1_records": 1000,
+        "missing_orientations": 0,
+        "group_violations": 0
+      }
+    }
+  },
+  "development": {
+    "records": 240,
+    "overlap": {
+      "training": {
+        "record": 0,
+        "normalized_text": 0,
+        "source_document": 0
+      },
+      "validation": {
+        "record": 0,
+        "normalized_text": 0,
+        "source_document": 0
+      },
+      "test": {
+        "record": 0,
+        "normalized_text": 0,
+        "source_document": 0
+      }
+    }
+  },
+  "governance": {
+    "provenance_complete": true,
+    "attribution_complete": true,
+    "rights_record_present": true,
+    "artifact_hashes_complete": true,
+    "machine_readable_task_report_present": true
+  },
+  "test": {
+    "records": 12188,
+    "bytes": 22875515,
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}

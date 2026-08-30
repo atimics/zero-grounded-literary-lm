@@ -1,0 +1,29 @@
+{
+  "schema": "zero.c43_result_publication_authorization.v1",
+  "approval_id": "zero5-c43-result-publication-2026-08-28-v1",
+  "approved_by": "ratimics",
+  "approved_at": "2026-08-28T18:04:26Z",
+  "approved_statement": "I agree with that scope",
+  "training_authorization_id": "zero5-c43-local-2026-08-28-v1",
+  "source_private_result_sha256": "3e1a33e4c0a3a630239a3fefc02ecca2f8c4a76ca7983a9c0efbac4e875130ca",
+  "public_result": {
+    "path": "benchmarks/zero5-c43-v1/result.json",
+    "sha256": "ebcf20bf7214f7b99b1425bcd74e3545de7a079268536fde93aeb4d456dbfb74",
+    "bytes": 7612
+  },
+  "scope": {
+    "publish": [
+      "C4.3 no-go decision",
+      "frozen C4.2 validation metrics",
+      "exact training accounting",
+      "implementation and private-artifact hashes"
+    ],
+    "withhold": [
+      "private corpus contents",
+      "checkpoint bytes",
+      "raw training logs",
+      "sample generations",
+      "sealed-test content and metrics"
+    ]
+  }
+}

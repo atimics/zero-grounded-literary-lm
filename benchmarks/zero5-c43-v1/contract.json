@@ -1,0 +1,354 @@
+{
+  "schema": "zero.c43_experiment_contract.v1",
+  "experiment": "zero5-c43-v1",
+  "status": "authorized-unrun",
+  "authorized": true,
+  "source_proposal_sha256": "a7efadd35ddc3cb3497c4605fb4f2e85370dda29e183fbcf47c8c0ce6617ad11",
+  "braid": {
+    "pull_request": 15,
+    "merge_commit": "45abf243b8b2acb0e4b74bc1e0dbcd2630907093",
+    "release_id": "braid-corpus-four-three-zero5-512-v0.1.1-21b0cb6364884df454d8e3e87019e8aaaae9377c511a1ccb675a745006f19e36",
+    "source_commit": "b1472ee2382a95c8a924ed82f9d76cc115541877",
+    "manifest_sha256": "1f4fd5095be48e434a8c41a872315aca6090e9979c9b095df5bd5dd24418503d",
+    "membership_digest": "fc1feaeb81da02d1ae7c44fbc0a745f698f1ba1b07dcea4505a108fc4ecb9413",
+    "pack_plan_sha256": "3237a3771d687dd6b9b670fb05e2252be2647c42636c7f330cbb8527353362ef",
+    "training_report_sha256": "70829aef06e4f1491f70eca2c828b801728440c2d0d7cfc31122728a92d63440",
+    "report": {
+      "path": "benchmarks/zero5-c43-v1/evidence/release-report.json",
+      "sha256": "b565ab6003785ba537d0a6ec33726e932713287b0052960ce2b826ca979040ac",
+      "bytes": 7938
+    },
+    "rights": {
+      "license": "CC-BY-SA-4.0",
+      "private_by_default": true,
+      "dataset_published_by_zero": false
+    }
+  },
+  "verified_import": {
+    "deterministic": true,
+    "first_receipt_sha256": "ffbe57998290e4719986cad65b3ac8129751ddd07f4ae6a74d44e11fe28f4da5",
+    "second_receipt_sha256": "e10eb2f7eeeeb6c17e1f9c5c3778e976b982f6948b0d31dbd011f76eba107ee4",
+    "evidence": {
+      "first": {
+        "path": "benchmarks/zero5-c43-v1/evidence/import-a.json",
+        "sha256": "ffbe57998290e4719986cad65b3ac8129751ddd07f4ae6a74d44e11fe28f4da5",
+        "bytes": 3594
+      },
+      "second": {
+        "path": "benchmarks/zero5-c43-v1/evidence/import-b.json",
+        "sha256": "e10eb2f7eeeeb6c17e1f9c5c3778e976b982f6948b0d31dbd011f76eba107ee4",
+        "bytes": 3594
+      }
+    },
+    "intake": {
+      "path": "benchmarks/zero5-c43-v1/evidence/intake.json",
+      "sha256": "f3417157b8a50b0717139454726980a9b5f87ecd500ff6a7368a641a989f4b87",
+      "bytes": 824
+    },
+    "primary": {
+      "sha256": "34d38b1b0ed67f0eb86d04cd9482e507b41d4418ea7e4f86e361452310dca329",
+      "bytes": 58202092,
+      "packs": 37768,
+      "records": 78039,
+      "active_targets": 14850534,
+      "answer_targets": {
+        "claim": 942560,
+        "cloze": 430769,
+        "retrieval": 1470102,
+        "total": 2843431
+      },
+      "answer_targets_by_task": {
+        "claim": 942560,
+        "cloze": 430769,
+        "retrieval": 1470102
+      },
+      "compute_token_exposures": 19337216,
+      "padding_targets": 4486682,
+      "update_groups": 28707,
+      "maximum_packs_per_update": 2,
+      "wraps": 0
+    },
+    "development": {
+      "sha256": "4426d9a51480f658bf5405524fb819a33f979eabe6cc31f446b906c4e9d38749",
+      "bytes": 2274412,
+      "packs": 1476,
+      "records": 3338,
+      "active_targets": 592243,
+      "answer_targets": 128333,
+      "answer_targets_by_task": {
+        "claim": 48450,
+        "cloze": 20939,
+        "retrieval": 58944
+      },
+      "compute_token_exposures": 755712,
+      "padding_targets": 163469,
+      "update_groups": 1061,
+      "maximum_packs_per_update": 2,
+      "evaluation": {
+        "cloze_completion": {
+          "sha256": "e1b361913521282eb7e5654799aed0445befde035874e4e62ae499f11a601f5d",
+          "bytes": 620754,
+          "records": 2508,
+          "target_tokens": 20939
+        },
+        "span_choices": {
+          "claim": {
+            "sha256": "690a01c14a963d02d618546ae478ef0f6b6c39fd00a7d7f9ebd79ab295b660be",
+            "bytes": 349460,
+            "pairs": 257,
+            "records": 514,
+            "correct_target_tokens": 48450,
+            "alternative_target_tokens": 50940,
+            "scoring": "mean causal nats per token over natural candidate spans"
+          },
+          "retrieval": {
+            "sha256": "63ef04608415e476d951b8f58245caf3475363a10a14c633c40545cf0c18af0a",
+            "bytes": 267716,
+            "pairs": 158,
+            "records": 316,
+            "correct_target_tokens": 58944,
+            "alternative_target_tokens": 58944,
+            "scoring": "mean causal nats per token over natural candidate spans"
+          }
+        }
+      }
+    },
+    "frozen_validation": {
+      "combined_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+      "claim_span_choices_sha256": "6bdfbcab7f0a7a91710c61d61700a108f8cf453e4ce74c12efc0c45a4ae10b0d",
+      "retrieval_span_choices_sha256": "8a351a73d1a800c5838d859be4ad170467cc2c912de59ee8b10c012526188250",
+      "cloze_completion_sha256": "e0b0a591bf515dd41968c00e348849558006d078ee4d9d211c3c876a1c683168",
+      "evidence_validation_sha256": "1d7d6bff59bf3c063274601072379e0fa59594aa239a95c754454990254f6431"
+    }
+  },
+  "pilot": {
+    "status": "complete-non-promotional",
+    "selected_variant": "cloze-plus-five-v1",
+    "selected_answer_weights": {
+      "claim": 2.229423406,
+      "cloze": 5.253416128,
+      "retrieval": 1.429401038
+    },
+    "selection": {
+      "path": "benchmarks/zero5-c43-v1/evidence/pilot-selection.json",
+      "sha256": "81b2a44dd9bbae48b62ccb3eebd5a495c43bf56f5648d14d9b41af7c71e0a82f",
+      "bytes": 14797
+    },
+    "variants": {
+      "balanced": {
+        "path": "benchmarks/zero5-c43-v1/evidence/pilot-balanced.json",
+        "sha256": "b7dc9c3d92500a8058049cab9e45b54e6e8538cbc7b9ff771e1527863bfd479b",
+        "bytes": 8567
+      },
+      "cloze_plus_five": {
+        "path": "benchmarks/zero5-c43-v1/evidence/pilot-cloze-plus-five.json",
+        "sha256": "cac6a4e9aab31816d77132b892d0a8c443d0987cef17884ae7ade05cbe73efdf",
+        "bytes": 8561
+      }
+    },
+    "optimizer_groups_per_variant": 1061,
+    "primary_starts_from_pilot": false,
+    "frozen_validation_scored": false,
+    "test_metrics_opened": false,
+    "promotion_eligible": false
+  },
+  "model": {
+    "parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "vocabulary": 512,
+    "positions": "rotary",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc"
+  },
+  "initialization": {
+    "source": "ZERO.5-C2 selected checkpoint",
+    "checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "source_update": 10425,
+    "seed": 0,
+    "optimizer": "fresh AdamW state"
+  },
+  "implementation": {
+    "trainer": "zero5_c32_lm.c",
+    "importer": "scripts/prepare_zero5_c43.mjs",
+    "intake_library": "scripts/lib/zero5_c43_intake.mjs",
+    "pilot_runner": "scripts/run_zero5_c43_pilot.mjs",
+    "evaluator": "scripts/evaluate_zero5_c43.mjs",
+    "runner": "scripts/run_zero5_c43.mjs",
+    "trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "importer_sha256": "9efbe5ccd57ee9db4079b99d2c5efd7c1f0f1c3efad14683503edda435a0efe3",
+    "intake_library_sha256": "4027038320161282aaeaa16bf8054f0e0064bd0e4d52ceaf60d6f5c405df6fbe",
+    "pilot_runner_sha256": "1aeb256f9a68c73ddbabaa80ecf19a14ba41d3097eccb07d9ab1653056202776",
+    "evaluator_sha256": "186659bdfd93f547ef480ec4948cecb9067a3e43df0b0b8a9b84e6e2b5303006",
+    "runner_sha256": "2a92ac573be15a1e4b0d1ceda70611ee31dec4b3f29b20b386c98b1f7f242367",
+    "model_and_training": "C11",
+    "orchestration": "Node.js",
+    "pack_format": "Z5PKV3 grouped packs"
+  },
+  "training": {
+    "status": "authorized",
+    "seed": 0,
+    "update_groups": 28707,
+    "maximum_batch_sequences": 2,
+    "parallel_workers": 2,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "pair_atomic_updates": true,
+    "zero_wraps_required": true,
+    "answer_weights": {
+      "claim": 2.229423406,
+      "cloze": 5.253416128,
+      "retrieval": 1.429401038
+    },
+    "primary_initialization": "C2-not-C4.2-or-pilot",
+    "optimizer": "AdamW with fresh state",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 1000,
+    "schedule": "cosine over all 28,707 update groups",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_packs": 64,
+    "checkpoint_selection": "lowest frozen validation loss at fixed reports; no test access",
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null
+  },
+  "execution": {
+    "status": "authorized-local-unrun",
+    "scale_policy": "local first; scale only after measured saturation",
+    "venue": "local",
+    "compute_resource": "Apple Silicon CPU",
+    "math_backend": "accelerate-vforce",
+    "attention_backend": "dense-blas",
+    "blas_threads": 4,
+    "checkpoint_every_updates": 250,
+    "maximum_execution_seconds": 3600,
+    "throughput_evidence": {
+      "development_compute_token_exposures": 755712,
+      "balanced_elapsed_seconds": 73.060036083,
+      "balanced_compute_tokens_per_second": 10343.7,
+      "cloze_plus_five_elapsed_seconds": 71.768870458,
+      "cloze_plus_five_compute_tokens_per_second": 10529.8,
+      "conservative_projected_primary_seconds": 1869.47
+    },
+    "automatic_termination_required_for_paid_compute": true
+  },
+  "evaluation": {
+    "evaluator_status": "implemented-frozen",
+    "contract_sha256": "8bdc2e081d30c429e82f5ef5d8ea739e8e4d5d5f137904a63559386e0a8ed934",
+    "reuse_c42_validation_artifacts": true,
+    "reuse_c42_evaluator_semantics": true,
+    "baseline": "frozen C2",
+    "baseline_metrics": {
+      "combined_nats_per_token": 2.3373,
+      "evidence_nats_per_token": 2.3086,
+      "atlas_nats_per_token": 2.2786,
+      "anchor_nats_per_token": 3.6942,
+      "cloze_exact_accuracy": 0.000281293952,
+      "choice_accuracy": {
+        "claim": 0.518640351,
+        "retrieval": 0.513353116
+      },
+      "swap_consistency_accuracy": {
+        "claim": 0.963596491,
+        "retrieval": 0.940652819
+      },
+      "pair_exact_accuracy": {
+        "claim": 0.500438596,
+        "retrieval": 0.483679525
+      }
+    },
+    "combined_validation_packs": 128,
+    "evidence_validation_packs": 128,
+    "atlas_windows": 128,
+    "anchor_windows": 19,
+    "retention_inputs": {
+      "c2_import_manifest": {
+        "path": "benchmarks/zero5-c2-v1/import.json",
+        "sha256": "2cc42c2f0473b9b08a8708d54ecb8dd7e958576d9f5692bbfcf6b3e587f5b45d"
+      },
+      "c0_result": {
+        "path": "benchmarks/zero5-c0-v1/result.json",
+        "sha256": "e3c0bd90196387d0791674c6b38ecf97134f229f99757c94c8b4f095d339508f"
+      },
+      "atlas_train_sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+      "atlas_validation_sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+      "anchor_train_sha256": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+      "anchor_validation_sha256": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
+    }
+  },
+  "gates": {
+    "combined_relative_improvement_minimum": 0.1,
+    "choice_accuracy_minimum": {
+      "claim": 0.55,
+      "retrieval": 0.55
+    },
+    "choice_improvement_minimum": 0.02,
+    "position_accuracy_minimum": 0.5,
+    "position_gap_maximum": {
+      "claim": 0.1,
+      "retrieval": 0.15
+    },
+    "swap_consistency_minimum": {
+      "claim": 0.95,
+      "retrieval": 0.95
+    },
+    "swap_regression_maximum": {
+      "claim": 0.01,
+      "retrieval": 0.01
+    },
+    "pair_exact_improvement_minimum": 0.03,
+    "cloze_exact_improvement_minimum": 0.01,
+    "evidence_relative_regression_maximum": 0.1,
+    "atlas_nats_per_token_maximum": 2.50646,
+    "anchor_nats_per_token_maximum": 4.06362,
+    "c2_relative_regression_maximum": 0.1,
+    "finite_metrics": true,
+    "test_metrics_opened": false
+  },
+  "test": {
+    "records": 12188,
+    "bytes": 22875515,
+    "sha256": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6",
+    "policy": "hash-only; content absent, not parsed, not tokenized, not packed, and not scored",
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  },
+  "authorization": {
+    "status": "authorized",
+    "training_authorized": true,
+    "aws_use_authorized": false,
+    "paid_compute_authorized": false,
+    "promotion_authorized": false,
+    "sealed_test_access_authorized": false,
+    "publication_authorized": false,
+    "independent_retry_authorized": false,
+    "approval_id": "zero5-c43-local-2026-08-28-v1",
+    "record": {
+      "path": "benchmarks/zero5-c43-v1/authorization.json",
+      "sha256": "9c0a2c30c38c68b8f5040f5385997d81c71ec1d384af5c71036b4e67244d2162",
+      "bytes": 1613,
+      "source_contract_sha256": "650fddce48ae240a2e1fe0dc622d82cdd0d5eb599ef0cc51f553ea87e7a491e0"
+    }
+  },
+  "claim_boundary": {
+    "may_claim": "C4.2 identified a real exact-cloze and retrieval-choice shortfall and an impossible claim-swap improvement gate; C4.3 corrects the future gate design without changing the C4.2 no-go.",
+    "may_not_claim": [
+      "that C4.2 passed under revised rules",
+      "that C4.3 data exists before Braid publishes a governed release",
+      "permission to use AWS or paid compute",
+      "permission to open the sealed test set",
+      "permission to promote the model",
+      "permission to publish private corpus artifacts, checkpoints, or results",
+      "permission to start an independent retry"
+    ]
+  },
+  "blockers": []
+}

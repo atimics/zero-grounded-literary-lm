@@ -1,0 +1,31 @@
+{
+  "schema": "zero.c51_statebridge_training_authorization.v1",
+  "authorization_id": "zero5-c51-statebridge-local-2026-08-28-v1",
+  "authorized": true,
+  "authorization_source": "user instruction: run it",
+  "scope": {
+    "experiment": "zero5-c51-statebridge-v1",
+    "runs": 1,
+    "seed": 0,
+    "venue": "local Apple Silicon",
+    "maximum_execution_seconds": 3600,
+    "paid_compute": false,
+    "starting_checkpoint": "frozen ZERO.5 C2",
+    "arm": "25% C5.2 structured-text mixture",
+    "validation": [
+      "frozen C4.2 validation",
+      "C5.2 validation"
+    ]
+  },
+  "not_authorized": [
+    "AWS or paid compute",
+    "sealed-test access",
+    "symbolic serialization claim",
+    "auxiliary state-target claim",
+    "promotion",
+    "checkpoint publication",
+    "corpus publication",
+    "an independent retry"
+  ]
+}
+

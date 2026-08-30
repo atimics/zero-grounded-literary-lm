@@ -1,0 +1,30 @@
+{
+  "schema": "zero.c52_targetbridge_training_authorization.v1",
+  "authorization_id": "zero5-c52-targetbridge-local-2026-08-28-v1",
+  "authorized": true,
+  "authorization_source": "user instruction: run it; confirmed with: Do it",
+  "scope": {
+    "experiment": "zero5-c52-targetbridge-v1",
+    "runs": 1,
+    "seed": 0,
+    "venue": "local Apple Silicon",
+    "maximum_execution_seconds": 3600,
+    "paid_compute": false,
+    "starting_checkpoint": "frozen ZERO.5 C2",
+    "training_view": "frozen 25% C5.2 structured-text mixture",
+    "auxiliary_loss": "factorized verified state target, weight 0.1",
+    "validation": [
+      "frozen C4.2 validation",
+      "C5.2 development validation"
+    ]
+  },
+  "not_authorized": [
+    "AWS or paid compute",
+    "sealed-test access",
+    "symbolic serialization claim",
+    "promotion",
+    "checkpoint publication",
+    "corpus publication",
+    "an independent retry"
+  ]
+}

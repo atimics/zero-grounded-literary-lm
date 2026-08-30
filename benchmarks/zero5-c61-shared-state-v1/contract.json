@@ -1,0 +1,209 @@
+{
+  "schema": "zero.c61_shared_state_contract.v1",
+  "experiment": "zero5-c61-shared-state-v1",
+  "status": "authorized-unrun-aws",
+  "authorized": true,
+  "ilxyr": {
+    "registration_id": "zero5-c61-shared-state-v1",
+    "system_of_record": "ilxyr",
+    "registration_state": "authorized",
+    "run_authorized": true,
+    "authorization_mechanism": "separate hash-bound authorization record"
+  },
+  "specification": {
+    "path": "benchmarks/zero5-c61-shared-state-v1/SPEC.md",
+    "sha256": "d2b99dd9d6cae52355c19edf44271ad76078aaf434dcef391c5bb79b46e4d1c1"
+  },
+  "braid": {
+    "release_id": "braid-corpus-five-statebridge-v0.3.0-3ce479213241679af209b402101c24786299f2ff05325838efd42eebf541315c",
+    "source_commit": "f96fb289b2ddf3c22b755bfa378f8ff70afb0293",
+    "target_vocabulary_id": "braid-state-target-vocabulary-v2-618f60e04d3ff6ec0ecdd0741c7812b808a09c03e2ea465eaf2d33e3492ba88e",
+    "target_vocabulary_sha256": "3923f04459eb3769fce7e133f687758b677bca0e3a9d65444a6407e70e9bb578"
+  },
+  "control": {
+    "experiment": "zero5-c51-statebridge-v1",
+    "c51_contract": "benchmarks/zero5-c51-statebridge-v1/contract.json",
+    "c51_contract_sha256": "7bb9616e2d3c47bba90ca995aaebf43fcc613825dae64564627261d8be745b7d",
+    "private_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "metrics": {
+      "retrieval_choice_accuracy": 0.525717112,
+      "retrieval_pair_exact_accuracy": 0.509396637,
+      "claim_choice_accuracy": 0.561403509,
+      "combined_nats_per_token": 2.0801
+    },
+    "same_checkpoint_ablation": "score the trained C6.1 checkpoint with answer bridge scale zero"
+  },
+  "verified_target_import": {
+    "receipt": {
+      "sha256": "9951615d08c5051f48594b015c48e61fa1cb3719ca10a378129c940eb29bfdb7",
+      "bytes": 2592
+    },
+    "primary": {
+      "sha256": "e655e97acb700433a9f4d32560cda6ec82bea10d64d2bc55873f9aeb3bcc27eb",
+      "bytes": 2501560,
+      "events": 293606,
+      "raw_events": 316051,
+      "packs": 37768,
+      "matched_c5_packs": 9442,
+      "matched_c5_records": 22445,
+      "choice_a_records": 7880,
+      "choice_b_records": 7880
+    },
+    "evaluation": {
+      "sha256": "4deeea638690148dd814bf0fb22694c998edf5dbe66ba2088a85face3ac4fd1c",
+      "bytes": 6891658,
+      "events": 192438,
+      "records": 14772
+    },
+    "factorized_family_softmax": true,
+    "singleton_families_excluded": true,
+    "prompt_boundary_hidden_state": true,
+    "deterministic": true
+  },
+  "inputs": {
+    "tokenizer": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "initial": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "train": "96cd33db03f5cc4e837d4ff2cdfd2bf4aaf845b731a189ea7d4ae770a730b59f",
+    "validation": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "atlasTrain": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+    "atlasValidation": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+    "anchorTrain": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+    "anchorValidation": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
+  },
+  "model": {
+    "base_parameters": 4852992,
+    "bottleneck_parameters": 193032,
+    "auxiliary_parameter_ceiling": 193264,
+    "total_parameters": 5046024,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "language_vocabulary": 512,
+    "state_target_vocabulary": 752,
+    "bottleneck_width": 152,
+    "positions": "rotary"
+  },
+  "treatment": {
+    "activation": "tanh",
+    "down_initialization": "deterministic identity slice",
+    "factor_output_initialization": "zero",
+    "answer_bridge_initialization": "zero",
+    "answer_bridge_scope": "target classes 2, 3, and 4 only",
+    "state_decoder_and_answer_bridge_share_bottleneck": true,
+    "random_numbers_added_at_initialization": 0
+  },
+  "training": {
+    "seed": 0,
+    "update_groups": 28707,
+    "maximum_batch_sequences": 2,
+    "parallel_workers": 2,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 14850534,
+    "auxiliary_events": 293606,
+    "auxiliary_loss_weight": 0.1,
+    "bridge_scale": 0.1,
+    "answer_weights": {
+      "claim": 2.229423406,
+      "cloze": 5.253416128,
+      "retrieval": 1.429401038
+    },
+    "optimizer": "AdamW with fresh state",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 1000,
+    "schedule": "cosine over all 28,707 update groups",
+    "residual_dropout": 0.1,
+    "report_every_updates": 500,
+    "selection_validation_packs": 64,
+    "checkpoint_selection": "lowest frozen C4.2 validation loss with bridge enabled"
+  },
+  "execution": {
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "compute_resource": "c6i.4xlarge CPU",
+    "math_backend": "openblas",
+    "openblas_threads": 16,
+    "attention_backend": "dense-blas",
+    "maximum_instance_seconds": 9000,
+    "maximum_ec2_usd": 1.7,
+    "purchase_option": "on-demand",
+    "on_demand_usd_per_hour": 0.68,
+    "paid_compute_authorized": true,
+    "cost_ceiling_usd": 1.7,
+    "independent_retry_authorized": false,
+    "automatic_termination": true,
+    "state_sync_seconds": 30,
+    "checkpoint_every_updates": 250,
+    "spot_instances": false,
+    "gpu": false,
+    "maximum_execution_seconds": 9000,
+    "blas_threads": 16
+  },
+  "evaluation": {
+    "combined_validation_packs": 128,
+    "evidence_validation_packs": 128,
+    "bridge_ablation": "same trained checkpoint, bridge scale zero",
+    "cloze_exact_metric": "reported-retired-not-a-decision-gate",
+    "pass_effect": "authorizes only a frozen multi-seed replication request"
+  },
+  "gates": {
+    "state_nats_reduction_minimum": 0.1,
+    "state_accuracy_gain_minimum": 0.05,
+    "retrieval_choice_accuracy_minimum": 0.55,
+    "retrieval_choice_gain_minimum": 0.01,
+    "retrieval_pair_exact_minimum": 0.53,
+    "retrieval_pair_gain_minimum": 0.01,
+    "bridge_retrieval_contribution_minimum": 0.01,
+    "bridge_pair_contribution_minimum": 0.01,
+    "orientation_accuracy_minimum": 0.5,
+    "maximum_retrieval_orientation_gap": 0.15,
+    "retrieval_swap_consistency_minimum": 0.94,
+    "maximum_c52_choice_orientation_gap": 0.15,
+    "maximum_claim_accuracy_loss": 0.02,
+    "claim_swap_consistency_minimum": 0.94,
+    "maximum_combined_nats_increase": 0.1,
+    "maximum_evidence_nats": 2.4,
+    "maximum_atlas_nats": 2.50646,
+    "maximum_anchor_nats": 4.06362
+  },
+  "implementation": {
+    "trainer": "zero5_c61_bottleneck_lm.c",
+    "trainer_sha256": "b61e51dd73d2be6446bfdc6338ee47f74a95a08b9f9bb5c9f0d4109f803ab084",
+    "importer": "scripts/prepare_zero5_c52_targets.mjs",
+    "importer_sha256": "773ca4dd122a83fa125a9466c60f3262b27b0a4a70e1837e70a98b13b83c2464",
+    "evaluator": "scripts/evaluate_zero5_c61_shared_state.mjs",
+    "evaluator_sha256": "969e09cc8b19f4b233d43f4757b9440f58de3e681bade7d6cf1810a8adabcc9e",
+    "runner": "scripts/run_zero5_c61_shared_state.mjs",
+    "runner_sha256": "54d64674e5b9bdd5ddddfa1a994f2ad4f0cc3b4f84e872ba1ac3bba355afa4ae",
+    "c51_evaluator": "scripts/evaluate_zero5_c51.mjs",
+    "c51_evaluator_sha256": "c6e2cdd1ed6da0a4bae906fe63c2ad66918b0d28392da62c185357860456b770"
+  },
+  "claim_boundary": {
+    "shared_state_bottleneck": true,
+    "verified_state_target_loss": true,
+    "structured_content": true,
+    "symbolic_serialization": false,
+    "promotion_authorized": false,
+    "replication_authorized": false,
+    "publication_authorized": false
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  },
+  "authorization": {
+    "approval_id": "zero5-c61-shared-state-aws-2026-08-29-v1",
+    "record": {
+      "path": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
+      "source_contract_sha256": "e06a7fb3fa56890085f00531ff5802e147b018b52bf582cda65938a9a06236e4",
+      "supersedes": "zero5-c61-shared-state-local-2026-08-28-v1 (unused; no run ever executed)"
+    }
+  }
+}

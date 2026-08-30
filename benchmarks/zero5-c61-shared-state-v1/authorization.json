@@ -1,0 +1,32 @@
+{
+  "schema": "zero.c61_training_authorization.v1",
+  "authorization_id": "zero5-c61-shared-state-local-2026-08-28-v1",
+  "authorized": true,
+  "authorization_source": "user instruction: run it (2026-08-28)",
+  "scope": {
+    "experiment": "zero5-c61-shared-state-v1",
+    "runs": 1,
+    "seed": 0,
+    "venue": "local Apple Silicon",
+    "maximum_execution_seconds": 3600,
+    "paid_compute": false,
+    "starting_checkpoint": "frozen ZERO.5 C2"
+  },
+  "contract_sha256": "14739d59127c70b3d7dcbe64bc1fd7526cb28bedf459383c68c682a46ca953d6",
+  "ilxyr": {
+    "registration_id": "zero5-c61-shared-state-v1",
+    "run_authorized": true
+  },
+  "not_authorized": [
+    "paid compute",
+    "independent retries",
+    "promotion",
+    "checkpoint publication",
+    "corpus publication",
+    "sealed-test access"
+  ],
+  "approved_by": "ratimics",
+  "approved_at": "2026-08-28T23:59:00Z",
+  "approved_statement": "I authorize one ZERO.5 C6.1 shared-state bottleneck run under contract e06a7fb3fa56890085f00531ff5802e147b018b52bf582cda65938a9a06236e4.\n\nAuthorization is limited to: local Apple Silicon execution, a 3,600-second hard ceiling, initialization from the frozen C2 checkpoint, the frozen C5.1 mixture and target streams, and frozen validation after training.\n\nThis does not authorize AWS, paid compute, sealed-test access, promotion, publication, or an independent retry.",
+  "experiment": "zero5-c61-shared-state-v1"
+}

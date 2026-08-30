@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/atimics/zero-grounded-literary-lm/schemas/zero5-c43-release-report.schema.json",
+  "title": "Braid ZERO.5 C4.3 release report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "release",
+    "artifacts",
+    "primary",
+    "development",
+    "governance",
+    "test"
+  ],
+  "properties": {
+    "schema": {
+      "const": "braid.zero5_c43_release_report.v1"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "id",
+        "source_commit",
+        "manifest_sha256",
+        "membership_digest",
+        "pack_plan_sha256",
+        "tokenizer_sha256",
+        "marker_free",
+        "context"
+      ],
+      "properties": {
+        "status": { "const": "released" },
+        "id": { "type": "string", "minLength": 1 },
+        "source_commit": { "$ref": "#/$defs/commit" },
+        "manifest_sha256": { "$ref": "#/$defs/digest" },
+        "membership_digest": { "$ref": "#/$defs/digest" },
+        "pack_plan_sha256": { "$ref": "#/$defs/digest" },
+        "tokenizer_sha256": { "$ref": "#/$defs/digest" },
+        "marker_free": { "const": true },
+        "context": { "const": 512 }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "path", "sha256", "bytes"],
+        "properties": {
+          "kind": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "$ref": "#/$defs/digest" },
+          "bytes": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "primary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compute_token_exposures",
+        "wraps",
+        "answer_targets",
+        "cloze",
+        "retrieval",
+        "mirroring"
+      ],
+      "properties": {
+        "compute_token_exposures": { "const": 19337216 },
+        "wraps": { "const": 0 },
+        "answer_targets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["claim", "cloze", "retrieval", "total"],
+          "properties": {
+            "claim": { "type": "integer", "minimum": 1 },
+            "cloze": { "type": "integer", "minimum": 406932 },
+            "retrieval": { "type": "integer", "minimum": 1 },
+            "total": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "cloze": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "length_band_target_tokens",
+            "maximum_derived_per_source_record",
+            "source_documents",
+            "maximum_source_share",
+            "answer_leakage_records"
+          ],
+          "properties": {
+            "length_band_target_tokens": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["1-4", "5-8", "9-16", "17+"],
+              "properties": {
+                "1-4": { "type": "integer", "minimum": 0 },
+                "5-8": { "type": "integer", "minimum": 0 },
+                "9-16": { "type": "integer", "minimum": 0 },
+                "17+": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "maximum_derived_per_source_record": { "const": 1 },
+            "source_documents": { "type": "integer", "minimum": 2 },
+            "maximum_source_share": {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 1
+            },
+            "answer_leakage_records": { "const": 0 }
+          }
+        },
+        "retrieval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pairs",
+            "negative_type_counts",
+            "answer_span_shortcut_audit_passed"
+          ],
+          "properties": {
+            "pairs": { "type": "integer", "minimum": 1 },
+            "negative_type_counts": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity",
+                "relation",
+                "numeric",
+                "temporal",
+                "lexical-confounder"
+              ],
+              "properties": {
+                "entity": { "type": "integer", "minimum": 1 },
+                "relation": { "type": "integer", "minimum": 1 },
+                "numeric": { "type": "integer", "minimum": 1 },
+                "temporal": { "type": "integer", "minimum": 1 },
+                "lexical-confounder": { "type": "integer", "minimum": 1 }
+              }
+            },
+            "answer_span_shortcut_audit_passed": { "const": true }
+          }
+        },
+        "mirroring": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["claim", "retrieval"],
+          "properties": {
+            "claim": { "$ref": "#/$defs/mirroring" },
+            "retrieval": { "$ref": "#/$defs/mirroring" }
+          }
+        }
+      }
+    },
+    "development": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["records", "overlap"],
+      "properties": {
+        "records": { "type": "integer", "minimum": 1 },
+        "overlap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["training", "validation", "test"],
+          "properties": {
+            "training": { "$ref": "#/$defs/zeroOverlap" },
+            "validation": { "$ref": "#/$defs/zeroOverlap" },
+            "test": { "$ref": "#/$defs/zeroOverlap" }
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance_complete",
+        "attribution_complete",
+        "rights_record_present",
+        "artifact_hashes_complete",
+        "machine_readable_task_report_present"
+      ],
+      "properties": {
+        "provenance_complete": { "const": true },
+        "attribution_complete": { "const": true },
+        "rights_record_present": { "const": true },
+        "artifact_hashes_complete": { "const": true },
+        "machine_readable_task_report_present": { "const": true }
+      }
+    },
+    "test": { "$ref": "#/$defs/sealedTest" }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "mirroring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pairs",
+        "orientation_records",
+        "position_0_records",
+        "position_1_records",
+        "missing_orientations",
+        "group_violations"
+      ],
+      "properties": {
+        "pairs": { "type": "integer", "minimum": 1 },
+        "orientation_records": { "type": "integer", "minimum": 2 },
+        "position_0_records": { "type": "integer", "minimum": 1 },
+        "position_1_records": { "type": "integer", "minimum": 1 },
+        "missing_orientations": { "const": 0 },
+        "group_violations": { "const": 0 }
+      }
+    },
+    "zeroOverlap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record", "normalized_text", "source_document"],
+      "properties": {
+        "record": { "const": 0 },
+        "normalized_text": { "const": 0 },
+        "source_document": { "const": 0 }
+      }
+    },
+    "sealedTest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "records",
+        "bytes",
+        "sha256",
+        "content_present",
+        "parsed",
+        "tokenized",
+        "packed",
+        "scored",
+        "metrics_opened"
+      ],
+      "properties": {
+        "records": { "const": 12188 },
+        "bytes": { "const": 22875515 },
+        "sha256": {
+          "const": "67804aa2153c005c85adae61cf730336ea9bd348072b5250a7143f31c11824b6"
+        },
+        "content_present": { "const": false },
+        "parsed": { "const": false },
+        "tokenized": { "const": false },
+        "packed": { "const": false },
+        "scored": { "const": false },
+        "metrics_opened": { "const": false }
+      }
+    }
+  }
+}

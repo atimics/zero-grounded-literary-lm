@@ -1,0 +1,61 @@
+{
+  "schema": "zero.c61_aws_venue_amendment.v1",
+  "experiment": "zero5-c61-shared-state-v1",
+  "status": "proposed",
+  "purpose": "Move the single authorized C6.1 run from local Apple Silicon to governed AWS execution because sandbox execution is not externally monitorable. The local authorization zero5-c61-shared-state-local-2026-08-28-v1 is superseded unused: no training has executed under it.",
+  "supersedes": {
+    "authorization_id": "zero5-c61-shared-state-local-2026-08-28-v1",
+    "state": "never-executed",
+    "verification": "no run output, checkpoint, or result exists in any workspace; no training process recorded"
+  },
+  "execution": {
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "math_backend": "openblas",
+    "openblas_threads": 16,
+    "maximum_instance_seconds": 9000,
+    "maximum_ec2_usd": 1.7,
+    "purchase_option": "on-demand",
+    "spot_instances": false,
+    "gpu": false,
+    "automatic_termination": true,
+    "state_sync_seconds": 30,
+    "checkpoint_every_updates": 250
+  },
+  "monitoring": {
+    "status_json_synced_to_s3": true,
+    "training_log_synced_to_s3": true,
+    "launch_receipt_immutable": true,
+    "instance_tagged_with_contract_and_run": true,
+    "hard_cost_ceiling_enforced_in_user_data": true,
+    "observable_by_any_iam_principal_with_bucket_read": true
+  },
+  "controls": {
+    "immutable_source_archive": true,
+    "immutable_private_asset_archive": true,
+    "contract_bound_checkpoints": true,
+    "byte_exact_resume_test_required": true,
+    "baseline_cache_reuse_not_applicable": "C5.1 control result ships as a frozen asset"
+  },
+  "required_assets": [
+    "frozen C2 checkpoint",
+    "tokenizer",
+    "C5.1 mixed grouped packs (train.mixed.grouped.z5pack)",
+    "verified target streams (train.targets.z5aux, validation.targets.z5aueval)",
+    "target import receipt",
+    "C4.3 frozen validation packs",
+    "atlas train/validation token streams",
+    "anchor train/validation token streams",
+    "C5.1 matched control result (frozen reference)"
+  ],
+  "scientific_change": false,
+  "unchanged": [
+    "model architecture and parameter count",
+    "seed 0",
+    "28,707 update groups",
+    "19,337,216 compute-token exposures",
+    "auxiliary loss weight 0.1 and bridge scale 0.1",
+    "all gates including bridge-on vs bridge-off ablation",
+    "sealed-test policy"
+  ],
+  "approval": "requires explicit user instruction to launch"
+}
