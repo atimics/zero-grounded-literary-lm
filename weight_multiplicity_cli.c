@@ -293,6 +293,49 @@ static int run_query(const char *type, const char *highest_text,
     return 0;
 }
 
+static int run_describe(const char *type)
+{
+    WMOracle oracle;
+    WMStatus status;
+    char error[256] = {0};
+    uint8_t row, column;
+    uint16_t root;
+    status = wm_oracle_init_type(type, &oracle, error, sizeof(error));
+    if (status != WM_OK) {
+        fprintf(stderr, "%s: %s\n", wm_status_name(status), error);
+        return 2;
+    }
+    printf("{\"schema_version\":1,\"type\":\"%s\",\"rank\":%u,"
+           "\"cartan\":[",
+           type, oracle.cartan.rank);
+    for (row = 0; row < oracle.cartan.rank; ++row) {
+        if (row > 0) putchar(',');
+        putchar('[');
+        for (column = 0; column < oracle.cartan.rank; ++column) {
+            if (column > 0) putchar(',');
+            printf("%d", WM_CELL(&oracle.cartan, row, column));
+        }
+        putchar(']');
+    }
+    fputs("],\"symmetrizer\":[", stdout);
+    for (row = 0; row < oracle.cartan.rank; ++row) {
+        if (row > 0) putchar(',');
+        printf("%u", oracle.symmetrizer[row]);
+    }
+    fputs("],\"positive_roots\":[", stdout);
+    for (root = 0; root < oracle.positive_roots.count; ++root) {
+        if (root > 0) putchar(',');
+        putchar('[');
+        for (column = 0; column < oracle.cartan.rank; ++column) {
+            if (column > 0) putchar(',');
+            printf("%d", oracle.positive_roots.coefficient[root][column]);
+        }
+        putchar(']');
+    }
+    fputs("]}\n", stdout);
+    return 0;
+}
+
 static int run_server(void)
 {
     struct CachedOracle {
@@ -378,9 +421,9 @@ static void usage(const char *program)
 {
     fprintf(stderr,
             "usage:\n  %s --self-test\n  %s --serve\n"
-            "  %s query TYPE HIGHEST TARGET\n"
+            "  %s describe TYPE\n  %s query TYPE HIGHEST TARGET\n"
             "example:\n  %s query A2 1,1 0,0\n",
-            program, program, program, program);
+            program, program, program, program, program);
 }
 
 int main(int argc, char **argv)
@@ -389,6 +432,8 @@ int main(int argc, char **argv)
         return run_self_test();
     if (argc == 2 && strcmp(argv[1], "--serve") == 0)
         return run_server();
+    if (argc == 3 && strcmp(argv[1], "describe") == 0)
+        return run_describe(argv[2]);
     if (argc == 5 && strcmp(argv[1], "query") == 0)
         return run_query(argv[2], argv[3], argv[4]);
     usage(argv[0]);

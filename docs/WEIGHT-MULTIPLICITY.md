@@ -86,3 +86,13 @@ gets a fresh Freudenthal memo table, so multiplicities are not reused between
 requests. Each response is the same stable JSON record as the one-shot query.
 This lets the ilXyr controller time calls and replay the exact input stream in
 a fresh process to check byte identity.
+
+The controller can obtain the verified coordinate data once per type with:
+
+```sh
+./weight_multiplicity describe E8
+```
+
+The stable JSON result contains the Cartan matrix, its integer symmetrizer, and
+all positive roots in simple-root coordinates. The Phase 0 candidate generator
+uses this record instead of carrying a second handwritten Cartan catalogue.
