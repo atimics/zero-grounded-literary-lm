@@ -52,7 +52,37 @@ existing=$(aws s3api list-objects-v2 --region "$SCOUT_REGION" \
 test "$existing" = None
 
 launch_epoch=$(date +%s)
-tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=${SCOUT_EXPERIMENT}},{Key=Experiment,Value=${SCOUT_EXPERIMENT}},{Key=Version,Value=${SCOUT_VERSION}},{Key=Binary,Value=${SCOUT_BINARY}},{Key=MakeTarget,Value=${SCOUT_MAKE_TARGET}},{Key=ResultSchema,Value=${SCOUT_RESULT_SCHEMA}},{Key=Commit,Value=${SCOUT_SOURCE_COMMIT}},{Key=RunId,Value=${SCOUT_RUN_ID}},{Key=SourceKey,Value=${SCOUT_SOURCE_KEY}},{Key=SourceSha256,Value=${SCOUT_SOURCE_SHA256}},{Key=TrainingBucket,Value=${SCOUT_TRAINING_BUCKET}},{Key=ContractSha256,Value=${SCOUT_CONTRACT_SHA256}},{Key=Region,Value=${SCOUT_REGION}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${maximum_seconds}},{Key=MaxComputeUsd,Value=${maximum_ec2_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${SCOUT_APPROVAL_ID}}]"
+tags=$(jq -cn --arg experiment "$SCOUT_EXPERIMENT" \
+  --arg version "$SCOUT_VERSION" --arg binary "$SCOUT_BINARY" \
+  --arg make_target "$SCOUT_MAKE_TARGET" \
+  --arg result_schema "$SCOUT_RESULT_SCHEMA" \
+  --arg commit "$SCOUT_SOURCE_COMMIT" --arg run_id "$SCOUT_RUN_ID" \
+  --arg source_key "$SCOUT_SOURCE_KEY" \
+  --arg source_sha256 "$SCOUT_SOURCE_SHA256" \
+  --arg bucket "$SCOUT_TRAINING_BUCKET" \
+  --arg contract_sha256 "$SCOUT_CONTRACT_SHA256" \
+  --arg region "$SCOUT_REGION" --arg launch_epoch "$launch_epoch" \
+  --arg maximum_seconds "$maximum_seconds" \
+  --arg maximum_usd "$maximum_ec2_usd" \
+  --arg hourly_price "$hourly_price" \
+  --arg approval_id "$SCOUT_APPROVAL_ID" '
+  [{ResourceType:"instance",Tags:[
+    {Key:"Project",Value:"zero"},{Key:"Name",Value:$experiment},
+    {Key:"Experiment",Value:$experiment},{Key:"Version",Value:$version},
+    {Key:"Binary",Value:$binary},{Key:"MakeTarget",Value:$make_target},
+    {Key:"ResultSchema",Value:$result_schema},{Key:"Commit",Value:$commit},
+    {Key:"RunId",Value:$run_id},{Key:"SourceKey",Value:$source_key},
+    {Key:"SourceSha256",Value:$source_sha256},
+    {Key:"TrainingBucket",Value:$bucket},
+    {Key:"ContractSha256",Value:$contract_sha256},
+    {Key:"Region",Value:$region},{Key:"LaunchEpoch",Value:$launch_epoch},
+    {Key:"MaxInstanceSeconds",Value:$maximum_seconds},
+    {Key:"MaxComputeUsd",Value:$maximum_usd},
+    {Key:"HourlyPrice",Value:$hourly_price},
+    {Key:"ApprovalId",Value:$approval_id}]},
+   {ResourceType:"volume",Tags:[
+    {Key:"Project",Value:"zero"},{Key:"Experiment",Value:$experiment},
+    {Key:"RunId",Value:$run_id}]}]')
 
 request=(ec2 run-instances
   --region "$SCOUT_REGION"
@@ -66,7 +96,6 @@ request=(ec2 run-instances
   --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"VolumeSize":8,"VolumeType":"gp3","DeleteOnTermination":true,"Encrypted":true}}]'
   --instance-initiated-shutdown-behavior terminate
   --tag-specifications "$tags"
-    "ResourceType=volume,Tags=[{Key=Project,Value=zero},{Key=Experiment,Value=${SCOUT_EXPERIMENT}},{Key=RunId,Value=${SCOUT_RUN_ID}}]"
   --query 'Instances[0].InstanceId'
   --output text
   --no-cli-pager)
