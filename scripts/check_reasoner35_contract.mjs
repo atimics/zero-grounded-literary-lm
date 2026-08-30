@@ -35,6 +35,11 @@ requireValue(
   "seal policy",
 );
 requireValue(
+  contract.source.implementation_commit ===
+    "1e57af2da83a76ea0fba0046b8a16fc6a9a3cda8",
+  "implementation commit",
+);
+requireValue(
   contract.execution.instance_type === "t3.micro" &&
     contract.execution.maximum_instance_seconds === 1800 &&
     contract.execution.maximum_ec2_usd === 0.006 &&

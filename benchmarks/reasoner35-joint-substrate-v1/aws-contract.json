@@ -26,6 +26,7 @@
   "source": {
     "branch": "codex/reasoner35-joint",
     "base_commit": "e66214e",
+    "implementation_commit": "1e57af2da83a76ea0fba0046b8a16fc6a9a3cda8",
     "implementation_commit_supplied_at_launch": true,
     "archive_requires_source_commit_file": true,
     "sha256_supplied_at_launch": true
