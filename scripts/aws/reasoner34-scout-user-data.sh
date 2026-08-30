@@ -149,7 +149,8 @@ upload_status
 remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 120))
 test "$remaining" -gt 0
 set +e
-timeout --signal=TERM --kill-after=30s "${remaining}s" \
+R34_SEALED_EXECUTION=cloud R34_EXECUTION_LOCK=/tmp/sealed-execution.lock \
+  timeout --signal=TERM --kill-after=30s "${remaining}s" \
   "./${BINARY}" sealed-run /tmp/result.json > /tmp/sealed-summary.json
 runner_exit=$?
 set -e
