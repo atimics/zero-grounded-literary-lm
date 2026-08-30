@@ -803,6 +803,31 @@ static int make_known_type(char family, uint8_t rank, R0CartanMatrix *matrix)
     return 0;
 }
 
+R0Status r0_cartan_make_type(const char *type, R0CartanMatrix *matrix,
+                             char *error, size_t error_capacity)
+{
+    char *end = NULL;
+    long rank;
+    char family;
+    if (type == NULL || matrix == NULL || type[0] == '\0')
+        return R0_INVALID_ARGUMENT;
+    family = type[0];
+    if (family < 'A' || family > 'G') {
+        set_error(error, error_capacity, "unknown Cartan family in %s", type);
+        return R0_INVALID_ARGUMENT;
+    }
+    errno = 0;
+    rank = strtol(type + 1, &end, 10);
+    if (errno != 0 || end == type + 1 || *end != '\0' || rank < 1 ||
+        rank > R0_MAX_RANK ||
+        !make_known_type(family, (uint8_t)rank, matrix)) {
+        set_error(error, error_capacity, "unsupported finite Cartan type %s",
+                  type);
+        return R0_INVALID_ARGUMENT;
+    }
+    return R0_OK;
+}
+
 const char *r0_cartan_type(const R0CartanMatrix *matrix)
 {
     static const char *const a_names[] = {
