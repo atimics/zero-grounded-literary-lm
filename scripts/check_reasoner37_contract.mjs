@@ -1,0 +1,44 @@
+import fs from "node:fs";
+
+const path = "benchmarks/reasoner37-language-readout-v1/aws-contract.json";
+const contract = JSON.parse(fs.readFileSync(path, "utf8"));
+
+function requireValue(condition, message) {
+  if (!condition) throw new Error(`Reasoner (3,6) contract: ${message}`);
+}
+
+requireValue(contract.schema === "zero.reasoner37_aws_contract.v1", "schema");
+requireValue(contract.experiment === "reasoner37-language-readout-v1", "experiment");
+requireValue(contract.version === "(3,6)", "version");
+requireValue(contract.authorized === false, "sealed run must stay locked");
+requireValue(contract.authorization.approval_id === null, "approval must be null");
+requireValue(contract.prerequisite.experiment === "reasoner36-task-blind-tools-v1", "prerequisite experiment");
+requireValue(contract.prerequisite.version === "(3,5)", "prerequisite version");
+requireValue(contract.prerequisite.sealed_gate_passed === null, "prerequisite must be unresolved");
+requireValue(contract.prerequisite.result_sha256 === null, "prerequisite receipt must be absent");
+requireValue(contract.seal.reasoning_episodes === 2592, "reasoning episodes");
+requireValue(contract.seal.surface_lexicons === 2, "surface lexicons");
+requireValue(contract.seal.language_is_causally_downstream === true, "causal boundary");
+requireValue(contract.seal.adversarial_language_control === true, "adversarial control");
+requireValue(contract.seal.retry === false, "no retry");
+requireValue(contract.source.implementation_commit === null, "source must not be frozen yet");
+requireValue(contract.source.bundle_sha256 === null, "bundle must not exist yet");
+requireValue(contract.source.destination === null, "destination must not exist yet");
+requireValue(contract.execution.region === "us-east-1", "region");
+requireValue(contract.execution.instance_type === "t3.micro", "instance type");
+requireValue(contract.execution.maximum_instance_seconds === 1800, "time cap");
+requireValue(contract.execution.maximum_ec2_usd === 0.006, "EC2 cap");
+requireValue(contract.execution.maximum_total_run_usd === 0.01, "total cap");
+requireValue(contract.execution.retry === false, "execution retry");
+requireValue(
+  contract.execution.instance_initiated_shutdown_behavior === "terminate",
+  "automatic termination",
+);
+requireValue(contract.result.binary === "reasoner37", "binary");
+requireValue(contract.result.make_target === "reasoner37", "make target");
+requireValue(
+  contract.result.schema === "zero.reasoner37_language_readout.v1",
+  "result schema",
+);
+
+console.log("Reasoner (3,6) locked downstream cloud contract passed");

@@ -520,6 +520,136 @@ static void evaluate_sealed(const R36Model *model, R36Evaluation *report)
     report->exact = (uint8_t)(report->decisions == report->exact_decisions);
 }
 
+static R0Status visit_episode(const R36Model *model,
+                              const R36Episode *episode,
+                              uint32_t episode_id,
+                              R36TraceVisitor visitor, void *context,
+                              R36TraceSummary *summary, char *error,
+                              size_t error_capacity)
+{
+    R36State state = {episode, 0, 0};
+    ++summary->episodes;
+    summary->mixed_episodes += episode->mixed;
+    while (1) {
+        R36Call predicted = predict_call(model, &state, 0);
+        R36TraceEvent event;
+        R0Status status;
+        if (!acceptable_call(&state, predicted)) {
+            summary->exact = 0;
+            set_error(error, error_capacity,
+                      "frozen task-blind trace is not exact");
+            return R0_POLICY_ERROR;
+        }
+        memset(&event, 0, sizeof(event));
+        event.episode_id = episode_id;
+        event.mixed_episode = episode->mixed;
+        event.stage = state.stage;
+        event.call = predicted;
+        event.complete = terminal(&state);
+        if (!event.complete) {
+            const R36Stage *stage =
+                &state.episode->stages[state.stage];
+            event.candidate_count = stage->candidate_count;
+            if (predicted.tool != R36_TOOL_COMMIT)
+                event.reply = stage->replies[predicted.argument];
+        }
+        status = visitor(&event, context, error, error_capacity);
+        if (status != R0_OK) return status;
+        ++summary->events;
+        if (predicted.tool == R36_TOOL_COMMIT) break;
+        execute_call(&state, predicted);
+    }
+    return R0_OK;
+}
+
+R0Status r36_visit_traces(const int32_t weights[R36_FEATURE_COUNT],
+                          uint8_t suite, R36TraceVisitor visitor,
+                          void *context, R36TraceSummary *summary,
+                          char *error, size_t error_capacity)
+{
+    R36Model model;
+    R36Episode episode;
+    uint32_t episode_id = 0;
+    uint8_t domain, stages, variant, permutation, order;
+    if (weights == NULL || visitor == NULL || summary == NULL)
+        return R0_INVALID_ARGUMENT;
+    if (suite > R36_TRACE_SEALED) return R0_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    memset(summary, 0, sizeof(*summary));
+    summary->exact = 1;
+    if (suite == R36_TRACE_TRAINING) {
+        for (domain = 0; domain < R36_DOMAIN_COUNT; ++domain)
+            for (stages = 1; stages <= 3; ++stages)
+                for (variant = 0; variant < 6; ++variant)
+                    for (permutation = 0; permutation < 2;
+                         ++permutation) {
+                        make_episode(&domain, 1, stages, variant,
+                                     permutation, &episode);
+                        if (visit_episode(&model, &episode, episode_id++,
+                                          visitor, context, summary, error,
+                                          error_capacity) != R0_OK)
+                            return R0_POLICY_ERROR;
+                    }
+        for (order = 0; order < 6; ++order)
+            for (variant = 0; variant < 6; ++variant)
+                for (permutation = 0; permutation < 2; ++permutation) {
+                    make_episode(mixed_orders[order], R36_DOMAIN_COUNT, 3,
+                                 variant, permutation, &episode);
+                    if (visit_episode(&model, &episode, episode_id++,
+                                      visitor, context, summary, error,
+                                      error_capacity) != R0_OK)
+                        return R0_POLICY_ERROR;
+                }
+        return R0_OK;
+    }
+    if (suite == R36_TRACE_DEVELOPMENT) {
+        for (domain = 0; domain < R36_DOMAIN_COUNT; ++domain)
+            for (variant = 6; variant < 12; ++variant)
+                for (permutation = 0; permutation < 4; ++permutation) {
+                    make_episode(&domain, 1, 4, variant, permutation,
+                                 &episode);
+                    if (visit_episode(&model, &episode, episode_id++,
+                                      visitor, context, summary, error,
+                                      error_capacity) != R0_OK)
+                        return R0_POLICY_ERROR;
+                }
+        for (order = 0; order < 6; ++order)
+            for (variant = 6; variant < 12; ++variant)
+                for (permutation = 0; permutation < 4; ++permutation) {
+                    make_episode(mixed_orders[order], R36_DOMAIN_COUNT, 4,
+                                 variant, permutation, &episode);
+                    if (visit_episode(&model, &episode, episode_id++,
+                                      visitor, context, summary, error,
+                                      error_capacity) != R0_OK)
+                        return R0_POLICY_ERROR;
+                }
+        return R0_OK;
+    }
+    for (domain = 0; domain < R36_DOMAIN_COUNT; ++domain)
+        for (stages = 5; stages <= 7; ++stages)
+            for (variant = 12; variant < 24; ++variant)
+                for (permutation = 0; permutation < 8; ++permutation) {
+                    make_episode(&domain, 1, stages, variant, permutation,
+                                 &episode);
+                    if (visit_episode(&model, &episode, episode_id++,
+                                      visitor, context, summary, error,
+                                      error_capacity) != R0_OK)
+                        return R0_POLICY_ERROR;
+                }
+    for (order = 0; order < 6; ++order)
+        for (stages = 5; stages <= 7; ++stages)
+            for (variant = 12; variant < 24; ++variant)
+                for (permutation = 0; permutation < 8; ++permutation) {
+                    make_episode(mixed_orders[order], R36_DOMAIN_COUNT,
+                                 stages, variant, permutation, &episode);
+                    if (visit_episode(&model, &episode, episode_id++,
+                                      visitor, context, summary, error,
+                                      error_capacity) != R0_OK)
+                        return R0_POLICY_ERROR;
+                }
+    return R0_OK;
+}
+
 static uint8_t run_routed_control(char *error, size_t error_capacity)
 {
     uint8_t domain;

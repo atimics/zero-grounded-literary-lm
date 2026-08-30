@@ -69,6 +69,33 @@ typedef struct {
     uint64_t result_digest;
 } R36ExperimentReport;
 
+enum {
+    R36_TRACE_TRAINING = 0,
+    R36_TRACE_DEVELOPMENT = 1,
+    R36_TRACE_SEALED = 2
+};
+
+typedef struct {
+    uint32_t episode_id;
+    uint8_t mixed_episode;
+    uint8_t stage;
+    uint8_t candidate_count;
+    R36Call call;
+    R36ToolReply reply;
+    uint8_t complete;
+} R36TraceEvent;
+
+typedef struct {
+    uint32_t episodes;
+    uint32_t mixed_episodes;
+    uint32_t events;
+    uint8_t exact;
+} R36TraceSummary;
+
+typedef R0Status (*R36TraceVisitor)(const R36TraceEvent *event,
+                                    void *context, char *error,
+                                    size_t error_capacity);
+
 R0Status r36_run_development(R36ExperimentReport *report, char *error,
                              size_t error_capacity);
 R0Status r36_run_sealed(R36ExperimentReport *report, char *error,
@@ -76,5 +103,9 @@ R0Status r36_run_sealed(R36ExperimentReport *report, char *error,
 R0Status r36_write_result(const R36ExperimentReport *report,
                           const char *path, char *error,
                           size_t error_capacity);
+R0Status r36_visit_traces(const int32_t weights[R36_FEATURE_COUNT],
+                          uint8_t suite, R36TraceVisitor visitor,
+                          void *context, R36TraceSummary *summary,
+                          char *error, size_t error_capacity);
 
 #endif

@@ -160,6 +160,8 @@ R34_SEALED_EXECUTION=cloud R34_EXECUTION_LOCK=/tmp/sealed-execution.lock \
   R35_EXECUTION_LOCK=/tmp/reasoner35-sealed-execution.lock \
   R36_SEALED_EXECUTION=cloud \
   R36_EXECUTION_LOCK=/tmp/reasoner36-sealed-execution.lock \
+  R37_SEALED_EXECUTION=cloud \
+  R37_EXECUTION_LOCK=/tmp/reasoner37-sealed-execution.lock \
   timeout --signal=TERM --kill-after=30s "${remaining}s" \
   "./${BINARY}" sealed-run /tmp/result.json > /tmp/sealed-summary.json
 runner_exit=$?
