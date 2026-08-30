@@ -113,6 +113,14 @@ binding two-GiB total incremental process-memory limit independently. The
 original `--serve` mode remains fresh-memo and byte-compatible with the sealed
 Phase 0 evidence.
 
+Allocator-policy audits may set `ZERO_WEIGHT_MEMO_INITIAL_CAPACITY` to a
+power-of-two entry count. The default is 1024. Presizing avoids the temporary
+old-plus-new allocation of earlier resizes while leaving the hash function,
+70% load threshold, recurrence, and answers unchanged. The grouped ready
+record states the selected capacity, the memo entry size, and whether the run
+uses the default or presized policy. This control is for versioned audit
+reruns; it does not rewrite earlier frontier evidence.
+
 Sending `@metrics` returns the process peak resident-set size in bytes. The
 controller records it before type initialization, after warm-up, and after the
 cell. This keeps memory accounting separate from query latency.

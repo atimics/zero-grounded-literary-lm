@@ -164,8 +164,9 @@ static int test_persistent_representation_memo(void)
     WMStatus status;
     status = wm_oracle_init_type("A2", &oracle, error, sizeof(error));
     if (status == WM_OK)
-        status = wm_representation_session_create(
-            &oracle, highest, 1024U * 1024U, &session, error, sizeof(error));
+        status = wm_representation_session_create_with_capacity(
+            &oracle, highest, 1024U * 1024U, 2048U, &session, error,
+            sizeof(error));
     if (status == WM_OK)
         status = wm_representation_session_multiplicity(
             session, target, &first, &first_stats, error, sizeof(error));
@@ -180,7 +181,9 @@ static int test_persistent_representation_memo(void)
         memcmp(&first, &fresh, sizeof(first)) != 0 ||
         first_stats.memo_entries_added == 0 ||
         second_stats.memo_entries_before == 0 ||
-        second_stats.memo_entries_added != 0 || second_stats.memo_hits == 0) {
+        second_stats.memo_entries_added != 0 || second_stats.memo_hits == 0 ||
+        first_stats.memo_capacity_bytes !=
+            2048U * wm_representation_memo_entry_bytes()) {
         fprintf(stderr,
                 "self-test failed: persistent representation memo: %s\n",
                 error);
@@ -447,6 +450,22 @@ static int configured_memo_limit(size_t *memo_limit)
     return 1;
 }
 
+static int configured_memo_initial_capacity(size_t *initial_capacity)
+{
+    const char *text = getenv("ZERO_WEIGHT_MEMO_INITIAL_CAPACITY");
+    unsigned long long value = 1024U;
+    if (text != NULL && *text != '\0') {
+        char *end;
+        errno = 0;
+        value = strtoull(text, &end, 10);
+        if (errno != 0 || end == text || *end != '\0' || value > SIZE_MAX ||
+            value < 2U || (value & (value - 1U)) != 0U)
+            return 0;
+    }
+    *initial_capacity = (size_t)value;
+    return 1;
+}
+
 static int run_server(int grouped)
 {
     struct CachedOracle {
@@ -455,21 +474,32 @@ static int run_server(int grouped)
     } cache[31];
     size_t cache_count = 0;
     size_t memo_limit = 0;
+    size_t memo_initial_capacity = 1024U;
     WMRepresentationSession *active_session = NULL;
     int32_t active_highest[WM_MAX_RANK] = {0};
     char active_type[4] = {0};
     uint64_t session_generation = 0;
     char line[1024];
-    if (grouped && !configured_memo_limit(&memo_limit)) {
-        fputs("invalid ZERO_WEIGHT_MEMO_LIMIT_BYTES\n", stderr);
+    if (grouped &&
+        (!configured_memo_limit(&memo_limit) ||
+         !configured_memo_initial_capacity(&memo_initial_capacity))) {
+        fputs("invalid grouped memo configuration\n", stderr);
         return 2;
     }
     memset(cache, 0, sizeof(cache));
     if (grouped)
         printf("{\"status\":\"ready\",\"schema_version\":2,"
                "\"cache_mode\":\"per_representation\","
-               "\"memo_limit_bytes\":%llu}\n",
-               (unsigned long long)memo_limit);
+               "\"memo_limit_bytes\":%llu,"
+               "\"memo_initial_capacity\":%llu,"
+               "\"memo_entry_bytes\":%llu,"
+               "\"memo_allocation_policy\":\"%s\"}\n",
+               (unsigned long long)memo_limit,
+               (unsigned long long)memo_initial_capacity,
+               (unsigned long long)wm_representation_memo_entry_bytes(),
+               memo_initial_capacity == 1024U
+                   ? "power_of_two_doubling"
+                   : "power_of_two_presized_then_doubling");
     else
         fputs("{\"status\":\"ready\",\"schema_version\":1}\n", stdout);
     fflush(stdout);
@@ -589,9 +619,9 @@ static int run_server(int grouped)
                 !same_weight(active_highest, highest, oracle->cartan.rank)) {
                 wm_representation_session_destroy(active_session);
                 active_session = NULL;
-                status = wm_representation_session_create(
-                    oracle, highest, memo_limit, &active_session, error,
-                    sizeof(error));
+                status = wm_representation_session_create_with_capacity(
+                    oracle, highest, memo_limit, memo_initial_capacity,
+                    &active_session, error, sizeof(error));
                 if (status != WM_OK) {
                     printf("{\"status\":\"error\",\"code\":\"%s\"}\n",
                            wm_status_name(status));
