@@ -152,6 +152,8 @@ R0Status r0_cartan_verify(const R0CartanMatrix *matrix,
 R0Status r0_cartan_canonicalize(const R0CartanMatrix *matrix,
                                 R0CartanMatrix *canonical, char *error,
                                 size_t error_capacity);
+R0Status r0_cartan_make_type(const char *type, R0CartanMatrix *matrix,
+                             char *error, size_t error_capacity);
 R0Status r0_run(const R0Policy *policy, const R0CartanMatrix *candidate,
                 R0RunResult *result, char *error, size_t error_capacity);
 R0Status r0_enumerate(const R0Policy *policy, uint8_t maximum_rank,
