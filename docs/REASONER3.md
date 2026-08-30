@@ -147,8 +147,13 @@ unavailable before sealing.
 
 ## Next gate
 
-Inspect the two non-minimal stage-4 traces without changing the frozen test.
-The next experiment should add bounded witness history to a new training split
-and predict both the edit and whether another verifier call is needed. It must
-pass the unchanged stage-4 gate and a newly generated stage-5 holdout before
-any compression experiment begins.
+The two non-minimal traces were one error under an `x`/`y` swap: each first
+edit failed to resolve the current positive witness. The witness already held
+enough information, so bounded history was not added. A 2D axis-aligned box
+also cannot supply a stage-5 target because four irredundant sides is its
+maximum.
+
+Reasoner-3.1 implements the exact witness-progress action contract and moves
+the untouched generalization test to 3D boxes. It passes all 6,066 stage-5
+development cases and all 1,674 sealed stage-6 cases minimally. See
+[`REASONER31.md`](REASONER31.md).

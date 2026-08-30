@@ -54,6 +54,7 @@ reasoner0
 reasoner1
 reasoner2
 reasoner3
+reasoner31
 
 # Model artifacts (large binaries)
 *.ckpt

@@ -33,6 +33,8 @@ small browser runtime:
   rejected Cartan matrices with exact minimum-edit supervision.
 - `reasoner3`: an exact ICE learner that synthesizes bounded integer
   invariants from positive, negative, and implication counterexamples.
+- `reasoner31`: a progress-constrained 3D ICE learner with a sealed stage-6
+  generalization test and exact coordinate-permutation interventions.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -199,6 +201,13 @@ make reasoner3-check
 ./reasoner3 eval /tmp/reasoner3.r3p 1 4
 ./reasoner3 ablate /tmp/reasoner3.r3p 1 4
 ./reasoner3 render /tmp/reasoner3.r3p 167
+make reasoner31-check
+./reasoner31 demo
+./reasoner31 train /tmp/reasoner31.r31p
+./reasoner31 eval /tmp/reasoner31.r31p 6 full
+./reasoner31 eval /tmp/reasoner31.r31p 6 ranker-masked
+./reasoner31 eval /tmp/reasoner31.r31p 6 tool-only
+./reasoner31 render /tmp/reasoner31.r31p 510
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -208,6 +217,8 @@ learned proposer and rank curriculum. See
 feedback ablation, and its failed causal-use gate. See
 [`docs/REASONER3.md`](docs/REASONER3.md) for hidden transition systems,
 counterexample interventions, and its 1,738/1,740 minimum-edit holdout no-go.
+See [`docs/REASONER31.md`](docs/REASONER31.md) for the exact progress contract
+and the passing 1,674/1,674 sealed 3D test.
 
 ## Build
 
