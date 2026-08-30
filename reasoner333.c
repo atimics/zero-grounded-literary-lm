@@ -15,6 +15,7 @@ enum {
     R333_TRAINING = 0,
     R333_DEVELOPMENT = 1,
     R333_SEALED = 2,
+    R333_JOINT_SEALED = 3,
     R333_POSITIVE = 1,
     R333_NEGATIVE = 2,
     R333_MAX_TRAINING_CASES = 12,
@@ -91,6 +92,14 @@ const char *r333_status_name(R333Status status)
 uint32_t r333_training_program_count(void) { return 3; }
 uint32_t r333_development_program_count(void) { return 15; }
 uint32_t r333_sealed_program_count(void) { return 63; }
+
+static uint32_t role_program_count(uint8_t role)
+{
+    if (role == R333_DEVELOPMENT) return r333_development_program_count();
+    if (role == R333_SEALED || role == R333_JOINT_SEALED)
+        return r333_sealed_program_count();
+    return r333_training_program_count();
+}
 
 static int popcount64(uint64_t value)
 {
@@ -237,6 +246,17 @@ static R333Status build_task(uint8_t role, uint32_t program,
         labels[6] = (uint8_t)(labels[0] ^ labels[3]);
         labels[7] = (uint8_t)(labels[1] ^ labels[4]);
         labels[8] = (uint8_t)(labels[2] ^ labels[5]);
+    } else if (role == R333_JOINT_SEALED) {
+        if (program >= r333_sealed_program_count())
+            return R333_INVALID_ARGUMENT;
+        task->variables = 8;
+        task->module_width = 2;
+        task->module_count = 4;
+        code = program + 1U;
+        for (offset = 0; offset < 6; ++offset)
+            labels[offset] = (uint8_t)((code >> offset) & 1U);
+        labels[6] = (uint8_t)(labels[0] ^ labels[2] ^ labels[4]);
+        labels[7] = (uint8_t)(labels[1] ^ labels[3] ^ labels[5]);
     } else {
         return R333_INVALID_ARGUMENT;
     }
@@ -583,6 +603,72 @@ static R333Status train_models(R333Model *model, R333Lookup *lookup,
                : R333_POLICY_ERROR;
 }
 
+R333Status r333_joint_train_epoch(
+    int32_t weights[R333_FEATURE_COUNT], uint32_t *mistakes,
+    char *error, size_t error_capacity)
+{
+    R333Corpus corpus;
+    R333Model model;
+    uint32_t index;
+    R333Status status;
+    if (weights == NULL || mistakes == NULL) return R333_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    *mistakes = 0;
+    status = build_training_corpus(&corpus);
+    if (status != R333_OK) return status;
+    for (index = 0; index < corpus.count; ++index) {
+        R333Case *item = &corpus.cases[index];
+        int predicted = semantic_select(&model, &item->task, item->mask,
+                                        &item->verification,
+                                        R333_FULL_FEEDBACK);
+        if (predicted >= 0 &&
+            (item->optimal & (UINT64_C(1) << predicted)) != 0)
+            continue;
+        {
+            int target = oracle_select(&model, item);
+            if (predicted < 0 || target < 0) {
+                set_error(error, error_capacity,
+                          "joint composition epoch could not select an action");
+                return R333_POLICY_ERROR;
+            }
+            update(&model, item, target, 1);
+            update(&model, item, predicted, -1);
+            ++*mistakes;
+        }
+    }
+    memcpy(weights, model.weights, sizeof(model.weights));
+    return R333_OK;
+}
+
+R333Status r333_joint_training_errors(
+    const int32_t weights[R333_FEATURE_COUNT], uint32_t *errors,
+    char *error, size_t error_capacity)
+{
+    R333Corpus corpus;
+    R333Model model;
+    uint32_t index;
+    R333Status status;
+    if (weights == NULL || errors == NULL) return R333_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    *errors = 0;
+    status = build_training_corpus(&corpus);
+    if (status != R333_OK) return status;
+    for (index = 0; index < corpus.count; ++index) {
+        R333Case *item = &corpus.cases[index];
+        int predicted = semantic_select(&model, &item->task, item->mask,
+                                        &item->verification,
+                                        R333_FULL_FEEDBACK);
+        if (predicted < 0 ||
+            (item->optimal & (UINT64_C(1) << predicted)) == 0)
+            ++*errors;
+    }
+    if (*errors > 0)
+        set_error(error, error_capacity,
+                  "joint composition policy has %u training errors",
+                  *errors);
+    return R333_OK;
+}
+
 static R333Status run_trace(const R333Model *model,
                             const R333Lookup *lookup, const R333Task *task,
                             R333Arm arm, R333FeedbackMode mode,
@@ -618,9 +704,7 @@ static R333Status evaluate(const R333Model *model,
                            uint8_t check_relabelings,
                            R333Evaluation *report)
 {
-    uint32_t program, programs = role == R333_DEVELOPMENT
-                                     ? r333_development_program_count()
-                                     : r333_sealed_program_count();
+    uint32_t program, programs = role_program_count(role);
     memset(report, 0, sizeof(*report));
     report->programs = programs;
     for (program = 0; program < programs; ++program) {
@@ -667,6 +751,42 @@ static R333Status evaluate(const R333Model *model,
                   (!check_relabelings ||
                    report->relabel_exact == report->relabel_cases));
     return R333_OK;
+}
+
+R333Status r333_joint_evaluate_development(
+    const int32_t weights[R333_FEATURE_COUNT], R333Evaluation *report,
+    char *error, size_t error_capacity)
+{
+    R333Model model;
+    R333Lookup lookup;
+    R333Status status;
+    if (weights == NULL || report == NULL) return R333_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    memset(&lookup, 0, sizeof(lookup));
+    status = evaluate(&model, &lookup, R333_DEVELOPMENT,
+                      R333_ARM_SEMANTIC, R333_FULL_FEEDBACK, 1, report);
+    if (status == R333_OK && !report->exact)
+        set_error(error, error_capacity,
+                  "joint composition development gate did not pass");
+    return status;
+}
+
+R333Status r333_joint_evaluate_extended(
+    const int32_t weights[R333_FEATURE_COUNT], R333Evaluation *report,
+    char *error, size_t error_capacity)
+{
+    R333Model model;
+    R333Lookup lookup;
+    R333Status status;
+    if (weights == NULL || report == NULL) return R333_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    memset(&lookup, 0, sizeof(lookup));
+    status = evaluate(&model, &lookup, R333_JOINT_SEALED,
+                      R333_ARM_SEMANTIC, R333_FULL_FEEDBACK, 1, report);
+    if (status == R333_OK && !report->exact)
+        set_error(error, error_capacity,
+                  "joint four-module composition gate did not pass");
+    return status;
 }
 
 static R333Status evaluate_role(const R333Model *model,

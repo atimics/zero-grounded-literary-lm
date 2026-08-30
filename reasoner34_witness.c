@@ -255,6 +255,82 @@ R0Status r34w_train(R33Model *model, uint8_t maximum_dimensions,
     return R0_OK;
 }
 
+R0Status r34w_joint_train_epoch(
+    int32_t weights[R33_FEATURE_COUNT], uint8_t maximum_dimensions,
+    uint32_t *mistakes, char *error, size_t error_capacity)
+{
+    R34WCorpus corpus;
+    R33Model model;
+    size_t index;
+    R0Status status;
+    if (weights == NULL || mistakes == NULL || maximum_dimensions < 1 ||
+        maximum_dimensions >= R33_MAX_DIMENSIONS)
+        return R0_INVALID_ARGUMENT;
+    r33_model_init(&model);
+    memcpy(model.weights, weights, sizeof(model.weights));
+    model.trained_dimensions = maximum_dimensions;
+    *mistakes = 0;
+    status = build_corpus(maximum_dimensions, &corpus);
+    if (status != R0_OK) return status;
+    for (index = 0; index < corpus.count; ++index) {
+        R34WCase *item = &corpus.items[index];
+        int predicted = r33_task_select(
+            &model, item->dimensions, item->mask, &item->witness,
+            R31_FEEDBACK_FULL);
+        if (predicted >= 0 &&
+            (item->optimal & (UINT16_C(1) << predicted)) != 0)
+            continue;
+        {
+            int target = best_optimal(&model, item);
+            if (target < 0 || predicted < 0) {
+                free(corpus.items);
+                set_error(error, error_capacity,
+                          "joint witness epoch could not select an action");
+                return R0_POLICY_ERROR;
+            }
+            update(&model, item, target, 1);
+            update(&model, item, predicted, -1);
+            ++*mistakes;
+        }
+    }
+    memcpy(weights, model.weights, sizeof(model.weights));
+    free(corpus.items);
+    return R0_OK;
+}
+
+R0Status r34w_joint_training_errors(
+    const int32_t weights[R33_FEATURE_COUNT], uint8_t maximum_dimensions,
+    uint32_t *errors, char *error, size_t error_capacity)
+{
+    R34WCorpus corpus;
+    R33Model model;
+    size_t index;
+    R0Status status;
+    if (weights == NULL || errors == NULL || maximum_dimensions < 1 ||
+        maximum_dimensions >= R33_MAX_DIMENSIONS)
+        return R0_INVALID_ARGUMENT;
+    r33_model_init(&model);
+    memcpy(model.weights, weights, sizeof(model.weights));
+    model.trained_dimensions = maximum_dimensions;
+    *errors = 0;
+    status = build_corpus(maximum_dimensions, &corpus);
+    if (status != R0_OK) return status;
+    for (index = 0; index < corpus.count; ++index) {
+        R34WCase *item = &corpus.items[index];
+        int predicted = r33_task_select(
+            &model, item->dimensions, item->mask, &item->witness,
+            R31_FEEDBACK_FULL);
+        if (predicted < 0 ||
+            (item->optimal & (UINT16_C(1) << predicted)) == 0)
+            ++*errors;
+    }
+    free(corpus.items);
+    if (*errors > 0)
+        set_error(error, error_capacity,
+                  "joint witness policy has %u training errors", *errors);
+    return R0_OK;
+}
+
 static void check_permutations(const R33Model *model, uint8_t dimensions,
                                uint16_t mask, uint16_t optimal,
                                const R33Witness *witness,
@@ -279,6 +355,105 @@ static void check_permutations(const R33Model *model, uint8_t dimensions,
             (changed_optimal & (UINT16_C(1) << action)) != 0)
             ++report->permutation_exact;
     }
+}
+
+static int witness_state_distance(uint8_t dimensions,
+                                  const R33State *left,
+                                  const R33State *right)
+{
+    uint8_t dimension;
+    int distance = 0;
+    for (dimension = 0; dimension < dimensions; ++dimension)
+        distance += abs(left->values[dimension] -
+                        right->values[dimension]);
+    return distance;
+}
+
+R0Status r34w_evaluate_repair_choices(
+    const R33Model *model, uint8_t dimensions, uint8_t permutations,
+    R34WEvaluation *report, char *error, size_t error_capacity)
+{
+    uint32_t program;
+    if (model == NULL || report == NULL || dimensions < 1 ||
+        dimensions > R33_MAX_DIMENSIONS)
+        return R0_INVALID_ARGUMENT;
+    memset(report, 0, sizeof(*report));
+    report->dimensions = dimensions;
+    report->programs = r33_program_count(dimensions);
+    for (program = 0; program < report->programs; ++program) {
+        uint16_t target = r33_task_target(dimensions, program);
+        uint16_t mask = 0;
+        int robust = 1;
+        while (mask != target) {
+            uint32_t source_index;
+            int checked_permutations = 0;
+            for (source_index = 0;
+                 source_index < r33_task_state_count(dimensions);
+                 ++source_index) {
+                R33State source = r33_task_state(dimensions, source_index);
+                R33State canonical;
+                int best_distance;
+                uint32_t repair_index;
+                if (!r33_task_holds(dimensions, mask, &source) ||
+                    r33_task_holds(dimensions, target, &source))
+                    continue;
+                canonical = r33_task_nearest(dimensions, target, &source);
+                best_distance = witness_state_distance(
+                    dimensions, &source, &canonical);
+                for (repair_index = 0;
+                     repair_index < r33_task_state_count(dimensions);
+                     ++repair_index) {
+                    R33State repair = r33_task_state(
+                        dimensions, repair_index);
+                    R33Witness witness;
+                    uint16_t legal, optimal;
+                    int action;
+                    if (!r33_task_holds(dimensions, target, &repair) ||
+                        witness_state_distance(dimensions, &source,
+                                               &repair) != best_distance)
+                        continue;
+                    memset(&witness, 0, sizeof(witness));
+                    witness.kind = R31_WITNESS_NEGATIVE;
+                    witness.source = source;
+                    witness.target = repair;
+                    legal = r33_task_progress_actions(dimensions, mask,
+                                                      &witness);
+                    optimal = legal & (uint16_t)(target ^ mask);
+                    if (optimal == 0) return R0_VERIFIER_ERROR;
+                    action = r33_task_select(model, dimensions, mask,
+                                             &witness,
+                                             R31_FEEDBACK_FULL);
+                    ++report->decisions;
+                    if (action >= 0 &&
+                        (optimal & (UINT16_C(1) << action)) != 0)
+                        ++report->exact_decisions;
+                    else
+                        robust = 0;
+                    if (permutations && !checked_permutations) {
+                        check_permutations(model, dimensions, mask,
+                                           optimal, &witness, report);
+                        checked_permutations = 1;
+                    }
+                }
+            }
+            {
+                int action = first_action((uint16_t)(target ^ mask));
+                if (action < 0) break;
+                mask |= (uint16_t)(UINT16_C(1) << action);
+            }
+        }
+        if (robust) ++report->robust_programs;
+    }
+    report->exact = (uint8_t)(
+        report->robust_programs == report->programs &&
+        report->exact_decisions == report->decisions &&
+        (!permutations ||
+         report->permutation_exact == report->permutation_cases));
+    if (!report->exact)
+        set_error(error, error_capacity,
+                  "%u of %u dimension-%u programs are repair-choice robust",
+                  report->robust_programs, report->programs, dimensions);
+    return R0_OK;
 }
 
 R0Status r34w_evaluate(const R33Model *model, uint8_t dimensions,

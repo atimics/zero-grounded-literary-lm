@@ -696,6 +696,75 @@ static R0Status train_models(R34Model *semantic, R34HashModel *hashed,
     return report->final_errors == 0 ? R0_OK : R0_POLICY_ERROR;
 }
 
+R0Status r34_joint_train_epoch(int32_t weights[R34_FEATURE_COUNT],
+                               uint32_t *mistakes, char *error,
+                               size_t error_capacity)
+{
+    R34Corpus corpus;
+    R34Model model;
+    uint16_t index;
+    R0Status status;
+    if (weights == NULL || mistakes == NULL) return R0_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    *mistakes = 0;
+    status = build_corpus(&corpus);
+    if (status != R0_OK) return status;
+    for (index = 0; index < corpus.count; ++index) {
+        R34TrainingCase *item = &corpus.cases[index];
+        uint32_t all = (UINT32_C(1) <<
+                        (2U * item->world.gates + 1U)) - 1U;
+        int predicted = select_semantic(&model, &item->world,
+                                        item->state, all);
+        if (predicted >= 0 &&
+            (item->optimal_actions & (UINT32_C(1) << predicted)) != 0)
+            continue;
+        {
+            int target = select_semantic(&model, &item->world,
+                                         item->state,
+                                         item->optimal_actions);
+            if (predicted < 0 || target < 0) {
+                set_error(error, error_capacity,
+                          "joint planning epoch could not select an action");
+                return R0_POLICY_ERROR;
+            }
+            update_semantic(&model, item, target, 1);
+            update_semantic(&model, item, predicted, -1);
+            ++*mistakes;
+        }
+    }
+    memcpy(weights, model.weights, sizeof(model.weights));
+    return R0_OK;
+}
+
+R0Status r34_joint_training_errors(
+    const int32_t weights[R34_FEATURE_COUNT], uint32_t *errors,
+    char *error, size_t error_capacity)
+{
+    R34Corpus corpus;
+    R34Model model;
+    uint16_t index;
+    R0Status status;
+    if (weights == NULL || errors == NULL) return R0_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    *errors = 0;
+    status = build_corpus(&corpus);
+    if (status != R0_OK) return status;
+    for (index = 0; index < corpus.count; ++index) {
+        R34TrainingCase *item = &corpus.cases[index];
+        uint32_t all = (UINT32_C(1) <<
+                        (2U * item->world.gates + 1U)) - 1U;
+        int predicted = select_semantic(&model, &item->world,
+                                        item->state, all);
+        if (predicted < 0 ||
+            (item->optimal_actions & (UINT32_C(1) << predicted)) == 0)
+            ++*errors;
+    }
+    if (*errors > 0)
+        set_error(error, error_capacity,
+                  "joint planning policy has %u training errors", *errors);
+    return R0_OK;
+}
+
 static int choose_action(uint8_t policy, const R34Model *semantic,
                          const R34HashModel *hashed,
                          const R34LookupModel *lookup,
@@ -821,6 +890,37 @@ static R0Status evaluate(uint8_t policy, const R34Model *semantic,
     report->exact = (uint8_t)(report->optimal == report->worlds &&
                               report->failed == 0);
     return R0_OK;
+}
+
+R0Status r34_joint_evaluate_development(
+    const int32_t weights[R34_FEATURE_COUNT], R34Evaluation *report,
+    char *error, size_t error_capacity)
+{
+    return r34_joint_evaluate_gates(
+        weights, R34_DEVELOPMENT_GATES, R34_DEVELOPMENT_GATES,
+        report, error, error_capacity);
+}
+
+R0Status r34_joint_evaluate_gates(
+    const int32_t weights[R34_FEATURE_COUNT], uint8_t minimum_gates,
+    uint8_t maximum_gates, R34Evaluation *report, char *error,
+    size_t error_capacity)
+{
+    R34Model model;
+    R34HashModel hashed;
+    R34LookupModel lookup;
+    R0Status status;
+    if (weights == NULL || report == NULL) return R0_INVALID_ARGUMENT;
+    memcpy(model.weights, weights, sizeof(model.weights));
+    memset(&hashed, 0, sizeof(hashed));
+    memset(&lookup, 0, sizeof(lookup));
+    status = evaluate(R34_POLICY_SEMANTIC, &model, &hashed, &lookup,
+                      minimum_gates, maximum_gates, report);
+    if (status == R0_OK && !report->exact)
+        set_error(error, error_capacity,
+                  "joint planning gate range %u-%u did not pass",
+                  minimum_gates, maximum_gates);
+    return status;
 }
 
 static uint32_t required_gate_events(uint8_t minimum_gates,

@@ -96,5 +96,17 @@ R333Status r333_run_sealed(R333ExperimentReport *report, char *error,
 R333Status r333_write_result(const R333ExperimentReport *report,
                              const char *path, char *error,
                              size_t error_capacity);
+R333Status r333_joint_train_epoch(
+    int32_t weights[R333_FEATURE_COUNT], uint32_t *mistakes,
+    char *error, size_t error_capacity);
+R333Status r333_joint_training_errors(
+    const int32_t weights[R333_FEATURE_COUNT], uint32_t *errors,
+    char *error, size_t error_capacity);
+R333Status r333_joint_evaluate_development(
+    const int32_t weights[R333_FEATURE_COUNT], R333Evaluation *report,
+    char *error, size_t error_capacity);
+R333Status r333_joint_evaluate_extended(
+    const int32_t weights[R333_FEATURE_COUNT], R333Evaluation *report,
+    char *error, size_t error_capacity);
 
 #endif

@@ -50,5 +50,14 @@ R0Status r34w_run_sealed(R34WExperimentReport *report, char *error,
 R0Status r34w_write_result(const R34WExperimentReport *report,
                            const char *path, char *error,
                            size_t error_capacity);
+R0Status r34w_joint_train_epoch(
+    int32_t weights[R33_FEATURE_COUNT], uint8_t maximum_dimensions,
+    uint32_t *mistakes, char *error, size_t error_capacity);
+R0Status r34w_joint_training_errors(
+    const int32_t weights[R33_FEATURE_COUNT], uint8_t maximum_dimensions,
+    uint32_t *errors, char *error, size_t error_capacity);
+R0Status r34w_evaluate_repair_choices(
+    const R33Model *model, uint8_t dimensions, uint8_t permutations,
+    R34WEvaluation *report, char *error, size_t error_capacity);
 
 #endif

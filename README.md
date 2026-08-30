@@ -51,6 +51,8 @@ small browser runtime:
 - `reasoner34_witness`: Reasoner (3,3,4), an independently sealed test of
   robustness to every allowed counterexample source along a frozen exact
   trace.
+- `reasoner35`: Reasoner (3,4), a 64-byte joint-policy screen across planning,
+  composition, and witness reasoning with no task label or weight-bank switch.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -237,6 +239,8 @@ make reasoner333-check
 ./reasoner333 development
 make reasoner34-witness-check
 ./reasoner34_witness development
+make reasoner35-check
+./reasoner35 development
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -258,6 +262,8 @@ matched controls, relabeling intervention, and unopened 5-7 gate seal.
 branch and its unopened three-by-three seal.
 [`docs/REASONER34-WITNESS.md`](docs/REASONER34-WITNESS.md) for the independent
 counterexample-order branch and its unopened 4D seal.
+See [`docs/REASONER35.md`](docs/REASONER35.md) for the joint-policy screen and
+its separately frozen combination seal.
 
 ## Build
 

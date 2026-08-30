@@ -7,7 +7,7 @@
 #include <stdint.h>
 
 enum {
-    R34_MAX_GATES = 7,
+    R34_MAX_GATES = 8,
     R34_TRAINING_MAX_GATES = 3,
     R34_DEVELOPMENT_GATES = 4,
     R34_SEALED_MIN_GATES = 5,
@@ -16,7 +16,7 @@ enum {
     R34_HASH_BUCKETS = 16,
     R34_LOOKUP_ENTRIES = 8,
     R34_MAX_PLAN_STEPS = 40,
-    R34_MAX_STATES = 2048,
+    R34_MAX_STATES = 8192,
     R34_MAX_TRAINING_CASES = 256,
     R34_MAX_EPOCHS = 256
 };
@@ -93,5 +93,18 @@ R0Status r34_write_result(const R34ExperimentReport *report,
                           const char *path, char *error,
                           size_t error_capacity);
 uint16_t r34_oracle_initial_distance(uint8_t gates);
+R0Status r34_joint_train_epoch(int32_t weights[R34_FEATURE_COUNT],
+                               uint32_t *mistakes, char *error,
+                               size_t error_capacity);
+R0Status r34_joint_training_errors(
+    const int32_t weights[R34_FEATURE_COUNT], uint32_t *errors,
+    char *error, size_t error_capacity);
+R0Status r34_joint_evaluate_development(
+    const int32_t weights[R34_FEATURE_COUNT], R34Evaluation *report,
+    char *error, size_t error_capacity);
+R0Status r34_joint_evaluate_gates(
+    const int32_t weights[R34_FEATURE_COUNT], uint8_t minimum_gates,
+    uint8_t maximum_gates, R34Evaluation *report, char *error,
+    size_t error_capacity);
 
 #endif
