@@ -2,11 +2,11 @@
   "schema": "zero.reasoner34_aws_contract.v1",
   "experiment": "reasoner34-nonmonotonic-planning-v1",
   "version": "(3,3,2)",
-  "authorized": false,
+  "authorized": true,
   "authorization": {
-    "approved_by": null,
-    "approved_at": null,
-    "approval_id": null,
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-30",
+    "approval_id": "reasoner34-fanout-2026-08-30-v1",
     "scope": "one sealed 5-7 gate execution"
   },
   "seal": {

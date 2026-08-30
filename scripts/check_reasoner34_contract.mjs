@@ -15,10 +15,12 @@ requireValue(
   "unexpected contract schema",
 );
 requireValue(contract.version === "(3,3,2)", "unexpected version");
-requireValue(contract.authorized === false, "sealed run must stay unauthorized");
+requireValue(contract.authorized === true, "fan-out run must stay authorized");
 requireValue(
-  contract.authorization.approval_id === null,
-  "unauthorized contract cannot have an approval id",
+  contract.authorization.approved_by === "ratimics" &&
+    contract.authorization.approved_at === "2026-08-30" &&
+    contract.authorization.approval_id === "reasoner34-fanout-2026-08-30-v1",
+  "fan-out approval changed",
 );
 requireValue(
   JSON.stringify(contract.seal.training_gates) === "[1,2,3]" &&
@@ -54,4 +56,4 @@ requireValue(
   "commands changed",
 );
 
-console.log("Reasoner (3,3,2) unauthorized sealed contract passed");
+console.log("Reasoner (3,3,2) authorized sealed contract passed");

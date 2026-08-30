@@ -96,5 +96,5 @@ is reserved for the cloud wrapper:
 It refuses to run unless the wrapper supplies a cloud marker, a 40-character
 source commit, and a 64-character contract digest. The preregistered contract
 also requires one execution lock, a hard time and cost ceiling, source digest
-checking, result upload, and automatic instance termination. The contract is
-not authorized yet, so this branch cannot launch the sealed run.
+checking, result upload, and automatic instance termination. The fan-out order
+and exact bundle approval authorize one capped sealed run with no retry.
