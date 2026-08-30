@@ -45,6 +45,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Progress-constrained 3D synthesis | exact witness-resolving action set, learned legal-edit ranking, all-coordinate symmetry, development and sealed holdouts | Reasoner (3,1) is exact on 6,066/6,066 stage-5 cases and 1,674/1,674 sealed stage-6 cases; tool-only and witness-masked controls fail, so exact trace-preserving compression is authorized |
 | Exact behavioral compression | deterministic sparse packing, behavior-preserving nonzero-weight pruning, complete-world action comparison, full-trace and seal replay | Reasoner (3,2) retains 16 of 186 nonzero weights in an 87-byte artifact; all 2,093,056 actions and all 511 complete traces match (3,1) exactly |
 | Cross-dimension reasoning transfer | shared relational edit features, 1D/2D training, complete 3D development, capacity-matched hashed control, sealed 4D cloud test | Reasoner (3,3) passes all 4,095 sealed 4D programs minimally with a 64-byte policy and all 471,040 coordinate interventions; the fixed hash control solves 31/4,095 |
+| Counterexample-order robustness | enumerate every allowed negative witness source, shared semantic action features, canonical-witness and masked controls, sealed higher-dimensional census | Reasoner (3,3,4) passes all 101,436 3D development decisions and 9,600 relabelings with two nonzero weights; 4D remains sealed for its independent cloud run |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
