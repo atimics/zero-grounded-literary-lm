@@ -17,6 +17,7 @@ enum {
     R31_MAX_CASES = 40000,
     R31_MAX_REPAIR_STEPS = 6,
     R31_FEATURE_COUNT = 131072,
+    R31_MAX_ACTIVE_FEATURES = 192,
     R31_MAX_STAGE_EPOCHS = 256,
     R31_TRAINING_STAGE = 4,
     R31_DEVELOPMENT_STAGE = 5,
@@ -71,6 +72,12 @@ typedef struct {
     uint8_t evaluated_stage;
     uint8_t sealed_test_passed;
 } R31Model;
+
+typedef struct {
+    uint16_t count;
+    uint32_t indices[R31_MAX_ACTIVE_FEATURES];
+    int16_t values[R31_MAX_ACTIVE_FEATURES];
+} R31ActionFeatures;
 
 typedef struct {
     uint8_t stage;
@@ -143,6 +150,24 @@ uint8_t r31_program_stage(uint16_t program_index);
 R0Status r31_verify(uint16_t program_index, const R31Invariant *invariant,
                     R31Verification *verification, char *error,
                     size_t error_capacity);
+uint16_t r31_progress_action_mask(uint16_t invariant_mask,
+                                  const R31Witness *witness);
+int r31_canonical_action_index(uint16_t invariant_mask,
+                               const R31Witness *witness, int action,
+                               uint8_t feedback_mode);
+R0Status r31_canonicalize_context(uint16_t invariant_mask,
+                                  const R31Witness *witness,
+                                  uint8_t feedback_mode,
+                                  uint16_t *canonical_mask,
+                                  R31Witness *canonical_witness);
+R0Status r31_extract_action_features(uint16_t invariant_mask,
+                                     const R31Witness *witness, int action,
+                                     uint8_t feedback_mode,
+                                     R31ActionFeatures *features);
+R0Status r31_model_select_action(const R31Model *model,
+                                 uint16_t invariant_mask,
+                                 const R31Witness *witness,
+                                 uint8_t feedback_mode, int *action);
 
 void r31_model_init(R31Model *model);
 R0Status r31_train(R31Model *model, R31TrainingReport *report,

@@ -42,7 +42,8 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
 | Counterexample repair | learned node/bond edits, exact minimum-distance teacher, two-step verifier loop, feedback ablation | Reasoner-2 is exact on 267 supervised cases; its rank-7 policy solves 69/69 unseen rank-8 cases but only 66 optimally, while masked feedback still solves 66, so causal use and compression do not pass |
 | Hidden invariant synthesis | bounded integer transition systems, exact ICE witnesses, learned atom edits, causal interventions, sealed language output | Reasoner-3 solves all 1,740 unseen stage-4 cases and 1,738 minimally; all 396 witness-interchange pairs pass, but the conjunctive exact holdout gate fails, so compression remains blocked |
-| Progress-constrained 3D synthesis | exact witness-resolving action set, learned legal-edit ranking, all-coordinate symmetry, development and sealed holdouts | Reasoner-3.1 is exact on 6,066/6,066 stage-5 cases and 1,674/1,674 sealed stage-6 cases; tool-only and witness-masked controls fail, so exact trace-preserving compression is authorized |
+| Progress-constrained 3D synthesis | exact witness-resolving action set, learned legal-edit ranking, all-coordinate symmetry, development and sealed holdouts | Reasoner (3,1) is exact on 6,066/6,066 stage-5 cases and 1,674/1,674 sealed stage-6 cases; tool-only and witness-masked controls fail, so exact trace-preserving compression is authorized |
+| Exact behavioral compression | deterministic sparse packing, behavior-preserving nonzero-weight pruning, complete-world action comparison, full-trace and seal replay | Reasoner (3,2) retains 16 of 186 nonzero weights in an 87-byte artifact; all 2,093,056 actions and all 511 complete traces match (3,1) exactly |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -135,7 +136,7 @@ exact on all 6,428 repair states, but that replay does not authorize
 compression or language training. See
 [`docs/REASONER3.md`](docs/REASONER3.md).
 
-Reasoner-3.1 resolves the two Reasoner-3 misses without adding memory. An edit
+Reasoner (3,1) resolves the two Reasoner-3 misses without adding memory. An edit
 may reach the verifier only when it resolves the current witness; the learned
 policy ranks the remaining legal edits. The new 3D world has 511 hidden
 programs and six exact complexity stages. Training stops at stage 4 before a
@@ -146,6 +147,13 @@ the witness-masked ranker repairs 1,189, and the full learner repairs all
 1,674. All 27 equal-admissibility witness pairs and all coordinate
 permutations pass. Exact trace-preserving compression is now authorized, but
 language training is not. See [`docs/REASONER31.md`](docs/REASONER31.md).
+
+Reasoner (3,2) completes that compression gate. It removes 170 behaviorally
+redundant nonzero weights, stores the remaining 16 in 87 bytes, and scores them
+directly without rebuilding the dense table. All 2,093,056 program/hypothesis
+actions, 511 complete traces, and sealed answers remain identical. This is a
+smaller runtime, not a new generalization result, so language training remains
+blocked. See [`docs/REASONER32.md`](docs/REASONER32.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.

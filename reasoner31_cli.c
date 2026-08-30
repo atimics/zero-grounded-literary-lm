@@ -282,7 +282,7 @@ static int self_test(void)
                           sizeof(model.weights)) == 0,
                "the sealed 3D model artifact round-trips"))
         return 0;
-    puts("Reasoner-3.1 progress-constrained 3D self-test passed");
+    puts("Reasoner (3,1) progress-constrained 3D self-test passed");
     return 1;
 }
 

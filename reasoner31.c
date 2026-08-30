@@ -8,7 +8,6 @@
 #include <string.h>
 
 #define R31_ALL_ATOMS ((uint16_t)(R31_HYPOTHESIS_COUNT - 1U))
-#define R31_MAX_ACTIVE_FEATURES 192
 #define R31_MODEL_VERSION 1U
 #define R31_NORMALIZE_SLOTS 131072U
 
@@ -43,12 +42,6 @@ typedef struct {
     uint32_t negative_cases;
     uint32_t implication_cases;
 } R31Corpus;
-
-typedef struct {
-    uint16_t count;
-    uint32_t indices[R31_MAX_ACTIVE_FEATURES];
-    int16_t values[R31_MAX_ACTIVE_FEATURES];
-} R31FeatureVector;
 
 typedef struct {
     uint32_t witness_key;
@@ -723,7 +716,7 @@ static R0Status build_corpus(uint8_t maximum_stage, R31Corpus *corpus,
     return normalize_targets(corpus, error, error_capacity);
 }
 
-static void feature_add(R31FeatureVector *features, uint32_t key, int value)
+static void feature_add(R31ActionFeatures *features, uint32_t key, int value)
 {
     uint32_t index = mix32(key) % R31_FEATURE_COUNT;
     uint16_t cursor;
@@ -765,7 +758,7 @@ static int canonical_action_for_mode(uint16_t mask,
 
 static void extract_features(uint16_t mask, const R31Witness *witness,
                              int action, uint8_t feedback_mode,
-                             R31FeatureVector *features)
+                             R31ActionFeatures *features)
 {
     R31Witness observed = observed_witness(witness, feedback_mode);
     R31Witness canonical_witness;
@@ -850,7 +843,7 @@ static void extract_features(uint16_t mask, const R31Witness *witness,
 }
 
 static int64_t feature_score(const R31Model *model,
-                             const R31FeatureVector *features)
+                             const R31ActionFeatures *features)
 {
     int64_t score = 0;
     uint16_t cursor;
@@ -888,7 +881,7 @@ static int select_action(const R31Model *model, uint16_t mask,
         feedback_mode == R31_FEEDBACK_RANKER_MASKED)
         admissible = progress_actions(mask, witness);
     for (action = 0; action < R31_ATOM_COUNT; ++action) {
-        R31FeatureVector features;
+        R31ActionFeatures features;
         int64_t score;
         if ((admissible & (UINT16_C(1) << action)) == 0) continue;
         extract_features(mask, witness, action, feedback_mode, &features);
@@ -907,11 +900,80 @@ static int select_action(const R31Model *model, uint16_t mask,
     return best;
 }
 
+uint16_t r31_progress_action_mask(uint16_t invariant_mask,
+                                  const R31Witness *witness)
+{
+    if (witness == NULL ||
+        (invariant_mask & ~R31_ALL_ATOMS) != 0)
+        return 0;
+    return progress_actions(invariant_mask, witness);
+}
+
+int r31_canonical_action_index(uint16_t invariant_mask,
+                               const R31Witness *witness, int action,
+                               uint8_t feedback_mode)
+{
+    if (witness == NULL || action < 0 || action >= R31_ATOM_COUNT ||
+        feedback_mode > R31_FEEDBACK_TOOL_ONLY ||
+        (invariant_mask & ~R31_ALL_ATOMS) != 0)
+        return -1;
+    return canonical_action_for_mode(invariant_mask, witness, action,
+                                     feedback_mode);
+}
+
+R0Status r31_canonicalize_context(uint16_t invariant_mask,
+                                  const R31Witness *witness,
+                                  uint8_t feedback_mode,
+                                  uint16_t *canonical_mask,
+                                  R31Witness *canonical_witness)
+{
+    R31Witness observed;
+    if (witness == NULL || canonical_mask == NULL ||
+        canonical_witness == NULL ||
+        feedback_mode > R31_FEEDBACK_TOOL_ONLY ||
+        (invariant_mask & ~R31_ALL_ATOMS) != 0)
+        return R0_INVALID_ARGUMENT;
+    if (!build_world()) return R0_LIMIT_ERROR;
+    observed = observed_witness(witness, feedback_mode);
+    (void)canonicalize_context(invariant_mask, &observed, canonical_mask,
+                               canonical_witness);
+    return R0_OK;
+}
+
+R0Status r31_extract_action_features(uint16_t invariant_mask,
+                                     const R31Witness *witness, int action,
+                                     uint8_t feedback_mode,
+                                     R31ActionFeatures *features)
+{
+    if (witness == NULL || features == NULL || action < 0 ||
+        action >= R31_ATOM_COUNT || feedback_mode > R31_FEEDBACK_NONE ||
+        (invariant_mask & ~R31_ALL_ATOMS) != 0)
+        return R0_INVALID_ARGUMENT;
+    if (!build_world()) return R0_LIMIT_ERROR;
+    extract_features(invariant_mask, witness, action, feedback_mode,
+                     features);
+    return R0_OK;
+}
+
+R0Status r31_model_select_action(const R31Model *model,
+                                 uint16_t invariant_mask,
+                                 const R31Witness *witness,
+                                 uint8_t feedback_mode, int *action)
+{
+    if (model == NULL || witness == NULL || action == NULL ||
+        feedback_mode > R31_FEEDBACK_TOOL_ONLY ||
+        (invariant_mask & ~R31_ALL_ATOMS) != 0)
+        return R0_INVALID_ARGUMENT;
+    if (!build_world()) return R0_LIMIT_ERROR;
+    *action = select_action(model, invariant_mask, witness, feedback_mode);
+    return R0_OK;
+}
+
 static void update_action(R31Model *model, uint16_t mask,
                           const R31Witness *witness, int action,
                           int direction)
 {
-    R31FeatureVector features;
+    R31ActionFeatures features;
     uint16_t cursor;
     extract_features(mask, witness, action, R31_FEEDBACK_FULL, &features);
     for (cursor = 0; cursor < features.count; ++cursor)
@@ -924,7 +986,7 @@ static int best_target(const R31Model *model, const R31Case *item)
     int action, best = -1;
     int64_t best_score = INT64_MIN;
     for (action = 0; action < R31_ATOM_COUNT; ++action) {
-        R31FeatureVector features;
+        R31ActionFeatures features;
         int64_t score;
         if ((item->optimal_actions & (UINT16_C(1) << action)) == 0)
             continue;
@@ -1452,7 +1514,7 @@ R0Status r31_model_load(R31Model *model, const char *path,
         fread(model->weights, sizeof(model->weights), 1, file) != 1 ||
         fgetc(file) != EOF) {
         (void)fclose(file);
-        set_error(error, error_capacity, "invalid Reasoner-3.1 model %s",
+        set_error(error, error_capacity, "invalid Reasoner (3,1) model %s",
                   path);
         return R0_IO_ERROR;
     }
@@ -1467,7 +1529,7 @@ R0Status r31_model_load(R31Model *model, const char *path,
                               error, error_capacity);
         if (status != R0_OK || !evaluation.exact) {
             set_error(error, error_capacity,
-                      "Reasoner-3.1 model fails exact replay");
+                      "Reasoner (3,1) model fails exact replay");
             return R0_POLICY_ERROR;
         }
     }
@@ -1476,7 +1538,7 @@ R0Status r31_model_load(R31Model *model, const char *path,
                               &evaluation, error, error_capacity);
         if (status != R0_OK || !evaluation.exact) {
             set_error(error, error_capacity,
-                      "Reasoner-3.1 model fails sealed replay");
+                      "Reasoner (3,1) model fails sealed replay");
             return R0_POLICY_ERROR;
         }
     }

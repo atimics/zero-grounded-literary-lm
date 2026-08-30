@@ -153,7 +153,7 @@ enough information, so bounded history was not added. A 2D axis-aligned box
 also cannot supply a stage-5 target because four irredundant sides is its
 maximum.
 
-Reasoner-3.1 implements the exact witness-progress action contract and moves
+Reasoner (3,1) implements the exact witness-progress action contract and moves
 the untouched generalization test to 3D boxes. It passes all 6,066 stage-5
 development cases and all 1,674 sealed stage-6 cases minimally. See
 [`REASONER31.md`](REASONER31.md).

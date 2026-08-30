@@ -1,12 +1,12 @@
-# Reasoner-3.1: progress-constrained 3D invariant synthesis
+# Reasoner (3,1): progress-constrained 3D invariant synthesis
 
-Reasoner-3.1 tests the smallest explanation of the Reasoner-3 holdout miss.
+Reasoner (3,1) tests the smallest explanation of the Reasoner-3 holdout miss.
 Both failed traces had enough information in the current positive witness. The
 policy nevertheless added a redundant inequality before removing the
 inequality that excluded the required state. The two errors were the same
 policy rule under an `x`/`y` swap.
 
-Reasoner-3.1 therefore does not add memory. It makes immediate witness progress
+Reasoner (3,1) therefore does not add memory. It makes immediate witness progress
 part of the action contract:
 
 ```text
@@ -22,7 +22,7 @@ multiple legal choices, and a deterministic tool-only policy performs poorly.
 ## New exact world
 
 The 2D Reasoner-3 world ends at stage 4 because an irredundant rectangle has at
-most four sides. Reasoner-3.1 moves to three dimensions instead of inventing an
+most four sides. Reasoner (3,1) moves to three dimensions instead of inventing an
 impossible fifth 2D stage.
 
 The state is `(x, y, z)` with every coordinate in `[-2, 2]`. Each coordinate
@@ -149,8 +149,7 @@ make reasoner31-check
 
 ## Next gate
 
-Trace-preserving compression is now authorized. A smaller policy may advance
-only if it reproduces every stage-5 and stage-6 action, verifier call, witness,
-accepted invariant, and sealed Answer IR exactly. Aggregate accuracy is not
-enough. Language training remains out of scope; only the deterministic final
-renderer is permitted.
+Reasoner (3,2) now completes this gate. Its 87-byte sparse policy reproduces
+every action in the full finite world and every start-to-finish trace exactly.
+See [`REASONER32.md`](REASONER32.md). Language training remains out of scope;
+only the deterministic final renderer is permitted.
