@@ -40,8 +40,8 @@ small browser runtime:
   policy to a direct 87-byte sparse artifact and proves exact equivalence over
   the complete finite world.
 - `reasoner33`: Reasoner (3,3), a capacity-matched dimension-transfer test
-  with 1D/2D training, a complete 3D development gate, and a sealed 4D cloud
-  evaluation.
+  whose 64-byte semantic policy trained below 3D and passed all 4,095 programs
+  in the sealed 4D cloud evaluation; the fixed hash control solved only 31.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS

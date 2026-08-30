@@ -22,7 +22,7 @@ interval choices. The exact program census is therefore:
 | 1 | 7 | training |
 | 2 | 63 | training |
 | 3 | 511 | development |
-| 4 | 4,095 | sealed cloud test |
+| 4 | 4,095 | sealed cloud test; passed |
 
 The shared policy trains on 1D and 2D only. It must then solve all 511 3D
 programs with minimum-length traces and pass every generated coordinate
@@ -78,3 +78,28 @@ These commands stop after the 3D development gate and state explicitly that
 
 The cloud route adds an immutable source digest, one-run lock, hard time and
 cost ceilings, automatic instance termination, and a durable result receipt.
+
+## Sealed result
+
+The single authorized cloud run passed:
+
+```text
+semantic minimum-edit programs: 4,095/4,095
+coordinate interventions: 471,040/471,040
+equal-admissibility pairs: 180,899/180,899
+fixed hash control: 31/4,095
+witness-masked control: 0/4,095
+tool-only control: 0/4,095
+semantic capacity: 64 bytes
+hash-control capacity: 80 bytes
+```
+
+The execution took 298 instance-seconds and an estimated $0.000860888889 of
+EC2 compute. The instance terminated automatically. The result digest is
+`6a41d18ddfa1cac4`; the full receipt is in
+[`benchmarks/reasoner33-dimension-transfer-v1/RESULT.md`](../benchmarks/reasoner33-dimension-transfer-v1/RESULT.md).
+
+This establishes dimension transfer for the bounded, axis-aligned integer-box
+family. It does not establish general mathematical reasoning. More independent
+coordinates now repeat a solved factorization, so the next gate should change
+the relation structure rather than merely increase dimension.

@@ -1,0 +1,16 @@
+{
+  "schema": "zero.reasoner33_dimension_transfer.v1",
+  "version": "(3,3)",
+  "sealed_dimension": 4,
+  "development_gate_passed": true,
+  "sealed_gate_passed": true,
+  "development": {"programs": 511, "solved": 511, "minimal": 511, "permutation_cases": 9600, "permutation_exact": 9600},
+  "semantic": {"programs": 4095, "solved": 4095, "minimal": 4095, "failed": 0, "verifier_calls": 20480, "permutation_cases": 471040, "permutation_exact": 471040},
+  "hashed_control": {"programs": 4095, "solved": 31, "minimal": 31, "failed": 4064},
+  "witness_masked": {"programs": 4095, "solved": 0, "minimal": 0, "failed": 4095},
+  "tool_only": {"programs": 4095, "solved": 0, "minimal": 0, "failed": 4095},
+  "equal_admissibility": {"pairs": 180899, "full_exact": 180899, "masked_both_correct": 0},
+  "capacity": {"semantic_nonzero_weights": 9, "semantic_active_weight_bytes": 64, "hashed_control_weights": 16, "hashed_control_active_weight_bytes": 80},
+  "semantic_weights": [0,-2,2,2,0,4,-2,0,0,0,1,2,0,-2,2,0],
+  "result_digest": "6a41d18ddfa1cac4"
+}

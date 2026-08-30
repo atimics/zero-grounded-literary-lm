@@ -44,7 +44,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Hidden invariant synthesis | bounded integer transition systems, exact ICE witnesses, learned atom edits, causal interventions, sealed language output | Reasoner-3 solves all 1,740 unseen stage-4 cases and 1,738 minimally; all 396 witness-interchange pairs pass, but the conjunctive exact holdout gate fails, so compression remains blocked |
 | Progress-constrained 3D synthesis | exact witness-resolving action set, learned legal-edit ranking, all-coordinate symmetry, development and sealed holdouts | Reasoner (3,1) is exact on 6,066/6,066 stage-5 cases and 1,674/1,674 sealed stage-6 cases; tool-only and witness-masked controls fail, so exact trace-preserving compression is authorized |
 | Exact behavioral compression | deterministic sparse packing, behavior-preserving nonzero-weight pruning, complete-world action comparison, full-trace and seal replay | Reasoner (3,2) retains 16 of 186 nonzero weights in an 87-byte artifact; all 2,093,056 actions and all 511 complete traces match (3,1) exactly |
-| Cross-dimension reasoning transfer | shared relational edit features, 1D/2D training, complete 3D development, capacity-matched hashed control, sealed 4D cloud test | Reasoner (3,3) passes its 511/511 3D development gate with 9 nonzero weights; the 4,095-program 4D result remains sealed pending its one-run cloud execution |
+| Cross-dimension reasoning transfer | shared relational edit features, 1D/2D training, complete 3D development, capacity-matched hashed control, sealed 4D cloud test | Reasoner (3,3) passes all 4,095 sealed 4D programs minimally with a 64-byte policy and all 471,040 coordinate interventions; the fixed hash control solves 31/4,095 |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -156,12 +156,12 @@ actions, 511 complete traces, and sealed answers remain identical. This is a
 smaller runtime, not a new generalization result, so language training remains
 blocked. See [`docs/REASONER32.md`](docs/REASONER32.md).
 
-Reasoner (3,3) now tests whether that small behavior is a reusable rule or a
-small lookup table. A 64-byte shared relational scorer trains on 1D/2D and
-passes all 511 3D development programs and 9,600 coordinate interventions.
-The frozen 16-weight hash policy reproduces its complete 3D behavior. The 4D
-world has 4,095 programs and remains sealed for one immutable cloud run. See
-[`docs/REASONER33.md`](docs/REASONER33.md).
+Reasoner (3,3) tests whether that small behavior is a reusable rule or a small
+lookup table. A 64-byte shared relational scorer trains below 3D, passes all
+511 3D development programs, and then passes all 4,095 programs plus 471,040
+coordinate interventions in the one-run sealed 4D cloud test. The fixed
+16-weight hash policy reproduces 3D exactly but solves only 31 of 4,095 4D
+programs. See [`docs/REASONER33.md`](docs/REASONER33.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.
