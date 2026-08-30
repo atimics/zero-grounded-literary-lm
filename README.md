@@ -45,6 +45,9 @@ small browser runtime:
 - `reasoner34`: Reasoner (3,3,2), an exact non-monotonic courier planner that
   must open and later restore goal-correct gates; the local four-gate gate is
   frozen and the larger five- through seven-gate worlds remain cloud-sealed.
+- `reasoner333`: Reasoner (3,3,3), a sealed composition-transfer test that
+  trains a 64-byte shared policy only on isolated relation modules before
+  joining unseen modules with bridge constraints.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -227,6 +230,8 @@ make reasoner33-check
 ./reasoner33 development
 make reasoner34-check
 ./reasoner34 development
+make reasoner333-check
+./reasoner333 development
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -244,6 +249,8 @@ its exhaustive action-and-trace equivalence proof. See
 transfer contract and sealed cloud boundary. See
 [`docs/REASONER34.md`](docs/REASONER34.md) for the exact BFS planning task,
 matched controls, relabeling intervention, and unopened 5-7 gate seal.
+[`docs/REASONER333.md`](docs/REASONER333.md) for the independent composition
+branch and its unopened three-by-three seal.
 
 ## Build
 
