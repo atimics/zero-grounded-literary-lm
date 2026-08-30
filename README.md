@@ -42,6 +42,10 @@ small browser runtime:
 - `reasoner33`: Reasoner (3,3), a capacity-matched dimension-transfer test
   whose 64-byte semantic policy trained below 3D and passed all 4,095 programs
   in the sealed 4D cloud evaluation; the fixed hash control solved only 31.
+- `reasoner34`: Reasoner (3,3,1), a preregistered relational transfer test over
+  exact integer difference constraints. Its local gate trains on small paths
+  and passes all 432 larger path/star programs and 31,104 vertex relabelings;
+  the three 5-node graph families remain sealed for one cloud run.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -222,6 +226,8 @@ make reasoner32-check
 ./reasoner32 render /tmp/reasoner32.r32p 510
 make reasoner33-check
 ./reasoner33 development
+make reasoner34-check
+./reasoner34 development
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -236,7 +242,9 @@ and the passing 1,674/1,674 sealed 3D test. See
 [`docs/REASONER32.md`](docs/REASONER32.md) for the 16-weight sparse policy and
 its exhaustive action-and-trace equivalence proof. See
 [`docs/REASONER33.md`](docs/REASONER33.md) for the frozen cross-dimension
-transfer contract and sealed cloud boundary.
+transfer contract and sealed cloud result. See
+[`docs/REASONER34.md`](docs/REASONER34.md) for the difference-constraint graph
+split, exact minimum proof, controls, and sealed cloud boundary.
 
 ## Build
 
