@@ -163,6 +163,12 @@ coordinate interventions in the one-run sealed 4D cloud test. The fixed
 16-weight hash policy reproduces 3D exactly but solves only 31 of 4,095 4D
 programs. See [`docs/REASONER33.md`](docs/REASONER33.md).
 
+Reasoner (3,3,3) is the independent composition-transfer branch. It trains
+only on isolated two-variable difference modules, develops on two joined
+two-variable modules, and seals three unseen three-variable modules joined by
+bridge relations. The exact 63-program sealed family is frozen but unopened.
+See [`docs/REASONER333.md`](docs/REASONER333.md).
+
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.
 

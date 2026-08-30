@@ -1,0 +1,41 @@
+{
+  "schema": "zero.reasoner333_composition_contract.v1",
+  "experiment": "reasoner333-composition-transfer-v1",
+  "version": "(3,3,3)",
+  "status": "frozen-unopened",
+  "integer_domain": [-1, 0, 1],
+  "relation_constants": [-1, 0, 1],
+  "training": {
+    "module_count": 1,
+    "module_width": 2,
+    "programs": 3,
+    "decisions": 6
+  },
+  "development": {
+    "module_count": 2,
+    "module_width": 2,
+    "programs": 15,
+    "relabelings_per_program": 4,
+    "minimum_edits_per_program": 6
+  },
+  "sealed": {
+    "module_count": 3,
+    "module_width": 3,
+    "programs": 63,
+    "relabelings_per_program": 4,
+    "minimum_edits_per_program": 16,
+    "local_execution_forbidden": true,
+    "scientific_retries": 0,
+    "tuning_after_open": false
+  },
+  "capacity_bytes": {
+    "semantic": 64,
+    "lookup": 64
+  },
+  "sealed_gate": {
+    "semantic_minimum": 63,
+    "relabel_minimum": 252,
+    "each_control_below": 63,
+    "record_failure": true
+  }
+}

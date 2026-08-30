@@ -42,6 +42,9 @@ small browser runtime:
 - `reasoner33`: Reasoner (3,3), a capacity-matched dimension-transfer test
   whose 64-byte semantic policy trained below 3D and passed all 4,095 programs
   in the sealed 4D cloud evaluation; the fixed hash control solved only 31.
+- `reasoner333`: Reasoner (3,3,3), a sealed composition-transfer test that
+  trains a 64-byte shared policy only on isolated relation modules before
+  joining unseen modules with bridge constraints.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -222,6 +225,8 @@ make reasoner32-check
 ./reasoner32 render /tmp/reasoner32.r32p 510
 make reasoner33-check
 ./reasoner33 development
+make reasoner333-check
+./reasoner333 development
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -236,7 +241,9 @@ and the passing 1,674/1,674 sealed 3D test. See
 [`docs/REASONER32.md`](docs/REASONER32.md) for the 16-weight sparse policy and
 its exhaustive action-and-trace equivalence proof. See
 [`docs/REASONER33.md`](docs/REASONER33.md) for the frozen cross-dimension
-transfer contract and sealed cloud boundary.
+transfer contract and sealed cloud boundary. See
+[`docs/REASONER333.md`](docs/REASONER333.md) for the independent composition
+branch and its unopened three-by-three seal.
 
 ## Build
 

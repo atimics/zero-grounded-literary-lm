@@ -95,6 +95,7 @@ build/
 # Misc
 literary-training.log
 screenlog.0
+reasoner333
 *.tmp
 /tmp/
 .DS_Store
