@@ -191,6 +191,27 @@ static int test_persistent_representation_memo(void)
     return 1;
 }
 
+static int test_recursive_weyl_folding(void)
+{
+    WMOracle oracle;
+    WMBigUInt value;
+    WMQueryStats stats;
+    int32_t highest[WM_MAX_RANK] = {1, 1};
+    int32_t target[WM_MAX_RANK] = {0};
+    char error[256] = {0};
+    WMStatus status = wm_oracle_init_type("A2", &oracle, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_weight_multiplicity(&oracle, highest, target, &value, &stats,
+                                        error, sizeof(error));
+    if (status == WM_OK && wm_big_equal_u32(&value, 2) &&
+        stats.recursive_weyl_folds > 0 && stats.memo_entries == 1)
+        return 1;
+    fprintf(stderr,
+            "self-test failed: recursive Weyl folding expected A2 multiplicity "
+            "2, at least one fold, and one memo entry\n");
+    return 0;
+}
+
 static int test_adjoint(const TypeExpectation *expectation,
                         uint32_t *case_count)
 {
@@ -246,6 +267,7 @@ static int run_self_test(void)
     uint32_t acr1_cases = 0;
     uint32_t positive_roots = 0;
     if (!test_a1() || !test_a2_fundamental() ||
+        !test_recursive_weyl_folding() ||
         !test_persistent_representation_memo())
         return 1;
     for (index = 0; index < sizeof(TYPE_EXPECTATIONS) /
@@ -301,10 +323,13 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
     print_weight(target, oracle->cartan.rank);
     printf(",\"multiplicity\":\"%s\",\"positive_roots\":%u,"
            "\"memo_entries\":%llu,\"recurrence_terms\":%llu,"
+           "\"recursive_weyl_folds\":%llu,"
            "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
            (unsigned long long)stats.memo_entries,
-           (unsigned long long)stats.recurrence_terms, stats.maximum_level);
+           (unsigned long long)stats.recurrence_terms,
+           (unsigned long long)stats.recursive_weyl_folds,
+           stats.maximum_level);
     return WM_OK;
 }
 
@@ -339,7 +364,9 @@ static WMStatus evaluate_session_and_print(
            "\"memo_entries_added\":%llu,\"memo_hits\":%llu,"
            "\"memo_capacity_bytes\":%llu,"
            "\"memo_peak_allocated_bytes\":%llu,"
-           "\"recurrence_terms\":%llu,\"maximum_level\":%u}\n",
+           "\"recurrence_terms\":%llu,"
+           "\"recursive_weyl_folds\":%llu,"
+           "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
            (unsigned long long)session_generation,
            (unsigned long long)stats.memo_entries_before,
@@ -348,7 +375,9 @@ static WMStatus evaluate_session_and_print(
            (unsigned long long)stats.memo_hits,
            (unsigned long long)stats.memo_capacity_bytes,
            (unsigned long long)stats.memo_peak_allocated_bytes,
-           (unsigned long long)stats.recurrence_terms, stats.maximum_level);
+           (unsigned long long)stats.recurrence_terms,
+           (unsigned long long)stats.recursive_weyl_folds,
+           stats.maximum_level);
     return WM_OK;
 }
 
