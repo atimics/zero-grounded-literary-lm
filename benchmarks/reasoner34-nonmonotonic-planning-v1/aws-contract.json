@@ -21,7 +21,7 @@
   "source": {
     "branch": "codex/reasoner34-planning",
     "base_commit": "a1e4644bea5c4707221c0bf7fca5bf12f17aec0f",
-    "implementation_commit": "PENDING_IMPLEMENTATION_COMMIT",
+    "implementation_commit": "83bd05962e3263cad590103eb108ac0dfd12100d",
     "archive_requires_source_commit_file": true,
     "sha256_supplied_at_launch": true
   },
