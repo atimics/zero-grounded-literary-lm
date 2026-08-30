@@ -24,13 +24,22 @@ typedef struct {
     WMMemoEntry *entry;
     size_t capacity;
     size_t count;
+    size_t maximum_bytes;
+    size_t peak_allocated_bytes;
     uint8_t rank;
+    int limit_reached;
 } WMMemo;
+
+struct WMRepresentationSession {
+    const WMOracle *oracle;
+    int32_t highest_weight[WM_MAX_RANK];
+    WMMemo memo;
+};
 
 typedef struct {
     const WMOracle *oracle;
     const int32_t *highest_weight;
-    WMMemo memo;
+    WMMemo *memo;
     WMQueryStats *stats;
     char *error;
     size_t error_capacity;
@@ -384,12 +393,27 @@ static int memo_rehash(WMMemo *memo, size_t capacity)
 {
     WMMemoEntry *old = memo->entry;
     size_t old_capacity = memo->capacity;
+    size_t old_bytes;
+    size_t new_bytes;
     size_t index;
+    if (capacity > SIZE_MAX / sizeof(*memo->entry)) {
+        memo->limit_reached = 1;
+        return 0;
+    }
+    old_bytes = old_capacity * sizeof(*memo->entry);
+    new_bytes = capacity * sizeof(*memo->entry);
+    if (new_bytes > memo->maximum_bytes ||
+        old_bytes > memo->maximum_bytes - new_bytes) {
+        memo->limit_reached = 1;
+        return 0;
+    }
     memo->entry = calloc(capacity, sizeof(*memo->entry));
     if (memo->entry == NULL) {
         memo->entry = old;
         return 0;
     }
+    if (old_bytes + new_bytes > memo->peak_allocated_bytes)
+        memo->peak_allocated_bytes = old_bytes + new_bytes;
     memo->capacity = capacity;
     memo->count = 0;
     for (index = 0; index < old_capacity; ++index) {
@@ -410,9 +434,11 @@ static int memo_insert(WMMemo *memo,
                        const WMBigUInt *value)
 {
     size_t mask, slot;
-    if ((memo->count + 1U) * 10U >= memo->capacity * 7U &&
-        !memo_rehash(memo, memo->capacity * 2U))
-        return 0;
+    if ((memo->count + 1U) * 10U >= memo->capacity * 7U) {
+        if (memo->capacity > SIZE_MAX / 2U ||
+            !memo_rehash(memo, memo->capacity * 2U))
+            return 0;
+    }
     mask = memo->capacity - 1U;
     slot = (size_t)memo_hash(coefficient, memo->rank) & mask;
     while (memo->entry[slot].used) slot = (slot + 1U) & mask;
@@ -524,8 +550,9 @@ static WMStatus multiplicity_for_coefficient(
         multiplicity->limb[0] = 1;
         return WM_OK;
     }
-    cached = memo_find(&recurrence->memo, state);
+    cached = memo_find(recurrence->memo, state);
     if (cached != NULL) {
+        if (recurrence->stats != NULL) ++recurrence->stats->memo_hits;
         *multiplicity = cached->value;
         return WM_OK;
     }
@@ -542,13 +569,14 @@ static WMStatus multiplicity_for_coefficient(
                        oracle->symmetrizer[index] * sum;
     }
     if (denominator <= 0) {
-        if (!memo_insert(&recurrence->memo, state, multiplicity)) {
+        if (!memo_insert(recurrence->memo, state, multiplicity)) {
             set_error(recurrence->error, recurrence->error_capacity,
-                      "weight multiplicity memo allocation failed");
-            return WM_MEMORY_ERROR;
+                      recurrence->memo->limit_reached
+                          ? "weight multiplicity memo byte limit reached"
+                          : "weight multiplicity memo allocation failed");
+            return recurrence->memo->limit_reached ? WM_LIMIT_ERROR
+                                                   : WM_MEMORY_ERROR;
         }
-        if (recurrence->stats != NULL)
-            recurrence->stats->memo_entries = recurrence->memo.count;
         return WM_OK;
     }
     if (denominator > UINT32_MAX) {
@@ -610,13 +638,14 @@ static WMStatus multiplicity_for_coefficient(
         }
         *multiplicity = numerator.magnitude;
     }
-    if (!memo_insert(&recurrence->memo, state, multiplicity)) {
+    if (!memo_insert(recurrence->memo, state, multiplicity)) {
         set_error(recurrence->error, recurrence->error_capacity,
-                  "weight multiplicity memo allocation failed");
-        return WM_MEMORY_ERROR;
+                  recurrence->memo->limit_reached
+                      ? "weight multiplicity memo byte limit reached"
+                      : "weight multiplicity memo allocation failed");
+        return recurrence->memo->limit_reached ? WM_LIMIT_ERROR
+                                               : WM_MEMORY_ERROR;
     }
-    if (recurrence->stats != NULL)
-        recurrence->stats->memo_entries = recurrence->memo.count;
     return WM_OK;
 }
 
@@ -658,21 +687,34 @@ WMStatus wm_oracle_init_type(const char *type, WMOracle *oracle, char *error,
     return wm_oracle_init(&cartan, oracle, error, error_capacity);
 }
 
-WMStatus wm_weight_multiplicity(const WMOracle *oracle,
-                                const int32_t highest_weight[WM_MAX_RANK],
-                                const int32_t target_weight[WM_MAX_RANK],
-                                WMBigUInt *multiplicity, WMQueryStats *stats,
-                                char *error, size_t error_capacity)
+WMStatus wm_representation_session_create(
+    const WMOracle *oracle,
+    const int32_t highest_weight[WM_MAX_RANK],
+    size_t maximum_memo_bytes,
+    WMRepresentationSession **session,
+    char *error,
+    size_t error_capacity)
 {
-    int32_t delta[WM_MAX_RANK] = {0};
-    int32_t coefficient[WM_MAX_RANK] = {0};
-    int32_t dominant_target[WM_MAX_RANK] = {0};
-    WMRecurrence recurrence;
-    WMStatus status;
+    return wm_representation_session_create_with_capacity(
+        oracle, highest_weight, maximum_memo_bytes, 1024U, session, error,
+        error_capacity);
+}
+
+WMStatus wm_representation_session_create_with_capacity(
+    const WMOracle *oracle,
+    const int32_t highest_weight[WM_MAX_RANK],
+    size_t maximum_memo_bytes,
+    size_t initial_memo_capacity,
+    WMRepresentationSession **session,
+    char *error,
+    size_t error_capacity)
+{
+    WMRepresentationSession *created;
+    size_t maximum_bytes;
     uint8_t index;
-    if (oracle == NULL || highest_weight == NULL || target_weight == NULL ||
-        multiplicity == NULL)
+    if (oracle == NULL || highest_weight == NULL || session == NULL)
         return WM_INVALID_ARGUMENT;
+    *session = NULL;
     for (index = 0; index < oracle->cartan.rank; ++index) {
         if (highest_weight[index] < 0) {
             set_error(error, error_capacity,
@@ -680,31 +722,140 @@ WMStatus wm_weight_multiplicity(const WMOracle *oracle,
             return WM_NOT_DOMINANT;
         }
     }
-    memset(multiplicity, 0, sizeof(*multiplicity));
-    if (stats != NULL) memset(stats, 0, sizeof(*stats));
-    if (!make_dominant(&oracle->cartan, target_weight, dominant_target)) {
+    maximum_bytes = maximum_memo_bytes == 0 ? SIZE_MAX : maximum_memo_bytes;
+    if (initial_memo_capacity < 2U ||
+        (initial_memo_capacity & (initial_memo_capacity - 1U)) != 0U) {
         set_error(error, error_capacity,
-                  "target Weyl reduction exceeded the exact integer range");
+                  "representation memo initial capacity must be a power of two");
+        return WM_INVALID_ARGUMENT;
+    }
+    if (maximum_bytes / sizeof(WMMemoEntry) < initial_memo_capacity) {
+        set_error(error, error_capacity,
+                  "representation memo byte limit is below initial capacity");
         return WM_LIMIT_ERROR;
     }
-    for (index = 0; index < oracle->cartan.rank; ++index)
-        delta[index] = highest_weight[index] - dominant_target[index];
-    if (!solve_simple_coefficients(&oracle->cartan, delta, coefficient))
-        return WM_OK;
+    created = calloc(1, sizeof(*created));
+    if (created == NULL) return WM_MEMORY_ERROR;
+    created->memo.entry =
+        calloc(initial_memo_capacity, sizeof(*created->memo.entry));
+    if (created->memo.entry == NULL) {
+        free(created);
+        return WM_MEMORY_ERROR;
+    }
+    created->oracle = oracle;
+    memcpy(created->highest_weight, highest_weight,
+           sizeof(created->highest_weight));
+    created->memo.capacity = initial_memo_capacity;
+    created->memo.maximum_bytes = maximum_bytes;
+    created->memo.peak_allocated_bytes =
+        initial_memo_capacity * sizeof(*created->memo.entry);
+    created->memo.rank = oracle->cartan.rank;
+    *session = created;
+    return WM_OK;
+}
+
+uint64_t wm_representation_memo_entry_bytes(void)
+{
+    return (uint64_t)sizeof(WMMemoEntry);
+}
+
+WMStatus wm_representation_session_multiplicity(
+    WMRepresentationSession *session,
+    const int32_t target_weight[WM_MAX_RANK],
+    WMBigUInt *multiplicity,
+    WMQueryStats *stats,
+    char *error,
+    size_t error_capacity)
+{
+    int32_t delta[WM_MAX_RANK] = {0};
+    int32_t coefficient[WM_MAX_RANK] = {0};
+    int32_t dominant_target[WM_MAX_RANK] = {0};
+    WMRecurrence recurrence;
+    WMStatus status = WM_OK;
+    size_t entries_before;
+    uint8_t index;
+    if (session == NULL || target_weight == NULL || multiplicity == NULL)
+        return WM_INVALID_ARGUMENT;
+    entries_before = session->memo.count;
+    memset(multiplicity, 0, sizeof(*multiplicity));
+    if (stats != NULL) memset(stats, 0, sizeof(*stats));
+    session->memo.limit_reached = 0;
+    if (!make_dominant(&session->oracle->cartan, target_weight,
+                       dominant_target)) {
+        set_error(error, error_capacity,
+                  "target Weyl reduction exceeded the exact integer range");
+        status = WM_LIMIT_ERROR;
+        goto finished;
+    }
+    for (index = 0; index < session->oracle->cartan.rank; ++index)
+        delta[index] = session->highest_weight[index] - dominant_target[index];
+    if (!solve_simple_coefficients(&session->oracle->cartan, delta,
+                                   coefficient))
+        goto finished;
     memset(&recurrence, 0, sizeof(recurrence));
-    recurrence.oracle = oracle;
-    recurrence.highest_weight = highest_weight;
+    recurrence.oracle = session->oracle;
+    recurrence.highest_weight = session->highest_weight;
+    recurrence.memo = &session->memo;
     recurrence.stats = stats;
     recurrence.error = error;
     recurrence.error_capacity = error_capacity;
-    recurrence.memo.rank = oracle->cartan.rank;
-    recurrence.memo.capacity = 1024;
-    recurrence.memo.entry =
-        calloc(recurrence.memo.capacity, sizeof(*recurrence.memo.entry));
-    if (recurrence.memo.entry == NULL) return WM_MEMORY_ERROR;
     status = multiplicity_for_coefficient(&recurrence, coefficient,
                                           multiplicity);
-    free(recurrence.memo.entry);
+finished:
+    if (stats != NULL) {
+        stats->memo_entries_before = entries_before;
+        stats->memo_entries = session->memo.count;
+        stats->memo_entries_added = session->memo.count - entries_before;
+        stats->memo_capacity_bytes =
+            (uint64_t)session->memo.capacity * sizeof(*session->memo.entry);
+        stats->memo_peak_allocated_bytes =
+            (uint64_t)session->memo.peak_allocated_bytes;
+    }
+    return status;
+}
+
+uint64_t wm_representation_session_memo_entries(
+    const WMRepresentationSession *session)
+{
+    return session == NULL ? 0 : (uint64_t)session->memo.count;
+}
+
+uint64_t wm_representation_session_memo_capacity_bytes(
+    const WMRepresentationSession *session)
+{
+    return session == NULL
+               ? 0
+               : (uint64_t)session->memo.capacity *
+                     sizeof(*session->memo.entry);
+}
+
+uint64_t wm_representation_session_memo_peak_allocated_bytes(
+    const WMRepresentationSession *session)
+{
+    return session == NULL ? 0
+                           : (uint64_t)session->memo.peak_allocated_bytes;
+}
+
+void wm_representation_session_destroy(WMRepresentationSession *session)
+{
+    if (session == NULL) return;
+    free(session->memo.entry);
+    free(session);
+}
+
+WMStatus wm_weight_multiplicity(const WMOracle *oracle,
+                                const int32_t highest_weight[WM_MAX_RANK],
+                                const int32_t target_weight[WM_MAX_RANK],
+                                WMBigUInt *multiplicity, WMQueryStats *stats,
+                                char *error, size_t error_capacity)
+{
+    WMRepresentationSession *session = NULL;
+    WMStatus status = wm_representation_session_create(
+        oracle, highest_weight, 0, &session, error, error_capacity);
+    if (status != WM_OK) return status;
+    status = wm_representation_session_multiplicity(
+        session, target_weight, multiplicity, stats, error, error_capacity);
+    wm_representation_session_destroy(session);
     return status;
 }
 

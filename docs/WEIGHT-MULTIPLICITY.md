@@ -92,6 +92,40 @@ requests. Each response is the same stable JSON record as the one-shot query.
 This lets the ilXyr controller time calls and replay the exact input stream in
 a fresh process to check byte identity.
 
+Phase 0.5 adds a separate grouped adapter without changing that historical
+interface:
+
+```sh
+./weight_multiplicity --serve-grouped
+```
+
+The grouped adapter retains one bounded Freudenthal memo for one exact Lie type
+and highest weight. Requests with the same `(type, highest_weight)` reuse exact
+intermediate multiplicities. A type or highest-weight change destroys the old
+memo before creating the next one. The adapter never enumerates an unrequested
+weight and never shares a memo across representations.
+
+Every grouped response uses schema Version 2 and reports the memo entries
+before the query, entries added, recurrence cache hits, final entries, and
+allocated memo capacity. It also reports peak simultaneous memo allocation,
+including the old and new hash tables during a resize. `@reset` explicitly
+evicts the active representation. `@metrics` reports both process peak RSS and
+the active memo high-water state.
+
+The default memo allocation ceiling is 2,147,483,648 bytes. Tests may lower it
+with `ZERO_WEIGHT_MEMO_LIMIT_BYTES`; the ilXyr controller still enforces the
+binding two-GiB total incremental process-memory limit independently. The
+original `--serve` mode remains fresh-memo and byte-compatible with the sealed
+Phase 0 evidence.
+
+Allocator-policy audits may set `ZERO_WEIGHT_MEMO_INITIAL_CAPACITY` to a
+power-of-two entry count. The default is 1024. Presizing avoids the temporary
+old-plus-new allocation of earlier resizes while leaving the hash function,
+70% load threshold, recurrence, and answers unchanged. The grouped ready
+record states the selected capacity, the memo entry size, and whether the run
+uses the default or presized policy. This control is for versioned audit
+reruns; it does not rewrite earlier frontier evidence.
+
 Sending `@metrics` returns the process peak resident-set size in bytes. The
 controller records it before type initialization, after warm-up, and after the
 cell. This keeps memory accounting separate from query latency.

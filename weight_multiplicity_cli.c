@@ -152,6 +152,48 @@ static int test_a2_fundamental(void)
                           "A2 fundamental zero-weight exclusion");
 }
 
+static int test_persistent_representation_memo(void)
+{
+    WMOracle oracle;
+    WMRepresentationSession *session = NULL;
+    int32_t highest[WM_MAX_RANK] = {1, 1};
+    int32_t target[WM_MAX_RANK] = {0};
+    WMBigUInt first, second, fresh;
+    WMQueryStats first_stats, second_stats;
+    char error[256] = {0};
+    WMStatus status;
+    status = wm_oracle_init_type("A2", &oracle, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_create_with_capacity(
+            &oracle, highest, 1024U * 1024U, 2048U, &session, error,
+            sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_multiplicity(
+            session, target, &first, &first_stats, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_multiplicity(
+            session, target, &second, &second_stats, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_weight_multiplicity(&oracle, highest, target, &fresh, NULL,
+                                        error, sizeof(error));
+    if (status != WM_OK || !wm_big_equal_u32(&first, 2) ||
+        memcmp(&first, &second, sizeof(first)) != 0 ||
+        memcmp(&first, &fresh, sizeof(first)) != 0 ||
+        first_stats.memo_entries_added == 0 ||
+        second_stats.memo_entries_before == 0 ||
+        second_stats.memo_entries_added != 0 || second_stats.memo_hits == 0 ||
+        first_stats.memo_capacity_bytes !=
+            2048U * wm_representation_memo_entry_bytes()) {
+        fprintf(stderr,
+                "self-test failed: persistent representation memo: %s\n",
+                error);
+        wm_representation_session_destroy(session);
+        return 0;
+    }
+    wm_representation_session_destroy(session);
+    return 1;
+}
+
 static int test_recursive_weyl_folding(void)
 {
     WMOracle oracle;
@@ -228,7 +270,8 @@ static int run_self_test(void)
     uint32_t acr1_cases = 0;
     uint32_t positive_roots = 0;
     if (!test_a1() || !test_a2_fundamental() ||
-        !test_recursive_weyl_folding())
+        !test_recursive_weyl_folding() ||
+        !test_persistent_representation_memo())
         return 1;
     for (index = 0; index < sizeof(TYPE_EXPECTATIONS) /
                               sizeof(TYPE_EXPECTATIONS[0]);
@@ -255,7 +298,8 @@ static int run_self_test(void)
         return 1;
     }
     printf("{\"status\":\"pass\",\"types\":31,"
-           "\"positive_roots\":931,\"acr1_cases\":3750}\n");
+           "\"positive_roots\":931,\"acr1_cases\":3750,"
+           "\"persistent_representation_memo\":true}\n");
     return 0;
 }
 
@@ -286,6 +330,54 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
            "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
            (unsigned long long)stats.memo_entries,
+           (unsigned long long)stats.recurrence_terms,
+           (unsigned long long)stats.recursive_weyl_folds,
+           stats.maximum_level);
+    return WM_OK;
+}
+
+static WMStatus evaluate_session_and_print(
+    const char *type, const WMOracle *oracle,
+    WMRepresentationSession *session,
+    const int32_t highest[WM_MAX_RANK],
+    const int32_t target[WM_MAX_RANK],
+    uint64_t session_generation,
+    char *error, size_t error_capacity)
+{
+    WMBigUInt value;
+    WMQueryStats stats;
+    WMStatus status;
+    char decimal[WM_DECIMAL_CAPACITY];
+    status = wm_representation_session_multiplicity(
+        session, target, &value, &stats, error, error_capacity);
+    if (status != WM_OK ||
+        wm_big_to_decimal(&value, decimal, sizeof(decimal)) != WM_OK) {
+        return status == WM_OK ? WM_LIMIT_ERROR : status;
+    }
+    printf("{\"schema_version\":2,\"type\":\"%s\",\"rank\":%u,"
+           "\"highest_weight\":",
+           type, oracle->cartan.rank);
+    print_weight(highest, oracle->cartan.rank);
+    fputs(",\"target_weight\":", stdout);
+    print_weight(target, oracle->cartan.rank);
+    printf(",\"multiplicity\":\"%s\",\"positive_roots\":%u,"
+           "\"cache_mode\":\"per_representation\","
+           "\"session_generation\":%llu,"
+           "\"memo_entries_before\":%llu,\"memo_entries\":%llu,"
+           "\"memo_entries_added\":%llu,\"memo_hits\":%llu,"
+           "\"memo_capacity_bytes\":%llu,"
+           "\"memo_peak_allocated_bytes\":%llu,"
+           "\"recurrence_terms\":%llu,"
+           "\"recursive_weyl_folds\":%llu,"
+           "\"maximum_level\":%u}\n",
+           decimal, oracle->positive_roots.count,
+           (unsigned long long)session_generation,
+           (unsigned long long)stats.memo_entries_before,
+           (unsigned long long)stats.memo_entries,
+           (unsigned long long)stats.memo_entries_added,
+           (unsigned long long)stats.memo_hits,
+           (unsigned long long)stats.memo_capacity_bytes,
+           (unsigned long long)stats.memo_peak_allocated_bytes,
            (unsigned long long)stats.recurrence_terms,
            (unsigned long long)stats.recursive_weyl_folds,
            stats.maximum_level);
@@ -363,16 +455,82 @@ static int run_describe(const char *type)
     return 0;
 }
 
-static int run_server(void)
+static int same_weight(const int32_t left[WM_MAX_RANK],
+                       const int32_t right[WM_MAX_RANK], uint8_t rank)
+{
+    uint8_t index;
+    for (index = 0; index < rank; ++index)
+        if (left[index] != right[index]) return 0;
+    return 1;
+}
+
+static int configured_memo_limit(size_t *memo_limit)
+{
+    const char *text = getenv("ZERO_WEIGHT_MEMO_LIMIT_BYTES");
+    unsigned long long value = UINT64_C(2147483648);
+    if (text != NULL && *text != '\0') {
+        char *end;
+        errno = 0;
+        value = strtoull(text, &end, 10);
+        if (errno != 0 || end == text || *end != '\0' || value > SIZE_MAX)
+            return 0;
+    }
+    *memo_limit = (size_t)value;
+    return 1;
+}
+
+static int configured_memo_initial_capacity(size_t *initial_capacity)
+{
+    const char *text = getenv("ZERO_WEIGHT_MEMO_INITIAL_CAPACITY");
+    unsigned long long value = 1024U;
+    if (text != NULL && *text != '\0') {
+        char *end;
+        errno = 0;
+        value = strtoull(text, &end, 10);
+        if (errno != 0 || end == text || *end != '\0' || value > SIZE_MAX ||
+            value < 2U || (value & (value - 1U)) != 0U)
+            return 0;
+    }
+    *initial_capacity = (size_t)value;
+    return 1;
+}
+
+static int run_server(int grouped)
 {
     struct CachedOracle {
         char type[4];
         WMOracle oracle;
     } cache[31];
     size_t cache_count = 0;
+    size_t memo_limit = 0;
+    size_t memo_initial_capacity = 1024U;
+    WMRepresentationSession *active_session = NULL;
+    int32_t active_highest[WM_MAX_RANK] = {0};
+    char active_type[4] = {0};
+    uint64_t session_generation = 0;
     char line[1024];
+    if (grouped &&
+        (!configured_memo_limit(&memo_limit) ||
+         !configured_memo_initial_capacity(&memo_initial_capacity))) {
+        fputs("invalid grouped memo configuration\n", stderr);
+        return 2;
+    }
     memset(cache, 0, sizeof(cache));
-    fputs("{\"status\":\"ready\",\"schema_version\":1}\n", stdout);
+    if (grouped)
+        printf("{\"status\":\"ready\",\"schema_version\":2,"
+               "\"cache_mode\":\"per_representation\","
+               "\"memo_limit_bytes\":%llu,"
+               "\"memo_initial_capacity\":%llu,"
+               "\"memo_entry_bytes\":%llu,"
+               "\"memo_allocation_policy\":\"%s\"}\n",
+               (unsigned long long)memo_limit,
+               (unsigned long long)memo_initial_capacity,
+               (unsigned long long)wm_representation_memo_entry_bytes(),
+               memo_initial_capacity == 1024U
+                   ? "power_of_two_doubling"
+                   : "power_of_two_presized_then_doubling");
+    else
+        fputs("{\"status\":\"ready\",\"schema_version\":1}\n", stdout);
     fflush(stdout);
     while (fgets(line, sizeof(line), stdin) != NULL) {
         char *highest_text;
@@ -399,9 +557,41 @@ static int run_server(void)
                 unsigned long long max_rss_bytes =
                     (unsigned long long)usage.ru_maxrss * 1024ULL;
 #endif
-                printf("{\"status\":\"metrics\",\"max_rss_bytes\":%llu}\n",
-                       max_rss_bytes);
+                if (grouped)
+                    printf("{\"status\":\"metrics\","
+                           "\"max_rss_bytes\":%llu,"
+                           "\"cache_mode\":\"per_representation\","
+                           "\"session_generation\":%llu,"
+                           "\"memo_entries\":%llu,"
+                           "\"memo_capacity_bytes\":%llu,"
+                           "\"memo_peak_allocated_bytes\":%llu}\n",
+                           max_rss_bytes,
+                           (unsigned long long)session_generation,
+                           (unsigned long long)
+                               wm_representation_session_memo_entries(
+                                   active_session),
+                           (unsigned long long)
+                               wm_representation_session_memo_capacity_bytes(
+                                   active_session),
+                           (unsigned long long)
+                               wm_representation_session_memo_peak_allocated_bytes(
+                                   active_session));
+                else
+                    printf("{\"status\":\"metrics\","
+                           "\"max_rss_bytes\":%llu}\n",
+                           max_rss_bytes);
             }
+            fflush(stdout);
+            continue;
+        }
+        if (grouped && strcmp(line, "@reset") == 0) {
+            wm_representation_session_destroy(active_session);
+            active_session = NULL;
+            memset(active_highest, 0, sizeof(active_highest));
+            memset(active_type, 0, sizeof(active_type));
+            fputs("{\"status\":\"reset\","
+                  "\"cache_mode\":\"per_representation\"}\n",
+                  stdout);
             fflush(stdout);
             continue;
         }
@@ -453,13 +643,37 @@ static int run_server(void)
             fflush(stdout);
             continue;
         }
-        status = evaluate_and_print(line, oracle, highest, target, error,
-                                    sizeof(error));
+        if (grouped) {
+            if (active_session == NULL || strcmp(active_type, line) != 0 ||
+                !same_weight(active_highest, highest, oracle->cartan.rank)) {
+                wm_representation_session_destroy(active_session);
+                active_session = NULL;
+                status = wm_representation_session_create_with_capacity(
+                    oracle, highest, memo_limit, memo_initial_capacity,
+                    &active_session, error, sizeof(error));
+                if (status != WM_OK) {
+                    printf("{\"status\":\"error\",\"code\":\"%s\"}\n",
+                           wm_status_name(status));
+                    fflush(stdout);
+                    continue;
+                }
+                memcpy(active_type, line, strlen(line) + 1U);
+                memcpy(active_highest, highest, sizeof(active_highest));
+                ++session_generation;
+            }
+            status = evaluate_session_and_print(
+                line, oracle, active_session, highest, target,
+                session_generation, error, sizeof(error));
+        } else {
+            status = evaluate_and_print(line, oracle, highest, target, error,
+                                        sizeof(error));
+        }
         if (status != WM_OK)
             printf("{\"status\":\"error\",\"code\":\"%s\"}\n",
                    wm_status_name(status));
         fflush(stdout);
     }
+    wm_representation_session_destroy(active_session);
     return ferror(stdin) ? 1 : 0;
 }
 
@@ -467,9 +681,10 @@ static void usage(const char *program)
 {
     fprintf(stderr,
             "usage:\n  %s --self-test\n  %s --serve\n"
+            "  %s --serve-grouped\n"
             "  %s describe TYPE\n  %s query TYPE HIGHEST TARGET\n"
             "example:\n  %s query A2 1,1 0,0\n",
-            program, program, program, program, program);
+            program, program, program, program, program, program);
 }
 
 int main(int argc, char **argv)
@@ -477,7 +692,9 @@ int main(int argc, char **argv)
     if (argc == 2 && strcmp(argv[1], "--self-test") == 0)
         return run_self_test();
     if (argc == 2 && strcmp(argv[1], "--serve") == 0)
-        return run_server();
+        return run_server(0);
+    if (argc == 2 && strcmp(argv[1], "--serve-grouped") == 0)
+        return run_server(1);
     if (argc == 3 && strcmp(argv[1], "describe") == 0)
         return run_describe(argv[2]);
     if (argc == 5 && strcmp(argv[1], "query") == 0)
