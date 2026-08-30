@@ -38,9 +38,9 @@ awk -v seconds="$maximum_seconds" -v price="$hourly_price" \
   'BEGIN { exit !(seconds * price / 3600 <= ceiling) }'
 
 existing=$(aws s3api list-objects-v2 --region "$R33_REGION" \
-  --bucket "$R33_TRAINING_BUCKET" --prefix "$lock_key" \
-  --query KeyCount --output text --no-cli-pager)
-test "$existing" = 0
+  --bucket "$R33_TRAINING_BUCKET" --prefix "$lock_key" --max-keys 1 \
+  --query 'Contents[0].Key' --output text --no-cli-pager)
+test "$existing" = None
 
 launch_epoch=$(date +%s)
 tags="ResourceType=instance,Tags=[{Key=Project,Value=zero},{Key=Name,Value=reasoner33-dimension-transfer},{Key=Experiment,Value=reasoner33-dimension-transfer-v1},{Key=Commit,Value=${R33_SOURCE_COMMIT}},{Key=RunId,Value=${R33_RUN_ID}},{Key=SourceKey,Value=${R33_SOURCE_KEY}},{Key=SourceSha256,Value=${R33_SOURCE_SHA256}},{Key=TrainingBucket,Value=${R33_TRAINING_BUCKET}},{Key=ContractSha256,Value=${R33_CONTRACT_SHA256}},{Key=Region,Value=${R33_REGION}},{Key=LaunchEpoch,Value=${launch_epoch}},{Key=MaxInstanceSeconds,Value=${maximum_seconds}},{Key=MaxComputeUsd,Value=${maximum_ec2_usd}},{Key=HourlyPrice,Value=${hourly_price}},{Key=ApprovalId,Value=${R33_APPROVAL_ID}}]"
