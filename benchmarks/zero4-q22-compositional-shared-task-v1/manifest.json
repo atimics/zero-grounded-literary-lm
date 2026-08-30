@@ -1,0 +1,55 @@
+{
+  "schema": "zero.q22_compositional_shared_task_surface.v1",
+  "shared_task_id": "zero-solomon.q22-compositional-routing.v1",
+  "generation": {
+    "train": 10000,
+    "eval": 1000,
+    "seed": 23
+  },
+  "canonical": {
+    "path": "quantity-composition.jsonl",
+    "sha256": "f25ff12105ea84b358b5dfb5f9cf54a6820d4b50f44fc50669ed8ce3074b334f"
+  },
+  "dataset": {
+    "path": "quantity-composition.train.jsonl",
+    "sha256": "1f997d174ea1e3f3675612e24ecced15f8145abd29819e532b2f890f36245e8f"
+  },
+  "eval_set": {
+    "path": "quantity-composition.promotion.tsv",
+    "sha256": "42902d61d9edc2ceb5a33875deddbdd9e9b523b06fb1aa13a22249acbf2983fe"
+  },
+  "records": {
+    "train": 10000,
+    "eval": 1000
+  },
+  "invariants": {
+    "common_prefix": "Route this quantity case.",
+    "common_prefix_tokens": 4,
+    "class_count": 5,
+    "prefix_only_exact_rate_ppm": 200000,
+    "train_template_families": 30,
+    "promotion_template_families": 20,
+    "template_families_disjoint": true,
+    "normalized_template_surfaces_disjoint": true,
+    "decoy_classes_balanced_per_target": true,
+    "literal_operation_identifiers_absent_from_inputs": true
+  },
+  "source_files": {
+    "generator": {
+      "path": "scripts/generate_q22_compositional_routing.mjs",
+      "sha256": "2600635c99199f9840c0c7cb0db50e62437e139672cd871bf0b9b2fb082429b0"
+    },
+    "checker": {
+      "path": "scripts/check_q22_compositional_shared_task.mjs",
+      "sha256": "c8a21add7d905c1c605c972e1ad703accd829c9633f72d7bf8ebb6648481a605"
+    },
+    "zero_verifier": {
+      "path": "quantity_request_eval.c",
+      "sha256": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902"
+    }
+  },
+  "zero_binding": {
+    "encoding": "zero.quantity-compositional-operation-request.v1",
+    "verifier": "verifier://zero/quantity-request/v1"
+  }
+}
