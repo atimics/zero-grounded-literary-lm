@@ -51,6 +51,7 @@ semantic_operation_eval
 semantic_runtime_head_pilot
 conservative_exposure_pilot
 reasoner0
+reasoner1
 
 # Model artifacts (large binaries)
 *.ckpt

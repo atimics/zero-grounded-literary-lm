@@ -27,6 +27,8 @@ small browser runtime:
 - `reasoner0`: a reason-first Cartan-matrix enumerator with exact integer
   verification, canonical deduplication, sealed Answer IR, and language as the
   final tool.
+- `reasoner1`: an integer graph-recurrent proposer that learns which canonical
+  node-and-bond actions should reach the Reasoner-0 verifier.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -178,10 +180,15 @@ make reasoner0-check
 ./reasoner0 enumerate /tmp/reasoner0.r0p 8
 ./reasoner0 dataset /tmp/reasoner0.r0p 8 /tmp/reasoner0.jsonl
 ./reasoner0 verify /tmp/reasoner0.r0p 2 2 -1 -1 2 --trace
+make reasoner1-check
+./reasoner1 demo
+./reasoner1 train /tmp/reasoner1.r1p 8
+./reasoner1 eval /tmp/reasoner1.r1p 8
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
-limits, and path to a recurrent neural reasoner.
+and verifier contract. See [`docs/REASONER1.md`](docs/REASONER1.md) for the
+learned proposer, rank curriculum, held-out result, and compression gate.
 
 ## Build
 

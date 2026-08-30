@@ -39,6 +39,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Evidence-task curriculum | claims, cloze, retrieval with answer-only gates | C3 no-go; combined loss improved 39.13%, but cloze regressed and retrieval choice stayed at 52.05% |
 | Record-safe task braid | same C3.1 packs under blocked order, smooth interleaving, and 4x answer loss | C3.1 no-go; interleaving improved combined loss 41.75% and fixed cloze, while the best retrieval choice reached 54.77% and claim gain reached 7.28% |
 | Reason-first runtime | canonical Cartan matrices, learned control policy, exact Bareiss verifier, sealed Answer IR, language renderer tool | Reasoner-0 enumerates all 31 connected finite types through rank 8 with exact precision/recall and affine boundary negatives; not a base-model capability claim |
+| Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -98,6 +99,17 @@ useful negative signal. It also emits a structured JSONL corpus with no
 rendered-text targets. It does not change the active C3 data repair, authorize a
 ZERO.5 run, or claim that a neural proposer has learned Lie theory. See
 [`docs/REASONER0.md`](docs/REASONER0.md).
+
+Reasoner-1 learns the proposal boundary rather than another language target. A
+fixed four-round graph recurrence converts canonical diagrams, attachment
+actions, directed bond multiplicities, and the last verifier failure into
+sparse integer features. A curriculum-trained integer perceptron selects which
+actions may call the exact verifier. Training through rank 8 reaches the full
+31-type census without an invalid verifier call. More importantly, the model
+trained only through rank 7 recovers `A8`, `B8`, `C8`, `D8`, and `E8`, but also
+makes one invalid proposal. This is 100% held-out recall and 96.7% precision,
+not an exact generalization pass. No distillation or quantization is authorized.
+See [`docs/REASONER1.md`](docs/REASONER1.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.

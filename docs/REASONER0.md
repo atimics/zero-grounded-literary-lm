@@ -182,10 +182,9 @@ into prose that looks accepted.
 
 ## What comes next
 
-The useful training target is the proposer, not another layer of formal
-scaffolding. A neural proposer should receive the canonical current diagram and
-the last exact counterexample, then choose a node attachment and directed bond.
-Its evaluation should remain mechanical:
+[`REASONER1.md`](REASONER1.md) implements the first learned proposer. It receives
+canonical graph state and the last exact counterexample, then scores discrete
+node-attachment and directed-bond actions. Its evaluation remains mechanical:
 
 - precision over novel canonical proposals;
 - recall against the complete type set at each rank;
@@ -193,9 +192,10 @@ Its evaluation should remain mechanical:
 - affine-boundary discrimination;
 - exact action traces and sealed matrices before and after compression.
 
-Only after an uncompressed proposer reaches exact rank-wise coverage should it
-be distilled or quantized. Language input and richer explanations remain tools
-around the formal loop, not part of the classification reward.
+The rank-7 holdout recovers all five rank-8 types but still makes one invalid
+proposal. That is enough to keep compression blocked. Language input and richer
+explanations remain tools around the formal loop, not part of the
+classification reward.
 
 ## Scope
 
