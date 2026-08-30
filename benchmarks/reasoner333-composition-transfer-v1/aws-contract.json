@@ -23,6 +23,11 @@
     "archive_requires_source_commit_file": true,
     "sha256_supplied_at_launch": true
   },
+  "result": {
+    "make_target": "reasoner333",
+    "binary": "reasoner333",
+    "schema": "zero.reasoner333_composition_transfer.v1"
+  },
   "execution": {
     "region": "us-east-1",
     "instance_type": "t3.micro",
