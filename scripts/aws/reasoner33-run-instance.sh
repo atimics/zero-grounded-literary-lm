@@ -39,7 +39,7 @@ awk -v seconds="$maximum_seconds" -v price="$hourly_price" \
 
 existing=$(aws s3api list-objects-v2 --region "$R33_REGION" \
   --bucket "$R33_TRAINING_BUCKET" --prefix "$lock_key" \
-  --query 'length(Contents)' --output text --no-cli-pager)
+  --query KeyCount --output text --no-cli-pager)
 test "$existing" = 0
 
 launch_epoch=$(date +%s)
