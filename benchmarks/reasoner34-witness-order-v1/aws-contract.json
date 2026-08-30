@@ -1,0 +1,51 @@
+{
+  "schema": "zero.reasoner34_scout_aws_contract.v1",
+  "experiment": "reasoner34-witness-order-v1",
+  "version": "(3,3,4)",
+  "authorized": true,
+  "authorization": {
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-30T18:53:52Z",
+    "approval_id": "reasoner34-witness-cloud-2026-08-30-v1",
+    "scope": "one sealed witness-order execution"
+  },
+  "seal": {
+    "development_dimensions": [1, 2, 3],
+    "sealed_dimension": 4,
+    "sealed_programs": 4095,
+    "local_execution_forbidden": true,
+    "retries_for_scientific_failure": 0,
+    "tuning_after_open": false
+  },
+  "source": {
+    "branch": "codex/reasoner34-witness",
+    "implementation_commit": "344cc33f58787ef4dd6a6627e7cd55651e1e748b",
+    "archive_requires_source_commit_file": true,
+    "sha256_supplied_at_launch": true
+  },
+  "result": {
+    "make_target": "reasoner34_witness",
+    "binary": "reasoner34_witness",
+    "schema": "zero.reasoner34_witness_order.v1"
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "cpu_credit_mode": "standard",
+    "instance_count": 1,
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.006,
+    "maximum_total_run_usd": 0.01,
+    "single_execution_lock": true,
+    "automatic_termination": true,
+    "encrypted_gp3_gib": 8,
+    "inbound_network_rules": 0
+  },
+  "price_evidence": {
+    "source": "AWS Price List API",
+    "sku": "CRAJUW7BTXFMT2UJ",
+    "usd_per_hour": 0.0104,
+    "catalog_publication": "2026-08-29T01:43:19Z",
+    "price_effective": "2026-08-01T00:00:00Z"
+  }
+}
