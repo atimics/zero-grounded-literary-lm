@@ -43,6 +43,7 @@ typedef struct {
 typedef struct {
     uint64_t memo_entries;
     uint64_t recurrence_terms;
+    uint64_t recursive_weyl_folds;
     uint32_t maximum_level;
 } WMQueryStats;
 

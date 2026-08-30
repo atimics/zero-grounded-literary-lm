@@ -434,12 +434,59 @@ static uint32_t coefficient_level(const int32_t coefficient[WM_MAX_RANK],
     return level;
 }
 
+static WMStatus canonicalize_recursive_coefficient(
+    WMRecurrence *recurrence, const int32_t input[WM_MAX_RANK],
+    int32_t output[WM_MAX_RANK], int *inside_highest_weight_cone)
+{
+    const WMOracle *oracle = recurrence->oracle;
+    int32_t weight[WM_MAX_RANK] = {0};
+    int32_t dominant[WM_MAX_RANK] = {0};
+    int32_t delta[WM_MAX_RANK] = {0};
+    uint8_t row;
+    *inside_highest_weight_cone = 0;
+    for (row = 0; row < oracle->cartan.rank; ++row) {
+        int64_t value = recurrence->highest_weight[row];
+        uint8_t column;
+        for (column = 0; column < oracle->cartan.rank; ++column)
+            value -= (int64_t)WM_CELL(&oracle->cartan, row, column) *
+                     input[column];
+        if (value < INT32_MIN || value > INT32_MAX) {
+            set_error(recurrence->error, recurrence->error_capacity,
+                      "recursive weight exceeds the exact integer range");
+            return WM_LIMIT_ERROR;
+        }
+        weight[row] = (int32_t)value;
+    }
+    if (!make_dominant(&oracle->cartan, weight, dominant)) {
+        set_error(recurrence->error, recurrence->error_capacity,
+                  "recursive Weyl reduction exceeded the exact integer range");
+        return WM_LIMIT_ERROR;
+    }
+    for (row = 0; row < oracle->cartan.rank; ++row) {
+        int64_t difference =
+            (int64_t)recurrence->highest_weight[row] - dominant[row];
+        if (difference < INT32_MIN || difference > INT32_MAX) {
+            set_error(recurrence->error, recurrence->error_capacity,
+                      "dominant recursive delta exceeds the exact integer range");
+            return WM_LIMIT_ERROR;
+        }
+        delta[row] = (int32_t)difference;
+    }
+    if (!solve_simple_coefficients(&oracle->cartan, delta, output))
+        return WM_OK;
+    *inside_highest_weight_cone = 1;
+    return WM_OK;
+}
+
 static WMStatus multiplicity_for_coefficient(
     WMRecurrence *recurrence, const int32_t coefficient[WM_MAX_RANK],
     WMBigUInt *multiplicity)
 {
     const WMOracle *oracle = recurrence->oracle;
     WMMemoEntry *cached;
+    int32_t canonical[WM_MAX_RANK] = {0};
+    const int32_t *state = coefficient;
+    int inside_highest_weight_cone;
     int all_zero = 1;
     int64_t target[WM_MAX_RANK] = {0};
     int64_t denominator = 0;
@@ -453,30 +500,49 @@ static WMStatus multiplicity_for_coefficient(
         multiplicity->limb[0] = 1;
         return WM_OK;
     }
-    cached = memo_find(&recurrence->memo, coefficient);
-    if (cached != NULL) {
-        *multiplicity = cached->value;
-        return WM_OK;
-    }
     if (recurrence->stats != NULL) {
         uint32_t level = coefficient_level(coefficient, oracle->cartan.rank);
         if (level > recurrence->stats->maximum_level)
             recurrence->stats->maximum_level = level;
+    }
+    {
+        WMStatus status = canonicalize_recursive_coefficient(
+            recurrence, coefficient, canonical, &inside_highest_weight_cone);
+        if (status != WM_OK) return status;
+    }
+    if (!inside_highest_weight_cone) return WM_OK;
+    if (memcmp(coefficient, canonical,
+               sizeof(int32_t) * oracle->cartan.rank) != 0) {
+        state = canonical;
+        if (recurrence->stats != NULL)
+            ++recurrence->stats->recursive_weyl_folds;
+    }
+    all_zero = 1;
+    for (index = 0; index < oracle->cartan.rank; ++index)
+        if (state[index] != 0) all_zero = 0;
+    if (all_zero) {
+        multiplicity->limb[0] = 1;
+        return WM_OK;
+    }
+    cached = memo_find(&recurrence->memo, state);
+    if (cached != NULL) {
+        *multiplicity = cached->value;
+        return WM_OK;
     }
     for (index = 0; index < oracle->cartan.rank; ++index) {
         uint8_t simple;
         target[index] = recurrence->highest_weight[index];
         for (simple = 0; simple < oracle->cartan.rank; ++simple)
             target[index] -= (int64_t)WM_CELL(&oracle->cartan, index, simple) *
-                             coefficient[simple];
+                             state[simple];
     }
     for (index = 0; index < oracle->cartan.rank; ++index) {
         int64_t sum = recurrence->highest_weight[index] + target[index] + 2;
-        denominator += (int64_t)coefficient[index] *
+        denominator += (int64_t)state[index] *
                        oracle->symmetrizer[index] * sum;
     }
     if (denominator <= 0) {
-        if (!memo_insert(&recurrence->memo, coefficient, multiplicity)) {
+        if (!memo_insert(&recurrence->memo, state, multiplicity)) {
             set_error(recurrence->error, recurrence->error_capacity,
                       "weight multiplicity memo allocation failed");
             return WM_MEMORY_ERROR;
@@ -495,7 +561,7 @@ static WMStatus multiplicity_for_coefficient(
         const int16_t *root = oracle->positive_roots.coefficient[root_index];
         int32_t raised[WM_MAX_RANK];
         uint32_t multiple = 0;
-        memcpy(raised, coefficient, sizeof(raised));
+        memcpy(raised, state, sizeof(raised));
         for (;;) {
             int valid = 1;
             int64_t inner = 0;
@@ -544,7 +610,7 @@ static WMStatus multiplicity_for_coefficient(
         }
         *multiplicity = numerator.magnitude;
     }
-    if (!memo_insert(&recurrence->memo, coefficient, multiplicity)) {
+    if (!memo_insert(&recurrence->memo, state, multiplicity)) {
         set_error(recurrence->error, recurrence->error_capacity,
                   "weight multiplicity memo allocation failed");
         return WM_MEMORY_ERROR;
