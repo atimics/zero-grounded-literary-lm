@@ -98,3 +98,7 @@ R333_SEAL_APPROVAL_ID=reasoner333-composition-seal-2026-08-30-v1 \
 The cloud launcher adds a one-run object lock, a source digest, a hard time
 and cost ceiling, automatic termination, and a durable result receipt. Do not
 run the sealed command during development.
+
+The frozen implementation source is commit
+`f7465586b0133b82c6627162b75df5a28d25883b`. The cloud contract permits one
+`t3.micro` instance for at most 900 seconds and at most $0.003 of EC2 compute.
