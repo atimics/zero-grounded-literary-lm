@@ -2,11 +2,11 @@
   "schema": "zero.reasoner35_aws_contract.v1",
   "experiment": "reasoner35-joint-substrate-v1",
   "version": "(3,4)",
-  "authorized": false,
+  "authorized": true,
   "authorization": {
-    "approved_by": null,
-    "approved_at": null,
-    "approval_id": null,
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-30",
+    "approval_id": "reasoner35-next-set-2026-08-30-v1",
     "scope": "one sealed joint-substrate execution after exact bundle approval"
   },
   "seal": {

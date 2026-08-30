@@ -15,8 +15,13 @@ function requireValue(condition, message) {
 
 requireValue(contract.schema === "zero.reasoner35_aws_contract.v1", "schema");
 requireValue(contract.version === "(3,4)", "version");
-requireValue(contract.authorized === false, "sealed run must stay locked");
-requireValue(contract.authorization.approval_id === null, "approval must be null");
+requireValue(contract.authorized === true, "sealed run must stay authorized");
+requireValue(
+  contract.authorization.approved_by === "ratimics" &&
+    contract.authorization.approved_at === "2026-08-30" &&
+    contract.authorization.approval_id === "reasoner35-next-set-2026-08-30-v1",
+  "approval",
+);
 requireValue(contract.seal.planning_worlds === 40320, "planning seal");
 requireValue(
   contract.seal.composition_programs === 63 &&
@@ -47,4 +52,4 @@ requireValue(
   "execution cap",
 );
 
-console.log("Reasoner (3,4) locked cloud contract passed");
+console.log("Reasoner (3,4) authorized cloud contract passed");

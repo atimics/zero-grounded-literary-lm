@@ -22,5 +22,5 @@ every joint arm remains 64 bytes.
 The sealed command refuses local execution. The cloud wrapper must supply both
 `R35_SEALED_EXECUTION=cloud` and a new `R35_EXECUTION_LOCK` path. The sealed
 suite is defined in the preregistration and must not be opened during local
-development. The AWS contract remains unauthorized until the exact source
-bundle, destination, and budget are approved.
+development. The exact source bundle, destination, and capped one-shot run were
+authorized on 2026-08-30 with no retry.
