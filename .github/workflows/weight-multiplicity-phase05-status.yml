@@ -1,0 +1,91 @@
+name: Check weight-multiplicity Phase 0.5 cloud status
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Launch workflow run ID
+        required: true
+        type: string
+      expected_commit:
+        description: Exact merged Zero commit used by the launch
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: weight-multiplicity-phase05-cloud-status
+  cancel-in-progress: true
+
+jobs:
+  status:
+    name: AWS · read sealed Phase 0.5 status
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: aws
+    env:
+      WM_BUCKET: ${{ secrets.AWS_BUCKET }}
+      WM_REGION: us-east-1
+      WM_SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      WM_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      WM_ILXYR_COMMIT: 4e45ed31f6771a8cc03b00244ba008fb1ca7d0a1
+    steps:
+      - name: Validate status authority
+        run: |
+          [[ "$WM_SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$WM_EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test -n "$WM_BUCKET"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Read and verify status
+        run: |
+          root=/tmp/weight-multiplicity-phase05-status
+          prefix="experiments/weight-multiplicity-phase05-cloud-v1/runs/${WM_SOURCE_RUN_ID}"
+          mkdir -p "$root"
+          aws s3 cp "s3://${WM_BUCKET}/${prefix}/launch.json" \
+            "$root/launch.json" --only-show-errors
+          aws s3 cp "s3://${WM_BUCKET}/${prefix}/terminal-status.json" \
+            "$root/status.json" --only-show-errors
+          jq -e --arg run_id "$WM_SOURCE_RUN_ID" \
+            --arg commit "$WM_EXPECTED_COMMIT" \
+            --arg ilxyr "$WM_ILXYR_COMMIT" \
+            '.schema == "ilxyr.weight_multiplicity_cloud_launch.v1"
+             and .run_id == $run_id and .source_commit == $commit
+             and .ilxyr_commit == $ilxyr and .maximum_ec2_usd == 6.0' \
+            "$root/launch.json" >/dev/null
+          jq -e --arg run_id "$WM_SOURCE_RUN_ID" \
+            --arg commit "$WM_EXPECTED_COMMIT" \
+            --arg ilxyr "$WM_ILXYR_COMMIT" \
+            '.schema == "ilxyr.weight_multiplicity_cloud_status.v1"
+             and (.status == "running" or .status == "complete" or
+               .status == "failed")
+             and .run_id == $run_id and .source_commit == $commit
+             and .ilxyr_commit == $ilxyr and .estimated_ec2_usd <= 6.0' \
+            "$root/status.json" >/dev/null
+          instance=$(jq -r .instance_id "$root/launch.json")
+          test "$instance" = "$(jq -r .instance_id "$root/status.json")"
+          state=$(aws ec2 describe-instances --instance-ids "$instance" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text --no-cli-pager)
+          files=$(aws s3 ls "s3://${WM_BUCKET}/${prefix}/state/" \
+            --recursive --summarize | awk '/Total Objects:/ {print $3}')
+          bytes=$(aws s3 ls "s3://${WM_BUCKET}/${prefix}/state/" \
+            --recursive --summarize | awk '/Total Size:/ {print $3}')
+          files=${files:-0}
+          bytes=${bytes:-0}
+          jq --arg instance_state "$state" --argjson checkpoint_files "$files" \
+            --argjson checkpoint_bytes "$bytes" \
+            '. + {instance_state:$instance_state,
+              checkpoint_files:$checkpoint_files,
+              checkpoint_bytes:$checkpoint_bytes}' \
+            "$root/status.json" > "$root/verified-status.json"
+          jq -c . "$root/verified-status.json"
+          jq . "$root/verified-status.json" >> "$GITHUB_STEP_SUMMARY"
