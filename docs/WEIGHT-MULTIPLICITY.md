@@ -121,6 +121,12 @@ record states the selected capacity, the memo entry size, and whether the run
 uses the default or presized policy. This control is for versioned audit
 reruns; it does not rewrite earlier frontier evidence.
 
+Setting `ZERO_WEIGHT_MEMO_PROGRESS=1` emits one JSON record on standard error
+before, after, or upon rejection of each resize. The record includes the live
+entry count, current and requested capacities, and their projected simultaneous
+bytes. It does not change standard output or the recurrence. A controller can
+therefore retain the last exact memo count when a timed query is terminated.
+
 Sending `@metrics` returns the process peak resident-set size in bytes. The
 controller records it before type initialization, after warm-up, and after the
 cell. This keeps memory accounting separate from query latency.

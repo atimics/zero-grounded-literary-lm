@@ -30,6 +30,37 @@ typedef struct {
     int limit_reached;
 } WMMemo;
 
+static int memo_progress_enabled(void)
+{
+    const char *value = getenv("ZERO_WEIGHT_MEMO_PROGRESS");
+    return value != NULL && strcmp(value, "1") == 0;
+}
+
+static void memo_report_resize(const WMMemo *memo, const char *event,
+                               size_t capacity_before,
+                               size_t capacity_after)
+{
+    size_t bytes_before;
+    size_t bytes_after;
+    if (!memo_progress_enabled()) return;
+    bytes_before = capacity_before * sizeof(*memo->entry);
+    bytes_after = capacity_after * sizeof(*memo->entry);
+    fprintf(stderr,
+            "{\"schema\":\"zero.weight_memo_progress.v1\","
+            "\"event\":\"%s\",\"memo_entries\":%llu,"
+            "\"capacity_before_entries\":%llu,"
+            "\"capacity_after_entries\":%llu,"
+            "\"bytes_before\":%llu,\"bytes_after\":%llu,"
+            "\"projected_simultaneous_bytes\":%llu}\n",
+            event, (unsigned long long)memo->count,
+            (unsigned long long)capacity_before,
+            (unsigned long long)capacity_after,
+            (unsigned long long)bytes_before,
+            (unsigned long long)bytes_after,
+            (unsigned long long)(bytes_before + bytes_after));
+    fflush(stderr);
+}
+
 struct WMRepresentationSession {
     const WMOracle *oracle;
     int32_t highest_weight[WM_MAX_RANK];
@@ -402,8 +433,10 @@ static int memo_rehash(WMMemo *memo, size_t capacity)
     }
     old_bytes = old_capacity * sizeof(*memo->entry);
     new_bytes = capacity * sizeof(*memo->entry);
+    memo_report_resize(memo, "resize_attempt", old_capacity, capacity);
     if (new_bytes > memo->maximum_bytes ||
         old_bytes > memo->maximum_bytes - new_bytes) {
+        memo_report_resize(memo, "resize_rejected", old_capacity, capacity);
         memo->limit_reached = 1;
         return 0;
     }
@@ -426,6 +459,7 @@ static int memo_rehash(WMMemo *memo, size_t capacity)
         ++memo->count;
     }
     free(old);
+    memo_report_resize(memo, "resize_complete", old_capacity, capacity);
     return 1;
 }
 
