@@ -41,9 +41,12 @@ PHASE=bootstrap
 export AWS_DEFAULT_REGION
 test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = t3.micro
-test "$MAX_INSTANCE_SECONDS" = 1800
-test "$MAX_COMPUTE_USD" = 0.006
 test "$HOURLY_PRICE" = 0.0104
+[[ "$MAX_INSTANCE_SECONDS" =~ ^[0-9]+$ ]]
+awk -v seconds="$MAX_INSTANCE_SECONDS" \
+  'BEGIN { exit !(seconds > 0 && seconds <= 1800) }'
+awk -v ceiling="$MAX_COMPUTE_USD" \
+  'BEGIN { exit !(ceiling > 0 && ceiling <= 0.006) }'
 [[ "$EXPERIMENT" =~ ^[a-z0-9-]{8,100}$ ]]
 [[ "$BINARY" =~ ^[a-zA-Z0-9_]{3,80}$ ]]
 [[ "$MAKE_TARGET" =~ ^[a-zA-Z0-9_-]{3,80}$ ]]
@@ -150,6 +153,9 @@ remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 120))
 test "$remaining" -gt 0
 set +e
 R34_SEALED_EXECUTION=cloud R34_EXECUTION_LOCK=/tmp/sealed-execution.lock \
+  R34_SEALED_CLOUD=1 R34_SOURCE_COMMIT="$SOURCE_COMMIT" \
+  R34_CONTRACT_SHA256="$CONTRACT_SHA256" \
+  R333_SEAL_APPROVAL_ID="$APPROVAL_ID" \
   timeout --signal=TERM --kill-after=30s "${remaining}s" \
   "./${BINARY}" sealed-run /tmp/result.json > /tmp/sealed-summary.json
 runner_exit=$?

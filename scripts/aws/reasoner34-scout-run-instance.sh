@@ -12,10 +12,10 @@ done
 
 action=${1:-}
 test "$action" = dry-run || test "$action" = launch
-instance_type=t3.micro
-hourly_price=0.0104
-maximum_seconds=1800
-maximum_ec2_usd=0.006
+instance_type=$(jq -r .execution.instance_type "$SCOUT_CONTRACT")
+hourly_price=$(jq -r .price_evidence.usd_per_hour "$SCOUT_CONTRACT")
+maximum_seconds=$(jq -r .execution.maximum_instance_seconds "$SCOUT_CONTRACT")
+maximum_ec2_usd=$(jq -r .execution.maximum_ec2_usd "$SCOUT_CONTRACT")
 lock_key="experiments/${SCOUT_EXPERIMENT}/execution.lock"
 
 test "$SCOUT_REGION" = us-east-1
@@ -31,6 +31,10 @@ test "$(jq -r .execution.instance_type "$SCOUT_CONTRACT")" = "$instance_type"
 test "$(jq -r .execution.maximum_instance_seconds "$SCOUT_CONTRACT")" = "$maximum_seconds"
 test "$(jq -r .execution.maximum_ec2_usd "$SCOUT_CONTRACT")" = "$maximum_ec2_usd"
 test "$(jq -r .price_evidence.usd_per_hour "$SCOUT_CONTRACT")" = "$hourly_price"
+test "$instance_type" = t3.micro
+[[ "$maximum_seconds" =~ ^[0-9]+$ ]]
+awk -v seconds="$maximum_seconds" 'BEGIN { exit !(seconds > 0 && seconds <= 1800) }'
+awk -v ceiling="$maximum_ec2_usd" 'BEGIN { exit !(ceiling > 0 && ceiling <= 0.006) }'
 [[ "$SCOUT_EXPERIMENT" =~ ^[a-z0-9-]{8,100}$ ]]
 [[ "$SCOUT_BINARY" =~ ^[a-zA-Z0-9_]{3,80}$ ]]
 [[ "$SCOUT_MAKE_TARGET" =~ ^[a-zA-Z0-9_-]{3,80}$ ]]
