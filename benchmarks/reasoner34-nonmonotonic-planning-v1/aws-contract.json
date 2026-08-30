@@ -25,6 +25,11 @@
     "archive_requires_source_commit_file": true,
     "sha256_supplied_at_launch": true
   },
+  "result": {
+    "make_target": "reasoner34",
+    "binary": "reasoner34",
+    "schema": "zero.reasoner34_nonmonotonic_planning.v1"
+  },
   "execution": {
     "region": "us-east-1",
     "instance_type": "t3.micro",
