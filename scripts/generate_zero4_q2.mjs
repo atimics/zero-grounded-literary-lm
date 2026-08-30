@@ -119,6 +119,7 @@ function generate(out, requested, seed, requestMode) {
   const trainValidation = records.filter((record) => record.split !== "promotion"), tokenized = tokenBuffer(trainValidation);
   const files = {
     jsonl: path.join(out, "quantity-request.jsonl"),
+    sharedTrain: path.join(out, "quantity-request.train.jsonl"),
     tokens: path.join(out, "quantity-request.tok"),
     preview: path.join(out, "quantity-request.PREVIEW.txt"),
     sentinel: path.join(out, "quantity-request.sentinel.tsv"),
@@ -126,6 +127,7 @@ function generate(out, requested, seed, requestMode) {
     promotion: path.join(out, "quantity-request.promotion.tsv")
   };
   atomicWrite(files.jsonl, `${records.map((record) => JSON.stringify(record)).join("\n")}\n`);
+  atomicWrite(files.sharedTrain, `${records.filter((record) => record.split === "train").map((record) => JSON.stringify(record)).join("\n")}\n`);
   atomicWrite(files.tokens, tokenized.buffer);
   atomicWrite(files.preview, `${records.filter((record) => record.split === "train").slice(0, 16).map((record) => `[${record.input}] => ${outputText(record)} => ${record.artifact}\n`).join("")}`);
   const evaluationHeader = requestMode === "operation"
@@ -160,6 +162,8 @@ function checkDirectory(out) {
   const requestMode = manifest.request_mode ?? "full";
   for (const metadata of Object.values(manifest.files)) if (sha256(path.join(out, metadata.path)) !== metadata.sha256) fail(`hash mismatch ${metadata.path}`);
   const records = fs.readFileSync(path.join(out, manifest.files.jsonl.path), "utf8").trim().split("\n").map(JSON.parse);
+  const sharedTrainText = fs.readFileSync(path.join(out, manifest.files.sharedTrain.path), "utf8").trim();
+  const sharedTrain = sharedTrainText.split("\n").map(JSON.parse);
   const counts = { train: 0, validation: 0, promotion: 0 };
   for (const record of records) {
     const expectedModelRequest = record.request.split(" ", 1)[0];
@@ -169,6 +173,9 @@ function checkDirectory(out) {
     encode(record); counts[record.split] += 1;
   }
   for (const split of Object.keys(counts)) if (counts[split] !== manifest.records[split]) fail(`${split} count mismatch`);
+  const expectedSharedTrainText = records.filter((record) => record.split === "train").map((record) => JSON.stringify(record)).join("\n");
+  if (sharedTrain.length !== counts.train || sharedTrain.some((record) => record.split !== "train") ||
+      sharedTrainText !== expectedSharedTrainText) fail("shared training JSONL mismatch");
   const sentinel = fs.readFileSync(path.join(out, manifest.files.sentinel.path), "utf8").trim().split("\n");
   const publicValidation = fs.readFileSync(path.join(out, manifest.files.public.path), "utf8").trim().split("\n");
   const promotion = fs.readFileSync(path.join(out, manifest.files.promotion.path), "utf8").trim().split("\n");

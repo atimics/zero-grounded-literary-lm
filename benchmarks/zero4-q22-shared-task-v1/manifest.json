@@ -1,0 +1,35 @@
+{
+  "schema": "zero.q22_shared_task_surface.v1",
+  "shared_task_id": "zero-solomon.q22-operation.v1",
+  "generation": {
+    "quantity": 10000,
+    "seed": 5,
+    "request_mode": "operation"
+  },
+  "dataset": {
+    "path": "quantity-request.train.jsonl",
+    "sha256": "815fac312664f49eaaa33942828ffa1511fd81091ccd88d47b4480b6c27a5fa4"
+  },
+  "eval_set": {
+    "path": "quantity-request.promotion.tsv",
+    "sha256": "9270ea2b72af90235407bd7924a0864b8eba35b2969e1657ed1c15bf04449519"
+  },
+  "records": {
+    "train": 9500,
+    "eval": 500
+  },
+  "source_files": {
+    "generator": {
+      "path": "scripts/generate_zero4_q2.mjs",
+      "sha256": "c727af9851ad4faa3940fc3a80242dd56adab8a26614ee0f5bd9b0244dcaf3f0"
+    },
+    "zero_verifier": {
+      "path": "quantity_request_eval.c",
+      "sha256": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902"
+    }
+  },
+  "zero_binding": {
+    "encoding": "zero.quantity-operation-request.v1",
+    "verifier": "verifier://zero/quantity-request/v1"
+  }
+}
