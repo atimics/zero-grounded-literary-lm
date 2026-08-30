@@ -70,6 +70,15 @@ WMStatus wm_representation_session_create(
     WMRepresentationSession **session,
     char *error,
     size_t error_capacity);
+WMStatus wm_representation_session_create_with_capacity(
+    const WMOracle *oracle,
+    const int32_t highest_weight[WM_MAX_RANK],
+    size_t maximum_memo_bytes,
+    size_t initial_memo_capacity,
+    WMRepresentationSession **session,
+    char *error,
+    size_t error_capacity);
+uint64_t wm_representation_memo_entry_bytes(void);
 WMStatus wm_representation_session_multiplicity(
     WMRepresentationSession *session,
     const int32_t target_weight[WM_MAX_RANK],

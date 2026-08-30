@@ -695,7 +695,20 @@ WMStatus wm_representation_session_create(
     char *error,
     size_t error_capacity)
 {
-    const size_t initial_capacity = 1024U;
+    return wm_representation_session_create_with_capacity(
+        oracle, highest_weight, maximum_memo_bytes, 1024U, session, error,
+        error_capacity);
+}
+
+WMStatus wm_representation_session_create_with_capacity(
+    const WMOracle *oracle,
+    const int32_t highest_weight[WM_MAX_RANK],
+    size_t maximum_memo_bytes,
+    size_t initial_memo_capacity,
+    WMRepresentationSession **session,
+    char *error,
+    size_t error_capacity)
+{
     WMRepresentationSession *created;
     size_t maximum_bytes;
     uint8_t index;
@@ -710,7 +723,13 @@ WMStatus wm_representation_session_create(
         }
     }
     maximum_bytes = maximum_memo_bytes == 0 ? SIZE_MAX : maximum_memo_bytes;
-    if (maximum_bytes / sizeof(WMMemoEntry) < initial_capacity) {
+    if (initial_memo_capacity < 2U ||
+        (initial_memo_capacity & (initial_memo_capacity - 1U)) != 0U) {
+        set_error(error, error_capacity,
+                  "representation memo initial capacity must be a power of two");
+        return WM_INVALID_ARGUMENT;
+    }
+    if (maximum_bytes / sizeof(WMMemoEntry) < initial_memo_capacity) {
         set_error(error, error_capacity,
                   "representation memo byte limit is below initial capacity");
         return WM_LIMIT_ERROR;
@@ -718,7 +737,7 @@ WMStatus wm_representation_session_create(
     created = calloc(1, sizeof(*created));
     if (created == NULL) return WM_MEMORY_ERROR;
     created->memo.entry =
-        calloc(initial_capacity, sizeof(*created->memo.entry));
+        calloc(initial_memo_capacity, sizeof(*created->memo.entry));
     if (created->memo.entry == NULL) {
         free(created);
         return WM_MEMORY_ERROR;
@@ -726,13 +745,18 @@ WMStatus wm_representation_session_create(
     created->oracle = oracle;
     memcpy(created->highest_weight, highest_weight,
            sizeof(created->highest_weight));
-    created->memo.capacity = initial_capacity;
+    created->memo.capacity = initial_memo_capacity;
     created->memo.maximum_bytes = maximum_bytes;
     created->memo.peak_allocated_bytes =
-        initial_capacity * sizeof(*created->memo.entry);
+        initial_memo_capacity * sizeof(*created->memo.entry);
     created->memo.rank = oracle->cartan.rank;
     *session = created;
     return WM_OK;
+}
+
+uint64_t wm_representation_memo_entry_bytes(void)
+{
+    return (uint64_t)sizeof(WMMemoEntry);
 }
 
 WMStatus wm_representation_session_multiplicity(
