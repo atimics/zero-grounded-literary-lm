@@ -156,6 +156,8 @@ R34_SEALED_EXECUTION=cloud R34_EXECUTION_LOCK=/tmp/sealed-execution.lock \
   R34_SEALED_CLOUD=1 R34_SOURCE_COMMIT="$SOURCE_COMMIT" \
   R34_CONTRACT_SHA256="$CONTRACT_SHA256" \
   R333_SEAL_APPROVAL_ID="$APPROVAL_ID" \
+  R35_SEALED_EXECUTION=cloud \
+  R35_EXECUTION_LOCK=/tmp/reasoner35-sealed-execution.lock \
   timeout --signal=TERM --kill-after=30s "${remaining}s" \
   "./${BINARY}" sealed-run /tmp/result.json > /tmp/sealed-summary.json
 runner_exit=$?
