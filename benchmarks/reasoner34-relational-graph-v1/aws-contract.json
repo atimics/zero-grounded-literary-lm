@@ -23,9 +23,15 @@
     "base_branch": "codex/reasoner33-transfer",
     "branch": "codex/reasoner34-relational",
     "base_commit": "a1e4644bea5c4707221c0bf7fca5bf12f17aec0f",
+    "implementation_commit": "dffc36771e3a374f381a951fe3e521724c3cc2be",
     "implementation_commit_supplied_at_launch": true,
     "archive_requires_source_commit_file": true,
     "sha256_supplied_at_launch": true
+  },
+  "result": {
+    "make_target": "reasoner34",
+    "binary": "reasoner34",
+    "schema": "zero.reasoner34_relational_graph.v1"
   },
   "execution": {
     "region": "us-east-1",
