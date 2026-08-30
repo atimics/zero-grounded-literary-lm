@@ -1,0 +1,59 @@
+{
+  "schema": "zero.reasoner34_aws_contract.v1",
+  "experiment": "reasoner34-nonmonotonic-planning-v1",
+  "version": "(3,3,2)",
+  "authorized": false,
+  "authorization": {
+    "approved_by": null,
+    "approved_at": null,
+    "approval_id": null,
+    "scope": "one sealed 5-7 gate execution"
+  },
+  "seal": {
+    "training_gates": [1, 2, 3],
+    "development_gates": [4],
+    "sealed_gates": [5, 6, 7],
+    "sealed_worlds": 5880,
+    "local_execution_forbidden": true,
+    "retries_for_scientific_failure": 0,
+    "tuning_after_open": false
+  },
+  "source": {
+    "branch": "codex/reasoner34-planning",
+    "base_commit": "a1e4644bea5c4707221c0bf7fca5bf12f17aec0f",
+    "implementation_commit": "PENDING_IMPLEMENTATION_COMMIT",
+    "archive_requires_source_commit_file": true,
+    "sha256_supplied_at_launch": true
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "cpu_credit_mode": "standard",
+    "instance_count": 1,
+    "maximum_instance_seconds": 900,
+    "maximum_ec2_usd": 0.003,
+    "maximum_total_run_usd": 0.01,
+    "single_execution_lock": true,
+    "automatic_termination": true,
+    "instance_initiated_shutdown_behavior": "terminate",
+    "encrypted_gp3_gib": 8,
+    "inbound_network_rules": 0
+  },
+  "price_evidence": {
+    "source": "inherited frozen Reasoner (3,3) AWS price receipt",
+    "sku": "CRAJUW7BTXFMT2UJ",
+    "description": "$0.0104 per On Demand Linux t3.micro Instance Hour",
+    "usd_per_hour": 0.0104,
+    "catalog_publication": "2026-08-29T01:43:19Z",
+    "price_effective": "2026-08-01T00:00:00Z"
+  },
+  "commands": {
+    "development_gate": "./reasoner34 --self-test",
+    "sealed_execution": "./reasoner34 sealed-run result.json"
+  },
+  "decision": {
+    "record_no_go": true,
+    "language_training_in_scope": false,
+    "promotion_requires_sealed_gate": true
+  }
+}
