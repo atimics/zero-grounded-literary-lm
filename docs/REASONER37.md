@@ -18,5 +18,6 @@ make reasoner37-check
 
 The sealed command refuses local execution. Cloud execution requires both
 `R37_SEALED_EXECUTION=cloud` and a new `R37_EXECUTION_LOCK` path. The source
-bundle and cloud contract remain unauthorized. The seal also remains blocked
-until Reasoner (3,5) passes its own one-shot sealed gate.
+bundle is frozen at commit `06adde505c47802d80148c0b93ff70b2c749034b`.
+The cloud contract remains unauthorized, and the seal remains blocked until
+Reasoner (3,5) passes its own one-shot sealed gate.

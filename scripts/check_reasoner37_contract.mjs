@@ -21,9 +21,21 @@ requireValue(contract.seal.surface_lexicons === 2, "surface lexicons");
 requireValue(contract.seal.language_is_causally_downstream === true, "causal boundary");
 requireValue(contract.seal.adversarial_language_control === true, "adversarial control");
 requireValue(contract.seal.retry === false, "no retry");
-requireValue(contract.source.implementation_commit === null, "source must not be frozen yet");
-requireValue(contract.source.bundle_sha256 === null, "bundle must not exist yet");
-requireValue(contract.source.destination === null, "destination must not exist yet");
+requireValue(
+  contract.source.implementation_commit === "06adde505c47802d80148c0b93ff70b2c749034b",
+  "source commit",
+);
+requireValue(
+  contract.source.bundle_sha256 ===
+    "e43419a197ffd9e38becc30eae22de14a0b534db9b30c3ce34b597328ec76964",
+  "bundle hash",
+);
+requireValue(contract.source.bundle_bytes === 42147, "bundle size");
+requireValue(
+  contract.source.destination ===
+    "s3://zero-training-022118847419/experiments/reasoner37-language-readout-v1/source/06adde505c47802d80148c0b93ff70b2c749034b.tar.gz",
+  "destination",
+);
 requireValue(contract.execution.region === "us-east-1", "region");
 requireValue(contract.execution.instance_type === "t3.micro", "instance type");
 requireValue(contract.execution.maximum_instance_seconds === 1800, "time cap");

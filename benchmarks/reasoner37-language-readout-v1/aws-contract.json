@@ -23,10 +23,10 @@
     "retry": false
   },
   "source": {
-    "implementation_commit": null,
-    "bundle_sha256": null,
-    "bundle_bytes": null,
-    "destination": null
+    "implementation_commit": "06adde505c47802d80148c0b93ff70b2c749034b",
+    "bundle_sha256": "e43419a197ffd9e38becc30eae22de14a0b534db9b30c3ce34b597328ec76964",
+    "bundle_bytes": 42147,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner37-language-readout-v1/source/06adde505c47802d80148c0b93ff70b2c749034b.tar.gz"
   },
   "execution": {
     "region": "us-east-1",
