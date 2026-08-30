@@ -1425,17 +1425,22 @@ zero4-q21: zero4-q21-train
 		ZERO4_Q21_RESULTS=$(ZERO4_Q21_RESULTS) \
 		ZERO4_Q21_EVAL_LIMIT=$(ZERO4_Q21_EVAL_LIMIT)
 
-zero4-q22-data: scripts/generate_zero4_q2.mjs
+zero4-q22-data: scripts/generate_zero4_q2.mjs \
+		scripts/materialize_zero4_q22_shared_task.mjs
 	mkdir -p corpus/faculty/q22
 	node scripts/generate_zero4_q2.mjs --out corpus/faculty/q22 \
 		--quantity 10000 --seed 5 --request-mode operation
+	node scripts/materialize_zero4_q22_shared_task.mjs corpus/faculty/q22
 
 zero4-q22-shared-task-check: scripts/generate_zero4_q2.mjs \
+		scripts/materialize_zero4_q22_shared_task.mjs \
 		scripts/check_zero4_q22_shared_task.mjs \
 		benchmarks/zero4-q22-shared-task-v1/manifest.json
 	rm -rf /tmp/zero4-q22-shared-task-v1
 	node scripts/generate_zero4_q2.mjs --out /tmp/zero4-q22-shared-task-v1 \
 		--quantity 10000 --seed 5 --request-mode operation
+	node scripts/materialize_zero4_q22_shared_task.mjs \
+		/tmp/zero4-q22-shared-task-v1
 	node scripts/check_zero4_q22_shared_task.mjs \
 		benchmarks/zero4-q22-shared-task-v1/manifest.json \
 		/tmp/zero4-q22-shared-task-v1

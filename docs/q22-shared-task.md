@@ -1,7 +1,8 @@
 # Q22 Zero to Solomon shared task surface
 
-Q22 now publishes a family-neutral training file alongside the existing Zero
-token stream. `quantity-request.train.jsonl` contains only the 9,500 training
+Q22 now materializes a family-neutral training file alongside the existing
+Zero token stream without changing the historically locked generator.
+`quantity-request.train.jsonl` contains only the 9,500 training
 records. The frozen evaluation surface remains the 500-row disjoint promotion
 set. This separation prevents the evaluation answers from entering a shared
 family's training input.

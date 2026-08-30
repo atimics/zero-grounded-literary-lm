@@ -21,7 +21,11 @@
   "source_files": {
     "generator": {
       "path": "scripts/generate_zero4_q2.mjs",
-      "sha256": "c727af9851ad4faa3940fc3a80242dd56adab8a26614ee0f5bd9b0244dcaf3f0"
+      "sha256": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded"
+    },
+    "materializer": {
+      "path": "scripts/materialize_zero4_q22_shared_task.mjs",
+      "sha256": "dde58f4d77b861d9e51ea323c8f6e664ffa4ed95cb7ccebde7a2233ec3174d9f"
     },
     "zero_verifier": {
       "path": "quantity_request_eval.c",
