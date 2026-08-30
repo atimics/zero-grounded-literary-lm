@@ -39,6 +39,9 @@ small browser runtime:
 - `reasoner32`: Reasoner (3,2), which behaviorally prunes the passing (3,1)
   policy to a direct 87-byte sparse artifact and proves exact equivalence over
   the complete finite world.
+- `reasoner33`: Reasoner (3,3), a capacity-matched dimension-transfer test
+  with 1D/2D training, a complete 3D development gate, and a sealed 4D cloud
+  evaluation.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -217,6 +220,8 @@ make reasoner32-check
 ./reasoner32 build /tmp/reasoner32.r32p
 ./reasoner32 verify /tmp/reasoner31.r31p /tmp/reasoner32.r32p
 ./reasoner32 render /tmp/reasoner32.r32p 510
+make reasoner33-check
+./reasoner33 development
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -229,7 +234,9 @@ counterexample interventions, and its 1,738/1,740 minimum-edit holdout no-go.
 See [`docs/REASONER31.md`](docs/REASONER31.md) for the exact progress contract
 and the passing 1,674/1,674 sealed 3D test. See
 [`docs/REASONER32.md`](docs/REASONER32.md) for the 16-weight sparse policy and
-its exhaustive action-and-trace equivalence proof.
+its exhaustive action-and-trace equivalence proof. See
+[`docs/REASONER33.md`](docs/REASONER33.md) for the frozen cross-dimension
+transfer contract and sealed cloud boundary.
 
 ## Build
 
