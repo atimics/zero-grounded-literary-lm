@@ -194,7 +194,8 @@ static int self_test(void)
 {
     R0Policy policy, loaded;
     R0TrainingReport training;
-    R0CartanMatrix a2, disconnected, affine_a2, b3, e8, affine_e8;
+    R0CartanMatrix a2, disconnected, affine_a1, affine_a2, affine_d4;
+    R0CartanMatrix product_five, g2, b3, b4, c4, f4, e8, affine_e8;
     R0CartanMatrix canonical, relabeled, relabeled_canonical;
     R0RunResult result;
     R0EnumerationReport enumeration;
@@ -258,6 +259,47 @@ static int self_test(void)
                "affine A2 is an exact determinant-zero negative"))
         return 0;
 
+    diagonal(&affine_a1, 2);
+    edge(&affine_a1, 0, 1, -2, -2);
+    status = r0_run(&policy, &affine_a1, &result, error, sizeof(error));
+    if (!check(status == R0_OK && !result.accepted &&
+                   result.observation.failure == R0_CARTAN_AFFINE_BOUNDARY &&
+                   result.observation.determinant == 0,
+               "affine A1 reaches the exact product-four boundary"))
+        return 0;
+
+    diagonal(&affine_d4, 5);
+    edge(&affine_d4, 0, 1, -1, -1);
+    edge(&affine_d4, 0, 2, -1, -1);
+    edge(&affine_d4, 0, 3, -1, -1);
+    edge(&affine_d4, 0, 4, -1, -1);
+    status = r0_run(&policy, &affine_d4, &result, error, sizeof(error));
+    if (!check(status == R0_OK && !result.accepted &&
+                   result.observation.failure == R0_CARTAN_AFFINE_BOUNDARY &&
+                   result.observation.determinant == 0,
+               "affine D4 valence-four star is determinant zero"))
+        return 0;
+
+    diagonal(&product_five, 2);
+    edge(&product_five, 0, 1, -1, -5);
+    status = r0_run(&policy, &product_five, &result, error, sizeof(error));
+    if (!check(status == R0_OK && !result.accepted &&
+                   result.observation.failure ==
+                       R0_CARTAN_BAD_BOND_PRODUCT &&
+                   result.observation.checked_principal_minors == 0,
+               "product five fails before positive-definiteness checks"))
+        return 0;
+
+    diagonal(&g2, 2);
+    edge(&g2, 0, 1, -3, -1);
+    status = r0_run(&policy, &g2, &result, error, sizeof(error));
+    if (!check(status == R0_OK && result.accepted &&
+                   result.observation.determinant == 1 &&
+                   strcmp(r0_cartan_type(&result.sealed_answer.answer.matrix),
+                          "G2") == 0,
+               "G2 exercises and accepts bond product three"))
+        return 0;
+
     diagonal(&b3, 3);
     edge(&b3, 0, 1, -1, -1);
     edge(&b3, 1, 2, -2, -1);
@@ -266,6 +308,48 @@ static int self_test(void)
                    strcmp(r0_cartan_type(&result.sealed_answer.answer.matrix),
                           "B3") == 0,
                "B3 is accepted and oriented"))
+        return 0;
+
+    diagonal(&f4, 4);
+    edge(&f4, 0, 1, -1, -1);
+    edge(&f4, 1, 2, -2, -1);
+    edge(&f4, 2, 3, -1, -1);
+    status = r0_run(&policy, &f4, &result, error, sizeof(error));
+    if (!check(status == R0_OK && result.accepted &&
+                   result.observation.determinant == 1 &&
+                   strcmp(r0_cartan_type(&result.sealed_answer.answer.matrix),
+                          "F4") == 0,
+               "F4 exercises and accepts an internal double bond"))
+        return 0;
+
+    diagonal(&b4, 4);
+    edge(&b4, 0, 1, -1, -1);
+    edge(&b4, 1, 2, -1, -1);
+    edge(&b4, 2, 3, -2, -1);
+    diagonal(&c4, 4);
+    edge(&c4, 0, 1, -1, -1);
+    edge(&c4, 1, 2, -1, -1);
+    edge(&c4, 2, 3, -1, -2);
+    status = r0_cartan_canonicalize(&b4, &canonical, error, sizeof(error));
+    if (status == R0_OK)
+        status = r0_cartan_canonicalize(&c4, &relabeled_canonical, error,
+                                        sizeof(error));
+    if (!check(status == R0_OK &&
+                   memcmp(&canonical, &relabeled_canonical,
+                          sizeof(canonical)) != 0,
+               "canonicalization preserves the B4-C4 arrow direction"))
+        return 0;
+    status = r0_run(&policy, &b4, &result, error, sizeof(error));
+    if (!check(status == R0_OK && result.accepted &&
+                   strcmp(r0_cartan_type(&result.sealed_answer.answer.matrix),
+                          "B4") == 0,
+               "B4 is accepted as B4"))
+        return 0;
+    status = r0_run(&policy, &c4, &result, error, sizeof(error));
+    if (!check(status == R0_OK && result.accepted &&
+                   strcmp(r0_cartan_type(&result.sealed_answer.answer.matrix),
+                          "C4") == 0,
+               "C4 is accepted separately from B4"))
         return 0;
     relabeled = b3;
     CELL(&relabeled, 0, 0) = CELL(&b3, 2, 2);
@@ -339,6 +423,9 @@ static int self_test(void)
                "bounded classification contains 31 connected types") ||
         !check(cumulative_rank_two == 4,
                "rank-two curriculum has A1, A2, B2/C2, G2") ||
+        !check(enumeration.count_by_rank[3] == 3 &&
+                   strcmp(enumeration.types_by_rank[3], "A3,B3,C3") == 0,
+               "rank three excludes reducible rank-two-plus-A1 cases") ||
         !check(strcmp(enumeration.types_by_rank[8],
                       "A8,B8,C8,D8,E8") == 0,
                "rank eight contains E8 and four families") ||

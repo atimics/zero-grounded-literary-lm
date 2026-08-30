@@ -35,7 +35,9 @@ For a rank `n` integer matrix `A`, `cartan.verify` requires:
 1. `A[i,i] = 2`.
 2. Every off-diagonal entry is non-positive.
 3. `A[i,j] = 0` exactly when `A[j,i] = 0`.
-4. Every bond product `A[i,j] * A[j,i]` is in `{0, 1, 2, 3}`.
+4. Every finite-type bond product is in `{0, 1, 2, 3}`. Product `4` is
+   allowed to reach the exact minor check so rank-2 affine cases are labeled
+   by determinant zero; products above `4` fail immediately.
 5. The diagram is connected. Direct sums are rejected.
 6. A positive integer symmetrizer exists.
 7. Every proper principal minor is positive and the full determinant is
@@ -45,10 +47,17 @@ All determinants use the fraction-free Bareiss algorithm over signed integers.
 There are no eigenvalues, tolerances, or floating-point comparisons. If every
 proper principal minor is positive and the full determinant is zero, the
 verifier returns the dedicated `affine_determinant_zero` counterexample.
+This includes the product-4 rank-2 affine case. A product-5 negative is rejected
+as `bad_bond_product` before any determinant is computed.
 
 Connectedness is part of the verifier, not a dataset filter. This closes the
 `A1 x A1 x ...` reward channel: a reducible matrix cannot receive a valid
 certificate.
+
+The self-test keeps the important paths separate: `G2` exercises product 3;
+`F4` exercises an internal product-2 bond; affine `A1` and affine `D4` exercise
+two different determinant-zero shapes; and a product-5 matrix fails before any
+principal minor is checked.
 
 ## Canonical reward identity
 
@@ -61,6 +70,9 @@ are one proposal. Before verification, reward, or deduplication, Reasoner-0:
 4. selects the lexicographically least matrix.
 
 The policy therefore cannot earn repeated credit by relabeling one diagram.
+Directed bond counts remain in the node signature and the full directed matrix
+is compared. The self-test therefore requires `B4` and its transpose `C4` to
+have different canonical forms and different type names.
 
 ## Enumeration curriculum
 

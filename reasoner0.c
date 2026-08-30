@@ -576,7 +576,9 @@ R0Status r0_cartan_verify(const R0CartanMatrix *matrix,
                 return R0_OK;
             }
             product = left * right;
-            if (product < 0 || product > 3) {
+            /* Product four is the rank-two affine boundary.  Let exact
+               principal minors classify it; larger products fail locally. */
+            if (product < 0 || product > 4) {
                 observation->failure = R0_CARTAN_BAD_BOND_PRODUCT;
                 observation->row = (uint8_t)row;
                 observation->column = (uint8_t)column;
