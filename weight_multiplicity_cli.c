@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 
 #define WM_CELL(matrix, row, column) \
     ((matrix)->entries[(size_t)(row) * R0_MAX_RANK + (column)])
@@ -359,6 +360,25 @@ static int run_server(void)
         char error[256] = {0};
         end = strpbrk(line, "\r\n");
         if (end != NULL) *end = '\0';
+        if (strcmp(line, "@metrics") == 0) {
+            struct rusage usage;
+            if (getrusage(RUSAGE_SELF, &usage) != 0) {
+                fputs("{\"status\":\"error\",\"code\":\"metrics_error\"}\n",
+                      stdout);
+            } else {
+#if defined(__APPLE__)
+                unsigned long long max_rss_bytes =
+                    (unsigned long long)usage.ru_maxrss;
+#else
+                unsigned long long max_rss_bytes =
+                    (unsigned long long)usage.ru_maxrss * 1024ULL;
+#endif
+                printf("{\"status\":\"metrics\",\"max_rss_bytes\":%llu}\n",
+                       max_rss_bytes);
+            }
+            fflush(stdout);
+            continue;
+        }
         highest_text = strchr(line, '\t');
         if (highest_text == NULL) {
             fputs("{\"status\":\"error\",\"code\":\"invalid_request\"}\n",

@@ -87,6 +87,10 @@ requests. Each response is the same stable JSON record as the one-shot query.
 This lets the ilXyr controller time calls and replay the exact input stream in
 a fresh process to check byte identity.
 
+Sending `@metrics` returns the process peak resident-set size in bytes. The
+controller records it before type initialization, after warm-up, and after the
+cell. This keeps memory accounting separate from query latency.
+
 The controller can obtain the verified coordinate data once per type with:
 
 ```sh
