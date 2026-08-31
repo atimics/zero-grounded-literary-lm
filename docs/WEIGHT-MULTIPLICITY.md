@@ -162,6 +162,39 @@ high-water mark. Process RSS remains a separate controller measurement.
 This is a new Phase 0.5 execution surface. It does not change the historical
 `--serve` output or rewrite sealed Phase 0 evidence.
 
+## Stabilizer orbits and root rays
+
+The prepared engine groups positive roots under the Weyl subgroup that fixes
+the current dominant weight. Roots in one such orbit have the same folded
+dependency and the same Freudenthal contribution. The engine therefore folds
+one representative for each active orbit and keeps the original logical term
+and fold counters. A differential build checks every grouped endpoint against
+the ungrouped canonicalizer.
+
+An additional exact root-ray engine is available for memory-sensitive deep
+queries:
+
+```sh
+./weight_multiplicity query-ray E8 HIGHEST TARGET
+./weight_multiplicity --serve-ray
+```
+
+It treats all positive multiples of a root as one memoized ray state. A ray
+stores its ordinary and distance-weighted multiplicity sums, so a source node
+can reconstruct the unchanged Freudenthal numerator without retaining the
+prepared graph's many-to-one edge list. Ray states are keyed by canonical
+weight node and signed root direction. The state table uses 48-byte entries,
+direct per-node root lookup, 128-bit inline values, and an exact 1,024-bit side
+table when an inline value is too small.
+
+This engine is additive and is not the default. On the current E8 frontier it
+uses materially less memory, but its single-threaded ray traversal is not
+faster than the parallel prepared graph. Schema Version 4 reports ray states,
+hits, transitions, and counted ray allocation. The same shared byte ceiling
+applies to the multiplicity memo and the ray tables. See
+`docs/WEIGHT-MULTIPLICITY-ROOT-RAY.md` for the matched measurements and the
+remaining performance decision.
+
 Sending `@metrics` returns the process peak resident-set size in bytes. The
 controller records it before type initialization, after warm-up, and after the
 cell. This keeps memory accounting separate from query latency.

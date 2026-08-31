@@ -40,6 +40,17 @@ typedef struct {
     WMPositiveRoots positive_roots;
     int32_t positive_root_dynkin[WM_MAX_POSITIVE_ROOTS][WM_MAX_RANK];
     int64_t positive_root_norm[WM_MAX_POSITIVE_ROOTS];
+    uint32_t positive_root_key[WM_MAX_POSITIVE_ROOTS];
+    uint8_t positive_root_key_order[WM_MAX_POSITIVE_ROOTS];
+    uint8_t positive_root_orbit_group[1U << WM_MAX_RANK]
+                                     [WM_MAX_POSITIVE_ROOTS];
+    uint8_t positive_root_orbit_order[1U << WM_MAX_RANK]
+                                     [WM_MAX_POSITIVE_ROOTS];
+    uint8_t positive_root_orbit_offset[1U << WM_MAX_RANK]
+                                      [WM_MAX_POSITIVE_ROOTS + 1U];
+    uint8_t positive_root_orbit_group_count[1U << WM_MAX_RANK];
+    uint8_t signed_root_orbit_representative[1U << WM_MAX_RANK]
+                                             [WM_MAX_ROOTS];
 } WMOracle;
 
 typedef struct {
@@ -68,6 +79,15 @@ typedef struct {
     uint64_t prepared_parallel_nodes;
     uint64_t prepared_discovery_rounds;
     uint64_t prepared_discovery_nodes;
+    uint64_t prepared_root_orbit_groups;
+    uint64_t prepared_root_ray_updates;
+    uint64_t prepared_root_ray_transitions_saved;
+    uint64_t prepared_nontrivial_stabilizer_nodes;
+    uint64_t ray_states;
+    uint64_t ray_state_hits;
+    uint64_t ray_transitions;
+    uint64_t ray_capacity_bytes;
+    uint64_t ray_peak_allocated_bytes;
     uint32_t prepared_worker_count;
     uint32_t maximum_level;
 } WMQueryStats;
@@ -84,6 +104,14 @@ WMStatus wm_weight_multiplicity(const WMOracle *oracle,
                                 WMBigUInt *multiplicity, WMQueryStats *stats,
                                 char *error, size_t error_capacity);
 WMStatus wm_weight_multiplicity_prepared(
+    const WMOracle *oracle,
+    const int32_t highest_weight[WM_MAX_RANK],
+    const int32_t target_weight[WM_MAX_RANK],
+    WMBigUInt *multiplicity,
+    WMQueryStats *stats,
+    char *error,
+    size_t error_capacity);
+WMStatus wm_weight_multiplicity_ray(
     const WMOracle *oracle,
     const int32_t highest_weight[WM_MAX_RANK],
     const int32_t target_weight[WM_MAX_RANK],
@@ -115,6 +143,13 @@ WMStatus wm_representation_session_multiplicity(
     char *error,
     size_t error_capacity);
 WMStatus wm_representation_session_multiplicity_prepared(
+    WMRepresentationSession *session,
+    const int32_t target_weight[WM_MAX_RANK],
+    WMBigUInt *multiplicity,
+    WMQueryStats *stats,
+    char *error,
+    size_t error_capacity);
+WMStatus wm_representation_session_multiplicity_ray(
     WMRepresentationSession *session,
     const int32_t target_weight[WM_MAX_RANK],
     WMBigUInt *multiplicity,

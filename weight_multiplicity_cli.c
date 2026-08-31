@@ -80,22 +80,32 @@ static int query_expected(const WMOracle *oracle,
                           const int32_t target[WM_MAX_RANK], uint32_t expected,
                           const char *context)
 {
-    WMBigUInt value;
+    WMBigUInt value, ray_value;
+    WMQueryStats recursive_stats, ray_stats;
     WMStatus status;
     char error[256] = {0};
     char decimal[WM_DECIMAL_CAPACITY];
-    status = wm_weight_multiplicity(oracle, highest, target, &value, NULL,
-                                    error, sizeof(error));
-    if (status == WM_OK && wm_big_equal_u32(&value, expected)) return 1;
+    status = wm_weight_multiplicity(oracle, highest, target, &value,
+                                    &recursive_stats, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_weight_multiplicity_ray(
+            oracle, highest, target, &ray_value, &ray_stats, error,
+            sizeof(error));
+    if (status == WM_OK && wm_big_equal_u32(&value, expected) &&
+        memcmp(&value, &ray_value, sizeof(value)) == 0 &&
+        recursive_stats.recurrence_terms == ray_stats.recurrence_terms)
+        return 1;
     if (status == WM_OK)
         (void)wm_big_to_decimal(&value, decimal, sizeof(decimal));
     else
         snprintf(decimal, sizeof(decimal), "%s", wm_status_name(status));
     if (error[0])
-        fprintf(stderr, "self-test failed: %s expected %u, got %s (%s)\n",
+        fprintf(stderr, "self-test failed: %s expected %u, got %s (%s; "
+                        "root-ray differential failed)\n",
                 context, expected, decimal, error);
     else
-        fprintf(stderr, "self-test failed: %s expected %u, got %s\n",
+        fprintf(stderr, "self-test failed: %s expected %u, got %s "
+                        "(root-ray differential failed)\n",
                 context, expected, decimal);
     return 0;
 }
@@ -261,6 +271,66 @@ static int test_prepared_dependency_graph(void)
     return 1;
 }
 
+static int test_root_ray_factorization(void)
+{
+    WMOracle oracle;
+    WMRepresentationSession *session = NULL;
+    int32_t highest[WM_MAX_RANK] = {2, 0, 2};
+    int32_t target[WM_MAX_RANK] = {0};
+    WMBigUInt recursive, first, second;
+    WMQueryStats recursive_stats, first_stats, second_stats, limit_stats;
+    char error[256] = {0};
+    WMStatus status = wm_oracle_init_type("A3", &oracle, error,
+                                         sizeof(error));
+    if (status == WM_OK)
+        status = wm_weight_multiplicity(&oracle, highest, target, &recursive,
+                                        &recursive_stats, error,
+                                        sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_create(
+            &oracle, highest, 4U * 1024U * 1024U, &session, error,
+            sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_multiplicity_ray(
+            session, target, &first, &first_stats, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_multiplicity_ray(
+            session, target, &second, &second_stats, error, sizeof(error));
+    if (status != WM_OK || !wm_big_equal_u32(&first, 6) ||
+        memcmp(&recursive, &first, sizeof(first)) != 0 ||
+        memcmp(&first, &second, sizeof(first)) != 0 ||
+        recursive_stats.recurrence_terms != first_stats.recurrence_terms ||
+        first_stats.ray_states == 0 || first_stats.ray_transitions == 0 ||
+        second_stats.memo_entries_added != 0 ||
+        second_stats.recurrence_terms != 0) {
+        fprintf(stderr,
+                "self-test failed: root-ray factorization exactness or "
+                "session reuse: %s\n",
+                error);
+        wm_representation_session_destroy(session);
+        return 0;
+    }
+    wm_representation_session_destroy(session);
+    session = NULL;
+    memset(error, 0, sizeof(error));
+    status = wm_representation_session_create(
+        &oracle, highest, 200000U, &session, error, sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_multiplicity_ray(
+            session, target, &first, &limit_stats, error, sizeof(error));
+    if (status != WM_LIMIT_ERROR ||
+        limit_stats.working_set_peak_allocated_bytes > 200000U) {
+        fprintf(stderr,
+                "self-test failed: root-ray tables did not honor the shared "
+                "byte limit: %s\n",
+                error);
+        wm_representation_session_destroy(session);
+        return 0;
+    }
+    wm_representation_session_destroy(session);
+    return 1;
+}
+
 static int test_recursive_weyl_folding(void)
 {
     WMOracle oracle;
@@ -339,7 +409,8 @@ static int run_self_test(void)
     if (!test_a1() || !test_a2_fundamental() ||
         !test_recursive_weyl_folding() ||
         !test_persistent_representation_memo() ||
-        !test_prepared_dependency_graph())
+        !test_prepared_dependency_graph() ||
+        !test_root_ray_factorization())
         return 1;
     for (index = 0; index < sizeof(TYPE_EXPECTATIONS) /
                               sizeof(TYPE_EXPECTATIONS[0]);
@@ -368,26 +439,30 @@ static int run_self_test(void)
     printf("{\"status\":\"pass\",\"types\":31,"
            "\"positive_roots\":931,\"acr1_cases\":3750,"
            "\"persistent_representation_memo\":true,"
-           "\"prepared_dependency_graph\":true}\n");
+           "\"prepared_dependency_graph\":true,"
+           "\"root_ray_factorization\":true}\n");
     return 0;
 }
 
 static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
                                    const int32_t highest[WM_MAX_RANK],
                                    const int32_t target[WM_MAX_RANK],
-                                   int prepared, char *error,
+                                   int engine, char *error,
                                    size_t error_capacity)
 {
     WMBigUInt value;
     WMQueryStats stats;
     WMStatus status;
     char decimal[WM_DECIMAL_CAPACITY];
-    status = prepared
-                 ? wm_weight_multiplicity_prepared(
-                       oracle, highest, target, &value, &stats, error,
-                       error_capacity)
-                 : wm_weight_multiplicity(oracle, highest, target, &value,
-                                          &stats, error, error_capacity);
+    if (engine == 2)
+        status = wm_weight_multiplicity_ray(
+            oracle, highest, target, &value, &stats, error, error_capacity);
+    else if (engine == 1)
+        status = wm_weight_multiplicity_prepared(
+            oracle, highest, target, &value, &stats, error, error_capacity);
+    else
+        status = wm_weight_multiplicity(oracle, highest, target, &value,
+                                        &stats, error, error_capacity);
     if (status != WM_OK ||
         wm_big_to_decimal(&value, decimal, sizeof(decimal)) != WM_OK) {
         return status == WM_OK ? WM_LIMIT_ERROR : status;
@@ -404,6 +479,10 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
            "\"engine\":\"%s\","
            "\"prepared_nodes\":%llu,\"prepared_edges\":%llu,"
            "\"prepared_raw_transitions\":%llu,"
+           "\"prepared_root_orbit_groups\":%llu,"
+           "\"prepared_root_ray_updates\":%llu,"
+           "\"prepared_root_ray_transitions_saved\":%llu,"
+           "\"prepared_nontrivial_stabilizer_nodes\":%llu,"
            "\"prepared_discovery_nanoseconds\":%llu,"
            "\"prepared_evaluation_nanoseconds\":%llu,"
            "\"prepared_graph_capacity_bytes\":%llu,"
@@ -412,16 +491,25 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
            "\"prepared_parallel_nodes\":%llu,"
            "\"prepared_discovery_rounds\":%llu,"
            "\"prepared_discovery_nodes\":%llu,"
+           "\"ray_states\":%llu,\"ray_state_hits\":%llu,"
+           "\"ray_transitions\":%llu,"
+           "\"ray_capacity_bytes\":%llu,"
+           "\"ray_peak_allocated_bytes\":%llu,"
            "\"working_set_peak_allocated_bytes\":%llu,"
            "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
            (unsigned long long)stats.memo_entries,
            (unsigned long long)stats.recurrence_terms,
            (unsigned long long)stats.recursive_weyl_folds,
-           prepared ? "prepared_dag" : "recursive",
+           engine == 2 ? "root_ray"
+                       : (engine == 1 ? "prepared_dag" : "recursive"),
            (unsigned long long)stats.prepared_nodes,
            (unsigned long long)stats.prepared_edges,
            (unsigned long long)stats.prepared_raw_transitions,
+           (unsigned long long)stats.prepared_root_orbit_groups,
+           (unsigned long long)stats.prepared_root_ray_updates,
+           (unsigned long long)stats.prepared_root_ray_transitions_saved,
+           (unsigned long long)stats.prepared_nontrivial_stabilizer_nodes,
            (unsigned long long)stats.prepared_discovery_nanoseconds,
            (unsigned long long)stats.prepared_evaluation_nanoseconds,
            (unsigned long long)stats.prepared_graph_capacity_bytes,
@@ -430,6 +518,11 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
            (unsigned long long)stats.prepared_parallel_nodes,
            (unsigned long long)stats.prepared_discovery_rounds,
            (unsigned long long)stats.prepared_discovery_nodes,
+           (unsigned long long)stats.ray_states,
+           (unsigned long long)stats.ray_state_hits,
+           (unsigned long long)stats.ray_transitions,
+           (unsigned long long)stats.ray_capacity_bytes,
+           (unsigned long long)stats.ray_peak_allocated_bytes,
            (unsigned long long)stats.working_set_peak_allocated_bytes,
            stats.maximum_level);
     return WM_OK;
@@ -441,24 +534,29 @@ static WMStatus evaluate_session_and_print(
     const int32_t highest[WM_MAX_RANK],
     const int32_t target[WM_MAX_RANK],
     uint64_t session_generation,
-    int prepared, char *error, size_t error_capacity)
+    int engine, char *error, size_t error_capacity)
 {
     WMBigUInt value;
     WMQueryStats stats;
     WMStatus status;
     char decimal[WM_DECIMAL_CAPACITY];
-    status = prepared
-                 ? wm_representation_session_multiplicity_prepared(
-                       session, target, &value, &stats, error, error_capacity)
-                 : wm_representation_session_multiplicity(
-                       session, target, &value, &stats, error, error_capacity);
+    if (engine == 2)
+        status = wm_representation_session_multiplicity_ray(
+            session, target, &value, &stats, error, error_capacity);
+    else if (engine == 1)
+        status = wm_representation_session_multiplicity_prepared(
+            session, target, &value, &stats, error, error_capacity);
+    else
+        status = wm_representation_session_multiplicity(
+            session, target, &value, &stats, error, error_capacity);
     if (status != WM_OK ||
         wm_big_to_decimal(&value, decimal, sizeof(decimal)) != WM_OK) {
         return status == WM_OK ? WM_LIMIT_ERROR : status;
     }
     printf("{\"schema_version\":%u,\"type\":\"%s\",\"rank\":%u,"
            "\"highest_weight\":",
-           prepared ? 3U : 2U, type, oracle->cartan.rank);
+           engine == 2 ? 4U : (engine == 1 ? 3U : 2U), type,
+           oracle->cartan.rank);
     print_weight(highest, oracle->cartan.rank);
     fputs(",\"target_weight\":", stdout);
     print_weight(target, oracle->cartan.rank);
@@ -480,15 +578,26 @@ static WMStatus evaluate_session_and_print(
            "\"prepared_edges\":%llu,"
            "\"prepared_edges_added\":%llu,"
            "\"prepared_raw_transitions\":%llu,"
+           "\"prepared_root_orbit_groups\":%llu,"
+           "\"prepared_root_ray_updates\":%llu,"
+           "\"prepared_root_ray_transitions_saved\":%llu,"
+           "\"prepared_nontrivial_stabilizer_nodes\":%llu,"
            "\"prepared_discovery_nanoseconds\":%llu,"
            "\"prepared_evaluation_nanoseconds\":%llu,"
            "\"prepared_graph_capacity_bytes\":%llu,"
            "\"prepared_worker_count\":%u,"
+           "\"ray_states\":%llu,\"ray_state_hits\":%llu,"
+           "\"ray_transitions\":%llu,"
+           "\"ray_capacity_bytes\":%llu,"
+           "\"ray_peak_allocated_bytes\":%llu,"
            "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
-           prepared ? "per_representation_prepared_dag"
-                    : "per_representation",
-           prepared ? "prepared_dag" : "recursive",
+           engine == 2
+               ? "per_representation_root_ray"
+               : (engine == 1 ? "per_representation_prepared_dag"
+                              : "per_representation"),
+           engine == 2 ? "root_ray"
+                       : (engine == 1 ? "prepared_dag" : "recursive"),
            (unsigned long long)session_generation,
            (unsigned long long)stats.memo_entries_before,
            (unsigned long long)stats.memo_entries,
@@ -507,16 +616,25 @@ static WMStatus evaluate_session_and_print(
            (unsigned long long)stats.prepared_edges,
            (unsigned long long)stats.prepared_edges_added,
            (unsigned long long)stats.prepared_raw_transitions,
+           (unsigned long long)stats.prepared_root_orbit_groups,
+           (unsigned long long)stats.prepared_root_ray_updates,
+           (unsigned long long)stats.prepared_root_ray_transitions_saved,
+           (unsigned long long)stats.prepared_nontrivial_stabilizer_nodes,
            (unsigned long long)stats.prepared_discovery_nanoseconds,
            (unsigned long long)stats.prepared_evaluation_nanoseconds,
            (unsigned long long)stats.prepared_graph_capacity_bytes,
            stats.prepared_worker_count,
+           (unsigned long long)stats.ray_states,
+           (unsigned long long)stats.ray_state_hits,
+           (unsigned long long)stats.ray_transitions,
+           (unsigned long long)stats.ray_capacity_bytes,
+           (unsigned long long)stats.ray_peak_allocated_bytes,
            stats.maximum_level);
     return WM_OK;
 }
 
 static int run_query(const char *type, const char *highest_text,
-                     const char *target_text, int prepared)
+                     const char *target_text, int engine)
 {
     WMOracle oracle;
     int32_t highest[WM_MAX_RANK] = {0};
@@ -534,7 +652,7 @@ static int run_query(const char *type, const char *highest_text,
                 oracle.cartan.rank);
         return 2;
     }
-    status = evaluate_and_print(type, &oracle, highest, target, prepared, error,
+    status = evaluate_and_print(type, &oracle, highest, target, engine, error,
                                 sizeof(error));
     if (status != WM_OK) {
         fprintf(stderr, "%s: %s\n", wm_status_name(status), error);
@@ -626,9 +744,9 @@ static int configured_memo_initial_capacity(size_t *initial_capacity)
     return 1;
 }
 
-static int run_server(int grouped, int prepared)
+static int run_server(int grouped, int engine)
 {
-    struct CachedOracle {
+    static struct CachedOracle {
         char type[4];
         WMOracle oracle;
     } cache[31];
@@ -654,9 +772,11 @@ static int run_server(int grouped, int prepared)
                "\"memo_initial_capacity\":%llu,"
                "\"memo_entry_bytes\":%llu,"
                "\"memo_allocation_policy\":\"%s\"}\n",
-               prepared ? 3U : 2U,
-               prepared ? "per_representation_prepared_dag"
-                        : "per_representation",
+               engine == 2 ? 4U : (engine == 1 ? 3U : 2U),
+               engine == 2
+                   ? "per_representation_root_ray"
+                   : (engine == 1 ? "per_representation_prepared_dag"
+                                  : "per_representation"),
                (unsigned long long)memo_limit,
                (unsigned long long)memo_initial_capacity,
                (unsigned long long)wm_representation_memo_entry_bytes(),
@@ -702,8 +822,11 @@ static int run_server(int grouped, int prepared)
                            "\"working_set_capacity_bytes\":%llu,"
                            "\"working_set_peak_allocated_bytes\":%llu}\n",
                            max_rss_bytes,
-                           prepared ? "per_representation_prepared_dag"
-                                    : "per_representation",
+                           engine == 2
+                               ? "per_representation_root_ray"
+                               : (engine == 1
+                                      ? "per_representation_prepared_dag"
+                                      : "per_representation"),
                            (unsigned long long)session_generation,
                            (unsigned long long)
                                wm_representation_session_memo_entries(
@@ -734,8 +857,10 @@ static int run_server(int grouped, int prepared)
             memset(active_highest, 0, sizeof(active_highest));
             memset(active_type, 0, sizeof(active_type));
             printf("{\"status\":\"reset\",\"cache_mode\":\"%s\"}\n",
-                   prepared ? "per_representation_prepared_dag"
-                            : "per_representation");
+                   engine == 2
+                       ? "per_representation_root_ray"
+                       : (engine == 1 ? "per_representation_prepared_dag"
+                                      : "per_representation"));
             fflush(stdout);
             continue;
         }
@@ -807,7 +932,7 @@ static int run_server(int grouped, int prepared)
             }
             status = evaluate_session_and_print(
                 line, oracle, active_session, highest, target,
-                session_generation, prepared, error, sizeof(error));
+                session_generation, engine, error, sizeof(error));
         } else {
             status = evaluate_and_print(line, oracle, highest, target, 0,
                                         error, sizeof(error));
@@ -827,11 +952,13 @@ static void usage(const char *program)
             "usage:\n  %s --self-test\n  %s --serve\n"
             "  %s --serve-grouped\n"
             "  %s --serve-prepared\n"
+            "  %s --serve-ray\n"
             "  %s describe TYPE\n  %s query TYPE HIGHEST TARGET\n"
             "  %s query-prepared TYPE HIGHEST TARGET\n"
+            "  %s query-ray TYPE HIGHEST TARGET\n"
             "example:\n  %s query A2 1,1 0,0\n",
             program, program, program, program, program, program, program,
-            program);
+            program, program, program);
 }
 
 int main(int argc, char **argv)
@@ -844,12 +971,16 @@ int main(int argc, char **argv)
         return run_server(1, 0);
     if (argc == 2 && strcmp(argv[1], "--serve-prepared") == 0)
         return run_server(1, 1);
+    if (argc == 2 && strcmp(argv[1], "--serve-ray") == 0)
+        return run_server(1, 2);
     if (argc == 3 && strcmp(argv[1], "describe") == 0)
         return run_describe(argv[2]);
     if (argc == 5 && strcmp(argv[1], "query") == 0)
         return run_query(argv[2], argv[3], argv[4], 0);
     if (argc == 5 && strcmp(argv[1], "query-prepared") == 0)
         return run_query(argv[2], argv[3], argv[4], 1);
+    if (argc == 5 && strcmp(argv[1], "query-ray") == 0)
+        return run_query(argv[2], argv[3], argv[4], 2);
     usage(argv[0]);
     return 2;
 }
