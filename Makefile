@@ -305,12 +305,12 @@ reasoner2-check: reasoner2
 
 weight_multiplicity: reasoner0.c weight_multiplicity.c \
 		weight_multiplicity_cli.c reasoner0.h weight_multiplicity.h
-	$(CC) $(CFLAGS) reasoner0.c weight_multiplicity.c \
+	$(CC) $(CFLAGS) -pthread reasoner0.c weight_multiplicity.c \
 		weight_multiplicity_cli.c -o $@
 
 weight_multiplicity_crosscheck: reasoner0.c weight_multiplicity.c \
 		weight_multiplicity_cli.c reasoner0.h weight_multiplicity.h
-	$(CC) $(CFLAGS) -DWM_CANONICALIZATION_CROSSCHECK reasoner0.c \
+	$(CC) $(CFLAGS) -pthread -DWM_CANONICALIZATION_CROSSCHECK reasoner0.c \
 		weight_multiplicity.c weight_multiplicity_cli.c -o $@
 
 weight-multiplicity-check: weight_multiplicity weight_multiplicity_crosscheck
