@@ -27,5 +27,5 @@ The sealed command refuses local execution. Cloud execution requires both
 dimension 9–12 source bundle is frozen at commit
 `16ef41706023ae4df417bb562490adf3404292fd`, with SHA-256
 `6cc30df918c77800b49b6599f02e39ea6644590ebb32ccb034b93a9bf8cfdb14`.
-The seal remains locked until the user explicitly approves that exact source
-upload and capped one-shot launch.
+The user has authorized that exact private source upload and one capped
+launch, with no retry.
