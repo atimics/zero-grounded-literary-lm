@@ -53,6 +53,9 @@ small browser runtime:
   trace.
 - `reasoner35`: Reasoner (3,4), a 64-byte joint-policy screen across planning,
   composition, and witness reasoning with no task label or weight-bank switch.
+- `reasoner310`: Reasoner (3,9), an active integer-program learner that builds
+  laws from raw comparisons, queries until one canonical program remains, and
+  keeps language reporting behind a final tool call.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS

@@ -1,0 +1,48 @@
+{
+  "schema": "zero.reasoner310_aws_contract.v1",
+  "experiment": "reasoner310-active-law-v1",
+  "version": "(3,9)",
+  "authorized": false,
+  "authorization": {
+    "approved_by": null,
+    "approved_at": null,
+    "approval_id": null,
+    "scope": "one fresh sealed active-law execution after exact bundle approval"
+  },
+  "seal": {
+    "canonical_target_programs": 31,
+    "episodes": 744,
+    "action_calls": 2232,
+    "minimum_dimension": 9,
+    "maximum_dimension": 12,
+    "variants": 6,
+    "coordinate_orders": 6,
+    "terms_per_target": 3,
+    "retry": false
+  },
+  "source": {
+    "implementation_commit": null,
+    "bundle_sha256": null,
+    "bundle_bytes": null,
+    "destination": null
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.006,
+    "maximum_total_run_usd": 0.01,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "usd_per_hour": 0.0104,
+    "source": "AWS EC2 Linux on-demand t3.micro us-east-1",
+    "checked_at": "2026-08-30"
+  },
+  "result": {
+    "binary": "reasoner310",
+    "make_target": "reasoner310",
+    "schema": "zero.reasoner310_active_law.v1"
+  }
+}
