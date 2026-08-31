@@ -302,7 +302,7 @@ static int self_test(void)
 
     diagonal(&b3, 3);
     edge(&b3, 0, 1, -1, -1);
-    edge(&b3, 1, 2, -2, -1);
+    edge(&b3, 1, 2, -1, -2);
     status = r0_run(&policy, &b3, &result, error, sizeof(error));
     if (!check(status == R0_OK && result.accepted &&
                    strcmp(r0_cartan_type(&result.sealed_answer.answer.matrix),
@@ -325,11 +325,11 @@ static int self_test(void)
     diagonal(&b4, 4);
     edge(&b4, 0, 1, -1, -1);
     edge(&b4, 1, 2, -1, -1);
-    edge(&b4, 2, 3, -2, -1);
+    edge(&b4, 2, 3, -1, -2);
     diagonal(&c4, 4);
     edge(&c4, 0, 1, -1, -1);
     edge(&c4, 1, 2, -1, -1);
-    edge(&c4, 2, 3, -1, -2);
+    edge(&c4, 2, 3, -2, -1);
     status = r0_cartan_canonicalize(&b4, &canonical, error, sizeof(error));
     if (status == R0_OK)
         status = r0_cartan_canonicalize(&c4, &relabeled_canonical, error,

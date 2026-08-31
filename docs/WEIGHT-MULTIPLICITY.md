@@ -13,6 +13,14 @@ The implementation accepts the 31 finite connected Cartan types through rank
 - `D4` through `D8`
 - `G2`, `F4`, `E6`, `E7`, and `E8`
 
+Public `B_n` and `C_n` names follow the standard Dynkin-label convention.
+For ranks 3 through 8, the self-test checks
+`dim V_Bn(omega_1) = 2n + 1` and `dim V_Cn(omega_1) = 2n`. `B2/C2` remains
+the rank-two isomorphism edge case and is not used to distinguish the names.
+Historical binaries built before this convention repair used the opposite
+public B/C labels; their sealed outputs must be mapped explicitly rather than
+rewritten.
+
 Highest and target weights use Dynkin labels. The highest weight must be
 dominant. The target may be dominant or non-dominant.
 
