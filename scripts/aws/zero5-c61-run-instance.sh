@@ -14,10 +14,10 @@ test "$action" = dry-run || test "$action" = launch
 max_usd=1.7
 hourly_price=0.68
 maximum_seconds=9000
-lock_key=experiments/zero5-c61-shared-state-v1/execution-v4.lock
+lock_key=experiments/zero5-c61-shared-state-v1/execution-v5.lock
 
 test "$ZERO5_REGION" = us-east-1
-test "$ZERO5_APPROVAL_ID" = zero5-c61-shared-state-aws-2026-08-29-v1
+test "$ZERO5_APPROVAL_ID" = zero5-c61-shared-state-aws-2026-08-31-v2
 test "$(jq -r .authorized benchmarks/zero5-c61-shared-state-v1/contract.json)" = true
 test "$(jq -r .authorization.approval_id benchmarks/zero5-c61-shared-state-v1/contract.json)" = "$ZERO5_APPROVAL_ID"
 test "$(jq -r .execution.venue benchmarks/zero5-c61-shared-state-v1/contract.json)" = "aws us-east-1 c6i.4xlarge on-demand"

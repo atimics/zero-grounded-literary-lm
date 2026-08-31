@@ -922,7 +922,9 @@ static void aux_eval_completions(Model *model, AuxHead *head,
         int exact = 1;
         if (token_count < 2U ||
             token_count > (uint32_t)model->cfg.context + 1U ||
-            target_start == 0U || target_count == 0U ||
+            (target_start == 0U &&
+             token_count == (uint32_t)model->cfg.context + 1U) ||
+            target_count == 0U ||
             target_start + target_count > token_count || reserved != 0U)
             fail("invalid completion evaluation record");
         for (token = 0; token < token_count; ++token) {
