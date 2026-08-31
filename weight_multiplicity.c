@@ -42,16 +42,19 @@ typedef struct {
 } WMMemo;
 
 typedef struct {
-    int64_t scale;
     uint32_t dependency;
+    int32_t scale_or_wide_index;
     uint32_t term_count_and_flags;
 } WMDependencyEdge;
 
-_Static_assert(sizeof(WMDependencyEdge) == 16,
+_Static_assert(sizeof(WMDependencyEdge) == 12,
                "prepared dependency edges must remain compact");
 
 #define WM_EDGE_SCALE_UNSUPPORTED UINT32_C(0x80000000)
-#define WM_EDGE_TERM_COUNT_MASK UINT32_C(0x7fffffff)
+#define WM_EDGE_SCALE_WIDE UINT32_C(0x40000000)
+#define WM_EDGE_TERM_COUNT_MASK UINT32_C(0x3fffffff)
+#define WM_EDGE_LOCAL_DEPENDENCY UINT32_C(0x80000000)
+#define WM_EDGE_DEPENDENCY_MASK UINT32_C(0x7fffffff)
 #define WM_EDGE_BLOCK_SHIFT 16U
 #define WM_EDGE_BLOCK_SIZE (UINT32_C(1) << WM_EDGE_BLOCK_SHIFT)
 #define WM_EDGE_BLOCK_MASK (WM_EDGE_BLOCK_SIZE - 1U)
@@ -66,6 +69,7 @@ typedef struct {
     uint32_t level;
     uint32_t denominator;
     uint64_t recurrence_terms;
+    uint8_t edge_shard;
     uint8_t edges_ready;
     uint8_t value_ready;
 } WMDependencyNode;
@@ -79,6 +83,7 @@ typedef struct {
     int64_t scale;
     int32_t coefficient[WM_MAX_RANK];
     uint32_t term_count_and_flags;
+    uint32_t dependency;
 } WMDependencyScratchEntry;
 
 typedef struct {
@@ -91,14 +96,22 @@ typedef struct {
 } WMDependencyScratch;
 
 typedef struct {
+    WMDependencyEdge **edge_block;
+    size_t edge_block_capacity;
+    size_t edge_block_count;
+    size_t edge_count;
+    int64_t *wide_scale;
+    size_t wide_scale_capacity;
+    size_t wide_scale_count;
+} WMDependencyEdgeShard;
+
+typedef struct {
     WMDependencyNode *node;
     size_t node_capacity;
     size_t node_count;
     uint32_t *node_slot;
     size_t node_slot_capacity;
-    WMDependencyEdge **edge_block;
-    size_t edge_block_capacity;
-    size_t edge_block_count;
+    WMDependencyEdgeShard edge_shard[WM_MAX_PREPARED_WORKERS];
     size_t edge_count;
     uint64_t *order;
     size_t order_capacity;
@@ -645,42 +658,82 @@ static int graph_reserve_nodes(WMDependencyGraph *graph, size_t required)
     return 1;
 }
 
-static int graph_reserve_edges(WMDependencyGraph *graph, size_t required)
+static int graph_reserve_shard_edges(
+    WMDependencyGraph *graph, WMDependencyEdgeShard *shard,
+    size_t required, pthread_mutex_t *allocation_mutex)
 {
     size_t required_blocks;
+    int success = 1;
     if (required > SIZE_MAX - (WM_EDGE_BLOCK_SIZE - 1U)) return 0;
     required_blocks =
         (required + WM_EDGE_BLOCK_SIZE - 1U) >> WM_EDGE_BLOCK_SHIFT;
-    if (required_blocks > graph->edge_block_capacity) {
-        size_t capacity = graph->edge_block_capacity == 0
-                              ? 16U
-                              : graph->edge_block_capacity;
+    (void)pthread_mutex_lock(allocation_mutex);
+    if (required_blocks > shard->edge_block_capacity) {
+        size_t capacity = shard->edge_block_capacity == 0
+                              ? 4U
+                              : shard->edge_block_capacity;
         WMDependencyEdge **replacement;
         while (capacity < required_blocks) {
-            if (capacity > SIZE_MAX / 2U) return 0;
+            if (capacity > SIZE_MAX / 2U) {
+                success = 0;
+                goto finished;
+            }
             capacity *= 2U;
         }
         replacement = graph_replace_array(
-            graph, graph->edge_block, graph->edge_block_capacity, capacity,
-            sizeof(*graph->edge_block));
-        if (replacement == NULL) return 0;
-        graph->edge_block = replacement;
-        graph->edge_block_capacity = capacity;
+            graph, shard->edge_block, shard->edge_block_capacity,
+            capacity, sizeof(*shard->edge_block));
+        if (replacement == NULL) {
+            success = 0;
+            goto finished;
+        }
+        shard->edge_block = replacement;
+        shard->edge_block_capacity = capacity;
     }
-    while (graph->edge_block_count < required_blocks) {
+    while (shard->edge_block_count < required_blocks) {
         WMDependencyEdge *block = graph_allocate(
             graph, WM_EDGE_BLOCK_SIZE, sizeof(*block));
-        if (block == NULL) return 0;
-        graph->edge_block[graph->edge_block_count++] = block;
+        if (block == NULL) {
+            success = 0;
+            goto finished;
+        }
+        shard->edge_block[shard->edge_block_count++] = block;
     }
-    return 1;
+finished:
+    (void)pthread_mutex_unlock(allocation_mutex);
+    return success;
 }
 
-static WMDependencyEdge *graph_edge_at(WMDependencyGraph *graph,
-                                       uint64_t index)
+static WMDependencyEdge *graph_shard_edge_at(
+    WMDependencyEdgeShard *shard, uint64_t index)
 {
-    return &graph->edge_block[index >> WM_EDGE_BLOCK_SHIFT]
+    return &shard->edge_block[index >> WM_EDGE_BLOCK_SHIFT]
                              [index & WM_EDGE_BLOCK_MASK];
+}
+
+static int graph_append_wide_scale(
+    WMDependencyGraph *graph, WMDependencyEdgeShard *shard, int64_t scale,
+    pthread_mutex_t *allocation_mutex, int32_t *wide_index)
+{
+    if (shard->wide_scale_count > INT32_MAX) return 0;
+    if (shard->wide_scale_count == shard->wide_scale_capacity) {
+        size_t capacity = shard->wide_scale_capacity == 0
+                              ? 64U
+                              : shard->wide_scale_capacity * 2U;
+        int64_t *replacement;
+        if (capacity < shard->wide_scale_capacity) return 0;
+        (void)pthread_mutex_lock(allocation_mutex);
+        replacement = graph_replace_array(
+            graph, shard->wide_scale, shard->wide_scale_capacity,
+            capacity, sizeof(*shard->wide_scale));
+        (void)pthread_mutex_unlock(allocation_mutex);
+        if (replacement == NULL) return 0;
+        shard->wide_scale = replacement;
+        shard->wide_scale_capacity = capacity;
+    }
+    *wide_index = (int32_t)shard->wide_scale_count;
+    shard->wide_scale[shard->wide_scale_count++] = scale;
+    return 1;
 }
 
 static int graph_reserve_order(WMDependencyGraph *graph, size_t required)
@@ -760,7 +813,7 @@ static int graph_get_or_add_node(
         *memo_hit = graph->node[found].level != 0;
         return 1;
     }
-    if (graph->node_count >= UINT32_MAX) return 0;
+    if (graph->node_count >= WM_EDGE_LOCAL_DEPENDENCY) return 0;
     if (graph->node_slot_capacity == 0) {
         if (!graph_rehash_nodes(graph, 2048U)) return 0;
     } else if ((graph->node_count + 1U) * 10U >=
@@ -877,7 +930,8 @@ static int checked_add_i64(int64_t left, int64_t right, int64_t *sum)
 static int graph_scratch_add(
     WMDependencyGraph *graph, WMDependencyScratch *scratch,
     const int32_t coefficient[WM_MAX_RANK], int64_t scale,
-    int scale_supported, pthread_mutex_t *allocation_mutex)
+    int scale_supported, uint32_t added_term_count,
+    pthread_mutex_t *allocation_mutex, uint32_t *entry_index)
 {
     size_t mask;
     size_t slot;
@@ -900,14 +954,17 @@ static int graph_scratch_add(
             &scratch->entry[scratch->slot[slot].entry_plus_one - 1U];
         if (memcmp(entry->coefficient, coefficient,
                    sizeof(int32_t) * graph->rank) == 0) {
+            if (entry_index != NULL)
+                *entry_index = scratch->slot[slot].entry_plus_one - 1U;
             uint32_t term_count =
                 entry->term_count_and_flags & WM_EDGE_TERM_COUNT_MASK;
             int entry_scale_supported =
                 (entry->term_count_and_flags & WM_EDGE_SCALE_UNSUPPORTED) == 0;
-            if (term_count == WM_EDGE_TERM_COUNT_MASK) return 0;
+            if (added_term_count > WM_EDGE_TERM_COUNT_MASK - term_count)
+                return 0;
             entry->term_count_and_flags =
                 (entry->term_count_and_flags & WM_EDGE_SCALE_UNSUPPORTED) |
-                (term_count + 1U);
+                (term_count + added_term_count);
             if (!entry_scale_supported || !scale_supported ||
                 !checked_add_i64(entry->scale, scale, &entry->scale))
                 entry->term_count_and_flags |= WM_EDGE_SCALE_UNSUPPORTED;
@@ -918,11 +975,14 @@ static int graph_scratch_add(
     if (!graph_reserve_scratch_entries(graph, scratch, scratch->count + 1U,
                                        allocation_mutex))
         return 0;
+    if (scratch->count >= UINT32_MAX) return 0;
+    if (entry_index != NULL) *entry_index = (uint32_t)scratch->count;
     scratch->entry[scratch->count].scale = scale;
     memcpy(scratch->entry[scratch->count].coefficient, coefficient,
            sizeof(scratch->entry[scratch->count].coefficient));
     scratch->entry[scratch->count].term_count_and_flags =
-        1U | (scale_supported ? 0U : WM_EDGE_SCALE_UNSUPPORTED);
+        added_term_count |
+        (scale_supported ? 0U : WM_EDGE_SCALE_UNSUPPORTED);
     scratch->slot[slot].generation = scratch->generation;
     scratch->slot[slot].entry_plus_one = (uint32_t)scratch->count + 1U;
     ++scratch->count;
@@ -951,15 +1011,23 @@ static WMStatus evaluate_prepared_node(WMRecurrence *recurrence,
                                        uint32_t node_index)
 {
     WMDependencyNode *node = &graph->node[node_index];
+    WMDependencyEdgeShard *shard = &graph->edge_shard[node->edge_shard];
     WMSignedBig numerator = {0};
     uint32_t edge_index;
     node->recurrence_terms = 0;
     memset(&node->value, 0, sizeof(node->value));
     for (edge_index = 0; edge_index < node->edge_count; ++edge_index) {
         const WMDependencyEdge *edge =
-            graph_edge_at(graph, node->edge_offset + edge_index);
-        const WMDependencyNode *dependency = &graph->node[edge->dependency];
+            graph_shard_edge_at(shard, node->edge_offset + edge_index);
+        const WMDependencyNode *dependency;
+        int64_t scale;
         uint32_t term_count;
+        if (edge->dependency >= graph->node_count) {
+            set_error(recurrence->error, recurrence->error_capacity,
+                      "prepared edge dependency is invalid");
+            return WM_ARITHMETIC_ERROR;
+        }
+        dependency = &graph->node[edge->dependency];
         if (!dependency->value_ready || dependency->level >= node->level) {
             set_error(recurrence->error, recurrence->error_capacity,
                       "prepared dependency order is invalid");
@@ -973,8 +1041,25 @@ static WMStatus evaluate_prepared_node(WMRecurrence *recurrence,
             return WM_LIMIT_ERROR;
         }
         node->recurrence_terms += term_count;
-        if ((edge->term_count_and_flags & WM_EDGE_SCALE_UNSUPPORTED) != 0 ||
-            !signed_add_scaled(&numerator, &dependency->value, edge->scale)) {
+        if ((edge->term_count_and_flags & WM_EDGE_SCALE_UNSUPPORTED) != 0) {
+            set_error(recurrence->error, recurrence->error_capacity,
+                      "Freudenthal numerator exceeds the exact integer "
+                      "capacity");
+            return WM_LIMIT_ERROR;
+        }
+        if ((edge->term_count_and_flags & WM_EDGE_SCALE_WIDE) != 0) {
+            uint32_t wide_index = (uint32_t)edge->scale_or_wide_index;
+            if (edge->scale_or_wide_index < 0 ||
+                wide_index >= shard->wide_scale_count) {
+                set_error(recurrence->error, recurrence->error_capacity,
+                          "prepared wide edge scale is invalid");
+                return WM_ARITHMETIC_ERROR;
+            }
+            scale = shard->wide_scale[wide_index];
+        } else {
+            scale = edge->scale_or_wide_index;
+        }
+        if (!signed_add_scaled(&numerator, &dependency->value, scale)) {
             set_error(recurrence->error, recurrence->error_capacity,
                       "Freudenthal numerator exceeds the exact integer "
                       "capacity");
@@ -1066,19 +1151,27 @@ static WMStatus evaluate_prepared_group_parallel(
 
 static void graph_destroy(WMDependencyGraph *graph)
 {
+    uint8_t shard_index;
     graph_release(graph, graph->node,
                   graph->node_capacity * sizeof(*graph->node));
     graph_release(graph, graph->node_slot,
                   graph->node_slot_capacity * sizeof(*graph->node_slot));
-    {
-        size_t index;
-        for (index = 0; index < graph->edge_block_count; ++index)
-            graph_release(graph, graph->edge_block[index],
+    for (shard_index = 0; shard_index < WM_MAX_PREPARED_WORKERS;
+         ++shard_index) {
+        WMDependencyEdgeShard *shard = &graph->edge_shard[shard_index];
+        size_t block_index;
+        for (block_index = 0; block_index < shard->edge_block_count;
+             ++block_index)
+            graph_release(graph, shard->edge_block[block_index],
                           WM_EDGE_BLOCK_SIZE *
-                              sizeof(*graph->edge_block[index]));
+                              sizeof(*shard->edge_block[block_index]));
+        graph_release(graph, shard->edge_block,
+                      shard->edge_block_capacity *
+                          sizeof(*shard->edge_block));
+        graph_release(graph, shard->wide_scale,
+                      shard->wide_scale_capacity *
+                          sizeof(*shard->wide_scale));
     }
-    graph_release(graph, graph->edge_block,
-                  graph->edge_block_capacity * sizeof(*graph->edge_block));
     graph_release(graph, graph->order,
                   graph->order_capacity * sizeof(*graph->order));
     memset(graph, 0, sizeof(*graph));
@@ -1550,67 +1643,46 @@ static WMStatus enumerate_dependency_node(
                 scale = 2 * inner;
             }
             if (!graph_scratch_add(graph, scratch, canonical, scale,
-                                   scale_supported, allocation_mutex))
+                                   scale_supported, 1U,
+                                   allocation_mutex, NULL))
                 return graph_allocation_error(recurrence);
         }
     }
     return WM_OK;
 }
 
-static WMStatus merge_dependency_node(WMRecurrence *recurrence,
-                                      WMDependencyGraph *graph,
-                                      uint32_t node_index,
-                                      WMDependencyScratch *scratch,
-                                      uint32_t denominator)
+static WMStatus merge_discovered_nodes(WMRecurrence *recurrence,
+                                       WMDependencyGraph *graph,
+                                       WMDependencyScratch *discovered)
 {
     const WMOracle *oracle = recurrence->oracle;
-    uint32_t parent_level = graph->node[node_index].level;
-    if (scratch->count > UINT32_MAX ||
-        graph->edge_count > UINT64_MAX - scratch->count ||
-        !graph_reserve_edges(graph,
-                             graph->edge_count + scratch->count))
-        return graph_allocation_error(recurrence);
-    graph->node[node_index].denominator = denominator;
-    graph->node[node_index].edge_offset = graph->edge_count;
-    graph->node[node_index].edge_count = (uint32_t)scratch->count;
-    {
-        size_t scratch_index;
-        for (scratch_index = 0; scratch_index < scratch->count;
-             ++scratch_index) {
-            const WMDependencyScratchEntry *scratch_entry =
-                &scratch->entry[scratch_index];
-            WMDependencyEdge *edge =
-                graph_edge_at(graph, graph->edge_count++);
-            uint32_t dependency_level = coefficient_level(
-                scratch_entry->coefficient, oracle->cartan.rank);
-            uint32_t term_count =
-                scratch_entry->term_count_and_flags & WM_EDGE_TERM_COUNT_MASK;
-            int added;
-            int memo_hit;
-            if (dependency_level >= parent_level) {
+    size_t scratch_index;
+    for (scratch_index = 0; scratch_index < discovered->count;
+         ++scratch_index) {
+        const WMDependencyScratchEntry *entry =
+            &discovered->entry[scratch_index];
+        uint32_t dependency_level = coefficient_level(
+            entry->coefficient, oracle->cartan.rank);
+        uint32_t term_count =
+            entry->term_count_and_flags & WM_EDGE_TERM_COUNT_MASK;
+        uint32_t dependency;
+        int added;
+        int memo_hit;
+        if (!graph_get_or_add_node(
+                graph, recurrence->memo, entry->coefficient,
+                dependency_level, &dependency, &added, &memo_hit))
+            return graph_allocation_error(recurrence);
+        discovered->entry[scratch_index].dependency = dependency;
+        if (recurrence->stats != NULL && dependency_level != 0) {
+            uint64_t hits = memo_hit ? term_count : term_count - 1U;
+            if (UINT64_MAX - recurrence->stats->memo_hits < hits) {
                 set_error(recurrence->error, recurrence->error_capacity,
-                          "prepared dependency is not above its parent weight");
-                return WM_ARITHMETIC_ERROR;
+                          "memo hit counter exceeded its exact range");
+                return WM_LIMIT_ERROR;
             }
-            if (!graph_get_or_add_node(
-                    graph, recurrence->memo, scratch_entry->coefficient,
-                    dependency_level, &edge->dependency, &added, &memo_hit))
-                return graph_allocation_error(recurrence);
-            edge->scale = scratch_entry->scale;
-            edge->term_count_and_flags =
-                scratch_entry->term_count_and_flags;
-            if (recurrence->stats != NULL && dependency_level != 0) {
-                uint64_t hits = memo_hit ? term_count : term_count - 1U;
-                if (UINT64_MAX - recurrence->stats->memo_hits < hits) {
-                    set_error(recurrence->error, recurrence->error_capacity,
-                              "memo hit counter exceeded its exact range");
-                    return WM_LIMIT_ERROR;
-                }
-                recurrence->stats->memo_hits += hits;
-            }
+            recurrence->stats->memo_hits += hits;
         }
     }
-    graph->node[node_index].edges_ready = 1;
     return WM_OK;
 }
 
@@ -1618,11 +1690,14 @@ typedef struct {
     WMRecurrence recurrence;
     WMQueryStats stats;
     WMDependencyScratch scratch;
+    WMDependencyScratch discovered;
     WMDependencyGraph *graph;
-    pthread_mutex_t *graph_mutex;
+    pthread_mutex_t *allocation_mutex;
     atomic_size_t *next;
     atomic_int *failed;
     size_t end;
+    size_t round_edge_begin;
+    uint8_t shard_index;
     WMStatus status;
     char error[256];
 } WMPreparedDiscoveryWorker;
@@ -1630,38 +1705,115 @@ typedef struct {
 static void *discover_prepared_worker(void *argument)
 {
     WMPreparedDiscoveryWorker *worker = argument;
+    WMDependencyEdgeShard *shard =
+        &worker->graph->edge_shard[worker->shard_index];
     while (atomic_load_explicit(worker->failed, memory_order_relaxed) == 0) {
         int32_t state[WM_MAX_RANK];
         size_t position =
             atomic_fetch_add_explicit(worker->next, 1U, memory_order_relaxed);
         uint32_t denominator;
         uint32_t node_index;
+        size_t scratch_index;
         if (position >= worker->end) break;
         node_index = (uint32_t)position;
-        (void)pthread_mutex_lock(worker->graph_mutex);
         if (worker->graph->node[node_index].edges_ready) {
-            (void)pthread_mutex_unlock(worker->graph_mutex);
             continue;
         }
         memcpy(state, worker->graph->node[node_index].coefficient,
                sizeof(state));
-        (void)pthread_mutex_unlock(worker->graph_mutex);
         worker->status = enumerate_dependency_node(
             &worker->recurrence, worker->graph, state, &worker->scratch,
-            worker->graph_mutex, &denominator);
+            worker->allocation_mutex, &denominator);
         if (worker->status != WM_OK) {
             atomic_store_explicit(worker->failed, 1, memory_order_relaxed);
             break;
         }
-        (void)pthread_mutex_lock(worker->graph_mutex);
-        worker->status = merge_dependency_node(
-            &worker->recurrence, worker->graph, node_index,
-            &worker->scratch, denominator);
-        (void)pthread_mutex_unlock(worker->graph_mutex);
-        if (worker->status != WM_OK) {
-            atomic_store_explicit(worker->failed, 1, memory_order_relaxed);
+        if (worker->scratch.count > UINT32_MAX ||
+            shard->edge_count > SIZE_MAX - worker->scratch.count ||
+            !graph_reserve_shard_edges(
+                worker->graph, shard,
+                shard->edge_count + worker->scratch.count,
+                worker->allocation_mutex)) {
+            worker->status = graph_allocation_error(&worker->recurrence);
+            atomic_store_explicit(worker->failed, 1,
+                                  memory_order_relaxed);
             break;
         }
+        worker->graph->node[node_index].denominator = denominator;
+        worker->graph->node[node_index].edge_shard = worker->shard_index;
+        worker->graph->node[node_index].edge_offset = shard->edge_count;
+        worker->graph->node[node_index].edge_count =
+            (uint32_t)worker->scratch.count;
+        for (scratch_index = 0; scratch_index < worker->scratch.count;
+             ++scratch_index) {
+            const WMDependencyScratchEntry *entry =
+                &worker->scratch.entry[scratch_index];
+            WMDependencyEdge *edge =
+                graph_shard_edge_at(shard, shard->edge_count++);
+            uint32_t dependency_level = coefficient_level(
+                entry->coefficient, worker->graph->rank);
+            uint32_t term_count =
+                entry->term_count_and_flags & WM_EDGE_TERM_COUNT_MASK;
+            uint32_t dependency =
+                graph_find_node(worker->graph, entry->coefficient);
+            uint32_t local_index;
+            if (dependency_level >= worker->graph->node[node_index].level) {
+                set_error(worker->recurrence.error,
+                          worker->recurrence.error_capacity,
+                          "prepared dependency is not above its parent weight");
+                worker->status = WM_ARITHMETIC_ERROR;
+                atomic_store_explicit(worker->failed, 1,
+                                      memory_order_relaxed);
+                break;
+            }
+            if (!graph_scratch_add(
+                    worker->graph, &worker->discovered,
+                    entry->coefficient, 0, 1, term_count,
+                    worker->allocation_mutex, &local_index)) {
+                worker->status = graph_allocation_error(&worker->recurrence);
+                atomic_store_explicit(worker->failed, 1,
+                                      memory_order_relaxed);
+                break;
+            }
+            if (dependency == UINT32_MAX) {
+                if (local_index > WM_EDGE_DEPENDENCY_MASK) {
+                    set_error(worker->recurrence.error,
+                              worker->recurrence.error_capacity,
+                              "prepared local dependency index exceeded its "
+                              "exact range");
+                    worker->status = WM_LIMIT_ERROR;
+                    atomic_store_explicit(worker->failed, 1,
+                                          memory_order_relaxed);
+                    break;
+                }
+                edge->dependency = WM_EDGE_LOCAL_DEPENDENCY | local_index;
+            } else {
+                edge->dependency = dependency;
+            }
+            edge->term_count_and_flags = entry->term_count_and_flags;
+            if ((entry->term_count_and_flags &
+                 WM_EDGE_SCALE_UNSUPPORTED) != 0) {
+                edge->scale_or_wide_index = 0;
+            } else if (entry->scale >= INT32_MIN &&
+                       entry->scale <= INT32_MAX) {
+                edge->scale_or_wide_index = (int32_t)entry->scale;
+            } else {
+                int32_t wide_index;
+                if (!graph_append_wide_scale(
+                        worker->graph, shard, entry->scale,
+                        worker->allocation_mutex, &wide_index)) {
+                    worker->status =
+                        graph_allocation_error(&worker->recurrence);
+                    atomic_store_explicit(worker->failed, 1,
+                                          memory_order_relaxed);
+                    break;
+                }
+                edge->scale_or_wide_index = wide_index;
+                edge->term_count_and_flags |= WM_EDGE_SCALE_WIDE;
+            }
+        }
+        if (worker->status != WM_OK) break;
+        worker->graph->node[node_index].edges_ready = 1;
     }
     return NULL;
 }
@@ -1707,13 +1859,13 @@ static WMStatus discover_prepared_nodes(WMRecurrence *recurrence,
 {
     WMPreparedDiscoveryWorker worker[WM_MAX_PREPARED_WORKERS];
     pthread_t thread[WM_MAX_PREPARED_WORKERS - 1U];
-    pthread_mutex_t graph_mutex;
+    pthread_mutex_t allocation_mutex;
     size_t begin = 0;
     WMStatus result = WM_OK;
     uint8_t configured_workers = graph->worker_count;
     uint8_t index;
     memset(worker, 0, sizeof(worker));
-    if (pthread_mutex_init(&graph_mutex, NULL) != 0) {
+    if (pthread_mutex_init(&allocation_mutex, NULL) != 0) {
         set_error(recurrence->error, recurrence->error_capacity,
                   "prepared discovery lock creation failed");
         return WM_MEMORY_ERROR;
@@ -1740,10 +1892,13 @@ static WMStatus discover_prepared_nodes(WMRecurrence *recurrence,
             worker[index].recurrence.error_capacity =
                 sizeof(worker[index].error);
             worker[index].graph = graph;
-            worker[index].graph_mutex = &graph_mutex;
+            worker[index].allocation_mutex = &allocation_mutex;
             worker[index].next = &next;
             worker[index].failed = &failed;
             worker[index].end = end;
+            worker[index].shard_index = index;
+            worker[index].round_edge_begin =
+                graph->edge_shard[index].edge_count;
             worker[index].status = WM_OK;
         }
         for (index = 1; index < workers; ++index) {
@@ -1774,6 +1929,48 @@ static WMStatus discover_prepared_nodes(WMRecurrence *recurrence,
             }
         }
         if (result != WM_OK) goto finished;
+        for (index = 0; index < workers; ++index) {
+            WMStatus merge_status = merge_discovered_nodes(
+                recurrence, graph, &worker[index].discovered);
+            if (merge_status != WM_OK) {
+                result = merge_status;
+                goto finished;
+            }
+        }
+        for (index = 0; index < workers; ++index) {
+            WMDependencyEdgeShard *shard = &graph->edge_shard[index];
+            size_t edge_index;
+            size_t added_edges = shard->edge_count -
+                                 worker[index].round_edge_begin;
+            if (graph->edge_count > SIZE_MAX - added_edges) {
+                set_error(recurrence->error, recurrence->error_capacity,
+                          "prepared logical edge counter exceeded its exact "
+                          "range");
+                result = WM_LIMIT_ERROR;
+                goto finished;
+            }
+            graph->edge_count += added_edges;
+            for (edge_index = worker[index].round_edge_begin;
+                 edge_index < shard->edge_count; ++edge_index) {
+                WMDependencyEdge *edge =
+                    graph_shard_edge_at(shard, edge_index);
+                if ((edge->dependency & WM_EDGE_LOCAL_DEPENDENCY) != 0) {
+                    uint32_t local_index =
+                        edge->dependency & WM_EDGE_DEPENDENCY_MASK;
+                    if (local_index >= worker[index].discovered.count) {
+                        set_error(recurrence->error,
+                                  recurrence->error_capacity,
+                                  "prepared local dependency is invalid");
+                        result = WM_ARITHMETIC_ERROR;
+                        goto finished;
+                    }
+                    edge->dependency = worker[index]
+                                           .discovered.entry[local_index]
+                                           .dependency;
+                }
+            }
+            graph_reset_scratch(&worker[index].discovered);
+        }
         if (recurrence->stats != NULL) {
             ++recurrence->stats->prepared_discovery_rounds;
             recurrence->stats->prepared_discovery_nodes += end - begin;
@@ -1781,9 +1978,11 @@ static WMStatus discover_prepared_nodes(WMRecurrence *recurrence,
         begin = end;
     }
 finished:
-    for (index = 0; index < configured_workers; ++index)
+    for (index = 0; index < configured_workers; ++index) {
         release_discovery_scratch(graph, &worker[index].scratch);
-    (void)pthread_mutex_destroy(&graph_mutex);
+        release_discovery_scratch(graph, &worker[index].discovered);
+    }
+    (void)pthread_mutex_destroy(&allocation_mutex);
     return result;
 }
 
@@ -1792,6 +1991,7 @@ static WMStatus evaluate_prepared_nodes(WMRecurrence *recurrence,
 {
     size_t order_count = 0;
     size_t index;
+    uint8_t configured_workers = graph->worker_count;
     if (!graph_reserve_order(graph, graph->node_count))
         return graph_allocation_error(recurrence);
     for (index = 0; index < graph->node_count; ++index) {
@@ -1809,15 +2009,17 @@ static WMStatus evaluate_prepared_nodes(WMRecurrence *recurrence,
     while (index < order_count) {
         size_t end = index + 1U;
         uint32_t level = (uint32_t)(graph->order[index] >> 32);
-        uint64_t group_edges = graph->node[(uint32_t)graph->order[index]].edge_count;
+        uint64_t group_edges =
+            graph->node[(uint32_t)graph->order[index]].edge_count;
         WMStatus status;
         uint8_t workers;
         while (end < order_count &&
                (uint32_t)(graph->order[end] >> 32) == level) {
-            group_edges += graph->node[(uint32_t)graph->order[end]].edge_count;
+            group_edges +=
+                graph->node[(uint32_t)graph->order[end]].edge_count;
             ++end;
         }
-        workers = graph->worker_count;
+        workers = configured_workers;
         if ((size_t)workers > end - index) workers = (uint8_t)(end - index);
         if (workers > 1U &&
             group_edges >= WM_PREPARED_PARALLEL_EDGE_THRESHOLD) {
