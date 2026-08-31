@@ -189,8 +189,13 @@ table when an inline value is too small.
 
 The root-ray engine now separates transition discovery from arithmetic
 evaluation. Its compact transition graph is ordered by lowering depth, and
-nodes at the same depth run in parallel. `ZERO_WEIGHT_RAY_WORKERS` selects one
-through 32 workers; the default is eight.
+nodes at the same depth run in parallel. Discovery carries each signed root as
+a compact index through a precomputed Weyl-reflection table, reuses source
+weights within large batches, and computes destination hashes before the
+serialized merge. A small direct destination cache avoids repeated probes of
+the full graph table. Temporary batch storage is charged to the shared byte
+budget and shrinks automatically under a small limit.
+`ZERO_WEIGHT_RAY_WORKERS` selects one through 32 workers; the default is eight.
 
 This engine is additive and is not yet the default. It is faster and smaller
 than the prepared graph on the measured depth-1,080 E8 query, but a new
