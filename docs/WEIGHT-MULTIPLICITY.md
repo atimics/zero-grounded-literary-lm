@@ -149,8 +149,11 @@ target already covered by that graph is a direct lookup.
 default is 8. Small evaluation groups stay on one thread, so the configured
 count is a ceiling rather than a promise that every query uses every worker.
 
-The prepared graph uses fixed edge blocks instead of a growing contiguous
-array. This avoids retaining a large old edge array during growth. The
+The prepared graph gives each discovery worker a private edge shard backed by
+fixed blocks. A round reads a stable node table, then merges only newly seen
+node names at its barrier. This removes a shared lookup lock from the edge hot
+path. Common edges occupy 12 bytes; rare scales outside 32 bits are retained
+exactly in a per-shard side table. The
 `ZERO_WEIGHT_MEMO_LIMIT_BYTES` ceiling is shared by the memo, graph, temporary
 discovery tables, and resize overlap. Schema Version 3 reports graph size,
 graph build and evaluation time, worker count, and the shared working-set
