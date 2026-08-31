@@ -277,8 +277,10 @@ static int test_root_ray_factorization(void)
     WMRepresentationSession *session = NULL;
     int32_t highest[WM_MAX_RANK] = {2, 0, 2};
     int32_t target[WM_MAX_RANK] = {0};
-    WMBigUInt recursive, first, second;
-    WMQueryStats recursive_stats, first_stats, second_stats, limit_stats;
+    int32_t shallow_target[WM_MAX_RANK] = {1, 0, 1};
+    WMBigUInt recursive, shallow, first, second;
+    WMQueryStats recursive_stats, shallow_stats, first_stats, second_stats,
+        limit_stats;
     char error[256] = {0};
     WMStatus status = wm_oracle_init_type("A3", &oracle, error,
                                          sizeof(error));
@@ -292,15 +294,23 @@ static int test_root_ray_factorization(void)
             sizeof(error));
     if (status == WM_OK)
         status = wm_representation_session_multiplicity_ray(
+            session, shallow_target, &shallow, &shallow_stats, error,
+            sizeof(error));
+    if (status == WM_OK)
+        status = wm_representation_session_multiplicity_ray(
             session, target, &first, &first_stats, error, sizeof(error));
     if (status == WM_OK)
         status = wm_representation_session_multiplicity_ray(
             session, target, &second, &second_stats, error, sizeof(error));
-    if (status != WM_OK || !wm_big_equal_u32(&first, 6) ||
+    if (status != WM_OK || !wm_big_equal_u32(&shallow, 3) ||
+        !wm_big_equal_u32(&first, 6) ||
         memcmp(&recursive, &first, sizeof(first)) != 0 ||
         memcmp(&first, &second, sizeof(first)) != 0 ||
-        recursive_stats.recurrence_terms != first_stats.recurrence_terms ||
-        first_stats.ray_states == 0 || first_stats.ray_transitions == 0 ||
+        recursive_stats.recurrence_terms !=
+            shallow_stats.recurrence_terms + first_stats.recurrence_terms ||
+        shallow_stats.ray_states == 0 || shallow_stats.ray_transitions == 0 ||
+        first_stats.ray_states <= shallow_stats.ray_states ||
+        first_stats.ray_transitions == 0 ||
         second_stats.memo_entries_added != 0 ||
         second_stats.recurrence_terms != 0) {
         fprintf(stderr,
@@ -440,7 +450,8 @@ static int run_self_test(void)
            "\"positive_roots\":931,\"acr1_cases\":3750,"
            "\"persistent_representation_memo\":true,"
            "\"prepared_dependency_graph\":true,"
-           "\"root_ray_factorization\":true}\n");
+           "\"root_ray_factorization\":true,"
+           "\"parallel_root_ray_dag\":true}\n");
     return 0;
 }
 
@@ -493,8 +504,15 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
            "\"prepared_discovery_nodes\":%llu,"
            "\"ray_states\":%llu,\"ray_state_hits\":%llu,"
            "\"ray_transitions\":%llu,"
+           "\"ray_nodes\":%llu,"
+           "\"ray_graph_capacity_bytes\":%llu,"
            "\"ray_capacity_bytes\":%llu,"
            "\"ray_peak_allocated_bytes\":%llu,"
+           "\"ray_discovery_nanoseconds\":%llu,"
+           "\"ray_evaluation_nanoseconds\":%llu,"
+           "\"ray_worker_count\":%u,"
+           "\"ray_parallel_groups\":%llu,"
+           "\"ray_parallel_nodes\":%llu,"
            "\"working_set_peak_allocated_bytes\":%llu,"
            "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
@@ -521,8 +539,15 @@ static WMStatus evaluate_and_print(const char *type, const WMOracle *oracle,
            (unsigned long long)stats.ray_states,
            (unsigned long long)stats.ray_state_hits,
            (unsigned long long)stats.ray_transitions,
+           (unsigned long long)stats.ray_nodes,
+           (unsigned long long)stats.ray_graph_capacity_bytes,
            (unsigned long long)stats.ray_capacity_bytes,
            (unsigned long long)stats.ray_peak_allocated_bytes,
+           (unsigned long long)stats.ray_discovery_nanoseconds,
+           (unsigned long long)stats.ray_evaluation_nanoseconds,
+           stats.ray_worker_count,
+           (unsigned long long)stats.ray_parallel_groups,
+           (unsigned long long)stats.ray_parallel_nodes,
            (unsigned long long)stats.working_set_peak_allocated_bytes,
            stats.maximum_level);
     return WM_OK;
@@ -588,8 +613,17 @@ static WMStatus evaluate_session_and_print(
            "\"prepared_worker_count\":%u,"
            "\"ray_states\":%llu,\"ray_state_hits\":%llu,"
            "\"ray_transitions\":%llu,"
+           "\"ray_nodes_before\":%llu,"
+           "\"ray_nodes\":%llu,"
+           "\"ray_nodes_added\":%llu,"
+           "\"ray_graph_capacity_bytes\":%llu,"
            "\"ray_capacity_bytes\":%llu,"
            "\"ray_peak_allocated_bytes\":%llu,"
+           "\"ray_discovery_nanoseconds\":%llu,"
+           "\"ray_evaluation_nanoseconds\":%llu,"
+           "\"ray_worker_count\":%u,"
+           "\"ray_parallel_groups\":%llu,"
+           "\"ray_parallel_nodes\":%llu,"
            "\"maximum_level\":%u}\n",
            decimal, oracle->positive_roots.count,
            engine == 2
@@ -627,8 +661,17 @@ static WMStatus evaluate_session_and_print(
            (unsigned long long)stats.ray_states,
            (unsigned long long)stats.ray_state_hits,
            (unsigned long long)stats.ray_transitions,
+           (unsigned long long)stats.ray_nodes_before,
+           (unsigned long long)stats.ray_nodes,
+           (unsigned long long)stats.ray_nodes_added,
+           (unsigned long long)stats.ray_graph_capacity_bytes,
            (unsigned long long)stats.ray_capacity_bytes,
            (unsigned long long)stats.ray_peak_allocated_bytes,
+           (unsigned long long)stats.ray_discovery_nanoseconds,
+           (unsigned long long)stats.ray_evaluation_nanoseconds,
+           stats.ray_worker_count,
+           (unsigned long long)stats.ray_parallel_groups,
+           (unsigned long long)stats.ray_parallel_nodes,
            stats.maximum_level);
     return WM_OK;
 }

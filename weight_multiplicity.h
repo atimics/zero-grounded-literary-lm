@@ -86,8 +86,17 @@ typedef struct {
     uint64_t ray_states;
     uint64_t ray_state_hits;
     uint64_t ray_transitions;
+    uint64_t ray_nodes_before;
+    uint64_t ray_nodes;
+    uint64_t ray_nodes_added;
+    uint64_t ray_graph_capacity_bytes;
     uint64_t ray_capacity_bytes;
     uint64_t ray_peak_allocated_bytes;
+    uint64_t ray_discovery_nanoseconds;
+    uint64_t ray_evaluation_nanoseconds;
+    uint64_t ray_parallel_groups;
+    uint64_t ray_parallel_nodes;
+    uint32_t ray_worker_count;
     uint32_t prepared_worker_count;
     uint32_t maximum_level;
 } WMQueryStats;
