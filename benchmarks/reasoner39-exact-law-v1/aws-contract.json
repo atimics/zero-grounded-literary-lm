@@ -1,0 +1,50 @@
+{
+  "schema": "zero.reasoner39_aws_contract.v1",
+  "experiment": "reasoner39-exact-law-v1",
+  "version": "(3,8)",
+  "authorized": false,
+  "authorization": {
+    "approved_by": null,
+    "approved_at": null,
+    "approval_id": null,
+    "scope": "one fresh sealed exact-law dimension-transfer execution after the exact source bundle is approved"
+  },
+  "seal": {
+    "episodes": 20736,
+    "individual_episodes": 6912,
+    "mixed_episodes": 13824,
+    "coordinate_permutations": 145152,
+    "minimum_dimension": 9,
+    "maximum_dimension": 12,
+    "minimum_stages": 6,
+    "maximum_stages": 8,
+    "handle_orders": 4,
+    "coordinate_orders": 4,
+    "retry": false
+  },
+  "source": {
+    "implementation_commit": null,
+    "bundle_sha256": null,
+    "bundle_bytes": null,
+    "destination": null
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.006,
+    "maximum_total_run_usd": 0.01,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "usd_per_hour": 0.0104,
+    "source": "AWS EC2 Linux on-demand t3.micro us-east-1",
+    "checked_at": "2026-08-30"
+  },
+  "result": {
+    "binary": "reasoner39",
+    "make_target": "reasoner39",
+    "schema": "zero.reasoner39_exact_law.v1"
+  }
+}
