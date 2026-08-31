@@ -16,5 +16,7 @@ make reasoner310-check
 ./reasoner310 development
 ```
 
-The sealed command is locked until its source bundle and cloud contract are
-frozen and explicitly authorized.
+The sealed command is locked. The private source bundle is frozen at commit
+`57fe18ebd96dd82ed9cf9c775cb24819a62b8d86`, 41,602 bytes, with SHA-256
+`30ffa61a3c68b1ca8daefe15329f37f0f5f025cbb8b6e26b0a72c8b842a6f574`.
+It cannot be uploaded or launched without explicit authorization.

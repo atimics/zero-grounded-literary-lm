@@ -21,10 +21,10 @@
     "retry": false
   },
   "source": {
-    "implementation_commit": null,
-    "bundle_sha256": null,
-    "bundle_bytes": null,
-    "destination": null
+    "implementation_commit": "57fe18ebd96dd82ed9cf9c775cb24819a62b8d86",
+    "bundle_sha256": "30ffa61a3c68b1ca8daefe15329f37f0f5f025cbb8b6e26b0a72c8b842a6f574",
+    "bundle_bytes": 41602,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner310-active-law-v1/source/57fe18ebd96dd82ed9cf9c775cb24819a62b8d86.tar.gz"
   },
   "execution": {
     "region": "us-east-1",

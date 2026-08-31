@@ -80,6 +80,12 @@ Local sealed execution is refused. A later cloud launch requires a frozen
 source bundle, an exact hash, an explicit user authorization, a cost cap, and
 a one-shot execution lock.
 
+The frozen private source is commit
+`57fe18ebd96dd82ed9cf9c775cb24819a62b8d86`. Its 41,602-byte bundle has
+SHA-256
+`30ffa61a3c68b1ca8daefe15329f37f0f5f025cbb8b6e26b0a72c8b842a6f574`.
+This identifies the source but does not authorize its upload or execution.
+
 ## Interpretation
 
 A pass would show active, compositional program induction inside this finite
