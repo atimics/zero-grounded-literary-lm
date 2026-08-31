@@ -51,6 +51,7 @@ typedef struct {
     uint8_t positive_root_orbit_group_count[1U << WM_MAX_RANK];
     uint8_t signed_root_orbit_representative[1U << WM_MAX_RANK]
                                              [WM_MAX_ROOTS];
+    uint8_t signed_root_reflection[WM_MAX_RANK][WM_MAX_ROOTS];
 } WMOracle;
 
 typedef struct {

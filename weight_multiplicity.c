@@ -135,6 +135,7 @@ typedef struct {
 #define WM_RAY_STATE_BLOCK_SIZE (UINT32_C(1) << WM_RAY_STATE_BLOCK_SHIFT)
 #define WM_RAY_STATE_BLOCK_MASK (WM_RAY_STATE_BLOCK_SIZE - 1U)
 #define WM_RAY_INLINE_LIMBS 4U
+#define WM_ROOT_RAY_DISCOVERY_BATCH_SIZE 1024U
 #define WM_RAY_VALUE_READY UINT32_C(0x80000000)
 #define WM_RAY_WIDE_INDEX_MASK UINT32_C(0x7fffffff)
 
@@ -648,6 +649,7 @@ static int initialize_positive_root_orbits(WMOracle *oracle)
     uint16_t signed_count = (uint16_t)(positive->count * 2U);
     uint16_t root;
     uint16_t mask;
+    uint16_t signed_root;
     for (root = 0; root < positive->count; ++root) {
         int supported;
         uint16_t position = root;
@@ -665,44 +667,49 @@ static int initialize_positive_root_orbits(WMOracle *oracle)
         }
         oracle->positive_root_key_order[position] = (uint8_t)root;
     }
+    for (signed_root = 0; signed_root < signed_count; ++signed_root) {
+        uint8_t reflection;
+        for (reflection = 0; reflection < positive->rank; ++reflection) {
+            int16_t coefficient[WM_MAX_RANK] = {0};
+            int pairing = 0;
+            uint16_t positive_root =
+                signed_root < positive->count
+                    ? signed_root
+                    : (uint16_t)(signed_root - positive->count);
+            int sign = signed_root < positive->count ? 1 : -1;
+            uint16_t reflected_index;
+            uint8_t index;
+            for (index = 0; index < positive->rank; ++index) {
+                coefficient[index] =
+                    (int16_t)(sign * positive->coefficient[positive_root][index]);
+                pairing += WM_CELL(&oracle->cartan, reflection, index) *
+                           coefficient[index];
+            }
+            coefficient[reflection] =
+                (int16_t)(coefficient[reflection] - pairing);
+            reflected_index = find_signed_root(positive, coefficient);
+            if (reflected_index == UINT16_MAX) return 0;
+            oracle->signed_root_reflection[reflection][signed_root] =
+                (uint8_t)reflected_index;
+        }
+    }
     for (mask = 0; mask < (uint16_t)(1U << positive->rank); ++mask) {
         uint16_t parent[WM_MAX_ROOTS];
         uint16_t group_parent[WM_MAX_POSITIVE_ROOTS];
         uint8_t group_size[WM_MAX_POSITIVE_ROOTS] = {0};
         uint8_t group_cursor[WM_MAX_POSITIVE_ROOTS] = {0};
         uint8_t group_count = 0;
-        uint16_t signed_root;
         for (signed_root = 0; signed_root < signed_count; ++signed_root)
             parent[signed_root] = signed_root;
         for (signed_root = 0; signed_root < signed_count; ++signed_root) {
-            int16_t coefficient[WM_MAX_RANK] = {0};
-            uint8_t index;
             uint8_t reflection;
-            root = signed_root < positive->count
-                       ? signed_root
-                       : (uint16_t)(signed_root - positive->count);
-            for (index = 0; index < positive->rank; ++index) {
-                int16_t value = positive->coefficient[root][index];
-                coefficient[index] = signed_root < positive->count
-                                         ? value
-                                         : (int16_t)-value;
-            }
             for (reflection = 0; reflection < positive->rank; ++reflection) {
-                int16_t reflected[WM_MAX_RANK];
-                int pairing = 0;
                 uint16_t reflected_index;
                 uint16_t left;
                 uint16_t right;
                 if ((mask & (uint16_t)(1U << reflection)) == 0) continue;
-                memcpy(reflected, coefficient, sizeof(reflected));
-                for (index = 0; index < positive->rank; ++index)
-                    pairing +=
-                        WM_CELL(&oracle->cartan, reflection, index) *
-                        coefficient[index];
-                reflected[reflection] =
-                    (int16_t)(reflected[reflection] - pairing);
-                reflected_index = find_signed_root(positive, reflected);
-                if (reflected_index == UINT16_MAX) return 0;
+                reflected_index =
+                    oracle->signed_root_reflection[reflection][signed_root];
                 left = root_union_find(parent, signed_root);
                 right = root_union_find(parent, reflected_index);
                 if (left != right) parent[right] = left;
@@ -1277,15 +1284,15 @@ static int graph_rehash_nodes(WMDependencyGraph *graph, size_t capacity)
     return 1;
 }
 
-static uint32_t graph_find_node(
+static uint32_t graph_find_node_hashed(
     const WMDependencyGraph *graph,
-    const int32_t coefficient[WM_MAX_RANK])
+    const int32_t coefficient[WM_MAX_RANK], uint64_t hash)
 {
     size_t mask;
     size_t slot;
     if (graph->node_slot_capacity == 0) return UINT32_MAX;
     mask = graph->node_slot_capacity - 1U;
-    slot = (size_t)memo_hash(coefficient, graph->rank) & mask;
+    slot = (size_t)hash & mask;
     while (graph->node_slot[slot] != 0) {
         uint32_t index = graph->node_slot[slot] - 1U;
         if (memcmp(graph->node[index].coefficient, coefficient,
@@ -1296,12 +1303,20 @@ static uint32_t graph_find_node(
     return UINT32_MAX;
 }
 
-static int graph_get_or_add_node(
+static uint32_t graph_find_node(
+    const WMDependencyGraph *graph,
+    const int32_t coefficient[WM_MAX_RANK])
+{
+    return graph_find_node_hashed(
+        graph, coefficient, memo_hash(coefficient, graph->rank));
+}
+
+static int graph_get_or_add_node_hashed(
     WMDependencyGraph *graph, WMMemo *memo,
-    const int32_t coefficient[WM_MAX_RANK], uint32_t level,
+    const int32_t coefficient[WM_MAX_RANK], uint64_t hash, uint32_t level,
     uint32_t *node_index, int *added, int *memo_hit)
 {
-    uint32_t found = graph_find_node(graph, coefficient);
+    uint32_t found = graph_find_node_hashed(graph, coefficient, hash);
     size_t mask;
     size_t slot;
     WMDependencyNode *node;
@@ -1346,11 +1361,21 @@ static int graph_get_or_add_node(
         }
     }
     mask = graph->node_slot_capacity - 1U;
-    slot = (size_t)memo_hash(coefficient, graph->rank) & mask;
+    slot = (size_t)hash & mask;
     while (graph->node_slot[slot] != 0) slot = (slot + 1U) & mask;
     graph->node_slot[slot] = *node_index + 1U;
     *added = 1;
     return 1;
+}
+
+static int graph_get_or_add_node(
+    WMDependencyGraph *graph, WMMemo *memo,
+    const int32_t coefficient[WM_MAX_RANK], uint32_t level,
+    uint32_t *node_index, int *added, int *memo_hit)
+{
+    return graph_get_or_add_node_hashed(
+        graph, memo, coefficient, memo_hash(coefficient, graph->rank), level,
+        node_index, added, memo_hit);
 }
 
 static int graph_reserve_scratch_entries(WMDependencyGraph *graph,
@@ -1688,16 +1713,26 @@ static uint32_t coefficient_level(const int32_t coefficient[WM_MAX_RANK],
     return level;
 }
 
+static void signed_root_coefficient(const WMOracle *oracle,
+                                    uint8_t signed_root,
+                                    int16_t output[WM_MAX_RANK]);
+
 static WMStatus canonicalize_recursive_coefficient_direct_from_weight(
     WMRecurrence *recurrence, const int32_t input[WM_MAX_RANK],
     const int32_t input_weight[WM_MAX_RANK],
     int32_t output[WM_MAX_RANK], int *inside_highest_weight_cone,
-    int16_t transformed_root[WM_MAX_RANK])
+    uint8_t *transformed_root, int32_t output_weight[WM_MAX_RANK])
 {
     const WMOracle *oracle = recurrence->oracle;
     int32_t weight[WM_MAX_RANK] = {0};
     unsigned iteration;
     uint8_t row;
+#if defined(WM_CANONICALIZATION_CROSSCHECK)
+    int16_t reference_transformed_root[WM_MAX_RANK] = {0};
+    if (transformed_root != NULL)
+        signed_root_coefficient(oracle, *transformed_root,
+                                reference_transformed_root);
+#endif
     *inside_highest_weight_cone = 0;
     memcpy(output, input, sizeof(int32_t) * WM_MAX_RANK);
     memcpy(weight, input_weight, sizeof(weight));
@@ -1719,6 +1754,8 @@ static WMStatus canonicalize_recursive_coefficient_direct_from_weight(
         if (reflection < 0) {
             for (row = 0; row < oracle->cartan.rank; ++row)
                 if (output[row] < 0) return WM_OK;
+            if (output_weight != NULL)
+                memcpy(output_weight, weight, sizeof(weight));
             *inside_highest_weight_cone = 1;
             return WM_OK;
         }
@@ -1735,23 +1772,42 @@ static WMStatus canonicalize_recursive_coefficient_direct_from_weight(
             }
             output[reflection] = (int32_t)reflected_coefficient;
             if (transformed_root != NULL) {
+#if defined(WM_CANONICALIZATION_CROSSCHECK)
                 int root_pairing = 0;
                 int reflected_root;
+                int16_t table_root[WM_MAX_RANK] = {0};
                 for (row = 0; row < oracle->cartan.rank; ++row)
                     root_pairing +=
                         WM_CELL(&oracle->cartan, reflection, row) *
-                        transformed_root[row];
+                        reference_transformed_root[row];
                 reflected_root =
-                    transformed_root[reflection] - root_pairing;
+                    reference_transformed_root[reflection] - root_pairing;
                 if (reflected_root < INT16_MIN ||
                     reflected_root > INT16_MAX) {
                     set_error(recurrence->error,
                               recurrence->error_capacity,
-                              "transformed root exceeded the exact integer "
-                              "range");
+                              "reference transformed root exceeded the exact "
+                              "integer range");
                     return WM_LIMIT_ERROR;
                 }
-                transformed_root[reflection] = (int16_t)reflected_root;
+                reference_transformed_root[reflection] =
+                    (int16_t)reflected_root;
+#endif
+                *transformed_root =
+                    oracle->signed_root_reflection[reflection]
+                                                  [*transformed_root];
+#if defined(WM_CANONICALIZATION_CROSSCHECK)
+                signed_root_coefficient(oracle, *transformed_root,
+                                        table_root);
+                if (!root_equal(table_root, reference_transformed_root,
+                                oracle->cartan.rank)) {
+                    set_error(recurrence->error,
+                              recurrence->error_capacity,
+                              "compiled signed-root reflection disagreed with "
+                              "the coordinate action");
+                    return WM_ARITHMETIC_ERROR;
+                }
+#endif
             }
             for (row = 0; row < oracle->cartan.rank; ++row) {
                 int64_t reflected =
@@ -1794,7 +1850,8 @@ static WMStatus canonicalize_recursive_coefficient_direct(
         weight[row] = (int32_t)value;
     }
     return canonicalize_recursive_coefficient_direct_from_weight(
-        recurrence, input, weight, output, inside_highest_weight_cone, NULL);
+        recurrence, input, weight, output, inside_highest_weight_cone, NULL,
+        NULL);
 }
 
 #if defined(WM_CANONICALIZATION_CROSSCHECK)
@@ -1865,7 +1922,7 @@ static WMStatus canonicalize_recursive_coefficient_from_weight(
 {
     WMStatus status = canonicalize_recursive_coefficient_direct_from_weight(
         recurrence, input, input_weight, output, inside_highest_weight_cone,
-        NULL);
+        NULL, NULL);
 #if defined(WM_CANONICALIZATION_CROSSCHECK)
     int32_t reference[WM_MAX_RANK] = {0};
     int reference_inside = 0;
@@ -1889,11 +1946,11 @@ static WMStatus canonicalize_recursive_coefficient_from_weight_with_root(
     WMRecurrence *recurrence, const int32_t input[WM_MAX_RANK],
     const int32_t input_weight[WM_MAX_RANK],
     int32_t output[WM_MAX_RANK], int *inside_highest_weight_cone,
-    int16_t transformed_root[WM_MAX_RANK])
+    uint8_t *transformed_root, int32_t output_weight[WM_MAX_RANK])
 {
     WMStatus status = canonicalize_recursive_coefficient_direct_from_weight(
         recurrence, input, input_weight, output, inside_highest_weight_cone,
-        transformed_root);
+        transformed_root, output_weight);
 #if defined(WM_CANONICALIZATION_CROSSCHECK)
     int32_t reference[WM_MAX_RANK] = {0};
     int reference_inside = 0;
@@ -1988,17 +2045,16 @@ static WMStatus discover_root_ray_state(
 {
     const WMOracle *oracle = recurrence->oracle;
     int16_t root[WM_MAX_RANK] = {0};
-    int16_t transformed_root[WM_MAX_RANK] = {0};
     int32_t raised[WM_MAX_RANK] = {0};
     int32_t raised_weight[WM_MAX_RANK] = {0};
     int32_t canonical[WM_MAX_RANK] = {0};
     int32_t canonical_weight[WM_MAX_RANK] = {0};
     uint16_t canonical_zero_mask = 0;
-    uint16_t transformed_index;
     uint32_t state_index;
     uint32_t dependency_node;
     uint32_t tail_state;
     uint8_t normalized_root;
+    uint8_t transformed_root;
     uint8_t index;
     int added;
     int dependency_added;
@@ -2018,7 +2074,7 @@ static WMStatus discover_root_ray_state(
     ++graph->node[source_node].ray_state_count;
     graph->node[source_node].ray_values_ready = 0;
     signed_root_coefficient(oracle, normalized_root, root);
-    memcpy(transformed_root, root, sizeof(transformed_root));
+    transformed_root = normalized_root;
     for (index = 0; index < oracle->cartan.rank; ++index) {
         uint16_t positive_count = oracle->positive_roots.count;
         uint16_t positive_root = normalized_root < positive_count
@@ -2044,7 +2100,7 @@ static WMStatus discover_root_ray_state(
     }
     status = canonicalize_recursive_coefficient_from_weight_with_root(
         recurrence, raised, raised_weight, canonical,
-        &inside_highest_weight_cone, transformed_root);
+        &inside_highest_weight_cone, &transformed_root, canonical_weight);
     if (status != WM_OK) return status;
     if (recurrence->stats != NULL) {
         ++recurrence->stats->ray_transitions;
@@ -2066,23 +2122,12 @@ static WMStatus discover_root_ray_state(
                   "root-ray transition did not move above its source");
         return WM_ARITHMETIC_ERROR;
     }
-    if (!dominant_weight_for_coefficient(recurrence, canonical,
-                                         canonical_weight,
-                                         &canonical_zero_mask)) {
-        set_error(recurrence->error, recurrence->error_capacity,
-                  "root-ray canonical dependency is not dominant");
-        return WM_ARITHMETIC_ERROR;
-    }
-    transformed_index =
-        find_signed_root(&oracle->positive_roots, transformed_root);
-    if (transformed_index == UINT16_MAX) {
-        set_error(recurrence->error, recurrence->error_capacity,
-                  "root-ray transformed direction is not a root");
-        return WM_ARITHMETIC_ERROR;
-    }
-    transformed_index =
+    for (index = 0; index < oracle->cartan.rank; ++index)
+        if (canonical_weight[index] == 0)
+            canonical_zero_mask |= (uint16_t)(1U << index);
+    transformed_root =
         oracle->signed_root_orbit_representative[canonical_zero_mask]
-                                                 [transformed_index];
+                                                 [transformed_root];
     if (!graph_get_or_add_node(
             graph, recurrence->memo, canonical,
             coefficient_level(canonical, oracle->cartan.rank),
@@ -2096,7 +2141,7 @@ static WMStatus discover_root_ray_state(
     if (status != WM_OK) return status;
     status = discover_root_ray_state(
         recurrence, graph, ray_memo, dependency_node, canonical,
-        canonical_weight, canonical_zero_mask, (uint8_t)transformed_index,
+        canonical_weight, canonical_zero_mask, transformed_root,
         &tail_state);
     if (status != WM_OK) return status;
     ray_entry_at(ray_memo, state_index)->payload.transition.tail_plus_one =
@@ -2174,6 +2219,8 @@ typedef struct {
     uint64_t state_hits;
     uint64_t memo_hits;
     uint64_t folds;
+    uint32_t *node_cache;
+    size_t node_cache_capacity;
     pthread_mutex_t mutex;
     pthread_cond_t condition;
     WMStatus status;
@@ -2293,7 +2340,8 @@ static WMStatus initialize_root_ray_node_locked(
 typedef struct {
     WMRayMemoEntry *entry;
     int32_t canonical[WM_MAX_RANK];
-    int32_t canonical_weight[WM_MAX_RANK];
+    uint64_t canonical_hash;
+    uint32_t canonical_level;
     uint16_t canonical_zero_mask;
     uint8_t transformed_root;
     uint8_t inside_highest_weight_cone;
@@ -2302,20 +2350,104 @@ typedef struct {
     char error[160];
 } WMRootRayTransitionResult;
 
+typedef struct {
+    WMRootRayDiscovery *discovery;
+    size_t batch_capacity;
+    uint8_t *root;
+    uint8_t *weight_valid;
+    uint32_t *source_node;
+    uint32_t *source_level;
+    int32_t (*coefficient)[WM_MAX_RANK];
+    int32_t (*weight)[WM_MAX_RANK];
+    WMRayMemoEntry **entry;
+    WMRootRayTransitionResult *result;
+} WMRootRayDiscoveryWorker;
+
+static void destroy_root_ray_discovery_worker(
+    WMRayMemo *ray_memo, WMRootRayDiscoveryWorker *worker)
+{
+    const size_t count = worker->batch_capacity;
+    ray_release(ray_memo, worker->root, count * sizeof(*worker->root));
+    ray_release(ray_memo, worker->weight_valid,
+                count * sizeof(*worker->weight_valid));
+    ray_release(ray_memo, worker->source_node,
+                count * sizeof(*worker->source_node));
+    ray_release(ray_memo, worker->source_level,
+                count * sizeof(*worker->source_level));
+    ray_release(ray_memo, worker->coefficient,
+                count * sizeof(*worker->coefficient));
+    ray_release(ray_memo, worker->weight,
+                count * sizeof(*worker->weight));
+    ray_release(ray_memo, worker->entry, count * sizeof(*worker->entry));
+    ray_release(ray_memo, worker->result, count * sizeof(*worker->result));
+    memset(worker, 0, sizeof(*worker));
+}
+
+static int initialize_root_ray_discovery_worker(
+    WMRootRayDiscovery *discovery, size_t batch_capacity,
+    WMRootRayDiscoveryWorker *worker)
+{
+    WMRayMemo *ray_memo = discovery->ray_memo;
+    const size_t count = batch_capacity;
+    memset(worker, 0, sizeof(*worker));
+    worker->discovery = discovery;
+    worker->batch_capacity = batch_capacity;
+    worker->root = ray_allocate(ray_memo, count, sizeof(*worker->root));
+    worker->weight_valid =
+        ray_allocate(ray_memo, count, sizeof(*worker->weight_valid));
+    worker->source_node =
+        ray_allocate(ray_memo, count, sizeof(*worker->source_node));
+    worker->source_level =
+        ray_allocate(ray_memo, count, sizeof(*worker->source_level));
+    worker->coefficient =
+        ray_allocate(ray_memo, count, sizeof(*worker->coefficient));
+    worker->weight =
+        ray_allocate(ray_memo, count, sizeof(*worker->weight));
+    worker->entry = ray_allocate(ray_memo, count, sizeof(*worker->entry));
+    worker->result = ray_allocate(ray_memo, count, sizeof(*worker->result));
+    if (worker->root != NULL && worker->weight_valid != NULL &&
+        worker->source_node != NULL && worker->coefficient != NULL &&
+        worker->source_level != NULL && worker->weight != NULL &&
+        worker->entry != NULL &&
+        worker->result != NULL)
+        return 1;
+    destroy_root_ray_discovery_worker(ray_memo, worker);
+    return 0;
+}
+
+static size_t root_ray_discovery_batch_capacity(
+    const WMRootRayDiscovery *discovery, uint8_t workers)
+{
+    const WMMemoryBudget *budget = discovery->ray_memo->budget;
+    const size_t bytes_per_item =
+        sizeof(uint8_t) * 2U + sizeof(uint32_t) +
+        sizeof(uint32_t) +
+        sizeof(int32_t[WM_MAX_RANK]) * 2U + sizeof(WMRayMemoEntry *) +
+        sizeof(WMRootRayTransitionResult);
+    size_t available = budget->maximum_bytes - budget->allocated_bytes;
+    size_t item_limit;
+    size_t capacity = 1U;
+    if (workers == 0) workers = 1;
+    item_limit = available / workers / 4U / bytes_per_item;
+    while (capacity < WM_ROOT_RAY_DISCOVERY_BATCH_SIZE &&
+           capacity <= item_limit / 2U)
+        capacity *= 2U;
+    return capacity;
+}
+
 static void compute_root_ray_transition(
     const WMRecurrence *recurrence, uint8_t normalized_root,
     WMRayMemoEntry *entry, const int32_t coefficient[WM_MAX_RANK],
+    const int32_t weight[WM_MAX_RANK], uint32_t source_level,
     WMRootRayTransitionResult *result)
 {
     WMRecurrence local_recurrence = *recurrence;
     const WMOracle *oracle = local_recurrence.oracle;
     int16_t root[WM_MAX_RANK] = {0};
-    int16_t transformed_root[WM_MAX_RANK] = {0};
-    int32_t weight[WM_MAX_RANK] = {0};
+    int32_t canonical_weight[WM_MAX_RANK] = {0};
     int32_t raised[WM_MAX_RANK] = {0};
     int32_t raised_weight[WM_MAX_RANK] = {0};
-    uint16_t zero_mask = 0;
-    uint16_t transformed_index;
+    uint8_t transformed_root = normalized_root;
     uint8_t index;
     int inside_highest_weight_cone = 0;
     memset(result, 0, sizeof(*result));
@@ -2324,15 +2456,7 @@ static void compute_root_ray_transition(
     local_recurrence.stats = NULL;
     local_recurrence.error = result->error;
     local_recurrence.error_capacity = sizeof(result->error);
-    if (!dominant_weight_for_coefficient(&local_recurrence, coefficient,
-                                         weight, &zero_mask)) {
-        set_error(result->error, sizeof(result->error),
-                  "root-ray task source is not dominant");
-        result->status = WM_ARITHMETIC_ERROR;
-        return;
-    }
     signed_root_coefficient(oracle, normalized_root, root);
-    memcpy(transformed_root, root, sizeof(transformed_root));
     for (index = 0; index < oracle->cartan.rank; ++index) {
         uint16_t positive_count = oracle->positive_roots.count;
         uint16_t positive_root = normalized_root < positive_count
@@ -2359,7 +2483,8 @@ static void compute_root_ray_transition(
     }
     result->status = canonicalize_recursive_coefficient_from_weight_with_root(
         &local_recurrence, raised, raised_weight, result->canonical,
-        &inside_highest_weight_cone, transformed_root);
+        &inside_highest_weight_cone, &transformed_root,
+        canonical_weight);
     if (result->status != WM_OK) return;
     result->inside_highest_weight_cone =
         (uint8_t)inside_highest_weight_cone;
@@ -2368,39 +2493,28 @@ static void compute_root_ray_transition(
                   memcmp(raised, result->canonical,
                          sizeof(int32_t) * oracle->cartan.rank) != 0);
     if (!inside_highest_weight_cone) return;
-    if (coefficient_level(result->canonical, oracle->cartan.rank) >=
-        coefficient_level(coefficient, oracle->cartan.rank)) {
+    result->canonical_level =
+        coefficient_level(result->canonical, oracle->cartan.rank);
+    if (result->canonical_level >= source_level) {
         set_error(result->error, sizeof(result->error),
                   "root-ray transition did not move above its source");
         result->status = WM_ARITHMETIC_ERROR;
         return;
     }
-    if (!dominant_weight_for_coefficient(
-            &local_recurrence, result->canonical, result->canonical_weight,
-            &result->canonical_zero_mask)) {
-        set_error(result->error, sizeof(result->error),
-                  "root-ray canonical dependency is not dominant");
-        result->status = WM_ARITHMETIC_ERROR;
-        return;
-    }
-    transformed_index =
-        find_signed_root(&oracle->positive_roots, transformed_root);
-    if (transformed_index == UINT16_MAX) {
-        set_error(result->error, sizeof(result->error),
-                  "root-ray transformed direction is not a root");
-        result->status = WM_ARITHMETIC_ERROR;
-        return;
-    }
+    for (index = 0; index < oracle->cartan.rank; ++index)
+        if (canonical_weight[index] == 0)
+            result->canonical_zero_mask |= (uint16_t)(1U << index);
+    result->canonical_hash =
+        memo_hash(result->canonical, oracle->cartan.rank);
     result->transformed_root =
         oracle->signed_root_orbit_representative
-            [result->canonical_zero_mask][transformed_index];
+            [result->canonical_zero_mask][transformed_root];
 }
 
 static WMStatus merge_root_ray_transition_locked(
     WMRootRayDiscovery *discovery,
     const WMRootRayTransitionResult *result)
 {
-    const WMOracle *oracle = discovery->recurrence->oracle;
     uint32_t dependency_node;
     uint32_t tail_state;
     int dependency_added;
@@ -2413,11 +2527,34 @@ static WMStatus merge_root_ray_transition_locked(
         result->entry->payload.transition.tail_plus_one = 0;
         return WM_OK;
     }
-    if (!graph_get_or_add_node(
-            discovery->graph, discovery->recurrence->memo,
-            result->canonical,
-            coefficient_level(result->canonical, oracle->cartan.rank),
-            &dependency_node, &dependency_added, &memo_hit)) {
+    if (discovery->node_cache != NULL) {
+        size_t slot =
+            (size_t)result->canonical_hash &
+            (discovery->node_cache_capacity - 1U);
+        uint32_t cached = discovery->node_cache[slot];
+        if (cached != 0 &&
+            memcmp(discovery->graph->node[cached - 1U].coefficient,
+                   result->canonical,
+                   sizeof(int32_t) * discovery->graph->rank) == 0) {
+            dependency_node = cached - 1U;
+            dependency_added = 0;
+            memo_hit = discovery->graph->node[dependency_node].level != 0;
+        } else {
+            if (!graph_get_or_add_node_hashed(
+                    discovery->graph, discovery->recurrence->memo,
+                    result->canonical, result->canonical_hash,
+                    result->canonical_level, &dependency_node,
+                    &dependency_added, &memo_hit)) {
+                return root_ray_allocation_error(discovery->recurrence,
+                                                 "node");
+            }
+            discovery->node_cache[slot] = dependency_node + 1U;
+        }
+    } else if (!graph_get_or_add_node_hashed(
+                   discovery->graph, discovery->recurrence->memo,
+                   result->canonical, result->canonical_hash,
+                   result->canonical_level, &dependency_node,
+                   &dependency_added, &memo_hit)) {
         return root_ray_allocation_error(discovery->recurrence, "node");
     }
     if (memo_hit) ++discovery->memo_hits;
@@ -2450,13 +2587,10 @@ static void root_ray_discovery_fail(WMRootRayDiscovery *discovery,
 
 static void *discover_root_ray_worker(void *argument)
 {
-    WMRootRayDiscovery *discovery = argument;
-    enum { BATCH_SIZE = 64 };
+    WMRootRayDiscoveryWorker *worker = argument;
+    WMRootRayDiscovery *discovery = worker->discovery;
+    const size_t batch_capacity = worker->batch_capacity;
     for (;;) {
-        uint8_t root[BATCH_SIZE];
-        int32_t coefficient[BATCH_SIZE][WM_MAX_RANK];
-        WMRayMemoEntry *entry[BATCH_SIZE];
-        WMRootRayTransitionResult result[BATCH_SIZE];
         size_t batch_count = 0;
         size_t index;
         WMStatus batch_status = WM_OK;
@@ -2475,23 +2609,31 @@ static void *discover_root_ray_worker(void *argument)
             (void)pthread_mutex_unlock(&discovery->mutex);
             break;
         }
-        while (batch_count < BATCH_SIZE &&
+        while (batch_count < batch_capacity &&
                discovery->task_begin < discovery->task_end) {
             uint64_t task = discovery->task[discovery->task_begin++];
-            uint32_t source_node = (uint32_t)(task >> 8);
-            root[batch_count] = (uint8_t)task;
-            if (source_node >= discovery->graph->node_count) {
+            worker->source_node[batch_count] = (uint32_t)(task >> 8);
+            worker->root[batch_count] = (uint8_t)task;
+            if (worker->source_node[batch_count] >=
+                discovery->graph->node_count) {
                 root_ray_discovery_fail(
                     discovery, WM_ARITHMETIC_ERROR,
                     "root-ray discovery task is invalid");
                 break;
             }
-            memcpy(coefficient[batch_count],
-                   discovery->graph->node[source_node].coefficient,
-                   sizeof(coefficient[batch_count]));
-            entry[batch_count] = ray_memo_find(
-                discovery->ray_memo, source_node, root[batch_count]);
-            if (entry[batch_count] == NULL) {
+            memcpy(worker->coefficient[batch_count],
+                   discovery->graph
+                       ->node[worker->source_node[batch_count]]
+                       .coefficient,
+                   sizeof(worker->coefficient[batch_count]));
+            worker->source_level[batch_count] =
+                discovery->graph
+                    ->node[worker->source_node[batch_count]]
+                    .level;
+            worker->entry[batch_count] = ray_memo_find(
+                discovery->ray_memo, worker->source_node[batch_count],
+                worker->root[batch_count]);
+            if (worker->entry[batch_count] == NULL) {
                 root_ray_discovery_fail(
                     discovery, WM_ARITHMETIC_ERROR,
                     "root-ray discovery state is missing");
@@ -2505,20 +2647,46 @@ static void *discover_root_ray_worker(void *argument)
         }
         ++discovery->active_workers;
         (void)pthread_mutex_unlock(&discovery->mutex);
-        for (index = 0; index < batch_count; ++index)
+        for (index = 0; index < batch_count; ++index) {
+            uint16_t zero_mask;
+            worker->weight_valid[index] = 0;
+            if (index == 0 ||
+                worker->source_node[index] !=
+                    worker->source_node[index - 1U] ||
+                !worker->weight_valid[index - 1U]) {
+                if (!dominant_weight_for_coefficient(
+                        discovery->recurrence, worker->coefficient[index],
+                        worker->weight[index], &zero_mask)) {
+                    memset(&worker->result[index], 0,
+                           sizeof(worker->result[index]));
+                    worker->result[index].status = WM_ARITHMETIC_ERROR;
+                    set_error(worker->result[index].error,
+                              sizeof(worker->result[index].error),
+                              "root-ray task source is not dominant");
+                    continue;
+                }
+            } else {
+                memcpy(worker->weight[index], worker->weight[index - 1U],
+                       sizeof(worker->weight[index]));
+            }
+            worker->weight_valid[index] = 1;
             compute_root_ray_transition(
-                discovery->recurrence, root[index], entry[index],
-                coefficient[index], &result[index]);
+                discovery->recurrence, worker->root[index],
+                worker->entry[index], worker->coefficient[index],
+                worker->weight[index], worker->source_level[index],
+                &worker->result[index]);
+        }
         if (pthread_mutex_lock(&discovery->mutex) != 0) return NULL;
         for (index = 0; index < batch_count; ++index) {
-            if (result[index].status != WM_OK) {
-                batch_status = result[index].status;
+            if (worker->result[index].status != WM_OK) {
+                batch_status = worker->result[index].status;
                 root_ray_discovery_fail(discovery, batch_status,
-                                        result[index].error);
+                                        worker->result[index].error);
                 break;
             }
             batch_status =
-                merge_root_ray_transition_locked(discovery, &result[index]);
+                merge_root_ray_transition_locked(
+                    discovery, &worker->result[index]);
             if (batch_status != WM_OK) {
                 root_ray_discovery_fail(
                     discovery, batch_status,
@@ -2544,12 +2712,16 @@ static WMStatus discover_root_ray_nodes_parallel(
     WMRayMemo *ray_memo, uint32_t source_node)
 {
     WMRootRayDiscovery discovery;
+    WMRootRayDiscoveryWorker worker[WM_MAX_PREPARED_WORKERS];
     pthread_t thread[WM_MAX_PREPARED_WORKERS - 1U];
     size_t created = 0;
+    size_t initialized_workers = 0;
+    size_t batch_capacity;
     uint8_t workers = ray_memo->worker_count;
     uint8_t index;
     WMStatus status;
     memset(&discovery, 0, sizeof(discovery));
+    memset(worker, 0, sizeof(worker));
     discovery.recurrence = recurrence;
     discovery.graph = graph;
     discovery.ray_memo = ray_memo;
@@ -2574,9 +2746,39 @@ static WMStatus discover_root_ray_nodes_parallel(
     (void)pthread_mutex_unlock(&discovery.mutex);
     if (status != WM_OK) goto finished;
     if (workers == 0) workers = 1;
+    batch_capacity = root_ray_discovery_batch_capacity(&discovery, workers);
+    for (index = 0; index < workers; ++index) {
+        if (!initialize_root_ray_discovery_worker(&discovery,
+                                                  batch_capacity,
+                                                  &worker[index])) {
+            status = root_ray_allocation_error(recurrence,
+                                               "discovery worker");
+            goto finished;
+        }
+        ++initialized_workers;
+    }
+    {
+        size_t available = ray_memo->budget->maximum_bytes -
+                           ray_memo->budget->allocated_bytes;
+        size_t cache_capacity = 262144U;
+        while (cache_capacity > 0 &&
+               cache_capacity * sizeof(*discovery.node_cache) >
+                   available / 8U)
+            cache_capacity /= 2U;
+        if (cache_capacity >= 64U) {
+            discovery.node_cache = ray_allocate(
+                ray_memo, cache_capacity, sizeof(*discovery.node_cache));
+            if (discovery.node_cache == NULL) {
+                status = root_ray_allocation_error(recurrence,
+                                                   "discovery node cache");
+                goto finished;
+            }
+            discovery.node_cache_capacity = cache_capacity;
+        }
+    }
     for (index = 1; index < workers; ++index) {
         if (pthread_create(&thread[created], NULL, discover_root_ray_worker,
-                           &discovery) != 0) {
+                           &worker[index]) != 0) {
             if (pthread_mutex_lock(&discovery.mutex) == 0) {
                 root_ray_discovery_fail(
                     &discovery, WM_MEMORY_ERROR,
@@ -2589,7 +2791,7 @@ static WMStatus discover_root_ray_nodes_parallel(
         }
         ++created;
     }
-    (void)discover_root_ray_worker(&discovery);
+    (void)discover_root_ray_worker(&worker[0]);
     while (created > 0) (void)pthread_join(thread[--created], NULL);
     status = discovery.status;
     if (status != WM_OK)
@@ -2604,6 +2806,12 @@ static WMStatus discover_root_ray_nodes_parallel(
             recurrence->stats->ray_worker_count = workers;
     }
 finished:
+    ray_release(ray_memo, discovery.node_cache,
+                discovery.node_cache_capacity *
+                    sizeof(*discovery.node_cache));
+    while (initialized_workers > 0)
+        destroy_root_ray_discovery_worker(
+            ray_memo, &worker[--initialized_workers]);
     ray_release(ray_memo, discovery.task,
                 discovery.task_capacity * sizeof(*discovery.task));
     (void)pthread_cond_destroy(&discovery.condition);
