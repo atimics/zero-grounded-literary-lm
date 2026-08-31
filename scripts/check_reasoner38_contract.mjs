@@ -10,10 +10,14 @@ function requireValue(condition, message) {
 requireValue(contract.schema === "zero.reasoner38_aws_contract.v1", "schema");
 requireValue(contract.experiment === "reasoner38-raw-observation-v1", "experiment");
 requireValue(contract.version === "(3,7)", "version");
-requireValue(contract.authorized === false, "sealed run must stay locked");
-requireValue(contract.authorization.approved_by === null, "approver must be null");
-requireValue(contract.authorization.approved_at === null, "approval date must be null");
-requireValue(contract.authorization.approval_id === null, "approval id must be null");
+requireValue(contract.authorized === true, "sealed run must stay authorized");
+requireValue(
+  contract.authorization.approved_by === "ratimics" &&
+    contract.authorization.approved_at === "2026-08-30" &&
+    contract.authorization.approval_id ===
+      "reasoner38-raw-observation-2026-08-30-v1",
+  "approval",
+);
 requireValue(contract.seal.episodes === 15552, "sealed episodes");
 requireValue(contract.seal.individual_episodes === 5184, "individual episodes");
 requireValue(contract.seal.mixed_episodes === 10368, "mixed episodes");
@@ -54,4 +58,4 @@ requireValue(contract.result.binary === "reasoner38", "binary");
 requireValue(contract.result.make_target === "reasoner38", "make target");
 requireValue(contract.result.schema === "zero.reasoner38_raw_observation.v1", "result schema");
 
-console.log("Reasoner (3,7) frozen, locked raw-observation cloud contract passed");
+console.log("Reasoner (3,7) authorized raw-observation cloud contract passed");

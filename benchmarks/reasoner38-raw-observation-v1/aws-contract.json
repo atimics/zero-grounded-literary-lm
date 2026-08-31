@@ -2,11 +2,11 @@
   "schema": "zero.reasoner38_aws_contract.v1",
   "experiment": "reasoner38-raw-observation-v1",
   "version": "(3,7)",
-  "authorized": false,
+  "authorized": true,
   "authorization": {
-    "approved_by": null,
-    "approved_at": null,
-    "approval_id": null,
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-30",
+    "approval_id": "reasoner38-raw-observation-2026-08-30-v1",
     "scope": "one sealed raw-observation dimension-transfer execution after the exact source bundle is approved"
   },
   "seal": {

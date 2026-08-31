@@ -23,5 +23,5 @@ The sealed command refuses local execution. Cloud execution requires both
 bundle is frozen at commit
 `8e3212a9770e4514f5f2b1c465c1243c29062cd6`, with SHA-256
 `95e2c42ec5fcb49635c409be0b4d7eed4022111a99904c2aed65c3b5e01c2bdf`.
-The cloud contract remains locked until the user explicitly approves that
-exact upload and capped one-shot launch.
+The cloud contract was locked until explicit approval. The user has now
+authorized that exact bundle and one capped launch, with no retry.
