@@ -187,11 +187,18 @@ weight node and signed root direction. The state table uses 48-byte entries,
 direct per-node root lookup, 128-bit inline values, and an exact 1,024-bit side
 table when an inline value is too small.
 
-This engine is additive and is not the default. On the current E8 frontier it
-uses materially less memory, but its single-threaded ray traversal is not
-faster than the parallel prepared graph. Schema Version 4 reports ray states,
-hits, transitions, and counted ray allocation. The same shared byte ceiling
-applies to the multiplicity memo and the ray tables. See
+The root-ray engine now separates transition discovery from arithmetic
+evaluation. Its compact transition graph is ordered by lowering depth, and
+nodes at the same depth run in parallel. `ZERO_WEIGHT_RAY_WORKERS` selects one
+through 32 workers; the default is eight.
+
+This engine is additive and is not yet the default. It is faster and smaller
+than the prepared graph on the measured depth-1,080 E8 query, but a new
+frontier run must establish the full surface before the default changes.
+Schema Version 4 reports canonical nodes, ray states, hits, transitions,
+discovery and evaluation time, worker use, and counted allocation. The same
+shared byte ceiling applies to the multiplicity memo, compact graph, work
+queue, and ray tables. See
 `docs/WEIGHT-MULTIPLICITY-ROOT-RAY.md` for the matched measurements and the
 remaining performance decision.
 
