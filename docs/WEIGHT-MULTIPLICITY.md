@@ -47,6 +47,9 @@ The self-test checks:
 - the exact positive-root count for all 31 types;
 - the complete 3,750-case ACR-1 adjoint integrity surface;
 - non-dominant Weyl-orbit targets;
+- prepared-graph answers and recurrence counters against the recursive engine;
+- prepared-graph reuse inside one representation session;
+- the shared memo-and-graph byte ceiling;
 - `A1` weight strings and root-lattice gaps; and
 - the three weights of the `A2` fundamental representation.
 
@@ -125,6 +128,36 @@ old-plus-new allocation of earlier resizes while leaving the hash function,
 record states the selected capacity, the memo entry size, and whether the run
 uses the default or presized policy. This control is for versioned audit
 reruns; it does not rewrite earlier frontier evidence.
+
+## Prepared dependency graph
+
+Deep or grouped work can use the prepared engine explicitly:
+
+```sh
+./weight_multiplicity query-prepared E8 HIGHEST TARGET
+./weight_multiplicity --serve-prepared
+```
+
+The prepared engine discovers the canonical Freudenthal dependency graph for
+the requested target. It combines repeated edges to the same dominant weight,
+then evaluates equal-depth nodes in parallel after all higher-weight
+dependencies are ready. The grouped adapter keeps both the exact values and
+the prepared graph for the active `(type, highest_weight)` session. A later
+target already covered by that graph is a direct lookup.
+
+`ZERO_WEIGHT_PREPARED_WORKERS` sets the worker count from 1 through 32. The
+default is 8. Small evaluation groups stay on one thread, so the configured
+count is a ceiling rather than a promise that every query uses every worker.
+
+The prepared graph uses fixed edge blocks instead of a growing contiguous
+array. This avoids retaining a large old edge array during growth. The
+`ZERO_WEIGHT_MEMO_LIMIT_BYTES` ceiling is shared by the memo, graph, temporary
+discovery tables, and resize overlap. Schema Version 3 reports graph size,
+graph build and evaluation time, worker count, and the shared working-set
+high-water mark. Process RSS remains a separate controller measurement.
+
+This is a new Phase 0.5 execution surface. It does not change the historical
+`--serve` output or rewrite sealed Phase 0 evidence.
 
 Sending `@metrics` returns the process peak resident-set size in bytes. The
 controller records it before type initialization, after warm-up, and after the

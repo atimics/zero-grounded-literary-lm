@@ -38,6 +38,8 @@ typedef struct {
     R0CartanMatrix cartan;
     uint32_t symmetrizer[WM_MAX_RANK];
     WMPositiveRoots positive_roots;
+    int32_t positive_root_dynkin[WM_MAX_POSITIVE_ROOTS][WM_MAX_RANK];
+    int64_t positive_root_norm[WM_MAX_POSITIVE_ROOTS];
 } WMOracle;
 
 typedef struct {
@@ -51,6 +53,22 @@ typedef struct {
     uint64_t working_set_peak_allocated_bytes;
     uint64_t recurrence_terms;
     uint64_t recursive_weyl_folds;
+    uint64_t prepared_nodes_before;
+    uint64_t prepared_nodes;
+    uint64_t prepared_nodes_added;
+    uint64_t prepared_edges_before;
+    uint64_t prepared_edges;
+    uint64_t prepared_edges_added;
+    uint64_t prepared_raw_transitions;
+    uint64_t prepared_discovery_nanoseconds;
+    uint64_t prepared_evaluation_nanoseconds;
+    uint64_t prepared_graph_capacity_bytes;
+    uint64_t prepared_graph_peak_allocated_bytes;
+    uint64_t prepared_parallel_groups;
+    uint64_t prepared_parallel_nodes;
+    uint64_t prepared_discovery_rounds;
+    uint64_t prepared_discovery_nodes;
+    uint32_t prepared_worker_count;
     uint32_t maximum_level;
 } WMQueryStats;
 
@@ -65,6 +83,14 @@ WMStatus wm_weight_multiplicity(const WMOracle *oracle,
                                 const int32_t target_weight[WM_MAX_RANK],
                                 WMBigUInt *multiplicity, WMQueryStats *stats,
                                 char *error, size_t error_capacity);
+WMStatus wm_weight_multiplicity_prepared(
+    const WMOracle *oracle,
+    const int32_t highest_weight[WM_MAX_RANK],
+    const int32_t target_weight[WM_MAX_RANK],
+    WMBigUInt *multiplicity,
+    WMQueryStats *stats,
+    char *error,
+    size_t error_capacity);
 WMStatus wm_representation_session_create(
     const WMOracle *oracle,
     const int32_t highest_weight[WM_MAX_RANK],
@@ -82,6 +108,13 @@ WMStatus wm_representation_session_create_with_capacity(
     size_t error_capacity);
 uint64_t wm_representation_memo_entry_bytes(void);
 WMStatus wm_representation_session_multiplicity(
+    WMRepresentationSession *session,
+    const int32_t target_weight[WM_MAX_RANK],
+    WMBigUInt *multiplicity,
+    WMQueryStats *stats,
+    char *error,
+    size_t error_capacity);
+WMStatus wm_representation_session_multiplicity_prepared(
     WMRepresentationSession *session,
     const int32_t target_weight[WM_MAX_RANK],
     WMBigUInt *multiplicity,
