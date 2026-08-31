@@ -1,0 +1,277 @@
+name: Launch weight-multiplicity Phase 0.5 corrective audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact merged Zero commit authorized for dispatch
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: weight-multiplicity-phase05-corrective-cloud-v1
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: Correct evidence and launch allocator audit · ≤$0.50
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    environment: aws
+    env:
+      WM_BUCKET: ${{ secrets.AWS_BUCKET }}
+      WM_REGION: us-east-1
+      WM_RUN_ID: ${{ github.run_id }}
+      WM_SOURCE_COMMIT: ${{ github.sha }}
+      WM_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      WM_ILXYR_COMMIT: ad39f923c5b1c489afec24b461ef922cdd2db561
+      WM_APPROVAL_ID: weight-multiplicity-phase05-corrective-cloud-2026-08-30-v1
+      WM_PRIOR_RUN_ID: '33329981839'
+      WM_PRIOR_PACKAGE_KEY: jobs/33329981839/weight-multiplicity-phase05-package.tar.gz
+      WM_PRIOR_PACKAGE_SHA256: f876ce7342cabe344e95eb798750ce1f705fdb586ec24e65ef76ab2778d3ec7f
+      WM_PRIOR_FRONTIER_KEY: experiments/weight-multiplicity-phase05-cloud-v1/runs/33329981839/results/default-frontier.json.gz
+      WM_PRIOR_FRONTIER_SHA256: 7d74654ebb16fe62b3e20a5f49c5a32312de14a3a2b3feaf8d79ae0ffb291c9c
+      WM_ORACLE_SHA256: 274d00071b33b9e4d4f495e629b0af96867cea382a8e7c4dc3174d13ca56a621
+      WM_AUDIT_PLAN_SHA256: b2908c50519d7692f6abdfd24e9410fe721797021b0ec962319415e07f9c3a4f
+      WM_LIE_SOURCE_SHA256: c4d6f67fa17d2bc77c875a5b2ad2b42ffc5cadf30e7d1c64c097648ccb918b1e
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate final authority and contract
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test "$WM_SOURCE_COMMIT" = "$WM_EXPECTED_COMMIT"
+          [[ "$WM_SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test -n "$WM_BUCKET"
+          node scripts/check_weight_multiplicity_phase05_corrective_cloud.mjs
+          WM_CONTRACT_SHA256=$(sha256sum \
+            benchmarks/weight-multiplicity-phase05-corrective-cloud-v1/aws-contract.json | \
+            awk '{print $1}')
+          echo "WM_CONTRACT_SHA256=$WM_CONTRACT_SHA256" >> "$GITHUB_ENV"
+
+      - name: Fetch exact ilXyr corrective controller
+        run: |
+          git init -q /tmp/ilxyr
+          git -C /tmp/ilxyr remote add origin https://github.com/cenetex/ilXyr.git
+          git -C /tmp/ilxyr fetch --depth=1 origin "$WM_ILXYR_COMMIT"
+          git -C /tmp/ilxyr checkout -q --detach FETCH_HEAD
+          test "$(git -C /tmp/ilxyr rev-parse HEAD)" = "$WM_ILXYR_COMMIT"
+          test "$(sha256sum /tmp/ilxyr/examples/weight-multiplicity/phase05-cloud-corrective-audit-v1.json | awk '{print $1}')" = \
+            "$WM_AUDIT_PLAN_SHA256"
+          node /tmp/ilxyr/scripts/run-weight-multiplicity-phase05.mjs --self-test
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Refuse overlapping ZERO compute
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Recover and verify the prior immutable evidence
+        run: |
+          mkdir -p /tmp/prior
+          aws s3 cp "s3://${WM_BUCKET}/${WM_PRIOR_PACKAGE_KEY}" \
+            /tmp/prior-package.tar.gz --only-show-errors
+          test "$(sha256sum /tmp/prior-package.tar.gz | awk '{print $1}')" = \
+            "$WM_PRIOR_PACKAGE_SHA256"
+          tar -xzf /tmp/prior-package.tar.gz -C /tmp/prior
+          cd /tmp/prior
+          sha256sum --check PACKAGE-SHA256SUMS
+          test "$(sha256sum weight_multiplicity | awk '{print $1}')" = \
+            "$WM_ORACLE_SHA256"
+          test "$(sha256sum examples/weight-multiplicity/phase05-cloud-frontier-plan.json | awk '{print $1}')" = \
+            350ed67272f534a0d8bc7df1ae35a5da55485c04d1184e4e5ce92de8a8e57314
+          aws s3 cp "s3://${WM_BUCKET}/${WM_PRIOR_FRONTIER_KEY}" \
+            /tmp/prior-frontier.json.gz --only-show-errors
+          test "$(sha256sum /tmp/prior-frontier.json.gz | awk '{print $1}')" = \
+            "$WM_PRIOR_FRONTIER_SHA256"
+
+      - name: Build the pinned temporary LiE witness
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bison build-essential
+          curl --fail --location --silent --show-error \
+            https://mirror.metanet.ch/sage/spkg/upstream/lie/lie-2.2.2.tar.gz \
+            --output /tmp/lie-2.2.2.tar.gz
+          test "$(sha256sum /tmp/lie-2.2.2.tar.gz | awk '{print $1}')" = \
+            "$WM_LIE_SOURCE_SHA256"
+          mkdir -p /tmp/lie
+          tar -xzf /tmp/lie-2.2.2.tar.gz -C /tmp/lie
+          make -C /tmp/lie/LiE noreadline CPPFLAGS=-D_POSIX_C_SOURCE=200809L
+          printf 'dom_char([1],[-1],A1)\nquit\n' | /tmp/lie/LiE/Lie.exe | \
+            grep -qE '^[[:space:]]*1[[:space:]]*$'
+
+      - name: Produce the correction and exact-binary LiE witness
+        run: |
+          node /tmp/ilxyr/scripts/correct-weight-multiplicity-phase05-cloud-exactness.mjs \
+            --audit-plan /tmp/ilxyr/examples/weight-multiplicity/phase05-cloud-corrective-audit-v1.json \
+            --source-plan /tmp/prior/examples/weight-multiplicity/phase05-cloud-frontier-plan.json \
+            --frontier /tmp/prior-frontier.json.gz \
+            --out /tmp/exactness-correction-v1.json
+          test "$(jq -r '.changes | length' /tmp/exactness-correction-v1.json)" = 2
+          node /tmp/ilxyr/scripts/prepare-weight-multiplicity-phase05-cloud-lie-manifest.mjs \
+            --audit-plan /tmp/ilxyr/examples/weight-multiplicity/phase05-cloud-corrective-audit-v1.json \
+            --source-manifest /tmp/ilxyr/examples/weight-multiplicity/phase05-lie-cross-check-manifest-v3.json \
+            --zero /tmp/prior/weight_multiplicity \
+            --out /tmp/lie-manifest-v5.json
+          node /tmp/ilxyr/scripts/run-weight-multiplicity-lie-cross-check.mjs \
+            --manifest /tmp/lie-manifest-v5.json \
+            --zero /tmp/prior/weight_multiplicity \
+            --lie /tmp/lie/LiE/Lie.exe \
+            --out /tmp/lie-cross-check-v5.json \
+            --timeout-ms 60000
+          test "$(jq -r .evidence_status /tmp/lie-cross-check-v5.json)" = pass
+          test "$(jq -r .summary.agreements /tmp/lie-cross-check-v5.json)" = 496
+
+      - name: Build the immutable corrective package
+        run: |
+          mkdir -p /tmp/wm-corrective-package/scripts \
+            /tmp/wm-corrective-package/examples/weight-multiplicity
+          install -m 0755 /tmp/prior/weight_multiplicity \
+            /tmp/wm-corrective-package/weight_multiplicity
+          install -m 0755 \
+            /tmp/ilxyr/scripts/run-weight-multiplicity-phase05.mjs \
+            /tmp/ilxyr/scripts/run-weight-multiplicity-phase05-allocator-audit.mjs \
+            /tmp/wm-corrective-package/scripts/
+          cp /tmp/ilxyr/examples/weight-multiplicity/phase05-cloud-corrective-audit-v1.json \
+            /tmp/wm-corrective-package/examples/weight-multiplicity/
+          cp /tmp/prior/examples/weight-multiplicity/phase05-cloud-frontier-plan.json \
+            /tmp/wm-corrective-package/examples/weight-multiplicity/
+          cp /tmp/exactness-correction-v1.json \
+            /tmp/wm-corrective-package/exactness-correction-v1.json
+          cp /tmp/lie-cross-check-v5.json \
+            /tmp/wm-corrective-package/lie-cross-check-v5.json
+          WM_LIE_EXECUTABLE_SHA256=$(sha256sum /tmp/lie/LiE/Lie.exe | awk '{print $1}')
+          jq -n --arg source_commit "$WM_SOURCE_COMMIT" \
+            --arg ilxyr_commit "$WM_ILXYR_COMMIT" \
+            --arg oracle_sha256 "$WM_ORACLE_SHA256" \
+            --arg contract_sha256 "$WM_CONTRACT_SHA256" \
+            --arg audit_plan_sha256 "$WM_AUDIT_PLAN_SHA256" \
+            --arg lie_source_sha256 "$WM_LIE_SOURCE_SHA256" \
+            --arg lie_executable_sha256 "$WM_LIE_EXECUTABLE_SHA256" \
+            --arg prior_run_id "$WM_PRIOR_RUN_ID" \
+            --arg approval_id "$WM_APPROVAL_ID" \
+            '{schema:"ilxyr.weight_multiplicity_corrective_cloud_execution.v1",
+              execution:{source_commit:$source_commit,ilxyr_commit:$ilxyr_commit,
+                oracle_executable_sha256:$oracle_sha256,
+                contract_sha256:$contract_sha256,
+                audit_plan_sha256:$audit_plan_sha256,
+                lie_source_sha256:$lie_source_sha256,
+                lie_executable_sha256:$lie_executable_sha256,
+                prior_run_id:$prior_run_id,approval_id:$approval_id,
+                instance_type:"c6i.4xlarge",region:"us-east-1",
+                maximum_instance_seconds:2647,workload_timeout_seconds:2100,
+                maximum_ec2_usd:0.5},
+              closures:{phase_1_authorized:false,corpus_generated:false,
+                models_trained:false}}' \
+            > /tmp/wm-corrective-package/execution-record.json
+          cd /tmp/wm-corrective-package
+          find . -type f ! -name PACKAGE-SHA256SUMS -print0 | sort -z | \
+            xargs -0 sha256sum > PACKAGE-SHA256SUMS
+          tar --sort=name --mtime='UTC 2026-08-30' --owner=0 --group=0 \
+            --numeric-owner -czf /tmp/weight-multiplicity-phase05-corrective-package.tar.gz .
+          {
+            echo "WM_PACKAGE_SHA256=$(sha256sum /tmp/weight-multiplicity-phase05-corrective-package.tar.gz | awk '{print $1}')"
+            echo "WM_PACKAGE_KEY=jobs/${WM_RUN_ID}/weight-multiplicity-phase05-corrective-package.tar.gz"
+          } >> "$GITHUB_ENV"
+
+      - name: Resolve and dry-run the exact request
+        id: preflight
+        env:
+          WM_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          WM_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          WM_AMI=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value --output text --no-cli-pager)
+          WM_LAUNCH_EPOCH=$(date +%s)
+          export WM_AMI WM_LAUNCH_EPOCH
+          scripts/aws/weight-multiplicity-phase05-corrective-run-instance.sh dry-run
+          {
+            echo "ami=$WM_AMI"
+            echo "launch_epoch=$WM_LAUNCH_EPOCH"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish package and acquire one-time lock
+        run: |
+          aws s3api put-object --bucket "$WM_BUCKET" --key "$WM_PACKAGE_KEY" \
+            --body /tmp/weight-multiplicity-phase05-corrective-package.tar.gz \
+            --content-type application/gzip --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          jq -n --arg run_id "$WM_RUN_ID" --arg source_commit "$WM_SOURCE_COMMIT" \
+            --arg ilxyr_commit "$WM_ILXYR_COMMIT" \
+            --arg package_sha256 "$WM_PACKAGE_SHA256" \
+            --arg contract_sha256 "$WM_CONTRACT_SHA256" \
+            --arg approval_id "$WM_APPROVAL_ID" \
+            '{schema:"ilxyr.weight_multiplicity_corrective_cloud_lock.v1",
+              run_id:$run_id,source_commit:$source_commit,
+              ilxyr_commit:$ilxyr_commit,package_sha256:$package_sha256,
+              contract_sha256:$contract_sha256,approval_id:$approval_id}' \
+            > /tmp/weight-multiplicity-corrective.lock
+          aws s3api put-object --bucket "$WM_BUCKET" \
+            --key experiments/weight-multiplicity-phase05-corrective-cloud-v1/execution.lock \
+            --body /tmp/weight-multiplicity-corrective.lock \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Launch bounded instance
+        id: launch
+        env:
+          WM_AMI: ${{ steps.preflight.outputs.ami }}
+          WM_LAUNCH_EPOCH: ${{ steps.preflight.outputs.launch_epoch }}
+          WM_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          WM_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          instance_id=$(scripts/aws/weight-multiplicity-phase05-corrective-run-instance.sh launch)
+          echo "instance_id=$instance_id" >> "$GITHUB_OUTPUT"
+
+      - name: Publish launch receipt
+        env:
+          WM_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          WM_AMI: ${{ steps.preflight.outputs.ami }}
+          WM_LAUNCH_EPOCH: ${{ steps.preflight.outputs.launch_epoch }}
+        run: |
+          jq -n --arg run_id "$WM_RUN_ID" --arg instance_id "$WM_INSTANCE_ID" \
+            --arg ami "$WM_AMI" --arg source_commit "$WM_SOURCE_COMMIT" \
+            --arg ilxyr_commit "$WM_ILXYR_COMMIT" \
+            --arg package_key "$WM_PACKAGE_KEY" \
+            --arg package_sha256 "$WM_PACKAGE_SHA256" \
+            --arg contract_sha256 "$WM_CONTRACT_SHA256" \
+            --arg approval_id "$WM_APPROVAL_ID" \
+            --argjson launch_epoch "$WM_LAUNCH_EPOCH" \
+            '{schema:"ilxyr.weight_multiplicity_corrective_cloud_launch.v1",
+              run_id:$run_id,instance_id:$instance_id,ami:$ami,
+              instance_type:"c6i.4xlarge",region:"us-east-1",
+              source_commit:$source_commit,ilxyr_commit:$ilxyr_commit,
+              package_key:$package_key,package_sha256:$package_sha256,
+              contract_sha256:$contract_sha256,approval_id:$approval_id,
+              launch_epoch:$launch_epoch,maximum_instance_seconds:2647,
+              workload_timeout_seconds:2100,maximum_ec2_usd:0.5}' \
+            > /tmp/weight-multiplicity-corrective-launch.json
+          aws s3api put-object --bucket "$WM_BUCKET" \
+            --key "experiments/weight-multiplicity-phase05-corrective-cloud-v1/runs/${WM_RUN_ID}/launch.json" \
+            --body /tmp/weight-multiplicity-corrective-launch.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          jq -c . /tmp/weight-multiplicity-corrective-launch.json >> "$GITHUB_STEP_SUMMARY"
