@@ -47,6 +47,8 @@ typedef struct {
     uint64_t memo_hits;
     uint64_t memo_capacity_bytes;
     uint64_t memo_peak_allocated_bytes;
+    uint64_t working_set_capacity_bytes;
+    uint64_t working_set_peak_allocated_bytes;
     uint64_t recurrence_terms;
     uint64_t recursive_weyl_folds;
     uint32_t maximum_level;
@@ -91,6 +93,10 @@ uint64_t wm_representation_session_memo_entries(
 uint64_t wm_representation_session_memo_capacity_bytes(
     const WMRepresentationSession *session);
 uint64_t wm_representation_session_memo_peak_allocated_bytes(
+    const WMRepresentationSession *session);
+uint64_t wm_representation_session_working_set_capacity_bytes(
+    const WMRepresentationSession *session);
+uint64_t wm_representation_session_working_set_peak_allocated_bytes(
     const WMRepresentationSession *session);
 void wm_representation_session_destroy(WMRepresentationSession *session);
 WMStatus wm_big_to_decimal(const WMBigUInt *value, char *output,

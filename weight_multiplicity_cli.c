@@ -367,6 +367,8 @@ static WMStatus evaluate_session_and_print(
            "\"memo_entries_added\":%llu,\"memo_hits\":%llu,"
            "\"memo_capacity_bytes\":%llu,"
            "\"memo_peak_allocated_bytes\":%llu,"
+           "\"working_set_capacity_bytes\":%llu,"
+           "\"working_set_peak_allocated_bytes\":%llu,"
            "\"recurrence_terms\":%llu,"
            "\"recursive_weyl_folds\":%llu,"
            "\"maximum_level\":%u}\n",
@@ -378,6 +380,8 @@ static WMStatus evaluate_session_and_print(
            (unsigned long long)stats.memo_hits,
            (unsigned long long)stats.memo_capacity_bytes,
            (unsigned long long)stats.memo_peak_allocated_bytes,
+           (unsigned long long)stats.working_set_capacity_bytes,
+           (unsigned long long)stats.working_set_peak_allocated_bytes,
            (unsigned long long)stats.recurrence_terms,
            (unsigned long long)stats.recursive_weyl_folds,
            stats.maximum_level);
@@ -564,7 +568,9 @@ static int run_server(int grouped)
                            "\"session_generation\":%llu,"
                            "\"memo_entries\":%llu,"
                            "\"memo_capacity_bytes\":%llu,"
-                           "\"memo_peak_allocated_bytes\":%llu}\n",
+                           "\"memo_peak_allocated_bytes\":%llu,"
+                           "\"working_set_capacity_bytes\":%llu,"
+                           "\"working_set_peak_allocated_bytes\":%llu}\n",
                            max_rss_bytes,
                            (unsigned long long)session_generation,
                            (unsigned long long)
@@ -575,6 +581,12 @@ static int run_server(int grouped)
                                    active_session),
                            (unsigned long long)
                                wm_representation_session_memo_peak_allocated_bytes(
+                                   active_session),
+                           (unsigned long long)
+                               wm_representation_session_working_set_capacity_bytes(
+                                   active_session),
+                           (unsigned long long)
+                               wm_representation_session_working_set_peak_allocated_bytes(
                                    active_session));
                 else
                     printf("{\"status\":\"metrics\","

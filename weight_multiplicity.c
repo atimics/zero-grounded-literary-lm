@@ -21,18 +21,27 @@ typedef struct {
 } WMMemoEntry;
 
 typedef struct {
+    size_t maximum_bytes;
+    size_t allocated_bytes;
+    size_t peak_allocated_bytes;
+    int limit_reached;
+} WMMemoryBudget;
+
+typedef struct {
     WMMemoEntry *entry;
     size_t capacity;
     size_t count;
-    size_t maximum_bytes;
+    size_t allocated_bytes;
     size_t peak_allocated_bytes;
     uint8_t rank;
     int limit_reached;
+    WMMemoryBudget *budget;
 } WMMemo;
 
 struct WMRepresentationSession {
     const WMOracle *oracle;
     int32_t highest_weight[WM_MAX_RANK];
+    WMMemoryBudget budget;
     WMMemo memo;
 };
 
@@ -52,6 +61,34 @@ static void set_error(char *error, size_t capacity, const char *format, ...)
     va_start(arguments, format);
     (void)vsnprintf(error, capacity, format, arguments);
     va_end(arguments);
+}
+
+static void *budget_calloc(WMMemoryBudget *budget, size_t count, size_t size)
+{
+    size_t bytes;
+    void *allocation;
+    if (count != 0 && size > SIZE_MAX / count) {
+        budget->limit_reached = 1;
+        return NULL;
+    }
+    bytes = count * size;
+    if (bytes > budget->maximum_bytes - budget->allocated_bytes) {
+        budget->limit_reached = 1;
+        return NULL;
+    }
+    allocation = calloc(count, size);
+    if (allocation == NULL) return NULL;
+    budget->allocated_bytes += bytes;
+    if (budget->allocated_bytes > budget->peak_allocated_bytes)
+        budget->peak_allocated_bytes = budget->allocated_bytes;
+    return allocation;
+}
+
+static void budget_free(WMMemoryBudget *budget, void *allocation, size_t bytes)
+{
+    if (allocation == NULL) return;
+    free(allocation);
+    budget->allocated_bytes -= bytes;
 }
 
 static int big_is_zero(const WMBigUInt *value)
@@ -396,24 +433,22 @@ static int memo_rehash(WMMemo *memo, size_t capacity)
     size_t old_bytes;
     size_t new_bytes;
     size_t index;
+    old_bytes = old_capacity * sizeof(*memo->entry);
     if (capacity > SIZE_MAX / sizeof(*memo->entry)) {
         memo->limit_reached = 1;
         return 0;
     }
-    old_bytes = old_capacity * sizeof(*memo->entry);
     new_bytes = capacity * sizeof(*memo->entry);
-    if (new_bytes > memo->maximum_bytes ||
-        old_bytes > memo->maximum_bytes - new_bytes) {
-        memo->limit_reached = 1;
-        return 0;
-    }
-    memo->entry = calloc(capacity, sizeof(*memo->entry));
+    memo->budget->limit_reached = 0;
+    memo->entry = budget_calloc(memo->budget, capacity, sizeof(*memo->entry));
     if (memo->entry == NULL) {
         memo->entry = old;
+        memo->limit_reached = memo->budget->limit_reached;
         return 0;
     }
     if (old_bytes + new_bytes > memo->peak_allocated_bytes)
         memo->peak_allocated_bytes = old_bytes + new_bytes;
+    memo->allocated_bytes = old_bytes + new_bytes;
     memo->capacity = capacity;
     memo->count = 0;
     for (index = 0; index < old_capacity; ++index) {
@@ -425,7 +460,8 @@ static int memo_rehash(WMMemo *memo, size_t capacity)
         memo->entry[slot] = old[index];
         ++memo->count;
     }
-    free(old);
+    budget_free(memo->budget, old, old_bytes);
+    memo->allocated_bytes -= old_bytes;
     return 1;
 }
 
@@ -830,17 +866,21 @@ WMStatus wm_representation_session_create_with_capacity(
     }
     created = calloc(1, sizeof(*created));
     if (created == NULL) return WM_MEMORY_ERROR;
-    created->memo.entry =
-        calloc(initial_memo_capacity, sizeof(*created->memo.entry));
+    created->budget.maximum_bytes = maximum_bytes;
+    created->memo.budget = &created->budget;
+    created->memo.entry = budget_calloc(
+        &created->budget, initial_memo_capacity, sizeof(*created->memo.entry));
     if (created->memo.entry == NULL) {
+        int limit_reached = created->budget.limit_reached;
         free(created);
-        return WM_MEMORY_ERROR;
+        return limit_reached ? WM_LIMIT_ERROR : WM_MEMORY_ERROR;
     }
     created->oracle = oracle;
     memcpy(created->highest_weight, highest_weight,
            sizeof(created->highest_weight));
     created->memo.capacity = initial_memo_capacity;
-    created->memo.maximum_bytes = maximum_bytes;
+    created->memo.allocated_bytes =
+        initial_memo_capacity * sizeof(*created->memo.entry);
     created->memo.peak_allocated_bytes =
         initial_memo_capacity * sizeof(*created->memo.entry);
     created->memo.rank = oracle->cartan.rank;
@@ -904,6 +944,10 @@ finished:
             (uint64_t)session->memo.capacity * sizeof(*session->memo.entry);
         stats->memo_peak_allocated_bytes =
             (uint64_t)session->memo.peak_allocated_bytes;
+        stats->working_set_capacity_bytes =
+            (uint64_t)session->budget.allocated_bytes;
+        stats->working_set_peak_allocated_bytes =
+            (uint64_t)session->budget.peak_allocated_bytes;
     }
     return status;
 }
@@ -930,10 +974,25 @@ uint64_t wm_representation_session_memo_peak_allocated_bytes(
                            : (uint64_t)session->memo.peak_allocated_bytes;
 }
 
+uint64_t wm_representation_session_working_set_capacity_bytes(
+    const WMRepresentationSession *session)
+{
+    return session == NULL ? 0
+                           : (uint64_t)session->budget.allocated_bytes;
+}
+
+uint64_t wm_representation_session_working_set_peak_allocated_bytes(
+    const WMRepresentationSession *session)
+{
+    return session == NULL ? 0
+                           : (uint64_t)session->budget.peak_allocated_bytes;
+}
+
 void wm_representation_session_destroy(WMRepresentationSession *session)
 {
     if (session == NULL) return;
-    free(session->memo.entry);
+    budget_free(&session->budget, session->memo.entry,
+                session->memo.capacity * sizeof(*session->memo.entry));
     free(session);
 }
 
