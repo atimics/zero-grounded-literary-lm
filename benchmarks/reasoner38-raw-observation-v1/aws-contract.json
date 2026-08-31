@@ -1,0 +1,51 @@
+{
+  "schema": "zero.reasoner38_aws_contract.v1",
+  "experiment": "reasoner38-raw-observation-v1",
+  "version": "(3,7)",
+  "authorized": false,
+  "authorization": {
+    "approved_by": null,
+    "approved_at": null,
+    "approval_id": null,
+    "scope": "one sealed raw-observation dimension-transfer execution after the exact source bundle is approved"
+  },
+  "seal": {
+    "episodes": 15552,
+    "individual_episodes": 5184,
+    "mixed_episodes": 10368,
+    "coordinate_permutations": 93312,
+    "minimum_dimension": 6,
+    "maximum_dimension": 8,
+    "minimum_stages": 5,
+    "maximum_stages": 7,
+    "handle_orders": 4,
+    "coordinate_orders": 4,
+    "retry": false
+  },
+  "source": {
+    "implementation_commit": null,
+    "bundle_sha256": null,
+    "bundle_bytes": null,
+    "destination": null
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.006,
+    "maximum_total_run_usd": 0.01,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "usd_per_hour": 0.0104,
+    "source": "AWS EC2 Linux on-demand t3.micro us-east-1",
+    "checked_at": "2026-08-30"
+  },
+  "result": {
+    "binary": "reasoner38",
+    "make_target": "reasoner38",
+    "schema": "zero.reasoner38_raw_observation.v1"
+  }
+}
+
