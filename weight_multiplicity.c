@@ -460,7 +460,85 @@ static uint32_t coefficient_level(const int32_t coefficient[WM_MAX_RANK],
     return level;
 }
 
-static WMStatus canonicalize_recursive_coefficient(
+static WMStatus canonicalize_recursive_coefficient_direct(
+    WMRecurrence *recurrence, const int32_t input[WM_MAX_RANK],
+    int32_t output[WM_MAX_RANK], int *inside_highest_weight_cone)
+{
+    const WMOracle *oracle = recurrence->oracle;
+    int32_t weight[WM_MAX_RANK] = {0};
+    unsigned iteration;
+    uint8_t row;
+    *inside_highest_weight_cone = 0;
+    memcpy(output, input, sizeof(int32_t) * WM_MAX_RANK);
+    for (row = 0; row < oracle->cartan.rank; ++row) {
+        int64_t value = recurrence->highest_weight[row];
+        uint8_t column;
+        for (column = 0; column < oracle->cartan.rank; ++column)
+            value -= (int64_t)WM_CELL(&oracle->cartan, row, column) *
+                     input[column];
+        if (value < INT32_MIN || value > INT32_MAX) {
+            set_error(recurrence->error, recurrence->error_capacity,
+                      "recursive weight exceeds the exact integer range");
+            return WM_LIMIT_ERROR;
+        }
+        weight[row] = (int32_t)value;
+    }
+
+    /*
+     * The state coefficient c represents weight = highest - A*c.  If a
+     * reflection at simple root i uses the negative Dynkin pairing p, then
+     * the reflected weight is weight - p*A[:,i].  Its coefficient is
+     * therefore c + p*e_i.  Carrying c through the reflection avoids solving
+     * A*c = highest - dominant after every recursive memo lookup.
+     */
+    for (iteration = 0; iteration < 4096; ++iteration) {
+        int reflection = -1;
+        for (row = 0; row < oracle->cartan.rank; ++row) {
+            if (weight[row] < 0) {
+                reflection = row;
+                break;
+            }
+        }
+        if (reflection < 0) {
+            for (row = 0; row < oracle->cartan.rank; ++row)
+                if (output[row] < 0) return WM_OK;
+            *inside_highest_weight_cone = 1;
+            return WM_OK;
+        }
+        {
+            int64_t pairing = weight[reflection];
+            int64_t reflected_coefficient =
+                (int64_t)output[reflection] + pairing;
+            if (reflected_coefficient < INT32_MIN ||
+                reflected_coefficient > INT32_MAX) {
+                set_error(recurrence->error, recurrence->error_capacity,
+                          "dominant recursive coefficient exceeds the exact "
+                          "integer range");
+                return WM_LIMIT_ERROR;
+            }
+            output[reflection] = (int32_t)reflected_coefficient;
+            for (row = 0; row < oracle->cartan.rank; ++row) {
+                int64_t reflected =
+                    (int64_t)weight[row] -
+                    pairing * WM_CELL(&oracle->cartan, row, reflection);
+                if (reflected < INT32_MIN || reflected > INT32_MAX) {
+                    set_error(
+                        recurrence->error, recurrence->error_capacity,
+                        "recursive Weyl reduction exceeded the exact integer "
+                        "range");
+                    return WM_LIMIT_ERROR;
+                }
+                weight[row] = (int32_t)reflected;
+            }
+        }
+    }
+    set_error(recurrence->error, recurrence->error_capacity,
+              "recursive Weyl reduction exceeded the iteration limit");
+    return WM_LIMIT_ERROR;
+}
+
+#if defined(WM_CANONICALIZATION_CROSSCHECK)
+static WMStatus canonicalize_recursive_coefficient_reference(
     WMRecurrence *recurrence, const int32_t input[WM_MAX_RANK],
     int32_t output[WM_MAX_RANK], int *inside_highest_weight_cone)
 {
@@ -476,32 +554,48 @@ static WMStatus canonicalize_recursive_coefficient(
         for (column = 0; column < oracle->cartan.rank; ++column)
             value -= (int64_t)WM_CELL(&oracle->cartan, row, column) *
                      input[column];
-        if (value < INT32_MIN || value > INT32_MAX) {
-            set_error(recurrence->error, recurrence->error_capacity,
-                      "recursive weight exceeds the exact integer range");
-            return WM_LIMIT_ERROR;
-        }
+        if (value < INT32_MIN || value > INT32_MAX) return WM_LIMIT_ERROR;
         weight[row] = (int32_t)value;
     }
-    if (!make_dominant(&oracle->cartan, weight, dominant)) {
-        set_error(recurrence->error, recurrence->error_capacity,
-                  "recursive Weyl reduction exceeded the exact integer range");
+    if (!make_dominant(&oracle->cartan, weight, dominant))
         return WM_LIMIT_ERROR;
-    }
     for (row = 0; row < oracle->cartan.rank; ++row) {
         int64_t difference =
             (int64_t)recurrence->highest_weight[row] - dominant[row];
-        if (difference < INT32_MIN || difference > INT32_MAX) {
-            set_error(recurrence->error, recurrence->error_capacity,
-                      "dominant recursive delta exceeds the exact integer range");
+        if (difference < INT32_MIN || difference > INT32_MAX)
             return WM_LIMIT_ERROR;
-        }
         delta[row] = (int32_t)difference;
     }
     if (!solve_simple_coefficients(&oracle->cartan, delta, output))
         return WM_OK;
     *inside_highest_weight_cone = 1;
     return WM_OK;
+}
+#endif
+
+static WMStatus canonicalize_recursive_coefficient(
+    WMRecurrence *recurrence, const int32_t input[WM_MAX_RANK],
+    int32_t output[WM_MAX_RANK], int *inside_highest_weight_cone)
+{
+    WMStatus status = canonicalize_recursive_coefficient_direct(
+        recurrence, input, output, inside_highest_weight_cone);
+#if defined(WM_CANONICALIZATION_CROSSCHECK)
+    int32_t reference[WM_MAX_RANK] = {0};
+    int reference_inside = 0;
+    WMStatus reference_status = canonicalize_recursive_coefficient_reference(
+        recurrence, input, reference, &reference_inside);
+    if (status != reference_status ||
+        *inside_highest_weight_cone != reference_inside ||
+        (status == WM_OK && reference_inside &&
+         memcmp(output, reference,
+                sizeof(int32_t) * recurrence->oracle->cartan.rank) != 0)) {
+        set_error(recurrence->error, recurrence->error_capacity,
+                  "direct recursive Weyl reduction disagreed with the exact "
+                  "reference solver");
+        return WM_ARITHMETIC_ERROR;
+    }
+#endif
+    return status;
 }
 
 static WMStatus multiplicity_for_coefficient(
