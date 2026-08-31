@@ -23,10 +23,10 @@
     "retry": false
   },
   "source": {
-    "implementation_commit": null,
-    "bundle_sha256": null,
-    "bundle_bytes": null,
-    "destination": null
+    "implementation_commit": "8e3212a9770e4514f5f2b1c465c1243c29062cd6",
+    "bundle_sha256": "95e2c42ec5fcb49635c409be0b4d7eed4022111a99904c2aed65c3b5e01c2bdf",
+    "bundle_bytes": 38098,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner38-raw-observation-v1/source/8e3212a9770e4514f5f2b1c465c1243c29062cd6.tar.gz"
   },
   "execution": {
     "region": "us-east-1",
@@ -48,4 +48,3 @@
     "schema": "zero.reasoner38_raw_observation.v1"
   }
 }
-

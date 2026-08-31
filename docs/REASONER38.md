@@ -20,6 +20,8 @@ make reasoner38-check
 
 The sealed command refuses local execution. Cloud execution requires both
 `R38_SEALED_EXECUTION=cloud` and a new `R38_EXECUTION_LOCK` path. The source
-bundle and cloud contract are locked until the user explicitly approves the
+bundle is frozen at commit
+`8e3212a9770e4514f5f2b1c465c1243c29062cd6`, with SHA-256
+`95e2c42ec5fcb49635c409be0b4d7eed4022111a99904c2aed65c3b5e01c2bdf`.
+The cloud contract remains locked until the user explicitly approves that
 exact upload and capped one-shot launch.
-
