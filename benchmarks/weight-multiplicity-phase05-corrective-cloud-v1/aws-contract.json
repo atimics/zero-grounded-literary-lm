@@ -1,0 +1,48 @@
+{
+  "schema": "zero.weight_multiplicity_phase05_corrective_aws_contract.v1",
+  "approval_id": "weight-multiplicity-phase05-corrective-cloud-2026-08-30-v1",
+  "approved_at": "2026-08-30",
+  "purpose": "Correct two false exactness labels, test allocator policy on five frozen representations, and run LiE against the exact prior cloud executable.",
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "instances": 1,
+    "maximum_instance_seconds": 2647,
+    "workload_timeout_seconds": 2100,
+    "hourly_price_usd": 0.68,
+    "maximum_ec2_usd": 0.5
+  },
+  "bindings": {
+    "ilxyr_commit": "ad39f923c5b1c489afec24b461ef922cdd2db561",
+    "audit_plan_sha256": "b2908c50519d7692f6abdfd24e9410fe721797021b0ec962319415e07f9c3a4f",
+    "prior_cloud_run_id": "33329981839",
+    "prior_cloud_package_key": "jobs/33329981839/weight-multiplicity-phase05-package.tar.gz",
+    "prior_cloud_package_sha256": "f876ce7342cabe344e95eb798750ce1f705fdb586ec24e65ef76ab2778d3ec7f",
+    "prior_cloud_frontier_key": "experiments/weight-multiplicity-phase05-cloud-v1/runs/33329981839/results/default-frontier.json.gz",
+    "prior_cloud_frontier_sha256": "7d74654ebb16fe62b3e20a5f49c5a32312de14a3a2b3feaf8d79ae0ffb291c9c",
+    "oracle_source_commit": "53eaa6c2fcce514d1183e19445daeaf151e7ec04",
+    "oracle_executable_sha256": "274d00071b33b9e4d4f495e629b0af96867cea382a8e7c4dc3174d13ca56a621",
+    "lie_version": "2.2.2",
+    "lie_source_sha256": "c4d6f67fa17d2bc77c875a5b2ad2b42ffc5cadf30e7d1c64c097648ccb918b1e"
+  },
+  "allowed_outputs": [
+    "append_only_exactness_correction",
+    "allocator_policy_audit",
+    "independent_lie_cross_check",
+    "execution_identity",
+    "checksums",
+    "logs"
+  ],
+  "forbidden": {
+    "corpus_generation": true,
+    "model_training": true,
+    "production_lie_dependency": true,
+    "timeout_increase": true
+  },
+  "stop_conditions": [
+    "any_zero_lie_disagreement_timeout_process_error_or_parse_error",
+    "any_answer_disagreement_between_allocator_policies",
+    "identity_or_checksum_mismatch",
+    "cost_or_time_ceiling_reached"
+  ]
+}
