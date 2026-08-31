@@ -10,8 +10,13 @@ function requireValue(condition, message) {
 requireValue(contract.schema === "zero.reasoner36_aws_contract.v1", "schema");
 requireValue(contract.experiment === "reasoner36-task-blind-tools-v1", "experiment");
 requireValue(contract.version === "(3,5)", "version");
-requireValue(contract.authorized === false, "sealed run must stay locked");
-requireValue(contract.authorization.approval_id === null, "approval must be null");
+requireValue(contract.authorized === true, "sealed run must stay authorized");
+requireValue(
+  contract.authorization.approved_by === "ratimics" &&
+    contract.authorization.approved_at === "2026-08-30" &&
+    contract.authorization.approval_id === "reasoner36-next-set-2026-08-30-v1",
+  "approval",
+);
 requireValue(contract.seal.episodes === 2592, "sealed episode count");
 requireValue(contract.seal.single_domain_episodes === 864, "single-domain count");
 requireValue(contract.seal.mixed_domain_episodes === 1728, "mixed-domain count");
@@ -49,4 +54,4 @@ requireValue(
   "result schema",
 );
 
-console.log("Reasoner (3,5) locked cloud contract passed");
+console.log("Reasoner (3,5) authorized cloud contract passed");

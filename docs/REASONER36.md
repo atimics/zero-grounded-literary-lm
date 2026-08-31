@@ -19,5 +19,5 @@ make reasoner36-check
 The sealed command refuses local execution. Cloud execution requires both
 `R36_SEALED_EXECUTION=cloud` and a new `R36_EXECUTION_LOCK` path. The source
 bundle is frozen at commit `b26bd62ee11dba7341d227c2c4cb1f2a2568da65`.
-Its exact bundle, destination, and capped run remain unauthorized until they
-are approved.
+Its exact bundle, destination, and capped one-shot run were authorized on
+2026-08-30 with no retry.
