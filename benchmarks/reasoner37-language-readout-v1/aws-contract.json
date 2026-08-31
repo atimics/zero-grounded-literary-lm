@@ -2,18 +2,18 @@
   "schema": "zero.reasoner37_aws_contract.v1",
   "experiment": "reasoner37-language-readout-v1",
   "version": "(3,6)",
-  "authorized": false,
+  "authorized": true,
   "authorization": {
-    "approved_by": null,
-    "approved_at": null,
-    "approval_id": null,
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-30",
+    "approval_id": "reasoner37-next-set-2026-08-30-v1",
     "scope": "one sealed downstream language-readout execution after Reasoner (3,5) passes and the exact bundle is approved"
   },
   "prerequisite": {
     "experiment": "reasoner36-task-blind-tools-v1",
     "version": "(3,5)",
-    "sealed_gate_passed": null,
-    "result_sha256": null
+    "sealed_gate_passed": true,
+    "result_sha256": "9f00ef30e4a815bbcc88683f74a65c39d62358476f8023bc1ce3d293ccbd2597"
   },
   "seal": {
     "reasoning_episodes": 2592,

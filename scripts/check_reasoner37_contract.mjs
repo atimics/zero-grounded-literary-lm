@@ -10,12 +10,21 @@ function requireValue(condition, message) {
 requireValue(contract.schema === "zero.reasoner37_aws_contract.v1", "schema");
 requireValue(contract.experiment === "reasoner37-language-readout-v1", "experiment");
 requireValue(contract.version === "(3,6)", "version");
-requireValue(contract.authorized === false, "sealed run must stay locked");
-requireValue(contract.authorization.approval_id === null, "approval must be null");
+requireValue(contract.authorized === true, "sealed run must stay authorized");
+requireValue(
+  contract.authorization.approved_by === "ratimics" &&
+    contract.authorization.approved_at === "2026-08-30" &&
+    contract.authorization.approval_id === "reasoner37-next-set-2026-08-30-v1",
+  "approval",
+);
 requireValue(contract.prerequisite.experiment === "reasoner36-task-blind-tools-v1", "prerequisite experiment");
 requireValue(contract.prerequisite.version === "(3,5)", "prerequisite version");
-requireValue(contract.prerequisite.sealed_gate_passed === null, "prerequisite must be unresolved");
-requireValue(contract.prerequisite.result_sha256 === null, "prerequisite receipt must be absent");
+requireValue(contract.prerequisite.sealed_gate_passed === true, "prerequisite must pass");
+requireValue(
+  contract.prerequisite.result_sha256 ===
+    "9f00ef30e4a815bbcc88683f74a65c39d62358476f8023bc1ce3d293ccbd2597",
+  "prerequisite receipt",
+);
 requireValue(contract.seal.reasoning_episodes === 2592, "reasoning episodes");
 requireValue(contract.seal.surface_lexicons === 2, "surface lexicons");
 requireValue(contract.seal.language_is_causally_downstream === true, "causal boundary");
@@ -53,4 +62,4 @@ requireValue(
   "result schema",
 );
 
-console.log("Reasoner (3,6) locked downstream cloud contract passed");
+console.log("Reasoner (3,6) authorized downstream cloud contract passed");
