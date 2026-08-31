@@ -23,10 +23,10 @@
     "retry": false
   },
   "source": {
-    "implementation_commit": null,
-    "bundle_sha256": null,
-    "bundle_bytes": null,
-    "destination": null
+    "implementation_commit": "16ef41706023ae4df417bb562490adf3404292fd",
+    "bundle_sha256": "6cc30df918c77800b49b6599f02e39ea6644590ebb32ccb034b93a9bf8cfdb14",
+    "bundle_bytes": 40342,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner39-exact-law-v1/source/16ef41706023ae4df417bb562490adf3404292fd.tar.gz"
   },
   "execution": {
     "region": "us-east-1",

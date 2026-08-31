@@ -24,6 +24,8 @@ make reasoner39-check
 
 The sealed command refuses local execution. Cloud execution requires both
 `R39_SEALED_EXECUTION=cloud` and a new `R39_EXECUTION_LOCK` path. The fresh
-dimension 9–12 seal is locked until the user explicitly approves the exact
-source upload and capped one-shot launch.
-
+dimension 9–12 source bundle is frozen at commit
+`16ef41706023ae4df417bb562490adf3404292fd`, with SHA-256
+`6cc30df918c77800b49b6599f02e39ea6644590ebb32ccb034b93a9bf8cfdb14`.
+The seal remains locked until the user explicitly approves that exact source
+upload and capped one-shot launch.
