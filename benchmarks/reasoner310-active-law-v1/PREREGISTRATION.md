@@ -84,7 +84,9 @@ The frozen private source is commit
 `57fe18ebd96dd82ed9cf9c775cb24819a62b8d86`. Its 41,602-byte bundle has
 SHA-256
 `30ffa61a3c68b1ca8daefe15329f37f0f5f025cbb8b6e26b0a72c8b842a6f574`.
-This identifies the source but does not authorize its upload or execution.
+The user authorized that exact private upload and one capped `t3.micro` launch
+on 2026-08-31, with a 1,800-second limit, a $0.006 EC2 limit, a $0.01 total
+limit, and no retry.
 
 ## Interpretation
 
