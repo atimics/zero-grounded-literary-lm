@@ -362,6 +362,89 @@ static int test_recursive_weyl_folding(void)
     return 0;
 }
 
+static int add_prime_factors(int exponents[512], uint64_t value, int sign)
+{
+    uint64_t factor;
+    for (factor = 2; factor * factor <= value; ++factor) {
+        while (value % factor == 0) {
+            if (factor >= 512U) return 0;
+            exponents[factor] += sign;
+            value /= factor;
+        }
+    }
+    if (value > 1) {
+        if (value >= 512U) return 0;
+        exponents[value] += sign;
+    }
+    return 1;
+}
+
+static int first_fundamental_dimension(const WMOracle *oracle,
+                                       uint64_t *dimension)
+{
+    int exponents[512] = {0};
+    uint16_t root;
+    uint64_t result = 1;
+    uint16_t factor;
+    for (root = 0; root < oracle->positive_roots.count; ++root) {
+        uint64_t denominator = 0;
+        uint64_t numerator = 0;
+        uint8_t index;
+        for (index = 0; index < oracle->cartan.rank; ++index) {
+            uint64_t scaled =
+                (uint64_t)oracle->positive_roots.coefficient[root][index] *
+                oracle->symmetrizer[index];
+            denominator += scaled;
+            numerator += scaled * (index == 0 ? 2U : 1U);
+        }
+        if (denominator == 0 || !add_prime_factors(exponents, numerator, 1) ||
+            !add_prime_factors(exponents, denominator, -1))
+            return 0;
+    }
+    for (factor = 2; factor < 512U; ++factor) {
+        int exponent = exponents[factor];
+        if (exponent < 0) return 0;
+        while (exponent-- > 0) {
+            if (result > UINT64_MAX / factor) return 0;
+            result *= factor;
+        }
+    }
+    *dimension = result;
+    return 1;
+}
+
+static int test_canonical_bc_fundamental_dimensions(void)
+{
+    uint8_t rank;
+    for (rank = 3; rank <= 8; ++rank) {
+        char b_type[4];
+        char c_type[4];
+        char error[256] = {0};
+        WMOracle b_oracle;
+        WMOracle c_oracle;
+        uint64_t b_dimension = 0;
+        uint64_t c_dimension = 0;
+        (void)snprintf(b_type, sizeof(b_type), "B%u", rank);
+        (void)snprintf(c_type, sizeof(c_type), "C%u", rank);
+        if (wm_oracle_init_type(b_type, &b_oracle, error, sizeof(error)) !=
+                WM_OK ||
+            wm_oracle_init_type(c_type, &c_oracle, error, sizeof(error)) !=
+                WM_OK ||
+            !first_fundamental_dimension(&b_oracle, &b_dimension) ||
+            !first_fundamental_dimension(&c_oracle, &c_dimension) ||
+            b_dimension != 2U * rank + 1U || c_dimension != 2U * rank) {
+            fprintf(stderr,
+                    "self-test failed: canonical B/C omega_1 dimensions at "
+                    "rank %u; expected B=%u C=%u, got B=%llu C=%llu (%s)\n",
+                    rank, 2U * rank + 1U, 2U * rank,
+                    (unsigned long long)b_dimension,
+                    (unsigned long long)c_dimension, error);
+            return 0;
+        }
+    }
+    return 1;
+}
+
 static int test_adjoint(const TypeExpectation *expectation,
                         uint32_t *case_count)
 {
@@ -418,6 +501,7 @@ static int run_self_test(void)
     uint32_t positive_roots = 0;
     if (!test_a1() || !test_a2_fundamental() ||
         !test_recursive_weyl_folding() ||
+        !test_canonical_bc_fundamental_dimensions() ||
         !test_persistent_representation_memo() ||
         !test_prepared_dependency_graph() ||
         !test_root_ray_factorization())
@@ -449,6 +533,7 @@ static int run_self_test(void)
     printf("{\"status\":\"pass\",\"types\":31,"
            "\"positive_roots\":931,\"acr1_cases\":3750,"
            "\"persistent_representation_memo\":true,"
+           "\"canonical_bc_dimensions\":true,"
            "\"prepared_dependency_graph\":true,"
            "\"root_ray_factorization\":true,"
            "\"parallel_root_ray_dag\":true}\n");

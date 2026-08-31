@@ -773,8 +773,8 @@ static int make_known_type(char family, uint8_t rank, R0CartanMatrix *matrix)
         for (index = 0; index + 1 < rank - 1; ++index)
             matrix_edge(matrix, index, index + 1, -1, -1);
         matrix_edge(matrix, rank - 2, rank - 1,
-                    family == 'B' ? -2 : -1,
-                    family == 'B' ? -1 : -2);
+                    family == 'B' ? -1 : -2,
+                    family == 'B' ? -2 : -1);
         return 1;
     }
     if (family == 'D' && rank >= 4) {
