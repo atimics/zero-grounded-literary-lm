@@ -10,10 +10,14 @@ function requireValue(condition, message) {
 requireValue(contract.schema === "zero.reasoner310_aws_contract.v1", "schema");
 requireValue(contract.experiment === "reasoner310-active-law-v1", "experiment");
 requireValue(contract.version === "(3,9)", "version");
-requireValue(contract.authorized === false, "sealed run must stay locked");
-requireValue(contract.authorization.approved_by === null, "approver must be null");
-requireValue(contract.authorization.approved_at === null, "approval date must be null");
-requireValue(contract.authorization.approval_id === null, "approval ID must be null");
+requireValue(contract.authorized === true, "sealed run must be authorized");
+requireValue(contract.authorization.approved_by === "ratimics", "approver");
+requireValue(contract.authorization.approved_at === "2026-08-31", "approval date");
+requireValue(
+  contract.authorization.approval_id ===
+    "reasoner310-active-law-2026-08-31-v1",
+  "approval ID",
+);
 requireValue(contract.seal.canonical_target_programs === 31, "sealed targets");
 requireValue(contract.seal.episodes === 744, "sealed episodes");
 requireValue(contract.seal.action_calls === 2232, "sealed action calls");
@@ -56,4 +60,4 @@ requireValue(
   "result schema",
 );
 
-console.log("Reasoner (3,9) locked frozen-source cloud contract passed");
+console.log("Reasoner (3,9) authorized frozen-source cloud contract passed");
