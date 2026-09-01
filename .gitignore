@@ -60,8 +60,14 @@ reasoner31
 reasoner32
 reasoner33
 reasoner34
+reasoner333
 reasoner34_witness
 reasoner35
+reasoner36
+reasoner37
+reasoner38
+reasoner39
+reasoner310
 
 # Model artifacts (large binaries)
 *.ckpt
@@ -100,7 +106,6 @@ build/
 # Misc
 literary-training.log
 screenlog.0
-reasoner333
 *.tmp
 /tmp/
 .DS_Store

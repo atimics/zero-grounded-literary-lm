@@ -16,8 +16,8 @@ make reasoner36-check
 ./reasoner36 development
 ```
 
-The sealed command refuses local execution. Cloud execution requires both
-`R36_SEALED_EXECUTION=cloud` and a new `R36_EXECUTION_LOCK` path. The source
-bundle is frozen at commit `b26bd62ee11dba7341d227c2c4cb1f2a2568da65`.
-Its exact bundle, destination, and capped run remain unauthorized until they
-are approved.
+The sealed command refuses local execution. A historical one-shot cloud run
+of source commit `b26bd62ee11dba7341d227c2c4cb1f2a2568da65` completed and its
+result is recorded in
+[`RESULT.md`](../benchmarks/reasoner36-task-blind-tools-v1/RESULT.md). The
+checked-in contract remains locked and grants no new run or retry authority.

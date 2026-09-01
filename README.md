@@ -43,19 +43,30 @@ small browser runtime:
   whose 64-byte semantic policy trained below 3D and passed all 4,095 programs
   in the sealed 4D cloud evaluation; the fixed hash control solved only 31.
 - `reasoner34`: Reasoner (3,3,2), an exact non-monotonic courier planner that
-  must open and later restore goal-correct gates; the local four-gate gate is
-  frozen and the larger five- through seven-gate worlds remain cloud-sealed.
+  must open and later restore goal-correct gates; its sealed five- through
+  seven-gate evaluation passed all 5,880 worlds exactly.
 - `reasoner333`: Reasoner (3,3,3), a sealed composition-transfer test that
   trains a 64-byte shared policy only on isolated relation modules before
-  joining unseen modules with bridge constraints.
+  joining unseen modules with bridge constraints; all 63 sealed compositions
+  and 252 relabelings passed.
 - `reasoner34_witness`: Reasoner (3,3,4), an independently sealed test of
-  robustness to every allowed counterexample source along a frozen exact
-  trace.
+  robustness to every allowed counterexample source; all 4,095 sealed programs
+  and 4,877,336 alternate-counterexample decisions passed.
 - `reasoner35`: Reasoner (3,4), a 64-byte joint-policy screen across planning,
-  composition, and witness reasoning with no task label or weight-bank switch.
+  composition, and witness reasoning with no task label or weight-bank switch;
+  its combined sealed gate passed.
+- `reasoner36`: Reasoner (3,5), one task-blind 64-byte policy that selects
+  `QUERY`, `APPLY`, and `COMMIT` calls from a common integer tool record.
+- `reasoner37`: Reasoner (3,6), a causally downstream language readout whose
+  output cannot change the completed nonverbal reasoning trace.
+- `reasoner38`: Reasoner (3,7), the raw-observation transfer test that kept
+  481,968 of 482,304 sealed decisions exact but correctly resolved no-go.
+- `reasoner39`: Reasoner (3,8), exact minimum-description law induction over a
+  fixed raw polynomial feature family.
 - `reasoner310`: Reasoner (3,9), an active integer-program learner that builds
   laws from raw comparisons, queries until one canonical program remains, and
-  keeps language reporting behind a final tool call.
+  keeps language reporting behind a final tool call; its fresh compositional
+  seal passed all 744 episodes.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -244,6 +255,8 @@ make reasoner34-witness-check
 ./reasoner34_witness development
 make reasoner35-check
 ./reasoner35 development
+make reasoner36-check reasoner37-check reasoner38-check reasoner39-check
+make reasoner310-check
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -265,8 +278,9 @@ matched controls, relabeling intervention, and unopened 5-7 gate seal.
 branch and its unopened three-by-three seal.
 [`docs/REASONER34-WITNESS.md`](docs/REASONER34-WITNESS.md) for the independent
 counterexample-order branch and its unopened 4D seal.
-See [`docs/REASONER35.md`](docs/REASONER35.md) for the joint-policy screen and
-its separately frozen combination seal.
+See [`docs/REASONER.md`](docs/REASONER.md) for the complete evidence map,
+current claim boundary, and next research question. The version-specific
+documents remain the detailed source for each frozen experiment.
 
 ## Build
 
