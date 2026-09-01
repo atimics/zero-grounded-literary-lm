@@ -55,6 +55,13 @@ conservative_exposure_pilot
 reasoner0
 reasoner1
 reasoner2
+reasoner3
+reasoner31
+reasoner32
+reasoner33
+reasoner34
+reasoner34_witness
+reasoner35
 
 # Model artifacts (large binaries)
 *.ckpt
@@ -93,6 +100,7 @@ build/
 # Misc
 literary-training.log
 screenlog.0
+reasoner333
 *.tmp
 /tmp/
 .DS_Store

@@ -1,0 +1,8 @@
+{
+  "schema": "zero.reasoner33_aws_termination.v1",
+  "instance_id": "i-04f518d90e907063f",
+  "instance_type": "t3.micro",
+  "launch_time": "2026-08-30T18:16:36Z",
+  "state": "terminated",
+  "state_transition_reason": "User initiated"
+}
