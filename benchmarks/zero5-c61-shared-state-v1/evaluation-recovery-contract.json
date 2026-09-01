@@ -1,0 +1,107 @@
+{
+  "schema": "zero.c61_evaluation_recovery_contract.v1",
+  "experiment": "zero5-c61-shared-state-v1",
+  "status": "evaluation-authorized",
+  "authorized": true,
+  "training_authorized": false,
+  "purpose": "Complete the unchanged frozen C6.1 validation and bridge-off ablation from the already-trained private checkpoint without another training update.",
+  "source_training": {
+    "scientific_contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
+    "scientific_contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
+    "training_authorization": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
+    "training_authorization_sha256": "9ee9cb31b26629d225dfba90ebe105e902a7360409e1419f068fd14c30b3ca5c",
+    "source_run_id": "zero5-c61-aws-20260831-e977b63r1",
+    "checkpoint": {
+      "filename": "best.ckpt",
+      "key": "experiments/zero5-c61-shared-state-v1/zero5-c61-aws-20260831-e977b63r1/state/best.ckpt",
+      "sha256": "975a2c2be303147a05a37681d8baa5fd0472dceb36d6715f593826412df54078",
+      "bytes": 58236496
+    },
+    "bottleneck": {
+      "filename": "best.ckpt.aux",
+      "key": "experiments/zero5-c61-shared-state-v1/zero5-c61-aws-20260831-e977b63r1/state/best.ckpt.aux",
+      "sha256": "9e8426389293368d0bb1bcf5199c6371a22730796fed867c93f08e089533252c",
+      "bytes": 2316480
+    },
+    "training_log": {
+      "filename": "training.log",
+      "key": "experiments/zero5-c61-shared-state-v1/zero5-c61-aws-20260831-e977b63r1/state/training.log",
+      "sha256": "2961b31e4de4ac9b405512b7f2d9621a5c34a344493aa5e551ce1f483fe78b7e",
+      "bytes": 6141
+    },
+    "completed_accounting": {
+      "update_groups": 28707,
+      "pack_sequences": 37768,
+      "compute_token_exposures": 19337216,
+      "auxiliary_events": 293606,
+      "wraps": 0
+    }
+  },
+  "evaluation": {
+    "scientific_gates_sha256": "7b6c4f01c873ef4a826f05c7aec41be894f4defce837110ef0555c51b8478c2d",
+    "gate_source": "source scientific contract without modification",
+    "candidate_arm": "frozen bridge-on evaluation",
+    "ablation_arm": "same checkpoint with bridge scale zero",
+    "atomic_tasks": 18,
+    "cache_binding": "scientific contract, checkpoint pair, evaluator, binaries, task arguments, and bridge state",
+    "sealed_test_opened": false,
+    "training_updates": 0
+  },
+  "implementation": {
+    "evaluator": {
+      "path": "scripts/evaluate_zero5_c61_shared_state_recovery.mjs",
+      "sha256": "ead4b1141bca1fcdcb8b4220eaac8af632c7bd875f965ca4ea8e3334ef5e8baf",
+      "bytes": 20006
+    },
+    "runner": {
+      "path": "scripts/run_zero5_c61_evaluation_recovery.mjs",
+      "sha256": "e4a8d63a325441854e60ca0b03f4a3d801dadf77391495bb406f520f0efb6aa7",
+      "bytes": 11470
+    },
+    "user_data": {
+      "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
+      "sha256": "02c5c00fdb0fca5bb443e43a2abf0ae27dfaf87c59afb9ff30c1f6d1a65941b1",
+      "bytes": 8549
+    },
+    "launcher": {
+      "path": "scripts/aws/zero5-c61-evaluation-run-instance.sh",
+      "sha256": "23b4740f3b98092c5d3ecb7935c9a8b9fc4a19f166d607abeef2f3b7f6ef5d00",
+      "bytes": 5936
+    },
+    "stager": {
+      "path": "scripts/aws/zero5-c61-evaluation-stage.sh",
+      "sha256": "2dd863a2100457a461dfed6f77ee27dd148b81e09fea59aa1ce009185646d546",
+      "bytes": 2451
+    }
+  },
+  "execution": {
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "instance_type": "c6i.4xlarge",
+    "maximum_execution_seconds": 9000,
+    "maximum_ec2_usd": 1.7,
+    "on_demand_usd_per_hour": 0.68,
+    "evaluation_jobs": 4,
+    "openblas_threads": 16,
+    "cache_sync_seconds": 30,
+    "automatic_termination": true,
+    "independent_retry_authorized": false,
+    "asset_archive": {
+      "key": "experiments/zero5-c61-shared-state-v1/inputs/assets-b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94.tar.gz",
+      "sha256": "b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94"
+    }
+  },
+  "claim_boundary": {
+    "evaluation_only": true,
+    "training_rerun": false,
+    "scientific_gates_changed": false,
+    "promotion_authorized": false,
+    "replication_authorized": false,
+    "checkpoint_publication_authorized": false,
+    "corpus_publication_authorized": false,
+    "sealed_test_access_authorized": false
+  },
+  "authorization": {
+    "approval_id": "zero5-c61-evaluation-recovery-aws-2026-09-01-v1",
+    "record": "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json"
+  }
+}

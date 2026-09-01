@@ -58,3 +58,17 @@ Training must not run again. Any recovery must:
 6. produce the original `zero.c61_shared_state_result.v1` decision record or a
    terminal evaluation status without changing a scientific gate.
 
+## Authorized evaluation-only execution
+
+The recovery is frozen in `evaluation-recovery-contract.json` at SHA-256
+`dd8e8bed413c551507ba424ee82ba0b6b91403ef4c50c423b1961dcee801cfa0`.
+The separate authorization
+`zero5-c61-evaluation-recovery-aws-2026-09-01-v1` is bound to that contract and
+permits one c6i.4xlarge evaluation for at most 9,000 seconds and $1.70. It
+permits zero training updates and no independent retry.
+
+The recovery evaluator runs 18 hash-bound atomic tasks with four workers and
+writes each completed task to the private synced cache. It preserves the
+original evaluator and scientific contract byte for byte. A final result still
+uses the original C6.1 gates and can authorize only a replication request, not
+replication or promotion itself.
