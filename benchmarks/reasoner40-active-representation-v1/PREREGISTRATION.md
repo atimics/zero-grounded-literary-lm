@@ -118,3 +118,6 @@ adapter feeding a frozen reasoning core inside the registered reversible
 adapter language. It would not establish arbitrary representation recovery,
 new adapter primitives, natural-language grounding, visual perception, or
 joint transfer to unseen law compositions.
+
+The authorized one-shot seal passed. See [`RESULT.md`](RESULT.md) and the raw
+[`RESULT.json`](RESULT.json).

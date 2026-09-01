@@ -52,7 +52,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Raw observation transfer | remove semantic tool fields and learn from raw vectors plus error codes | Reasoner (3,7) misses 336 of 482,304 sealed decisions and resolves no-go; no retry or post-seal tuning |
 | Exact law induction | minimum-description search with algebraic invariance certificates | Reasoner (3,8) passes all 743,184 sealed decisions across 20,736 fresh episodes |
 | Active compositional law induction | typed integer program enumeration, version-space filtering, and minimax evidence queries | Reasoner (3,9) identifies all 744 fresh sealed laws, makes all 2,844 active queries exactly, and passes every registered control |
-| Active representation induction | reversible field transducers, minimax alignment queries, exact raw-to-IR replay, frozen Reasoner (3,9) law core | Reasoner 4.0 passes the 1,392-episode public two-operation screen and 400,896 replay checks; the 6,432-episode three-operation seal is locked and not run |
+| Active representation induction | reversible field transducers, minimax alignment queries, exact raw-to-IR replay, frozen Reasoner (3,9) law core | Reasoner 4.0 passes all 6,432 fresh three-operation episodes, 1,852,416 replays, and 19,296 actions exactly |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -179,11 +179,11 @@ passed; every registered control solved zero programs. See
 [`docs/REASONER333.md`](docs/REASONER333.md) and the
 [`sealed result`](benchmarks/reasoner333-composition-transfer-v1/RESULT.md).
 
-The current Reasoner frontier is active representation induction. Reasoner
-4.0 learns exact two-operation raw adapters in public development, replays
-canonical IR, and then uses the frozen (3,9) law core. Its fresh
-three-operation seal remains locked, so the current positive sealed claim is
-still Reasoner (3,9). See [`docs/REASONER40.md`](docs/REASONER40.md).
+The current positive Reasoner frontier is active representation induction.
+Reasoner 4.0 learns fresh three-operation raw adapters, replays canonical IR,
+and then uses the frozen (3,9) law core. All 6,432 sealed episodes passed. See
+[`docs/REASONER40.md`](docs/REASONER40.md) and the
+[`sealed result`](benchmarks/reasoner40-active-representation-v1/RESULT.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.

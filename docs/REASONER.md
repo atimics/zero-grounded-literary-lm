@@ -47,7 +47,7 @@ way and the complete conjunctive gate passes.
 | (3,7) | Transfer from raw observations | No-go: 336 of 482,304 sealed decisions missed |
 | (3,8) | Exact minimum-description law induction | Pass: 743,184/743,184 sealed decisions |
 | (3,9) | Active induction of unseen law compositions | Pass: 744/744 sealed episodes |
-| 4.0 | Active induction of reversible input representations | Development pass: 1,392/1,392 episodes; seal locked |
+| 4.0 | Active induction of reversible input representations | Pass: 6,432/6,432 sealed episodes |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -55,28 +55,24 @@ part of the line and must not be rewritten as intermediate successes.
 
 ## Current claim boundary
 
-Reasoner (3,9) is positive evidence for active compositional law induction
-inside a registered typed integer program language. It does not establish
-open-ended mathematical reasoning, invention of new operators, natural
-language reasoning, or transfer from an arbitrary external representation.
-
-Reasoner 4.0 now implements the first bounded adapter learner. Its public
-screen transfers to unseen two-operation representations and feeds exact
-canonical IR into the frozen core. This is development evidence only. The
-remaining claim boundary is a fresh three-operation representation seal.
+Reasoner 4.0 is positive evidence for active compositional induction of exact
+input representations inside a registered reversible adapter language. It
+learned every fresh three-operation adapter, fed exact canonical IR into the
+frozen Reasoner (3,9) core, and passed all 6,432 sealed episodes. It does not
+establish arbitrary representation recovery, new adapter primitives,
+open-ended mathematical reasoning, or natural-language grounding.
 
 ## Next research question
 
-The active experiment is Reasoner 4.0: representation transfer.
+The next proposed experiment is Reasoner 4.1: joint transfer.
 
-> Can an exact adapter learner infer a structured input representation from
-> examples, then feed a frozen Reasoner (3,9) core without a task label,
-> hand-coded domain switch, or core change?
+> Can the learner identify a new composed representation and a new composed
+> law in the same episode without adapter-law compensation or a core change?
 
-The implemented first stage uses unfamiliar representations of the six
-familiar one-fold laws. A later stage may combine an unseen representation
-with unseen law composition. Keeping those gates separate makes a failure
-interpretable.
+Reasoner 4.0 deliberately held the six familiar one-fold laws fixed while the
+representation changed. Reasoner (3,9) separately transferred to unseen law
+compositions. The next useful boundary is their preregistered cross-product,
+with independent adapter and law commitments before action.
 
 The checked contract requires:
 
@@ -88,6 +84,6 @@ The checked contract requires:
 - held-out compositions of representation operations; and
 - a fresh one-shot seal with no post-seal tuning.
 
-The public development screen passes. The three-operation sealed evaluator is
-locked and refuses execution. No cloud run, sealed evaluation, retry, or
-post-seal tuning is authorized. See [`REASONER40.md`](REASONER40.md).
+The Reasoner 4.0 seal passed with no retry or post-seal tuning. See
+[`REASONER40.md`](REASONER40.md) and the
+[`sealed result`](../benchmarks/reasoner40-active-representation-v1/RESULT.md).
