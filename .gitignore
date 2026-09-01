@@ -55,6 +55,19 @@ conservative_exposure_pilot
 reasoner0
 reasoner1
 reasoner2
+reasoner3
+reasoner31
+reasoner32
+reasoner33
+reasoner34
+reasoner333
+reasoner34_witness
+reasoner35
+reasoner36
+reasoner37
+reasoner38
+reasoner39
+reasoner310
 
 # Model artifacts (large binaries)
 *.ckpt

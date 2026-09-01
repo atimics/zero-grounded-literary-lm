@@ -1,0 +1,67 @@
+{
+  "schema": "zero.reasoner34_aws_contract.v1",
+  "experiment": "reasoner34-relational-graph-v1",
+  "version": "(3,3,1)",
+  "authorized": true,
+  "authorization": {
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-30",
+    "approval_id": "reasoner34-fanout-2026-08-30-v1",
+    "scope": "one sealed relational graph execution"
+  },
+  "seal": {
+    "training_graphs": ["path2", "path3"],
+    "development_graphs": ["path4", "star4"],
+    "sealed_graphs": ["path5", "star5", "fork5"],
+    "sealed_programs": 3888,
+    "sealed_relabeling_interventions": 1866240,
+    "local_execution_forbidden": true,
+    "retries_for_scientific_failure": 0,
+    "tuning_after_open": false
+  },
+  "source": {
+    "base_branch": "codex/reasoner33-transfer",
+    "branch": "codex/reasoner34-relational",
+    "base_commit": "a1e4644bea5c4707221c0bf7fca5bf12f17aec0f",
+    "implementation_commit": "dffc36771e3a374f381a951fe3e521724c3cc2be",
+    "implementation_commit_supplied_at_launch": true,
+    "archive_requires_source_commit_file": true,
+    "sha256_supplied_at_launch": true
+  },
+  "result": {
+    "make_target": "reasoner34",
+    "binary": "reasoner34",
+    "schema": "zero.reasoner34_relational_graph.v1"
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "cpu_credit_mode": "standard",
+    "instance_count": 1,
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.006,
+    "maximum_total_run_usd": 0.01,
+    "single_execution_lock": true,
+    "automatic_termination": true,
+    "instance_initiated_shutdown_behavior": "terminate",
+    "encrypted_gp3_gib": 8,
+    "inbound_network_rules": 0
+  },
+  "price_evidence": {
+    "source": "AWS Price List API evidence frozen by Reasoner (3,3)",
+    "sku": "CRAJUW7BTXFMT2UJ",
+    "description": "$0.0104 per On Demand Linux t3.micro Instance Hour",
+    "usd_per_hour": 0.0104,
+    "catalog_publication": "2026-08-29T01:43:19Z",
+    "price_effective": "2026-08-01T00:00:00Z"
+  },
+  "commands": {
+    "development_gate": "make reasoner34-check && ./reasoner34 development",
+    "sealed_execution": "R34_SEALED_EXECUTION=cloud R34_EXECUTION_LOCK=execution.lock ./reasoner34 sealed-run result.json"
+  },
+  "decision": {
+    "record_no_go": true,
+    "language_training_in_scope": false,
+    "promotion_requires_sealed_gate": true
+  }
+}
