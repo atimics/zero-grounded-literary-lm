@@ -48,7 +48,8 @@ way and the complete conjunctive gate passes.
 | (3,8) | Exact minimum-description law induction | Pass: 743,184/743,184 sealed decisions |
 | (3,9) | Active induction of unseen law compositions | Pass: 744/744 sealed episodes |
 | 4.0 | Active induction of reversible input representations | Pass: 6,432/6,432 sealed episodes |
-| 4.1 | Joint induction of unseen representations and laws | Development pass: 3,480/3,480 episodes; seal locked |
+| 4.1 | Joint induction of unseen representations and laws | Pass: 33,232/33,232 sealed episodes |
+| 4.2 | Exact discovery and reuse of derived adapter abstractions | Development pass: 14/14 episodes; seal locked |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -56,39 +57,44 @@ part of the line and must not be rewritten as intermediate successes.
 
 ## Current claim boundary
 
-Reasoner 4.0 is positive evidence for active compositional induction of exact
-input representations inside a registered reversible adapter language. It
-learned every fresh three-operation adapter, fed exact canonical IR into the
-frozen Reasoner (3,9) core, and passed all 6,432 sealed episodes. It does not
-establish arbitrary representation recovery, new adapter primitives,
+Reasoner 4.1 is positive evidence for exact factorized joint transfer inside
+the registered reversible-adapter and typed integer-law languages. It passed
+all 33,232 sealed episodes over 4,154 fresh three-by-three pairs, with separate
+adapter and law commitments and 9,570,816 exact raw-to-IR replays. It does not
+establish arbitrary representation recovery, new primitives, noisy learning,
 open-ended mathematical reasoning, or natural-language grounding.
 
-Reasoner 4.1 adds public development evidence for joint transfer. Across all
-435 unseen two-operation-adapter by two-fold-law pairs, it committed to the
-adapter and law separately and passed all 3,480 episodes exactly. This is not
-yet a positive sealed claim.
+Reasoner 4.2 adds public development evidence for exact abstraction-library
+growth. It solved nine short base programs, discovered three positive-MDL
+two-operation abstractions, froze them, and passed 14/14 held-out development
+episodes over seven semantic classes requiring four base operations but only
+two library calls. Program identity is now certified by exact affine matrices
+over every field input in dimensions four through twelve rather than by a
+finite behavior sample. This remains a derived-abstraction result inside the
+six-operation base meta-language.
 
 ## Next research question
 
-The active experiment is the Reasoner 4.1 fresh joint-transfer seal.
+The active experiment is the locked Reasoner 4.2 three-abstraction seal.
 
-> Does exact, factorized joint transfer survive the fresh cross-product of all
-> three-operation adapters and all three-fold laws?
+> Does the frozen learned library retain its search advantage when targets
+> require three reusable abstractions and six expanded base operations?
 
-The public cross-product is complete. The unopened seal contains 4,154 fresh
-adapter-law pairs and 33,232 episodes in dimensions nine through twelve. It
-has not been run or authorized.
+The public development screen is complete. The planned seal contains 17 exact
+semantic classes. Its library grammar has 820 raw programs through three
+calls, while the corresponding base grammar has 55,987 raw programs through
+six operations. It has not been implemented or authorized.
 
 The checked contract requires:
 
-- exact raw-input-to-IR replay;
-- exact reasoning actions and sealed answers;
-- no task or domain identity feature;
-- no changes to the frozen 4.0 representation or (3,9) law cores;
-- separate adapter and law commitments before action;
-- oracle isolation, lookup, no-query, and shuffled-feedback controls;
-- held-out compositions in both registered languages; and
-- a fresh one-shot seal with no post-seal tuning.
+- an unchanged three-entry library and library digest;
+- exact affine identity and inverse certificates;
+- unique identification before every commit;
+- exact replay, application, and report traces;
+- three library calls and six expanded base operations per target;
+- oracle isolation plus no-library, shuffled-curriculum, single-use,
+  lookup, and no-query controls; and
+- a separately authorized one-shot seal with no post-seal tuning.
 
-See [`REASONER41.md`](REASONER41.md) and the
-[`frozen contract`](../benchmarks/reasoner41-joint-transfer-v1/contract.json).
+See [`REASONER42.md`](REASONER42.md) and the
+[`development contract`](../benchmarks/reasoner42-abstraction-library-v1/contract.json).
