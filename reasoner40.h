@@ -75,7 +75,9 @@ typedef struct {
     uint8_t shuffled_alignment_control_passed;
     R40Evaluation curriculum;
     R40Evaluation development;
+    R40Evaluation sealed;
     uint8_t development_gate_passed;
+    uint8_t sealed_gate_passed;
     uint8_t sealed_execution_locked;
     uint64_t result_digest;
 } R40ExperimentReport;
@@ -84,5 +86,8 @@ R0Status r40_run_development(R40ExperimentReport *report, char *error,
                              size_t error_capacity);
 R0Status r40_run_sealed(R40ExperimentReport *report, char *error,
                         size_t error_capacity);
+R0Status r40_write_result(const R40ExperimentReport *report,
+                          const char *path, char *error,
+                          size_t error_capacity);
 
 #endif

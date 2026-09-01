@@ -447,7 +447,8 @@ reasoner40: reasoner0.c reasoner310.c reasoner310.h reasoner40.c \
 
 reasoner40-check: reasoner40
 	./reasoner40 --self-test
-	@if ./reasoner40 sealed-run >/dev/null 2>&1; then \
+	@if ./reasoner40 sealed-run /tmp/reasoner40-unauthorized.json \
+			>/dev/null 2>&1; then \
 		echo "Reasoner 4.0 sealed execution unexpectedly opened"; exit 1; \
 	fi
 

@@ -1,9 +1,49 @@
 #include "reasoner40.h"
 
+#include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#define R40_APPROVAL_ID \
+    "reasoner40-active-representation-2026-09-01-v1"
+
+static int claim_sealed_execution(char *error, size_t capacity)
+{
+    const char *cloud = getenv("R40_SEALED_EXECUTION");
+    const char *approval = getenv("R40_SEAL_APPROVAL_ID");
+    const char *lock = getenv("R40_EXECUTION_LOCK");
+    int descriptor;
+    if (cloud == NULL || strcmp(cloud, "cloud") != 0) {
+        (void)snprintf(error, capacity,
+                       "sealed representation cases are cloud-only");
+        return 0;
+    }
+    if (approval == NULL || strcmp(approval, R40_APPROVAL_ID) != 0) {
+        (void)snprintf(error, capacity,
+                       "sealed-run requires the frozen approval id");
+        return 0;
+    }
+    if (lock == NULL || lock[0] == '\0') {
+        (void)snprintf(error, capacity,
+                       "R40_EXECUTION_LOCK is required");
+        return 0;
+    }
+    descriptor = open(lock, O_WRONLY | O_CREAT | O_EXCL, 0444);
+    if (descriptor < 0) {
+        (void)snprintf(error, capacity,
+                       "sealed execution lock already exists");
+        return 0;
+    }
+    if (close(descriptor) != 0) {
+        (void)snprintf(error, capacity,
+                       "cannot close sealed execution lock");
+        return 0;
+    }
+    return 1;
+}
 
 static void print_evaluation(const R40Evaluation *evaluation)
 {
@@ -84,19 +124,51 @@ int main(int argc, char **argv)
     R40ExperimentReport report;
     char error[512] = {0};
     R0Status status;
-    if (argc != 2 ||
-        (strcmp(argv[1], "development") != 0 &&
-         strcmp(argv[1], "--self-test") != 0 &&
-         strcmp(argv[1], "sealed-run") != 0)) {
-        fprintf(stderr, "usage: %s development|--self-test|sealed-run\n",
+    if (!((argc == 2 &&
+           (strcmp(argv[1], "development") == 0 ||
+            strcmp(argv[1], "--self-test") == 0)) ||
+          (argc == 3 && strcmp(argv[1], "sealed-run") == 0))) {
+        fprintf(stderr,
+                "usage: %s development|--self-test|sealed-run RESULT.json\n",
                 argv[0]);
         return EXIT_FAILURE;
     }
-    if (strcmp(argv[1], "sealed-run") == 0) {
+    if (argc == 3) {
+        if (!claim_sealed_execution(error, sizeof(error))) {
+            fprintf(stderr, "error: %s\n", error);
+            return EXIT_FAILURE;
+        }
         status = r40_run_sealed(&report, error, sizeof(error));
-        fprintf(stderr, "error: %s\n", error[0] == '\0' ?
-                r0_status_name(status) : error);
-        return EXIT_FAILURE;
+        if (status == R0_OK)
+            status = r40_write_result(&report, argv[2], error,
+                                      sizeof(error));
+        if (status != R0_OK) {
+            fprintf(stderr, "error: %s\n", error[0] == '\0' ?
+                    r0_status_name(status) : error);
+            return EXIT_FAILURE;
+        }
+        printf("{\"schema\":\"zero.reasoner40_sealed_summary.v1\","
+               "\"version\":\"4.0\",\"episodes\":%u,"
+               "\"target_adapters\":%u,\"target_laws\":%u,"
+               "\"adapter_queries\":%u,"
+               "\"exact_adapter_queries\":%u,"
+               "\"replay_checks\":%u,\"exact_replays\":%u,"
+               "\"law_queries\":%u,\"exact_law_queries\":%u,"
+               "\"actions\":%u,\"exact_actions\":%u,"
+               "\"premature_commits\":%u,\"gate_passed\":%s,"
+               "\"result_digest\":\"%016" PRIx64 "\","
+               "\"result\":\"%s\"}\n",
+               report.sealed.episodes, report.sealed.target_adapters,
+               report.sealed.target_laws, report.sealed.adapter_queries,
+               report.sealed.exact_adapter_queries,
+               report.sealed.replay_checks, report.sealed.exact_replays,
+               report.sealed.law_queries,
+               report.sealed.exact_law_queries,
+               report.sealed.actions, report.sealed.exact_actions,
+               report.sealed.premature_commits,
+               report.sealed_gate_passed ? "true" : "false",
+               report.result_digest, argv[2]);
+        return EXIT_SUCCESS;
     }
     status = r40_run_development(&report, error, sizeof(error));
     if (status != R0_OK) {
