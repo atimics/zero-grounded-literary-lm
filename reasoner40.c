@@ -1021,6 +1021,13 @@ static uint64_t r40_experiment_digest(const R40ExperimentReport *report)
     return r40_digest_u64(hash, report->sealed_execution_locked);
 }
 
+static uint64_t r40_sealed_digest(const R40ExperimentReport *report)
+{
+    uint64_t hash = report->result_digest;
+    hash = r40_digest_evaluation(hash, &report->sealed);
+    return r40_digest_u64(hash, report->sealed_gate_passed);
+}
+
 R0Status r40_run_development(R40ExperimentReport *report, char *error,
                              size_t error_capacity)
 {
@@ -1094,8 +1101,138 @@ R0Status r40_run_development(R40ExperimentReport *report, char *error,
 R0Status r40_run_sealed(R40ExperimentReport *report, char *error,
                         size_t error_capacity)
 {
-    (void)report;
-    set_error(error, error_capacity,
-              "Reasoner 4.0 sealed execution is locked and unauthorized");
-    return R0_POLICY_ERROR;
+    R40Engine engine;
+    R0Status status = r40_run_development(report, error, error_capacity);
+    if (status != R0_OK) return status;
+    status = r40_build_engine(&engine, error, error_capacity);
+    if (status != R0_OK) return status;
+    r40_evaluate_split(&engine, 3, 9, 12, 2, UINT32_C(0x4005ea17),
+                       R40_CONTROL_MODEL, &report->sealed);
+    report->sealed_gate_passed = (uint8_t)(
+        report->development_gate_passed &&
+        report->sealed.episodes == report->planned_sealed_episodes &&
+        report->sealed.exact);
+    report->result_digest = r40_sealed_digest(report);
+    if (!report->sealed_gate_passed) {
+        set_error(error, error_capacity,
+                  "active representation sealed gate failed");
+        return R0_POLICY_ERROR;
+    }
+    return R0_OK;
+}
+
+static int r40_write_evaluation(FILE *file,
+                                const R40Evaluation *evaluation)
+{
+    return fprintf(file,
+        "{\"episodes\":%u,\"target_adapters\":%u,"
+        "\"target_laws\":%u,\"alignment_demonstrations\":%u,"
+        "\"adapter_queries\":%u,\"exact_adapter_queries\":%u,"
+        "\"adapter_identifications\":%u,"
+        "\"exact_adapter_identifications\":%u,"
+        "\"replay_checks\":%u,\"exact_replays\":%u,"
+        "\"law_demonstrations\":%u,\"law_queries\":%u,"
+        "\"exact_law_queries\":%u,\"law_identifications\":%u,"
+        "\"exact_law_identifications\":%u,\"actions\":%u,"
+        "\"exact_actions\":%u,\"commits\":%u,"
+        "\"exact_commits\":%u,\"reports\":%u,"
+        "\"exact_reports\":%u,\"premature_commits\":%u,"
+        "\"maximum_adapter_queries\":%u,"
+        "\"maximum_law_queries\":%u,\"exact\":%s}",
+        evaluation->episodes, evaluation->target_adapters,
+        evaluation->target_laws, evaluation->alignment_demonstrations,
+        evaluation->adapter_queries, evaluation->exact_adapter_queries,
+        evaluation->adapter_identifications,
+        evaluation->exact_adapter_identifications,
+        evaluation->replay_checks, evaluation->exact_replays,
+        evaluation->law_demonstrations, evaluation->law_queries,
+        evaluation->exact_law_queries, evaluation->law_identifications,
+        evaluation->exact_law_identifications, evaluation->actions,
+        evaluation->exact_actions, evaluation->commits,
+        evaluation->exact_commits, evaluation->reports,
+        evaluation->exact_reports, evaluation->premature_commits,
+        evaluation->maximum_adapter_queries,
+        evaluation->maximum_law_queries,
+        evaluation->exact ? "true" : "false");
+}
+
+R0Status r40_write_result(const R40ExperimentReport *report,
+                          const char *path, char *error,
+                          size_t error_capacity)
+{
+    FILE *file;
+    int failed = 0;
+    if (report == NULL || path == NULL || path[0] == '\0') {
+        set_error(error, error_capacity,
+                  "report and result path are required");
+        return R0_INVALID_ARGUMENT;
+    }
+    file = fopen(path, "wb");
+    if (file == NULL) {
+        set_error(error, error_capacity, "cannot open result file");
+        return R0_IO_ERROR;
+    }
+    if (fprintf(file,
+        "{\n  \"schema\": \"zero.reasoner40_active_representation.v1\",\n"
+        "  \"version\": \"4.0\",\n"
+        "  \"raw_adapter_programs\": %u,\n"
+        "  \"canonical_adapter_programs\": %u,\n"
+        "  \"identity_adapters\": %u,\n"
+        "  \"curriculum_adapters\": %u,\n"
+        "  \"development_adapters\": %u,\n"
+        "  \"sealed_adapters\": %u,\n"
+        "  \"frozen_core_programs\": %u,\n"
+        "  \"familiar_laws\": %u,\n"
+        "  \"planned_sealed_episodes\": %u,\n"
+        "  \"adapter_canonicalization_passed\": %s,\n"
+        "  \"adapter_unique_minimum_passed\": %s,\n"
+        "  \"adapter_grammar_certificate_passed\": %s,\n"
+        "  \"frozen_core_certificate_passed\": %s,\n"
+        "  \"oracle_adapter_control_passed\": %s,\n"
+        "  \"identity_adapter_control_passed\": %s,\n"
+        "  \"curriculum_lookup_control_passed\": %s,\n"
+        "  \"no_adapter_query_control_passed\": %s,\n"
+        "  \"shuffled_alignment_control_passed\": %s,\n"
+        "  \"development_gate_passed\": %s,\n"
+        "  \"sealed_gate_passed\": %s,\n"
+        "  \"sealed_execution_locked\": %s,\n"
+        "  \"result_digest\": \"%016" PRIx64 "\",\n"
+        "  \"curriculum\": ",
+        report->raw_adapter_programs,
+        report->canonical_adapter_programs,
+        report->identity_adapters, report->curriculum_adapters,
+        report->development_adapters, report->sealed_adapters,
+        report->frozen_core_programs, report->familiar_laws,
+        report->planned_sealed_episodes,
+        report->adapter_canonicalization_passed ? "true" : "false",
+        report->adapter_unique_minimum_passed ? "true" : "false",
+        report->adapter_grammar_certificate_passed ? "true" : "false",
+        report->frozen_core_certificate_passed ? "true" : "false",
+        report->oracle_adapter_control_passed ? "true" : "false",
+        report->identity_adapter_control_passed ? "true" : "false",
+        report->curriculum_lookup_control_passed ? "true" : "false",
+        report->no_adapter_query_control_passed ? "true" : "false",
+        report->shuffled_alignment_control_passed ? "true" : "false",
+        report->development_gate_passed ? "true" : "false",
+        report->sealed_gate_passed ? "true" : "false",
+        report->sealed_execution_locked ? "true" : "false",
+        report->result_digest) < 0)
+        failed = 1;
+    if (!failed && r40_write_evaluation(file, &report->curriculum) < 0)
+        failed = 1;
+    if (!failed && fprintf(file, ",\n  \"development\": ") < 0)
+        failed = 1;
+    if (!failed && r40_write_evaluation(file, &report->development) < 0)
+        failed = 1;
+    if (!failed && fprintf(file, ",\n  \"sealed\": ") < 0)
+        failed = 1;
+    if (!failed && r40_write_evaluation(file, &report->sealed) < 0)
+        failed = 1;
+    if (!failed && fprintf(file, "\n}\n") < 0) failed = 1;
+    if (fclose(file) != 0) failed = 1;
+    if (failed) {
+        set_error(error, error_capacity, "cannot write result file");
+        return R0_IO_ERROR;
+    }
+    return R0_OK;
 }

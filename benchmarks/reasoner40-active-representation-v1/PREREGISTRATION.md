@@ -101,8 +101,10 @@ nine through twelve, two fresh opaque orders, and the same six familiar laws:
 6,432 episodes. Every target representation is absent from curriculum and
 development as a semantic class.
 
-The sealed evaluator is locked. No implementation bundle, approval ID, cloud
-execution, retry, or post-seal tuning is authorized by this preregistration.
+The sealed evaluator is compiled but locked before evaluation. It requires a
+cloud-only environment marker, the exact frozen approval ID, and a new
+exclusive execution-lock path. No implementation bundle, cloud execution,
+retry, or post-seal tuning is authorized by this preregistration.
 
 ## Interpretation
 

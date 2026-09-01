@@ -54,7 +54,10 @@ make reasoner40-contract-check
 The planned fresh seal contains 6,432 episodes over all 134 canonical
 three-operation adapters, dimensions nine through twelve, two new opaque
 probe orders, and the same six familiar laws. It is locked and unauthorized.
-`./reasoner40 sealed-run` refuses execution.
+The compiled evaluator requires a cloud-only environment marker, the exact
+frozen approval ID, and a new exclusive execution-lock path. A normal local
+`./reasoner40 sealed-run RESULT.json` call refuses execution before any sealed
+episode is evaluated.
 
 A future sealed pass would support active compositional induction of an exact
 adapter inside this registered reversible language. It would not support a
