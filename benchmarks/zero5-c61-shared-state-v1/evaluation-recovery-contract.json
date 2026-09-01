@@ -70,8 +70,8 @@
     },
     "stager": {
       "path": "scripts/aws/zero5-c61-evaluation-stage.sh",
-      "sha256": "2dd863a2100457a461dfed6f77ee27dd148b81e09fea59aa1ce009185646d546",
-      "bytes": 2451
+      "sha256": "5afc7a646737fc6c24a33d24dc2dcaffabbd8e6c4640356485cc31da2e11a6c2",
+      "bytes": 2366
     }
   },
   "execution": {

@@ -30,10 +30,9 @@ test "$(jq -r '.Metadata.sha256 // ""' "$head_file")" = "$asset_sha256"
 
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
-mkdir -p "$stage/source"
-git archive "$source_commit" | tar -xf - -C "$stage/source"
-printf '%s\n' "$source_commit" > "$stage/source/SOURCE_COMMIT"
-COPYFILE_DISABLE=1 tar -czf "$stage/source.tar.gz" -C "$stage/source" .
+git archive --format=tar \
+  --add-virtual-file="SOURCE_COMMIT:${source_commit}" "$source_commit" |
+  gzip -n > "$stage/source.tar.gz"
 source_sha256=$(digest_file "$stage/source.tar.gz")
 source_key="experiments/zero5-c61-shared-state-v1/inputs/source-${source_commit}-${source_sha256}.tar.gz"
 if aws s3api head-object --region "$ZERO5_REGION" \
