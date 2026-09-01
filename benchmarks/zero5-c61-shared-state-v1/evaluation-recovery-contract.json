@@ -60,13 +60,13 @@
     },
     "user_data": {
       "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
-      "sha256": "02c5c00fdb0fca5bb443e43a2abf0ae27dfaf87c59afb9ff30c1f6d1a65941b1",
-      "bytes": 8549
+      "sha256": "9e28ff5d920f5306281ebc6d4deec56a9afdf10c0fa9981d128743319263c567",
+      "bytes": 8548
     },
     "launcher": {
       "path": "scripts/aws/zero5-c61-evaluation-run-instance.sh",
-      "sha256": "23b4740f3b98092c5d3ecb7935c9a8b9fc4a19f166d607abeef2f3b7f6ef5d00",
-      "bytes": 5936
+      "sha256": "6caa75cfe77712829d035f44b7439f2523bd51ecf714b023dbdb48c1492bad81",
+      "bytes": 5935
     },
     "stager": {
       "path": "scripts/aws/zero5-c61-evaluation-stage.sh",
