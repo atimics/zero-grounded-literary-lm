@@ -475,6 +475,9 @@ reasoner41-check: reasoner41
 
 reasoner41-contract-check: reasoner41
 	node scripts/check_reasoner41_contract.mjs
+	bash -n scripts/aws/reasoner41-stage.sh \
+		scripts/aws/reasoner41-run-instance.sh \
+		scripts/aws/reasoner41-user-data.sh
 
 sero_tokenizer: sero_tokenizer.c
 	$(CC) $(CFLAGS) sero_tokenizer.c -o $@

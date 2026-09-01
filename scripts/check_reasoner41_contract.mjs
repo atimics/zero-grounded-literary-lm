@@ -21,8 +21,19 @@ requireValue(
 );
 requireValue(contract.experiment === "reasoner41-joint-transfer-v1", "experiment");
 requireValue(contract.version === "4.1", "version");
-requireValue(contract.status === "frozen-unopened", "seal status");
-requireValue(contract.authorized === false, "sealed run must be unauthorized");
+requireValue(contract.status === "authorized-unopened", "seal status");
+requireValue(contract.authorized === true, "sealed run authorization");
+requireValue(contract.authorization.approved_by === "ratimics", "approver");
+requireValue(contract.authorization.approved_at === "2026-09-01", "approval date");
+requireValue(
+  contract.authorization.approval_id ===
+    "reasoner41-joint-transfer-2026-09-01-v1",
+  "approval ID",
+);
+requireValue(
+  contract.authorization.user_authorization === "Authorize it.",
+  "user authorization",
+);
 
 const frozen = contract.frozen_cores;
 requireValue(frozen.representation_version === "4.0", "representation version");
@@ -73,6 +84,95 @@ requireValue(contract.sealed.scientific_retries === 0, "sealed retries");
 requireValue(contract.sealed.tuning_after_open === false, "post-seal tuning");
 for (const [field, value] of Object.entries(contract.protocol))
   requireValue(value === true, `protocol ${field}`);
+for (const [field, value] of Object.entries(contract.controls))
+  requireValue(value === true, `control contract ${field}`);
+
+const sourceCommit = "8153537581137822a1fa5e3c98139c60238ba8d4";
+const sourceFiles = [
+  "Makefile",
+  "reasoner0.c",
+  "reasoner0.h",
+  "reasoner310.c",
+  "reasoner310.h",
+  "reasoner40.c",
+  "reasoner40.h",
+  "reasoner41.c",
+  "reasoner41.h",
+  "reasoner41_cli.c",
+];
+const archive = spawnSync(
+  "git",
+  ["archive", "--format=tar.gz", sourceCommit, ...sourceFiles],
+  { encoding: null, maxBuffer: 1024 * 1024 },
+);
+requireValue(archive.status === 0, "frozen source archive generation");
+const bundleSha256 = crypto
+  .createHash("sha256")
+  .update(archive.stdout)
+  .digest("hex");
+requireValue(contract.source.implementation_commit === sourceCommit, "source commit");
+requireValue(
+  contract.source.bundle_sha256 === bundleSha256 &&
+    bundleSha256 ===
+      "33fd19521ff5cc7f30bbca81bbb47428fd5118dc5020db068b15a74472fcc733",
+  "bundle hash",
+);
+requireValue(
+  contract.source.bundle_bytes === archive.stdout.length &&
+    archive.stdout.length === 54787,
+  "bundle size",
+);
+requireValue(
+  contract.source.destination ===
+    "s3://zero-training-022118847419/experiments/reasoner41-joint-transfer-v1/source/8153537581137822a1fa5e3c98139c60238ba8d4-33fd19521ff5cc7f30bbca81bbb47428fd5118dc5020db068b15a74472fcc733.tar.gz",
+  "bundle destination",
+);
+
+requireValue(contract.execution.enabled === true, "cloud execution enabled");
+requireValue(contract.execution.region === "us-east-1", "region");
+requireValue(contract.execution.image_id === "ami-0d7f022123f8ff19d", "image");
+requireValue(contract.execution.instance_type === "t3.micro", "instance type");
+requireValue(contract.execution.subnet_id === "subnet-f45220bc", "subnet");
+requireValue(
+  contract.execution.security_group_id === "sg-03636a7f90a9b8b17",
+  "security group",
+);
+requireValue(contract.execution.ingress_rules === 0, "no ingress");
+requireValue(
+  contract.execution.instance_profile === "zero-training-ec2",
+  "instance profile",
+);
+requireValue(
+  contract.execution.training_bucket === "zero-training-022118847419",
+  "training bucket",
+);
+requireValue(contract.execution.maximum_instance_seconds === 2400, "time cap");
+requireValue(contract.execution.maximum_ec2_usd === 0.007, "EC2 cap");
+requireValue(contract.execution.maximum_total_run_usd === 0.01, "total cap");
+requireValue(contract.execution.retry === false, "execution retry");
+requireValue(
+  contract.execution.instance_initiated_shutdown_behavior === "terminate",
+  "automatic termination",
+);
+requireValue(contract.price_evidence.usd_per_hour === 0.0104, "hourly price");
+requireValue(contract.price_evidence.checked_at === "2026-09-01", "price date");
+requireValue(
+  (contract.execution.maximum_instance_seconds *
+    contract.price_evidence.usd_per_hour) /
+    3600 <=
+    contract.execution.maximum_ec2_usd,
+  "time and cost caps disagree",
+);
+requireValue(contract.result.binary === "reasoner41", "binary");
+requireValue(contract.result.make_target === "reasoner41", "make target");
+requireValue(
+  contract.result.schema === "zero.reasoner41_joint_transfer.v1",
+  "result schema",
+);
+requireValue(
+  contract.result.summary_schema === "zero.reasoner41_sealed_summary.v1",
+  "summary schema",
+);
 
 const run = spawnSync("./reasoner41", ["development"], {
   encoding: "utf8",
@@ -190,4 +290,4 @@ requireValue(
   "one-shot lock refusal",
 );
 
-console.log("Reasoner 4.1 frozen joint-transfer contract passed");
+console.log("Reasoner 4.1 authorized frozen-source cloud contract passed");

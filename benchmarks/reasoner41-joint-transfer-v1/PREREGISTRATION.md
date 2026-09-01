@@ -78,11 +78,15 @@ three-fold laws in dimensions nine through twelve and two new opaque orders:
 absent from curriculum and development.
 
 Local sealed execution is forbidden. The seal has zero scientific retries and
-allows no tuning after opening. A later cloud run requires a frozen source
-bundle, its exact hash and byte count, explicit user authorization for that
-bundle, a cost and time cap, and a permanent one-shot execution lock.
+allows no tuning after opening.
 
-This preregistration does not authorize a sealed run.
+The user authorized one execution of the exact 54,787-byte source bundle from
+commit `8153537581137822a1fa5e3c98139c60238ba8d4`, SHA-256
+`33fd19521ff5cc7f30bbca81bbb47428fd5118dc5020db068b15a74472fcc733`, on
+2026-09-01. The authorization permits one no-ingress `t3.micro` launch in
+`us-east-1`, capped at 2,400 instance seconds, $0.007 EC2, and $0.01 total.
+There is no retry or post-seal tuning. Authorization does not itself stage the
+bundle or launch the run.
 
 ## Interpretation
 

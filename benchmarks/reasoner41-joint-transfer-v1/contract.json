@@ -2,8 +2,15 @@
   "schema": "zero.reasoner41_joint_transfer_contract.v1",
   "experiment": "reasoner41-joint-transfer-v1",
   "version": "4.1",
-  "status": "frozen-unopened",
-  "authorized": false,
+  "status": "authorized-unopened",
+  "authorized": true,
+  "authorization": {
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-01",
+    "approval_id": "reasoner41-joint-transfer-2026-09-01-v1",
+    "user_authorization": "Authorize it.",
+    "scope": "one fresh sealed three-operation-adapter by three-fold-law cross-product execution for the exact frozen source bundle"
+  },
   "frozen_cores": {
     "representation_version": "4.0",
     "representation_development_digest": "6af623f4d0e176fe",
@@ -70,5 +77,39 @@
     "no_law_query_must_fail": true,
     "shuffled_alignment_must_fail": true,
     "shuffled_law_feedback_must_fail": true
+  },
+  "source": {
+    "implementation_commit": "8153537581137822a1fa5e3c98139c60238ba8d4",
+    "bundle_sha256": "33fd19521ff5cc7f30bbca81bbb47428fd5118dc5020db068b15a74472fcc733",
+    "bundle_bytes": 54787,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner41-joint-transfer-v1/source/8153537581137822a1fa5e3c98139c60238ba8d4-33fd19521ff5cc7f30bbca81bbb47428fd5118dc5020db068b15a74472fcc733.tar.gz"
+  },
+  "execution": {
+    "enabled": true,
+    "region": "us-east-1",
+    "image_id": "ami-0d7f022123f8ff19d",
+    "instance_type": "t3.micro",
+    "subnet_id": "subnet-f45220bc",
+    "security_group_id": "sg-03636a7f90a9b8b17",
+    "ingress_rules": 0,
+    "instance_profile": "zero-training-ec2",
+    "training_bucket": "zero-training-022118847419",
+    "maximum_instance_seconds": 2400,
+    "maximum_ec2_usd": 0.007,
+    "maximum_total_run_usd": 0.01,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "usd_per_hour": 0.0104,
+    "source": "AWS Price List API, Linux on-demand t3.micro us-east-1",
+    "checked_at": "2026-09-01",
+    "effective_at": "2026-08-01T00:00:00Z"
+  },
+  "result": {
+    "binary": "reasoner41",
+    "make_target": "reasoner41",
+    "schema": "zero.reasoner41_joint_transfer.v1",
+    "summary_schema": "zero.reasoner41_sealed_summary.v1"
   }
 }
