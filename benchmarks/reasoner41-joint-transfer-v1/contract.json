@@ -1,0 +1,74 @@
+{
+  "schema": "zero.reasoner41_joint_transfer_contract.v1",
+  "experiment": "reasoner41-joint-transfer-v1",
+  "version": "4.1",
+  "status": "frozen-unopened",
+  "authorized": false,
+  "frozen_cores": {
+    "representation_version": "4.0",
+    "representation_development_digest": "6af623f4d0e176fe",
+    "representation_implementation_sha256": "2177cd1f37e993f152758466cdddce22beb52ad510e791af8e5c0ce6c107d722",
+    "representation_header_sha256": "a6555cb1dd7ae85d6d8e80be063f527b5bd6ca1cb16cdf93ebc83f26170f0a87",
+    "law_version": "(3,9)",
+    "law_development_digest": "c16b44a0ab50c456",
+    "law_implementation_sha256": "7904d982ec445358e07ade7532a94a5867d90a2268add7269db1cd45c505a40d",
+    "law_header_sha256": "82709f8a9dd20517a097187832e49a5d4f6554f11d566478edbeda079e19b2b8"
+  },
+  "curriculum": {
+    "adapter_depth": 1,
+    "law_terms": 1,
+    "adapters": 6,
+    "laws": 6,
+    "pairs": 36,
+    "episodes": 72,
+    "dimensions": [4],
+    "opaque_orders": 2
+  },
+  "development": {
+    "adapter_depth": 2,
+    "law_terms": 2,
+    "adapters": 29,
+    "laws": 15,
+    "pairs": 435,
+    "episodes": 3480,
+    "minimum_dimension": 5,
+    "maximum_dimension": 8,
+    "opaque_orders": 2,
+    "exact_replays": 1002240,
+    "exact_adapter_queries": 3480,
+    "exact_law_queries": 13340,
+    "exact_actions": 10440,
+    "maximum_adapter_queries": 1,
+    "maximum_law_queries": 5
+  },
+  "sealed": {
+    "adapter_depth": 3,
+    "law_terms": 3,
+    "adapters": 134,
+    "laws": 31,
+    "pairs": 4154,
+    "episodes": 33232,
+    "minimum_dimension": 9,
+    "maximum_dimension": 12,
+    "opaque_orders": 2,
+    "local_execution_forbidden": true,
+    "scientific_retries": 0,
+    "tuning_after_open": false
+  },
+  "protocol": {
+    "adapter_commit_before_law_evidence": true,
+    "exact_replay_before_law_commit": true,
+    "law_commit_before_action": true,
+    "joint_commit_before_report": true
+  },
+  "controls": {
+    "oracle_adapter_must_pass": true,
+    "oracle_law_must_pass": true,
+    "identity_adapter_must_fail": true,
+    "curriculum_pair_must_fail": true,
+    "no_adapter_query_must_fail": true,
+    "no_law_query_must_fail": true,
+    "shuffled_alignment_must_fail": true,
+    "shuffled_law_feedback_must_fail": true
+  }
+}
