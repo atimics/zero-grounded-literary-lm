@@ -68,8 +68,8 @@ small browser runtime:
   keeps language reporting behind a final tool call; its fresh compositional
   seal passed all 744 episodes.
 - `reasoner40`: Reasoner 4.0, an exact active learner for reversible raw-input
-  adapters feeding the frozen (3,9) core; its public two-operation development
-  screen passes, while the fresh three-operation seal remains locked.
+  adapters feeding the frozen (3,9) core; all 6,432 fresh three-operation
+  sealed episodes passed exactly.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -286,7 +286,7 @@ See [`docs/REASONER.md`](docs/REASONER.md) for the complete evidence map,
 current claim boundary, and next research question. The version-specific
 documents remain the detailed source for each frozen experiment.
 See [`docs/REASONER40.md`](docs/REASONER40.md) for the active adapter language,
-frozen-core certificate, exact public screen, and locked three-operation seal.
+frozen-core certificate, exact public screen, and passed three-operation seal.
 
 ## Build
 

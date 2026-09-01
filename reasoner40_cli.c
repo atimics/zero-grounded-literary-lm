@@ -177,8 +177,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     if (strcmp(argv[1], "--self-test") == 0) {
-        puts("Reasoner 4.0 active representation screen passed; the "
-             "three-operation seal remains locked and unauthorized");
+        puts("Reasoner 4.0 active representation screen passed; sealed "
+             "execution remains cloud-gated and one-shot");
         return EXIT_SUCCESS;
     }
     print_development(&report);

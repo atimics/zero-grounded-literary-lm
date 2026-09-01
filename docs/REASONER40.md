@@ -51,19 +51,18 @@ make reasoner40-check
 make reasoner40-contract-check
 ```
 
-The planned fresh seal contains 6,432 episodes over all 134 canonical
+The fresh seal contained 6,432 episodes over all 134 canonical
 three-operation adapters, dimensions nine through twelve, two new opaque
-probe orders, and the same six familiar laws. Its exact merged source bundle
-and one capped cloud execution are authorized.
+probe orders, and the same six familiar laws. Every episode, replay, action,
+commit, and report passed exactly. The one-shot execution lock is consumed.
 The compiled evaluator requires a cloud-only environment marker, the exact
 frozen approval ID, and a new exclusive execution-lock path. A normal local
 `./reasoner40 sealed-run RESULT.json` call refuses execution before any sealed
 episode is evaluated.
 
-A future sealed pass would support active compositional induction of an exact
-adapter inside this registered reversible language. It would not support a
-claim about arbitrary raw formats, unseen adapter primitives, images, natural
-language, or simultaneous transfer to unseen law compositions. See the
+A sealed pass supports active compositional induction of an exact adapter
+inside this registered reversible language. It does not support a claim about
+arbitrary raw formats, unseen adapter primitives, images, natural language,
+or simultaneous transfer to unseen law compositions. See the
 [`preregistration`](../benchmarks/reasoner40-active-representation-v1/PREREGISTRATION.md)
-and
-[`locked contract`](../benchmarks/reasoner40-active-representation-v1/aws-contract.json).
+and the [`result`](../benchmarks/reasoner40-active-representation-v1/RESULT.md).
