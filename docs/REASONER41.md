@@ -47,17 +47,17 @@ make reasoner41-check
 make reasoner41-contract-check
 ```
 
-The unopened seal crosses all 134 three-operation adapters with all 31
-three-fold laws in dimensions nine through twelve and two new opaque orders.
-It contains 4,154 fresh pairs and 33,232 episodes. Local execution is refused,
-the evaluator requires an exact approval ID and exclusive execution lock, and
-no sealed case has been evaluated. One exact frozen source bundle and one
-capped, no-retry cloud launch are now authorized; neither staging nor launch
-has occurred.
+The seal crossed all 134 three-operation adapters with all 31 three-fold laws
+in dimensions nine through twelve and two new opaque orders. Every one of its
+4,154 fresh pairs and 33,232 episodes passed exactly, including 9,570,816
+raw-to-IR replays, 132,928 law queries, and 99,696 actions. The permanent
+one-shot lock is consumed and the cloud instance terminated after publishing
+the result.
 
-The public result is evidence for simultaneous, factorized transfer inside
-the two registered finite languages. It is not sealed evidence and does not
-show transfer outside either grammar, noisy learning, new primitives,
-natural-language grounding, or open-ended reasoning. See the
-[`preregistration`](../benchmarks/reasoner41-joint-transfer-v1/PREREGISTRATION.md)
-and [`frozen contract`](../benchmarks/reasoner41-joint-transfer-v1/contract.json).
+The sealed result is evidence for simultaneous, factorized transfer inside
+the two registered finite languages. It does not show transfer outside either
+grammar, noisy learning, new primitives, natural-language grounding, or
+open-ended reasoning. See the
+[`preregistration`](../benchmarks/reasoner41-joint-transfer-v1/PREREGISTRATION.md),
+the [`frozen contract`](../benchmarks/reasoner41-joint-transfer-v1/contract.json),
+and the [`sealed result`](../benchmarks/reasoner41-joint-transfer-v1/RESULT.md).
