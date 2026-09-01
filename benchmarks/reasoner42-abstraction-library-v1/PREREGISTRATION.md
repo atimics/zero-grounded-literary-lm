@@ -66,16 +66,30 @@ The exact gate requires:
 - no-library, shuffled-curriculum, single-use-library, curriculum-lookup, and
   no-query controls to fail.
 
-## Locked sealed split
+## Frozen sealed split
 
-The planned seal retains exact semantic classes whose minimum description is
+The seal retains exact semantic classes whose minimum description is
 three library calls and six expanded base calls. The registered grammar census
 contains 820 raw library programs through depth three and 55,987 raw base
-programs through depth six. The current census contains 17 planned target
-classes.
+programs through depth six. The frozen census contains 17 target classes.
 
-The sealed evaluator is not part of this change. No sealed execution is
-authorized. The CLI must reject every `sealed-run` request.
+Every target is evaluated in two deterministic evidence orders, for 34 sealed
+episodes. The learner may use at most two active queries per episode. A pass
+requires all 34 unique identifications and commits, 2,754/2,754 affine-basis
+replays, 102/102 decode applications, 34/34 exact reports, and no premature
+commit. The frozen library must contribute exactly 51 calls whose expansion
+contains 102 base operations.
+
+During the one-shot run, an exhaustive semantic oracle enumerates all 55,987
+raw base programs through depth six and must prove that every target has exact
+minimum length six. The semantic oracle must pass, while the no-library,
+shuffled-curriculum, single-use-library, curriculum-lookup, and no-query
+controls must fail.
+
+The evaluator is implemented but not authorized. Local execution is
+forbidden. The CLI requires the cloud marker, the frozen approval ID, and a
+new exclusive execution-lock file. The future execution contract permits no
+scientific retry and no tuning after the seal opens.
 
 ## Interpretation
 

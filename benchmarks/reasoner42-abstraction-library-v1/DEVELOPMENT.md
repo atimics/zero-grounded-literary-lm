@@ -23,5 +23,7 @@ The library-guided search stays within 91 raw candidates. The corresponding
 base-only depth-four search requires 1,555 raw candidates, so it exceeds the
 frozen 100-program development budget.
 
-The next three-library-call split is only planned. Its 17 target classes have
-not been evaluated, and sealed execution remains unauthorized and locked.
+The frozen seal plan has 17 target classes, 51 library calls, and 102 expanded
+base operations. Its evaluator is implemented, but those targets have not
+been evaluated. Sealed execution remains unauthorized, cloud-only, one-shot,
+and locked.

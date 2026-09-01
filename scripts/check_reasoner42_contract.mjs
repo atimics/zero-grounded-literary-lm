@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 const directory = "benchmarks/reasoner42-abstraction-library-v1";
@@ -20,7 +20,7 @@ requireValue(
 );
 requireValue(contract.experiment === "reasoner42-abstraction-library-v1", "experiment");
 requireValue(contract.version === "4.2", "version");
-requireValue(contract.status === "development-passed-seal-locked", "status");
+requireValue(contract.status === "frozen-unopened", "status");
 requireValue(contract.authorized === false, "authorization");
 requireValue(
   contract.frozen_base.development_digest === "6af623f4d0e176fe",
@@ -66,9 +66,37 @@ requireValue(
   "base semantic oracle",
 );
 requireValue(contract.sealed.authorized === false, "sealed authorization");
+requireValue(contract.sealed.status === "implemented-locked", "sealed status");
 requireValue(contract.sealed.targets === 17, "sealed targets");
+requireValue(contract.sealed.evidence_orders === 2, "sealed evidence orders");
+requireValue(contract.sealed.episodes === 34, "sealed episodes");
 requireValue(contract.sealed.library_raw_programs === 820, "sealed library census");
 requireValue(contract.sealed.base_raw_programs === 55987, "sealed base census");
+requireValue(contract.sealed.library_tokens === 51, "sealed library tokens");
+requireValue(contract.sealed.base_tokens === 102, "sealed base tokens");
+requireValue(contract.sealed.exact_replays === 2754, "sealed replays");
+requireValue(contract.sealed.exact_applications === 102, "sealed applications");
+requireValue(contract.sealed.exact_reports === 34, "sealed reports");
+requireValue(contract.sealed.maximum_queries === 2, "sealed query maximum");
+requireValue(
+  contract.sealed.exhaustive_base_minimum_certificate === true,
+  "sealed base minimum certificate",
+);
+requireValue(contract.sealed.controls_repeat_on_seal === true, "sealed controls");
+requireValue(
+  contract.sealed.required_approval_id ===
+    "reasoner42-abstraction-library-2026-09-01-v1",
+  "sealed approval ID",
+);
+requireValue(contract.sealed.local_execution_forbidden === true, "local seal");
+requireValue(contract.sealed.cloud_execution_required === true, "cloud seal");
+requireValue(
+  contract.sealed.exclusive_execution_lock_required === true,
+  "one-shot lock",
+);
+requireValue(contract.sealed.scientific_retries === 0, "sealed retries");
+requireValue(contract.sealed.tuning_after_open === false, "post-seal tuning");
+requireValue(contract.sealed.cli_must_fail_closed === true, "sealed CLI lock");
 requireValue(contract.result.digest === "ac7837bdb3030663", "result digest");
 
 const outputPath = `/tmp/reasoner42-contract-${process.pid}.json`;
@@ -87,15 +115,79 @@ try {
   rmSync(outputPath, { force: true });
 }
 
+const sealedPath = `/tmp/reasoner42-sealed-${process.pid}.json`;
 const sealed = spawnSync(
   "./reasoner42",
-  ["sealed-run", `/tmp/reasoner42-sealed-${process.pid}.json`],
+  ["sealed-run", sealedPath],
   { encoding: "utf8" },
 );
 requireValue(sealed.status !== 0, "sealed execution must fail closed");
 requireValue(
-  sealed.stderr.includes("locked and unauthorized"),
-  "sealed rejection message",
+  sealed.stderr.includes("cloud-only"),
+  "local sealed rejection",
+);
+requireValue(!existsSync(sealedPath), "local rejection wrote a result");
+const missingApproval = spawnSync(
+  "./reasoner42",
+  ["sealed-run", `/tmp/reasoner42-unapproved-${process.pid}.json`],
+  {
+    encoding: "utf8",
+    env: { ...process.env, R42_SEALED_EXECUTION: "cloud" },
+  },
+);
+requireValue(missingApproval.status !== 0, "approval ID must be required");
+requireValue(
+  missingApproval.stderr.includes("frozen approval id"),
+  "approval rejection",
+);
+requireValue(
+  !existsSync(`/tmp/reasoner42-unapproved-${process.pid}.json`),
+  "approval rejection wrote a result",
+);
+const missingLock = spawnSync(
+  "./reasoner42",
+  ["sealed-run", `/tmp/reasoner42-unlocked-${process.pid}.json`],
+  {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      R42_SEALED_EXECUTION: "cloud",
+      R42_SEAL_APPROVAL_ID:
+        "reasoner42-abstraction-library-2026-09-01-v1",
+    },
+  },
+);
+requireValue(missingLock.status !== 0, "execution lock must be required");
+requireValue(
+  missingLock.stderr.includes("R42_EXECUTION_LOCK is required"),
+  "execution-lock rejection",
+);
+requireValue(
+  !existsSync(`/tmp/reasoner42-unlocked-${process.pid}.json`),
+  "lock rejection wrote a result",
+);
+const reusedLock = spawnSync(
+  "./reasoner42",
+  ["sealed-run", `/tmp/reasoner42-reused-${process.pid}.json`],
+  {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      R42_SEALED_EXECUTION: "cloud",
+      R42_SEAL_APPROVAL_ID:
+        "reasoner42-abstraction-library-2026-09-01-v1",
+      R42_EXECUTION_LOCK: "/dev/null",
+    },
+  },
+);
+requireValue(reusedLock.status !== 0, "execution lock must be exclusive");
+requireValue(
+  reusedLock.stderr.includes("already exists"),
+  "one-shot rejection",
+);
+requireValue(
+  !existsSync(`/tmp/reasoner42-reused-${process.pid}.json`),
+  "one-shot rejection wrote a result",
 );
 
-console.log("Reasoner 4.2 contract verified");
+console.log("Reasoner 4.2 frozen unopened contract verified");

@@ -83,7 +83,8 @@ The active experiment is the locked Reasoner 4.2 three-abstraction seal.
 The public development screen is complete. The planned seal contains 17 exact
 semantic classes. Its library grammar has 820 raw programs through three
 calls, while the corresponding base grammar has 55,987 raw programs through
-six operations. It has not been implemented or authorized.
+six operations. Its cloud-only, one-shot evaluator is implemented and locked,
+but it has not been authorized or executed.
 
 The checked contract requires:
 

@@ -16,7 +16,10 @@ enum {
     R42_QUERY_COUNT = 81,
     R42_MAX_PROGRAMS = 4096,
     R42_CURRICULUM_TARGETS = 9,
-    R42_DEVELOPMENT_VARIANTS = 2
+    R42_DEVELOPMENT_VARIANTS = 2,
+    R42_SEALED_TARGETS = 17,
+    R42_SEALED_VARIANTS = 2,
+    R42_SEALED_MAXIMUM_QUERIES = 2
 };
 
 typedef enum {
@@ -67,6 +70,8 @@ typedef struct {
     uint32_t base_depth_four_raw_programs;
     uint32_t planned_sealed_raw_programs;
     uint32_t planned_sealed_base_raw_programs;
+    uint32_t sealed_base_tokens;
+    uint32_t sealed_library_tokens;
     uint8_t frozen_base_certificate_passed;
     uint8_t affine_certificate_passed;
     uint8_t library_discovery_certificate_passed;
@@ -79,6 +84,7 @@ typedef struct {
     uint8_t single_use_library_control_passed;
     uint8_t curriculum_lookup_control_passed;
     uint8_t no_query_control_passed;
+    uint8_t sealed_minimum_certificate_passed;
     R42Evaluation curriculum;
     R42Evaluation development;
     R42Evaluation sealed;
@@ -91,6 +97,8 @@ typedef struct {
 
 R0Status r42_run_development(R42ExperimentReport *report, char *error,
                              size_t error_capacity);
+R0Status r42_run_sealed(R42ExperimentReport *report, char *error,
+                        size_t error_capacity);
 R0Status r42_write_result(const R42ExperimentReport *report,
                           const char *path, char *error,
                           size_t error_capacity);

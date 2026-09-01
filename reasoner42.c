@@ -951,16 +951,102 @@ static uint16_t r42_make_development_targets(const R42Macro *library,
     return count;
 }
 
-static uint32_t r42_count_planned_sealed_targets(const R42Engine *engine)
+static uint16_t r42_make_sealed_targets(const R42Engine *engine,
+                                        R42Target *targets,
+                                        uint32_t *base_tokens,
+                                        uint32_t *library_tokens)
 {
-    uint32_t count = 0;
+    uint16_t count = 0;
     uint16_t program;
-    for (program = 0; program < engine->program_count; ++program)
+    *base_tokens = 0;
+    *library_tokens = 0;
+    for (program = 0; program < engine->program_count; ++program) {
         if (engine->programs[program].token_count == 3u &&
             engine->programs[program].macro_uses == 3u &&
-            engine->programs[program].base_length == 6u)
+            engine->programs[program].base_length == 6u) {
+            if (targets != NULL && count < R42_SEALED_TARGETS) {
+                memcpy(targets[count].code,
+                       engine->programs[program].base_code,
+                       engine->programs[program].base_length);
+                targets[count].length = engine->programs[program].base_length;
+            }
             ++count;
+            *base_tokens += 6u;
+            *library_tokens += 3u;
+        }
+    }
     return count;
+}
+
+typedef struct {
+    const R42Target *targets;
+    uint16_t target_count;
+    uint64_t target_digests[R42_SEALED_TARGETS];
+    uint8_t minimum_depths[R42_SEALED_TARGETS];
+    uint32_t raw_programs;
+} R42BaseOracle;
+
+static void r42_visit_base_program(R42BaseOracle *oracle,
+                                   const uint8_t *code, uint8_t length)
+{
+    uint64_t digest = r42_program_digest(code, length);
+    uint16_t target;
+    ++oracle->raw_programs;
+    for (target = 0; target < oracle->target_count; ++target) {
+        if (oracle->minimum_depths[target] != UINT8_MAX ||
+            digest != oracle->target_digests[target])
+            continue;
+        if (r42_program_equal_code(code, length,
+                                   oracle->targets[target].code,
+                                   oracle->targets[target].length))
+            oracle->minimum_depths[target] = length;
+    }
+}
+
+static void r42_enumerate_base_level(R42BaseOracle *oracle, uint8_t depth,
+                                     uint8_t *code, uint8_t position)
+{
+    uint8_t operation;
+    if (position == depth) {
+        r42_visit_base_program(oracle, code, depth);
+        return;
+    }
+    for (operation = 1; operation <= R40_ADAPTER_PRIMITIVES; ++operation) {
+        code[position] = operation;
+        r42_enumerate_base_level(oracle, depth, code,
+                                 (uint8_t)(position + 1u));
+    }
+}
+
+static uint8_t r42_certify_sealed_base_minimum(const R42Target *targets,
+                                                uint16_t target_count,
+                                                uint32_t *raw_programs)
+{
+    R42BaseOracle oracle;
+    uint8_t code[R42_MAX_BASE_CODE] = {0};
+    uint8_t depth;
+    uint16_t target;
+    memset(&oracle, 0, sizeof(oracle));
+    if (target_count != R42_SEALED_TARGETS) {
+        *raw_programs = 0;
+        return 0;
+    }
+    oracle.targets = targets;
+    oracle.target_count = target_count;
+    memset(oracle.minimum_depths, UINT8_MAX,
+           sizeof(oracle.minimum_depths));
+    for (target = 0; target < target_count; ++target)
+        oracle.target_digests[target] =
+            r42_program_digest(targets[target].code, targets[target].length);
+    for (depth = 0; depth <= R42_MAX_BASE_CODE; ++depth)
+        r42_enumerate_base_level(&oracle, depth, code, 0);
+    *raw_programs = oracle.raw_programs;
+    if (oracle.raw_programs != 55987u)
+        return 0;
+    for (target = 0; target < target_count; ++target)
+        if (oracle.minimum_depths[target] != R42_MAX_BASE_CODE)
+            return 0;
+    return 1;
 }
 
 static uint8_t r42_certify_frozen_base(void)
@@ -1030,6 +1116,17 @@ static uint64_t r42_experiment_digest(const R42ExperimentReport *report)
     hash = r42_digest_evaluation(hash, &report->development);
     hash = r42_digest_u64(hash, report->development_gate_passed);
     return r42_digest_u64(hash, report->sealed_execution_locked);
+}
+
+static uint64_t r42_sealed_digest(const R42ExperimentReport *report)
+{
+    uint64_t hash = r42_experiment_digest(report);
+    hash = r42_digest_evaluation(hash, &report->sealed);
+    hash = r42_digest_u64(hash, report->sealed_base_tokens);
+    hash = r42_digest_u64(hash, report->sealed_library_tokens);
+    hash = r42_digest_u64(hash,
+                          report->sealed_minimum_certificate_passed);
+    return r42_digest_u64(hash, report->sealed_gate_passed);
 }
 
 R0Status r42_run_development(R42ExperimentReport *report, char *error,
@@ -1159,8 +1256,9 @@ R0Status r42_run_development(R42ExperimentReport *report, char *error,
     report->base_depth_four_raw_programs = base_depth_four.raw_programs;
     report->planned_sealed_raw_programs = sealed_plan_engine.raw_programs;
     report->planned_sealed_base_raw_programs = 55987u;
-    report->sealed.target_programs =
-        r42_count_planned_sealed_targets(&sealed_plan_engine);
+    report->sealed.target_programs = r42_make_sealed_targets(
+        &sealed_plan_engine, NULL, &report->sealed_base_tokens,
+        &report->sealed_library_tokens);
     report->frozen_base_certificate_passed = r42_certify_frozen_base();
     report->affine_certificate_passed = (uint8_t)(
         curriculum_engine.affine_certificate_passed &&
@@ -1220,6 +1318,163 @@ R0Status r42_run_development(R42ExperimentReport *report, char *error,
                 report->library_freeze_certificate_passed,
                 report->compression_certificate_passed,
                 report->search_budget_certificate_passed,
+                report->semantic_oracle_control_passed,
+                report->no_library_control_passed,
+                report->shuffled_curriculum_control_passed,
+                report->single_use_library_control_passed,
+                report->curriculum_lookup_control_passed,
+                report->no_query_control_passed);
+        return R0_POLICY_ERROR;
+    }
+    return R0_OK;
+}
+
+R0Status r42_run_sealed(R42ExperimentReport *report, char *error,
+                        size_t error_capacity)
+{
+    R42Engine curriculum_engine;
+    R42Engine sealed_engine;
+    R42Engine no_library_engine;
+    R42Engine shuffled_engine;
+    R42Engine single_use_engine;
+    R42Program solutions[R42_CURRICULUM_TARGETS];
+    uint16_t identified_curriculum[R42_CURRICULUM_TARGETS];
+    R42Macro library[R42_LIBRARY_SIZE];
+    R42Macro shuffled_library[R42_LIBRARY_SIZE];
+    R42Target targets[R42_SEALED_TARGETS];
+    R42Evaluation control;
+    uint8_t library_count;
+    uint8_t shuffled_count;
+    uint16_t target;
+    uint32_t base_raw_programs = 0;
+    uint32_t base_tokens = 0;
+    uint32_t library_tokens = 0;
+    R0Status status;
+
+    status = r42_run_development(report, error, error_capacity);
+    if (status != R0_OK) return status;
+    status = r42_build_engine(&curriculum_engine, NULL, 0, 3, 0,
+                              error, error_capacity);
+    if (status != R0_OK) return status;
+    r42_evaluate_targets(&curriculum_engine, r42_curriculum_targets,
+                         R42_CURRICULUM_TARGETS, 1, R42_CONTROL_MODEL,
+                         &control, identified_curriculum);
+    if (!control.exact) {
+        set_error(error, error_capacity,
+                  "sealed library curriculum replay failed");
+        return R0_POLICY_ERROR;
+    }
+    for (target = 0; target < R42_CURRICULUM_TARGETS; ++target) {
+        if (identified_curriculum[target] == UINT16_MAX) {
+            set_error(error, error_capacity,
+                      "sealed curriculum identification is missing");
+            return R0_POLICY_ERROR;
+        }
+        solutions[target] =
+            curriculum_engine.programs[identified_curriculum[target]];
+    }
+    library_count = r42_learn_library(solutions, R42_CURRICULUM_TARGETS, 0,
+                                      library);
+    shuffled_count = r42_learn_library(solutions, R42_CURRICULUM_TARGETS, 1,
+                                       shuffled_library);
+    if (!r42_library_matches_contract(library, library_count) ||
+        r42_library_digest(library, library_count) != report->library_digest) {
+        set_error(error, error_capacity,
+                  "sealed library differs from the frozen library");
+        return R0_POLICY_ERROR;
+    }
+    status = r42_build_engine(&sealed_engine, library, library_count, 3,
+                              R42_MAX_TOKENS, error, error_capacity);
+    if (status != R0_OK) return status;
+    status = r42_build_engine(&no_library_engine, NULL, 0, 3, 0,
+                              error, error_capacity);
+    if (status != R0_OK) return status;
+    status = r42_build_engine(&shuffled_engine, shuffled_library,
+                              shuffled_count, 3, R42_MAX_TOKENS,
+                              error, error_capacity);
+    if (status != R0_OK) return status;
+    status = r42_build_engine(&single_use_engine, library, library_count, 3,
+                              1, error, error_capacity);
+    if (status != R0_OK) return status;
+
+    report->sealed.target_programs = r42_make_sealed_targets(
+        &sealed_engine, targets, &base_tokens, &library_tokens);
+    if (report->sealed.target_programs != R42_SEALED_TARGETS) {
+        set_error(error, error_capacity,
+                  "sealed target census differs from the frozen census");
+        return R0_POLICY_ERROR;
+    }
+    report->sealed_base_tokens = base_tokens;
+    report->sealed_library_tokens = library_tokens;
+    report->sealed_minimum_certificate_passed =
+        r42_certify_sealed_base_minimum(targets,
+                                        (uint16_t)report->sealed.target_programs,
+                                        &base_raw_programs);
+    report->planned_sealed_base_raw_programs = base_raw_programs;
+
+    r42_evaluate_targets(&sealed_engine, targets,
+        (uint16_t)report->sealed.target_programs, R42_SEALED_VARIANTS,
+        R42_CONTROL_MODEL, &report->sealed, NULL);
+    r42_evaluate_targets(&no_library_engine, targets,
+        (uint16_t)report->sealed.target_programs, 1, R42_CONTROL_MODEL,
+        &control, NULL);
+    report->no_library_control_passed = (uint8_t)(
+        report->no_library_control_passed && !control.exact);
+    r42_evaluate_targets(&shuffled_engine, targets,
+        (uint16_t)report->sealed.target_programs, 1, R42_CONTROL_MODEL,
+        &control, NULL);
+    report->shuffled_curriculum_control_passed = (uint8_t)(
+        report->shuffled_curriculum_control_passed && !control.exact);
+    r42_evaluate_targets(&single_use_engine, targets,
+        (uint16_t)report->sealed.target_programs, 1, R42_CONTROL_MODEL,
+        &control, NULL);
+    report->single_use_library_control_passed = (uint8_t)(
+        report->single_use_library_control_passed && !control.exact);
+    r42_evaluate_targets(&sealed_engine, targets,
+        (uint16_t)report->sealed.target_programs, 1,
+        R42_CONTROL_CURRICULUM_LOOKUP, &control, NULL);
+    report->curriculum_lookup_control_passed = (uint8_t)(
+        report->curriculum_lookup_control_passed && !control.exact);
+    r42_evaluate_targets(&sealed_engine, targets,
+        (uint16_t)report->sealed.target_programs, 1,
+        R42_CONTROL_NO_QUERY, &control, NULL);
+    report->no_query_control_passed = (uint8_t)(
+        report->no_query_control_passed && !control.exact);
+    report->semantic_oracle_control_passed = (uint8_t)(
+        report->semantic_oracle_control_passed &&
+        report->sealed_minimum_certificate_passed);
+    report->sealed_gate_passed = (uint8_t)(
+        report->development_gate_passed &&
+        report->library_digest == UINT64_C(0x3cf6bb033d68d2a3) &&
+        report->planned_sealed_raw_programs == 820u &&
+        report->planned_sealed_base_raw_programs == 55987u &&
+        report->sealed.target_programs == R42_SEALED_TARGETS &&
+        report->sealed_base_tokens == 102u &&
+        report->sealed_library_tokens == 51u &&
+        report->sealed_minimum_certificate_passed &&
+        report->semantic_oracle_control_passed &&
+        report->no_library_control_passed &&
+        report->shuffled_curriculum_control_passed &&
+        report->single_use_library_control_passed &&
+        report->curriculum_lookup_control_passed &&
+        report->no_query_control_passed &&
+        report->sealed.episodes ==
+            R42_SEALED_TARGETS * R42_SEALED_VARIANTS &&
+        report->sealed.maximum_queries <= R42_SEALED_MAXIMUM_QUERIES &&
+        report->sealed.exact);
+    report->result_digest = r42_sealed_digest(report);
+    if (!report->sealed_gate_passed) {
+        if (error != NULL && error_capacity > 0)
+            (void)snprintf(error, error_capacity,
+                "Reasoner 4.2 sealed gate failed: targets=%u episodes=%u "
+                "queries=%u raw=%u base=%u exact=%u minimum=%u "
+                "controls=%u%u%u%u%u%u",
+                report->sealed.target_programs, report->sealed.episodes,
+                report->sealed.maximum_queries,
+                report->planned_sealed_raw_programs,
+                report->planned_sealed_base_raw_programs,
+                report->sealed.exact,
+                report->sealed_minimum_certificate_passed,
                 report->semantic_oracle_control_passed,
                 report->no_library_control_passed,
                 report->shuffled_curriculum_control_passed,
@@ -1292,6 +1547,8 @@ R0Status r42_write_result(const R42ExperimentReport *report,
         "  \"base_depth_four_raw_programs\": %u,\n"
         "  \"planned_sealed_raw_programs\": %u,\n"
         "  \"planned_sealed_base_raw_programs\": %u,\n"
+        "  \"sealed_base_tokens\": %u,\n"
+        "  \"sealed_library_tokens\": %u,\n"
         "  \"frozen_base_certificate_passed\": %s,\n"
         "  \"affine_certificate_passed\": %s,\n"
         "  \"library_discovery_certificate_passed\": %s,\n"
@@ -1304,6 +1561,7 @@ R0Status r42_write_result(const R42ExperimentReport *report,
         "  \"single_use_library_control_passed\": %s,\n"
         "  \"curriculum_lookup_control_passed\": %s,\n"
         "  \"no_query_control_passed\": %s,\n"
+        "  \"sealed_minimum_certificate_passed\": %s,\n"
         "  \"development_gate_passed\": %s,\n"
         "  \"sealed_gate_passed\": %s,\n"
         "  \"sealed_execution_locked\": %s,\n"
@@ -1326,6 +1584,8 @@ R0Status r42_write_result(const R42ExperimentReport *report,
         report->base_depth_four_raw_programs,
         report->planned_sealed_raw_programs,
         report->planned_sealed_base_raw_programs,
+        report->sealed_base_tokens,
+        report->sealed_library_tokens,
         report->frozen_base_certificate_passed ? "true" : "false",
         report->affine_certificate_passed ? "true" : "false",
         report->library_discovery_certificate_passed ? "true" : "false",
@@ -1338,6 +1598,7 @@ R0Status r42_write_result(const R42ExperimentReport *report,
         report->single_use_library_control_passed ? "true" : "false",
         report->curriculum_lookup_control_passed ? "true" : "false",
         report->no_query_control_passed ? "true" : "false",
+        report->sealed_minimum_certificate_passed ? "true" : "false",
         report->development_gate_passed ? "true" : "false",
         report->sealed_gate_passed ? "true" : "false",
         report->sealed_execution_locked ? "true" : "false",
@@ -1349,10 +1610,17 @@ R0Status r42_write_result(const R42ExperimentReport *report,
         failed = 1;
     if (!failed && r42_write_evaluation(file, &report->development) < 0)
         failed = 1;
-    if (!failed && fprintf(file,
-        ",\n  \"sealed\": {\"target_programs\":%u,"
-        "\"executed\":false}\n}\n",
-        report->sealed.target_programs) < 0)
+    if (!failed && fprintf(file, ",\n  \"sealed\": ") < 0)
+        failed = 1;
+    if (!failed && report->sealed.episodes > 0) {
+        if (r42_write_evaluation(file, &report->sealed) < 0)
+            failed = 1;
+    } else if (!failed && fprintf(file,
+        "{\"target_programs\":%u,\"executed\":false}",
+        report->sealed.target_programs) < 0) {
+        failed = 1;
+    }
+    if (!failed && fprintf(file, "\n}\n") < 0)
         failed = 1;
     if (fclose(file) != 0) failed = 1;
     if (failed) {

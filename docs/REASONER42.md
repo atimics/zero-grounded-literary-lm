@@ -82,8 +82,15 @@ make reasoner42-contract-check
 The registered next split contains 17 exact semantic classes that require
 three library calls and six expanded base operations. The library grammar has
 820 raw programs through depth three; the corresponding base grammar has
-55,987 raw programs through depth six. The sealed evaluator is not implemented
-or authorized, and every `sealed-run` request fails closed.
+55,987 raw programs through depth six. The frozen evaluator uses two evidence
+orders per class, allows at most two active queries, replays all 81 affine
+certificate probes, and applies every result three times. An exhaustive base
+oracle must prove that every target's exact minimum is six operations. The
+same negative controls must continue to fail.
+
+The evaluator is implemented but not authorized. It refuses local execution,
+requires a separately frozen approval ID and an unused one-shot lock, and
+cannot yet be launched. No sealed target has been evaluated.
 
 The current result is evidence for exact derived-abstraction discovery and
 reuse inside the registered reversible affine language. It does not establish

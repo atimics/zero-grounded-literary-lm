@@ -2,7 +2,7 @@
   "schema": "zero.reasoner42_abstraction_library_contract.v1",
   "experiment": "reasoner42-abstraction-library-v1",
   "version": "4.2",
-  "status": "development-passed-seal-locked",
+  "status": "frozen-unopened",
   "authorized": false,
   "question": "Can solved exact programs create reusable derived abstractions that make longer held-out programs searchable inside a fixed budget?",
   "frozen_base": {
@@ -103,19 +103,34 @@
   },
   "sealed": {
     "authorized": false,
-    "status": "planned-unimplemented",
+    "status": "implemented-locked",
     "recipe": "exact semantic classes requiring three library calls and six expanded base calls",
     "targets": 17,
+    "evidence_orders": 2,
+    "episodes": 34,
     "library_raw_programs": 820,
     "base_raw_programs": 55987,
+    "library_tokens": 51,
+    "base_tokens": 102,
+    "exact_replays": 2754,
+    "exact_applications": 102,
+    "exact_reports": 34,
+    "maximum_queries": 2,
+    "exhaustive_base_minimum_certificate": true,
+    "controls_repeat_on_seal": true,
+    "required_approval_id": "reasoner42-abstraction-library-2026-09-01-v1",
     "local_execution_forbidden": true,
+    "cloud_execution_required": true,
+    "exclusive_execution_lock_required": true,
+    "scientific_retries": 0,
+    "tuning_after_open": false,
     "cli_must_fail_closed": true
   },
   "source": {
     "files": {
-      "reasoner42.c": "17086520fc25983e723ba2ac1729fcbf2712f44a90ff27f946f8cc6ed413470d",
-      "reasoner42.h": "bf40986035451859a298d36940d86559e57dfe417c3b03b9e5a01706a6222e1e",
-      "reasoner42_cli.c": "48c90b954bc531ac542c9b3d9f92188a6d15b971c318d1fd215086079a39ee67"
+      "reasoner42.c": "aee74c6f7e29109cca3ceb00f829a5a7da7b9f844b6b47957ecba938c7146a7d",
+      "reasoner42.h": "30a9b1d4b6ed2b1e1d893bc5eeffb3ab6e33dc5d9b1004e822f0d921d42092db",
+      "reasoner42_cli.c": "3f47cac2910c8b8ce9ac979bf9a06b4b4391ffe398b2679292aa1ccfa58ad7b3"
     }
   },
   "result": {
