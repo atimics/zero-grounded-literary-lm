@@ -1,0 +1,49 @@
+{
+  "schema": "zero.reasoner40_aws_contract.v1",
+  "experiment": "reasoner40-active-representation-v1",
+  "version": "4.0",
+  "authorized": false,
+  "authorization": {
+    "approved_by": null,
+    "approved_at": null,
+    "approval_id": null,
+    "scope": "one fresh sealed three-operation representation-transfer execution after exact source-bundle approval"
+  },
+  "seal": {
+    "adapter_programs": 134,
+    "familiar_laws": 6,
+    "episodes": 6432,
+    "minimum_dimension": 9,
+    "maximum_dimension": 12,
+    "opaque_probe_orders": 2,
+    "adapter_depth": 3,
+    "retry": false
+  },
+  "frozen_core": {
+    "version": "(3,9)",
+    "development_digest": "c16b44a0ab50c456",
+    "implementation_sha256": "7904d982ec445358e07ade7532a94a5867d90a2268add7269db1cd45c505a40d",
+    "header_sha256": "82709f8a9dd20517a097187832e49a5d4f6554f11d566478edbeda079e19b2b8"
+  },
+  "source": {
+    "implementation_commit": null,
+    "bundle_sha256": null,
+    "bundle_bytes": null,
+    "destination": null
+  },
+  "execution": {
+    "enabled": false,
+    "region": null,
+    "instance_type": null,
+    "maximum_instance_seconds": null,
+    "maximum_ec2_usd": null,
+    "maximum_total_run_usd": null,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "result": {
+    "binary": "reasoner40",
+    "make_target": "reasoner40",
+    "schema": "zero.reasoner40_active_representation.v1"
+  }
+}
