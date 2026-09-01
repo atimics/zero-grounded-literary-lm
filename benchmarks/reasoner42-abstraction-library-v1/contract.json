@@ -1,0 +1,128 @@
+{
+  "schema": "zero.reasoner42_abstraction_library_contract.v1",
+  "experiment": "reasoner42-abstraction-library-v1",
+  "version": "4.2",
+  "status": "development-passed-seal-locked",
+  "authorized": false,
+  "question": "Can solved exact programs create reusable derived abstractions that make longer held-out programs searchable inside a fixed budget?",
+  "frozen_base": {
+    "version": "4.0",
+    "development_digest": "6af623f4d0e176fe",
+    "implementation_sha256": "2177cd1f37e993f152758466cdddce22beb52ad510e791af8e5c0ce6c107d722",
+    "header_sha256": "a6555cb1dd7ae85d6d8e80be063f527b5bd6ca1cb16cdf93ebc83f26170f0a87",
+    "primitives": [
+      "reverse",
+      "rotate-left",
+      "prefix-sum",
+      "pair-shear",
+      "add-17",
+      "multiply-3"
+    ]
+  },
+  "canonicalization": {
+    "kind": "exact-affine-matrix-and-offset",
+    "field_modulus": 257,
+    "dimensions": [4, 12],
+    "query_basis_size": 81,
+    "hash_is_authoritative": false,
+    "exact_matrix_comparison_after_hash": true,
+    "symbolic_inverse_must_compose_to_identity": true,
+    "runtime_basis_replay_required": true
+  },
+  "curriculum": {
+    "maximum_base_tokens": 3,
+    "raw_programs": 259,
+    "canonical_programs": 170,
+    "targets": 9,
+    "episodes": 9,
+    "solution_tokens": 24,
+    "exact_replays": 729,
+    "exact_applications": 27,
+    "maximum_queries": 1
+  },
+  "library": {
+    "selection": "positive-MDL adjacent-pair frequency then lexical order",
+    "entries": [
+      {
+        "name": "library-1",
+        "base_code": ["reverse", "rotate-left"],
+        "occurrences": 3,
+        "definition_tokens": 2,
+        "mdl_gain": 1
+      },
+      {
+        "name": "library-2",
+        "base_code": ["prefix-sum", "add-17"],
+        "occurrences": 3,
+        "definition_tokens": 2,
+        "mdl_gain": 1
+      },
+      {
+        "name": "library-3",
+        "base_code": ["pair-shear", "rotate-left"],
+        "occurrences": 3,
+        "definition_tokens": 2,
+        "mdl_gain": 1
+      }
+    ],
+    "definition_tokens": 6,
+    "occurrences": 9,
+    "net_mdl_gain": 3,
+    "digest": "3cf6bb033d68d2a3",
+    "frozen_before_development": true
+  },
+  "development": {
+    "recipe": "all ordered library pairs whose exact minimum is two library calls and four base calls",
+    "maximum_library_tokens": 2,
+    "raw_programs": 91,
+    "canonical_programs": 74,
+    "targets": 7,
+    "evidence_orders": 2,
+    "episodes": 14,
+    "base_tokens": 28,
+    "library_tokens": 14,
+    "exact_replays": 1134,
+    "exact_applications": 42,
+    "maximum_queries": 1
+  },
+  "search_budget": {
+    "maximum_raw_programs": 100,
+    "library_raw_programs": 91,
+    "base_depth_four_raw_programs": 1555,
+    "library_must_fit": true,
+    "base_depth_four_must_exceed": true
+  },
+  "controls": {
+    "semantic_oracle_must_pass": true,
+    "semantic_oracle_uses_full_base_depth_four": true,
+    "no_library_must_fail": true,
+    "shuffled_curriculum_must_fail": true,
+    "single_use_library_must_fail": true,
+    "curriculum_lookup_must_fail": true,
+    "no_query_must_fail": true
+  },
+  "sealed": {
+    "authorized": false,
+    "status": "planned-unimplemented",
+    "recipe": "exact semantic classes requiring three library calls and six expanded base calls",
+    "targets": 17,
+    "library_raw_programs": 820,
+    "base_raw_programs": 55987,
+    "local_execution_forbidden": true,
+    "cli_must_fail_closed": true
+  },
+  "source": {
+    "files": {
+      "reasoner42.c": "17086520fc25983e723ba2ac1729fcbf2712f44a90ff27f946f8cc6ed413470d",
+      "reasoner42.h": "bf40986035451859a298d36940d86559e57dfe417c3b03b9e5a01706a6222e1e",
+      "reasoner42_cli.c": "48c90b954bc531ac542c9b3d9f92188a6d15b971c318d1fd215086079a39ee67"
+    }
+  },
+  "result": {
+    "schema": "zero.reasoner42_abstraction_library.v1",
+    "digest": "ac7837bdb3030663",
+    "development_gate_passed": true,
+    "sealed_gate_passed": false,
+    "sealed_execution_locked": true
+  }
+}
