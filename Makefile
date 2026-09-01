@@ -454,6 +454,9 @@ reasoner40-check: reasoner40
 
 reasoner40-contract-check:
 	node scripts/check_reasoner40_contract.mjs
+	bash -n scripts/aws/reasoner40-stage.sh \
+		scripts/aws/reasoner40-run-instance.sh \
+		scripts/aws/reasoner40-user-data.sh
 
 sero_tokenizer: sero_tokenizer.c
 	$(CC) $(CFLAGS) sero_tokenizer.c -o $@
