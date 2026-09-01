@@ -78,3 +78,13 @@ the superseded contract hash and cannot be resumed under the amended contract;
 the amended authorization funds exactly one fresh training run initialized
 from the frozen C2 checkpoint. Cumulative experiment spend to date: $1.67
 (original) + $0.13 (r1) + $0.61 (r2) = $2.41; the fresh run adds at most $1.70.
+
+## Post-amendment execution outcome
+
+The amended fresh run and a later continuation both reached the hard instance
+ceiling without producing `result.json`. The continuation completed all 28,707
+training updates, but the sequential evaluation did not finish. The later
+continuation used `execution-v6.lock`; it is not covered by the v2 record's
+one-run, no-independent-retry scope. No further training or continuation is
+authorized. Exact receipts, checkpoint hashes, costs, and the evaluation-only
+recovery boundary are recorded in `EVALUATION-RECOVERY-NOTES.md`.
