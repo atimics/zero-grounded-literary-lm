@@ -185,7 +185,7 @@ runner_args=(--contract benchmarks/zero5-c61-shared-state-v1/contract.json
   --control-result build/zero5-c61-shared-state-v1/control/matched-control-result.json
   --out "$OUT")
 if [ -f "$OUT/execution.json" ]; then runner_args+=(--resume-run); fi
-remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 180))
+remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 120))
 test "$remaining" -gt 0
 set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \

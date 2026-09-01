@@ -88,3 +88,22 @@ continuation used `execution-v6.lock`; it is not covered by the v2 record's
 one-run, no-independent-retry scope. No further training or continuation is
 authorized. Exact receipts, checkpoint hashes, costs, and the evaluation-only
 recovery boundary are recorded in `EVALUATION-RECOVERY-NOTES.md`.
+
+## Continuation ceiling record (2026-08-31, later)
+
+- Fresh run `zero5-c61-aws-20260831-e977b63` trained to ~27,000 updates and hit
+  the 9,000-second instance ceiling (exit 124, $1.67), terminating recoverable
+  as designed. Continuation `...e977b63r1` completed training (full accounting)
+  and then hit the ceiling again mid-evaluation (exit 124, $1.67) after
+  ~8,220 seconds of evaluation without producing a result.
+- Duration calibration (timing only, all metrics discarded unopened): the full
+  evaluation takes ~3,070s on the local instrumented environment (base arm
+  1,103s, candidate arm 781s, ablation arm 760s, auxiliary 427s). Anchoring
+  against the observed on-instance base-arm duration (~3,100s vs 1,103s
+  locally) gives an instance evaluation cost of ~8,660s, about 440s beyond what
+  r1's window allowed.
+- The user-data runner timeout margin is reduced from 180s to 120s. The final
+  state sync and terminal status upload complete well within 60s, so the
+  change is safe and returns 60 seconds of evaluation window per instance.
+  A fresh continuation therefore has ~8,800s of evaluation window, which covers
+  the estimated ~8,660s requirement.
