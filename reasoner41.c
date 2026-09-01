@@ -670,6 +670,14 @@ R0Status r41_write_result(const R41ExperimentReport *report,
         "  \"frozen_representation_core_passed\": %s,\n"
         "  \"frozen_law_core_passed\": %s,\n"
         "  \"separate_commit_certificate_passed\": %s,\n"
+        "  \"oracle_adapter_control_passed\": %s,\n"
+        "  \"oracle_law_control_passed\": %s,\n"
+        "  \"identity_adapter_control_passed\": %s,\n"
+        "  \"curriculum_pair_control_passed\": %s,\n"
+        "  \"no_adapter_query_control_passed\": %s,\n"
+        "  \"no_law_query_control_passed\": %s,\n"
+        "  \"shuffled_alignment_control_passed\": %s,\n"
+        "  \"shuffled_law_feedback_control_passed\": %s,\n"
         "  \"development_gate_passed\": %s,\n"
         "  \"sealed_gate_passed\": %s,\n"
         "  \"sealed_execution_locked\": %s,\n"
@@ -685,6 +693,14 @@ R0Status r41_write_result(const R41ExperimentReport *report,
         report->frozen_representation_core_passed ? "true" : "false",
         report->frozen_law_core_passed ? "true" : "false",
         report->separate_commit_certificate_passed ? "true" : "false",
+        report->oracle_adapter_control_passed ? "true" : "false",
+        report->oracle_law_control_passed ? "true" : "false",
+        report->identity_adapter_control_passed ? "true" : "false",
+        report->curriculum_pair_control_passed ? "true" : "false",
+        report->no_adapter_query_control_passed ? "true" : "false",
+        report->no_law_query_control_passed ? "true" : "false",
+        report->shuffled_alignment_control_passed ? "true" : "false",
+        report->shuffled_law_feedback_control_passed ? "true" : "false",
         report->development_gate_passed ? "true" : "false",
         report->sealed_gate_passed ? "true" : "false",
         report->sealed_execution_locked ? "true" : "false",

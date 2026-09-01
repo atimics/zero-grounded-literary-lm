@@ -138,8 +138,56 @@ const sealed = spawnSync(
 );
 requireValue(sealed.status !== 0, "sealed command must refuse execution");
 requireValue(
-  sealed.stderr.includes("locked and unauthorized"),
-  "sealed refusal message",
+  sealed.stderr.includes("cloud-only"),
+  "local sealed refusal",
+);
+const missingApproval = spawnSync(
+  "./reasoner41",
+  ["sealed-run", `/tmp/reasoner41-unapproved-${process.pid}.json`],
+  {
+    encoding: "utf8",
+    env: { ...process.env, R41_SEALED_EXECUTION: "cloud" },
+  },
+);
+requireValue(missingApproval.status !== 0, "approval ID must be required");
+requireValue(
+  missingApproval.stderr.includes("frozen approval id"),
+  "approval refusal",
+);
+const missingLock = spawnSync(
+  "./reasoner41",
+  ["sealed-run", `/tmp/reasoner41-unlocked-${process.pid}.json`],
+  {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      R41_SEALED_EXECUTION: "cloud",
+      R41_SEAL_APPROVAL_ID: "reasoner41-joint-transfer-2026-09-01-v1",
+    },
+  },
+);
+requireValue(missingLock.status !== 0, "execution lock must be required");
+requireValue(
+  missingLock.stderr.includes("R41_EXECUTION_LOCK is required"),
+  "lock refusal",
+);
+const existingLock = spawnSync(
+  "./reasoner41",
+  ["sealed-run", `/tmp/reasoner41-reused-${process.pid}.json`],
+  {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      R41_SEALED_EXECUTION: "cloud",
+      R41_SEAL_APPROVAL_ID: "reasoner41-joint-transfer-2026-09-01-v1",
+      R41_EXECUTION_LOCK: "/dev/null",
+    },
+  },
+);
+requireValue(existingLock.status !== 0, "existing lock must refuse execution");
+requireValue(
+  existingLock.stderr.includes("already exists"),
+  "one-shot lock refusal",
 );
 
 console.log("Reasoner 4.1 frozen joint-transfer contract passed");

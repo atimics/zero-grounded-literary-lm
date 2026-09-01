@@ -50,7 +50,9 @@ make reasoner41-contract-check
 The unopened seal crosses all 134 three-operation adapters with all 31
 three-fold laws in dimensions nine through twelve and two new opaque orders.
 It contains 4,154 fresh pairs and 33,232 episodes. Local execution is refused,
-no cloud execution is authorized, and no sealed case has been evaluated.
+the evaluator requires an exact approval ID and exclusive execution lock, and
+no sealed case has been evaluated. The current contract still authorizes no
+cloud execution.
 
 The public result is evidence for simultaneous, factorized transfer inside
 the two registered finite languages. It is not sealed evidence and does not
