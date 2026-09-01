@@ -47,6 +47,7 @@ way and the complete conjunctive gate passes.
 | (3,7) | Transfer from raw observations | No-go: 336 of 482,304 sealed decisions missed |
 | (3,8) | Exact minimum-description law induction | Pass: 743,184/743,184 sealed decisions |
 | (3,9) | Active induction of unseen law compositions | Pass: 744/744 sealed episodes |
+| 4.0 | Active induction of reversible input representations | Development pass: 1,392/1,392 episodes; seal locked |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -59,24 +60,25 @@ inside a registered typed integer program language. It does not establish
 open-ended mathematical reasoning, invention of new operators, natural
 language reasoning, or transfer from an arbitrary external representation.
 
-The remaining hand-built boundary is the adapter that turns a domain input
-into the reasoner's structured observation. Increasing dimension or adding a
-larger census inside the current grammar would mostly repeat an established
-result.
+Reasoner 4.0 now implements the first bounded adapter learner. Its public
+screen transfers to unseen two-operation representations and feeds exact
+canonical IR into the frozen core. This is development evidence only. The
+remaining claim boundary is a fresh three-operation representation seal.
 
 ## Next research question
 
-The next proposed experiment is Reasoner 4.0: representation transfer.
+The active experiment is Reasoner 4.0: representation transfer.
 
-> Can the frozen Reasoner (3,9) core infer a structured input adapter from
-> examples, then solve a fresh sealed representation without a task label,
+> Can an exact adapter learner infer a structured input representation from
+> examples, then feed a frozen Reasoner (3,9) core without a task label,
 > hand-coded domain switch, or core change?
 
-The first stage should use unfamiliar representations of familiar laws. A
-later stage may combine an unseen representation with unseen law composition.
-Keeping those gates separate makes a failure interpretable.
+The implemented first stage uses unfamiliar representations of the six
+familiar one-fold laws. A later stage may combine an unseen representation
+with unseen law composition. Keeping those gates separate makes a failure
+interpretable.
 
-A future contract should require:
+The checked contract requires:
 
 - exact raw-input-to-IR replay;
 - exact reasoning actions and sealed answers;
@@ -86,5 +88,6 @@ A future contract should require:
 - held-out compositions of representation operations; and
 - a fresh one-shot seal with no post-seal tuning.
 
-This document proposes the boundary. It does not authorize an experiment,
-cloud run, model training job, or new sealed evaluation.
+The public development screen passes. The three-operation sealed evaluator is
+locked and refuses execution. No cloud run, sealed evaluation, retry, or
+post-seal tuning is authorized. See [`REASONER40.md`](REASONER40.md).
