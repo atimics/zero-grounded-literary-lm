@@ -70,6 +70,10 @@ small browser runtime:
 - `reasoner40`: Reasoner 4.0, an exact active learner for reversible raw-input
   adapters feeding the frozen (3,9) core; all 6,432 fresh three-operation
   sealed episodes passed exactly.
+- `reasoner41`: Reasoner 4.1, a factorized joint-transfer learner that commits
+  separately to a fresh adapter and a fresh law; its complete 3,480-episode
+  public two-by-two cross-product passes while the three-by-three seal remains
+  locked.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -261,6 +265,7 @@ make reasoner35-check
 make reasoner36-check reasoner37-check reasoner38-check reasoner39-check
 make reasoner310-check
 make reasoner40-check reasoner40-contract-check
+make reasoner41-check reasoner41-contract-check
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
@@ -287,6 +292,8 @@ current claim boundary, and next research question. The version-specific
 documents remain the detailed source for each frozen experiment.
 See [`docs/REASONER40.md`](docs/REASONER40.md) for the active adapter language,
 frozen-core certificate, exact public screen, and passed three-operation seal.
+See [`docs/REASONER41.md`](docs/REASONER41.md) for the joint-transfer protocol,
+separate commitment certificate, exact public cross-product, and locked seal.
 
 ## Build
 

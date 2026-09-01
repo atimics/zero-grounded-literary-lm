@@ -48,6 +48,7 @@ way and the complete conjunctive gate passes.
 | (3,8) | Exact minimum-description law induction | Pass: 743,184/743,184 sealed decisions |
 | (3,9) | Active induction of unseen law compositions | Pass: 744/744 sealed episodes |
 | 4.0 | Active induction of reversible input representations | Pass: 6,432/6,432 sealed episodes |
+| 4.1 | Joint induction of unseen representations and laws | Development pass: 3,480/3,480 episodes; seal locked |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -62,28 +63,32 @@ frozen Reasoner (3,9) core, and passed all 6,432 sealed episodes. It does not
 establish arbitrary representation recovery, new adapter primitives,
 open-ended mathematical reasoning, or natural-language grounding.
 
+Reasoner 4.1 adds public development evidence for joint transfer. Across all
+435 unseen two-operation-adapter by two-fold-law pairs, it committed to the
+adapter and law separately and passed all 3,480 episodes exactly. This is not
+yet a positive sealed claim.
+
 ## Next research question
 
-The next proposed experiment is Reasoner 4.1: joint transfer.
+The active experiment is the Reasoner 4.1 fresh joint-transfer seal.
 
-> Can the learner identify a new composed representation and a new composed
-> law in the same episode without adapter-law compensation or a core change?
+> Does exact, factorized joint transfer survive the fresh cross-product of all
+> three-operation adapters and all three-fold laws?
 
-Reasoner 4.0 deliberately held the six familiar one-fold laws fixed while the
-representation changed. Reasoner (3,9) separately transferred to unseen law
-compositions. The next useful boundary is their preregistered cross-product,
-with independent adapter and law commitments before action.
+The public cross-product is complete. The unopened seal contains 4,154 fresh
+adapter-law pairs and 33,232 episodes in dimensions nine through twelve. It
+has not been run or authorized.
 
 The checked contract requires:
 
 - exact raw-input-to-IR replay;
 - exact reasoning actions and sealed answers;
 - no task or domain identity feature;
-- no changes to the frozen (3,9) core;
-- lookup, fixed-adapter, scrambled-example, and task-label controls;
-- held-out compositions of representation operations; and
+- no changes to the frozen 4.0 representation or (3,9) law cores;
+- separate adapter and law commitments before action;
+- oracle isolation, lookup, no-query, and shuffled-feedback controls;
+- held-out compositions in both registered languages; and
 - a fresh one-shot seal with no post-seal tuning.
 
-The Reasoner 4.0 seal passed with no retry or post-seal tuning. See
-[`REASONER40.md`](REASONER40.md) and the
-[`sealed result`](../benchmarks/reasoner40-active-representation-v1/RESULT.md).
+See [`REASONER41.md`](REASONER41.md) and the
+[`frozen contract`](../benchmarks/reasoner41-joint-transfer-v1/contract.json).
