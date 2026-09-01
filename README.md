@@ -24,6 +24,13 @@ small browser runtime:
 - `channel_corpus`: a converter that turns scripts, verse, and consented chat
   exports into multi-speaker channels with explicit reply edges and learned
   lossy-memory transitions.
+- `reasoner0`: a reason-first Cartan-matrix enumerator with exact integer
+  verification, canonical deduplication, sealed Answer IR, and language as the
+  final tool.
+- `reasoner1`: an integer graph-recurrent proposer that learns which canonical
+  node-and-bond actions should reach the Reasoner-0 verifier.
+- `reasoner2`: a counterexample-conditioned integer policy that repairs
+  rejected Cartan matrices with exact minimum-edit supervision.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -158,6 +165,39 @@ The seed-0 run plus retention consolidation passed every frozen source gate at
 context also helped, but greedy generation still looped on 90% of the prompt
 panel and sampled answers were not reliable. See
 [`benchmarks/sero2-curriculum-eval-v1/RESULT.md`](benchmarks/sero2-curriculum-eval-v1/RESULT.md).
+
+## Reason-first runtime
+
+Reasoner-0 is a working mechanics slice for training control before language.
+Its seed task enumerates connected finite-type Cartan matrices through rank 8.
+Every proposal is canonicalized, then checked with exact fraction-free integer
+determinants. Affine determinant-zero matrices are high-weight counterexamples.
+An accepted answer is sealed before the policy may call `language.render`.
+This builds a complete training environment, not a general reasoning claim.
+
+```sh
+make reasoner0-check
+./reasoner0 demo
+./reasoner0 train /tmp/reasoner0.r0p
+./reasoner0 enumerate /tmp/reasoner0.r0p 8
+./reasoner0 dataset /tmp/reasoner0.r0p 8 /tmp/reasoner0.jsonl
+./reasoner0 verify /tmp/reasoner0.r0p 2 2 -1 -1 2 --trace
+make reasoner1-check
+./reasoner1 demo
+./reasoner1 train /tmp/reasoner1.r1p 8
+./reasoner1 eval /tmp/reasoner1.r1p 8
+make reasoner2-check
+./reasoner2 demo
+./reasoner2 train /tmp/reasoner2.r2p 8
+./reasoner2 eval /tmp/reasoner2.r2p 2 8
+./reasoner2 ablate /tmp/reasoner2.r2p 2 8
+```
+
+See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
+and verifier contract. See [`docs/REASONER1.md`](docs/REASONER1.md) for the
+learned proposer and rank curriculum. See
+[`docs/REASONER2.md`](docs/REASONER2.md) for exact repair supervision, the
+feedback ablation, and its failed causal-use gate.
 
 ## Build
 

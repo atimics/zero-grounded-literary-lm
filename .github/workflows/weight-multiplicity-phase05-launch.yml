@@ -1,0 +1,230 @@
+name: Launch weight-multiplicity Phase 0.5 cloud audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Exact merged Zero commit authorized for dispatch
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: weight-multiplicity-phase05-cloud-v1
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    name: AWS · launch immutable Phase 0.5 package · ≤$6.00
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: aws
+    env:
+      WM_BUCKET: ${{ secrets.AWS_BUCKET }}
+      WM_REGION: us-east-1
+      WM_RUN_ID: ${{ github.run_id }}
+      WM_SOURCE_COMMIT: ${{ github.sha }}
+      WM_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      WM_ILXYR_COMMIT: 4e45ed31f6771a8cc03b00244ba008fb1ca7d0a1
+      WM_ORACLE_LINEAGE: 53eaa6c2fcce514d1183e19445daeaf151e7ec04
+      WM_APPROVAL_ID: weight-multiplicity-phase05-cloud-2026-08-30-v1
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - name: Validate final authority and isolated oracle lineage
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          test "$WM_SOURCE_COMMIT" = "$WM_EXPECTED_COMMIT"
+          [[ "$WM_SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          git fetch --depth=1 origin "$WM_ORACLE_LINEAGE"
+          git worktree add --detach /tmp/zero-oracle FETCH_HEAD
+          test "$(git -C /tmp/zero-oracle rev-parse HEAD)" = "$WM_ORACLE_LINEAGE"
+          test -n "$WM_BUCKET"
+          node scripts/check_weight_multiplicity_phase05_cloud.mjs
+
+      - name: Fetch the exact ilXyr controller
+        run: |
+          git init -q /tmp/ilxyr
+          git -C /tmp/ilxyr remote add origin https://github.com/cenetex/ilXyr.git
+          git -C /tmp/ilxyr fetch --depth=1 origin "$WM_ILXYR_COMMIT"
+          git -C /tmp/ilxyr checkout -q --detach FETCH_HEAD
+          test "$(git -C /tmp/ilxyr rev-parse HEAD)" = "$WM_ILXYR_COMMIT"
+          node /tmp/ilxyr/scripts/run-weight-multiplicity-phase05.mjs --self-test
+          node /tmp/ilxyr/scripts/prepare-weight-multiplicity-memory-audit.mjs \
+            --self-test
+
+      - name: Build and package immutable inputs
+        run: |
+          make -C /tmp/zero-oracle weight_multiplicity
+          /tmp/zero-oracle/weight_multiplicity --self-test
+          rm -rf /tmp/wm-package
+          mkdir -p /tmp/wm-package/scripts \
+            /tmp/wm-package/examples/weight-multiplicity
+          install -m 0755 /tmp/zero-oracle/weight_multiplicity \
+            /tmp/wm-package/weight_multiplicity
+          install -m 0755 \
+            /tmp/ilxyr/scripts/run-weight-multiplicity-phase05.mjs \
+            /tmp/ilxyr/scripts/prepare-weight-multiplicity-memory-audit.mjs \
+            /tmp/wm-package/scripts/
+          cp /tmp/ilxyr/examples/weight-multiplicity/phase05-cloud-frontier-plan.json \
+            /tmp/ilxyr/examples/weight-multiplicity/phase05-cloud-experiment.json \
+            /tmp/wm-package/examples/weight-multiplicity/
+          node /tmp/wm-package/scripts/run-weight-multiplicity-phase05.mjs \
+            --plan examples/weight-multiplicity/phase05-cloud-frontier-plan.json \
+            --oracle /tmp/wm-package/weight_multiplicity \
+            --manifest-out \
+              /tmp/wm-package/examples/weight-multiplicity/phase05-cloud-representation-manifest.json
+          WM_ORACLE_SHA256=$(sha256sum /tmp/wm-package/weight_multiplicity | awk '{print $1}')
+          WM_CONTRACT_SHA256=$(sha256sum \
+            /tmp/wm-package/examples/weight-multiplicity/phase05-cloud-experiment.json | \
+            awk '{print $1}')
+          WM_PLAN_SHA256=$(sha256sum \
+            /tmp/wm-package/examples/weight-multiplicity/phase05-cloud-frontier-plan.json | \
+            awk '{print $1}')
+          WM_MANIFEST_SHA256=$(sha256sum \
+            /tmp/wm-package/examples/weight-multiplicity/phase05-cloud-representation-manifest.json | \
+            awk '{print $1}')
+          jq -n --arg source_commit "$WM_SOURCE_COMMIT" \
+            --arg oracle_lineage "$WM_ORACLE_LINEAGE" \
+            --arg ilxyr_commit "$WM_ILXYR_COMMIT" \
+            --arg oracle_sha256 "$WM_ORACLE_SHA256" \
+            --arg contract_sha256 "$WM_CONTRACT_SHA256" \
+            --arg plan_sha256 "$WM_PLAN_SHA256" \
+            --arg manifest_sha256 "$WM_MANIFEST_SHA256" \
+            --arg approval_id "$WM_APPROVAL_ID" \
+            '{schema:"ilxyr.weight_multiplicity_cloud_execution.v1",
+              experiments:["phase05-cloud-frontier-default-v1",
+                "phase05-cloud-memory-presized-v1"],
+              execution:{source_commit:$source_commit,
+                oracle_source_commit:$oracle_lineage,
+                ilxyr_commit:$ilxyr_commit,
+                oracle_executable_sha256:$oracle_sha256,
+                contract_sha256:$contract_sha256,plan_sha256:$plan_sha256,
+                manifest_sha256:$manifest_sha256,approval_id:$approval_id,
+                instance_type:"c6i.4xlarge",region:"us-east-1",
+                maximum_instance_seconds:31764,
+                workload_timeout_seconds:30900,maximum_ec2_usd:6.0},
+              policies:{default_initial_capacity:1024,
+                presized_initial_capacity:8388608,
+                recursive_weyl_canonicalization:false}}' \
+            > /tmp/wm-package/execution-record.json
+          cd /tmp/wm-package
+          find . -type f ! -name PACKAGE-SHA256SUMS -print0 | sort -z | \
+            xargs -0 sha256sum > PACKAGE-SHA256SUMS
+          tar --sort=name --mtime='UTC 2026-08-30' --owner=0 --group=0 \
+            --numeric-owner -czf /tmp/weight-multiplicity-phase05-package.tar.gz .
+          {
+            echo "WM_ORACLE_SHA256=$WM_ORACLE_SHA256"
+            echo "WM_CONTRACT_SHA256=$WM_CONTRACT_SHA256"
+            echo "WM_PLAN_SHA256=$WM_PLAN_SHA256"
+            echo "WM_MANIFEST_SHA256=$WM_MANIFEST_SHA256"
+            echo "WM_PACKAGE_SHA256=$(sha256sum /tmp/weight-multiplicity-phase05-package.tar.gz | awk '{print $1}')"
+            echo "WM_PACKAGE_KEY=jobs/${WM_RUN_ID}/weight-multiplicity-phase05-package.tar.gz"
+          } >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TRAINING_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Refuse overlapping ZERO compute
+        run: |
+          active=$(aws ec2 describe-instances \
+            --filters Name=tag:Project,Values=zero \
+              Name=instance-state-name,Values=pending,running,stopping \
+            --query 'Reservations[].Instances[].InstanceId' \
+            --output text --no-cli-pager)
+          test -z "$active" || {
+            echo "Refusing launch while ZERO instances are active: $active"
+            exit 1
+          }
+
+      - name: Resolve and dry-run the exact request
+        id: preflight
+        env:
+          WM_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          WM_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          WM_AMI=$(aws ssm get-parameter \
+            --name /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id \
+            --query Parameter.Value --output text --no-cli-pager)
+          WM_LAUNCH_EPOCH=$(date +%s)
+          export WM_AMI WM_LAUNCH_EPOCH
+          scripts/aws/weight-multiplicity-phase05-run-instances.sh dry-run
+          {
+            echo "ami=$WM_AMI"
+            echo "launch_epoch=$WM_LAUNCH_EPOCH"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish immutable package and acquire execution lock
+        run: |
+          aws s3api put-object --bucket "$WM_BUCKET" --key "$WM_PACKAGE_KEY" \
+            --body /tmp/weight-multiplicity-phase05-package.tar.gz \
+            --content-type application/gzip --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          jq -n --arg run_id "$WM_RUN_ID" --arg source_commit "$WM_SOURCE_COMMIT" \
+            --arg ilxyr_commit "$WM_ILXYR_COMMIT" \
+            --arg package_sha256 "$WM_PACKAGE_SHA256" \
+            --arg contract_sha256 "$WM_CONTRACT_SHA256" \
+            --arg approval_id "$WM_APPROVAL_ID" \
+            '{schema:"ilxyr.weight_multiplicity_cloud_lock.v1",
+              run_id:$run_id,source_commit:$source_commit,
+              ilxyr_commit:$ilxyr_commit,package_sha256:$package_sha256,
+              contract_sha256:$contract_sha256,approval_id:$approval_id}' \
+            > /tmp/weight-multiplicity-phase05.lock
+          aws s3api put-object --bucket "$WM_BUCKET" \
+            --key experiments/weight-multiplicity-phase05-cloud-v1/execution.lock \
+            --body /tmp/weight-multiplicity-phase05.lock \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+
+      - name: Launch bounded instance
+        id: launch
+        env:
+          WM_AMI: ${{ steps.preflight.outputs.ami }}
+          WM_LAUNCH_EPOCH: ${{ steps.preflight.outputs.launch_epoch }}
+          WM_SECURITY_GROUP_ID: ${{ secrets.AWS_SECURITY_GROUP_ID }}
+          WM_SUBNET_ID: ${{ secrets.AWS_SUBNET_ID }}
+        run: |
+          instance_id=$(scripts/aws/weight-multiplicity-phase05-run-instances.sh launch)
+          echo "instance_id=$instance_id" >> "$GITHUB_OUTPUT"
+
+      - name: Publish launch receipt
+        env:
+          WM_INSTANCE_ID: ${{ steps.launch.outputs.instance_id }}
+          WM_AMI: ${{ steps.preflight.outputs.ami }}
+          WM_LAUNCH_EPOCH: ${{ steps.preflight.outputs.launch_epoch }}
+        run: |
+          jq -n --arg run_id "$WM_RUN_ID" --arg instance_id "$WM_INSTANCE_ID" \
+            --arg ami "$WM_AMI" --arg source_commit "$WM_SOURCE_COMMIT" \
+            --arg ilxyr_commit "$WM_ILXYR_COMMIT" \
+            --arg package_key "$WM_PACKAGE_KEY" \
+            --arg package_sha256 "$WM_PACKAGE_SHA256" \
+            --arg contract_sha256 "$WM_CONTRACT_SHA256" \
+            --arg approval_id "$WM_APPROVAL_ID" \
+            --argjson launch_epoch "$WM_LAUNCH_EPOCH" \
+            '{schema:"ilxyr.weight_multiplicity_cloud_launch.v1",
+              run_id:$run_id,instance_id:$instance_id,ami:$ami,
+              instance_type:"c6i.4xlarge",region:"us-east-1",
+              source_commit:$source_commit,ilxyr_commit:$ilxyr_commit,
+              package_key:$package_key,package_sha256:$package_sha256,
+              contract_sha256:$contract_sha256,approval_id:$approval_id,
+              launch_epoch:$launch_epoch,maximum_instance_seconds:31764,
+              workload_timeout_seconds:30900,maximum_ec2_usd:6.0}' \
+            > /tmp/weight-multiplicity-phase05-launch.json
+          aws s3api put-object --bucket "$WM_BUCKET" \
+            --key "experiments/weight-multiplicity-phase05-cloud-v1/runs/${WM_RUN_ID}/launch.json" \
+            --body /tmp/weight-multiplicity-phase05-launch.json \
+            --content-type application/json --if-none-match '*' \
+            --no-cli-pager >/dev/null
+          jq -c . /tmp/weight-multiplicity-phase05-launch.json >> "$GITHUB_STEP_SUMMARY"

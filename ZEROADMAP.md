@@ -13,7 +13,7 @@ The active faculty-training decision is tracked in `PROPOSALS.md`, with the
 completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 `ZERO4-BACKLOG.md` is subordinate engineering work.
 
-## State of the system — 2026-08-24
+## State of the system — 2026-08-29
 
 | Layer | Concrete artifact | State |
 | --- | --- | --- |
@@ -38,6 +38,9 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Atlas corpus scale | one ordered C2 pass at fixed 4.85M parameters | C2 passed; Atlas validation loss fell 54.26% and C1 anchors improved |
 | Evidence-task curriculum | claims, cloze, retrieval with answer-only gates | C3 no-go; combined loss improved 39.13%, but cloze regressed and retrieval choice stayed at 52.05% |
 | Record-safe task braid | same C3.1 packs under blocked order, smooth interleaving, and 4x answer loss | C3.1 no-go; interleaving improved combined loss 41.75% and fixed cloze, while the best retrieval choice reached 54.77% and claim gain reached 7.28% |
+| Reason-first runtime | canonical Cartan matrices, learned control policy, exact Bareiss verifier, sealed Answer IR, language renderer tool | Reasoner-0 enumerates all 31 connected finite types through rank 8 with exact precision/recall and affine boundary negatives; not a base-model capability claim |
+| Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
+| Counterexample repair | learned node/bond edits, exact minimum-distance teacher, two-step verifier loop, feedback ablation | Reasoner-2 is exact on 267 supervised cases; its rank-7 policy solves 69/69 unseen rank-8 cases but only 66 optimally, while masked feedback still solves 66, so causal use and compression do not pass |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -85,6 +88,39 @@ loss by more than 40%; explicit answer weight raised retrieval choice to
 data-definition repair at the same model size: evidence-grounded short claim
 targets, passage-order-paired retrieval, and task-balanced answer loss. No
 C3.2 training or parameter-scale run is authorized yet.
+
+Reasoner-0 now provides a separate mechanics path for the longer-term
+reason-first architecture. Its seed task starts at the Cartan integer condition
+rather than following formal-definition dependencies. A tiny learned control
+policy routes canonical matrix proposals through an exact connected finite-type
+verifier, commits a sealed Answer IR, and calls language rendering last. The
+deterministic baseline recovers the four families and five exceptional types
+through rank 8, while weighting affine determinant-zero near-misses as the most
+useful negative signal. It also emits a structured JSONL corpus with no
+rendered-text targets. It does not change the active C3 data repair, authorize a
+ZERO.5 run, or claim that a neural proposer has learned Lie theory. See
+[`docs/REASONER0.md`](docs/REASONER0.md).
+
+Reasoner-1 learns the proposal boundary rather than another language target. A
+fixed four-round graph recurrence converts canonical diagrams, attachment
+actions, directed bond multiplicities, and the last verifier failure into
+sparse integer features. A curriculum-trained integer perceptron selects which
+actions may call the exact verifier. Training through rank 8 reaches the full
+31-type census without an invalid verifier call. More importantly, the model
+trained only through rank 7 recovers `A8`, `B8`, `C8`, `D8`, and `E8`, but also
+makes one invalid proposal. This is 100% held-out recall and 96.7% precision,
+not an exact generalization pass. No distillation or quantization is authorized.
+See [`docs/REASONER1.md`](docs/REASONER1.md).
+
+Reasoner-2 turns a rejection into another structured action rather than a
+language explanation. Its exact teacher finds minimum one- or two-edit repairs
+over node deletion and directed-bond changes. The fully supervised rank-8
+curriculum repairs all 267 cases minimally. Frozen after rank 7, it solves all
+69 unseen rank-8 cases, but only 66 use the minimum edit count. Masking the
+verifier fields still solves 66 cases and repairs 63 minimally. Feedback helps,
+but it is not causally dominant, so this is a no-go for the feedback-use gate
+and no compression is authorized. See
+[`docs/REASONER2.md`](docs/REASONER2.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.
