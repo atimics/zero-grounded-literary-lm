@@ -2,11 +2,11 @@
   "schema": "zero.reasoner40_aws_contract.v1",
   "experiment": "reasoner40-active-representation-v1",
   "version": "4.0",
-  "authorized": false,
+  "authorized": true,
   "authorization": {
-    "approved_by": null,
-    "approved_at": null,
-    "approval_id": null,
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-01",
+    "approval_id": "reasoner40-active-representation-2026-09-01-v1",
     "scope": "one fresh sealed three-operation representation-transfer execution after exact source-bundle approval"
   },
   "seal": {
@@ -26,24 +26,35 @@
     "header_sha256": "82709f8a9dd20517a097187832e49a5d4f6554f11d566478edbeda079e19b2b8"
   },
   "source": {
-    "implementation_commit": null,
-    "bundle_sha256": null,
-    "bundle_bytes": null,
-    "destination": null
+    "implementation_commit": "73b721a00f8e5737cf0fcfb47b14c90b1e832e70",
+    "bundle_sha256": "06432af1ef731d637f8fb09a2aaf1d9b1929fd34a2cba40ebae5db6a7fb5afe9",
+    "bundle_bytes": 50211,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner40-active-representation-v1/source/73b721a00f8e5737cf0fcfb47b14c90b1e832e70-06432af1ef731d637f8fb09a2aaf1d9b1929fd34a2cba40ebae5db6a7fb5afe9.tar.gz"
   },
   "execution": {
-    "enabled": false,
-    "region": null,
-    "instance_type": null,
-    "maximum_instance_seconds": null,
-    "maximum_ec2_usd": null,
-    "maximum_total_run_usd": null,
+    "enabled": true,
+    "region": "us-east-1",
+    "image_id": "ami-0d7f022123f8ff19d",
+    "instance_type": "t3.micro",
+    "subnet_id": "subnet-f45220bc",
+    "security_group_id": "sg-03636a7f90a9b8b17",
+    "instance_profile": "zero-training-ec2",
+    "training_bucket": "zero-training-022118847419",
+    "maximum_instance_seconds": 900,
+    "maximum_ec2_usd": 0.003,
+    "maximum_total_run_usd": 0.01,
     "retry": false,
     "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "usd_per_hour": 0.0104,
+    "source": "AWS Price List API, Linux on-demand t3.micro us-east-1",
+    "checked_at": "2026-09-01"
   },
   "result": {
     "binary": "reasoner40",
     "make_target": "reasoner40",
-    "schema": "zero.reasoner40_active_representation.v1"
+    "schema": "zero.reasoner40_active_representation.v1",
+    "summary_schema": "zero.reasoner40_sealed_summary.v1"
   }
 }

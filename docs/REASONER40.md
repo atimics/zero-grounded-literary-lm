@@ -53,7 +53,8 @@ make reasoner40-contract-check
 
 The planned fresh seal contains 6,432 episodes over all 134 canonical
 three-operation adapters, dimensions nine through twelve, two new opaque
-probe orders, and the same six familiar laws. It is locked and unauthorized.
+probe orders, and the same six familiar laws. Its exact merged source bundle
+and one capped cloud execution are authorized.
 The compiled evaluator requires a cloud-only environment marker, the exact
 frozen approval ID, and a new exclusive execution-lock path. A normal local
 `./reasoner40 sealed-run RESULT.json` call refuses execution before any sealed

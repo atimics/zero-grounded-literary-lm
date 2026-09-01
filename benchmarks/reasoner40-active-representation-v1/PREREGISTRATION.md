@@ -103,8 +103,13 @@ development as a semantic class.
 
 The sealed evaluator is compiled but locked before evaluation. It requires a
 cloud-only environment marker, the exact frozen approval ID, and a new
-exclusive execution-lock path. No implementation bundle, cloud execution,
-retry, or post-seal tuning is authorized by this preregistration.
+exclusive execution-lock path.
+
+The user explicitly authorized the exact 50,211-byte source bundle from commit
+`73b721a00f8e5737cf0fcfb47b14c90b1e832e70`, SHA-256
+`06432af1ef731d637f8fb09a2aaf1d9b1929fd34a2cba40ebae5db6a7fb5afe9`,
+and one capped `t3.micro` launch on 2026-09-01. The cap is 900 instance
+seconds, $0.003 EC2, and $0.01 total. There is no retry or post-seal tuning.
 
 ## Interpretation
 
