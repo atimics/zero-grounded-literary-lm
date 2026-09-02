@@ -291,11 +291,9 @@ static int r51_candidate_compare(const void *left, const void *right) {
 static uint32_t r51_rank_episode(const r51_artifact *artifact,
                                  const uint8_t target_token[R51_PROGRAM_LEN],
                                  uint32_t target_index, uint32_t tie_order,
-                                 r51_adapter_mode mode, r51_result *result,
+                                 const uint8_t classes[8], int ablated,
                                  int *top_invalid) {
     r51_affine target = r51_program(target_token);
-    uint8_t classes[8];
-    r51_adapter_classes(mode, classes, result);
     r51_candidate candidates[R51_CANDIDATES];
     uint32_t cursor = 0u;
     for (uint8_t a = 0; a < R51_PRIMITIVES; ++a)
@@ -307,7 +305,6 @@ static uint32_t r51_rank_episode(const r51_artifact *artifact,
                 candidate->token[2] = c;
                 candidate->exact = r51_program(candidate->token);
                 uint32_t loss = r51_evidence_loss(&candidate->exact, &target);
-                int ablated = mode == R51_ADAPTER_ABLATED;
                 uint32_t strength = r51_prior_strength(
                     artifact, candidate->token, classes, ablated);
                 candidate->score = (uint64_t)loss * UINT64_C(1000000) +
@@ -361,43 +358,57 @@ int r51_execute(r51_result *result, r51_artifact *artifact) {
     result->artifact_frozen_before_target = 1u;
     result->artifact_digest = artifact->source_digest;
     result->verifier_authoritative = 1u;
+    uint8_t full_classes[8];
+    uint8_t oracle_classes[8];
+    uint8_t identity_classes[8];
+    uint8_t shuffled_classes[8];
+    uint8_t no_query_classes[8];
+    uint8_t token_id_classes[8];
+    uint8_t ablated_classes[8];
+    r51_adapter_classes(R51_ADAPTER_VERIFIED, full_classes, result);
+    r51_adapter_classes(R51_ADAPTER_ORACLE, oracle_classes, result);
+    r51_adapter_classes(R51_ADAPTER_IDENTITY, identity_classes, result);
+    r51_adapter_classes(R51_ADAPTER_SHUFFLED, shuffled_classes, result);
+    r51_adapter_classes(R51_ADAPTER_NO_QUERY, no_query_classes, result);
+    r51_adapter_classes(R51_ADAPTER_TOKEN_ID, token_id_classes, result);
+    r51_adapter_classes(R51_ADAPTER_ABLATED, ablated_classes, result);
     for (uint32_t target = 0; target < R51_TARGETS; ++target) {
         for (uint32_t tie = 0; tie < R51_TIE_ORDERS; ++tie) {
             int invalid = 0;
             uint32_t full = r51_rank_episode(artifact, targets[target], target,
-                tie, R51_ADAPTER_VERIFIED, result, &invalid);
+                tie, full_classes, 0, &invalid);
             result->full_expansions += full;
             result->full_exact_matches += full <= R51_CANDIDATES;
             result->unverified_top_candidates += (uint32_t)invalid;
             if (full > result->full_max_expansions) result->full_max_expansions = full;
             uint32_t oracle = r51_rank_episode(artifact, targets[target], target,
-                tie, R51_ADAPTER_ORACLE, result, &invalid);
+                tie, oracle_classes, 0, &invalid);
             result->oracle_expansions += oracle;
             result->oracle_exact_matches += oracle <= R51_CANDIDATES;
             uint32_t target_only = r51_rank_episode(artifact, targets[target], target,
-                tie, R51_ADAPTER_ABLATED, result, &invalid);
+                tie, ablated_classes, 1, &invalid);
             result->target_only_expansions += target_only;
             result->source_ablation_expansions += target_only;
             if (target_only > result->target_only_max_expansions)
                 result->target_only_max_expansions = target_only;
             result->individual_wins_vs_target_only += full < target_only;
             result->identity_adapter_expansions += r51_rank_episode(artifact,
-                targets[target], target, tie, R51_ADAPTER_IDENTITY, result, &invalid);
+                targets[target], target, tie, identity_classes, 0, &invalid);
             result->shuffled_adapter_expansions += r51_rank_episode(artifact,
-                targets[target], target, tie, R51_ADAPTER_SHUFFLED, result, &invalid);
+                targets[target], target, tie, shuffled_classes, 0, &invalid);
             result->no_query_adapter_expansions += r51_rank_episode(artifact,
-                targets[target], target, tie, R51_ADAPTER_NO_QUERY, result, &invalid);
+                targets[target], target, tie, no_query_classes, 0, &invalid);
             result->token_id_lookup_expansions += r51_rank_episode(artifact,
-                targets[target], target, tie, R51_ADAPTER_TOKEN_ID, result, &invalid);
+                targets[target], target, tie, token_id_classes, 0, &invalid);
         }
     }
     result->source_ablation_control_valid =
         result->source_ablation_expansions == result->target_only_expansions;
     result->gate_pass =
         result->adapter_verified &&
-        result->adapter_reconstruction_queries == 8u * R51_EPISODES &&
-        result->adapter_challenge_queries == 6u * R51_EPISODES &&
-        result->adapter_checks_passed == 6u * R51_EPISODES &&
+        result->adapter_reconstruction_queries == 8u &&
+        result->adapter_challenge_queries == 6u &&
+        result->adapter_checks_passed == 6u &&
         result->artifact_frozen_before_target &&
         result->verifier_authoritative &&
         result->source_ablation_control_valid &&

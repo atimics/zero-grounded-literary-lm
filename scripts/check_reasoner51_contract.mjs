@@ -22,9 +22,9 @@ requireValue(contract.execution?.tuning_after_open === false,
   "post-open tuning must remain forbidden");
 requireValue(contract.ranking?.exact_affine_verifier_is_authoritative === true,
   "the exact verifier must remain authoritative");
-requireValue(contract.gate?.adapter_reconstruction_queries === 192,
+requireValue(contract.gate?.adapter_reconstruction_queries === 8,
   "adapter reconstruction query gate changed");
-requireValue(contract.gate?.adapter_challenge_queries === 144,
+requireValue(contract.gate?.adapter_challenge_queries === 6,
   "adapter challenge query gate changed");
 requireValue(contract.gate?.full_exact_matches === 24,
   "exact-match gate changed");

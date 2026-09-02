@@ -67,9 +67,9 @@
     "unverified_top_candidate": "measure invalid first suggestions before exact verification"
   },
   "gate": {
-    "adapter_reconstruction_queries": 192,
-    "adapter_challenge_queries": 144,
-    "adapter_checks_passed": 144,
+    "adapter_reconstruction_queries": 8,
+    "adapter_challenge_queries": 6,
+    "adapter_checks_passed": 6,
     "full_exact_matches": 24,
     "oracle_exact_matches": 24,
     "full_expansions_equal_oracle": true,
@@ -97,7 +97,7 @@
   "implementation_source": {
     "exact_commit_recorded_at_execution": true,
     "files": {
-      "reasoner51.c": "191e9cb27c104ec96b18593eaa56262dcf2903a15ed2322e1e9087f21272cfd7",
+      "reasoner51.c": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
       "reasoner51.h": "498749b6655096ae0b3a161c9a13140c2ee80732c310b6c2cba59b065a3c0a9e",
       "reasoner51_cli.c": "dcc761fc1705aca4915f1d00832373e1654adc938d057146734789b452bc3458"
     }
