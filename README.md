@@ -77,6 +77,9 @@ small browser runtime:
   reusable adapter subprograms, freezes them, and passed all 34 sealed episodes
   over longer six-operation classes using affine proof certificates rather
   than sampled behavioral identity.
+- `reasoner50`: Reasoner 5.0, a deployment-exact integer ranker that freezes
+  source-learned state, adds a same-schema target residual, and leaves all
+  acceptance authority with the exact affine verifier.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -270,6 +273,7 @@ make reasoner310-check
 make reasoner40-check reasoner40-contract-check
 make reasoner41-check reasoner41-contract-check
 make reasoner42-check reasoner42-contract-check reasoner42-result-check
+make reasoner50-check reasoner50-contract-check
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
