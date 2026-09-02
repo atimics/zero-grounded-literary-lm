@@ -1,0 +1,35 @@
+{
+  "schema": "zero.reasoner50_provenance.v1",
+  "run_id": "reasoner50-20260902t045030z",
+  "decision": "no-go",
+  "started_at": "2026-09-02T04:50:30Z",
+  "approval_id": "reasoner50-residual-transfer-2026-09-02-v1",
+  "source": {
+    "commit": "1912bba1d6ef29645345fd9ec1792c6586c6e689",
+    "bundle_bytes": 72080,
+    "bundle_sha256": "3cdd79ed8e735e648d73b0d9db5e2a9f00d2ae60b55e410181fc66fd96e4461c",
+    "binary_sha256": "cd30403d182e39a9cb0d2a2652108b682c2114a7e7a8a80ed1014483a0e51ba6"
+  },
+  "contract_sha256": "876bfa3edf82a4894f9bb38b3210ffc281ce4ca3d1533398bac74d4912978360",
+  "artifacts": {
+    "result_bytes": 1590,
+    "result_sha256": "8d0fca3c6d787dcfe330637716fbff7101e1f8d81738d05f6f348166e919c990",
+    "execution_bytes": 592,
+    "execution_sha256": "5b66095000ed60e9d03684a57fd55da1fc74a86d5e81b9e8a2ccbe88b7e6b51a",
+    "source_artifact_bytes": 368,
+    "source_artifact_sha256": "9538a3449d66ec43dc58a139a39fb52392816b7eb3a4e36df798ce602784323b",
+    "execution_lock_bytes": 43,
+    "execution_lock_sha256": "de8939a0eec2465e393102c67fabc1fbc4921db0abe42fc1433776bbfc16f112"
+  },
+  "execution": {
+    "mode": "local-deterministic",
+    "platform": "Darwin 25.3.0 arm64",
+    "compiler": "Apple clang 17.0.0",
+    "elapsed_milliseconds": 893.252,
+    "scientific_executions": 1,
+    "scientific_retries": 0,
+    "post_open_tuning": false,
+    "cloud_resources": false,
+    "cost_usd": 0
+  }
+}

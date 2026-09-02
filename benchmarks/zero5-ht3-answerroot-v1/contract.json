@@ -1,0 +1,131 @@
+{
+  "schema": "zero.ht3_answerroot_contract.v1",
+  "experiment": "zero5-ht3-answerroot-v1",
+  "status": "preregistered-blocked-not-authorized",
+  "authorized": false,
+  "ilxyr": {
+    "registration_state": "not-registered",
+    "run_authorized": false,
+    "authorization_mechanism": "future separate hash-bound record after terminal C6.1"
+  },
+  "series": {
+    "path": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
+    "sha256": "c80bb49128ad8ac6839fadaf55b146d1f0e63fba760a822921d42064d17962e1"
+  },
+  "specification": {
+    "path": "benchmarks/zero5-ht3-answerroot-v1/SPEC.md",
+    "sha256": "8a9110bc94a78c4d5c6e774f2ee79796aa6112d6eb4232bb00da18de9076d3e1"
+  },
+  "control": {
+    "experiment": "zero5-c61-shared-state-v1",
+    "contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
+    "contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
+    "required_result_state": "terminal-hash-bound",
+    "result_sha256": null,
+    "checkpoint_sha256": null,
+    "control_type": "continuous per-answer-position shared-state bridge",
+    "treatment_starts_independently_from_c2": true
+  },
+  "verified_factors": {
+    "target_vocabulary": 752,
+    "target_vocabulary_sha256": "3923f04459eb3769fce7e133f687758b677bca0e3a9d65444a6407e70e9bb578",
+    "factorized_family_softmax": true,
+    "singleton_families_excluded": true,
+    "family_set_selected_from_gold_metadata": false,
+    "gold_factors_used_as_language_input": false
+  },
+  "model": {
+    "base_parameters": 4852992,
+    "bottleneck_parameters": 193032,
+    "total_parameters": 5046024,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "language_vocabulary": 512,
+    "state_target_vocabulary": 752,
+    "root_width": 152,
+    "positions": "rotary"
+  },
+  "parameter_accounting": {
+    "prompt_bottleneck": 39064,
+    "factor_decoder": 115056,
+    "answer_bridge": 38912,
+    "separate_tag_codebook_parameters": 0,
+    "factor_rows_reused_as_tag_embeddings": true
+  },
+  "treatment": {
+    "root_source": "last prompt token only",
+    "root_formula": "mean across every registered non-singleton family of the family-softmax-weighted factor rows",
+    "root_computations_per_answer": 1,
+    "root_held_fixed_during_answer": true,
+    "bridge_scope": "answer target classes 2, 3, and 4 only",
+    "language_gradient_through_root": true,
+    "stop_gradient": false,
+    "gold_or_future_information_used": false,
+    "random_numbers_added_at_initialization": 0
+  },
+  "training": {
+    "seed": 0,
+    "update_groups": 28707,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 14850534,
+    "auxiliary_events": 293606,
+    "auxiliary_loss_weight": 0.1,
+    "source": "exact C6.1 schedule from an independent selected C2 initialization",
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null,
+    "runs_authorized": 0
+  },
+  "evaluation": {
+    "interventions": ["normal-root", "zero-root", "paired-wrong-root", "bridge-off"],
+    "checkpoint_selection_uses_interventions": false,
+    "existing_task_and_retention_surfaces_unchanged": true
+  },
+  "gates": {
+    "factor_nats_relative_reduction_minimum": 0.1,
+    "factor_accuracy_gain_minimum": 0.05,
+    "retrieval_choice_gain_over_c61_minimum": 0.02,
+    "retrieval_pair_exact_gain_over_c61_minimum": 0.02,
+    "normal_root_choice_gain_over_zero_minimum": 0.01,
+    "normal_root_pair_gain_over_zero_minimum": 0.01,
+    "wrong_root_answer_nats_increase_minimum": 0.01,
+    "orientation_accuracy_minimum": 0.5,
+    "maximum_orientation_gap": 0.15,
+    "swap_consistency_minimum": 0.94,
+    "maximum_combined_nats_increase": 0.03,
+    "maximum_claim_accuracy_loss": 0.02,
+    "maximum_evidence_nats": 2.4,
+    "maximum_atlas_nats": 2.50646,
+    "maximum_anchor_nats": 4.06362,
+    "maximum_compute_ratio": 1.15,
+    "maximum_wall_time_ratio": 1.15
+  },
+  "implementation": {
+    "status": "planned-not-implemented",
+    "planned_trainer": "zero5_ht3_answerroot_lm.c",
+    "planned_evaluator": "scripts/evaluate_zero5_ht3_answerroot.mjs",
+    "launcher": "scripts/run_zero5_hierarchical_tokenization.mjs",
+    "launcher_sha256": "f255f718a0b5b75fe1e626f66336b362fe7af4986d51d0b694c3e26732dbe763",
+    "implementation_authorized": false
+  },
+  "claim_boundary": {
+    "prompt_only_semantic_root": true,
+    "whole_answer_lossless_code": false,
+    "new_tokenizer": false,
+    "symbolic_serialization": false,
+    "replication_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
