@@ -2886,3 +2886,24 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 clean:
 	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_c51_target_lm zero5_c61_bottleneck_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot reasoner0 reasoner1 reasoner2 reasoner3 reasoner31 reasoner32 reasoner33 reasoner34 reasoner333 reasoner34_witness reasoner35 reasoner36 reasoner37 reasoner38 reasoner39 reasoner310 reasoner40 reasoner41 reasoner42 reasoner50 reasoner51 reasoner52 weight_multiplicity weight_multiplicity_crosscheck
 	rm -f docs/literary.js docs/literary.wasm
+
+all: reasoner53 reasoner54
+.PHONY: reasoner53-check reasoner54-check reasoner53-contract-check reasoner54-contract-check clean-reasoner5-followups
+reasoner53: reasoner5_followup.c reasoner52.c reasoner52.h
+	$(CC) $(CFLAGS) -DR5_VARIANT=53 reasoner5_followup.c -o $@
+reasoner54: reasoner5_followup.c reasoner52.c reasoner52.h
+	$(CC) $(CFLAGS) -DR5_VARIANT=54 reasoner5_followup.c -o $@
+reasoner53-check: reasoner53
+	./reasoner53 --self-test
+	@if ./reasoner53 execute /tmp/reasoner53-test-result /tmp/reasoner53-test-execution /tmp/reasoner53-test-artifact; then exit 1; fi
+reasoner54-check: reasoner54
+	./reasoner54 --self-test
+	@if ./reasoner54 execute /tmp/reasoner54-test-result /tmp/reasoner54-test-execution /tmp/reasoner54-test-artifact; then exit 1; fi
+reasoner53-contract-check:
+	node scripts/check_reasoner5_followup_contract.mjs 53
+reasoner54-contract-check:
+	node scripts/check_reasoner5_followup_contract.mjs 54
+check: reasoner53-check reasoner54-check reasoner53-contract-check reasoner54-contract-check
+clean: clean-reasoner5-followups
+clean-reasoner5-followups:
+	rm -f reasoner53 reasoner54
