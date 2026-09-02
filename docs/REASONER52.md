@@ -1,5 +1,10 @@
 # Reasoner 5.2: nonlinear depth transfer
 
+The registered decision is no-go. The run produced 24 exact answers with
+30 candidate checks against 44 for target-only. It earned eight individual
+wins against a gate of sixteen. See the
+[result](../benchmarks/reasoner52-nonlinear-depth-transfer-v1/RESULT.md).
+
 Reasoner 5.2 moves beyond affine maps. It learns a small integer ranker from
 two-operation polynomial programs over the 17-element field, freezes it, then
 asks whether that state reduces exact search over three-operation nonlinear
