@@ -1,0 +1,107 @@
+{
+  "schema": "zero.reasoner52_nonlinear_depth_contract.v1",
+  "experiment": "reasoner52-nonlinear-depth-transfer-v1",
+  "version": "5.2",
+  "status": "authorized-unopened",
+  "question": "Can a frozen semantic transition ranker learned from two-operation nonlinear programs reduce exact search on three-operation nonlinear compositions?",
+  "authorization": {
+    "authorized": true,
+    "scope": "one deterministic local scientific execution; no cloud resources",
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-02",
+    "approval_id": "reasoner52-nonlinear-depth-2026-09-02-v1",
+    "user_request": "execute the first 5 experiments in Reasoner 5"
+  },
+  "prior_result": {
+    "experiment": "reasoner50-residual-transfer-v1",
+    "decision": "no-go",
+    "constraint": "No Reasoner 5.0 scorer is retuned or promoted"
+  },
+  "domain": {
+    "field_modulus": 17,
+    "input_points": 17,
+    "primitive_count": 8,
+    "nonlinear_primitives": ["square", "cube", "square-plus-input", "cube-plus-one"],
+    "semantic_classes": ["translate", "scale", "power-2", "power-3", "polynomial-mix"]
+  },
+  "source": {
+    "programs": 16,
+    "program_length": 2,
+    "artifact": "integer semantic-class frequencies and adjacent class-transition counts",
+    "artifact_frozen_before_target": true,
+    "target_labels_forbidden_during_artifact_build": true
+  },
+  "target": {
+    "programs": 12,
+    "program_length": 3,
+    "tie_orders": 2,
+    "episodes": 24,
+    "candidates_per_episode": 512,
+    "every_program_is_nonlinear": true,
+    "ranking_evidence_points": [0, 1],
+    "target_labels_forbidden_during_ranking": true
+  },
+  "ranking": {
+    "primary_order": "ascending two-point evidence loss, then descending frozen source transition strength",
+    "tie_order": "registered seeded FNV-1a order",
+    "candidate_expansion": "one complete 17-point truth-table equality check",
+    "ranker_can_authorize_commit": false,
+    "exact_truth_table_verifier_is_authoritative": true
+  },
+  "controls": {
+    "oracle": "rank an exact truth-table match first",
+    "target_only": "zero the frozen source prior",
+    "source_ablation": "zero the source contribution at inference and require equality with target-only",
+    "affine_projection": "collapse every nonlinear class into scale",
+    "degree_blind": "collapse all nonlinear classes into one polynomial-mix class",
+    "shuffled_source": "rotate semantic class labels before source lookup",
+    "source_only": "remove target evidence",
+    "unverified_top_candidate": "measure invalid first suggestions before truth-table verification"
+  },
+  "gate": {
+    "full_exact_matches": 24,
+    "oracle_exact_matches": 24,
+    "oracle_expansions": 24,
+    "full_checks_equal_full_expansions": true,
+    "full_expansions_at_most_fraction_of_target_only": 0.8,
+    "full_expansions_strictly_less_than_affine_projection": true,
+    "full_expansions_strictly_less_than_degree_blind": true,
+    "full_expansions_strictly_less_than_shuffled_source": true,
+    "full_expansions_strictly_less_than_source_only": true,
+    "individual_wins_over_target_only_at_least": 16,
+    "source_ablation_equals_target_only": true,
+    "unverified_scorer_must_offer_invalid_top_candidate": true,
+    "premature_commits": 0
+  },
+  "execution": {
+    "mode": "local-deterministic",
+    "scientific_executions": 1,
+    "scientific_retries": 0,
+    "maximum_seconds": 300,
+    "cloud_resources": false,
+    "required_approval_id": "reasoner52-nonlinear-depth-2026-09-02-v1",
+    "exclusive_execution_lock_required": true,
+    "tuning_after_open": false,
+    "publish_pass_or_no_go": true
+  },
+  "implementation_source": {
+    "exact_commit_recorded_at_execution": true,
+    "files": {
+      "reasoner52.c": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+      "reasoner52.h": "c5505b1d9fef6d2e0408f0043b3d23c20226453c7f00845213a8aafc815dc96f",
+      "reasoner52_cli.c": "73c1d5632af68c4d146df854e897e4f09da0a464a294bc32cb7b10df2757efb6"
+    }
+  },
+  "result": {
+    "schema": "reasoner52-result-v1",
+    "binary": "reasoner52",
+    "required_files": ["RESULT.json", "RESULT.md", "EXECUTION.json", "ARTIFACT.hex", "PROVENANCE.json"],
+    "decision_values": ["pass", "no-go"]
+  },
+  "non_claims": [
+    "recursive or unbounded execution",
+    "robustness to noisy evidence",
+    "natural-language or visual grounding",
+    "open-ended reasoning"
+  ]
+}
