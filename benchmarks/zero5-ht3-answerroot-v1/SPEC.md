@@ -2,9 +2,10 @@
 
 ## Status
 
-**Preregistered and blocked by the terminal C6.1 result. Implementation and
-training are not authorized.** This specification does not authorize paid
-compute, a retry, replication, promotion, publication, or sealed-test access.
+**Preregistered with its terminal C6.1 dependency satisfied.** Implementation
+review and training authority remain separate steps. This specification keeps
+the paid-compute, retry, replication, promotion, publication, and sealed-test
+boundaries fixed.
 
 ## Question
 
@@ -15,9 +16,9 @@ per-position shared-state bridge?
 ## Control
 
 The parameter-matched control is the terminal C6.1 seed-0 continuous
-shared-state arm. HT3 may not be implemented, authorized, or run until that
-result and its checkpoint hashes are frozen. HT3 starts from C2 independently;
-it does not continue the C6.1 checkpoint.
+shared-state arm. Its no-go result and checkpoint hashes are frozen in the HT3
+contract. HT3 starts independently from C2. The C6.1 checkpoint serves only as
+the control.
 
 The control and treatment use the same 152-wide bottleneck, 752-tag factor
 decoder, tied language head, answer positions, auxiliary loss, parameter

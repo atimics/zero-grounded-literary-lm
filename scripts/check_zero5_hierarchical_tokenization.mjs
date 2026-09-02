@@ -51,12 +51,22 @@ function assertNoTestAccess(test) {
 
 const series = JSON.parse(fs.readFileSync(seriesPath, "utf8"));
 assert.equal(series.schema, "zero.hierarchical_tokenization_series.v1");
-assert.equal(series.status, "preregistered-not-authorized");
+assert.equal(series.status, "preregistered-ready-for-implementation-review");
 assert.equal(series.authorized, false);
 assert.deepEqual(series.execution_order, experiments.map(item => item.name));
 assert.equal(series.active_dependency.experiment, "zero5-c61-shared-state-v1");
 assert.equal(sha256(series.active_dependency.contract),
   series.active_dependency.contract_sha256);
+assert.equal(sha256(series.active_dependency.terminal_record),
+  series.active_dependency.terminal_record_sha256);
+const c61Terminal = JSON.parse(fs.readFileSync(
+  series.active_dependency.terminal_record, "utf8"));
+assert.equal(series.active_dependency.terminal_status, c61Terminal.status);
+assert.equal(series.active_dependency.terminal_result_sha256,
+  c61Terminal.evaluation.result.sha256);
+assert.equal(series.active_dependency.checkpoint_sha256,
+  c61Terminal.selected_checkpoint.sha256);
+assert.equal(series.active_dependency.dependency_satisfied, true);
 assert.equal(series.shared_control.experiment, "zero5-c51-statebridge-v1");
 assert.equal(sha256(series.shared_control.contract),
   series.shared_control.contract_sha256);
@@ -143,9 +153,14 @@ const rootParameters = Object.entries(ht3.parameter_accounting)
 assert.equal(rootParameters, ht3.model.bottleneck_parameters);
 assert.equal(ht3.model.total_parameters,
   ht3.model.base_parameters + ht3.model.bottleneck_parameters);
-assert.equal(ht3.control.result_sha256, null);
-assert.equal(ht3.control.checkpoint_sha256, null);
+assert.equal(ht3.control.result_sha256,
+  c61Terminal.evaluation.result.sha256);
+assert.equal(ht3.control.checkpoint_sha256,
+  c61Terminal.selected_checkpoint.sha256);
 assert.equal(ht3.control.required_result_state, "terminal-hash-bound");
+assert.equal(sha256(ht3.control.contract), ht3.control.contract_sha256);
+assert.equal(sha256(ht3.control.terminal_record),
+  ht3.control.terminal_record_sha256);
 assert.equal(ht3.verified_factors.gold_factors_used_as_language_input, false);
 assert.equal(ht3.treatment.root_source, "last prompt token only");
 assert.equal(ht3.treatment.root_computations_per_answer, 1);

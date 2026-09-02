@@ -1,0 +1,117 @@
+{
+  "schema": "zero.reasoner51_unseen_primitive_contract.v1",
+  "experiment": "reasoner51-unseen-primitive-v1",
+  "version": "5.1",
+  "status": "authorized-unopened",
+  "question": "Can a frozen ranker learned on known semantic classes reduce exact search when two target primitives are unseen token IDs but are exposed through a verified canonical adapter?",
+  "authorization": {
+    "authorized": true,
+    "scope": "one deterministic local scientific execution; no cloud resources",
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-02",
+    "approval_id": "reasoner51-unseen-primitive-2026-09-02-v1",
+    "user_request": "execute the first 5 experiments in Reasoner 5"
+  },
+  "prior_result": {
+    "experiment": "reasoner50-residual-transfer-v1",
+    "decision": "no-go",
+    "constraint": "Reasoner 5.0 is not retuned or promoted; Reasoner 5.1 asks a new prospectively frozen question"
+  },
+  "domain": {
+    "field_modulus": 257,
+    "lanes": 3,
+    "program_length": 3,
+    "known_primitives": 6,
+    "opaque_target_primitives": 2,
+    "candidate_programs_per_episode": 512
+  },
+  "source": {
+    "programs": 16,
+    "uses_only_known_primitives": true,
+    "semantic_classes": ["bias", "scale", "permute", "mix", "identity"],
+    "artifact": "integer position-class counts and adjacent class-transition counts",
+    "artifact_frozen_before_target": true,
+    "target_labels_forbidden_during_artifact_build": true
+  },
+  "adapter": {
+    "opaque_primitives": ["rotate-right", "alternating-add-11"],
+    "reconstruction_queries_per_primitive": 4,
+    "challenge_queries_per_primitive": 3,
+    "canonical_representation": "exact 3 by 3 affine matrix and bias over the field",
+    "classification_occurs_after_exact_reconstruction": true,
+    "all_challenges_must_pass": true
+  },
+  "target": {
+    "programs": 12,
+    "tie_orders": 2,
+    "episodes": 24,
+    "every_program_uses_at_least_one_opaque_primitive": true,
+    "evidence": "one registered runtime observation at the zero vector",
+    "target_labels_forbidden_during_ranking": true
+  },
+  "ranking": {
+    "primary_order": "ascending evidence loss, then descending frozen source strength",
+    "tie_order": "registered seeded FNV-1a order",
+    "candidate_expansion": "one exact affine equality check",
+    "ranker_can_authorize_commit": false,
+    "exact_affine_verifier_is_authoritative": true
+  },
+  "controls": {
+    "oracle_adapter": "use the registered exact opaque semantics without adapter queries",
+    "target_only": "zero the frozen source prior",
+    "source_ablation": "zero the frozen source contribution at inference and require equality with target-only",
+    "identity_adapter": "map both opaque primitives to identity class",
+    "shuffled_adapter": "swap the two opaque semantic classes",
+    "no_query_adapter": "make no adapter queries and map opaque primitives to identity class",
+    "token_id_lookup": "use only the known source token table, so unseen IDs map to identity class",
+    "unverified_top_candidate": "measure invalid first suggestions before exact verification"
+  },
+  "gate": {
+    "adapter_reconstruction_queries": 8,
+    "adapter_challenge_queries": 6,
+    "adapter_checks_passed": 6,
+    "full_exact_matches": 24,
+    "oracle_exact_matches": 24,
+    "full_expansions_equal_oracle": true,
+    "full_expansions_at_most_fraction_of_target_only": 0.8,
+    "full_expansions_strictly_less_than_identity_adapter": true,
+    "full_expansions_strictly_less_than_shuffled_adapter": true,
+    "full_expansions_strictly_less_than_no_query_adapter": true,
+    "full_expansions_strictly_less_than_token_id_lookup": true,
+    "individual_wins_over_target_only_at_least": 16,
+    "source_ablation_equals_target_only": true,
+    "unverified_scorer_must_offer_invalid_top_candidate": true,
+    "premature_commits": 0
+  },
+  "execution": {
+    "mode": "local-deterministic",
+    "scientific_executions": 1,
+    "scientific_retries": 0,
+    "maximum_seconds": 300,
+    "cloud_resources": false,
+    "required_approval_id": "reasoner51-unseen-primitive-2026-09-02-v1",
+    "exclusive_execution_lock_required": true,
+    "tuning_after_open": false,
+    "publish_pass_or_no_go": true
+  },
+  "implementation_source": {
+    "exact_commit_recorded_at_execution": true,
+    "files": {
+      "reasoner51.c": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
+      "reasoner51.h": "498749b6655096ae0b3a161c9a13140c2ee80732c310b6c2cba59b065a3c0a9e",
+      "reasoner51_cli.c": "dcc761fc1705aca4915f1d00832373e1654adc938d057146734789b452bc3458"
+    }
+  },
+  "result": {
+    "schema": "reasoner51-result-v1",
+    "binary": "reasoner51",
+    "required_files": ["RESULT.json", "RESULT.md", "EXECUTION.json", "ARTIFACT.hex", "PROVENANCE.json"],
+    "decision_values": ["pass", "no-go"]
+  },
+  "non_claims": [
+    "non-affine transfer",
+    "robustness to noisy or incomplete evidence beyond the registered single observation",
+    "natural-language or visual grounding",
+    "open-ended reasoning"
+  ]
+}

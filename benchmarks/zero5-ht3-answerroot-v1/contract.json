@@ -1,28 +1,30 @@
 {
   "schema": "zero.ht3_answerroot_contract.v1",
   "experiment": "zero5-ht3-answerroot-v1",
-  "status": "preregistered-blocked-not-authorized",
+  "status": "preregistered-not-authorized",
   "authorized": false,
   "ilxyr": {
     "registration_state": "not-registered",
     "run_authorized": false,
-    "authorization_mechanism": "future separate hash-bound record after terminal C6.1"
+    "authorization_mechanism": "future separate hash-bound record"
   },
   "series": {
     "path": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
-    "sha256": "c80bb49128ad8ac6839fadaf55b146d1f0e63fba760a822921d42064d17962e1"
+    "sha256": "c3fb49f0ed7488df461a2c7914e7e0145122cac6c29743419e8a20ba10a26385"
   },
   "specification": {
     "path": "benchmarks/zero5-ht3-answerroot-v1/SPEC.md",
-    "sha256": "8a9110bc94a78c4d5c6e774f2ee79796aa6112d6eb4232bb00da18de9076d3e1"
+    "sha256": "f436e789360381f73307096f1243c1ec1dad5b87f181ac64010d5307d133c487"
   },
   "control": {
     "experiment": "zero5-c61-shared-state-v1",
     "contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
-    "contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
+    "contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
     "required_result_state": "terminal-hash-bound",
-    "result_sha256": null,
-    "checkpoint_sha256": null,
+    "terminal_record": "benchmarks/zero5-c61-shared-state-v1/terminal.json",
+    "terminal_record_sha256": "3d8551060080cff4239ebc53385c291ceee3cda38515534aee7e099d54cfd08d",
+    "result_sha256": "f08036025f74911e53f5341b35d4844cf49e9261c3599ba134ed7e56072e1d32",
+    "checkpoint_sha256": "975a2c2be303147a05a37681d8baa5fd0472dceb36d6715f593826412df54078",
     "control_type": "continuous per-answer-position shared-state bridge",
     "treatment_starts_independently_from_c2": true
   },

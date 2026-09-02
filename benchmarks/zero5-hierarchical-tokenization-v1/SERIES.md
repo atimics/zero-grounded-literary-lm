@@ -2,14 +2,14 @@
 
 ## Status
 
-**Three experiments are preregistered. Implementation and training are not
-authorized.** The series freezes the scientific questions, controls, resource
-ceilings, evaluation rules, and execution order. It does not provide a trainer,
-open a test set, approve paid compute, or permit a run.
+**Three experiments are preregistered. The series is ready for implementation
+review.** The series freezes the scientific questions, controls, resource
+ceilings, evaluation rules, and execution order. Training authority remains a
+separate step.
 
-The active C6.1 execution must reach a terminal, hash-bound result before any
-experiment in this series may be implemented or authorized. This prevents the
-new designs from changing the interpretation of the already frozen C6.1 test.
+C6.1 reached its terminal no-go result. The result and selected checkpoint are
+hash-bound in `series.json`. This satisfies the series dependency while
+preserving the frozen C6.1 interpretation.
 
 ## Purpose
 

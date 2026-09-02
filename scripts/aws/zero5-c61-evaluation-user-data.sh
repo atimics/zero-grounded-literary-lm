@@ -2,7 +2,7 @@
 
 set -Eeuo pipefail
 
-BOOT_LOG=/var/log/zero5-c61-bootstrap.log
+BOOT_LOG=/var/log/zero5-c61-evaluation-bootstrap.log
 exec > >(tee -a "$BOOT_LOG" >/dev/console) 2>&1
 set -x
 
@@ -22,7 +22,7 @@ SOURCE_SHA256=$(tag SourceSha256)
 ASSET_KEY=$(tag AssetKey)
 ASSET_SHA256=$(tag AssetSha256)
 TRAINING_BUCKET=$(tag TrainingBucket)
-CONTRACT_SHA256=$(tag ContractSha256)
+RECOVERY_CONTRACT_SHA256=$(tag RecoveryContractSha256)
 AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
@@ -31,9 +31,9 @@ HOURLY_PRICE=$(tag HourlyPrice)
 APPROVAL_ID=$(tag ApprovalId)
 INSTANCE_ID=$(metadata instance-id)
 INSTANCE_TYPE=$(metadata instance-type)
-RESULT_PREFIX="experiments/zero5-c61-shared-state-v1/${RUN_ID}"
+RESULT_PREFIX="experiments/zero5-c61-shared-state-v1/evaluation-recovery/${RUN_ID}"
 STATE_PREFIX="${RESULT_PREFIX}/state"
-STATUS_FILE=/tmp/zero5-c61-status.json
+STATUS_FILE=/tmp/zero5-c61-evaluation-status.json
 TERMINAL_WRITTEN=0
 PHASE=bootstrap
 
@@ -43,12 +43,12 @@ test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$MAX_INSTANCE_SECONDS" = 9000
 test "$MAX_COMPUTE_USD" = 1.7
 test "$HOURLY_PRICE" = 0.68
-test "$APPROVAL_ID" = zero5-c61-shared-state-aws-2026-08-31-v2
+test "$APPROVAL_ID" = zero5-c61-evaluation-recovery-aws-2026-09-01-v1
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
-[[ "$CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
+[[ "$RECOVERY_CONTRACT_SHA256" =~ ^[0-9a-f]{64}$ ]]
 awk -v seconds="$MAX_INSTANCE_SECONDS" -v price="$HOURLY_PRICE" \
   -v ceiling="$MAX_COMPUTE_USD" \
   'BEGIN { exit !(seconds * price / 3600 <= ceiling &&
@@ -71,13 +71,15 @@ write_status() {
   cost=$(estimated_cost "$elapsed")
   jq -n --arg status "$status" --arg phase "$PHASE" \
     --arg run_id "$RUN_ID" --arg instance_id "$INSTANCE_ID" \
-    --arg git_commit "$SOURCE_COMMIT" --arg contract_sha256 "$CONTRACT_SHA256" \
+    --arg git_commit "$SOURCE_COMMIT" \
+    --arg recovery_contract_sha256 "$RECOVERY_CONTRACT_SHA256" \
     --arg result_key "$result_key" --arg result_sha256 "$result_sha256" \
     --argjson exit_code "$exit_code" --argjson elapsed "$elapsed" \
     --argjson cost "$cost" \
-    '{schema:"zero.c61_aws_status.v1",status:$status,phase:$phase,
+    '{schema:"zero.c61_evaluation_aws_status.v1",status:$status,phase:$phase,
       run_id:$run_id,instance_id:$instance_id,git_commit:$git_commit,
-      contract_sha256:$contract_sha256,exit_code:$exit_code,
+      recovery_contract_sha256:$recovery_contract_sha256,
+      training_executed:false,exit_code:$exit_code,
       elapsed_instance_seconds:$elapsed,estimated_ec2_usd:$cost,
       result_key:(if $result_key=="" then null else $result_key end),
       result_sha256:(if $result_sha256=="" then null else $result_sha256 end)}' \
@@ -133,9 +135,12 @@ test "$(sha256sum /tmp/source.tar.gz | awk '{print $1}')" = "$SOURCE_SHA256"
 tar -xzf /tmp/source.tar.gz -C /opt/zero/repo
 cd /opt/zero/repo
 test "$(cat SOURCE_COMMIT)" = "$SOURCE_COMMIT"
-test "$(sha256sum benchmarks/zero5-c61-shared-state-v1/contract.json | awk '{print $1}')" = "$CONTRACT_SHA256"
-test "$(jq -r .authorized benchmarks/zero5-c61-shared-state-v1/contract.json)" = true
-test "$(jq -r .authorization.approval_id benchmarks/zero5-c61-shared-state-v1/contract.json)" = "$APPROVAL_ID"
+RECOVERY_CONTRACT=benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json
+EVALUATION_AUTH=benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json
+test "$(sha256sum "$RECOVERY_CONTRACT" | awk '{print $1}')" = \
+  "$RECOVERY_CONTRACT_SHA256"
+test "$(jq -r .authorization.approval_id "$RECOVERY_CONTRACT")" = \
+  "$APPROVAL_ID"
 
 PHASE=assets
 write_status running 0
@@ -145,6 +150,22 @@ aws s3 cp "s3://${TRAINING_BUCKET}/${ASSET_KEY}" /tmp/assets.tar.gz \
 test "$(sha256sum /tmp/assets.tar.gz | awk '{print $1}')" = "$ASSET_SHA256"
 tar -xzf /tmp/assets.tar.gz -C /opt/zero/repo
 
+PHASE=checkpoint
+write_status running 0
+upload_status
+INPUT=build/zero5-c61-shared-state-v1/evaluation-input
+install -d -m 0700 "$INPUT"
+for field in checkpoint bottleneck training_log; do
+  key=$(jq -r ".source_training.${field}.key" "$RECOVERY_CONTRACT")
+  file=$(jq -r ".source_training.${field}.filename" "$RECOVERY_CONTRACT")
+  aws s3 cp "s3://${TRAINING_BUCKET}/${key}" "$INPUT/$file" \
+    --only-show-errors
+  test "$(sha256sum "$INPUT/$file" | awk '{print $1}')" = \
+    "$(jq -r ".source_training.${field}.sha256" "$RECOVERY_CONTRACT")"
+  test "$(stat -c %s "$INPUT/$file")" = \
+    "$(jq -r ".source_training.${field}.bytes" "$RECOVERY_CONTRACT")"
+done
+
 PHASE=environment
 write_status running 0
 upload_status
@@ -153,43 +174,36 @@ export OPENBLAS_DYNAMIC=0
 export OPENBLAS_NUM_THREADS=16
 export OMP_NUM_THREADS=16
 make zero5_c61_bottleneck_lm zero5_c32_lm_vector_math
-node scripts/check_zero5_c61_shared_state.mjs
-node scripts/run_zero5_c61_shared_state.mjs \
-  --contract benchmarks/zero5-c61-shared-state-v1/contract.json \
-  --authorization benchmarks/zero5-c61-shared-state-v1/authorization-aws.json \
-  --target-import build/zero5-c52-targets/import-final \
-  --c51-import build/zero5-c51-v1/import-final \
-  --c43-import build/zero5-c43-v1/import-final \
-  --c0-dir build/zero5-c0-v1/corpus-one \
-  --c2-dir build/zero5-c2-v1/run \
-  --c2-import-dir build/zero5-c2-v1/import-final \
-  --control-result build/zero5-c61-shared-state-v1/control/matched-control-result.json \
-  --preflight-only >/dev/null
-
-OUT=build/zero5-c61-shared-state-v1/run
-install -d -m 0755 "$(dirname "$OUT")"
-aws s3 sync "s3://${TRAINING_BUCKET}/${STATE_PREFIX}/" "$OUT/" \
-  --only-show-errors || true
-
-PHASE=training
-write_status running 0
-upload_status
-runner_args=(--contract benchmarks/zero5-c61-shared-state-v1/contract.json
-  --authorization benchmarks/zero5-c61-shared-state-v1/authorization-aws.json
+node scripts/check_zero5_c61_evaluation_recovery.mjs
+runner_args=(
+  --recovery-contract "$RECOVERY_CONTRACT"
+  --authorization "$EVALUATION_AUTH"
+  --checkpoint "$INPUT/best.ckpt"
+  --training-log "$INPUT/training.log"
   --target-import build/zero5-c52-targets/import-final
+  --control-result build/zero5-c61-shared-state-v1/control/matched-control-result.json
+  --baseline-checkpoint build/zero5-c2-v1/run/best.ckpt
+  --tokenizer build/zero5-c0-v1/corpus-one/byte-bpe512.sero
   --c51-import build/zero5-c51-v1/import-final
   --c43-import build/zero5-c43-v1/import-final
-  --c0-dir build/zero5-c0-v1/corpus-one
-  --c2-dir build/zero5-c2-v1/run
-  --c2-import-dir build/zero5-c2-v1/import-final
-  --control-result build/zero5-c61-shared-state-v1/control/matched-control-result.json
-  --out "$OUT")
-if [ -f "$OUT/execution.json" ]; then runner_args+=(--resume-run); fi
-remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 120))
+  --atlas-train build/zero5-c2-v1/import-final/atlas.train.byte-bpe512.tok
+  --atlas-validation build/zero5-c2-v1/import-final/atlas.validation.byte-bpe512.tok
+  --anchor-train build/zero5-c0-v1/corpus-one/train.byte-bpe512.tok
+  --anchor-validation build/zero5-c0-v1/corpus-one/validation.byte-bpe512.tok)
+node scripts/run_zero5_c61_evaluation_recovery.mjs \
+  "${runner_args[@]}" --preflight-only >/dev/null
+
+OUT=build/zero5-c61-shared-state-v1/evaluation-recovery
+install -d -m 0700 "$OUT"
+PHASE=evaluation
+write_status running 0
+upload_status
+remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 180))
 test "$remaining" -gt 0
 set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
-  node scripts/run_zero5_c61_shared_state.mjs "${runner_args[@]}" &
+  node scripts/run_zero5_c61_evaluation_recovery.mjs \
+    "${runner_args[@]}" --out "$OUT" &
 RUNNER_PID=$!
 while kill -0 "$RUNNER_PID" 2>/dev/null; do
   sync_state || true
