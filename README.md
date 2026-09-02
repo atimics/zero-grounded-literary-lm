@@ -80,6 +80,9 @@ small browser runtime:
 - `reasoner50`: Reasoner 5.0, a deployment-exact integer ranker that freezes
   source-learned state, adds a same-schema target residual, and leaves all
   acceptance authority with the exact affine verifier.
+- `reasoner52`: Reasoner 5.2, a frozen semantic-transition ranker tested on a
+  deeper nonlinear polynomial family, with acceptance decided only by an exact
+  finite-domain truth-table verifier.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
