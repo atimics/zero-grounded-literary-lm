@@ -1,0 +1,95 @@
+{
+  "schema": "zero.reasoner54_contract.v1",
+  "experiment": "reasoner54-pixel-transfer-v1",
+  "variant": 54,
+  "status": "authorized-unopened",
+  "question": "Does the frozen symbolic prior help through a calibrated synthetic pixel channel?",
+  "authorization": {
+    "authorized": true,
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-02",
+    "user_request": "execute the first 5 experiments in Reasoner 5",
+    "approval_id": "reasoner54-pixel-2026-09-02-v1",
+    "scope": "one deterministic local run"
+  },
+  "source": {
+    "programs": 16,
+    "program_length": 2,
+    "prior": "unchanged Reasoner 5.2 class and transition counts",
+    "frozen_before_target": true
+  },
+  "target": {
+    "programs": 12,
+    "program_length": 3,
+    "tie_orders": 2,
+    "episodes": 48,
+    "candidates": 512,
+    "recipe": "the twelve fixed triples in the hashed shared source",
+    "conditions": [
+      "clean synthetic pixels",
+      "one flipped pixel in every glyph"
+    ],
+    "ranking_observations": [
+      3,
+      3
+    ]
+  },
+  "channel": {
+    "glyph": "sixteen-bit Walsh code for 0 through 15, plus all-one glyph for 16",
+    "shape": [
+      4,
+      4
+    ],
+    "sensor": "rotate clockwise and invert pixels",
+    "calibration_labels": 17,
+    "decoder": "nearest calibrated template",
+    "minimum_distance_margin": 6
+  },
+  "verifier": {
+    "domain_points": 17,
+    "authority": "exact full-domain equality",
+    "candidate_expansion": "one complete truth-table comparison"
+  },
+  "controls": {
+    "target_only": "zero prior strength",
+    "source_ablation": "separately run full scorer with a zeroed source artifact",
+    "shuffled_source": "rotate semantic class indices",
+    "channel_ablation": "decode using original symbol templates",
+    "source_only": "use prior strength alone",
+    "oracle": "use exact symbolic observations with the full prior"
+  },
+  "gate": {
+    "primary_condition": 1,
+    "full_fraction_of_target_only_max": 0.8,
+    "full_expansions_per_episode_max": 64,
+    "primary_individual_wins_min": 12,
+    "full_strictly_beats": [
+      "channel_ablation",
+      "shuffled_source"
+    ],
+    "all_arms_exact_per_condition": 24,
+    "source_ablation_equal_each_episode": true,
+    "artifact_hash_unchanged": true,
+    "invalid_first_suggestions_min": 1,
+    "every_decoded_value_exact": true,
+    "minimum_margin": 6,
+    "oracle_search_equal_each_episode": true
+  },
+  "execution": {
+    "scientific_executions": 1,
+    "scientific_retries": 0,
+    "maximum_seconds": 300,
+    "watchdog": "POSIX alarm",
+    "tuning_after_open": false,
+    "mode": "local-deterministic",
+    "cloud_cost_usd": 0,
+    "exclusive_lock": true,
+    "publish": "pass or no-go"
+  },
+  "source_files": {
+    "reasoner5_followup.c": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214",
+    "reasoner52.c": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+    "reasoner52.h": "c5505b1d9fef6d2e0408f0043b3d23c20226453c7f00845213a8aafc815dc96f"
+  },
+  "scope": "finite polynomial programs through a synthetic sensor with a fully labelled symbol alphabet"
+}
