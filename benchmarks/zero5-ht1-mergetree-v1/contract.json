@@ -1,0 +1,113 @@
+{
+  "schema": "zero.ht1_mergetree_contract.v1",
+  "experiment": "zero5-ht1-mergetree-v1",
+  "status": "preregistered-not-authorized",
+  "authorized": false,
+  "ilxyr": {
+    "registration_state": "not-registered",
+    "run_authorized": false,
+    "authorization_mechanism": "future separate hash-bound record"
+  },
+  "series": {
+    "path": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
+    "sha256": "c80bb49128ad8ac6839fadaf55b146d1f0e63fba760a822921d42064d17962e1"
+  },
+  "specification": {
+    "path": "benchmarks/zero5-ht1-mergetree-v1/SPEC.md",
+    "sha256": "e2849a92b171f2704cf48217ead96fe623f32344f4b3e3c655ace633266e0500"
+  },
+  "control": {
+    "experiment": "zero5-c51-statebridge-v1",
+    "contract": "benchmarks/zero5-c51-statebridge-v1/contract.json",
+    "contract_sha256": "7bb9616e2d3c47bba90ca995aaebf43fcc613825dae64564627261d8be745b7d",
+    "private_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "gate_off_equivalence_updates": 10,
+    "gate_off_shared_tensors_byte_identical_required": true,
+    "full_checkpoint_byte_identical_required": false
+  },
+  "tokenizer": {
+    "sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "base_tokens": 264,
+    "merge_tokens": 248,
+    "vocabulary": 512,
+    "lossless_bytes": true,
+    "segmentation_changed": false,
+    "decoder_changed": false
+  },
+  "model": {
+    "base_parameters": 4852992,
+    "gate_parameters": 249,
+    "total_parameters": 4853241,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "language_vocabulary": 512,
+    "positions": "rotary",
+    "tied_effective_embeddings": true
+  },
+  "treatment": {
+    "composition": "recursive equal-weight mean of left and right child compositions",
+    "base_composition": "ordinary tied embedding",
+    "effective_embedding": "ordinary embedding plus depth gate times composition",
+    "gate_slots": 249,
+    "active_gate_rule": "one gate for each merge depth present in the frozen tokenizer",
+    "gate_initialization": "exact zero",
+    "random_numbers_added_at_initialization": 0,
+    "language_gradient_reaches_descendants": true
+  },
+  "training": {
+    "seed": 0,
+    "update_groups": 28707,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "active_targets": 14850534,
+    "source": "exact C5.1 grouped schedule from selected C2 initialization",
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null,
+    "runs_authorized": 0
+  },
+  "evaluation": {
+    "primary_metric": "validation bits per decoded raw byte",
+    "merge_depth_bands": ["0", "1", "2+"],
+    "all_targets_and_bytes_accounted_once": true,
+    "existing_task_and_retention_surfaces_unchanged": true
+  },
+  "gates": {
+    "overall_bits_per_byte_relative_reduction_minimum": 0.01,
+    "deep_merge_nats_relative_reduction_minimum": 0.03,
+    "maximum_task_accuracy_loss": 0.01,
+    "maximum_combined_nats_increase": 0,
+    "maximum_evidence_nats": 2.4,
+    "maximum_atlas_nats": 2.50646,
+    "maximum_anchor_nats": 4.06362,
+    "maximum_compute_ratio": 1.03,
+    "maximum_wall_time_ratio": 1.03
+  },
+  "implementation": {
+    "status": "planned-not-implemented",
+    "planned_trainer": "zero5_ht1_mergetree_lm.c",
+    "planned_evaluator": "scripts/evaluate_zero5_ht1_mergetree.mjs",
+    "launcher": "scripts/run_zero5_hierarchical_tokenization.mjs",
+    "launcher_sha256": "f255f718a0b5b75fe1e626f66336b362fe7af4986d51d0b694c3e26732dbe763",
+    "implementation_authorized": false
+  },
+  "claim_boundary": {
+    "merge_aware_embeddings": true,
+    "new_tokenizer": false,
+    "block_hierarchy": false,
+    "answer_root": false,
+    "replication_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
