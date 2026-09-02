@@ -1,8 +1,49 @@
 #include "reasoner42.h"
 
+#include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#define R42_APPROVAL_ID \
+    "reasoner42-abstraction-library-2026-09-01-v1"
+
+static int claim_sealed_execution(char *error, size_t capacity)
+{
+    const char *cloud = getenv("R42_SEALED_EXECUTION");
+    const char *approval = getenv("R42_SEAL_APPROVAL_ID");
+    const char *lock = getenv("R42_EXECUTION_LOCK");
+    int descriptor;
+    if (cloud == NULL || strcmp(cloud, "cloud") != 0) {
+        (void)snprintf(error, capacity,
+                       "sealed abstraction-library cases are cloud-only");
+        return 0;
+    }
+    if (approval == NULL || strcmp(approval, R42_APPROVAL_ID) != 0) {
+        (void)snprintf(error, capacity,
+                       "sealed-run requires the frozen approval id");
+        return 0;
+    }
+    if (lock == NULL || lock[0] == '\0') {
+        (void)snprintf(error, capacity,
+                       "R42_EXECUTION_LOCK is required");
+        return 0;
+    }
+    descriptor = open(lock, O_WRONLY | O_CREAT | O_EXCL, 0444);
+    if (descriptor < 0) {
+        (void)snprintf(error, capacity,
+                       "sealed execution lock already exists");
+        return 0;
+    }
+    if (close(descriptor) != 0) {
+        (void)snprintf(error, capacity,
+                       "cannot close sealed execution lock");
+        return 0;
+    }
+    return 1;
+}
 
 static void print_evaluation(const R42Evaluation *evaluation)
 {
@@ -39,6 +80,8 @@ static void print_report(const R42ExperimentReport *report)
            "\"base_depth_four_raw_programs\":%u,"
            "\"planned_sealed_raw_programs\":%u,"
            "\"planned_sealed_base_raw_programs\":%u,"
+           "\"sealed_base_tokens\":%u,"
+           "\"sealed_library_tokens\":%u,"
            "\"frozen_base_certificate_passed\":%s,"
            "\"affine_certificate_passed\":%s,"
            "\"library_discovery_certificate_passed\":%s,"
@@ -50,6 +93,7 @@ static void print_report(const R42ExperimentReport *report)
            "\"single_use_library_control_passed\":%s,"
            "\"curriculum_lookup_control_passed\":%s,"
            "\"no_query_control_passed\":%s,"
+           "\"sealed_minimum_certificate_passed\":%s,"
            "\"development_gate_passed\":%s,"
            "\"sealed_execution_locked\":%s,"
            "\"library_digest\":\"%016" PRIx64 "\","
@@ -68,6 +112,8 @@ static void print_report(const R42ExperimentReport *report)
            report->base_depth_four_raw_programs,
            report->planned_sealed_raw_programs,
            report->planned_sealed_base_raw_programs,
+           report->sealed_base_tokens,
+           report->sealed_library_tokens,
            report->frozen_base_certificate_passed ? "true" : "false",
            report->affine_certificate_passed ? "true" : "false",
            report->library_discovery_certificate_passed ? "true" : "false",
@@ -79,6 +125,7 @@ static void print_report(const R42ExperimentReport *report)
            report->single_use_library_control_passed ? "true" : "false",
            report->curriculum_lookup_control_passed ? "true" : "false",
            report->no_query_control_passed ? "true" : "false",
+           report->sealed_minimum_certificate_passed ? "true" : "false",
            report->development_gate_passed ? "true" : "false",
            report->sealed_execution_locked ? "true" : "false",
            report->library_digest, report->result_digest);
@@ -108,19 +155,55 @@ static int run_development(const char *output_path)
 
 int main(int argc, char **argv)
 {
+    R42ExperimentReport report;
+    char error[512] = {0};
+    R0Status status;
+    if (argc == 3 && strcmp(argv[1], "sealed-run") == 0) {
+        if (!claim_sealed_execution(error, sizeof(error))) {
+            fprintf(stderr, "error: %s\n", error);
+            return EXIT_FAILURE;
+        }
+        status = r42_run_sealed(&report, error, sizeof(error));
+        if (status == R0_OK)
+            status = r42_write_result(&report, argv[2], error,
+                                      sizeof(error));
+        if (status != R0_OK) {
+            fprintf(stderr, "error: %s\n", error[0] == '\0' ?
+                    r0_status_name(status) : error);
+            return EXIT_FAILURE;
+        }
+        printf("{\"schema\":\"zero.reasoner42_sealed_summary.v1\","
+               "\"version\":\"4.2\",\"target_programs\":%u,"
+               "\"episodes\":%u,\"queries\":%u,"
+               "\"exact_queries\":%u,\"replay_checks\":%u,"
+               "\"exact_replays\":%u,\"applications\":%u,"
+               "\"exact_applications\":%u,\"exact_commits\":%u,"
+               "\"exact_reports\":%u,\"premature_commits\":%u,"
+               "\"maximum_queries\":%u,\"gate_passed\":%s,"
+               "\"library_digest\":\"%016" PRIx64 "\","
+               "\"result_digest\":\"%016" PRIx64 "\","
+               "\"result\":\"%s\"}\n",
+               report.sealed.target_programs, report.sealed.episodes,
+               report.sealed.queries, report.sealed.exact_queries,
+               report.sealed.replay_checks, report.sealed.exact_replays,
+               report.sealed.applications,
+               report.sealed.exact_applications,
+               report.sealed.exact_commits, report.sealed.exact_reports,
+               report.sealed.premature_commits,
+               report.sealed.maximum_queries,
+               report.sealed_gate_passed ? "true" : "false",
+               report.library_digest, report.result_digest, argv[2]);
+        return EXIT_SUCCESS;
+    }
     if (argc == 2 && strcmp(argv[1], "--self-test") == 0)
         return run_development(NULL);
     if (argc == 2 && strcmp(argv[1], "development") == 0)
         return run_development(NULL);
     if (argc == 3 && strcmp(argv[1], "development") == 0)
         return run_development(argv[2]);
-    if (argc >= 2 && strcmp(argv[1], "sealed-run") == 0) {
-        fprintf(stderr,
-                "Reasoner 4.2 sealed execution is locked and unauthorized\n");
-        return 1;
-    }
     fprintf(stderr,
-            "usage: %s --self-test | development [result.json]\n",
+            "usage: %s --self-test | development [result.json] | "
+            "sealed-run RESULT.json\n",
             argv[0]);
     return 2;
 }
