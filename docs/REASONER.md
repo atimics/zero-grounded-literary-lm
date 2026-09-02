@@ -111,8 +111,8 @@ all authority.
 The measured outcome is deterministic candidate expansions on the final
 search path. The frozen gate requires exact answers and a causal search-cost
 advantage over matched target-only, source-only, shuffled, ablated, and
-runtime-mismatch controls. The experiment is authorized for one local run and
-is still unopened.
+runtime-mismatch controls. The reviewed evaluator and its exact 72,080-byte
+source bundle are authorized for one local run, which is still unopened.
 
 See [`REASONER50.md`](REASONER50.md) and the
 [`prospective contract`](../benchmarks/reasoner50-residual-transfer-v1/contract.json).

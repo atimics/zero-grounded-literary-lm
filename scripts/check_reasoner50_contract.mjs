@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 
 const directory = "benchmarks/reasoner50-residual-transfer-v1";
 const contract = JSON.parse(readFileSync(`${directory}/contract.json`, "utf8"));
@@ -20,14 +21,24 @@ requireValue(
 );
 requireValue(contract.experiment === "reasoner50-residual-transfer-v1", "experiment");
 requireValue(contract.version === "5.0", "version");
-requireValue(contract.status === "preregistered-unopened", "status");
+requireValue(contract.status === "authorized-unopened", "status");
 requireValue(contract.authorization.authorized === true, "authorization");
+requireValue(
+  contract.authorization.approval_id ===
+    "reasoner50-residual-transfer-2026-09-02-v1",
+  "approval ID",
+);
 requireValue(contract.authorization.scope.includes("local"), "local scope");
 requireValue(contract.execution.cloud_resources === false, "no cloud authority");
 requireValue(contract.execution.scientific_executions === 1, "one execution");
 requireValue(contract.execution.scientific_retries === 0, "no retry");
 requireValue(contract.execution.maximum_seconds === 300, "time cap");
 requireValue(contract.execution.tuning_after_open === false, "no tuning");
+requireValue(
+  contract.execution.required_approval_id ===
+    contract.authorization.approval_id,
+  "execution approval",
+);
 requireValue(
   sha256("benchmarks/reasoner42-abstraction-library-v1/RESULT.json") ===
     contract.frozen_base.result_sha256,
@@ -67,6 +78,30 @@ requireValue(
 requireValue(contract.gate.oracle_expansions_per_episode === 1, "oracle");
 requireValue(Object.keys(contract.controls).length === 7, "controls");
 requireValue(contract.non_claims.length === 5, "non-claims");
+
+for (const [path, digest] of Object.entries(contract.implementation_source.files)) {
+  requireValue(sha256(path) === digest, `source hash ${path}`);
+}
+const sourceArchive = spawnSync(
+  "git",
+  [
+    "archive",
+    "--format=tar.gz",
+    contract.implementation_source.implementation_commit,
+    ...contract.implementation_source.archive_files,
+  ],
+  { encoding: null, maxBuffer: 1024 * 1024 },
+);
+requireValue(sourceArchive.status === 0, "source archive generation");
+requireValue(
+  createHash("sha256").update(sourceArchive.stdout).digest("hex") ===
+    contract.implementation_source.bundle_sha256,
+  "source bundle hash",
+);
+requireValue(
+  sourceArchive.stdout.length === contract.implementation_source.bundle_bytes,
+  "source bundle bytes",
+);
 
 for (const evidence of [
   "92 signed integer fields",
