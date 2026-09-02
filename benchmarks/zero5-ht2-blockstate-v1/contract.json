@@ -10,7 +10,7 @@
   },
   "series": {
     "path": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
-    "sha256": "17984410c08f57d80acc55b87f025e243dc2df18b91a29f22626cac72615b9a6"
+    "sha256": "c3fb49f0ed7488df461a2c7914e7e0145122cac6c29743419e8a20ba10a26385"
   },
   "specification": {
     "path": "benchmarks/zero5-ht2-blockstate-v1/SPEC.md",

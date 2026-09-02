@@ -61,7 +61,7 @@ Training must not run again. Any recovery must:
 ## Authorized evaluation-only execution
 
 The recovery is frozen in `evaluation-recovery-contract.json` at SHA-256
-`dd8e8bed413c551507ba424ee82ba0b6b91403ef4c50c423b1961dcee801cfa0`.
+`55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5`.
 The separate authorization
 `zero5-c61-evaluation-recovery-aws-2026-09-01-v1` is bound to that contract and
 permits one c6i.4xlarge evaluation for at most 9,000 seconds and $1.70. It
@@ -72,3 +72,12 @@ writes each completed task to the private synced cache. It preserves the
 original evaluator and scientific contract byte for byte. A final result still
 uses the original C6.1 gates and can authorize only a replication request, not
 replication or promotion itself.
+
+## Terminal outcome
+
+Run `zero5-c61-eval-20260901-10f8435` completed all 18 atomic tasks in 3,800
+instance seconds for an estimated $0.717777777778. The result SHA-256 is
+`f08036025f74911e53f5341b35d4844cf49e9261c3599ba134ed7e56072e1d32`.
+The frozen decision is no-go. Auxiliary state-learning and retention gates
+passed. Retrieval, paired-choice, and bridge-contribution gates failed. The
+sealed test stayed closed.
