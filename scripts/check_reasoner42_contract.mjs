@@ -199,7 +199,8 @@ const run = spawnSync("./reasoner42", ["development", outputPath], {
   encoding: "utf8",
 });
 try {
-  requireValue(run.status === 0, `development run: ${run.stderr.trim()}`);
+  const runError = run.stderr?.trim() || run.error?.message || "failed to start";
+  requireValue(run.status === 0, `development run: ${runError}`);
   const stdout = JSON.parse(run.stdout);
   const generated = JSON.parse(readFileSync(outputPath, "utf8"));
   requireValue(stdout.development_gate_passed === true, "stdout development gate");
