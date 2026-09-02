@@ -50,7 +50,7 @@ way and the complete conjunctive gate passes.
 | 4.0 | Active induction of reversible input representations | Pass: 6,432/6,432 sealed episodes |
 | 4.1 | Joint induction of unseen representations and laws | Pass: 33,232/33,232 sealed episodes |
 | 4.2 | Exact discovery and reuse of derived adapter abstractions | Pass: 34/34 sealed episodes |
-| 5.0 | Contract-preserved frozen-ranker and residual transfer | Preregistered; unopened |
+| 5.0 | Contract-preserved frozen-ranker and residual transfer | No-go: 7.7% versus required 20% search reduction |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -99,7 +99,7 @@ the [`sealed result`](../benchmarks/reasoner42-abstraction-library-v1/RESULT.md)
 and the
 [`cloud provenance`](../benchmarks/reasoner42-abstraction-library-v1/CLOUD_PROVENANCE.json).
 
-## Active Reasoner 5 experiment
+## Reasoner 5.0 result
 
 Reasoner 5.0 tests learned-state transfer separately from protocol transfer. A
 small integer ranker learned from the seven Reasoner 4.2 development solutions
@@ -108,11 +108,14 @@ same-schema residual. The combined scorer then orders candidates for twelve
 held-out three-library-call programs while the exact affine verifier retains
 all authority.
 
-The measured outcome is deterministic candidate expansions on the final
-search path. The frozen gate requires exact answers and a causal search-cost
-advantage over matched target-only, source-only, shuffled, ablated, and
-runtime-mismatch controls. The reviewed evaluator and its exact 72,080-byte
-source bundle are authorized for one local run, which is still unopened.
+The single authorized run kept all 24 identifications, 1,944 affine replays,
+72 applications, and 24 reports exact. But the full scorer required 229
+candidate expansions versus 248 for target-only, a 7.7% reduction rather than
+the required 20%. Source-only was better at 187 expansions, and the runtime
+mismatch was slightly better at 225. The result is therefore no-go: identical
+operating conditions made the transfer auditable and safe, but did not make
+the registered residual useful.
 
-See [`REASONER50.md`](REASONER50.md) and the
-[`prospective contract`](../benchmarks/reasoner50-residual-transfer-v1/contract.json).
+See [`REASONER50.md`](REASONER50.md), the unchanged
+[`prospective contract`](../benchmarks/reasoner50-residual-transfer-v1/contract.json),
+and the [`result`](../benchmarks/reasoner50-residual-transfer-v1/RESULT.md).

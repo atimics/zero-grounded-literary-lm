@@ -296,7 +296,7 @@ all: reasoner0 reasoner1 reasoner2 reasoner3 reasoner31 reasoner32 reasoner33 \
 	reasoner40-check reasoner40-contract-check reasoner40-result-check \
 	reasoner41-check reasoner41-contract-check reasoner41-result-check \
 	reasoner42-check reasoner42-contract-check reasoner42-result-check \
-	reasoner50-check reasoner50-contract-check \
+	reasoner50-check reasoner50-contract-check reasoner50-result-check \
 	weight-multiplicity-check
 
 reasoner0: reasoner0.c reasoner0_cli.c reasoner0.h
@@ -521,6 +521,9 @@ reasoner50-check: reasoner50
 		/tmp/reasoner50-unauthorized-artifact.bin >/dev/null 2>&1; then \
 		echo "Reasoner 5.0 scientific execution unexpectedly opened"; exit 1; \
 	fi
+
+reasoner50-result-check:
+	node scripts/check_reasoner50_result.mjs
 
 sero_tokenizer: sero_tokenizer.c
 	$(CC) $(CFLAGS) sero_tokenizer.c -o $@
@@ -2769,7 +2772,7 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/crowley.tok --validation 20
 
 check: reasoner41-result-check reasoner42-result-check
-check: reasoner50-check reasoner50-contract-check
+check: reasoner50-check reasoner50-contract-check reasoner50-result-check
 check: sero-series-closure-check zero5-c0-check zero5-c1-check zero5-c2-check zero5-c3-check zero5-c31-check zero5-c32-check zero5-c33-check zero5-c33-parallel-check zero5-c33-parallel-result-check zero5-c42-check zero5-c42-aws-check zero5-c42-result-check zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check zero5-c43-result-check zero5-c51-result-check zero5-c52-result-check zero5-c51-statebridge-check zero5-c61-shared-state-check zero5-cpu-profile-check zero5-cpu-profile-aws-check zero5-cpu-profile-aws-result-check zero5-vector-math-check zero5-vector-math-aws-check zero5-vector-math-aws-result-check zero5-blocked-attention-check zero5-tensor-batch-check zero5-tensor-aws-check zero5-tensor-aws-result-check
 check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-q22-shared-task-check zero4-q22-compositional-shared-task-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero-latent-v3-aws-check sero-latent-v3-result-check sero1-tokenizer-check sero1-pretrain-contract-check sero1-pretrain-aws-check sero1-pretrain-result-check sero1-generation-eval-result-check reasoner0-check reasoner1-check reasoner2-check reasoner3-check reasoner31-check reasoner32-check reasoner33-check reasoner34-check reasoner34-contract-check reasoner333-check reasoner34-witness-check reasoner35-check reasoner35-contract-check reasoner36-check reasoner36-contract-check reasoner37-check reasoner37-contract-check reasoner38-check reasoner38-contract-check reasoner39-check reasoner39-contract-check reasoner310-check reasoner310-contract-check reasoner40-check reasoner40-contract-check reasoner40-result-check reasoner41-check reasoner41-contract-check reasoner42-check reasoner42-contract-check weight-multiplicity-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
