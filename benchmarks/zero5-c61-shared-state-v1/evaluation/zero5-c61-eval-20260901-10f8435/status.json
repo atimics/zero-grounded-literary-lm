@@ -1,0 +1,15 @@
+{
+  "schema": "zero.c61_evaluation_aws_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "zero5-c61-eval-20260901-10f8435",
+  "instance_id": "i-0263c49dfdda5f8d5",
+  "git_commit": "10f8435107abebcd038d6310b9e42ca49738a859",
+  "recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+  "training_executed": false,
+  "exit_code": 0,
+  "elapsed_instance_seconds": 3800,
+  "estimated_ec2_usd": 0.717777777778,
+  "result_key": "experiments/zero5-c61-shared-state-v1/evaluation-recovery/zero5-c61-eval-20260901-10f8435/result.json",
+  "result_sha256": "f08036025f74911e53f5341b35d4844cf49e9261c3599ba134ed7e56072e1d32"
+}

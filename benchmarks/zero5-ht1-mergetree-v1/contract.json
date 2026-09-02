@@ -10,7 +10,7 @@
   },
   "series": {
     "path": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
-    "sha256": "c80bb49128ad8ac6839fadaf55b146d1f0e63fba760a822921d42064d17962e1"
+    "sha256": "c3fb49f0ed7488df461a2c7914e7e0145122cac6c29743419e8a20ba10a26385"
   },
   "specification": {
     "path": "benchmarks/zero5-ht1-mergetree-v1/SPEC.md",

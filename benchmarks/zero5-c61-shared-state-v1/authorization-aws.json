@@ -1,13 +1,13 @@
 {
   "schema": "zero.c61_training_authorization.v1",
-  "authorization_id": "zero5-c61-shared-state-aws-2026-08-29-v1",
+  "authorization_id": "zero5-c61-shared-state-aws-2026-08-31-v2",
   "authorized": true,
-  "authorization_source": "user instruction: 'do it' (2026-08-29, AWS venue per monitoring concern)",
+  "authorization_source": "user instruction: 'Do it' (2026-08-31, corrective parser amendment and one fresh full run)",
   "experiment": "zero5-c61-shared-state-v1",
-  "contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
+  "contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
   "approved_by": "ratimics",
-  "approved_at": "2026-08-29T16:30:00Z",
-  "approved_statement": "I authorize one ZERO.5 C6.1 shared-state bottleneck run on AWS (c6i.4xlarge, us-east-1) under the revised venue contract.\n\nAuthorization is limited to: one on-demand c6i.4xlarge instance, a 9,000-second maximum, a $1.70 hard cost ceiling enforced in user-data, automatic termination, 30-second state sync to S3, initialization from the frozen C2 checkpoint, the frozen C5.1 mixture and target streams, frozen validation after training, and the bridge-on/bridge-off ablation.\n\nThis supersedes the unused local authorization zero5-c61-shared-state-local-2026-08-28-v1 (verified never executed). It does not authorize independent retries, promotion, checkpoint publication, corpus publication, or sealed-test access.",
+  "approved_at": "2026-08-31T03:30:00Z",
+  "approved_statement": "I authorize one fresh ZERO.5 C6.1 shared-state bottleneck run on AWS (c6i.4xlarge, us-east-1) under the corrected venue contract amended 2026-08-31.\n\nThe amendment fixes one defect in the pinned trainer source: the completion-evaluation record parser rejected records with target_start zero that the established zero.c3_completion_eval format (and the base C3.2 trainer parser) accepts when token_count is below the context limit. The frozen cloze validation bin contains 537 such records, so evaluation could not complete under the previous contract. The corrected condition matches the base parser exactly; no other trainer logic, training parameters, gates, or specification values changed.\n\nAuthorization is limited to: one on-demand c6i.4xlarge instance, a 9,000-second maximum, a $1.70 hard cost ceiling enforced in user-data, automatic termination, 30-second state sync to S3, initialization from the frozen C2 checkpoint, the frozen C5.1 mixture and target streams, frozen validation after training, and the bridge-on/bridge-off ablation.\n\nThis supersedes zero5-c61-shared-state-aws-2026-08-29-v1, which was consumed by three executions (the original 93c8003 launch and two resumes), all terminated recoverable without producing a result. It does not authorize independent retries, promotion, checkpoint publication, corpus publication, or sealed-test access.",
   "scope": {
     "experiment": "zero5-c61-shared-state-v1",
     "runs": 1,

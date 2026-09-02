@@ -171,7 +171,7 @@
   },
   "implementation": {
     "trainer": "zero5_c61_bottleneck_lm.c",
-    "trainer_sha256": "b61e51dd73d2be6446bfdc6338ee47f74a95a08b9f9bb5c9f0d4109f803ab084",
+    "trainer_sha256": "5177fa54b6d73173fb2c1ad34874eb1c361a35c4cd366ffcceb14ab3368ac62e",
     "importer": "scripts/prepare_zero5_c52_targets.mjs",
     "importer_sha256": "773ca4dd122a83fa125a9466c60f3262b27b0a4a70e1837e70a98b13b83c2464",
     "evaluator": "scripts/evaluate_zero5_c61_shared_state.mjs",
@@ -199,11 +199,11 @@
     "metrics_opened": false
   },
   "authorization": {
-    "approval_id": "zero5-c61-shared-state-aws-2026-08-29-v1",
+    "approval_id": "zero5-c61-shared-state-aws-2026-08-31-v2",
     "record": {
       "path": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
-      "source_contract_sha256": "e06a7fb3fa56890085f00531ff5802e147b018b52bf582cda65938a9a06236e4",
-      "supersedes": "zero5-c61-shared-state-local-2026-08-28-v1 (unused; no run ever executed)"
+      "source_contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
+      "supersedes": "zero5-c61-shared-state-aws-2026-08-29-v1 (consumed by three executions: the original 93c8003 launch and resumes r1/r2, all terminated recoverable without a result; superseded by the corrective parser amendment 2026-08-31)"
     }
   }
 }

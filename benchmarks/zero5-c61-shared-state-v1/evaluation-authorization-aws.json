@@ -1,0 +1,30 @@
+{
+  "schema": "zero.c61_evaluation_authorization.v1",
+  "authorization_id": "zero5-c61-evaluation-recovery-aws-2026-09-01-v1",
+  "authorized": true,
+  "authorization_source": "user instruction: 'do it' in direct response to the proposed narrow C6.1 evaluation-only recovery plan (2026-08-31 America/Vancouver)",
+  "experiment": "zero5-c61-shared-state-v1",
+  "recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+  "approved_by": "ratimics",
+  "approved_at": "2026-09-01T02:42:16Z",
+  "approved_statement": "I authorize one evaluation-only recovery of the already-trained ZERO.5 C6.1 seed-0 checkpoint. The recovery may download the exact private checkpoint pair and completed training log bound by the recovery contract, run the unchanged frozen validation and same-checkpoint bridge-off ablation, cache hash-bound atomic evaluation results, and emit the original C6.1 decision record. It may use one on-demand c6i.4xlarge instance in us-east-1 for at most 9,000 seconds and $1.70, with 30-second private state sync and automatic termination. It authorizes zero training updates and no independent retry, promotion, replication, checkpoint publication, corpus publication, or sealed-test access.",
+  "scope": {
+    "evaluations": 1,
+    "training": false,
+    "seed": 0,
+    "checkpoint_sha256": "975a2c2be303147a05a37681d8baa5fd0472dceb36d6715f593826412df54078",
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "maximum_execution_seconds": 9000,
+    "maximum_ec2_usd": 1.7,
+    "paid_compute": true
+  },
+  "not_authorized": [
+    "training updates",
+    "independent retries",
+    "promotion",
+    "replication",
+    "checkpoint publication",
+    "corpus publication",
+    "sealed-test access"
+  ]
+}

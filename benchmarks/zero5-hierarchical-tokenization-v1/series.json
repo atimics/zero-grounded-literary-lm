@@ -1,7 +1,7 @@
 {
   "schema": "zero.hierarchical_tokenization_series.v1",
   "series": "zero5-hierarchical-tokenization-v1",
-  "status": "preregistered-not-authorized",
+  "status": "preregistered-ready-for-implementation-review",
   "authorized": false,
   "purpose": "Test lexical, temporal, and answer-level hierarchy while retaining exact byte-BPE512 output.",
   "execution_order": [
@@ -12,8 +12,14 @@
   "active_dependency": {
     "experiment": "zero5-c61-shared-state-v1",
     "contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
-    "contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
-    "required_state": "terminal-hash-bound-result-before-implementation-or-training-authorization"
+    "contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
+    "required_state": "terminal-hash-bound-result-before-implementation-or-training-authorization",
+    "terminal_record": "benchmarks/zero5-c61-shared-state-v1/terminal.json",
+    "terminal_record_sha256": "3d8551060080cff4239ebc53385c291ceee3cda38515534aee7e099d54cfd08d",
+    "terminal_result_sha256": "f08036025f74911e53f5341b35d4844cf49e9261c3599ba134ed7e56072e1d32",
+    "terminal_status": "complete-no-go",
+    "checkpoint_sha256": "975a2c2be303147a05a37681d8baa5fd0472dceb36d6715f593826412df54078",
+    "dependency_satisfied": true
   },
   "shared_control": {
     "experiment": "zero5-c51-statebridge-v1",

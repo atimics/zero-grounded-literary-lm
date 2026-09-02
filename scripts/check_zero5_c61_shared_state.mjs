@@ -37,7 +37,10 @@ assert.equal(contract.execution.cost_ceiling_usd, 1.7);
 assert.equal(contract.execution.maximum_instance_seconds, 9000);
 assert.equal(contract.execution.spot_instances, false);
 assert.equal(contract.execution.automatic_termination, true);
-assert.equal(contract.authorization.record.supersedes.includes("unused"), true);
+assert.equal(contract.authorization.record.supersedes.includes(
+  "zero5-c61-shared-state-aws-2026-08-29-v1"), true);
+assert.equal(contract.authorization.record.supersedes.includes(
+  "superseded by the corrective parser amendment"), true);
 assert.equal(sha256(contract.specification.path), contract.specification.sha256);
 for (const file of [contractPath, specPath]) {
   const text = fs.readFileSync(file, "utf8");
@@ -103,7 +106,9 @@ assert.equal(authorization.contract_sha256, sha256(contractPath));
 assert.equal(authorization.authorization_id,
   contract.authorization.approval_id);
 assert.match(authorization.approved_statement,
-  /supersedes the unused local authorization/u);
+  /supersedes zero5-c61-shared-state-aws-2026-08-29-v1/u);
+assert.match(authorization.approved_statement,
+  /The amendment fixes one defect in the pinned trainer source/u);
 assert.equal(authorization.authorization_id, contract.authorization.approval_id);
 assert.equal(authorization.scope.experiment, contract.experiment);
 assert.equal(authorization.scope.runs, 1);
@@ -115,7 +120,7 @@ assert.equal(authorization.scope.paid_compute, true);
 assert.equal(authorization.ilxyr.registration_id, contract.ilxyr.registration_id);
 assert.equal(authorization.ilxyr.run_authorized, true);
 assert.match(authorization.approved_statement,
-  /I authorize one ZERO\.5 C6\.1 shared-state bottleneck run on AWS/u);
+  /I authorize one fresh ZERO\.5 C6\.1 shared-state bottleneck run on AWS/u);
 for (const item of ["retries", "promotion", "publication",
   "sealed-test access"]) assert.equal(authorization.not_authorized.join(" ")
   .includes(item), true);
