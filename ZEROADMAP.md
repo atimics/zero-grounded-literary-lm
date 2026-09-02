@@ -38,6 +38,7 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Atlas corpus scale | one ordered C2 pass at fixed 4.85M parameters | C2 passed; Atlas validation loss fell 54.26% and C1 anchors improved |
 | Evidence-task curriculum | claims, cloze, retrieval with answer-only gates | C3 no-go; combined loss improved 39.13%, but cloze regressed and retrieval choice stayed at 52.05% |
 | Record-safe task braid | same C3.1 packs under blocked order, smooth interleaving, and 4x answer loss | C3.1 no-go; interleaving improved combined loss 41.75% and fixed cloze, while the best retrieval choice reached 54.77% and claim gain reached 7.28% |
+| Hierarchical tokenization studies | merge-tree embeddings, fixed-block recurrent state, and a prompt-predicted answer root | three contracts preregistered; implementation and training not authorized; blocked behind terminal C6.1 evidence |
 | Reason-first runtime | canonical Cartan matrices, learned control policy, exact Bareiss verifier, sealed Answer IR, language renderer tool | Reasoner-0 enumerates all 31 connected finite types through rank 8 with exact precision/recall and affine boundary negatives; not a base-model capability claim |
 | Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
 | Counterexample repair | learned node/bond edits, exact minimum-distance teacher, two-step verifier loop, feedback ablation | Reasoner-2 is exact on 267 supervised cases; its rank-7 policy solves 69/69 unseen rank-8 cases but only 66 optimally, while masked feedback still solves 66, so causal use and compression do not pass |
@@ -101,6 +102,14 @@ loss by more than 40%; explicit answer weight raised retrieval choice to
 data-definition repair at the same model size: evidence-grounded short claim
 targets, passage-order-paired retrieval, and task-balanced answer loss. No
 C3.2 training or parameter-scale run is authorized yet.
+
+Three hierarchical tokenization studies are now frozen as a separate series.
+HT1 tests structure already present in byte-BPE merges, HT2 tests recurrence
+across fixed eight-token blocks, and HT3 tests one prompt-predicted root held
+constant across an answer. They keep the exact lossless byte output and use
+matched controls. They are designs only: implementation, training, test
+access, replication, and promotion remain unauthorized, and all three wait
+for a terminal C6.1 result before activation.
 
 Reasoner-0 now provides a separate mechanics path for the longer-term
 reason-first architecture. Its seed task starts at the Cartan integer condition
