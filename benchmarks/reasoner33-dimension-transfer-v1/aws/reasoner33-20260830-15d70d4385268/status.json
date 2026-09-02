@@ -1,0 +1,14 @@
+{
+  "schema": "zero.reasoner33_aws_status.v1",
+  "status": "complete",
+  "phase": "complete",
+  "run_id": "reasoner33-20260830-15d70d4385268",
+  "instance_id": "i-04f518d90e907063f",
+  "git_commit": "15d70d4385268e3c7744abf1d1c7e703cbdf358c",
+  "contract_sha256": "8ad9eaa36a87a3637fe50a5a67c02151ef1be4abafd01cd428b19fba6f22cbfc",
+  "exit_code": 0,
+  "elapsed_instance_seconds": 298,
+  "estimated_ec2_usd": 0.000860888889,
+  "result_key": "experiments/reasoner33-dimension-transfer-v1/reasoner33-20260830-15d70d4385268/result.json",
+  "result_sha256": "340b15083b172803c817dd44a0572ebb2d0b3041c569cab1f2bb0f5d2849ddf3"
+}

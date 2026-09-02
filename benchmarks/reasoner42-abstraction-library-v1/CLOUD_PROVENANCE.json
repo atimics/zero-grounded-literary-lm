@@ -1,0 +1,84 @@
+{
+  "schema": "zero.reasoner42_cloud_provenance.v1",
+  "run_id": "reasoner42-20260902t030000z",
+  "instance_id": "i-0bb4aacea751e7b92",
+  "instance_state": "terminated",
+  "region": "us-east-1",
+  "instance_type": "t3.micro",
+  "approval_id": "reasoner42-abstraction-library-2026-09-01-v1",
+  "source": {
+    "commit": "a5c8e8c69c309940adce5cb01609b4604e553606",
+    "bundle_bytes": 61608,
+    "sha256": "41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1",
+    "bucket": "zero-training-022118847419",
+    "key": "experiments/reasoner42-abstraction-library-v1/source/a5c8e8c69c309940adce5cb01609b4604e553606-41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1.tar.gz",
+    "etag": "ae53e298ab812069d374342a8bfc83e3",
+    "checksum_crc64nvme": "S+S7lxSJqlc=",
+    "version_id": "R9qZt7EOs_Mgsm5qQfbuGsZZVDcI.i7E",
+    "server_side_encryption": "AES256"
+  },
+  "contract_sha256": "373740c1a2bd305e5f57b5b1d6ff0d5d87a6b47d47311e4f544cf14f95a82a6b",
+  "execution": {
+    "launched_at": "2026-09-02T03:02:23Z",
+    "launch_epoch": 1788318140,
+    "elapsed_instance_seconds": 198,
+    "hourly_price_usd": 0.0104,
+    "estimated_ec2_usd": 0.000572,
+    "maximum_instance_seconds": 2400,
+    "maximum_ec2_usd": 0.007,
+    "maximum_total_run_usd": 0.01,
+    "attempts": 1,
+    "retry": false,
+    "tuning_after_seal": false,
+    "automatic_termination": true
+  },
+  "artifacts": {
+    "execution_lock": {
+      "key": "experiments/reasoner42-abstraction-library-v1/execution.lock",
+      "bytes": 467,
+      "sha256": "6fce8be0136638613c0f48e337fcc12a09389f82768c12d39dfd5903484f6a51"
+    },
+    "launch_receipt": {
+      "key": "experiments/reasoner42-abstraction-library-v1/reasoner42-20260902t030000z/launch.json",
+      "bytes": 570,
+      "sha256": "b179e42736fc0013b9272003dbd75b6d60167ff5d6d3f854f8b2522d16ff1365"
+    },
+    "result": {
+      "key": "experiments/reasoner42-abstraction-library-v1/reasoner42-20260902t030000z/result.json",
+      "bytes": 2508,
+      "sha256": "04abc43c23f26db5114e085906395c508497562ec8b3d90b7da04676a85f47ee"
+    },
+    "sealed_summary": {
+      "key": "experiments/reasoner42-abstraction-library-v1/reasoner42-20260902t030000z/sealed-summary.json",
+      "bytes": 414,
+      "sha256": "9c6e091631c893be3f523ac1e06f5e64197ca647d966761d503e1d1e92942e00"
+    },
+    "final_status": {
+      "key": "experiments/reasoner42-abstraction-library-v1/reasoner42-20260902t030000z/status.json",
+      "bytes": 698,
+      "sha256": "40fd53a5a144331fe806bdcd456d282dee1ef430b4a74896bf2aeee7977d85b4"
+    },
+    "bootstrap_log": {
+      "key": "experiments/reasoner42-abstraction-library-v1/reasoner42-20260902t030000z/bootstrap.log",
+      "bytes": 37319,
+      "sha256": "ee4ee1970041b8ce45fd407e283b966324af6adbd99bf8d3ca137a30f0e3bf01"
+    }
+  },
+  "scientific_result": {
+    "gate_passed": true,
+    "library_digest": "3cf6bb033d68d2a3",
+    "result_digest": "77c0a177ce2ba04f",
+    "target_programs": 17,
+    "episodes": 34,
+    "queries": 14,
+    "exact_queries": 14,
+    "replay_checks": 2754,
+    "exact_replays": 2754,
+    "applications": 102,
+    "exact_applications": 102,
+    "exact_commits": 34,
+    "exact_reports": 34,
+    "premature_commits": 0,
+    "maximum_queries": 1
+  }
+}

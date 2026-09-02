@@ -38,9 +38,23 @@ completed lineage in `EXPERIMENTS.md`. `ZERO4.md` describes the architecture;
 | Atlas corpus scale | one ordered C2 pass at fixed 4.85M parameters | C2 passed; Atlas validation loss fell 54.26% and C1 anchors improved |
 | Evidence-task curriculum | claims, cloze, retrieval with answer-only gates | C3 no-go; combined loss improved 39.13%, but cloze regressed and retrieval choice stayed at 52.05% |
 | Record-safe task braid | same C3.1 packs under blocked order, smooth interleaving, and 4x answer loss | C3.1 no-go; interleaving improved combined loss 41.75% and fixed cloze, while the best retrieval choice reached 54.77% and claim gain reached 7.28% |
+| Hierarchical tokenization studies | merge-tree embeddings, fixed-block recurrent state, and a prompt-predicted answer root | three contracts preregistered; implementation and training not authorized; blocked behind terminal C6.1 evidence |
 | Reason-first runtime | canonical Cartan matrices, learned control policy, exact Bareiss verifier, sealed Answer IR, language renderer tool | Reasoner-0 enumerates all 31 connected finite types through rank 8 with exact precision/recall and affine boundary negatives; not a base-model capability claim |
 | Learned reason proposer | four-round graph recurrence, integer perceptron, structured verifier feedback, rank curriculum | Reasoner-1 reaches exact supervised rank-8 precision/recall; the rank-7 holdout finds all five rank-8 types with 96.7% precision, so compression remains blocked |
 | Counterexample repair | learned node/bond edits, exact minimum-distance teacher, two-step verifier loop, feedback ablation | Reasoner-2 is exact on 267 supervised cases; its rank-7 policy solves 69/69 unseen rank-8 cases but only 66 optimally, while masked feedback still solves 66, so causal use and compression do not pass |
+| Hidden invariant synthesis | bounded integer transition systems, exact ICE witnesses, learned atom edits, causal interventions, sealed language output | Reasoner-3 solves all 1,740 unseen stage-4 cases and 1,738 minimally; all 396 witness-interchange pairs pass, but the conjunctive exact holdout gate fails, so compression remains blocked |
+| Progress-constrained 3D synthesis | exact witness-resolving action set, learned legal-edit ranking, all-coordinate symmetry, development and sealed holdouts | Reasoner (3,1) is exact on 6,066/6,066 stage-5 cases and 1,674/1,674 sealed stage-6 cases; tool-only and witness-masked controls fail, so exact trace-preserving compression is authorized |
+| Exact behavioral compression | deterministic sparse packing, behavior-preserving nonzero-weight pruning, complete-world action comparison, full-trace and seal replay | Reasoner (3,2) retains 16 of 186 nonzero weights in an 87-byte artifact; all 2,093,056 actions and all 511 complete traces match (3,1) exactly |
+| Cross-dimension reasoning transfer | shared relational edit features, 1D/2D training, complete 3D development, capacity-matched hashed control, sealed 4D cloud test | Reasoner (3,3) passes all 4,095 sealed 4D programs minimally with a 64-byte policy and all 471,040 coordinate interventions; the fixed hash control solves 31/4,095 |
+| Counterexample-order robustness | enumerate every allowed negative witness source, shared semantic action features, canonical-witness and masked controls, sealed higher-dimensional census | Reasoner (3,3,4) passes all 4,095 sealed programs, 4,877,336 alternate-counterexample decisions, and 471,040 permutation checks |
+| Joint reasoning substrate | one 64-byte weight vector across planning, composition, and counterexample repair; pairwise joins, cyclic replay, sequential forgetting control | Reasoner (3,4) passes every sealed planning, composition, and witness-repair slice with no task bit or weight-bank switch |
+| Task-blind tool routing | one common integer tool-call record and one 64-byte policy for `QUERY`, `APPLY`, and `COMMIT` | Reasoner (3,5) passes all 2,592 sealed episodes and 79,536 tool decisions; shuffled feedback and zero weights fail |
+| Downstream language boundary | freeze the nonverbal trace before a separate controlled-language head runs | Reasoner (3,6) preserves all 79,536 reasoning events while 159,072 held-out utterances parse exactly; broken language cannot alter the trace |
+| Raw observation transfer | remove semantic tool fields and learn from raw vectors plus error codes | Reasoner (3,7) misses 336 of 482,304 sealed decisions and resolves no-go; no retry or post-seal tuning |
+| Exact law induction | minimum-description search with algebraic invariance certificates | Reasoner (3,8) passes all 743,184 sealed decisions across 20,736 fresh episodes |
+| Active compositional law induction | typed integer program enumeration, version-space filtering, and minimax evidence queries | Reasoner (3,9) identifies all 744 fresh sealed laws, makes all 2,844 active queries exactly, and passes every registered control |
+| Active representation induction | reversible field transducers, minimax alignment queries, exact raw-to-IR replay, frozen Reasoner (3,9) law core | Reasoner 4.0 passes all 6,432 fresh three-operation episodes, 1,852,416 replays, and 19,296 actions exactly |
+| Joint representation and law transfer | separate adapter and law version spaces, independent commitments, exact replay before action | Reasoner 4.1 passes all 3,480 public two-by-two episodes and 1,002,240 replays; its 33,232-episode three-by-three seal is locked |
 
 The deployed model is ZERO.4: the prospectively selected Q2.6 seed-2
 update-500 artifact at `docs/model.litq8`, SHA-256 `44b32f22...`. It was
@@ -89,6 +103,14 @@ data-definition repair at the same model size: evidence-grounded short claim
 targets, passage-order-paired retrieval, and task-balanced answer loss. No
 C3.2 training or parameter-scale run is authorized yet.
 
+Three hierarchical tokenization studies are now frozen as a separate series.
+HT1 tests structure already present in byte-BPE merges, HT2 tests recurrence
+across fixed eight-token blocks, and HT3 tests one prompt-predicted root held
+constant across an answer. They keep the exact lossless byte output and use
+matched controls. They are designs only: implementation, training, test
+access, replication, and promotion remain unauthorized, and all three wait
+for a terminal C6.1 result before activation.
+
 Reasoner-0 now provides a separate mechanics path for the longer-term
 reason-first architecture. Its seed task starts at the Cartan integer condition
 rather than following formal-definition dependencies. A tiny learned control
@@ -121,6 +143,60 @@ verifier fields still solves 66 cases and repairs 63 minimally. Feedback helps,
 but it is not causally dominant, so this is a no-go for the feedback-use gate
 and no compression is authorized. See
 [`docs/REASONER2.md`](docs/REASONER2.md).
+
+Reasoner-3 changes the object instead of tuning Cartan repair. The verifier
+keeps a bounded integer transition system hidden and returns only positive,
+negative, or implication counterexamples to a learned atom-edit policy. The
+stage-3 policy solves all 1,740 unseen stage-4 repair states and passes 396
+disjoint witness-interchange tests, while an exact no-feedback calculation
+caps a fixed first edit at 50%. Two holdout traces are non-minimal, so the
+frozen conjunctive causal gate remains a no-go. The fully supervised policy is
+exact on all 6,428 repair states, but that replay does not authorize
+compression or language training. See
+[`docs/REASONER3.md`](docs/REASONER3.md).
+
+Reasoner (3,1) resolves the two Reasoner-3 misses without adding memory. An edit
+may reach the verifier only when it resolves the current witness; the learned
+policy ranks the remaining legal edits. The new 3D world has 511 hidden
+programs and six exact complexity stages. Training stops at stage 4 before a
+6,066-case development holdout, then stops at stage 5 before the 1,674-case
+sealed test. Both pass with minimum-length traces, including every unseen
+learner observation. The exact tool alone repairs only 139 sealed-test cases,
+the witness-masked ranker repairs 1,189, and the full learner repairs all
+1,674. All 27 equal-admissibility witness pairs and all coordinate
+permutations pass. Exact trace-preserving compression is now authorized, but
+language training is not. See [`docs/REASONER31.md`](docs/REASONER31.md).
+
+Reasoner (3,2) completes that compression gate. It removes 170 behaviorally
+redundant nonzero weights, stores the remaining 16 in 87 bytes, and scores them
+directly without rebuilding the dense table. All 2,093,056 program/hypothesis
+actions, 511 complete traces, and sealed answers remain identical. This is a
+smaller runtime, not a new generalization result, so language training remains
+blocked. See [`docs/REASONER32.md`](docs/REASONER32.md).
+
+Reasoner (3,3) tests whether that small behavior is a reusable rule or a small
+lookup table. A 64-byte shared relational scorer trains below 3D, passes all
+511 3D development programs, and then passes all 4,095 programs plus 471,040
+coordinate interventions in the one-run sealed 4D cloud test. The fixed
+16-weight hash policy reproduces 3D exactly but solves only 31 of 4,095 4D
+programs. See [`docs/REASONER33.md`](docs/REASONER33.md).
+
+Reasoner (3,3,3) is the independent composition-transfer branch. It trains
+only on isolated two-variable difference modules, develops on two joined
+two-variable modules, and seals three unseen three-variable modules joined by
+bridge relations. The exact 63-program sealed family and all 252 relabelings
+passed; every registered control solved zero programs. See
+[`docs/REASONER333.md`](docs/REASONER333.md) and the
+[`sealed result`](benchmarks/reasoner333-composition-transfer-v1/RESULT.md).
+
+The current positive sealed Reasoner frontier is active representation
+induction. Reasoner 4.0 learns fresh three-operation raw adapters, replays
+canonical IR, and then uses the frozen (3,9) law core. All 6,432 sealed
+episodes passed. Reasoner 4.1 is the public frontier: its 3,480-episode joint
+adapter-and-law development cross-product passes, while its fresh seal remains
+locked. See [`docs/REASONER40.md`](docs/REASONER40.md), the
+[`Reasoner 4.0 sealed result`](benchmarks/reasoner40-active-representation-v1/RESULT.md),
+and [`docs/REASONER41.md`](docs/REASONER41.md).
 
 Solomon in NSRL remains the separate integer-only Rust research line. ilXyr is
 the evidence plane, not a model implementation. See docs/LINEAGE-BOUNDARY.md.

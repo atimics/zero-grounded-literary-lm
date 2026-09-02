@@ -31,6 +31,55 @@ small browser runtime:
   node-and-bond actions should reach the Reasoner-0 verifier.
 - `reasoner2`: a counterexample-conditioned integer policy that repairs
   rejected Cartan matrices with exact minimum-edit supervision.
+- `reasoner3`: an exact ICE learner that synthesizes bounded integer
+  invariants from positive, negative, and implication counterexamples.
+- `reasoner31`: Reasoner (3,1), a progress-constrained 3D ICE learner with a
+  sealed stage-6 generalization test and exact coordinate-permutation
+  interventions.
+- `reasoner32`: Reasoner (3,2), which behaviorally prunes the passing (3,1)
+  policy to a direct 87-byte sparse artifact and proves exact equivalence over
+  the complete finite world.
+- `reasoner33`: Reasoner (3,3), a capacity-matched dimension-transfer test
+  whose 64-byte semantic policy trained below 3D and passed all 4,095 programs
+  in the sealed 4D cloud evaluation; the fixed hash control solved only 31.
+- `reasoner34`: Reasoner (3,3,2), an exact non-monotonic courier planner that
+  must open and later restore goal-correct gates; its sealed five- through
+  seven-gate evaluation passed all 5,880 worlds exactly.
+- `reasoner333`: Reasoner (3,3,3), a sealed composition-transfer test that
+  trains a 64-byte shared policy only on isolated relation modules before
+  joining unseen modules with bridge constraints; all 63 sealed compositions
+  and 252 relabelings passed.
+- `reasoner34_witness`: Reasoner (3,3,4), an independently sealed test of
+  robustness to every allowed counterexample source; all 4,095 sealed programs
+  and 4,877,336 alternate-counterexample decisions passed.
+- `reasoner35`: Reasoner (3,4), a 64-byte joint-policy screen across planning,
+  composition, and witness reasoning with no task label or weight-bank switch;
+  its combined sealed gate passed.
+- `reasoner36`: Reasoner (3,5), one task-blind 64-byte policy that selects
+  `QUERY`, `APPLY`, and `COMMIT` calls from a common integer tool record.
+- `reasoner37`: Reasoner (3,6), a causally downstream language readout whose
+  output cannot change the completed nonverbal reasoning trace.
+- `reasoner38`: Reasoner (3,7), the raw-observation transfer test that kept
+  481,968 of 482,304 sealed decisions exact but correctly resolved no-go.
+- `reasoner39`: Reasoner (3,8), exact minimum-description law induction over a
+  fixed raw polynomial feature family.
+- `reasoner310`: Reasoner (3,9), an active integer-program learner that builds
+  laws from raw comparisons, queries until one canonical program remains, and
+  keeps language reporting behind a final tool call; its fresh compositional
+  seal passed all 744 episodes.
+- `reasoner40`: Reasoner 4.0, an exact active learner for reversible raw-input
+  adapters feeding the frozen (3,9) core; all 6,432 fresh three-operation
+  sealed episodes passed exactly.
+- `reasoner41`: Reasoner 4.1, a factorized joint-transfer learner that commits
+  separately to a fresh adapter and a fresh law; all 33,232 sealed episodes
+  over 4,154 fresh three-by-three pairs passed exactly.
+- `reasoner42`: Reasoner 4.2, an exact library learner that discovers three
+  reusable adapter subprograms, freezes them, and passed all 34 sealed episodes
+  over longer six-operation classes using affine proof certificates rather
+  than sampled behavioral identity.
+- `reasoner50`: Reasoner 5.0, a deployment-exact integer ranker that freezes
+  source-learned state, adds a same-schema target residual, and leaves all
+  acceptance authority with the exact affine verifier.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -191,13 +240,71 @@ make reasoner2-check
 ./reasoner2 train /tmp/reasoner2.r2p 8
 ./reasoner2 eval /tmp/reasoner2.r2p 2 8
 ./reasoner2 ablate /tmp/reasoner2.r2p 2 8
+make reasoner3-check
+./reasoner3 demo
+./reasoner3 train /tmp/reasoner3.r3p 4
+./reasoner3 eval /tmp/reasoner3.r3p 1 4
+./reasoner3 ablate /tmp/reasoner3.r3p 1 4
+./reasoner3 render /tmp/reasoner3.r3p 167
+make reasoner31-check
+./reasoner31 demo
+./reasoner31 train /tmp/reasoner31.r31p
+./reasoner31 eval /tmp/reasoner31.r31p 6 full
+./reasoner31 eval /tmp/reasoner31.r31p 6 ranker-masked
+./reasoner31 eval /tmp/reasoner31.r31p 6 tool-only
+./reasoner31 render /tmp/reasoner31.r31p 510
+make reasoner32-check
+./reasoner32 demo
+./reasoner32 build /tmp/reasoner32.r32p
+./reasoner32 verify /tmp/reasoner31.r31p /tmp/reasoner32.r32p
+./reasoner32 render /tmp/reasoner32.r32p 510
+make reasoner33-check
+./reasoner33 development
+make reasoner34-check
+./reasoner34 development
+make reasoner333-check
+./reasoner333 development
+make reasoner34-witness-check
+./reasoner34_witness development
+make reasoner35-check
+./reasoner35 development
+make reasoner36-check reasoner37-check reasoner38-check reasoner39-check
+make reasoner310-check
+make reasoner40-check reasoner40-contract-check
+make reasoner41-check reasoner41-contract-check
+make reasoner42-check reasoner42-contract-check reasoner42-result-check
+make reasoner50-check reasoner50-contract-check
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,
 and verifier contract. See [`docs/REASONER1.md`](docs/REASONER1.md) for the
 learned proposer and rank curriculum. See
 [`docs/REASONER2.md`](docs/REASONER2.md) for exact repair supervision, the
-feedback ablation, and its failed causal-use gate.
+feedback ablation, and its failed causal-use gate. See
+[`docs/REASONER3.md`](docs/REASONER3.md) for hidden transition systems,
+counterexample interventions, and its 1,738/1,740 minimum-edit holdout no-go.
+See [`docs/REASONER31.md`](docs/REASONER31.md) for the exact progress contract
+and the passing 1,674/1,674 sealed 3D test. See
+[`docs/REASONER32.md`](docs/REASONER32.md) for the 16-weight sparse policy and
+its exhaustive action-and-trace equivalence proof. See
+[`docs/REASONER33.md`](docs/REASONER33.md) for the frozen cross-dimension
+transfer contract and sealed cloud result. See
+[`docs/REASONER34.md`](docs/REASONER34.md) for the exact BFS planning task,
+matched controls, relabeling intervention, and unopened 5-7 gate seal.
+[`docs/REASONER333.md`](docs/REASONER333.md) for the independent composition
+branch and its unopened three-by-three seal.
+[`docs/REASONER34-WITNESS.md`](docs/REASONER34-WITNESS.md) for the independent
+counterexample-order branch and its unopened 4D seal.
+See [`docs/REASONER.md`](docs/REASONER.md) for the complete evidence map,
+current claim boundary, and next research question. The version-specific
+documents remain the detailed source for each frozen experiment.
+See [`docs/REASONER40.md`](docs/REASONER40.md) for the active adapter language,
+frozen-core certificate, exact public screen, and passed three-operation seal.
+See [`docs/REASONER41.md`](docs/REASONER41.md) for the joint-transfer protocol,
+separate commitment certificate, exact public cross-product, and passed seal.
+See [`docs/REASONER42.md`](docs/REASONER42.md) for learned abstraction-library
+growth, exact affine canonicalization, the passing public development gate,
+and the locked three-abstraction seal.
 
 ## Build
 

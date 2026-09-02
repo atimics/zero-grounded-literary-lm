@@ -1,0 +1,48 @@
+{
+  "schema": "zero.reasoner310_aws_contract.v1",
+  "experiment": "reasoner310-active-law-v1",
+  "version": "(3,9)",
+  "authorized": true,
+  "authorization": {
+    "approved_by": "ratimics",
+    "approved_at": "2026-08-31",
+    "approval_id": "reasoner310-active-law-2026-08-31-v1",
+    "scope": "one fresh sealed active-law execution after exact bundle approval"
+  },
+  "seal": {
+    "canonical_target_programs": 31,
+    "episodes": 744,
+    "action_calls": 2232,
+    "minimum_dimension": 9,
+    "maximum_dimension": 12,
+    "variants": 6,
+    "coordinate_orders": 6,
+    "terms_per_target": 3,
+    "retry": false
+  },
+  "source": {
+    "implementation_commit": "57fe18ebd96dd82ed9cf9c775cb24819a62b8d86",
+    "bundle_sha256": "30ffa61a3c68b1ca8daefe15329f37f0f5f025cbb8b6e26b0a72c8b842a6f574",
+    "bundle_bytes": 41602,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner310-active-law-v1/source/57fe18ebd96dd82ed9cf9c775cb24819a62b8d86.tar.gz"
+  },
+  "execution": {
+    "region": "us-east-1",
+    "instance_type": "t3.micro",
+    "maximum_instance_seconds": 1800,
+    "maximum_ec2_usd": 0.006,
+    "maximum_total_run_usd": 0.01,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "usd_per_hour": 0.0104,
+    "source": "AWS EC2 Linux on-demand t3.micro us-east-1",
+    "checked_at": "2026-08-30"
+  },
+  "result": {
+    "binary": "reasoner310",
+    "make_target": "reasoner310",
+    "schema": "zero.reasoner310_active_law.v1"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "zero.reasoner33_aws_execution_lock.v1",
+  "run_id": "reasoner33-20260830-15d70d4385268",
+  "contract_sha256": "8ad9eaa36a87a3637fe50a5a67c02151ef1be4abafd01cd428b19fba6f22cbfc",
+  "approval_id": "reasoner33-cloud-2026-08-30-v1",
+  "source_commit": "15d70d4385268e3c7744abf1d1c7e703cbdf358c",
+  "source_sha256": "233e5e3aeb7459d58de22770795c0ae4d113e9ff47dc4887d1b85ae13d7d6434",
+  "maximum_instance_seconds": 1800,
+  "maximum_ec2_usd": 0.006
+}

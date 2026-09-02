@@ -1,0 +1,98 @@
+{
+  "schema": "zero.hierarchical_tokenization_series.v1",
+  "series": "zero5-hierarchical-tokenization-v1",
+  "status": "preregistered-not-authorized",
+  "authorized": false,
+  "purpose": "Test lexical, temporal, and answer-level hierarchy while retaining exact byte-BPE512 output.",
+  "execution_order": [
+    "zero5-ht1-mergetree-v1",
+    "zero5-ht2-blockstate-v1",
+    "zero5-ht3-answerroot-v1"
+  ],
+  "active_dependency": {
+    "experiment": "zero5-c61-shared-state-v1",
+    "contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
+    "contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
+    "required_state": "terminal-hash-bound-result-before-implementation-or-training-authorization"
+  },
+  "shared_control": {
+    "experiment": "zero5-c51-statebridge-v1",
+    "contract": "benchmarks/zero5-c51-statebridge-v1/contract.json",
+    "contract_sha256": "7bb9616e2d3c47bba90ca995aaebf43fcc613825dae64564627261d8be745b7d",
+    "private_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "metrics": {
+      "retrieval_choice_accuracy": 0.525717112,
+      "retrieval_pair_exact_accuracy": 0.509396637,
+      "claim_choice_accuracy": 0.561403509,
+      "combined_nats_per_token": 2.0801
+    }
+  },
+  "shared_inputs": {
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "training_packs_sha256": "96cd33db03f5cc4e837d4ff2cdfd2bf4aaf845b731a189ea7d4ae770a730b59f",
+    "combined_validation_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "atlas_train_sha256": "1cdfe97aadfea9e286f2ca4ff8c4446eb913ce1e16a69383a1c498a5b7360d79",
+    "atlas_validation_sha256": "db6b17bbe2987ae8bb17b665b0ea383f15d3d4a6b6469cebd86f42e2718adb5c",
+    "anchor_train_sha256": "d36187d025efb2825bc7fe1ea0d456ef885daea35be773b1aa5e7e90c3ef71f0",
+    "anchor_validation_sha256": "e4fa97267acc53ae7e1c5a95bcd060b9ed1fbfb82c112a6a41cba4680b6b497a"
+  },
+  "shared_model": {
+    "base_parameters": 4852992,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "language_vocabulary": 512,
+    "positions": "rotary",
+    "tokenizer": "lossless byte-BPE512"
+  },
+  "shared_training": {
+    "pilot_seed": 0,
+    "replication_seeds": [1, 2],
+    "update_groups_per_arm": 28707,
+    "pack_sequences_per_arm": 37768,
+    "compute_token_exposures_per_arm": 19337216,
+    "active_targets_per_arm": 14850534,
+    "maximum_batch_sequences": 2,
+    "parallel_workers": 2,
+    "optimizer": "AdamW with fresh state",
+    "peak_learning_rate": 0.0003,
+    "weight_decay": 0.01,
+    "gradient_clip": 1,
+    "warmup_updates": 1000,
+    "schedule": "cosine over all 28,707 update groups",
+    "residual_dropout": 0.1,
+    "answer_weights": {
+      "claim": 2.229423406,
+      "cloze": 5.253416128,
+      "retrieval": 1.429401038
+    }
+  },
+  "resource_boundary": {
+    "auxiliary_parameter_ceiling": 193264,
+    "maximum_compute_ratio": 1.15,
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null,
+    "training_runs_authorized": 0,
+    "independent_retries_authorized": 0
+  },
+  "governance": {
+    "implementation_authorized": false,
+    "training_authorized": false,
+    "replication_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false,
+    "sealed_test_access_authorized": false,
+    "pass_effect": "request for a separately frozen seeds-1-and-2 replication only"
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}

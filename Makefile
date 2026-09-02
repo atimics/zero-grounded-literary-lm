@@ -209,6 +209,7 @@ endif
 	zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check \
 	zero5-c43-result-check zero5-c51-result-check zero5-c52-result-check zero5-c51-statebridge-check \
 	zero5-c61-shared-state-check zero5-c61-evaluation-recovery-check \
+	zero5-hierarchical-tokenization-check \
 	sero-latent-v1-check sero-latent-v1-pilot \
 	sero-latent-v1-conventional sero-latent-v1-result-check \
 	sero-latent-v2-check sero-latent-v2-run sero-latent-v2-result-check \
@@ -280,9 +281,23 @@ endif
 	$(MONKEY_TRACE_PREFIX)-brainfuck.ckpt
 
 all: zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm bpe_tokenizer sero_tokenizer zero5_braid logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval
-all: reasoner0 reasoner1 reasoner2 weight_multiplicity
+all: reasoner0 reasoner1 reasoner2 reasoner3 reasoner31 reasoner32 reasoner33 \
+	reasoner34 reasoner333 reasoner34_witness reasoner35 reasoner36 reasoner37 \
+	reasoner38 reasoner39 reasoner310 reasoner40 reasoner41 reasoner42 \
+	reasoner50 \
+	weight_multiplicity
 
-.PHONY: reasoner0-check reasoner1-check reasoner2-check \
+.PHONY: reasoner0-check reasoner1-check reasoner2-check reasoner3-check \
+	reasoner31-check reasoner32-check reasoner33-check reasoner34-check \
+	reasoner34-contract-check reasoner333-check reasoner34-witness-check \
+	reasoner35-check reasoner35-contract-check reasoner36-check \
+	reasoner36-contract-check reasoner37-check reasoner37-contract-check \
+	reasoner38-check reasoner38-contract-check reasoner39-check \
+	reasoner39-contract-check reasoner310-check reasoner310-contract-check \
+	reasoner40-check reasoner40-contract-check reasoner40-result-check \
+	reasoner41-check reasoner41-contract-check reasoner41-result-check \
+	reasoner42-check reasoner42-contract-check reasoner42-result-check \
+	reasoner50-check reasoner50-contract-check \
 	weight-multiplicity-check
 
 reasoner0: reasoner0.c reasoner0_cli.c reasoner0.h
@@ -317,6 +332,196 @@ weight_multiplicity_crosscheck: reasoner0.c weight_multiplicity.c \
 weight-multiplicity-check: weight_multiplicity weight_multiplicity_crosscheck
 	./weight_multiplicity --self-test
 	./weight_multiplicity_crosscheck --self-test
+
+reasoner3: reasoner0.c reasoner3.c reasoner3_cli.c reasoner0.h reasoner3.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner3.c reasoner3_cli.c -o $@
+
+reasoner3-check: reasoner3
+	./reasoner3 --self-test
+
+reasoner31: reasoner0.c reasoner31.c reasoner31_cli.c reasoner0.h reasoner31.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner31.c reasoner31_cli.c -o $@
+
+reasoner31-check: reasoner31
+	./reasoner31 --self-test
+
+reasoner32: reasoner0.c reasoner31.c reasoner32.c reasoner32_cli.c \
+		reasoner0.h reasoner31.h reasoner32.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner31.c reasoner32.c \
+		reasoner32_cli.c -o $@
+
+reasoner32-check: reasoner32
+	./reasoner32 --self-test
+
+reasoner33: reasoner0.c reasoner31.c reasoner32.c reasoner33.c \
+		reasoner33_cli.c reasoner0.h reasoner31.h reasoner32.h reasoner33.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner31.c reasoner32.c reasoner33.c \
+		reasoner33_cli.c -o $@
+
+reasoner33-check: reasoner33
+	./reasoner33 --self-test
+
+reasoner34: reasoner0.c reasoner34.c reasoner34_cli.c reasoner0.h reasoner34.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner34.c reasoner34_cli.c -o $@
+
+reasoner34-check: reasoner34
+	./reasoner34 --self-test
+
+reasoner34-contract-check:
+	node scripts/check_reasoner34_contract.mjs
+
+reasoner333: reasoner333.c reasoner333_cli.c reasoner333.h
+	$(CC) $(CFLAGS) reasoner333.c reasoner333_cli.c -o $@
+
+reasoner333-check: reasoner333
+	./reasoner333 --self-test
+
+reasoner34_witness: reasoner0.c reasoner31.c reasoner32.c reasoner33.c \
+		reasoner34_witness.c reasoner34_witness_cli.c reasoner0.h reasoner31.h \
+		reasoner32.h reasoner33.h reasoner34_witness.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner31.c reasoner32.c reasoner33.c \
+		reasoner34_witness.c reasoner34_witness_cli.c -o $@
+
+reasoner34-witness-check: reasoner34_witness
+	./reasoner34_witness --self-test
+
+reasoner35: reasoner0.c reasoner31.c reasoner32.c reasoner33.c reasoner34.c \
+		reasoner333.c reasoner34_witness.c reasoner35.c reasoner35_cli.c \
+		reasoner0.h reasoner31.h reasoner32.h reasoner33.h reasoner34.h \
+		reasoner333.h reasoner34_witness.h reasoner35.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner31.c reasoner32.c reasoner33.c \
+		reasoner34.c reasoner333.c reasoner34_witness.c reasoner35.c \
+		reasoner35_cli.c -o $@
+
+reasoner35-check: reasoner35
+	./reasoner35 --self-test
+
+reasoner35-contract-check:
+	node scripts/check_reasoner35_contract.mjs
+
+reasoner36: reasoner0.c reasoner36.c reasoner36_cli.c reasoner0.h reasoner36.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner36.c reasoner36_cli.c -o $@
+
+reasoner36-check: reasoner36
+	./reasoner36 --self-test
+
+reasoner36-contract-check:
+	node scripts/check_reasoner36_contract.mjs
+
+reasoner37: reasoner0.c reasoner36.c reasoner37.c reasoner37_cli.c \
+		reasoner0.h reasoner36.h reasoner37.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner36.c reasoner37.c \
+		reasoner37_cli.c -o $@
+
+reasoner37-check: reasoner37
+	./reasoner37 --self-test
+
+reasoner37-contract-check:
+	node scripts/check_reasoner37_contract.mjs
+
+reasoner38: reasoner0.c reasoner38.c reasoner38_cli.c reasoner0.h reasoner38.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner38.c reasoner38_cli.c -o $@
+
+reasoner38-check: reasoner38
+	./reasoner38 --self-test
+
+reasoner38-contract-check:
+	node scripts/check_reasoner38_contract.mjs
+
+reasoner39: reasoner0.c reasoner39.c reasoner39_cli.c reasoner0.h reasoner39.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner39.c reasoner39_cli.c -o $@
+
+reasoner39-check: reasoner39
+	./reasoner39 --self-test
+
+reasoner39-contract-check:
+	node scripts/check_reasoner39_contract.mjs
+
+reasoner310: reasoner0.c reasoner310.c reasoner310_cli.c reasoner0.h \
+		reasoner310.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner310.c reasoner310_cli.c -o $@
+
+reasoner310-check: reasoner310
+	./reasoner310 --self-test
+
+reasoner310-contract-check:
+	node scripts/check_reasoner310_contract.mjs
+
+reasoner40: reasoner0.c reasoner310.c reasoner310.h reasoner40.c \
+		reasoner40_cli.c reasoner0.h reasoner40.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner40.c reasoner40_cli.c -o $@
+
+reasoner40-check: reasoner40
+	./reasoner40 --self-test
+	@if ./reasoner40 sealed-run /tmp/reasoner40-unauthorized.json \
+			>/dev/null 2>&1; then \
+		echo "Reasoner 4.0 sealed execution unexpectedly opened"; exit 1; \
+	fi
+
+reasoner40-contract-check:
+	node scripts/check_reasoner40_contract.mjs
+	bash -n scripts/aws/reasoner40-stage.sh \
+		scripts/aws/reasoner40-run-instance.sh \
+		scripts/aws/reasoner40-user-data.sh
+
+reasoner40-result-check:
+	node scripts/check_reasoner40_result.mjs
+
+reasoner41: reasoner0.c reasoner310.c reasoner310.h reasoner40.c \
+		reasoner40.h reasoner41.c reasoner41_cli.c reasoner0.h reasoner41.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner41.c reasoner41_cli.c -o $@
+
+reasoner41-check: reasoner41
+	./reasoner41 --self-test
+	@if ./reasoner41 sealed-run /tmp/reasoner41-unauthorized.json \
+			>/dev/null 2>&1; then \
+		echo "Reasoner 4.1 sealed execution unexpectedly opened"; exit 1; \
+	fi
+
+reasoner41-contract-check: reasoner41
+	node scripts/check_reasoner41_contract.mjs
+	bash -n scripts/aws/reasoner41-stage.sh \
+		scripts/aws/reasoner41-run-instance.sh \
+		scripts/aws/reasoner41-user-data.sh
+
+reasoner41-result-check:
+	node scripts/check_reasoner41_result.mjs
+
+reasoner42: reasoner0.c reasoner310.c reasoner310.h reasoner40.c \
+		reasoner40.h reasoner42.c reasoner42_cli.c reasoner0.h reasoner42.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner42.c reasoner42_cli.c -o $@
+
+reasoner42-check: reasoner42
+	./reasoner42 --self-test
+	@if ./reasoner42 sealed-run /tmp/reasoner42-unauthorized.json \
+			>/dev/null 2>&1; then \
+		echo "Reasoner 4.2 sealed execution unexpectedly opened"; exit 1; \
+	fi
+
+reasoner42-contract-check: reasoner42
+	node scripts/check_reasoner42_contract.mjs
+	bash -n scripts/aws/reasoner42-stage.sh \
+		scripts/aws/reasoner42-run-instance.sh \
+		scripts/aws/reasoner42-user-data.sh
+
+reasoner42-result-check:
+	node scripts/check_reasoner42_result.mjs
+
+reasoner50-contract-check:
+	node scripts/check_reasoner50_contract.mjs
+
+reasoner50: reasoner0.c reasoner310.c reasoner310.h reasoner40.c \
+		reasoner40.h reasoner42.c reasoner42.h reasoner50.c reasoner50.h \
+		reasoner50_cli.c reasoner0.h
+	$(CC) $(CFLAGS) reasoner0.c reasoner50.c reasoner50_cli.c -o $@
+
+reasoner50-check: reasoner50
+	./reasoner50 --self-test
+	@if ./reasoner50 execute /tmp/reasoner50-unauthorized-result.json \
+		/tmp/reasoner50-unauthorized-execution.json \
+		/tmp/reasoner50-unauthorized-artifact.bin >/dev/null 2>&1; then \
+		echo "Reasoner 5.0 scientific execution unexpectedly opened"; exit 1; \
+	fi
 
 sero_tokenizer: sero_tokenizer.c
 	$(CC) $(CFLAGS) sero_tokenizer.c -o $@
@@ -461,6 +666,9 @@ zero5-c61-shared-state-check: zero5_c61_bottleneck_lm
 
 zero5-c61-evaluation-recovery-check: zero5-c61-shared-state-check
 	node scripts/check_zero5_c61_evaluation_recovery.mjs
+
+zero5-hierarchical-tokenization-check:
+	node scripts/check_zero5_hierarchical_tokenization.mjs
 
 zero5-c42-run: zero5_c32_lm_vector_math zero5-c42-aws-check
 	node scripts/run_zero5_c42.mjs \
@@ -2567,8 +2775,10 @@ monkey-smoke: literary_lm monkey-data
 		--text corpus/bpe/blake.tok \
 		--text corpus/bpe/crowley.tok --validation 20
 
-check: sero-series-closure-check zero5-c0-check zero5-c1-check zero5-c2-check zero5-c3-check zero5-c31-check zero5-c32-check zero5-c33-check zero5-c33-parallel-check zero5-c33-parallel-result-check zero5-c42-check zero5-c42-aws-check zero5-c42-result-check zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check zero5-c43-result-check zero5-c51-result-check zero5-c52-result-check zero5-c51-statebridge-check zero5-c61-shared-state-check zero5-c61-evaluation-recovery-check zero5-cpu-profile-check zero5-cpu-profile-aws-check zero5-cpu-profile-aws-result-check zero5-vector-math-check zero5-vector-math-aws-check zero5-vector-math-aws-result-check zero5-blocked-attention-check zero5-tensor-batch-check zero5-tensor-aws-check zero5-tensor-aws-result-check
-check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-q22-shared-task-check zero4-q22-compositional-shared-task-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero-latent-v3-aws-check sero-latent-v3-result-check sero1-tokenizer-check sero1-pretrain-contract-check sero1-pretrain-aws-check sero1-pretrain-result-check sero1-generation-eval-result-check reasoner0-check reasoner1-check reasoner2-check weight-multiplicity-check
+check: reasoner41-result-check reasoner42-result-check
+check: reasoner50-check reasoner50-contract-check
+check: sero-series-closure-check zero5-c0-check zero5-c1-check zero5-c2-check zero5-c3-check zero5-c31-check zero5-c32-check zero5-c33-check zero5-c33-parallel-check zero5-c33-parallel-result-check zero5-c42-check zero5-c42-aws-check zero5-c42-result-check zero5-c43-spec-check zero5-c43-prep-check zero5-c43-contract-check zero5-c43-result-check zero5-c51-result-check zero5-c52-result-check zero5-c51-statebridge-check zero5-c61-shared-state-check zero5-c61-evaluation-recovery-check zero5-hierarchical-tokenization-check zero5-cpu-profile-check zero5-cpu-profile-aws-check zero5-cpu-profile-aws-result-check zero5-vector-math-check zero5-vector-math-aws-check zero5-vector-math-aws-result-check zero5-blocked-attention-check zero5-tensor-batch-check zero5-tensor-aws-check zero5-tensor-aws-result-check
+check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_controller freeze_literary_teacher literary_infer zero_eval faculty_eval quantity-request-eval-check zero4-q22-shared-task-check zero4-q22-compositional-shared-task-check zero4-promotion-check external-eval-check experiment-evidence-check literature-review-pipeline-check zero4-q27-check zero4-post-q27-research-check zero4-q28-check zero4-q28-activation-check zero4-q28-language-gate-check zero4-q28-u100-language-gate-check zero4-q29-check zero4-q29-language-gate-check zero4-q30-check zero4-q31-check zero4-q32-check zero4-q32-result-check zero4-q32-public-check zero4-q32-public-result-check zero4-q32-promotion-check zero4-q32-promotion-result-check zero4-q33-semantic-check zero4-q33-semantic-result-check zero4-q34-semantic-head-check zero4-q34-semantic-head-result-check corpus-rights-check zero-data-pipeline-check sero-corpus-plan-check sero0-check sero-latent-v1-result-check sero-latent-v2-result-check sero-latent-v3-contract-check sero-latent-v3-aws-check sero-latent-v3-result-check sero1-tokenizer-check sero1-pretrain-contract-check sero1-pretrain-aws-check sero1-pretrain-result-check sero1-generation-eval-result-check reasoner0-check reasoner1-check reasoner2-check reasoner3-check reasoner31-check reasoner32-check reasoner33-check reasoner34-check reasoner34-contract-check reasoner333-check reasoner34-witness-check reasoner35-check reasoner35-contract-check reasoner36-check reasoner36-contract-check reasoner37-check reasoner37-contract-check reasoner38-check reasoner38-contract-check reasoner39-check reasoner39-contract-check reasoner310-check reasoner310-contract-check reasoner40-check reasoner40-contract-check reasoner40-result-check reasoner41-check reasoner41-contract-check reasoner42-check reasoner42-contract-check weight-multiplicity-check
 	./zero_lm --steps 200 --tokens 16 --seed 0 \
 		--save /tmp/zero1-check.ckpt >/dev/null
 	./zero_lm --load /tmp/zero1-check.ckpt --tokens 16 --seed 0 >/dev/null
@@ -2631,5 +2841,5 @@ check: zero_lm literary_lm logic_corpus brainfuck_corpus channel_corpus faculty_
 		benchmarks/zero-channel-v1/results/BASELINE.md >/dev/null
 
 clean:
-	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_c51_target_lm zero5_c61_bottleneck_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot reasoner0 reasoner1 reasoner2 weight_multiplicity weight_multiplicity_crosscheck
+	rm -f zero_lm literary_lm zero5_lm zero5_c2_lm zero5_c3_lm zero5_c31_lm zero5_c32_lm zero5_c32_lm_fast zero5_c32_lm_profile zero5_c32_lm_vector_tanh zero5_c32_lm_vector_exp zero5_c32_lm_vector_math zero5_c32_lm_attention_b32 zero5_c32_lm_attention_b64 zero5_c32_lm_attention_b128 zero5_c32_lm_qkv_forward zero5_c32_lm_qkv_backward zero5_c32_lm_qkv zero5_c32_lm_tensor zero5_c32_lm_tensor_qkv zero5_c51_target_lm zero5_c61_bottleneck_lm zero5_braid bpe_tokenizer sero_tokenizer logic_corpus brainfuck_corpus channel_corpus faculty_controller export_literary freeze_literary_teacher literary_infer memorization_eval zero_eval faculty_eval quantity_request_eval external_eval quantity_adapter_pilot package_quantity_adapter quantity_adapter_infer quantity_adapter_request_eval base_probability_infer operation_head_pilot package_operation_head operation_head_infer operation_head_request_eval runtime_operation_head_pilot package_runtime_operation_head semantic_operation_eval semantic_runtime_head_pilot reasoner0 reasoner1 reasoner2 reasoner3 reasoner31 reasoner32 reasoner33 reasoner34 reasoner333 reasoner34_witness reasoner35 reasoner36 reasoner37 reasoner38 reasoner39 reasoner310 reasoner40 reasoner41 reasoner42 reasoner50 weight_multiplicity weight_multiplicity_crosscheck
 	rm -f docs/literary.js docs/literary.wasm
