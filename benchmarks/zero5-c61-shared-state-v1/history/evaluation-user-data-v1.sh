@@ -2,26 +2,15 @@
 
 set -Eeuo pipefail
 
-# Protect every startup command, including metadata reads and validation.
-# The full status handler takes over after the launch deadline is armed.
-bootstrap_finish() {
-  exit_code=$?
-  trap - EXIT
-  set +e
-  shutdown -h now
-  exit "$exit_code"
-}
-trap bootstrap_finish EXIT
-
 BOOT_LOG=/var/log/zero5-c61-evaluation-bootstrap.log
 exec > >(tee -a "$BOOT_LOG" >/dev/console) 2>&1
 set -x
 
 IMDS=http://169.254.169.254/latest
-TOKEN=$(curl --fail --silent --show-error --connect-timeout 5 --max-time 15 --request PUT \
+TOKEN=$(curl --fail --silent --show-error --request PUT \
   --header 'X-aws-ec2-metadata-token-ttl-seconds: 21600' "$IMDS/api/token")
 metadata() {
-  curl --fail --silent --show-error --connect-timeout 5 --max-time 15 \
+  curl --fail --silent --show-error \
     --header "X-aws-ec2-metadata-token: $TOKEN" "$IMDS/meta-data/$1"
 }
 tag() { metadata "tags/instance/$1"; }

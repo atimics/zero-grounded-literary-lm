@@ -1,0 +1,16 @@
+{
+  "schema": "zero.c61_runtime_safety_amendment.v1",
+  "purpose": "Install shutdown protection before metadata reads and bound each request.",
+  "execution_authorized": false,
+  "recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+  "historical": {
+    "path": "benchmarks/zero5-c61-shared-state-v1/history/evaluation-user-data-v1.sh",
+    "sha256": "9e28ff5d920f5306281ebc6d4deec56a9afdf10c0fa9981d128743319263c567",
+    "bytes": 8548
+  },
+  "current": {
+    "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
+    "sha256": "3b0fa06482294380da487943484f837cb9dbe1d6164aadd9ebadccee4c385f2d",
+    "bytes": 8890
+  }
+}

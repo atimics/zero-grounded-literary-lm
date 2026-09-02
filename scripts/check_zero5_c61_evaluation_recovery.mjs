@@ -60,8 +60,20 @@ assert.equal(digest(Buffer.from(JSON.stringify(scientific.gates))),
 assert.equal(contract.evaluation.atomic_tasks, 18);
 assert.equal(contract.evaluation.sealed_test_opened, false);
 assert.equal(contract.evaluation.training_updates, 0);
-for (const [name, record] of Object.entries(contract.implementation))
-  checkArtifact(record, name);
+// Keep the executed source hash intact. Track the later startup fix separately.
+const safety = JSON.parse(fs.readFileSync(
+  "benchmarks/zero5-c61-shared-state-v1/runtime-safety-amendment.json"));
+assert.equal(safety.schema, "zero.c61_runtime_safety_amendment.v1");
+assert.equal(safety.execution_authorized, false);
+assert.equal(safety.recovery_contract_sha256, digest(contractBytes));
+assert.equal(safety.current.path, contract.implementation.user_data.path);
+assert.equal(safety.historical.sha256, contract.implementation.user_data.sha256);
+assert.equal(safety.historical.bytes, contract.implementation.user_data.bytes);
+checkArtifact(safety.historical, "executed user-data");
+checkArtifact(safety.current, "current user-data");
+for (const [name, record] of Object.entries(contract.implementation)) {
+  if (name !== "user_data") checkArtifact(record, name);
+}
 
 assert.equal(contract.execution.venue,
   "aws us-east-1 c6i.4xlarge on-demand");
@@ -113,5 +125,10 @@ for (const script of [contract.implementation.evaluator.path,
   });
   assert.equal(result.status, 0, result.stderr || result.stdout);
 }
+
+const bootstrap = spawnSync("node", [
+  "scripts/check_zero5_c61_bootstrap_safety.mjs",
+], { encoding: "utf8" });
+assert.equal(bootstrap.status, 0, bootstrap.stderr || bootstrap.stdout);
 
 process.stdout.write("ZERO.5 C6.1 evaluation-only recovery checks passed\n");
