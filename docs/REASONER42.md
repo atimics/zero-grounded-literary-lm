@@ -88,9 +88,12 @@ certificate probes, and applies every result three times. An exhaustive base
 oracle must prove that every target's exact minimum is six operations. The
 same negative controls must continue to fail.
 
-The evaluator is implemented but not authorized. It refuses local execution,
-requires a separately frozen approval ID and an unused one-shot lock, and
-cannot yet be launched. No sealed target has been evaluated.
+The evaluator is authorized for exactly one capped AWS execution. It refuses
+local execution and requires approval ID
+`reasoner42-abstraction-library-2026-09-01-v1` plus an unused one-shot lock.
+The cap is 2,400 seconds, $0.007 EC2 cost, and $0.01 total cost, with automatic
+termination, no retry, and no post-seal tuning. No sealed target has yet been
+evaluated.
 
 The current result is evidence for exact derived-abstraction discovery and
 reuse inside the registered reversible affine language. It does not establish

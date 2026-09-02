@@ -2,8 +2,14 @@
   "schema": "zero.reasoner42_abstraction_library_contract.v1",
   "experiment": "reasoner42-abstraction-library-v1",
   "version": "4.2",
-  "status": "frozen-unopened",
-  "authorized": false,
+  "status": "authorized-unopened",
+  "authorized": true,
+  "authorization": {
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-01",
+    "approval_id": "reasoner42-abstraction-library-2026-09-01-v1",
+    "user_authorization": "I approve merging Reasoner 4.2 PR #190.\n\nI authorize recording this approval, merging the authorization PR, and uploading the 61,608-byte source bundle from commit a5c8e8c69c309940adce5cb01609b4604e553606, SHA-256 41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1, to s3://zero-training-022118847419/experiments/reasoner42-abstraction-library-v1/source/.\n\nI authorize exactly one Reasoner 4.2 sealed AWS run in us-east-1 on t3.micro, capped at 2,400 seconds, $0.007 EC2 cost, and $0.01 total cost, with automatic termination, no retry, and no post-seal tuning.\n\nI approve publishing the result and cloud provenance whether the outcome is pass or no-go."
+  },
   "question": "Can solved exact programs create reusable derived abstractions that make longer held-out programs searchable inside a fixed budget?",
   "frozen_base": {
     "version": "4.0",
@@ -102,8 +108,8 @@
     "no_query_must_fail": true
   },
   "sealed": {
-    "authorized": false,
-    "status": "implemented-locked",
+    "authorized": true,
+    "status": "authorized-unopened",
     "recipe": "exact semantic classes requiring three library calls and six expanded base calls",
     "targets": 17,
     "evidence_orders": 2,
@@ -127,14 +133,43 @@
     "cli_must_fail_closed": true
   },
   "source": {
+    "implementation_commit": "a5c8e8c69c309940adce5cb01609b4604e553606",
+    "bundle_sha256": "41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1",
+    "bundle_bytes": 61608,
+    "destination": "s3://zero-training-022118847419/experiments/reasoner42-abstraction-library-v1/source/a5c8e8c69c309940adce5cb01609b4604e553606-41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1.tar.gz",
     "files": {
       "reasoner42.c": "aee74c6f7e29109cca3ceb00f829a5a7da7b9f844b6b47957ecba938c7146a7d",
       "reasoner42.h": "30a9b1d4b6ed2b1e1d893bc5eeffb3ab6e33dc5d9b1004e822f0d921d42092db",
       "reasoner42_cli.c": "3f47cac2910c8b8ce9ac979bf9a06b4b4391ffe398b2679292aa1ccfa58ad7b3"
     }
   },
+  "execution": {
+    "enabled": true,
+    "region": "us-east-1",
+    "image_id": "ami-0d7f022123f8ff19d",
+    "instance_type": "t3.micro",
+    "subnet_id": "subnet-f45220bc",
+    "security_group_id": "sg-03636a7f90a9b8b17",
+    "ingress_rules": 0,
+    "instance_profile": "zero-training-ec2",
+    "training_bucket": "zero-training-022118847419",
+    "maximum_instance_seconds": 2400,
+    "maximum_ec2_usd": 0.007,
+    "maximum_total_run_usd": 0.01,
+    "retry": false,
+    "instance_initiated_shutdown_behavior": "terminate"
+  },
+  "price_evidence": {
+    "source": "AWS Price List API",
+    "sku": "CRAJUW7BTXFMT2UJ",
+    "usd_per_hour": 0.0104,
+    "checked_at": "2026-09-01"
+  },
   "result": {
+    "binary": "reasoner42",
+    "make_target": "reasoner42",
     "schema": "zero.reasoner42_abstraction_library.v1",
+    "summary_schema": "zero.reasoner42_sealed_summary.v1",
     "digest": "ac7837bdb3030663",
     "development_gate_passed": true,
     "sealed_gate_passed": false,

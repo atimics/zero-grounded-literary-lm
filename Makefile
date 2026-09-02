@@ -497,6 +497,9 @@ reasoner42-check: reasoner42
 
 reasoner42-contract-check: reasoner42
 	node scripts/check_reasoner42_contract.mjs
+	bash -n scripts/aws/reasoner42-stage.sh \
+		scripts/aws/reasoner42-run-instance.sh \
+		scripts/aws/reasoner42-user-data.sh
 
 sero_tokenizer: sero_tokenizer.c
 	$(CC) $(CFLAGS) sero_tokenizer.c -o $@

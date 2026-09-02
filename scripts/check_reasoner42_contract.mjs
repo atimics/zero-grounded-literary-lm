@@ -20,8 +20,20 @@ requireValue(
 );
 requireValue(contract.experiment === "reasoner42-abstraction-library-v1", "experiment");
 requireValue(contract.version === "4.2", "version");
-requireValue(contract.status === "frozen-unopened", "status");
-requireValue(contract.authorized === false, "authorization");
+requireValue(contract.status === "authorized-unopened", "status");
+requireValue(contract.authorized === true, "authorization");
+requireValue(contract.authorization.approved_by === "ratimics", "approver");
+requireValue(contract.authorization.approved_at === "2026-09-01", "approval date");
+requireValue(
+  contract.authorization.approval_id ===
+    "reasoner42-abstraction-library-2026-09-01-v1",
+  "approval ID",
+);
+requireValue(
+  contract.authorization.user_authorization ===
+    "I approve merging Reasoner 4.2 PR #190.\n\nI authorize recording this approval, merging the authorization PR, and uploading the 61,608-byte source bundle from commit a5c8e8c69c309940adce5cb01609b4604e553606, SHA-256 41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1, to s3://zero-training-022118847419/experiments/reasoner42-abstraction-library-v1/source/.\n\nI authorize exactly one Reasoner 4.2 sealed AWS run in us-east-1 on t3.micro, capped at 2,400 seconds, $0.007 EC2 cost, and $0.01 total cost, with automatic termination, no retry, and no post-seal tuning.\n\nI approve publishing the result and cloud provenance whether the outcome is pass or no-go.",
+  "user authorization",
+);
 requireValue(
   contract.frozen_base.development_digest === "6af623f4d0e176fe",
   "frozen base digest",
@@ -38,6 +50,44 @@ requireValue(
 for (const [path, digest] of Object.entries(contract.source.files)) {
   requireValue(sha256(path) === digest, `source hash ${path}`);
 }
+
+const sourceCommit = "a5c8e8c69c309940adce5cb01609b4604e553606";
+const sourceFiles = [
+  "Makefile",
+  "reasoner0.c",
+  "reasoner0.h",
+  "reasoner310.c",
+  "reasoner310.h",
+  "reasoner40.c",
+  "reasoner40.h",
+  "reasoner42.c",
+  "reasoner42.h",
+  "reasoner42_cli.c",
+];
+const archive = spawnSync(
+  "git",
+  ["archive", "--format=tar.gz", sourceCommit, ...sourceFiles],
+  { encoding: null, maxBuffer: 1024 * 1024 },
+);
+requireValue(archive.status === 0, "frozen source archive generation");
+const bundleSha256 = createHash("sha256").update(archive.stdout).digest("hex");
+requireValue(contract.source.implementation_commit === sourceCommit, "source commit");
+requireValue(
+  contract.source.bundle_sha256 === bundleSha256 &&
+    bundleSha256 ===
+      "41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1",
+  "bundle hash",
+);
+requireValue(
+  contract.source.bundle_bytes === archive.stdout.length &&
+    archive.stdout.length === 61608,
+  "bundle size",
+);
+requireValue(
+  contract.source.destination ===
+    "s3://zero-training-022118847419/experiments/reasoner42-abstraction-library-v1/source/a5c8e8c69c309940adce5cb01609b4604e553606-41adde2ab724efc2c41c593b4faa462437108a75cf7ecad0ecc777cb61ebf2e1.tar.gz",
+  "bundle destination",
+);
 
 requireValue(contract.canonicalization.field_modulus === 257, "field modulus");
 requireValue(
@@ -65,8 +115,8 @@ requireValue(
   contract.controls.semantic_oracle_uses_full_base_depth_four === true,
   "base semantic oracle",
 );
-requireValue(contract.sealed.authorized === false, "sealed authorization");
-requireValue(contract.sealed.status === "implemented-locked", "sealed status");
+requireValue(contract.sealed.authorized === true, "sealed authorization");
+requireValue(contract.sealed.status === "authorized-unopened", "sealed status");
 requireValue(contract.sealed.targets === 17, "sealed targets");
 requireValue(contract.sealed.evidence_orders === 2, "sealed evidence orders");
 requireValue(contract.sealed.episodes === 34, "sealed episodes");
@@ -97,6 +147,51 @@ requireValue(
 requireValue(contract.sealed.scientific_retries === 0, "sealed retries");
 requireValue(contract.sealed.tuning_after_open === false, "post-seal tuning");
 requireValue(contract.sealed.cli_must_fail_closed === true, "sealed CLI lock");
+requireValue(contract.execution.enabled === true, "cloud execution enabled");
+requireValue(contract.execution.region === "us-east-1", "region");
+requireValue(contract.execution.image_id === "ami-0d7f022123f8ff19d", "image");
+requireValue(contract.execution.instance_type === "t3.micro", "instance type");
+requireValue(contract.execution.subnet_id === "subnet-f45220bc", "subnet");
+requireValue(
+  contract.execution.security_group_id === "sg-03636a7f90a9b8b17",
+  "security group",
+);
+requireValue(contract.execution.ingress_rules === 0, "no ingress");
+requireValue(
+  contract.execution.instance_profile === "zero-training-ec2",
+  "instance profile",
+);
+requireValue(
+  contract.execution.training_bucket === "zero-training-022118847419",
+  "training bucket",
+);
+requireValue(contract.execution.maximum_instance_seconds === 2400, "time cap");
+requireValue(contract.execution.maximum_ec2_usd === 0.007, "EC2 cap");
+requireValue(contract.execution.maximum_total_run_usd === 0.01, "total cap");
+requireValue(contract.execution.retry === false, "execution retry");
+requireValue(
+  contract.execution.instance_initiated_shutdown_behavior === "terminate",
+  "automatic termination",
+);
+requireValue(contract.price_evidence.usd_per_hour === 0.0104, "hourly price");
+requireValue(contract.price_evidence.checked_at === "2026-09-01", "price date");
+requireValue(
+  (contract.execution.maximum_instance_seconds *
+    contract.price_evidence.usd_per_hour) /
+    3600 <=
+    contract.execution.maximum_ec2_usd,
+  "time and cost caps disagree",
+);
+requireValue(contract.result.binary === "reasoner42", "binary");
+requireValue(contract.result.make_target === "reasoner42", "make target");
+requireValue(
+  contract.result.schema === "zero.reasoner42_abstraction_library.v1",
+  "result schema",
+);
+requireValue(
+  contract.result.summary_schema === "zero.reasoner42_sealed_summary.v1",
+  "summary schema",
+);
 requireValue(contract.result.digest === "ac7837bdb3030663", "result digest");
 
 const outputPath = `/tmp/reasoner42-contract-${process.pid}.json`;
@@ -190,4 +285,4 @@ requireValue(
   "one-shot rejection wrote a result",
 );
 
-console.log("Reasoner 4.2 frozen unopened contract verified");
+console.log("Reasoner 4.2 authorized frozen-source cloud contract verified");
