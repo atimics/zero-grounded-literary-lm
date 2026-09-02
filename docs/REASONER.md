@@ -50,6 +50,7 @@ way and the complete conjunctive gate passes.
 | 4.0 | Active induction of reversible input representations | Pass: 6,432/6,432 sealed episodes |
 | 4.1 | Joint induction of unseen representations and laws | Pass: 33,232/33,232 sealed episodes |
 | 4.2 | Exact discovery and reuse of derived adapter abstractions | Pass: 34/34 sealed episodes |
+| 5.0 | Contract-preserved frozen-ranker and residual transfer | Preregistered; unopened |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -97,3 +98,21 @@ See [`REASONER42.md`](REASONER42.md), the unchanged
 the [`sealed result`](../benchmarks/reasoner42-abstraction-library-v1/RESULT.md),
 and the
 [`cloud provenance`](../benchmarks/reasoner42-abstraction-library-v1/CLOUD_PROVENANCE.json).
+
+## Active Reasoner 5 experiment
+
+Reasoner 5.0 tests learned-state transfer separately from protocol transfer. A
+small integer ranker learned from the seven Reasoner 4.2 development solutions
+is frozen and hashed. Five target calibration programs may train only a
+same-schema residual. The combined scorer then orders candidates for twelve
+held-out three-library-call programs while the exact affine verifier retains
+all authority.
+
+The measured outcome is deterministic candidate expansions on the final
+search path. The frozen gate requires exact answers and a causal search-cost
+advantage over matched target-only, source-only, shuffled, ablated, and
+runtime-mismatch controls. The reviewed evaluator and its exact 72,080-byte
+source bundle are authorized for one local run, which is still unopened.
+
+See [`REASONER50.md`](REASONER50.md) and the
+[`prospective contract`](../benchmarks/reasoner50-residual-transfer-v1/contract.json).

@@ -1,0 +1,143 @@
+{
+  "schema": "zero.reasoner50_residual_transfer_contract.v1",
+  "experiment": "reasoner50-residual-transfer-v1",
+  "version": "5.0",
+  "status": "authorized-unopened",
+  "question": "Does frozen learned ranking state reduce exact target search after a task-family shift when the feature, scoring, and verifier interfaces remain byte-identical?",
+  "authorization": {
+    "authorized": true,
+    "scope": "one deterministic local scientific execution; no cloud resources",
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-02",
+    "approval_id": "reasoner50-residual-transfer-2026-09-02-v1",
+    "user_request": "execute the first 5 experiments in Reasoner 5"
+  },
+  "frozen_base": {
+    "version": "4.2",
+    "result_sha256": "04abc43c23f26db5114e085906395c508497562ec8b3d90b7da04676a85f47ee",
+    "library_digest": "3cf6bb033d68d2a3",
+    "library_entries": 3,
+    "field_modulus": 257,
+    "certificate_dimensions": [4, 12],
+    "certificate_queries": 81
+  },
+  "interface": {
+    "schema": "zero.reasoner5_candidate_features.v1",
+    "integer_only": true,
+    "feature_slots": 92,
+    "unigram_slots": 9,
+    "ordered_pair_slots": 81,
+    "length_slots": 1,
+    "macro_use_slots": 1,
+    "training_and_execution_share_one_score_function": true,
+    "ranker_can_authorize_commit": false,
+    "exact_affine_verifier_is_authoritative": true
+  },
+  "source": {
+    "recipe": "all seven exact Reasoner 4.2 development classes at their canonical two-library-call solutions",
+    "target_programs": 7,
+    "maximum_library_calls": 2,
+    "artifact": "signed integer unigram and ordered-pair counts plus length and macro-use counts",
+    "artifact_must_be_frozen_before_target_calibration": true,
+    "artifact_sha256_required": true
+  },
+  "target": {
+    "recipe": "the 17 published Reasoner 4.2 three-library-call semantic classes, ordered by exact semantic digest",
+    "target_programs": 17,
+    "calibration_programs": 5,
+    "held_out_programs": 12,
+    "calibration_selection": "five lowest exact semantic digests",
+    "held_out_selection": "remaining twelve exact semantic digests",
+    "evidence_orders": 2,
+    "held_out_episodes": 24,
+    "maximum_library_calls": 3,
+    "raw_candidate_programs": 820,
+    "target_residual_uses_only_calibration_programs": true,
+    "target_labels_forbidden_during_ranking": true
+  },
+  "ranking": {
+    "score": "dot(source_weights + target_residual, candidate_features)",
+    "primary_order": "descending signed integer score",
+    "tie_order_a": "ascending token count then lexical token bytes",
+    "tie_order_b": "descending lexical token bytes then ascending token count",
+    "candidate_expansion": "one exact affine equality check",
+    "acceptance": "only exact equality in every registered dimension",
+    "maximum_expansions_per_episode": 128
+  },
+  "controls": {
+    "target_only": "zero the frozen source weights",
+    "source_only": "zero the target residual",
+    "source_ablation": "build the full scorer then zero the frozen source contribution only at inference",
+    "shuffled_source": "rotate the 92 frozen source weight slots by 17 positions",
+    "runtime_mismatch": "swap library token feature slots one and three only at execution",
+    "oracle": "rank the exact semantic match first",
+    "unverified_top_candidate": "measure whether the scorer alone would commit an invalid first candidate"
+  },
+  "gate": {
+    "all_held_out_identifications_exact": true,
+    "all_affine_certificate_replays_exact": true,
+    "all_applications_exact": true,
+    "all_reports_exact": true,
+    "premature_commits": 0,
+    "full_model_must_fit_per_episode_expansion_budget": true,
+    "full_expansions_at_most_fraction_of_target_only": 0.8,
+    "full_expansions_strictly_less_than_source_only": true,
+    "full_expansions_strictly_less_than_shuffled_source": true,
+    "full_expansions_strictly_less_than_runtime_mismatch": true,
+    "full_model_individual_wins_over_target_only_at_least": 12,
+    "target_only_must_exceed_budget_on_at_least_one_episode": true,
+    "shuffled_source_must_exceed_budget_on_at_least_one_episode": true,
+    "unverified_scorer_must_offer_invalid_top_candidate": true,
+    "oracle_expansions_per_episode": 1
+  },
+  "execution": {
+    "mode": "local-deterministic",
+    "scientific_executions": 1,
+    "scientific_retries": 0,
+    "maximum_seconds": 300,
+    "cloud_resources": false,
+    "required_approval_id": "reasoner50-residual-transfer-2026-09-02-v1",
+    "exclusive_execution_lock_required": true,
+    "tuning_after_open": false,
+    "publish_pass_or_no_go": true
+  },
+  "implementation_source": {
+    "implementation_commit": "1912bba1d6ef29645345fd9ec1792c6586c6e689",
+    "bundle_sha256": "3cdd79ed8e735e648d73b0d9db5e2a9f00d2ae60b55e410181fc66fd96e4461c",
+    "bundle_bytes": 72080,
+    "files": {
+      "reasoner50.c": "cf9ac6f5c35342d8ad88d4dcdf546a3542780066bbe257a7dc229e56a630670b",
+      "reasoner50.h": "0805fb9ede2720b89deaa11d8543cd3b40a1a9465437903224efea9c0fd1568f",
+      "reasoner50_cli.c": "49a7364bd2d5e5a542cdac97776cd4a09cfd19f2f448a224d77d70d60979e220"
+    },
+    "archive_files": [
+      "Makefile",
+      "reasoner0.c",
+      "reasoner0.h",
+      "reasoner310.c",
+      "reasoner310.h",
+      "reasoner40.c",
+      "reasoner40.h",
+      "reasoner42.c",
+      "reasoner42.h",
+      "reasoner50.c",
+      "reasoner50.h",
+      "reasoner50_cli.c",
+      "benchmarks/reasoner50-residual-transfer-v1/contract.json",
+      "benchmarks/reasoner50-residual-transfer-v1/PREREGISTRATION.md"
+    ]
+  },
+  "result": {
+    "schema": "zero.reasoner50_residual_transfer.v1",
+    "binary": "reasoner50",
+    "required_files": ["RESULT.json", "RESULT.md", "EXECUTION.json"],
+    "decision_values": ["pass", "no-go"]
+  },
+  "non_claims": [
+    "unseen primitive transfer",
+    "non-affine transfer",
+    "robustness to noisy evidence",
+    "natural-language or visual grounding",
+    "open-ended reasoning"
+  ]
+}
