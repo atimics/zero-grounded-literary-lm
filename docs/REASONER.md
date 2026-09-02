@@ -119,3 +119,11 @@ the registered residual useful.
 See [`REASONER50.md`](REASONER50.md), the unchanged
 [`prospective contract`](../benchmarks/reasoner50-residual-transfer-v1/contract.json),
 and the [`result`](../benchmarks/reasoner50-residual-transfer-v1/RESULT.md).
+
+## Reasoner 5.1 result
+
+Reasoner 5.1 passed its registered finite unseen-primitive pilot. The verified
+adapter and frozen class prior used 45 candidate expansions against 105 for
+target-only. All 24 accepted programs were exact. The source corpus and
+semantic classes were fixed during design. The control table and scope are
+in the [result](../benchmarks/reasoner51-unseen-primitive-v1/RESULT.md).

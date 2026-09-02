@@ -528,6 +528,12 @@ reasoner50-check: reasoner50
 reasoner51-contract-check:
 	node scripts/check_reasoner51_contract.mjs
 
+.PHONY: reasoner51-result-check
+reasoner51-result-check:
+	node scripts/check_reasoner51_result.mjs
+
+check: reasoner51-result-check
+
 reasoner51: reasoner51.c reasoner51.h reasoner51_cli.c
 	$(CC) $(CFLAGS) reasoner51.c reasoner51_cli.c -o $@
 
