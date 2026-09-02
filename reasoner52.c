@@ -72,6 +72,13 @@ static void r52_program_table(const uint8_t token[3], uint8_t table[R52_MODULUS]
     }
 }
 
+static int r52_table_is_affine(const uint8_t table[R52_MODULUS]) {
+    uint8_t slope = r52_mod((int32_t)table[1] - table[0]);
+    for (uint8_t x = 0; x < R52_MODULUS; ++x)
+        if (table[x] != r52_mod((int32_t)slope * x + table[0])) return 0;
+    return 1;
+}
+
 static void r52_build_artifact(r52_artifact *artifact) {
     static const uint8_t source[R52_SOURCE_PROGRAMS][2] = {
         {3u,0u}, {4u,5u}, {0u,3u}, {5u,4u},
@@ -145,10 +152,6 @@ static uint32_t r52_rank(const r52_artifact *artifact,
                          uint32_t tie_order, r52_mode mode, int *top_invalid) {
     uint8_t target[R52_MODULUS];
     r52_program_table(target_token, target);
-    if (mode == R52_MODE_ORACLE) {
-        *top_invalid = 0;
-        return 1u;
-    }
     r52_candidate candidates[R52_CANDIDATES];
     uint32_t cursor = 0u;
     for (uint8_t a = 0u; a < R52_PRIMITIVES; ++a)
@@ -165,6 +168,9 @@ static uint32_t r52_rank(const r52_artifact *artifact,
                                                        candidate->token, mode);
                 candidate->score = (uint64_t)loss * UINT64_C(1000000) +
                                    (uint64_t)(1000u - strength);
+                if (mode == R52_MODE_ORACLE)
+                    candidate->score = memcmp(candidate->table, target,
+                                              R52_MODULUS) == 0 ? 0u : 1u;
                 uint64_t seed = ((uint64_t)target_index << 32) | tie_order;
                 candidate->tie = r52_hash(candidate->token,
                                            sizeof(candidate->token), seed);
@@ -180,6 +186,13 @@ static uint32_t r52_rank(const r52_artifact *artifact,
 int r52_self_test(void) {
     if (r52_apply_primitive(3u, 5u) != 8u) return 1;
     if (r52_apply_primitive(4u, 3u) != 10u) return 1;
+    uint8_t square[R52_MODULUS];
+    uint8_t affine[R52_MODULUS];
+    for (uint8_t x = 0; x < R52_MODULUS; ++x) {
+        square[x] = r52_apply_primitive(3u, x);
+        affine[x] = r52_mod(3 * (int32_t)x + 2);
+    }
+    if (r52_table_is_affine(square) || !r52_table_is_affine(affine)) return 1;
     r52_artifact artifact;
     r52_build_artifact(&artifact);
     if (artifact.source_digest == 0u) return 1;
@@ -206,7 +219,11 @@ int r52_execute(r52_result *result, r52_artifact *artifact) {
     result->artifact_frozen_before_target = 1u;
     result->exact_truth_table_authoritative = 1u;
     result->artifact_digest = artifact->source_digest;
+    r52_artifact ablated_artifact;
+    memset(&ablated_artifact, 0, sizeof(ablated_artifact));
     for (uint32_t target = 0; target < R52_TARGETS; ++target) {
+        uint8_t target_table[R52_MODULUS];
+        r52_program_table(targets[target], target_table);
         for (uint32_t tie = 0; tie < R52_TIE_ORDERS; ++tie) {
             int invalid = 0;
             uint32_t full = r52_rank(artifact, targets[target], target, tie,
@@ -215,11 +232,12 @@ int r52_execute(r52_result *result, r52_artifact *artifact) {
             result->full_truth_table_checks += full;
             result->full_exact_matches += full <= R52_CANDIDATES;
             result->unverified_top_candidates += (uint32_t)invalid;
-            result->nonlinear_target_episodes += 1u;
+            result->nonlinear_target_episodes += !r52_table_is_affine(target_table);
             uint32_t target_only = r52_rank(artifact, targets[target], target,
                 tie, R52_MODE_TARGET_ONLY, &invalid);
             result->target_only_expansions += target_only;
-            result->source_ablation_expansions += target_only;
+            result->source_ablation_expansions += r52_rank(&ablated_artifact,
+                targets[target], target, tie, R52_MODE_FULL, &invalid);
             result->individual_wins_vs_target_only += full < target_only;
             result->affine_projection_expansions += r52_rank(artifact,
                 targets[target], target, tie, R52_MODE_AFFINE_PROJECTION, &invalid);
@@ -237,6 +255,8 @@ int r52_execute(r52_result *result, r52_artifact *artifact) {
     }
     result->source_ablation_control_valid =
         result->source_ablation_expansions == result->target_only_expansions;
+    result->artifact_frozen_before_target = artifact->source_digest == r52_hash(
+        artifact, sizeof(*artifact) - sizeof(artifact->source_digest), 52u);
     result->gate_pass =
         result->artifact_frozen_before_target &&
         result->exact_truth_table_authoritative &&
