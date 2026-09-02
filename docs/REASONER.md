@@ -49,7 +49,7 @@ way and the complete conjunctive gate passes.
 | (3,9) | Active induction of unseen law compositions | Pass: 744/744 sealed episodes |
 | 4.0 | Active induction of reversible input representations | Pass: 6,432/6,432 sealed episodes |
 | 4.1 | Joint induction of unseen representations and laws | Pass: 33,232/33,232 sealed episodes |
-| 4.2 | Exact discovery and reuse of derived adapter abstractions | Development pass: 14/14 episodes; seal locked |
+| 4.2 | Exact discovery and reuse of derived adapter abstractions | Pass: 34/34 sealed episodes |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -64,38 +64,36 @@ adapter and law commitments and 9,570,816 exact raw-to-IR replays. It does not
 establish arbitrary representation recovery, new primitives, noisy learning,
 open-ended mathematical reasoning, or natural-language grounding.
 
-Reasoner 4.2 adds public development evidence for exact abstraction-library
+Reasoner 4.2 adds sealed positive evidence for exact abstraction-library
 growth. It solved nine short base programs, discovered three positive-MDL
-two-operation abstractions, froze them, and passed 14/14 held-out development
-episodes over seven semantic classes requiring four base operations but only
-two library calls. Program identity is now certified by exact affine matrices
-over every field input in dimensions four through twelve rather than by a
-finite behavior sample. This remains a derived-abstraction result inside the
-six-operation base meta-language.
+two-operation abstractions, froze them, and passed 34/34 fresh sealed episodes
+over 17 semantic classes requiring six base operations but only three library
+calls. The frozen library searched 820 raw programs while the exhaustive base
+oracle required 55,987. Program identity was certified by exact affine
+matrices over every field input in dimensions four through twelve rather than
+by a finite behavior sample. This remains a derived-abstraction result inside
+the six-operation base meta-language.
 
-## Next research question
+## Reasoner 4 series boundary
 
-The active experiment is the locked Reasoner 4.2 three-abstraction seal.
+The registered Reasoner 4 series is complete. Version 4.0 established active
+representation induction, 4.1 established factorized joint representation and
+law transfer, and 4.2 established exact discovery and reuse of a small derived
+abstraction library on longer held-out compositions.
 
-> Does the frozen learned library retain its search advantage when targets
-> require three reusable abstractions and six expanded base operations?
+The next justified question belongs to a separately preregistered successor:
 
-The public development screen is complete. The planned seal contains 17 exact
-semantic classes. Its library grammar has 820 raw programs through three
-calls, while the corresponding base grammar has 55,987 raw programs through
-six operations. Its cloud-only, one-shot evaluator is implemented, authorized,
-and still unopened.
+> Can the same verified search-and-commit design learn useful abstractions when
+> the primitive language, observation channel, or task family itself changes?
 
-The checked contract requires:
+That step must add a real boundary change rather than another larger sample
+from the current finite affine language. Useful directions include learned or
+unseen primitives, non-affine and recursive programs, noisy evidence, and
+transfer between symbolic and grounded observation channels. None of those
+claims is established by the Reasoner 4 results.
 
-- an unchanged three-entry library and library digest;
-- exact affine identity and inverse certificates;
-- unique identification before every commit;
-- exact replay, application, and report traces;
-- three library calls and six expanded base operations per target;
-- oracle isolation plus no-library, shuffled-curriculum, single-use,
-  lookup, and no-query controls; and
-- a separately authorized one-shot seal with no post-seal tuning.
-
-See [`REASONER42.md`](REASONER42.md) and the
-[`development contract`](../benchmarks/reasoner42-abstraction-library-v1/contract.json).
+See [`REASONER42.md`](REASONER42.md), the unchanged
+[`executed contract`](../benchmarks/reasoner42-abstraction-library-v1/contract.json),
+the [`sealed result`](../benchmarks/reasoner42-abstraction-library-v1/RESULT.md),
+and the
+[`cloud provenance`](../benchmarks/reasoner42-abstraction-library-v1/CLOUD_PROVENANCE.json).

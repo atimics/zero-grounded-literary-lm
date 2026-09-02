@@ -74,9 +74,9 @@ small browser runtime:
   separately to a fresh adapter and a fresh law; all 33,232 sealed episodes
   over 4,154 fresh three-by-three pairs passed exactly.
 - `reasoner42`: Reasoner 4.2, an exact library learner that discovers three
-  reusable adapter subprograms, freezes them, and solves held-out
-  four-operation classes inside a 100-program search budget using affine proof
-  certificates rather than sampled behavioral identity.
+  reusable adapter subprograms, freezes them, and passed all 34 sealed episodes
+  over longer six-operation classes using affine proof certificates rather
+  than sampled behavioral identity.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
@@ -269,7 +269,7 @@ make reasoner36-check reasoner37-check reasoner38-check reasoner39-check
 make reasoner310-check
 make reasoner40-check reasoner40-contract-check
 make reasoner41-check reasoner41-contract-check
-make reasoner42-check reasoner42-contract-check
+make reasoner42-check reasoner42-contract-check reasoner42-result-check
 ```
 
 See [`docs/REASONER0.md`](docs/REASONER0.md) for the interfaces, guarantees,

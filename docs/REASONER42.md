@@ -77,30 +77,40 @@ make reasoner42-check
 make reasoner42-contract-check
 ```
 
-## Locked next seal
+## Sealed result
 
-The registered next split contains 17 exact semantic classes that require
-three library calls and six expanded base operations. The library grammar has
-820 raw programs through depth three; the corresponding base grammar has
-55,987 raw programs through depth six. The frozen evaluator uses two evidence
-orders per class, allows at most two active queries, replays all 81 affine
-certificate probes, and applies every result three times. An exhaustive base
-oracle must prove that every target's exact minimum is six operations. The
-same negative controls must continue to fail.
+The single authorized AWS execution passed all 34 sealed episodes over 17
+fresh semantic classes and two evidence orders. Every target required three
+library calls and six expanded base operations. All 14 active queries, 2,754
+affine certificate replays, 102 applications, 34 commits, and 34 reports were
+exact. There were no premature commits, and no episode used more than one
+query, against the preregistered maximum of two.
 
-The evaluator is authorized for exactly one capped AWS execution. It refuses
-local execution and requires approval ID
-`reasoner42-abstraction-library-2026-09-01-v1` plus an unused one-shot lock.
-The cap is 2,400 seconds, $0.007 EC2 cost, and $0.01 total cost, with automatic
-termination, no retry, and no post-seal tuning. No sealed target has yet been
-evaluated.
+The library grammar searched 820 raw three-call programs. The exhaustive base
+oracle searched 55,987 raw programs and certified that every target's exact
+minimum was six base operations. The same semantic-oracle and negative
+controls repeated successfully on the seal.
 
-The current result is evidence for exact derived-abstraction discovery and
+Run `reasoner42-20260902t030000z` used the exact approved 61,608-byte source
+bundle from commit `a5c8e8c69c309940adce5cb01609b4604e553606`. It completed in
+198 instance-seconds for an estimated EC2 cost of $0.000572. The permanent
+one-shot lock was consumed before launch, there was no retry or post-seal
+tuning, and instance `i-0bb4aacea751e7b92` terminated after upload.
+
+Verify the published evidence with:
+
+```sh
+make reasoner42-result-check
+```
+
+The result is positive evidence for exact derived-abstraction discovery and
 reuse inside the registered reversible affine language. It does not establish
 arbitrary library learning, non-affine program induction, noisy observations,
 natural-language grounding, recursive algorithms, or open-ended reasoning.
 See the
 [`preregistration`](../benchmarks/reasoner42-abstraction-library-v1/PREREGISTRATION.md),
 [`contract`](../benchmarks/reasoner42-abstraction-library-v1/contract.json),
+[`development result`](../benchmarks/reasoner42-abstraction-library-v1/DEVELOPMENT.md),
+[`sealed result`](../benchmarks/reasoner42-abstraction-library-v1/RESULT.md),
 and
-[`development result`](../benchmarks/reasoner42-abstraction-library-v1/DEVELOPMENT.md).
+[`cloud provenance`](../benchmarks/reasoner42-abstraction-library-v1/CLOUD_PROVENANCE.json).
