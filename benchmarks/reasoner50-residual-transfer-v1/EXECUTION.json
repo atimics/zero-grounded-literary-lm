@@ -1,0 +1,15 @@
+{
+  "schema": "zero.reasoner50_execution.v1",
+  "approval_id": "reasoner50-residual-transfer-2026-09-02-v1",
+  "mode": "local-deterministic",
+  "started_at_epoch": 1788324630,
+  "elapsed_milliseconds": 893.252,
+  "scientific_execution": 1,
+  "scientific_retries": 0,
+  "post_open_tuning": false,
+  "decision": "no-go",
+  "result_path": "/private/tmp/reasoner50-run.n2H097/RESULT.json",
+  "artifact_path": "/private/tmp/reasoner50-run.n2H097/ARTIFACT.bin",
+  "source_artifact_sha256": "9538a3449d66ec43dc58a139a39fb52392816b7eb3a4e36df798ce602784323b",
+  "result_digest": "68d10269fcbd7ba2"
+}

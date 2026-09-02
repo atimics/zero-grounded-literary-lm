@@ -34,3 +34,19 @@ The reviewed evaluator is frozen at commit
 SHA-256 `3cdd79ed8e735e648d73b0d9db5e2a9f00d2ae60b55e410181fc66fd96e4461c`.
 Execution requires approval ID
 `reasoner50-residual-transfer-2026-09-02-v1`.
+
+## Result
+
+The single authorized execution resolved **no-go**. Exact verification remained
+perfect across 24 episodes, 1,944 affine replays, 72 applications, and 24
+reports. The full scorer used 229 candidate expansions versus 248 for
+target-only, only a 7.7% reduction against the preregistered 20% requirement.
+Source-only required 187 expansions, and the runtime-mismatch control required
+225, so the target residual and interface-match claims both failed their
+causal comparisons.
+
+This result shows that a byte-identical interface is not sufficient for useful
+learned-state transfer. The frozen source artifact carried weak signal, but the
+registered residual did not improve it. See the
+[`result`](../benchmarks/reasoner50-residual-transfer-v1/RESULT.md) and
+[`provenance`](../benchmarks/reasoner50-residual-transfer-v1/PROVENANCE.json).
