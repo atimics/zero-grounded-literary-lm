@@ -28,3 +28,9 @@ the frozen source artifact, target residual, six causal controls, exact affine
 replays, and a pass-or-no-go result record. Ordinary self-tests exercise only
 the preflight; the scientific target remains behind the approval marker and an
 exclusive execution lock.
+
+The reviewed evaluator is frozen at commit
+`1912bba1d6ef29645345fd9ec1792c6586c6e689`. Its 72,080-byte source bundle has
+SHA-256 `3cdd79ed8e735e648d73b0d9db5e2a9f00d2ae60b55e410181fc66fd96e4461c`.
+Execution requires approval ID
+`reasoner50-residual-transfer-2026-09-02-v1`.
