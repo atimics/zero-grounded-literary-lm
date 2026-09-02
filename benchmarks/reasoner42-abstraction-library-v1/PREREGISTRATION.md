@@ -86,10 +86,12 @@ minimum length six. The semantic oracle must pass, while the no-library,
 shuffled-curriculum, single-use-library, curriculum-lookup, and no-query
 controls must fail.
 
-The evaluator is implemented but not authorized. Local execution is
+The evaluator is authorized for one cloud execution under approval ID
+`reasoner42-abstraction-library-2026-09-01-v1`. Local execution remains
 forbidden. The CLI requires the cloud marker, the frozen approval ID, and a
-new exclusive execution-lock file. The future execution contract permits no
-scientific retry and no tuning after the seal opens.
+new exclusive execution-lock file. The execution is capped at 2,400 seconds,
+$0.007 EC2 cost, and $0.01 total cost, with automatic termination, no
+scientific retry, and no tuning after the seal opens.
 
 ## Interpretation
 
