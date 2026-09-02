@@ -1,0 +1,120 @@
+{
+  "schema": "zero.ht2_blockstate_contract.v1",
+  "experiment": "zero5-ht2-blockstate-v1",
+  "status": "preregistered-not-authorized",
+  "authorized": false,
+  "ilxyr": {
+    "registration_state": "not-registered",
+    "run_authorized": false,
+    "authorization_mechanism": "future separate hash-bound record"
+  },
+  "series": {
+    "path": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
+    "sha256": "c80bb49128ad8ac6839fadaf55b146d1f0e63fba760a822921d42064d17962e1"
+  },
+  "specification": {
+    "path": "benchmarks/zero5-ht2-blockstate-v1/SPEC.md",
+    "sha256": "ce4dc68373015cacd8e86298f19e94f02f6f14d2749dfa7aba0fd6ecebef655c"
+  },
+  "control": {
+    "arm": "parameter-matched-one-block-state",
+    "historical_flat_reference": "zero5-c51-statebridge-v1",
+    "historical_contract": "benchmarks/zero5-c51-statebridge-v1/contract.json",
+    "historical_contract_sha256": "7bb9616e2d3c47bba90ca995aaebf43fcc613825dae64564627261d8be745b7d",
+    "independent_initialization": "selected C2 checkpoint with fresh AdamW state",
+    "same_schedule_as_treatment": true
+  },
+  "model": {
+    "base_parameters": 4852992,
+    "block_parameters": 82048,
+    "total_parameters_per_arm": 4935040,
+    "context": 512,
+    "dimension": 256,
+    "heads": 8,
+    "layers": 6,
+    "feed_forward": 1024,
+    "language_vocabulary": 512,
+    "positions": "rotary",
+    "block_tokens": 8,
+    "block_state_width": 128
+  },
+  "parameter_accounting": {
+    "completed_block_projection": 32768,
+    "state_projection": 16384,
+    "state_bias": 128,
+    "output_bridge": 32768,
+    "control_and_treatment_equal": true
+  },
+  "boundary_policy": {
+    "count_only_active_tokens": true,
+    "restart_at_document_or_record_attention_reset": true,
+    "padding_updates_state": false,
+    "partial_final_block_may_summarize": true,
+    "state_crosses_reset": false
+  },
+  "control_treatment": {
+    "shared": "same W_h, W_s, bias, output bridge, parameter count, initialization and block boundaries",
+    "control": "W_s receives a second transform of the immediately completed block only",
+    "treatment": "W_s receives the previous recurrent block state",
+    "first_block_state": "exact zero",
+    "bridge_initialization": "exact zero",
+    "random_numbers_added_at_initialization": 0
+  },
+  "training": {
+    "seed": 0,
+    "arms": 2,
+    "update_groups_per_arm": 28707,
+    "pack_sequences_per_arm": 37768,
+    "compute_token_exposures_per_arm": 19337216,
+    "active_targets_per_arm": 14850534,
+    "source": "exact C5.1 grouped schedule from independent selected C2 initializations",
+    "paid_compute_authorized": false,
+    "cost_ceiling_usd": null,
+    "runs_authorized": 0
+  },
+  "evaluation": {
+    "primary_comparison": "recurrent treatment versus parameter-matched one-block control",
+    "historical_flat_reference_reported": true,
+    "evidence_distance_bands": ["0-63", "64-127", "128-255", "256+"],
+    "existing_task_and_retention_surfaces_unchanged": true
+  },
+  "gates": {
+    "retrieval_choice_gain_minimum": 0.02,
+    "retrieval_pair_exact_gain_minimum": 0.02,
+    "orientation_accuracy_minimum": 0.5,
+    "maximum_orientation_gap": 0.15,
+    "swap_consistency_minimum": 0.94,
+    "minimum_gain_each_distance_band": 0,
+    "maximum_combined_nats_increase": 0.03,
+    "maximum_claim_accuracy_loss": 0.02,
+    "maximum_evidence_nats": 2.4,
+    "maximum_atlas_nats": 2.50646,
+    "maximum_anchor_nats": 4.06362,
+    "maximum_compute_ratio_each_arm": 1.15
+  },
+  "implementation": {
+    "status": "planned-not-implemented",
+    "planned_trainer": "zero5_ht2_blockstate_lm.c",
+    "planned_evaluator": "scripts/evaluate_zero5_ht2_blockstate.mjs",
+    "launcher": "scripts/run_zero5_hierarchical_tokenization.mjs",
+    "launcher_sha256": "f255f718a0b5b75fe1e626f66336b362fe7af4986d51d0b694c3e26732dbe763",
+    "implementation_authorized": false
+  },
+  "claim_boundary": {
+    "fixed_block_hierarchy": true,
+    "dynamic_boundaries": false,
+    "new_tokenizer": false,
+    "answer_root": false,
+    "replication_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
