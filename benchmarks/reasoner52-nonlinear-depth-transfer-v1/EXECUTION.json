@@ -1,0 +1,15 @@
+{
+  "schema": "reasoner52-execution-v1",
+  "experiment": "reasoner52-nonlinear-depth-transfer-v1",
+  "approval_id": "reasoner52-nonlinear-depth-2026-09-02-v1",
+  "executed_at_utc": "2026-09-02T13:49:09Z",
+  "environment": "local",
+  "execution_count": 1,
+  "retry_count": 0,
+  "post_open_tuning": false,
+  "elapsed_ms": 11.341,
+  "cost_usd": 0.0,
+  "result_path": "/private/tmp/reasoner52-run.4P7Gku/RESULT.json",
+  "artifact_path": "/private/tmp/reasoner52-run.4P7Gku/ARTIFACT.bin",
+  "decision": "no-go"
+}
