@@ -29,6 +29,7 @@ digest_file() {
   fi
 }
 
+make reasoner42
 node scripts/check_reasoner42_contract.mjs
 test "$(jq -r .authorized "$contract")" = true
 test "$(jq -r .source.implementation_commit "$contract")" = \
