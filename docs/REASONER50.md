@@ -23,5 +23,8 @@ internal representation score, is the transfer measurement.
 The experiment is prospectively frozen in the
 [`contract`](../benchmarks/reasoner50-residual-transfer-v1/contract.json) and
 [`preregistration`](../benchmarks/reasoner50-residual-transfer-v1/PREREGISTRATION.md).
-It is authorized for one deterministic local execution and is currently
-unopened.
+It is authorized for one deterministic local execution. The evaluator builds
+the frozen source artifact, target residual, six causal controls, exact affine
+replays, and a pass-or-no-go result record. Ordinary self-tests exercise only
+the preflight; the scientific target remains behind the approval marker and an
+exclusive execution lock.
