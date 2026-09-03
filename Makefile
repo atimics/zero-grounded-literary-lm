@@ -2909,6 +2909,18 @@ reasoner53-contract-check:
 	node scripts/check_reasoner5_followup_contract.mjs 53
 reasoner54-contract-check:
 	node scripts/check_reasoner5_followup_contract.mjs 54
+
+.PHONY: reasoner53-result-check reasoner54-result-check
+reasoner53-result-check:
+	node scripts/check_reasoner5_followup_result.mjs 53
+reasoner54-result-check:
+	node scripts/check_reasoner5_followup_result.mjs 54
+check: reasoner53-result-check reasoner54-result-check
+
+.PHONY: reasoner5-series-check
+reasoner5-series-check: reasoner50-result-check reasoner51-result-check reasoner52-result-check reasoner53-result-check reasoner54-result-check
+	node scripts/check_reasoner5_series.mjs
+check: reasoner5-series-check
 check: reasoner53-check reasoner54-check reasoner53-contract-check reasoner54-contract-check
 clean: clean-reasoner5-followups
 clean-reasoner5-followups:

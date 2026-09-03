@@ -1,5 +1,9 @@
 # Reasoner 5.3: missing and corrupted evidence
 
+The registered run passed. All 72 answers were exact. The primary corrupted
+condition used 48 checks against 66 for target-only. See the
+[result](../benchmarks/reasoner53-evidence-transfer-v1/RESULT.md).
+
 This finite pilot tests the frozen Reasoner 5.2 source prior under three
 observation conditions. Each condition contains twelve target programs and
 two tie orders.

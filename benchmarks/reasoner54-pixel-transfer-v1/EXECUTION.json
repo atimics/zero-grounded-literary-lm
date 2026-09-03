@@ -1,0 +1,13 @@
+{
+  "schema": "reasoner54-execution-v1",
+  "experiment": "reasoner54-pixel-transfer-v1",
+  "approval_id": "reasoner54-pixel-2026-09-02-v1",
+  "executed_at_utc": "2026-09-02T19:24:58Z",
+  "environment": "local",
+  "execution_count": 1,
+  "retry_count": 0,
+  "post_open_tuning": false,
+  "elapsed_ms": 47.938,
+  "cost_usd": 0,
+  "decision": "no-go"
+}

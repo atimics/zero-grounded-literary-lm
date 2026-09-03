@@ -1,0 +1,13 @@
+{
+  "schema": "reasoner53-execution-v1",
+  "experiment": "reasoner53-evidence-transfer-v1",
+  "approval_id": "reasoner53-evidence-2026-09-02-v1",
+  "executed_at_utc": "2026-09-02T19:24:58Z",
+  "environment": "local",
+  "execution_count": 1,
+  "retry_count": 0,
+  "post_open_tuning": false,
+  "elapsed_ms": 74.263,
+  "cost_usd": 0,
+  "decision": "pass"
+}

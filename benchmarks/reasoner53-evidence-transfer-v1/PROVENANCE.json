@@ -1,0 +1,34 @@
+{
+  "schema": "zero.reasoner53_provenance.v1",
+  "run_id": "reasoner53-20260902t192458z",
+  "decision": "pass",
+  "executed_at_utc": "2026-09-02T19:24:58Z",
+  "approval_id": "reasoner53-evidence-2026-09-02-v1",
+  "source": {
+    "commit": "4dc4444615d4e8d11e44641f81d975542a315be2",
+    "pr": 210,
+    "bundle_bytes": 29436,
+    "bundle_sha256": "4467b54b633a75aecc0e154fdc75c70e162f22184272aedcf37e77788434ea4b",
+    "binary_sha256": "43dd0f5789b525871b46b529004d91528e25b9fa3816216b6b67f739db7a2c43",
+    "variant": 53
+  },
+  "contract_sha256": "10c01fc15d6cc69cd4bf8958bb93c08096e6278b202253aeeea49e46fba9624c",
+  "artifacts": {
+    "result_bytes": 34526,
+    "result_sha256": "253f4f5354c7baf6820c06fe5d05a00415d45d3837619c375f8ac9a9b8f22c3d",
+    "execution_bytes": 354,
+    "execution_sha256": "cfe5bcfbfe8252d669620b8cff68148444fc47fd7e00771ecbd24e4b037112d5",
+    "source_artifact_bytes": 216,
+    "source_artifact_sha256": "da93fa00c5539e25a5e397d538eb5e7eb836c38d34842e5a4bc6ac5188a30164",
+    "execution_lock_bytes": 41,
+    "execution_lock_sha256": "c812fc71bcd5ce4ed123bc2fb3fffa839357aaa216df904cccf6451bcde490f7"
+  },
+  "execution": {
+    "mode": "local-deterministic",
+    "elapsed_milliseconds": 74.263,
+    "scientific_executions": 1,
+    "scientific_retries": 0,
+    "post_open_tuning": false,
+    "cost_usd": 0
+  }
+}
