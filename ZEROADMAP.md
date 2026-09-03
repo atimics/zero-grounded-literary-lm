@@ -113,7 +113,9 @@ Three hierarchical tokenization studies are frozen as a separate series. HT1
 tests structure already present in byte-BPE merges. HT2 tests recurrence across
 fixed eight-token blocks. HT3 tests one prompt-predicted root held constant
 across an answer. They keep the exact lossless byte output and use matched
-controls. The series is ready for HT1 implementation review.
+controls. The HT1 trainer and evaluator now pass their synthetic mechanics
+checks. HT1 is ready for its hash-bound artifact preflight. The experiment run
+count remains zero.
 
 Reasoner-0 now provides a separate mechanics path for the longer-term
 reason-first architecture. Its seed task starts at the Cartan integer condition
