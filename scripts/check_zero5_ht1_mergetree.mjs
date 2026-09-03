@@ -100,6 +100,15 @@ try {
     assert.deepEqual(off.state, base.state, "selection and schedule state identity");
     assert.equal(off.parameters.at(-1).readBigUInt64LE(0), 249n);
     assert(off.parameters.at(-1).subarray(8).every(value => value === 0));
+    const identityArgs = checkpoint => ["--init", checkpoint, ...common,
+      "--identity-eval", file("packs.bin"), "--validation", "10", "--gate-off"];
+    const controlIdentity = JSON.parse(run(trainer,
+      identityArgs(file(`control-${workers}.ckpt`))).trim());
+    const offIdentity = JSON.parse(run(trainer,
+      identityArgs(file(`off-${workers}.ckpt`))).trim());
+    assert.equal(controlIdentity.schema, "zero.ht1_identity_eval.v1");
+    assert.deepEqual(offIdentity, controlIdentity,
+      `gate-off logits and loss digest, workers=${workers}`);
     run(trainer, ["--init", file("init.ckpt"), ...schedule,
       "--save", file(`on-${workers}.ckpt`)]);
     run(trainer, ["--init", file("init.ckpt"), ...schedule, "--max-run-steps", "4",
@@ -128,6 +137,7 @@ try {
   run(trainer, ["--init", file("init.ckpt"), "--tokenizer", file("corrupt.bin"),
     "--depth-eval", file("packs.bin")], 1);
   run("node", ["scripts/evaluate_zero5_ht1_mergetree.mjs", "--self-test"]);
+  run("node", ["scripts/preflight_zero5_ht1_mergetree.mjs", "--self-test"]);
   process.stdout.write("ZERO.5 HT1 checks passed: byte round trip, ten-update gate-off parity " +
     "(1/2 workers), learned gates, exact restart, depth accounting, evaluator gates\n");
 } finally {
