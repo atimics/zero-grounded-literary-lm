@@ -74,14 +74,34 @@ ten-update comparison from the actual C2 checkpoint and C5.1 packs. It also need
 a measured operation-count and wall-time proof on a matched machine. Both ratios
 must meet the frozen 1.03 limit.
 
-The evaluator keeps those proof gates pending until it receives a
-`zero.ht1_preflight_evidence.v1` record. That record binds the initial model,
-training and validation packs, tokenizer, control and candidate checkpoints,
-and trainer. Its mechanics section contains the six boolean checks and the
-ten-update count. Its resource section contains the compute and wall-time
-ratios. Its test section contains the six sealed-test fields.
+`scripts/preflight_zero5_ht1_mergetree.mjs` runs that stage. It verifies the
+frozen hashes before execution. It writes separate base and gate-off HT1
+checkpoints after ten updates, then compares every shared weight, optimizer
+slot, random-state field, and schedule field. The HT1 identity evaluator hashes
+every selected validation probability and loss bit from both checkpoints. The
+runner also checks the actual tokenizer round trip.
+
+Resource evidence uses three paired timing trials after a warmup on the frozen
+C5.1 backend and thread count. Trials alternate arm order. The operation ratio
+uses the executed pack-group shapes. It counts the base dense matrix operations
+and every added MergeTree scalar operation. Other base operations stay outside
+the denominator, which makes the ratio conservative.
+
+The committed `zero.ht1_preflight_evidence.v1` record binds the initial model,
+training and validation packs, tokenizer, both diagnostic checkpoints, both
+trainers, and the shared-state digest. Its mechanics section contains the six
+boolean checks and the ten-update count. Its resource section contains the
+compute and wall-time ratios. Its test section contains the six sealed-test
+fields. The later evaluator binds the selected control and pilot checkpoints
+separately.
+
+The actual artifact preflight passed on Apple M4 Max with the frozen four-thread
+Accelerate backend. All shared training state and the validation identity digest
+matched. The conservative operation ratio was `1.00005011948993`. The median
+wall-time ratio was `0.8879536174606378` across three paired trials. Both pass
+the registered `1.03` limits.
 
 The series launcher keeps its separate run-authorization boundary. A reviewed
 preflight record, a bound launch path, and one-run authority precede the seed-0
-pilot. This stage uses local synthetic fixtures. The experiment run count
-remains zero.
+pilot. The experiment run count remains zero. Training, replication, promotion,
+publication, and sealed-test access remain unauthorized.
