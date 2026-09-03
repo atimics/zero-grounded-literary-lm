@@ -8,6 +8,8 @@ import { spawnSync } from "node:child_process";
 const seriesPath = "benchmarks/zero5-hierarchical-tokenization-v1/series.json";
 const seriesDocPath = "benchmarks/zero5-hierarchical-tokenization-v1/SERIES.md";
 const launcherPath = "scripts/run_zero5_hierarchical_tokenization.mjs";
+const ht1ImplementationPath =
+  "benchmarks/zero5-ht1-mergetree-v1/implementation.json";
 const experiments = [
   {
     name: "zero5-ht1-mergetree-v1",
@@ -117,6 +119,33 @@ for (const file of checkedFiles) {
 }
 
 const ht1 = contracts.get("zero5-ht1-mergetree-v1");
+const ht1Implementation = JSON.parse(fs.readFileSync(ht1ImplementationPath));
+assert.equal(ht1Implementation.schema, "zero.ht1_mergetree_implementation.v1");
+assert.equal(ht1Implementation.status, "implemented-awaiting-artifact-preflight");
+assert.equal(ht1Implementation.implementation_complete, true);
+assert.equal(ht1Implementation.experiment_runs_completed, 0);
+assert.equal(sha256(ht1Implementation.preregistration.contract),
+  ht1Implementation.preregistration.contract_sha256);
+assert.equal(sha256(ht1Implementation.preregistration.series),
+  ht1Implementation.preregistration.series_sha256);
+for (const name of ["trainer", "base_trainer", "evaluator", "checker",
+  "test_header", "review_notes", "launcher"]) {
+  assert.equal(sha256(ht1Implementation.implementation[name]),
+    ht1Implementation.implementation[`${name}_sha256`]);
+}
+assert.equal(ht1Implementation.model.total_parameters,
+  ht1Implementation.model.base_parameters +
+    ht1Implementation.model.gate_parameters);
+assert.equal(ht1Implementation.synthetic_mechanics.ten_update_gate_off_identity,
+  true);
+assert.equal(ht1Implementation.artifact_preflight.status, "pending");
+assert.equal(ht1Implementation.authorization.training_authorized, false);
+assert.equal(ht1Implementation.authorization.runs_authorized, 0);
+assertNoTestAccess(ht1Implementation.test);
+assert.equal(fs.readFileSync(ht1Implementation.implementation.base_trainer)
+  .equals(fs.readFileSync(ht1Implementation.implementation.trainer)), false);
+checkedFiles.push(ht1ImplementationPath,
+  ht1Implementation.implementation.review_notes);
 assert.equal(ht1.tokenizer.base_tokens + ht1.tokenizer.merge_tokens,
   ht1.tokenizer.vocabulary);
 assert.equal(ht1.tokenizer.segmentation_changed, false);

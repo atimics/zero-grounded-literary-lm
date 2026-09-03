@@ -1,0 +1,79 @@
+{
+  "schema": "zero.ht1_mergetree_implementation.v1",
+  "experiment": "zero5-ht1-mergetree-v1",
+  "status": "implemented-awaiting-artifact-preflight",
+  "implementation_complete": true,
+  "experiment_runs_completed": 0,
+  "preregistration": {
+    "contract": "benchmarks/zero5-ht1-mergetree-v1/contract.json",
+    "contract_sha256": "bcb6eb3f139725a7abb30a27c87947f3144bf5ffff6babacd40052247937c317",
+    "series": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
+    "series_sha256": "c3fb49f0ed7488df461a2c7914e7e0145122cac6c29743419e8a20ba10a26385"
+  },
+  "implementation": {
+    "trainer": "zero5_ht1_mergetree_lm.c",
+    "trainer_sha256": "e9f8c1d4d7b77eeec6ea669fc49e7f66e943dde54d3750dc291d634b99898fff",
+    "base_trainer": "zero5_c32_lm.c",
+    "base_trainer_sha256": "746f592587e25a802cd15559b63bdb3eb81196111f77f579e88f17deb762ea58",
+    "evaluator": "scripts/evaluate_zero5_ht1_mergetree.mjs",
+    "evaluator_sha256": "ccff9bf066276c0e61b24c064451a9fcc23a83d78b46a10d41886903d6ab4aee",
+    "checker": "scripts/check_zero5_ht1_mergetree.mjs",
+    "checker_sha256": "0785124d047a77b98c86fcff27ae9736fe279549537474074b75f017a1d8ed1d",
+    "test_header": "tests/zero5_ht1_mergetree_test.h",
+    "test_header_sha256": "e4f368f69f6b623bb5b3d192ca9e11ae7191c303a13130739e6c204f911fc686",
+    "review_notes": "benchmarks/zero5-ht1-mergetree-v1/IMPLEMENTATION.md",
+    "review_notes_sha256": "2b50631ce6f763af1db9db77a952945aa47a5b80ebfe7cfbc7e8e94d6388e775",
+    "launcher": "scripts/run_zero5_hierarchical_tokenization.mjs",
+    "launcher_sha256": "f255f718a0b5b75fe1e626f66336b362fe7af4986d51d0b694c3e26732dbe763"
+  },
+  "model": {
+    "base_parameters": 4852992,
+    "gate_parameters": 249,
+    "total_parameters": 4853241,
+    "gate_initialization": "exact zero",
+    "random_numbers_added": 0,
+    "tied_effective_embeddings": true,
+    "recursive_descendant_gradients": true
+  },
+  "synthetic_mechanics": {
+    "ten_update_gate_off_identity": true,
+    "workers_checked": [1, 2],
+    "shared_weights_identical": true,
+    "shared_adamw_state_identical": true,
+    "logits_and_loss_identical": true,
+    "rng_state_identical": true,
+    "validation_selection_state_identical": true,
+    "split_run_checkpoint_identical": true,
+    "finite_difference_gradients_passed": true,
+    "repeated_child_gradients_passed": true,
+    "causality_passed": true,
+    "byte_round_trip_passed": true,
+    "depth_accounting_passed": true,
+    "evaluator_gate_tests_passed": true
+  },
+  "artifact_preflight": {
+    "status": "pending",
+    "actual_c2_checkpoint_gate_off_updates": 0,
+    "actual_c51_training_pack_gate_off_updates": 0,
+    "measured_compute_ratio": null,
+    "measured_wall_time_ratio": null
+  },
+  "authorization": {
+    "implementation_authorized_by_user": true,
+    "training_authorized": false,
+    "paid_compute_authorized": false,
+    "runs_authorized": 0,
+    "replication_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false,
+    "sealed_test_access_authorized": false
+  },
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}

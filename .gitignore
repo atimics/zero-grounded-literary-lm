@@ -22,6 +22,7 @@ zero5_c32_lm_tensor
 zero5_c32_lm_tensor_qkv
 zero5_c51_target_lm
 zero5_c61_bottleneck_lm
+zero5_ht1_mergetree_lm
 graded_plasticity_audit
 graded_plasticity_pilot
 logic_corpus
