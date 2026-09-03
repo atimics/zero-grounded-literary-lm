@@ -1,0 +1,85 @@
+{
+  "schema": "zero.reasoner5_first_five.v1",
+  "status": "complete",
+  "completed_at": "2026-09-02T19:24:58Z",
+  "scope": "five prospective finite transfer pilots, each with one sealed execution",
+  "experiments": [
+    {
+      "version": "5.0",
+      "id": "reasoner50-residual-transfer-v1",
+      "decision": "no-go",
+      "episodes": 24,
+      "primary_full_expansions": 229,
+      "primary_target_only_expansions": 248,
+      "individual_wins": 10,
+      "result": "../reasoner50-residual-transfer-v1/RESULT.json",
+      "provenance": "../reasoner50-residual-transfer-v1/PROVENANCE.json"
+    },
+    {
+      "version": "5.1",
+      "id": "reasoner51-unseen-primitive-v1",
+      "decision": "pass",
+      "episodes": 24,
+      "primary_full_expansions": 45,
+      "primary_target_only_expansions": 105,
+      "individual_wins": 17,
+      "result": "../reasoner51-unseen-primitive-v1/RESULT.json",
+      "provenance": "../reasoner51-unseen-primitive-v1/PROVENANCE.json"
+    },
+    {
+      "version": "5.2",
+      "id": "reasoner52-nonlinear-depth-transfer-v1",
+      "decision": "no-go",
+      "episodes": 24,
+      "primary_full_expansions": 30,
+      "primary_target_only_expansions": 44,
+      "individual_wins": 8,
+      "result": "../reasoner52-nonlinear-depth-transfer-v1/RESULT.json",
+      "provenance": "../reasoner52-nonlinear-depth-transfer-v1/PROVENANCE.json"
+    },
+    {
+      "version": "5.3",
+      "id": "reasoner53-evidence-transfer-v1",
+      "decision": "pass",
+      "episodes": 72,
+      "primary_condition": 2,
+      "primary_episodes": 24,
+      "primary_full_expansions": 48,
+      "primary_target_only_expansions": 66,
+      "individual_wins": 12,
+      "result": "../reasoner53-evidence-transfer-v1/RESULT.json",
+      "provenance": "../reasoner53-evidence-transfer-v1/PROVENANCE.json"
+    },
+    {
+      "version": "5.4",
+      "id": "reasoner54-pixel-transfer-v1",
+      "decision": "no-go",
+      "episodes": 48,
+      "primary_condition": 1,
+      "primary_episodes": 24,
+      "primary_full_expansions": 24,
+      "primary_target_only_expansions": 24,
+      "individual_wins": 0,
+      "decoded_values": 288,
+      "decoded_exact": 288,
+      "result": "../reasoner54-pixel-transfer-v1/RESULT.json",
+      "provenance": "../reasoner54-pixel-transfer-v1/PROVENANCE.json"
+    }
+  ],
+  "totals": {
+    "scientific_executions": 5,
+    "retries": 0,
+    "cloud_cost_usd": 0,
+    "episodes": 192,
+    "exact_final_answers": 192,
+    "passes": 2,
+    "no_go": 3
+  },
+  "next_scale_gate": {
+    "development_and_test_families_separate": true,
+    "primary_baseline_median_expansions_min": 4,
+    "generated_target_families": true,
+    "independent_replication": true,
+    "real_or_partially_labelled_channel_after_synthetic_replication": true
+  }
+}

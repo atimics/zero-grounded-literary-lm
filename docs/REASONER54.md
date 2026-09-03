@@ -1,5 +1,10 @@
 # Reasoner 5.4: a synthetic pixel channel
 
+The registered decision is no-go. The decoder recovered all 288 field symbols,
+and all 48 final answers were exact. Full and target-only both reached the
+one-check floor. See the
+[result](../benchmarks/reasoner54-pixel-transfer-v1/RESULT.md).
+
 This finite pilot carries the symbolic source prior through a small image
 channel. Each field value has a four-by-four binary glyph. The sensor rotates
 each glyph and flips its light and dark pixels. Seventeen labelled glyphs
