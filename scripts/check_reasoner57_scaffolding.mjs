@@ -79,6 +79,17 @@ assert.equal(contract.analytic_controls.posterior_l2_ec2_edge_cut,
   "sum_y q(y|a) sum_h (p(h)L(h,y|a)/q(y|a))^2-sum_h p(h)^2");
 assert.equal(contract.primary.outcomes, 18);
 assert.equal(contract.primary.missing_outcome, 17);
+assert.equal(contract.shared_harness.commit,
+  "2303a1a1769a7e4ccd32f5167e18645550651509");
+assert.equal(contract.shared_harness.library,
+  "scripts/lib/reasoner5_harness.mjs");
+assert.equal(sha256(contract.shared_harness.library),
+  contract.shared_harness.library_sha256);
+assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");
+assert.equal(contract.shared_harness.confidence_interval_method,
+  "ordinary-percentile-bootstrap");
+assert.equal(contract.shared_harness.p_value_method,
+  "recentered-null-bootstrap");
 assert.equal(contract.development_outputs, null);
 assert.equal(contract.scientific_decision, null);
 assert.equal(contract.execution.authorized, false);

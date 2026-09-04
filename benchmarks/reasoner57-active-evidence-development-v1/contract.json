@@ -80,6 +80,15 @@
     "uniform_18_outcome_noisy_gbs_expected": "17/18",
     "likelihood_row_normalization_is_checked": true
   },
+  "shared_harness": {
+    "commit": "2303a1a1769a7e4ccd32f5167e18645550651509",
+    "library": "scripts/lib/reasoner5_harness.mjs",
+    "library_sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66",
+    "bootstrap_receipt_schema": "v2",
+    "confidence_interval_method": "ordinary-percentile-bootstrap",
+    "p_value_method": "recentered-null-bootstrap",
+    "development_receipts": "gated by Reasoner 5.6 channel readiness"
+  },
   "development_outputs": null,
   "scientific_decision": null,
   "protected_sources": {
