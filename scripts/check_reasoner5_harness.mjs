@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 
 import { stableJson } from "./zero_data_lib.mjs";
 import {
+  REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE,
+  REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS,
+  REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS,
   REASONER5_SPLIT_LANES,
   REASONER5_TRACE_ROW_FIELDS,
   aggregateNestedFamilies,
@@ -24,6 +27,8 @@ import {
   canonicalCandidateOrder,
   canonicalBytes,
   canonicalDigest,
+  canonicalScientificNumber,
+  canonicalScientificValue,
   createReplayRegistry,
   createDeterministicRng,
   createSplitState,
@@ -109,6 +114,12 @@ function fixtureReplayRegistry() {
 
 function expectFailure(action, pattern) {
   assert.throws(action, pattern);
+}
+
+function withinScientificTolerance(actual, expected) {
+  return expected === 0 ? actual === 0 :
+    Math.abs(actual - expected) <=
+      REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE * Math.abs(expected);
 }
 
 function familyId(lane, index = 0) {
@@ -392,6 +403,84 @@ function testCanonicalDataAndSeeds() {
   const cycle = {};
   cycle.self = cycle;
   expectFailure(() => canonicalBytes(cycle), /cycle/u);
+}
+
+function testPortableScientificNumbers() {
+  assert.equal(REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS, 17);
+  assert.equal(REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS, 14);
+  assert.equal(REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE, 1e-13);
+  const roundingBoundary = [
+    6.389945594502464e-59,
+    6.389945594502465e-59,
+  ];
+  const truncationBoundary = [
+    1.9646127668504199,
+    1.9646127668504201,
+  ];
+  const adjacentUlpPairs = [
+    [0.20411951749544477, 0.2041195174954448],
+    [0.6309092162584323, 0.6309092162584324],
+    [1.8793185096513945, 1.8793185096513947],
+    roundingBoundary,
+    truncationBoundary,
+  ];
+  const doubleBits = value => {
+    const bytes = new ArrayBuffer(8);
+    const view = new DataView(bytes);
+    view.setFloat64(0, value);
+    return view.getBigUint64(0);
+  };
+  const truncateFrom17 = (value, digitsToKeep) => {
+    const [mantissa, exponent] = Math.abs(value).toExponential(16).split("e");
+    const digits = mantissa.replace(".", "").slice(0, digitsToKeep);
+    const sign = value < 0 ? "-" : "";
+    return Number(`${sign}${digits[0]}.${digits.slice(1)}e${exponent}`);
+  };
+  assert.notEqual(Number(roundingBoundary[0].toPrecision(15)),
+    Number(roundingBoundary[1].toPrecision(15)));
+  assert.notEqual(truncateFrom17(truncationBoundary[0], 15),
+    truncateFrom17(truncationBoundary[1], 15));
+  for (const [left, right] of adjacentUlpPairs) {
+    assert.equal(doubleBits(right) - doubleBits(left), 1n);
+    const canonicalLeft = canonicalScientificNumber(left);
+    const canonicalRight = canonicalScientificNumber(right);
+    assert.equal(canonicalLeft, canonicalRight);
+    assert.equal(canonicalScientificNumber(canonicalLeft), canonicalLeft);
+    assert.ok(withinScientificTolerance(canonicalLeft, left));
+    assert.ok(withinScientificTolerance(canonicalRight, right));
+  }
+  assert.equal(canonicalScientificNumber(roundingBoundary[0]),
+    6.3899455945024e-59);
+  assert.equal(canonicalScientificNumber(truncationBoundary[0]),
+    1.9646127668504);
+  assert.equal(canonicalScientificNumber(-1.234567890123456),
+    -1.2345678901234);
+  assert.equal(Object.is(canonicalScientificNumber(-0), -0), false);
+  assert.deepEqual(canonicalScientificValue({ value: -0, count: 3 }),
+    { value: 0, count: 3 });
+  expectFailure(() => canonicalScientificNumber(Number.NaN), /finite number/u);
+  expectFailure(() => canonicalScientificNumber(Number.POSITIVE_INFINITY),
+    /finite number/u);
+
+  const leftUnits = adjacentUlpPairs.map(([meanLogRatio], index) => ({
+    family_id: `portable-${index}`,
+    mean_log_ratio: meanLogRatio,
+  }));
+  const rightUnits = adjacentUlpPairs.map(([, meanLogRatio], index) => ({
+    family_id: `portable-${index}`,
+    mean_log_ratio: meanLogRatio,
+  }));
+  const settings = {
+    design: "one-way",
+    direction: "lower",
+    seed: DEVELOPMENT_SEED_A,
+    replicates: 64,
+    alpha: 0.05,
+  };
+  const leftReceipt = familyInferenceReceipt(leftUnits, settings);
+  const rightReceipt = familyInferenceReceipt(rightUnits, settings);
+  assert.deepEqual(leftReceipt, rightReceipt);
+  assert.equal(leftReceipt.receipt_sha256, rightReceipt.receipt_sha256);
 }
 
 function crossLaneState() {
@@ -1330,8 +1419,8 @@ function testGateAndTraceReplay() {
   });
   assert.match(result.result_sha256, /^[0-9a-f]{64}$/u);
   assert.equal(result.decision, "pass");
-  assert.equal(result.registered_analysis.primary.interval.point_ratio,
-    6 / 13);
+  assert.ok(withinScientificTolerance(
+    result.registered_analysis.primary.interval.point_ratio, 6 / 13));
   assert.equal(result.registered_analysis.derangement.values.length, 31);
   expectFailure(() => buildResultFromRawTraces({
     experiment: "reasoner5-harness-self-test",
@@ -1436,6 +1525,7 @@ function testGateAndTraceReplay() {
 }
 
 testCanonicalDataAndSeeds();
+testPortableScientificNumbers();
 testSplitsReplayAndOverlap();
 testRankerViewsAndParity();
 testVerifierAndAblation();
@@ -1445,6 +1535,11 @@ testGateAndTraceReplay();
 
 const coverage = {
   canonical_sha256: true,
+  portable_scientific_number_ulp_collapse: true,
+  portable_scientific_rounding_edge_collapse: true,
+  portable_scientific_truncation_edge_collapse: true,
+  portable_scientific_number_tolerance: true,
+  portable_scientific_receipt_binding: true,
   hex_seed_handling: true,
   split_before_episode: true,
   cross_lane_ast_behavior_episode_rejection: true,

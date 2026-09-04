@@ -90,6 +90,16 @@ registered row and column resampling. Ordinary and null samples have separate
 SHA-256 receipts. The output labels the ordinary sign-tail fraction as a
 diagnostic. Holm ordering and gates use only the calibrated null p-values.
 
+Derived scientific numbers enter receipts through one shared truncation rule.
+The harness formats each finite value with 17 significant scientific digits,
+keeps the first 14 digits without rounding, and restores the decimal exponent.
+Values already stored with at most 14 significant digits pass through, which
+makes receipt replay idempotent.
+This maps adjacent last-bit runtime values to one value before sorting, gate
+checks, and SHA-256 hashing. Safe integers keep their exact value, and negative
+zero becomes zero. The relative error stays at or below `1e-13`. Raw traces and
+manifests keep their exact canonical JSON values.
+
 The common gate is rebuilt from registered names and raw-trace measurements.
 Missing measurements fail closed. Exactness, certificate validity, fallback
 coverage, family units, confidence receipts, shuffle statistics, source

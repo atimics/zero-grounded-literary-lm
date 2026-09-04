@@ -46,6 +46,11 @@ assert(contract.digest?.algorithm === "sha256",
   "harness digest algorithm changed");
 assert(contract.digest?.canonical_encoding === "stable-json-utf8",
   "harness canonical encoding changed");
+assert(contract.digest?.scientific_number_encoding ===
+  "truncate-first-14-of-17-scientific-digits-toward-zero",
+  "harness scientific-number encoding changed");
+assert(contract.digest?.scientific_relative_tolerance === 1e-13,
+  "harness scientific-number tolerance changed");
 assert(contract.statistics?.confidence_interval ===
   "ordinary percentile cluster bootstrap",
 "harness confidence interval method changed");
@@ -66,6 +71,7 @@ assert(new Set(requiredChecks).size === requiredChecks.length,
   "harness required checks contain duplicates");
 for (const required of [
   "strict canonical JSON domain",
+  "portable canonical scientific numbers",
   "transactional registration rollback",
   "hash-bound replay registry",
   "intrinsic function-source hashing",
