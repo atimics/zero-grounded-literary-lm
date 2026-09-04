@@ -445,8 +445,11 @@ finite primitive and program generators.
 The development implementation and frozen local fixtures live in
 `reasoner56.c`, `reasoner56.h`, and
 `benchmarks/reasoner56-passive-noise-development-v1/`. This implementation is
-development-only. Shared-harness integration and preregistration remain the
-next boundary.
+development-only. Its 5,760 rows now pass strict shared-harness coverage,
+manifest replay, arm parity, and result replay. The deterministic fixture gives
+a search-cost no-go and a separate development-ready channel assessment.
+Preregistration, fresh sealed family selection, and explicit execution
+approval remain the next boundary.
 
 ### Question
 

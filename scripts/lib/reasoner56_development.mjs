@@ -879,7 +879,7 @@ function runR56VerifiedSearch(proposalIndexes, truthClass) {
     search_sha256: canonicalDigest("verified-search-receipt", body) };
 }
 
-function normalizeTraceRows(nativeRows, manifest, artifactBytes) {
+function normalizeTraceRows(nativeRows, manifest) {
   const episodes = new Map(manifest.episodes.map(episode => {
     const spec = episode.content.evaluator.episode_spec;
     return [`${spec.program_index}:${spec.mechanism_index}:${spec.repeat_index}`,
@@ -936,8 +936,8 @@ function normalizeTraceRows(nativeRows, manifest, artifactBytes) {
       fallback_verifier_checks: search.fallback_verifier_checks,
       fallback_partial_expansions: search.fallback_partial_expansions,
       observation_queries: native.observation_queries,
-      wall_ns: 0,
-      peak_bytes: artifactBytes.length,
+      wall_ns: null,
+      peak_bytes: null,
       source_artifact_reads: native.source_artifact_reads,
       exact: search.solved,
       certificate_valid: search.certificate_sha256 !== null,
@@ -1075,7 +1075,7 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
     replay: replayR56Episode,
   });
   const replayReceipt = assertManifestReplay(manifest, registry);
-  const rawRows = normalizeTraceRows(nativeRows, manifest, artifactBytes);
+  const rawRows = normalizeTraceRows(nativeRows, manifest);
   const coverage = assertRawTraceCoverage({ manifest, rawTraces: rawRows });
   const result = buildResultFromRawTraces({
     experiment: R56_EXPERIMENT,

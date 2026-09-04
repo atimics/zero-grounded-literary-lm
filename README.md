@@ -86,6 +86,10 @@ small browser runtime:
 - `reasoner52`: Reasoner 5.2, a frozen semantic-transition ranker tested on a
   deeper nonlinear polynomial family, with acceptance decided only by an exact
   finite-domain truth-table verifier.
+- `reasoner56`: the development implementation of Reasoner 5.6. It learns a
+  passive corruption and missingness channel from source sequences, ranks all
+  427 exact GF(17) semantic classes, and replays a complete 8 by 8 family
+  crossing through the shared Reasoner 5 evidence harness.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS

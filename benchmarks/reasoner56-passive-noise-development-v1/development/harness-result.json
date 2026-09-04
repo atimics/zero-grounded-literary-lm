@@ -278,11 +278,11 @@
     "fallback_verifier_checks": 74016,
     "observation_queries": 103680,
     "partial_expansions": 180829,
-    "peak_bytes": 175224,
+    "peak_bytes": null,
     "primary_cost": 176287,
     "source_artifact_reads": 73849223,
     "verifier_checks": 176287,
-    "wall_ns": 0
+    "wall_ns": null
   },
   "decision": "no-go",
   "development_gate_only": true,
@@ -352,14 +352,14 @@
     "common_gate_registration_sha256": "3db77de71b19c73fc810eb57e2e537fb793355aa331fc376f5fc8404d2615d71",
     "episodes": 128,
     "manifest_sha256": "04e2bb4b1c61ae6e69834182bdd37f6baf36b623327ae13ee835d0d8e544556c",
-    "raw_trace_sha256": "1f5e6822f8a95ddff0556c136e06958a40d407bd0f358b5fab364c0c5a6d3b4b",
+    "raw_trace_sha256": "1cca1df3ae70e97cbe205b5e53e58473b31f43d16eb1d5bff80884c81843f313",
     "rows": 5760,
     "schema": "zero.reasoner5_result_provenance.v1",
     "trace_coverage_sha256": "9530f6c3ca0356c8829e1ffc3e34c4fa5958e1dda207ec1a3f3b4dd9f3ba8e28"
   },
-  "raw_trace_sha256": "1f5e6822f8a95ddff0556c136e06958a40d407bd0f358b5fab364c0c5a6d3b4b",
+  "raw_trace_sha256": "1cca1df3ae70e97cbe205b5e53e58473b31f43d16eb1d5bff80884c81843f313",
   "registered_analysis": {
-    "analysis_sha256": "c8a1cd5fc1d4fdcea0f593c434c9c9b0cdab12afb79062ea48e6dabc2c45bb16",
+    "analysis_sha256": "5e978b440d5f6d18c8fe2a60f5aabb95c437632306c77c45ec34e3bfe524acbb",
     "derangement": {
       "observed": 1.0986122886681087,
       "values": [
@@ -3498,7 +3498,7 @@
     "source_ablation": {
       "episodes": 128,
       "matches": true,
-      "receipt_sha256": "113ea606f7c9791063fec7dff1010e8a5a631c0ee573e06c35c664ef5dd811ec"
+      "receipt_sha256": "c6403275fd89835cd1c0700a4f7be28e6ce5902597184743deab4e6ff8a2814e"
     },
     "strata": [
       {
@@ -4534,7 +4534,7 @@
       }
     ]
   },
-  "result_sha256": "8a5e94eebfb85a3e937b24819f60c554282d2b4fbb1a76a57e9693c3c4445c70",
+  "result_sha256": "35c62d635a57fca00c8ef84d30c4dac1de88900a38ed7abb081d482cacea2722",
   "schema": "zero.reasoner5_trace_result.v1",
   "scientific_decision": null,
   "sealed_execution_authorized": false,

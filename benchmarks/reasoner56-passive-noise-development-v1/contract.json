@@ -201,7 +201,7 @@
       "reasoner56.c": "440bfb5e0b7edab88d0c2a2fe17b4174aaeb160c89e156143609af8e9ca2e723",
       "reasoner56.h": "58881355743580f423cc532aa9593efdda74acd8a5d59dc598f1f8157b579a69",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
-      "scripts/lib/reasoner56_development.mjs": "f953b8c0c878c99aed85834398e2aa87926486540cd624355ea7558ebee31e54",
+      "scripts/lib/reasoner56_development.mjs": "5461c696f62b9f0527c8816ba53b685feb6bcf43e79e88129c8a9d2ac2ca2efa",
       "scripts/check_reasoner56_development.mjs": "6c66355d2bd6430903c44e4dc16c8f6f67444d7a68aa6d759c5f4e622238fd49"
     }
   },
@@ -224,11 +224,11 @@
     },
     "harness_trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-trace.jsonl.gz",
-      "sha256": "3d965543e5aa7029e99b14cfb0d30fce09ab14bdf83269e85e58b953d6437206"
+      "sha256": "1385374662093933e4bea77d6823f43074e8a5fd4fd25270c4cb2f02f531590e"
     },
     "harness_result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-result.json",
-      "sha256": "bcdee85037eadc44243d534f219c51e4f8cd0e58da72b78d8ef9c321e80b87bd"
+      "sha256": "60e14aa97facb356b90e4da24c0fa4f0de3c57c928085d9ed6eab839f74f5db8"
     },
     "audit": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/proxy-taint-audit.json",
