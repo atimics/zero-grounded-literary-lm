@@ -1,7 +1,7 @@
 {
-  "schema": "zero.reasoner56_passive_noise_development_contract.v3",
+  "schema": "zero.reasoner56_passive_noise_development_contract.v4",
   "experiment": "reasoner56-passive-noise-development-v1",
-  "version": "5.6-development-3",
+  "version": "5.6-development-4",
   "status": "development-only",
   "question": "Can a frozen source-learned observation model improve exact search on new GF(17) program and corruption families?",
   "domain": {
@@ -67,7 +67,7 @@
     "fit_statistic": "mean log loss per program family",
     "coverage_statistic": "worst corruption-draw cumulative mass per program family",
     "finite_sample_rank": 99,
-    "rank_unavailable_rule": "use the full-set threshold 1",
+    "rank_unavailable_rule": "use the exact full-universe set at threshold 1, including classes whose positive mass rounds to zero",
     "fit_and_coverage_lanes_are_semantically_disjoint": true
   },
   "ranker_interface": {
@@ -184,6 +184,10 @@
     "primary_strata",
     "mechanism_effects"
   ],
+  "development_expected_readiness_failures": [
+    "candidate_set_size_ratio_at_matched_coverage",
+    "development_and_sealed_interface_and_proxy_audits_clean"
+  ],
   "execution": {
     "authorized": false,
     "sealed_seeds_present": false,
@@ -199,21 +203,21 @@
   },
   "implementation": {
     "files": {
-      "reasoner56.c": "f19bae58ba380db466fb39aac1ccfffad379cd6d05b9bc4ca540adfb4a71d473",
+      "reasoner56.c": "d91d1066005aa9bbe653678320e3f322e6798f38bb823cd63853e453a00c067a",
       "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
-      "scripts/lib/reasoner56_development.mjs": "58008618e13fa58f6ae903c67ec945d80188bb0558d2bb5c1bf9c62ae53f888a",
-      "scripts/check_reasoner56_development.mjs": "060a63be5579338695051162ec5257806fadcd5c2824eb2358fdca44591e67ef"
+      "scripts/lib/reasoner56_development.mjs": "fd8dd5afc4b3f43a8951267f12d74aada1061e16db66e9600d0f1f5eb8af1ecb",
+      "scripts/check_reasoner56_development.mjs": "64dc8d1ffdcf992c98e6ba1a224c45f32a2d8e0d81bbf6b226e894460ed59621"
     }
   },
   "development_outputs": {
     "result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/result.json",
-      "sha256": "abcb28c7be6b502a7702f9a17fcb3bb48960b855afa58bdb9529c31d6f378b5c"
+      "sha256": "0988457a91f26612845ac0d0f4bce043954eceeaa5ed2030e9069140a7db09e5"
     },
     "trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/raw-trace.jsonl",
-      "sha256": "982a980a7af577964b056092373de8ac77a0ad25eb2bdf579a75e5d1e372842c"
+      "sha256": "3ff60f255378aacd0d968ee50cb136065a089266ad3a1eedbc3970dc5db19cbd"
     },
     "artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
@@ -221,7 +225,7 @@
     },
     "manifest": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/family-manifest.json",
-      "sha256": "f162c5c255cf578a704f90b44582b7821d9eff205fce9fdc4b03f64b6016c7b7"
+      "sha256": "7fac3d33b5f9f406794508fb8d19cb6eed09bdd2934a526e2c1c02e2f655bfda"
     },
     "harness_trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-trace.jsonl.gz",
@@ -229,7 +233,7 @@
     },
     "harness_result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-result.json",
-      "sha256": "969738786278591460c1f51bfdb0a2741df6e492337eac14f292d165e56d9cf6"
+      "sha256": "f0292f59f22f9caa7f137dcb9ef6e364a0a776c3cba7726eefb4d46619465276"
     },
     "audit": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/proxy-taint-audit.json",
@@ -237,7 +241,7 @@
     },
     "assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "a03d2857663ae1bb33da6a95dc3e361cef0900e3ce39f6a32d17baa4a498df15"
+      "sha256": "e1d5b82e18e8cbadb555827f9c12688a75f2a74ed26a1b07fdb6d248dab12007"
     }
   },
   "shared_harness": {
@@ -250,7 +254,9 @@
     "result_replay": true,
     "calibration_coverage_family_records": 99,
     "calibration_coverage_draw_receipts": 792,
-    "calibration_coverage_replay": true
+    "calibration_coverage_replay": true,
+    "calibration_coverage_independent_artifact_scoring": true,
+    "threshold_one_full_universe_rule": true
   },
   "remaining_scientific_boundary": [
     "fresh sealed family selection",

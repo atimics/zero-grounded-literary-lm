@@ -68,8 +68,10 @@ Six temperatures are eligible: `0.25, 0.5, 1, 2, 4, 8`. Sixteen disjoint
 program families select one temperature from their family-mean log loss over
 eight channel draws. A further 99 disjoint program families set the 99 percent
 candidate-mass threshold. Each family contributes its worst score over eight
-channel draws. The finite-sample rank is 99. A full-set threshold of 1 applies
-when the requested rank is unavailable.
+channel draws. The finite-sample rank is 99. The requested rank is unavailable
+with 99 families. The resulting threshold of 1 uses the exact full universe.
+This includes every smoothed positive-mass class even when its floating-point
+probability rounds to zero.
 
 ## Public ranker boundary
 
@@ -142,13 +144,16 @@ equality pass.
 
 The separate channel-readiness assessment resolves `development-no-go`. The
 full arm has mean log loss 0, compared with 6.056784 for uniform and 9.234742
-for program-prior-only. Its development candidate set has family-weighted mean
-size 1 versus 427. Candidate-set coverage comes from the registered disjoint
-calibration-coverage lane. Its 99 program-family records bind all 792 draws and
-use one worst-draw result per family. All 99 families cover the truth and their
-one-sided 95 percent Wilson lower bound is 0.973398. The development interface
-and proxy audits pass. The sealed interface and proxy audit remains pending,
-so the Reasoner 5.7 readiness gate stays closed.
+for program-prior-only. The exact threshold-one rule gives both the full and
+program-prior-only arms a family-weighted mean candidate-set size of 427. The
+size ratio is 1, so the registered 0.8 size gate fails. Candidate-set coverage
+comes from the registered disjoint calibration-coverage lane. Its 99
+program-family records bind all 792 draws. An independent JavaScript scorer
+parses the artifact, rebuilds every full-arm Q20 score from each public draw,
+and derives the family coverage values. All 99 families cover the truth and
+their one-sided 95 percent Wilson lower bound is 0.973398. The development
+interface and proxy audits pass. The sealed interface and proxy audit remains
+pending, so the Reasoner 5.7 readiness gate stays closed for both reasons.
 
 These values describe a deterministic engineering fixture. Fresh family
 selection, power analysis, a frozen publication rule, the sealed interface and

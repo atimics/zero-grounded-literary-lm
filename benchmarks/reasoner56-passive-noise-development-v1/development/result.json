@@ -24,7 +24,7 @@
   "calibration_coverage_episodes": 99,
   "candidate_set_rows": 128,
   "candidate_set_truth_covered": 128,
-  "candidate_set_total_size": 128,
+  "candidate_set_total_size": 54656,
   "source_semantic_classes": 193,
   "calibration_fit_families": 16,
   "calibration_coverage_families": 99,
@@ -142,7 +142,7 @@
     ,{"family_index": 98, "semantic_class": 205, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
   ],
   "artifact_digest": "0ea69dbf1705cb12",
-  "trace_digest": "66cf1f7ad1a4090f",
+  "trace_digest": "9d9ac8e5fb0cb9f6",
   "calibration_fit_digest": "9d62b059e8a38575",
   "calibration_coverage_digest": "16a77c9a7c4ebd8f"
 }

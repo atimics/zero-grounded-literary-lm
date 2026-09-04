@@ -69,6 +69,10 @@ const REPEATS = 2;
 const OBSERVATIONS = 18;
 const GLOBAL_CAP = 427;
 const PROPOSAL_BUDGET = 24;
+const Q20_ONE = 1048576;
+const CHANNEL_STATES = 18;
+const SUPPORT_MIN = 32;
+const ARTIFACT_SERIALIZED_BYTES = 175224;
 const CALIBRATION_COVERAGE_FAMILIES = 99;
 const CALIBRATION_DRAWS = 8;
 const DEVELOPMENT_CORRUPTION_SEED = 0x56de0002n;
@@ -380,6 +384,253 @@ function updateFNV64(hash, bytes) {
   return value;
 }
 
+function u64Hex(value) {
+  return value.toString(16).padStart(16, "0");
+}
+
+function parseR56Artifact(artifactBytes, expected = {}) {
+  const bytes = Buffer.from(artifactBytes);
+  assert.equal(bytes.length, ARTIFACT_SERIALIZED_BYTES,
+    "Reasoner 5.6 artifact length changed");
+  if (expected.bytes !== undefined)
+    assert.equal(bytes.length, expected.bytes,
+      "Reasoner 5.6 manifest artifact length changed");
+  if (expected.sha256 !== undefined)
+    assert.equal(sha256(bytes), expected.sha256,
+      "Reasoner 5.6 artifact SHA-256 changed");
+  assert.equal(bytes.subarray(0, 8).toString("ascii"), "R56ART1\0");
+  if (expected.schema !== undefined)
+    assert.equal(expected.schema, "R56ART1",
+      "Reasoner 5.6 artifact schema changed");
+  let cursor = 8;
+  const readU32 = () => {
+    const value = bytes.readUInt32LE(cursor);
+    cursor += 4;
+    return value;
+  };
+  const readI32 = () => {
+    const value = bytes.readInt32LE(cursor);
+    cursor += 4;
+    return value;
+  };
+  const readU64 = () => {
+    const value = bytes.readBigUInt64LE(cursor);
+    cursor += 8;
+    return value;
+  };
+  const readU32Array = count => Array.from({ length: count }, readU32);
+  const readI32Array = count => Array.from({ length: count }, readI32);
+  const skipU32 = count => { cursor += count * 4; };
+  const version = readU32();
+  assert.equal(version, 1);
+  assert.deepEqual(Array.from({ length: 8 }, readU32),
+    [17, 8, 3, 512, 427, 3, 18, 32]);
+  const sourceSeed = readU64();
+  const corruptionSeed = readU64();
+  const sourceProgramDigest = readU64();
+  const corruptionGeneratorDigest = readU64();
+  const calibrationFitDigest = readU64();
+  const calibrationCoverageDigest = readU64();
+  const sourcePrograms = readU32();
+  const sourceSamples = readU32();
+  const calibrationFitEpisodes = readU32();
+  const calibrationCoverageEpisodes = readU32();
+  const temperatureIndex = readU32();
+  const temperatureQ20 = readI32();
+  const conformalMassQ20 = readI32();
+  const classPrior = readU32Array(427);
+  const classLogQ20 = readI32Array(427);
+
+  const localExactSupport = readU32Array(3 * 17 * 17);
+  skipU32(3 * 17 * 17 * CHANNEL_STATES);
+  const localExactLogQ20 = readI32Array(3 * 17 * 17 * CHANNEL_STATES);
+  const localValueSupport = readU32Array(3 * 17);
+  skipU32(3 * 17 * CHANNEL_STATES);
+  const localValueLogQ20 = readI32Array(3 * 17 * CHANNEL_STATES);
+  const localSensorSupport = readU32Array(3);
+  skipU32(3 * CHANNEL_STATES);
+  const localSensorLogQ20 = readI32Array(3 * CHANNEL_STATES);
+  const localGlobalSupport = readU32();
+  skipU32(CHANNEL_STATES);
+  const localGlobalLogQ20 = readI32Array(CHANNEL_STATES);
+
+  const initialSupport = readU32Array(3);
+  skipU32(3 * CHANNEL_STATES);
+  const initialLogQ20 = readI32Array(3 * CHANNEL_STATES);
+
+  const transitionExactSupport = readU32Array(3 * 3 * CHANNEL_STATES);
+  skipU32(3 * 3 * CHANNEL_STATES * CHANNEL_STATES);
+  const transitionExactLogQ20 = readI32Array(
+    3 * 3 * CHANNEL_STATES * CHANNEL_STATES);
+  const transitionCurrentSupport = readU32Array(3 * CHANNEL_STATES);
+  skipU32(3 * CHANNEL_STATES * CHANNEL_STATES);
+  const transitionCurrentLogQ20 = readI32Array(
+    3 * CHANNEL_STATES * CHANNEL_STATES);
+  const transitionPreviousSupport = readU32Array(CHANNEL_STATES);
+  skipU32(CHANNEL_STATES * CHANNEL_STATES);
+  const transitionPreviousLogQ20 = readI32Array(
+    CHANNEL_STATES * CHANNEL_STATES);
+  const transitionGlobalSupport = readU32();
+  skipU32(CHANNEL_STATES);
+  const transitionGlobalLogQ20 = readI32Array(CHANNEL_STATES);
+  assert.equal(cursor, bytes.length - 8,
+    "Reasoner 5.6 artifact parser did not consume the payload");
+  const embeddedDigest = readU64();
+  const computedDigest = updateFNV64(
+    1469598103934665603n ^ 5604n, bytes.subarray(0, bytes.length - 8));
+  assert.equal(embeddedDigest, computedDigest,
+    "Reasoner 5.6 artifact checksum changed");
+  const nativeDigest = u64Hex(embeddedDigest);
+  if (expected.native_digest !== undefined)
+    assert.equal(nativeDigest, expected.native_digest,
+      "Reasoner 5.6 native artifact digest changed");
+  assert.ok(temperatureIndex < 6 && temperatureQ20 > 0);
+  assert.ok(conformalMassQ20 > 0 && conformalMassQ20 <= Q20_ONE);
+  assert.ok(classPrior.every(value => Number.isInteger(value)));
+  return {
+    version, sourceSeed, corruptionSeed, sourceProgramDigest,
+    corruptionGeneratorDigest, calibrationFitDigest,
+    calibrationCoverageDigest, sourcePrograms, sourceSamples,
+    calibrationFitEpisodes, calibrationCoverageEpisodes, temperatureIndex,
+    temperatureQ20, conformalMassQ20, classLogQ20, localExactSupport,
+    localExactLogQ20, localValueSupport, localValueLogQ20,
+    localSensorSupport, localSensorLogQ20, localGlobalSupport,
+    localGlobalLogQ20, initialSupport, initialLogQ20,
+    transitionExactSupport, transitionExactLogQ20,
+    transitionCurrentSupport, transitionCurrentLogQ20,
+    transitionPreviousSupport, transitionPreviousLogQ20,
+    transitionGlobalSupport, transitionGlobalLogQ20,
+    nativeDigest,
+  };
+}
+
+function independentR56FullScores(artifact, observations) {
+  assert.ok(Array.isArray(observations));
+  assert.ok(observations.length > 0 && observations.length <= 51);
+  return R56_UNIVERSE.semantic.map((semantic, semanticClass) => {
+    let score = BigInt(artifact.classLogQ20[semanticClass]);
+    let previousState = 0;
+    let previousSensor = 0;
+    for (const [position, observation] of observations.entries()) {
+      assert.deepEqual(Object.keys(observation).sort(),
+        ["input", "missing", "observed", "sensor"]);
+      assert.ok(Number.isInteger(observation.input) &&
+        observation.input >= 0 && observation.input < MODULUS);
+      assert.ok(Number.isInteger(observation.sensor) &&
+        observation.sensor >= 0 && observation.sensor < 3);
+      assert.ok(Number.isInteger(observation.observed) &&
+        observation.observed >= 0 && observation.observed < MODULUS);
+      assert.equal(typeof observation.missing, "boolean");
+      assert.ok(!observation.missing || observation.observed === 0);
+      const candidateValue = semantic.truth_table[observation.input];
+      const state = observation.missing ? MODULUS :
+        mod17(observation.observed - candidateValue);
+      const exactLocal = (observation.sensor * MODULUS + observation.input) *
+        MODULUS + candidateValue;
+      const valueLocal = observation.sensor * MODULUS + candidateValue;
+      let localLog;
+      if (artifact.localExactSupport[exactLocal] >= SUPPORT_MIN) {
+        localLog = artifact.localExactLogQ20[
+          exactLocal * CHANNEL_STATES + state];
+      } else if (artifact.localValueSupport[valueLocal] >= SUPPORT_MIN) {
+        localLog = artifact.localValueLogQ20[
+          valueLocal * CHANNEL_STATES + state];
+      } else if (artifact.localSensorSupport[observation.sensor] >=
+          SUPPORT_MIN) {
+        localLog = artifact.localSensorLogQ20[
+          observation.sensor * CHANNEL_STATES + state];
+      } else {
+        assert.ok(artifact.localGlobalSupport > 0);
+        localLog = artifact.localGlobalLogQ20[state];
+      }
+      score += BigInt(localLog);
+      if (position === 0) {
+        assert.ok(artifact.initialSupport[observation.sensor] > 0);
+        score += BigInt(artifact.initialLogQ20[
+          observation.sensor * CHANNEL_STATES + state]);
+      } else {
+        const exactTransition = (previousSensor * 3 + observation.sensor) *
+          CHANNEL_STATES + previousState;
+        const currentTransition = observation.sensor * CHANNEL_STATES +
+          previousState;
+        let transitionLog;
+        if (artifact.transitionExactSupport[exactTransition] >= SUPPORT_MIN) {
+          transitionLog = artifact.transitionExactLogQ20[
+            exactTransition * CHANNEL_STATES + state];
+        } else if (artifact.transitionCurrentSupport[currentTransition] >=
+            SUPPORT_MIN) {
+          transitionLog = artifact.transitionCurrentLogQ20[
+            currentTransition * CHANNEL_STATES + state];
+        } else if (artifact.transitionPreviousSupport[previousState] >=
+            SUPPORT_MIN) {
+          transitionLog = artifact.transitionPreviousLogQ20[
+            previousState * CHANNEL_STATES + state];
+        } else {
+          assert.ok(artifact.transitionGlobalSupport > 0);
+          transitionLog = artifact.transitionGlobalLogQ20[state];
+        }
+        score += BigInt(transitionLog);
+      }
+      previousState = state;
+      previousSensor = observation.sensor;
+    }
+    return score * BigInt(Q20_ONE) / BigInt(artifact.temperatureQ20);
+  });
+}
+
+function independentCandidateSet(scores, thresholdQ20) {
+  assert.equal(scores.length, R56_UNIVERSE.semantic.length);
+  assert.ok(Number.isInteger(thresholdQ20) && thresholdQ20 > 0 &&
+    thresholdQ20 <= Q20_ONE);
+  if (thresholdQ20 === Q20_ONE) {
+    return new Set(scores.map((_, semanticClass) => semanticClass));
+  }
+  const maximum = scores.reduce((left, right) => left > right ? left : right);
+  const weights = scores.map(score => Math.exp(
+    Number(score - maximum) / Q20_ONE));
+  const normalizer = weights.reduce((sum, value) => sum + value, 0);
+  assert.ok(Number.isFinite(normalizer) && normalizer > 0);
+  const order = scores.map((_, semanticClass) => semanticClass).sort(
+    (left, right) => scores[left] > scores[right] ? -1 :
+      scores[left] < scores[right] ? 1 : left - right);
+  let cumulative = 0;
+  let boundary = null;
+  const included = new Set();
+  for (const semanticClass of order) {
+    if (boundary !== null && scores[semanticClass] < boundary) break;
+    included.add(semanticClass);
+    cumulative += weights[semanticClass] / normalizer;
+    if (boundary === null && cumulative >= thresholdQ20 / Q20_ONE)
+      boundary = scores[semanticClass];
+  }
+  return included;
+}
+
+function independentCoverageDraw(artifact, content, truthClass) {
+  assert.ok(Number.isInteger(truthClass) && truthClass >= 0 &&
+    truthClass < R56_UNIVERSE.semantic.length);
+  const scores = independentR56FullScores(artifact,
+    content.public.observations);
+  const candidateSet = independentCandidateSet(scores,
+    artifact.conformalMassQ20);
+  const maximum = scores.reduce((left, right) => left > right ? left : right);
+  const weights = scores.map(score => Math.exp(
+    Number(score - maximum) / Q20_ONE));
+  const denominator = weights.reduce((sum, value) => sum + value, 0);
+  const truthScore = scores[truthClass];
+  const numerator = weights.reduce((sum, weight, semanticClass) =>
+    sum + (scores[semanticClass] >= truthScore ? weight : 0), 0);
+  const truthCumulativeMassQ20 = Math.min(Q20_ONE, Math.max(1,
+    Math.ceil(numerator / denominator * Q20_ONE)));
+  return {
+    candidate_set_size: candidateSet.size,
+    candidate_set_contains_truth: candidateSet.has(truthClass),
+    truth_cumulative_mass_q20: truthCumulativeMassQ20,
+    score_sha256: canonicalDigest("r56-independent-full-score-q20",
+      scores.map(score => score.toString())),
+  };
+}
+
 function calibrationCoverageNativeDigest(drawContents) {
   let digest = 1469598103934665603n ^ 5609n;
   for (const { content, truthClass } of drawContents) {
@@ -398,10 +649,18 @@ function calibrationCoverageNativeDigest(drawContents) {
   return digest.toString(16).padStart(16, "0");
 }
 
-function buildCalibrationCoverageReceipt(splits, nativeResult) {
+function buildCalibrationCoverageReceipt(splits, nativeResult,
+  artifactBytes) {
   const nativeRecords = nativeResult.calibration_coverage_records;
   assert.ok(Array.isArray(nativeRecords));
   assert.equal(nativeRecords.length, CALIBRATION_COVERAGE_FAMILIES);
+  const artifactSha256 = sha256(artifactBytes);
+  const artifact = parseR56Artifact(artifactBytes, {
+    sha256: artifactSha256,
+    native_digest: nativeResult.artifact_digest,
+  });
+  assert.equal(artifact.conformalMassQ20, nativeResult.conformal_mass_q20,
+    "native conformal threshold differs from the frozen artifact");
   const drawContents = [];
   const families = splits.coverage.map((truthClass, family) => {
     const native = nativeRecords[family];
@@ -420,6 +679,7 @@ function buildCalibrationCoverageReceipt(splits, nativeResult) {
       const recipe = calibrationCoverageRecipe(family, draw, truthClass);
       const content = replayR56CalibrationCoverage(recipe);
       drawContents.push({ content, truthClass });
+      const coverage = independentCoverageDraw(artifact, content, truthClass);
       return {
         draw_index: draw,
         episode_id: `coverage-${canonicalDigest("r56-calibration-episode", {
@@ -429,23 +689,34 @@ function buildCalibrationCoverageReceipt(splits, nativeResult) {
         replay_recipe: recipe,
         content_sha256: canonicalDigest(
           "r56-calibration-coverage-content", content),
+        ...coverage,
       };
     });
+    const worstTruthCumulativeMassQ20 = Math.max(...draws.map(draw =>
+      draw.truth_cumulative_mass_q20));
+    const allDrawsCovered = draws.every(draw =>
+      draw.candidate_set_contains_truth);
+    assert.equal(native.worst_truth_cumulative_mass_q20,
+      worstTruthCumulativeMassQ20,
+      "native calibration mass differs from independent replay");
+    assert.equal(native.all_draws_covered, allDrawsCovered,
+      "native calibration coverage differs from independent replay");
     return {
       family_id: `calibration-coverage-program-${String(truthClass)
         .padStart(3, "0")}`,
       family_index: family,
       semantic_class: truthClass,
-      worst_truth_cumulative_mass_q20:
-        native.worst_truth_cumulative_mass_q20,
-      all_draws_covered: native.all_draws_covered,
+      worst_truth_cumulative_mass_q20: worstTruthCumulativeMassQ20,
+      all_draws_covered: allDrawsCovered,
       draws,
     };
   });
   const nativeDigest = calibrationCoverageNativeDigest(drawContents);
   assert.equal(nativeDigest, nativeResult.calibration_coverage_digest);
+  assert.equal(nativeDigest, u64Hex(artifact.calibrationCoverageDigest),
+    "calibration draws differ from the digest inside the artifact");
   const body = {
-    schema: "zero.reasoner56_calibration_coverage_receipt.v1",
+    schema: "zero.reasoner56_calibration_coverage_receipt.v2",
     lane: "calibration-coverage",
     family_count: CALIBRATION_COVERAGE_FAMILIES,
     draws_per_family: CALIBRATION_DRAWS,
@@ -453,6 +724,12 @@ function buildCalibrationCoverageReceipt(splits, nativeResult) {
     generator_sha256: PROGRAM_GENERATOR_SHA256,
     input_generator_sha256: INPUT_GENERATOR_SHA256,
     replay_function_sha256: CALIBRATION_REPLAY_FUNCTION_SHA256,
+    artifact_sha256: artifactSha256,
+    artifact_native_digest: artifact.nativeDigest,
+    conformal_mass_q20: artifact.conformalMassQ20,
+    candidate_set_rule: artifact.conformalMassQ20 === Q20_ONE ?
+      "exact-full-universe-at-threshold-one" :
+      "stable-score-order-with-complete-boundary-ties",
     native_calibration_coverage_digest: nativeDigest,
     families,
   };
@@ -460,12 +737,13 @@ function buildCalibrationCoverageReceipt(splits, nativeResult) {
     "r56-calibration-coverage-receipt", body) };
 }
 
-export function assertR56CalibrationCoverageReplay(manifest) {
+export function assertR56CalibrationCoverageReplay(manifest, artifactBytes) {
   const receipt = manifest.calibration_coverage_receipt;
   assert.ok(receipt && typeof receipt === "object");
   assert.deepEqual(Object.keys(receipt).sort(), [
-    "draws_per_family", "episode_count", "families", "family_count",
-    "generator_sha256", "input_generator_sha256", "lane",
+    "artifact_native_digest", "artifact_sha256", "candidate_set_rule",
+    "conformal_mass_q20", "draws_per_family", "episode_count", "families",
+    "family_count", "generator_sha256", "input_generator_sha256", "lane",
     "native_calibration_coverage_digest", "receipt_sha256",
     "replay_function_sha256", "schema",
   ]);
@@ -474,7 +752,7 @@ export function assertR56CalibrationCoverageReplay(manifest) {
   assert.equal(receipt.receipt_sha256, canonicalDigest(
     "r56-calibration-coverage-receipt", body));
   assert.equal(receipt.schema,
-    "zero.reasoner56_calibration_coverage_receipt.v1");
+    "zero.reasoner56_calibration_coverage_receipt.v2");
   assert.equal(receipt.lane, "calibration-coverage");
   assert.equal(receipt.family_count, CALIBRATION_COVERAGE_FAMILIES);
   assert.equal(receipt.draws_per_family, CALIBRATION_DRAWS);
@@ -484,6 +762,17 @@ export function assertR56CalibrationCoverageReplay(manifest) {
   assert.equal(receipt.input_generator_sha256, INPUT_GENERATOR_SHA256);
   assert.equal(receipt.replay_function_sha256,
     CALIBRATION_REPLAY_FUNCTION_SHA256);
+  assert.equal(receipt.artifact_sha256, manifest.source_artifact.sha256);
+  assert.equal(receipt.artifact_native_digest,
+    manifest.source_artifact.native_digest);
+  const artifact = parseR56Artifact(artifactBytes, manifest.source_artifact);
+  assert.equal(receipt.artifact_sha256, sha256(artifactBytes));
+  assert.equal(receipt.artifact_native_digest, artifact.nativeDigest);
+  assert.equal(receipt.conformal_mass_q20, artifact.conformalMassQ20);
+  assert.equal(receipt.candidate_set_rule,
+    artifact.conformalMassQ20 === Q20_ONE ?
+      "exact-full-universe-at-threshold-one" :
+      "stable-score-order-with-complete-boundary-ties");
   assert.equal(receipt.families.length, CALIBRATION_COVERAGE_FAMILIES);
   const expectedClasses = selectSemanticSplits().coverage;
   const knownFamilies = new Map(manifest.families.map(family =>
@@ -508,11 +797,14 @@ export function assertR56CalibrationCoverageReplay(manifest) {
       family.worst_truth_cumulative_mass_q20 >= 1 &&
       family.worst_truth_cumulative_mass_q20 <= 1048576);
     assert.equal(typeof family.all_draws_covered, "boolean");
-    covered += family.all_draws_covered ? 1 : 0;
     assert.equal(family.draws.length, CALIBRATION_DRAWS);
+    const replayedDraws = [];
     for (const [drawIndex, draw] of family.draws.entries()) {
-      assert.deepEqual(Object.keys(draw).sort(), ["content_sha256",
-        "draw_index", "episode_id", "replay_recipe", "seed_ref"]);
+      assert.deepEqual(Object.keys(draw).sort(), [
+        "candidate_set_contains_truth", "candidate_set_size",
+        "content_sha256", "draw_index", "episode_id", "replay_recipe",
+        "score_sha256", "seed_ref", "truth_cumulative_mass_q20",
+      ]);
       assert.equal(draw.draw_index, drawIndex);
       assert.ok(!seenEpisodes.has(draw.episode_id));
       seenEpisodes.add(draw.episode_id);
@@ -525,11 +817,31 @@ export function assertR56CalibrationCoverageReplay(manifest) {
       assert.equal(draw.content_sha256, canonicalDigest(
         "r56-calibration-coverage-content", content),
       "calibration coverage content digest changed");
+      const replayed = independentCoverageDraw(artifact, content,
+        family.semantic_class);
+      assert.deepEqual({
+        candidate_set_size: draw.candidate_set_size,
+        candidate_set_contains_truth: draw.candidate_set_contains_truth,
+        truth_cumulative_mass_q20: draw.truth_cumulative_mass_q20,
+        score_sha256: draw.score_sha256,
+      }, replayed, "calibration coverage outcome changed");
+      replayedDraws.push(replayed);
       drawContents.push({ content, truthClass: family.semantic_class });
     }
+    const replayedWorst = Math.max(...replayedDraws.map(draw =>
+      draw.truth_cumulative_mass_q20));
+    const replayedCovered = replayedDraws.every(draw =>
+      draw.candidate_set_contains_truth);
+    assert.equal(family.worst_truth_cumulative_mass_q20, replayedWorst,
+      "calibration family worst mass changed");
+    assert.equal(family.all_draws_covered, replayedCovered,
+      "calibration family coverage changed");
+    covered += replayedCovered ? 1 : 0;
   }
   const nativeDigest = calibrationCoverageNativeDigest(drawContents);
   assert.equal(nativeDigest, receipt.native_calibration_coverage_digest);
+  assert.equal(nativeDigest, u64Hex(artifact.calibrationCoverageDigest),
+    "replayed calibration draws differ from the artifact digest");
   return {
     families: receipt.families.length,
     episodes: seenEpisodes.size,
@@ -856,16 +1168,17 @@ function pairedUpperInterval(left, right, seed) {
 }
 
 export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit,
-  manifest) {
+  manifest, artifactBytes) {
   const full = nativeRows.filter(row => row.arm === "full");
   const prior = nativeRows.filter(row => row.arm === "program_prior_only");
   assert.equal(full.length, 128);
   assert.equal(prior.length, 128);
-  const calibrationReplay = assertR56CalibrationCoverageReplay(manifest);
+  const calibrationReplay = assertR56CalibrationCoverageReplay(manifest,
+    artifactBytes);
   const calibrationCoverageReceipt = manifest.calibration_coverage_receipt;
   const sealedInterfaceAndProxyAuditPassed = false;
   assert.equal(calibrationCoverageReceipt?.schema,
-    "zero.reasoner56_calibration_coverage_receipt.v1");
+    "zero.reasoner56_calibration_coverage_receipt.v2");
   assert.equal(calibrationCoverageReceipt.families.length,
     CALIBRATION_COVERAGE_FAMILIES);
   assert.equal(calibrationReplay.episodes,
@@ -890,9 +1203,8 @@ export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit,
     "program_prior_only", row => row.candidate_set_size);
   const fullCandidateMean = mean([...fullCandidateSizes.values()]);
   const priorCandidateMean = mean([...priorCandidateSizes.values()]);
-  const covered = calibrationCoverageReceipt.families.filter(family =>
-    family.all_draws_covered).length;
-  const coverageFamilies = calibrationCoverageReceipt.families.length;
+  const covered = calibrationReplay.covered;
+  const coverageFamilies = calibrationReplay.families;
   const reliabilityBins = Array.from({ length: 10 }, (_, bin) => {
     const selected = full.filter(row => Math.min(9,
       Math.floor(row.truth_probability * 10)) === bin);
@@ -1251,7 +1563,7 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
   assert.equal(splits.rejections, nativeResult.split_rejections);
   assert.deepEqual(splits.development, nativeResult.development_classes);
   const calibrationCoverageReceipt = buildCalibrationCoverageReceipt(splits,
-    nativeResult);
+    nativeResult, artifactBytes);
   const artifactSha256 = sha256(artifactBytes);
   const state = createSplitState({ experiment_id: R56_EXPERIMENT });
   registerProgramFamilies(state, "source-training", splits.source,
@@ -1363,7 +1675,7 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
   });
   const replayReceipt = assertManifestReplay(manifest, registry);
   const calibrationReplayReceipt = assertR56CalibrationCoverageReplay(
-    manifest);
+    manifest, artifactBytes);
   const rawRows = normalizeTraceRows(nativeRows, manifest);
   const coverage = assertRawTraceCoverage({ manifest, rawTraces: rawRows });
   const result = buildResultFromRawTraces({
@@ -1383,7 +1695,8 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
   });
   const audit = auditR56ProxyTaint(manifest, rawRows, nativeResult);
   assert.equal(audit.passed, true);
-  const readiness = assessR56ChannelReadiness(nativeRows, audit, manifest);
+  const readiness = assessR56ChannelReadiness(nativeRows, audit, manifest,
+    artifactBytes);
   const assessmentBody = {
     schema: "zero.reasoner56_development_assessment.v1",
     status: "development-only",

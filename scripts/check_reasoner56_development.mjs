@@ -81,7 +81,7 @@ if (sanitizersOnly) {
 
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 assert.equal(contract.schema,
-  "zero.reasoner56_passive_noise_development_contract.v3");
+  "zero.reasoner56_passive_noise_development_contract.v4");
 assert.equal(contract.status, "development-only");
 assert.equal(contract.execution.authorized, false);
 assert.equal(contract.execution.sealed_seeds_present, false);
@@ -164,6 +164,9 @@ try {
     record.worst_truth_cumulative_mass_q20 <= 1048576));
   assert.equal(nativeResult.proxy_audit_passed, true);
   assert.equal(nativeResult.taint_audit_passed, true);
+  assert.equal(nativeResult.conformal_mass_q20, 1048576);
+  assert.equal(nativeResult.candidate_set_total_size, 128 * 427);
+  assert.equal(nativeResult.candidate_set_truth_covered, 128);
   assert.ok(nativeResult.target_only_median_cost >= 16);
   assert.equal(nativeRows.length, 5760);
   assert.equal(new Set(nativeRows.map(row => row.episode_id)).size, 128);
@@ -171,6 +174,8 @@ try {
   assert.ok(nativeRows.every(row => row.exact && row.certificate_valid &&
     row.injected_invalid_rejected && !row.global_cap_hit &&
     Math.abs(row.probability_sum - 1) <= 1e-12));
+  assert.ok(nativeRows.every(row => row.candidate_set_size === 427 &&
+    row.candidate_set_contains_truth));
   assert.ok(nativeRows.every(row => row.primary_cost === row.verifier_checks &&
     row.verifier_checks === row.proposal_verifier_checks +
       row.fallback_verifier_checks &&
@@ -203,6 +208,12 @@ try {
   assert.equal(bundle.calibrationReplayReceipt.families, 99);
   assert.equal(bundle.calibrationReplayReceipt.episodes, 792);
   assert.equal(bundle.calibrationReplayReceipt.covered, 99);
+  assert.equal(bundle.manifest.calibration_coverage_receipt.candidate_set_rule,
+    "exact-full-universe-at-threshold-one");
+  assert.ok(bundle.manifest.calibration_coverage_receipt.families.every(
+    family => family.all_draws_covered && family.draws.every(draw =>
+      draw.candidate_set_size === 427 &&
+      draw.candidate_set_contains_truth)));
   assert.equal(bundle.result.status, "development-only");
   assert.equal(bundle.result.scientific_decision, null);
   assert.equal(bundle.result.exactness.all_final_answers_exact, true);
@@ -213,7 +224,11 @@ try {
   assert.equal(bundle.readiness.scope, "development-only");
   assert.equal(bundle.readiness.status, "development-no-go");
   assert.deepEqual(bundle.readiness.failures,
-    ["development_and_sealed_interface_and_proxy_audits_clean"]);
+    contract.development_expected_readiness_failures);
+  assert.equal(bundle.readiness.metrics.candidate_set.full_mean_size, 427);
+  assert.equal(bundle.readiness.metrics.candidate_set
+    .program_prior_only_mean_size, 427);
+  assert.equal(bundle.readiness.metrics.candidate_set.size_ratio, 1);
   assert.equal(bundle.readiness.metrics.candidate_set.coverage_families, 99);
   assert.equal(bundle.readiness.metrics.candidate_set.covered_families, 99);
   assert.ok(bundle.readiness.metrics.candidate_set
@@ -268,7 +283,39 @@ try {
   badCalibrationReceipt.receipt_sha256 = canonicalDigest(
     "r56-calibration-coverage-receipt", badCalibrationBody);
   expectFailure(() => assertR56CalibrationCoverageReplay(
-    badCalibrationManifest), /content digest changed/u);
+    badCalibrationManifest, first.artifact), /content digest changed/u);
+
+  const forgedCoverageManifest = structuredClone(bundle.manifest);
+  const forgedCoverageReceipt =
+    forgedCoverageManifest.calibration_coverage_receipt;
+  forgedCoverageReceipt.families[0].all_draws_covered = false;
+  const forgedCoverageBody = structuredClone(forgedCoverageReceipt);
+  delete forgedCoverageBody.receipt_sha256;
+  forgedCoverageReceipt.receipt_sha256 = canonicalDigest(
+    "r56-calibration-coverage-receipt", forgedCoverageBody);
+  expectFailure(() => assertR56CalibrationCoverageReplay(
+    forgedCoverageManifest, first.artifact), /family coverage changed/u);
+
+  const forgedNativeResult = structuredClone(nativeResult);
+  forgedNativeResult.calibration_coverage_records[0].all_draws_covered = false;
+  expectFailure(() => buildR56HarnessBundle({ nativeRows,
+    nativeResult: forgedNativeResult, artifactBytes: first.artifact }),
+  /native calibration coverage differs from independent replay/u);
+
+  const forgedDrawManifest = structuredClone(bundle.manifest);
+  const forgedDrawReceipt = forgedDrawManifest.calibration_coverage_receipt;
+  forgedDrawReceipt.families[0].draws[0].candidate_set_size = 1;
+  const forgedDrawBody = structuredClone(forgedDrawReceipt);
+  delete forgedDrawBody.receipt_sha256;
+  forgedDrawReceipt.receipt_sha256 = canonicalDigest(
+    "r56-calibration-coverage-receipt", forgedDrawBody);
+  expectFailure(() => assertR56CalibrationCoverageReplay(
+    forgedDrawManifest, first.artifact), /coverage outcome changed/u);
+
+  const changedArtifact = Buffer.from(first.artifact);
+  changedArtifact[128] ^= 1;
+  expectFailure(() => assertR56CalibrationCoverageReplay(bundle.manifest,
+    changedArtifact), /artifact SHA-256 changed/u);
 
   const taintedRows = [...bundle.rawRows];
   const sourceIndex = taintedRows.findIndex(row => row.arm === "source_free");
@@ -315,10 +362,10 @@ try {
 
   const changedReadiness = assessR56ChannelReadiness(nativeRows, {
     ...bundle.audit, passed: false,
-  }, bundle.manifest);
+  }, bundle.manifest, first.artifact);
   assert.equal(changedReadiness.status, "development-no-go");
   assert.deepEqual(changedReadiness.failures,
-    ["development_and_sealed_interface_and_proxy_audits_clean"]);
+    contract.development_expected_readiness_failures);
   assert.equal(changedReadiness.metrics.interface_and_proxy_audits
     .development.status, "failed");
 

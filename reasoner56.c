@@ -1022,6 +1022,13 @@ uint32_t r56_candidate_set(const double probability[R56_SEMANTIC_CLASSES],
     if (fabs(cumulative - 1.0) > 1e-9) return 0u;
     cumulative = 0.0;
     memset(included, 0, R56_SEMANTIC_CLASSES);
+    /* The registered finite-sample fallback is the complete universe.  A
+     * floating-point posterior may round tiny positive masses to zero, so a
+     * threshold of one must be handled as the exact full-set rule. */
+    if (cumulative_threshold == 1.0) {
+        memset(included, 1, R56_SEMANTIC_CLASSES);
+        return R56_SEMANTIC_CLASSES;
+    }
     r56_probability_order(probability, order);
     for (uint32_t rank = 0u; rank < R56_SEMANTIC_CLASSES; ++rank) {
         uint16_t semantic = order[rank];
@@ -3075,6 +3082,18 @@ int r56_self_test(void) {
         }
         if (r56_candidate_set(full, 0.99, included) == 0u) {
             status = 22; goto bytes_done;
+        }
+        {
+            double rounded[R56_SEMANTIC_CLASSES] = {0.0};
+            rounded[0] = 1.0;
+            if (r56_candidate_set(rounded, 1.0, included) !=
+                    R56_SEMANTIC_CLASSES) {
+                status = 22; goto bytes_done;
+            }
+            for (uint32_t semantic = 0u;
+                 semantic < R56_SEMANTIC_CLASSES; ++semantic) {
+                if (!included[semantic]) { status = 22; goto bytes_done; }
+            }
         }
         {
             r56_certificate certificate;
