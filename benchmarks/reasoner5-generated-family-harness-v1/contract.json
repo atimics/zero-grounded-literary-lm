@@ -25,8 +25,18 @@
     "algorithm": "sha256",
     "canonical_encoding": "stable-json-utf8",
     "seed_encoding": "lowercase-hex-string",
-    "scientific_number_encoding": "truncate-first-14-of-17-scientific-digits-toward-zero",
+    "scientific_number_encoding": "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero",
     "scientific_relative_tolerance": 1e-13
+  },
+  "reference_math": {
+    "algorithm": "pure-js-binary64-fixed-order-v1",
+    "functions": [
+      "log",
+      "exp",
+      "sqrt"
+    ],
+    "registered_positive_domain_max": 4097,
+    "relative_or_near_zero_absolute_tolerance": 2e-14
   },
   "statistics": {
     "confidence_interval": "ordinary percentile cluster bootstrap",
@@ -37,7 +47,10 @@
   },
   "required_checks": [
     "strict canonical JSON domain",
-    "portable canonical scientific numbers",
+    "deterministic reference logarithm, exponential, and square root",
+    "registered positive-domain reference-math accuracy",
+    "known Reasoner 5 numeric portability regressions",
+    "bounded final scientific-number encoding",
     "byte-identical manifest replay",
     "hash-bound replay registry",
     "intrinsic function-source hashing",

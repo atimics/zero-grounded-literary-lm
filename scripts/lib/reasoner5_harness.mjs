@@ -16,6 +16,17 @@ export const REASONER5_SPLIT_LANES = Object.freeze([
 export const REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS = 17;
 export const REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS = 14;
 export const REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE = 1e-13;
+export const REASONER5_REFERENCE_MATH_RELATIVE_TOLERANCE = 2e-14;
+
+const REFERENCE_LN2_HIGH = 6.93147180369123816490e-1;
+const REFERENCE_LN2_LOW = 1.90821492927058770002e-10;
+const REFERENCE_INVERSE_LN2 = 1.44269504088896338700;
+const REFERENCE_SQRT_TWO = 1.41421356237309504880;
+const REFERENCE_FLOAT_BUFFER = new ArrayBuffer(8);
+const REFERENCE_FLOAT_VIEW = new DataView(REFERENCE_FLOAT_BUFFER);
+const REFERENCE_FRACTION_MASK = (1n << 52n) - 1n;
+const REFERENCE_NORMAL_EXPONENT = 1023n << 52n;
+const REFERENCE_TWO_POW_52 = 4503599627370496;
 
 export const REASONER5_EVALUATOR_ONLY_FIELDS = Object.freeze([
   "family_id",
@@ -149,6 +160,99 @@ function safeInteger(value, label, minimum = 0) {
 function finiteNumber(value, label, minimum = -Infinity) {
   requireValue(Number.isFinite(value) && value >= minimum,
     `${label} must be a finite number at least ${minimum}`);
+}
+
+function normalizedBinary64(value) {
+  let exponentAdjustment = 0;
+  let normalized = value;
+  REFERENCE_FLOAT_VIEW.setFloat64(0, normalized);
+  let bits = REFERENCE_FLOAT_VIEW.getBigUint64(0);
+  let exponentBits = Number((bits >> 52n) & 0x7ffn);
+  if (exponentBits === 0) {
+    normalized *= REFERENCE_TWO_POW_52;
+    exponentAdjustment = -52;
+    REFERENCE_FLOAT_VIEW.setFloat64(0, normalized);
+    bits = REFERENCE_FLOAT_VIEW.getBigUint64(0);
+    exponentBits = Number((bits >> 52n) & 0x7ffn);
+  }
+  const fractionBits = bits & REFERENCE_FRACTION_MASK;
+  REFERENCE_FLOAT_VIEW.setBigUint64(0,
+    REFERENCE_NORMAL_EXPONENT | fractionBits);
+  return {
+    exponent: exponentBits - 1023 + exponentAdjustment,
+    mantissa: REFERENCE_FLOAT_VIEW.getFloat64(0),
+  };
+}
+
+function referencePowerOfTwo(exponent) {
+  if (exponent > 1023) return Number.POSITIVE_INFINITY;
+  if (exponent < -1074) return 0;
+  if (exponent >= -1022) {
+    REFERENCE_FLOAT_VIEW.setBigUint64(0, BigInt(exponent + 1023) << 52n);
+    return REFERENCE_FLOAT_VIEW.getFloat64(0);
+  }
+  REFERENCE_FLOAT_VIEW.setBigUint64(0, 1n << BigInt(exponent + 1074));
+  return REFERENCE_FLOAT_VIEW.getFloat64(0);
+}
+
+/** Deterministic binary64 natural logarithm for positive finite values. */
+export function deterministicLog(value, label = "logarithm input") {
+  finiteNumber(value, label, 0);
+  requireValue(value > 0, `${label} must be positive`);
+  if (value === 1) return 0;
+  let { exponent, mantissa } = normalizedBinary64(value);
+  if (mantissa > REFERENCE_SQRT_TWO) {
+    mantissa *= 0.5;
+    exponent += 1;
+  }
+  const ratio = (mantissa - 1) / (mantissa + 1);
+  const ratioSquared = ratio * ratio;
+  let term = ratio;
+  let series = ratio;
+  for (let denominator = 3; denominator <= 51; denominator += 2) {
+    term *= ratioSquared;
+    series += term / denominator;
+  }
+  const reduced = 2 * series;
+  return exponent * REFERENCE_LN2_HIGH +
+    (reduced + exponent * REFERENCE_LN2_LOW);
+}
+
+/** Deterministic binary64 exponential over the finite binary64 range. */
+export function deterministicExp(value, label = "exponential input") {
+  finiteNumber(value, label);
+  if (value === 0) return 1;
+  if (value > 709.782712893384) return Number.POSITIVE_INFINITY;
+  if (value < -745.1332191019411) return 0;
+  const scaled = value * REFERENCE_INVERSE_LN2;
+  const exponent = scaled >= 0 ? Math.floor(scaled + 0.5) :
+    Math.ceil(scaled - 0.5);
+  const reduced = (value - exponent * REFERENCE_LN2_HIGH) -
+    exponent * REFERENCE_LN2_LOW;
+  let polynomial = 1;
+  for (let denominator = 24; denominator >= 1; --denominator)
+    polynomial = 1 + reduced * polynomial / denominator;
+  if (exponent > 1023)
+    return (polynomial * 2) * referencePowerOfTwo(exponent - 1);
+  if (exponent < -1022)
+    return (polynomial * referencePowerOfTwo(exponent + 1022)) *
+      referencePowerOfTwo(-1022);
+  return polynomial * referencePowerOfTwo(exponent);
+}
+
+/** Deterministic binary64 square root for non-negative finite values. */
+export function deterministicSqrt(value, label = "square-root input") {
+  finiteNumber(value, label, 0);
+  if (value === 0) return 0;
+  let { exponent, mantissa } = normalizedBinary64(value);
+  if (exponent % 2 !== 0) {
+    mantissa *= 2;
+    exponent -= 1;
+  }
+  let root = (mantissa + 1) * 0.5;
+  for (let iteration = 0; iteration < 9; ++iteration)
+    root = (root + mantissa / root) * 0.5;
+  return root * referencePowerOfTwo(exponent / 2);
 }
 
 function assertExactKeys(value, expected, label) {
@@ -1857,9 +1961,9 @@ export function aggregateNestedFamilies(rows, {
       nested_repeat_id: full[repeatField],
       full_cost: fullCost,
       comparator_cost: comparatorCost,
-      log_cost_ratio: canonicalScientificNumber(
-        Math.log((fullCost + 1) / (comparatorCost + 1)),
-        "paired log cost ratio"),
+      log_cost_ratio: deterministicLog(
+        (fullCost + 1) / (comparatorCost + 1),
+        "paired cost ratio"),
     });
   }
   const grouped = new Map();
@@ -1875,8 +1979,7 @@ export function aggregateNestedFamilies(rows, {
       "nested repeat IDs must be unique inside a family unit");
     const mean = field => group.reduce((sum, row) => sum + row[field], 0) /
       group.length;
-    const meanLog = canonicalScientificNumber(mean("log_cost_ratio"),
-      "family mean log ratio");
+    const meanLog = mean("log_cost_ratio");
     return canonicalScientificValue({
       ...group[0].unit,
       unit: group[0].unit,
@@ -1884,7 +1987,7 @@ export function aggregateNestedFamilies(rows, {
       mean_full_cost: mean("full_cost"),
       mean_comparator_cost: mean("comparator_cost"),
       mean_log_ratio: meanLog,
-      geometric_mean_ratio: Math.exp(meanLog),
+      geometric_mean_ratio: deterministicExp(meanLog),
       win: meanLog < 0,
       tie: meanLog === 0,
     }, "family aggregation receipt");
@@ -1897,11 +2000,10 @@ export function summarizeFamilyUnits(units,
     "family summary needs independent units");
   const logRatios = units.map(unit => {
     finiteNumber(unit.mean_log_ratio, "family mean log ratio");
-    return canonicalScientificNumber(unit.mean_log_ratio,
-      "family mean log ratio");
+    return unit.mean_log_ratio;
   });
-  const ratios = logRatios.map(value => canonicalScientificNumber(
-    Math.exp(value), "family ratio")).sort((left, right) => left - right);
+  const ratios = logRatios.map(value => deterministicExp(value,
+    "family log ratio")).sort((left, right) => left - right);
   const middle = Math.floor(ratios.length / 2);
   const median = ratios.length % 2 ? ratios[middle] :
     (ratios[middle - 1] + ratios[middle]) / 2;
@@ -1913,7 +2015,7 @@ export function summarizeFamilyUnits(units,
   return canonicalScientificValue({
     schema: "zero.reasoner5_family_summary.v1",
     independent_families: units.length,
-    family_weighted_geometric_mean_ratio: Math.exp(meanLog),
+    family_weighted_geometric_mean_ratio: deterministicExp(meanLog),
     family_weighted_median_ratio: median,
     wins,
     ties,
@@ -1957,15 +2059,13 @@ export function factorialInteractionFamilies(rows, {
     for (const arm of requiredArms)
       requireValue(arms.has(arm), `factorial episode needs arm ${arm}`);
     const row = arms.get(adapterGuideArm);
-    const logCost = arm => canonicalScientificNumber(
-      Math.log(armCost(arms.get(arm), costField) + 1),
-      `${arm} factorial log cost`);
+    const logCost = arm => deterministicLog(
+      armCost(arms.get(arm), costField) + 1,
+      `${arm} factorial cost`);
     values.push({
       unit: Object.fromEntries(unitFields.map(field => [field, row[field]])),
-      interaction: canonicalScientificNumber(
-        logCost(adapterGuideArm) - logCost(adapterOnlyArm) -
-          logCost(guideOnlyArm) + logCost(rawArm),
-        "factorial interaction"),
+      interaction: logCost(adapterGuideArm) - logCost(adapterOnlyArm) -
+        logCost(guideOnlyArm) + logCost(rawArm),
     });
   }
   const grouped = new Map();
@@ -1975,9 +2075,8 @@ export function factorialInteractionFamilies(rows, {
     grouped.get(key).push(value);
   }
   return [...grouped.values()].map(group => {
-    const mean = canonicalScientificNumber(group.reduce((sum, value) =>
-      sum + value.interaction, 0) / group.length,
-      "family mean factorial interaction");
+    const mean = group.reduce((sum, value) =>
+      sum + value.interaction, 0) / group.length;
     return canonicalScientificValue({
       ...group[0].unit,
       unit: group[0].unit,
@@ -1999,19 +2098,16 @@ function conservativeQuantile(sorted, probability) {
 
 function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
   pointLogOverride = null) {
-  const pointLog = canonicalScientificNumber(pointLogOverride ??
-    units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length,
-    "bootstrap point log ratio");
+  const pointLog = pointLogOverride ??
+    units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length;
   requireValue(samples.length > 0 && nullSamples.length === samples.length,
     "bootstrap and recentered null samples must have equal nonzero length");
   for (const value of samples)
     finiteNumber(value, "ordinary bootstrap sample");
   for (const value of nullSamples)
     finiteNumber(value, "recentered null bootstrap sample");
-  const sortedSamples = samples.map(value => canonicalScientificNumber(value,
-    "ordinary bootstrap sample")).sort((left, right) => left - right);
-  const sortedNullSamples = nullSamples.map(value =>
-    canonicalScientificNumber(value, "recentered null bootstrap sample"))
+  const sortedSamples = [...samples].sort((left, right) => left - right);
+  const sortedNullSamples = [...nullSamples]
     .sort((left, right) => left - right);
   const lowerLog = conservativeQuantile(sortedSamples, alpha);
   const upperLog = conservativeQuantile(sortedSamples, 1 - alpha);
@@ -2023,36 +2119,29 @@ function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
     .length + 1) / (sortedSamples.length + 1);
   const uncenteredTailHigher = (sortedSamples.filter(value => value <= 0)
     .length + 1) / (sortedSamples.length + 1);
-  return {
+  return canonicalScientificValue({
     schema: `zero.reasoner5_${kind}_bootstrap.v2`,
     independent_units: units.length,
     replicates: samples.length,
     alpha,
     point_log_ratio: pointLog,
-    point_ratio: canonicalScientificNumber(Math.exp(pointLog),
-      "bootstrap point ratio"),
+    point_ratio: deterministicExp(pointLog, "bootstrap point log ratio"),
     lower_log_ratio: lowerLog,
     upper_log_ratio: upperLog,
-    lower_ratio: canonicalScientificNumber(Math.exp(lowerLog),
-      "bootstrap lower ratio"),
-    upper_ratio: canonicalScientificNumber(Math.exp(upperLog),
-      "bootstrap upper ratio"),
+    lower_ratio: deterministicExp(lowerLog, "bootstrap lower log ratio"),
+    upper_ratio: deterministicExp(upperLog, "bootstrap upper log ratio"),
     confidence_interval_method: "ordinary-percentile-bootstrap",
     p_value_method: "recentered-null-bootstrap",
     null_hypothesis_point_log_ratio: 0,
-    one_sided_p_lower_than_zero: canonicalScientificNumber(oneSidedPLower,
-      "bootstrap lower-tail p-value"),
-    one_sided_p_higher_than_zero: canonicalScientificNumber(oneSidedPHigher,
-      "bootstrap higher-tail p-value"),
-    uncentered_sign_tail_fraction_lower: canonicalScientificNumber(
-      uncenteredTailLower, "bootstrap lower sign-tail fraction"),
-    uncentered_sign_tail_fraction_higher: canonicalScientificNumber(
-      uncenteredTailHigher, "bootstrap higher sign-tail fraction"),
+    one_sided_p_lower_than_zero: oneSidedPLower,
+    one_sided_p_higher_than_zero: oneSidedPHigher,
+    uncentered_sign_tail_fraction_lower: uncenteredTailLower,
+    uncentered_sign_tail_fraction_higher: uncenteredTailHigher,
     bootstrap_sha256: canonicalDigest(`${kind}-bootstrap-samples`,
       sortedSamples),
     null_bootstrap_sha256: canonicalDigest(
       `${kind}-recentered-null-bootstrap-samples`, sortedNullSamples),
-  };
+  }, "bootstrap receipt");
 }
 
 export function oneWayClusterBootstrap(units, {
@@ -2070,11 +2159,8 @@ export function oneWayClusterBootstrap(units, {
     "bootstrap alpha must lie between zero and one half");
   for (const unit of units)
     finiteNumber(unit.mean_log_ratio, "family mean log ratio");
-  const canonicalUnits = units.map(unit => ({
-    ...unit,
-    mean_log_ratio: canonicalScientificNumber(unit.mean_log_ratio,
-      "family mean log ratio"),
-  }));
+  const canonicalUnits = canonicalScientificValue(units,
+    "one-way bootstrap units");
   const environments = new Map();
   for (const unit of canonicalUnits) {
     const environment = environmentField === null ? "__all__" :
@@ -2133,18 +2219,21 @@ export function twoWayClusterBootstrap(units, {
   finiteNumber(alpha, "bootstrap alpha", 0);
   requireValue(alpha > 0 && alpha < 0.5,
     "bootstrap alpha must lie between zero and one half");
-  const rows = sortedUnique(units.map(unit => getUnitField(unit, rowField)));
-  const columns = sortedUnique(units.map(unit => getUnitField(unit, columnField)));
+  const canonicalUnits = canonicalScientificValue(units,
+    "two-way bootstrap units");
+  const rows = sortedUnique(canonicalUnits.map(unit =>
+    getUnitField(unit, rowField)));
+  const columns = sortedUnique(canonicalUnits.map(unit =>
+    getUnitField(unit, columnField)));
   requireValue(!rows.includes(undefined) && !columns.includes(undefined),
     "crossed cells need both family axes");
   const cells = new Map();
-  for (const unit of units) {
+  for (const unit of canonicalUnits) {
     finiteNumber(unit.mean_log_ratio, "crossed-cell mean log ratio");
     const key = stableJson([getUnitField(unit, rowField),
       getUnitField(unit, columnField)]);
     requireValue(!cells.has(key), `duplicate crossed cell ${key.trim()}`);
-    cells.set(key, canonicalScientificNumber(unit.mean_log_ratio,
-      "crossed-cell mean log ratio"));
+    cells.set(key, unit.mean_log_ratio);
   }
   requireValue(cells.size === rows.length * columns.length,
     "two-way bootstrap requires a complete family crossing");
@@ -2168,11 +2257,7 @@ export function twoWayClusterBootstrap(units, {
     samples.push(sample);
     nullSamples.push(sample - pointLog);
   }
-  const receipt = bootstrapReceipt(units.map(unit => ({
-    ...unit,
-    mean_log_ratio: canonicalScientificNumber(unit.mean_log_ratio,
-      "crossed-cell mean log ratio"),
-  })), samples, nullSamples, alpha,
+  const receipt = bootstrapReceipt(canonicalUnits, samples, nullSamples, alpha,
     "two_way_cluster", pointLog);
   const rowUnits = rows.map(row => ({
     [rowField]: row,
@@ -2307,8 +2392,9 @@ export function wilsonLowerBound(wins, total,
   const z2 = z * z;
   const denominator = 1 + z2 / total;
   const center = rate + z2 / (2 * total);
-  const radius = z * Math.sqrt((rate * (1 - rate) + z2 / (4 * total)) /
-    total);
+  const radius = z * deterministicSqrt(
+    (rate * (1 - rate) + z2 / (4 * total)) / total,
+    "Wilson variance");
   return canonicalScientificNumber(
     Math.max(0, (center - radius) / denominator), "Wilson lower bound");
 }
@@ -2828,13 +2914,12 @@ function absoluteArmStatistic(rawTraces, arm, unitFields) {
     }));
     const key = stableJson(unit);
     if (!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key).push(canonicalScientificNumber(
-      Math.log(row.primary_cost + 1), "derangement log cost"));
+    grouped.get(key).push(deterministicLog(row.primary_cost + 1,
+      "derangement cost"));
   }
   requireValue(grouped.size > 0, `derangement arm ${arm} selected no rows`);
   const unitMeans = [...grouped.values()].map(values =>
-    canonicalScientificNumber(values.reduce((sum, value) => sum + value, 0) /
-      values.length, "derangement family mean"));
+    values.reduce((sum, value) => sum + value, 0) / values.length);
   return canonicalScientificNumber(unitMeans.reduce((sum, value) =>
     sum + value, 0) / unitMeans.length, "derangement arm statistic");
 }

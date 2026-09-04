@@ -90,15 +90,23 @@ registered row and column resampling. Ordinary and null samples have separate
 SHA-256 receipts. The output labels the ordinary sign-tail fraction as a
 diagnostic. Holm ordering and gates use only the calibrated null p-values.
 
-Derived scientific numbers enter receipts through one shared truncation rule.
-The harness formats each finite value with 17 significant scientific digits,
-keeps the first 14 digits without rounding, and restores the decimal exponent.
-Values already stored with at most 14 significant digits pass through, which
-makes receipt replay idempotent.
-This maps adjacent last-bit runtime values to one value before sorting, gate
-checks, and SHA-256 hashing. Safe integers keep their exact value, and negative
-zero becomes zero. The relative error stays at or below `1e-13`. Raw traces and
-manifests keep their exact canonical JSON values.
+Receipt-path logarithms, exponentials, and square roots use one deterministic
+pure-JavaScript binary64 implementation. It decomposes binary64 values directly,
+uses fixed range reduction, and evaluates each series in a fixed operation
+order. The registered positive cost domain through 4,097 is checked against the
+runtime math functions with relative or near-zero absolute error at or below
+`2e-14`. Named checks also pin the values that exposed R5.5, R5.6, and R5.9a
+runtime differences.
+
+Derived scientific numbers enter their receipt boundary through one bounded
+display rule. The harness formats each finite value with 17 significant
+scientific digits, keeps the first 14 digits without rounding, and restores the
+decimal exponent. Values already stored with at most 14 significant digits pass
+through, which makes receipt replay idempotent. The encoding error stays at or
+below `1e-13`. It is a stable final representation rather than an equivalence
+test for nearby binary64 values. Safe integers keep their exact value, and
+negative zero becomes zero. Raw traces and manifests keep their exact canonical
+JSON values.
 
 The common gate is rebuilt from registered names and raw-trace measurements.
 Missing measurements fail closed. Exactness, certificate validity, fallback
