@@ -2952,3 +2952,8 @@ reasoner5-harness-contract-check:
 	node scripts/check_reasoner5_harness_contract.mjs
 
 check: reasoner5-harness-check reasoner5-harness-contract-check
+
+# Regenerate the model-card charts from frozen benchmark records.
+.PHONY: model-card-charts
+model-card-charts:
+	node scripts/render_model_card_charts.mjs
