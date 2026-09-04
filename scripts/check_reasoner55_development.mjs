@@ -16,6 +16,7 @@ import {
   assertSourceAblationMatches,
   canonicalCandidateOrder,
   canonicalDigest,
+  canonicalScientificNumber,
   createDeterministicRng,
   createReplayRegistry,
   createSplitState,
@@ -25,7 +26,6 @@ import {
   familyInferenceReceipt,
   finalizeManifest,
   freezeFamilySplits,
-  portableNumber,
   registerEpisode,
   registerFamily,
   registerReplayPipeline,
@@ -403,7 +403,7 @@ function sourceFreeSelectionReceipt(analysisRows) {
   });
   assert.equal(units.length, 16,
     "source-free selection needs every environment-family unit");
-  const meanLogRatio = portableNumber(units.reduce((sum, unit) =>
+  const meanLogRatio = canonicalScientificNumber(units.reduce((sum, unit) =>
     sum + unit.mean_log_ratio, 0) / units.length);
   const selectedArm = meanLogRatio < 0 ? "source_free_jit" : "target_only";
   const body = {
@@ -414,7 +414,7 @@ function sourceFreeSelectionReceipt(analysisRows) {
     nested_tie_repeats_per_unit: 2,
     source_free_jit_to_target_only_log_ratio: meanLogRatio,
     source_free_jit_to_target_only_ratio:
-      portableNumber(Math.exp(meanLogRatio)),
+      canonicalScientificNumber(Math.exp(meanLogRatio)),
     selected_arm: selectedArm,
   };
   return {
@@ -449,14 +449,14 @@ function absoluteArmStatistic(analysisRows, arm) {
   for (const row of analysisRows.filter(item => item.arm === arm)) {
     const key = `${row.generator_id}\0${row.family_id}`;
     const values = grouped.get(key) ?? [];
-    values.push(portableNumber(Math.log(row.primary_cost + 1)));
+    values.push(canonicalScientificNumber(Math.log(row.primary_cost + 1)));
     grouped.set(key, values);
   }
   assert.equal(grouped.size, 16,
     `${arm} derangement statistic needs 16 independent units`);
-  const means = [...grouped.values()].map(values => portableNumber(
+  const means = [...grouped.values()].map(values => canonicalScientificNumber(
     values.reduce((sum, value) => sum + value, 0) / values.length));
-  return portableNumber(
+  return canonicalScientificNumber(
     means.reduce((sum, value) => sum + value, 0) / means.length);
 }
 
@@ -536,6 +536,9 @@ check(contract.status === "development-only" &&
   contract.execution.sealed_seed_family === null &&
   contract.execution.cloud_run === null,
   "contract execution boundary changed");
+check(contract.implementation.shared_harness_commit ===
+    "a46382178fea84200a331c3ba0a0a22109b00747",
+"shared harness commit binding changed");
 for (const [field, path] of [
   ["core_sha256", "reasoner55.c"],
   ["header_sha256", "reasoner55.h"],

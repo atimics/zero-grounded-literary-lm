@@ -13,6 +13,21 @@ export const REASONER5_SPLIT_LANES = Object.freeze([
   "sealed",
 ]);
 
+export const REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS = 17;
+export const REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS = 14;
+export const REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE = 1e-13;
+export const REASONER5_REFERENCE_MATH_RELATIVE_TOLERANCE = 2e-14;
+
+const REFERENCE_LN2_HIGH = 6.93147180369123816490e-1;
+const REFERENCE_LN2_LOW = 1.90821492927058770002e-10;
+const REFERENCE_INVERSE_LN2 = 1.44269504088896338700;
+const REFERENCE_SQRT_TWO = 1.41421356237309504880;
+const REFERENCE_FLOAT_BUFFER = new ArrayBuffer(8);
+const REFERENCE_FLOAT_VIEW = new DataView(REFERENCE_FLOAT_BUFFER);
+const REFERENCE_FRACTION_MASK = (1n << 52n) - 1n;
+const REFERENCE_NORMAL_EXPONENT = 1023n << 52n;
+const REFERENCE_TWO_POW_52 = 4503599627370496;
+
 export const REASONER5_EVALUATOR_ONLY_FIELDS = Object.freeze([
   "family_id",
   "shift_stratum",
@@ -147,21 +162,97 @@ function finiteNumber(value, label, minimum = -Infinity) {
     `${label} must be a finite number at least ${minimum}`);
 }
 
-const PORTABLE_SIGNIFICANT_DIGITS = 15;
-
-export function portableNumber(value) {
-  finiteNumber(value, "portable number");
-  if (value === 0) return 0;
-  return Number(value.toPrecision(PORTABLE_SIGNIFICANT_DIGITS));
+function normalizedBinary64(value) {
+  let exponentAdjustment = 0;
+  let normalized = value;
+  REFERENCE_FLOAT_VIEW.setFloat64(0, normalized);
+  let bits = REFERENCE_FLOAT_VIEW.getBigUint64(0);
+  let exponentBits = Number((bits >> 52n) & 0x7ffn);
+  if (exponentBits === 0) {
+    normalized *= REFERENCE_TWO_POW_52;
+    exponentAdjustment = -52;
+    REFERENCE_FLOAT_VIEW.setFloat64(0, normalized);
+    bits = REFERENCE_FLOAT_VIEW.getBigUint64(0);
+    exponentBits = Number((bits >> 52n) & 0x7ffn);
+  }
+  const fractionBits = bits & REFERENCE_FRACTION_MASK;
+  REFERENCE_FLOAT_VIEW.setBigUint64(0,
+    REFERENCE_NORMAL_EXPONENT | fractionBits);
+  return {
+    exponent: exponentBits - 1023 + exponentAdjustment,
+    mantissa: REFERENCE_FLOAT_VIEW.getFloat64(0),
+  };
 }
 
-export function portableNumbers(value) {
-  if (typeof value === "number") return portableNumber(value);
-  if (Array.isArray(value)) return value.map(portableNumbers);
-  if (value !== null && typeof value === "object")
-    return Object.fromEntries(Object.entries(value)
-      .map(([key, item]) => [key, portableNumbers(item)]));
-  return value;
+function referencePowerOfTwo(exponent) {
+  if (exponent > 1023) return Number.POSITIVE_INFINITY;
+  if (exponent < -1074) return 0;
+  if (exponent >= -1022) {
+    REFERENCE_FLOAT_VIEW.setBigUint64(0, BigInt(exponent + 1023) << 52n);
+    return REFERENCE_FLOAT_VIEW.getFloat64(0);
+  }
+  REFERENCE_FLOAT_VIEW.setBigUint64(0, 1n << BigInt(exponent + 1074));
+  return REFERENCE_FLOAT_VIEW.getFloat64(0);
+}
+
+/** Deterministic binary64 natural logarithm for positive finite values. */
+export function deterministicLog(value, label = "logarithm input") {
+  finiteNumber(value, label, 0);
+  requireValue(value > 0, `${label} must be positive`);
+  if (value === 1) return 0;
+  let { exponent, mantissa } = normalizedBinary64(value);
+  if (mantissa > REFERENCE_SQRT_TWO) {
+    mantissa *= 0.5;
+    exponent += 1;
+  }
+  const ratio = (mantissa - 1) / (mantissa + 1);
+  const ratioSquared = ratio * ratio;
+  let term = ratio;
+  let series = ratio;
+  for (let denominator = 3; denominator <= 51; denominator += 2) {
+    term *= ratioSquared;
+    series += term / denominator;
+  }
+  const reduced = 2 * series;
+  return exponent * REFERENCE_LN2_HIGH +
+    (reduced + exponent * REFERENCE_LN2_LOW);
+}
+
+/** Deterministic binary64 exponential over the finite binary64 range. */
+export function deterministicExp(value, label = "exponential input") {
+  finiteNumber(value, label);
+  if (value === 0) return 1;
+  if (value > 709.782712893384) return Number.POSITIVE_INFINITY;
+  if (value < -745.1332191019411) return 0;
+  const scaled = value * REFERENCE_INVERSE_LN2;
+  const exponent = scaled >= 0 ? Math.floor(scaled + 0.5) :
+    Math.ceil(scaled - 0.5);
+  const reduced = (value - exponent * REFERENCE_LN2_HIGH) -
+    exponent * REFERENCE_LN2_LOW;
+  let polynomial = 1;
+  for (let denominator = 24; denominator >= 1; --denominator)
+    polynomial = 1 + reduced * polynomial / denominator;
+  if (exponent > 1023)
+    return (polynomial * 2) * referencePowerOfTwo(exponent - 1);
+  if (exponent < -1022)
+    return (polynomial * referencePowerOfTwo(exponent + 1022)) *
+      referencePowerOfTwo(-1022);
+  return polynomial * referencePowerOfTwo(exponent);
+}
+
+/** Deterministic binary64 square root for non-negative finite values. */
+export function deterministicSqrt(value, label = "square-root input") {
+  finiteNumber(value, label, 0);
+  if (value === 0) return 0;
+  let { exponent, mantissa } = normalizedBinary64(value);
+  if (exponent % 2 !== 0) {
+    mantissa *= 2;
+    exponent -= 1;
+  }
+  let root = (mantissa + 1) * 0.5;
+  for (let iteration = 0; iteration < 9; ++iteration)
+    root = (root + mantissa / root) * 0.5;
+  return root * referencePowerOfTwo(exponent / 2);
 }
 
 function assertExactKeys(value, expected, label) {
@@ -199,11 +290,12 @@ function assertFamilyUnitFields(fields, label, { crossed = false } = {}) {
 }
 
 function assertCanonicalJsonValue(value, label = "canonical value",
-  path = "$", ancestors = new Set()) {
+  path = "$", ancestors = new Set(), allowNegativeZero = false) {
   if (value === null || typeof value === "boolean" ||
       typeof value === "string") return;
   if (typeof value === "number") {
-    requireValue(Number.isFinite(value) && !Object.is(value, -0),
+    requireValue(Number.isFinite(value) &&
+      (allowNegativeZero || !Object.is(value, -0)),
       `${label} has a non-canonical number at ${path}`);
     return;
   }
@@ -229,7 +321,7 @@ function assertCanonicalJsonValue(value, label = "canonical value",
         descriptor.enumerable,
       `${label} has an accessor or hidden array item at ${path}[${index}]`);
       assertCanonicalJsonValue(descriptor.value, label, `${path}[${index}]`,
-        nextAncestors);
+        nextAncestors, allowNegativeZero);
     }
     return;
   }
@@ -237,8 +329,49 @@ function assertCanonicalJsonValue(value, label = "canonical value",
     requireValue("value" in descriptor && descriptor.enumerable,
       `${label} has an accessor or hidden property at ${path}.${key}`);
     assertCanonicalJsonValue(descriptor.value, label, `${path}.${key}`,
-      nextAncestors);
+      nextAncestors, allowNegativeZero);
   }
+}
+
+export function canonicalScientificNumber(value,
+  label = "scientific number") {
+  finiteNumber(value, label);
+  if (value === 0) return 0;
+  if (Number.isSafeInteger(value)) return value;
+  const shortestDigits = Math.abs(value).toExponential().split("e")[0]
+    .replace(".", "");
+  if (shortestDigits.length <= REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS)
+    return value;
+  const [mantissa, exponent] = Math.abs(value).toExponential(
+    REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS - 1).split("e");
+  const digits = mantissa.replace(".", "")
+    .slice(0, REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS);
+  const sign = value < 0 ? "-" : "";
+  const canonical = Number(`${sign}${digits[0]}.${digits.slice(1)}e${exponent}`);
+  requireValue(Number.isFinite(canonical),
+    `${label} exceeds the canonical scientific-number range`);
+  requireValue(Math.abs(canonical - value) <=
+    REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE * Math.abs(value),
+    `${label} exceeds the canonical scientific-number tolerance`);
+  return canonical === 0 ? 0 : canonical;
+}
+
+function mapScientificNumbers(value, label, path = "$") {
+  if (typeof value === "number")
+    return canonicalScientificNumber(value, `${label} at ${path}`);
+  if (value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map((item, index) =>
+    mapScientificNumbers(item, label, `${path}[${index}]`));
+  return Object.fromEntries(Object.entries(value).map(([key, item]) =>
+    [key, mapScientificNumbers(item, label, `${path}.${key}`)]));
+}
+
+export function canonicalScientificValue(value,
+  label = "scientific value") {
+  assertCanonicalJsonValue(value, label, "$", new Set(), true);
+  const canonical = mapScientificNumbers(value, label);
+  assertCanonicalJsonValue(canonical, label);
+  return canonical;
 }
 
 function cloneJson(value, label = "JSON value") {
@@ -1828,8 +1961,9 @@ export function aggregateNestedFamilies(rows, {
       nested_repeat_id: full[repeatField],
       full_cost: fullCost,
       comparator_cost: comparatorCost,
-      log_cost_ratio: portableNumber(
-        Math.log((fullCost + 1) / (comparatorCost + 1))),
+      log_cost_ratio: deterministicLog(
+        (fullCost + 1) / (comparatorCost + 1),
+        "paired cost ratio"),
     });
   }
   const grouped = new Map();
@@ -1845,18 +1979,18 @@ export function aggregateNestedFamilies(rows, {
       "nested repeat IDs must be unique inside a family unit");
     const mean = field => group.reduce((sum, row) => sum + row[field], 0) /
       group.length;
-    const meanLog = portableNumber(mean("log_cost_ratio"));
-    return {
+    const meanLog = mean("log_cost_ratio");
+    return canonicalScientificValue({
       ...group[0].unit,
       unit: group[0].unit,
       nested_measurements: group.length,
-      mean_full_cost: portableNumber(mean("full_cost")),
-      mean_comparator_cost: portableNumber(mean("comparator_cost")),
+      mean_full_cost: mean("full_cost"),
+      mean_comparator_cost: mean("comparator_cost"),
       mean_log_ratio: meanLog,
-      geometric_mean_ratio: portableNumber(Math.exp(meanLog)),
+      geometric_mean_ratio: deterministicExp(meanLog),
       win: meanLog < 0,
       tie: meanLog === 0,
-    };
+    }, "family aggregation receipt");
   }).sort((left, right) => stableJson(left.unit).localeCompare(stableJson(right.unit)));
 }
 
@@ -1868,28 +2002,27 @@ export function summarizeFamilyUnits(units,
     finiteNumber(unit.mean_log_ratio, "family mean log ratio");
     return unit.mean_log_ratio;
   });
-  const ratios = logRatios.map(value => portableNumber(Math.exp(value)))
-    .sort((left, right) => left - right);
+  const ratios = logRatios.map(value => deterministicExp(value,
+    "family log ratio")).sort((left, right) => left - right);
   const middle = Math.floor(ratios.length / 2);
   const median = ratios.length % 2 ? ratios[middle] :
     (ratios[middle - 1] + ratios[middle]) / 2;
   const wins = logRatios.filter(value => value < 0).length;
   const ties = logRatios.filter(value => value === 0).length;
   const losses = logRatios.length - wins - ties;
-  const meanLog = portableNumber(
-    logRatios.reduce((sum, value) => sum + value, 0) / logRatios.length);
-  return {
+  const meanLog = logRatios.reduce((sum, value) => sum + value, 0) /
+    logRatios.length;
+  return canonicalScientificValue({
     schema: "zero.reasoner5_family_summary.v1",
     independent_families: units.length,
-    family_weighted_geometric_mean_ratio:
-      portableNumber(Math.exp(meanLog)),
-    family_weighted_median_ratio: portableNumber(median),
+    family_weighted_geometric_mean_ratio: deterministicExp(meanLog),
+    family_weighted_median_ratio: median,
     wins,
     ties,
     losses,
-    win_rate: portableNumber(wins / units.length),
+    win_rate: wins / units.length,
     wilson_lower: wilsonLowerBound(wins, units.length, wilsonZ),
-  };
+  }, "family summary receipt");
 }
 
 export function factorialInteractionFamilies(rows, {
@@ -1926,11 +2059,13 @@ export function factorialInteractionFamilies(rows, {
     for (const arm of requiredArms)
       requireValue(arms.has(arm), `factorial episode needs arm ${arm}`);
     const row = arms.get(adapterGuideArm);
-    const logCost = arm => Math.log(armCost(arms.get(arm), costField) + 1);
+    const logCost = arm => deterministicLog(
+      armCost(arms.get(arm), costField) + 1,
+      `${arm} factorial cost`);
     values.push({
       unit: Object.fromEntries(unitFields.map(field => [field, row[field]])),
-      interaction: portableNumber(logCost(adapterGuideArm) -
-        logCost(adapterOnlyArm) - logCost(guideOnlyArm) + logCost(rawArm)),
+      interaction: logCost(adapterGuideArm) - logCost(adapterOnlyArm) -
+        logCost(guideOnlyArm) + logCost(rawArm),
     });
   }
   const grouped = new Map();
@@ -1940,16 +2075,16 @@ export function factorialInteractionFamilies(rows, {
     grouped.get(key).push(value);
   }
   return [...grouped.values()].map(group => {
-    const mean = portableNumber(group.reduce((sum, value) =>
-      sum + value.interaction, 0) / group.length);
-    return {
+    const mean = group.reduce((sum, value) =>
+      sum + value.interaction, 0) / group.length;
+    return canonicalScientificValue({
       ...group[0].unit,
       unit: group[0].unit,
       nested_measurements: group.length,
       mean_interaction: mean,
       mean_log_ratio: mean,
       useful_interaction: mean < 0,
-    };
+    }, "factorial family receipt");
   }).sort((left, right) => stableJson(left.unit).localeCompare(stableJson(right.unit)));
 }
 
@@ -1963,21 +2098,19 @@ function conservativeQuantile(sorted, probability) {
 
 function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
   pointLogOverride = null) {
-  const pointLog = portableNumber(pointLogOverride ??
-    units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length);
+  const pointLog = pointLogOverride ??
+    units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length;
   requireValue(samples.length > 0 && nullSamples.length === samples.length,
     "bootstrap and recentered null samples must have equal nonzero length");
   for (const value of samples)
     finiteNumber(value, "ordinary bootstrap sample");
   for (const value of nullSamples)
     finiteNumber(value, "recentered null bootstrap sample");
-  const sortedSamples = samples.map(portableNumber)
+  const sortedSamples = [...samples].sort((left, right) => left - right);
+  const sortedNullSamples = [...nullSamples]
     .sort((left, right) => left - right);
-  const sortedNullSamples = nullSamples.map(portableNumber)
-    .sort((left, right) => left - right);
-  const lowerLog = portableNumber(conservativeQuantile(sortedSamples, alpha));
-  const upperLog = portableNumber(
-    conservativeQuantile(sortedSamples, 1 - alpha));
+  const lowerLog = conservativeQuantile(sortedSamples, alpha);
+  const upperLog = conservativeQuantile(sortedSamples, 1 - alpha);
   const oneSidedPLower = (sortedNullSamples.filter(value =>
     value <= pointLog).length + 1) / (sortedNullSamples.length + 1);
   const oneSidedPHigher = (sortedNullSamples.filter(value =>
@@ -1986,17 +2119,17 @@ function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
     .length + 1) / (sortedSamples.length + 1);
   const uncenteredTailHigher = (sortedSamples.filter(value => value <= 0)
     .length + 1) / (sortedSamples.length + 1);
-  return {
+  return canonicalScientificValue({
     schema: `zero.reasoner5_${kind}_bootstrap.v2`,
     independent_units: units.length,
     replicates: samples.length,
     alpha,
     point_log_ratio: pointLog,
-    point_ratio: portableNumber(Math.exp(pointLog)),
+    point_ratio: deterministicExp(pointLog, "bootstrap point log ratio"),
     lower_log_ratio: lowerLog,
     upper_log_ratio: upperLog,
-    lower_ratio: portableNumber(Math.exp(lowerLog)),
-    upper_ratio: portableNumber(Math.exp(upperLog)),
+    lower_ratio: deterministicExp(lowerLog, "bootstrap lower log ratio"),
+    upper_ratio: deterministicExp(upperLog, "bootstrap upper log ratio"),
     confidence_interval_method: "ordinary-percentile-bootstrap",
     p_value_method: "recentered-null-bootstrap",
     null_hypothesis_point_log_ratio: 0,
@@ -2008,7 +2141,7 @@ function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
       sortedSamples),
     null_bootstrap_sha256: canonicalDigest(
       `${kind}-recentered-null-bootstrap-samples`, sortedNullSamples),
-  };
+  }, "bootstrap receipt");
 }
 
 export function oneWayClusterBootstrap(units, {
@@ -2026,8 +2159,10 @@ export function oneWayClusterBootstrap(units, {
     "bootstrap alpha must lie between zero and one half");
   for (const unit of units)
     finiteNumber(unit.mean_log_ratio, "family mean log ratio");
+  const canonicalUnits = canonicalScientificValue(units,
+    "one-way bootstrap units");
   const environments = new Map();
-  for (const unit of units) {
+  for (const unit of canonicalUnits) {
     const environment = environmentField === null ? "__all__" :
       getUnitField(unit, environmentField);
     requireValue(environment !== undefined,
@@ -2035,11 +2170,10 @@ export function oneWayClusterBootstrap(units, {
     if (!environments.has(environment)) environments.set(environment, []);
     environments.get(environment).push(unit);
   }
-  const pointLog = portableNumber([...environments.values()]
-    .reduce((sum, environmentUnits) =>
+  const pointLog = [...environments.values()].reduce((sum, environmentUnits) =>
     sum + environmentUnits.reduce((inner, unit) =>
       inner + unit.mean_log_ratio, 0) / environmentUnits.length, 0) /
-    environments.size);
+    environments.size;
   const rng = createDeterministicRng(seed, environmentField === null ?
     "one-way-cluster-bootstrap" : "stratified-one-way-cluster-bootstrap");
   const samples = [];
@@ -2053,11 +2187,11 @@ export function oneWayClusterBootstrap(units, {
           .mean_log_ratio;
       sum += environmentSum / environmentUnits.length;
     }
-    const sample = portableNumber(sum / environments.size);
+    const sample = sum / environments.size;
     samples.push(sample);
-    nullSamples.push(portableNumber(sample - pointLog));
+    nullSamples.push(sample - pointLog);
   }
-  const receipt = bootstrapReceipt(units, samples, nullSamples, alpha,
+  const receipt = bootstrapReceipt(canonicalUnits, samples, nullSamples, alpha,
     environmentField === null ? "one_way_cluster" :
       "stratified_one_way_cluster", pointLog);
   return {
@@ -2085,12 +2219,16 @@ export function twoWayClusterBootstrap(units, {
   finiteNumber(alpha, "bootstrap alpha", 0);
   requireValue(alpha > 0 && alpha < 0.5,
     "bootstrap alpha must lie between zero and one half");
-  const rows = sortedUnique(units.map(unit => getUnitField(unit, rowField)));
-  const columns = sortedUnique(units.map(unit => getUnitField(unit, columnField)));
+  const canonicalUnits = canonicalScientificValue(units,
+    "two-way bootstrap units");
+  const rows = sortedUnique(canonicalUnits.map(unit =>
+    getUnitField(unit, rowField)));
+  const columns = sortedUnique(canonicalUnits.map(unit =>
+    getUnitField(unit, columnField)));
   requireValue(!rows.includes(undefined) && !columns.includes(undefined),
     "crossed cells need both family axes");
   const cells = new Map();
-  for (const unit of units) {
+  for (const unit of canonicalUnits) {
     finiteNumber(unit.mean_log_ratio, "crossed-cell mean log ratio");
     const key = stableJson([getUnitField(unit, rowField),
       getUnitField(unit, columnField)]);
@@ -2103,8 +2241,8 @@ export function twoWayClusterBootstrap(units, {
     for (const column of columns)
       requireValue(cells.has(stableJson([row, column])),
         `missing crossed cell ${row} by ${column}`);
-  const pointLog = portableNumber([...cells.values()]
-    .reduce((sum, value) => sum + value, 0) / cells.size);
+  const pointLog = [...cells.values()].reduce((sum, value) => sum + value, 0) /
+    cells.size;
   const rng = createDeterministicRng(seed, "two-way-cluster-bootstrap");
   const samples = [];
   const nullSamples = [];
@@ -2115,22 +2253,21 @@ export function twoWayClusterBootstrap(units, {
     for (const row of sampledRows)
       for (const column of sampledColumns)
         sum += cells.get(stableJson([row, column]));
-    const sample = portableNumber(
-      sum / (sampledRows.length * sampledColumns.length));
+    const sample = sum / (sampledRows.length * sampledColumns.length);
     samples.push(sample);
-    nullSamples.push(portableNumber(sample - pointLog));
+    nullSamples.push(sample - pointLog);
   }
-  const receipt = bootstrapReceipt(units, samples, nullSamples, alpha,
+  const receipt = bootstrapReceipt(canonicalUnits, samples, nullSamples, alpha,
     "two_way_cluster", pointLog);
   const rowUnits = rows.map(row => ({
     [rowField]: row,
-    mean_log_ratio: portableNumber(columns.reduce((sum, column) =>
-      sum + cells.get(stableJson([row, column])), 0) / columns.length),
+    mean_log_ratio: columns.reduce((sum, column) =>
+      sum + cells.get(stableJson([row, column])), 0) / columns.length,
   }));
   const columnUnits = columns.map(column => ({
     [columnField]: column,
-    mean_log_ratio: portableNumber(rows.reduce((sum, row) =>
-      sum + cells.get(stableJson([row, column])), 0) / rows.length),
+    mean_log_ratio: rows.reduce((sum, row) =>
+      sum + cells.get(stableJson([row, column])), 0) / rows.length,
   }));
   return {
     ...receipt,
@@ -2157,9 +2294,9 @@ export function familyInferenceReceipt(units, {
     "family inference design must be one-way or two-way");
   requireValue(["lower", "higher"].includes(direction),
     "family inference direction must be lower or higher");
-  const unitSnapshot = portableNumbers(
-    cloneJson(units, "family inference units"));
-  const settings = {
+  const unitSnapshot = canonicalScientificValue(units,
+    "family inference units");
+  const settings = cloneJson({
     design,
     direction,
     seed: normalizeHexSeed(seed, "family inference seed"),
@@ -2169,19 +2306,21 @@ export function familyInferenceReceipt(units, {
     row_field: rowField,
     column_field: columnField,
     wilson_z: wilsonZ,
-  };
-  const summary = summarizeFamilyUnits(unitSnapshot, { wilsonZ });
+  }, "family inference settings");
+  const summary = summarizeFamilyUnits(unitSnapshot, {
+    wilsonZ: settings.wilson_z,
+  });
   const interval = design === "one-way" ? oneWayClusterBootstrap(unitSnapshot, {
     seed: settings.seed,
-    replicates,
-    alpha,
-    environmentField,
+    replicates: settings.replicates,
+    alpha: settings.alpha,
+    environmentField: settings.environment_field,
   }) : twoWayClusterBootstrap(unitSnapshot, {
     seed: settings.seed,
-    replicates,
-    alpha,
-    rowField,
-    columnField,
+    replicates: settings.replicates,
+    alpha: settings.alpha,
+    rowField: settings.row_field,
+    columnField: settings.column_field,
   });
   const body = {
     schema: "zero.reasoner5_family_inference.v1",
@@ -2253,9 +2392,11 @@ export function wilsonLowerBound(wins, total,
   const z2 = z * z;
   const denominator = 1 + z2 / total;
   const center = rate + z2 / (2 * total);
-  const radius = z * Math.sqrt((rate * (1 - rate) + z2 / (4 * total)) /
-    total);
-  return portableNumber(Math.max(0, (center - radius) / denominator));
+  const radius = z * deterministicSqrt(
+    (rate * (1 - rate) + z2 / (4 * total)) / total,
+    "Wilson variance");
+  return canonicalScientificNumber(
+    Math.max(0, (center - radius) / denominator), "Wilson lower bound");
 }
 
 export function derangementPValue(observed, derangements,
@@ -2265,19 +2406,25 @@ export function derangementPValue(observed, derangements,
     "derangement reference must contain values");
   for (const value of derangements)
     finiteNumber(value, "derangement statistic");
-  const ordered = [...derangements].sort((left, right) => left - right);
+  const canonicalObserved = canonicalScientificNumber(observed,
+    "observed derangement statistic");
+  const canonicalDerangements = derangements.map(value =>
+    canonicalScientificNumber(value, "derangement statistic"));
+  const ordered = [...canonicalDerangements]
+    .sort((left, right) => left - right);
   const middle = Math.floor(ordered.length / 2);
   const median = ordered.length % 2 ? ordered[middle] :
     (ordered[middle - 1] + ordered[middle]) / 2;
-  const extreme = derangements.filter(value => lowerIsBetter ?
-    value <= observed : value >= observed).length;
-  return {
-    observed,
-    derangements: derangements.length,
+  const extreme = canonicalDerangements.filter(value => lowerIsBetter ?
+    value <= canonicalObserved : value >= canonicalObserved).length;
+  return canonicalScientificValue({
+    observed: canonicalObserved,
+    derangements: canonicalDerangements.length,
     median,
-    beats_median: lowerIsBetter ? observed < median : observed > median,
-    p_value: (extreme + 1) / (derangements.length + 1),
-  };
+    beats_median: lowerIsBetter ? canonicalObserved < median :
+      canonicalObserved > median,
+    p_value: (extreme + 1) / (canonicalDerangements.length + 1),
+  }, "derangement receipt");
 }
 
 export function reconstructCommonGate(input) {
@@ -2767,13 +2914,14 @@ function absoluteArmStatistic(rawTraces, arm, unitFields) {
     }));
     const key = stableJson(unit);
     if (!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key).push(Math.log(row.primary_cost + 1));
+    grouped.get(key).push(deterministicLog(row.primary_cost + 1,
+      "derangement cost"));
   }
   requireValue(grouped.size > 0, `derangement arm ${arm} selected no rows`);
   const unitMeans = [...grouped.values()].map(values =>
     values.reduce((sum, value) => sum + value, 0) / values.length);
-  return unitMeans.reduce((sum, value) => sum + value, 0) /
-    unitMeans.length;
+  return canonicalScientificNumber(unitMeans.reduce((sum, value) =>
+    sum + value, 0) / unitMeans.length, "derangement arm statistic");
 }
 
 function deriveSourceAblation(rawTraces, registration) {
@@ -2816,8 +2964,8 @@ function deriveHeadroom(rawTraces, registration) {
     .sort((left, right) => left - right);
   requireValue(costs.length > 0, "headroom comparator selected no rows");
   const middle = Math.floor(costs.length / 2);
-  const median = costs.length % 2 ? costs[middle] :
-    (costs[middle - 1] + costs[middle]) / 2;
+  const median = canonicalScientificNumber(costs.length % 2 ? costs[middle] :
+    (costs[middle - 1] + costs[middle]) / 2, "headroom median cost");
   return {
     comparator_arm: registration.comparator_arm,
     median_primary_cost: median,
@@ -3132,7 +3280,8 @@ export function buildResultFromRawTraces({
     selectedLanes, sourceIsolatedArms });
   const payload = reconstruct(cloneJson(rawTraces));
   plainObject(payload, "reconstructed result payload");
-  const analysisPayload = cloneJson(payload, "reconstructed result payload");
+  const analysisPayload = canonicalScientificValue(payload,
+    "reconstructed result payload");
   const reserved = new Set(["schema", "experiment", "manifest_sha256",
     "raw_trace_sha256", "trace_coverage_sha256",
     "analysis_settings_sha256", "analysis_function_sha256", "integrity",
@@ -3172,7 +3321,7 @@ export function buildResultFromRawTraces({
     episodes: coverage.episodes,
     rows: coverage.rows,
   };
-  const body = portableNumbers({
+  const body = {
     ...analysisPayload,
     schema: "zero.reasoner5_trace_result.v1",
     experiment,
@@ -3192,7 +3341,7 @@ export function buildResultFromRawTraces({
     decision: gate.decision,
     gate,
     provenance,
-  });
+  };
   return {
     ...body,
     result_sha256: canonicalDigest("trace-result", body),
