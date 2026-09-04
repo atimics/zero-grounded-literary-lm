@@ -578,6 +578,22 @@ function independentR56FullScores(artifact, observations) {
   });
 }
 
+function stableLogLossFromQ20Scores(scores, truthClass) {
+  assert.equal(scores.length, R56_UNIVERSE.semantic.length);
+  assert.ok(Number.isInteger(truthClass) && truthClass >= 0 &&
+    truthClass < scores.length);
+  const maximum = scores.reduce((left, right) => left > right ? left : right);
+  let maximumTies = 0;
+  let lowerTail = 0;
+  for (const score of scores) {
+    if (score === maximum) maximumTies += 1;
+    else lowerTail += Math.exp(Number(score - maximum) / Q20_ONE);
+  }
+  assert.ok(maximumTies > 0 && Number.isFinite(lowerTail));
+  return Number(maximum - scores[truthClass]) / Q20_ONE +
+    Math.log(maximumTies) + Math.log1p(lowerTail / maximumTies);
+}
+
 function independentCandidateSet(scores, thresholdQ20) {
   assert.equal(scores.length, R56_UNIVERSE.semantic.length);
   assert.ok(Number.isInteger(thresholdQ20) && thresholdQ20 > 0 &&
@@ -1183,8 +1199,41 @@ export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit,
     CALIBRATION_COVERAGE_FAMILIES);
   assert.equal(calibrationReplay.episodes,
     CALIBRATION_COVERAGE_FAMILIES * CALIBRATION_DRAWS);
-  const naturalLoss = row => Math.max(0, -Math.log(row.truth_probability));
-  const fullFamilies = programFamilyValues(nativeRows, "full", naturalLoss);
+  const logClassCount = Math.log(R56_UNIVERSE.semantic.length);
+  const naturalLoss = row => {
+    assert.ok(Number.isFinite(row.normalized_log_loss) &&
+      row.normalized_log_loss >= 0);
+    return row.normalized_log_loss * logClassCount;
+  };
+  const artifact = parseR56Artifact(artifactBytes, manifest.source_artifact);
+  const episodes = new Map(manifest.episodes.map(episode => {
+    const spec = episode.content.evaluator.episode_spec;
+    return [`${spec.program_index}:${spec.mechanism_index}:${spec.repeat_index}`,
+      episode];
+  }));
+  const fullReplay = full.map(row => {
+    const program = Number(row.program_family_id.split("-").at(-1));
+    const episode = episodes.get(
+      `${program}:${row.mechanism_id}:${row.parameter_draw}`);
+    assert.ok(episode, `missing full-arm episode ${row.episode_id}`);
+    const truthClass = episode.content.evaluator.episode_spec.truth_class;
+    assert.equal(row.truth_class, truthClass);
+    const replayed = stableLogLossFromQ20Scores(
+      independentR56FullScores(artifact, episode.content.public.observations),
+      truthClass);
+    const emitted = naturalLoss(row);
+    assert.ok(replayed >= 0 && Number.isFinite(replayed));
+    if (replayed > 0) assert.ok(emitted > 0,
+      `rounded-zero full-arm log loss for ${row.episode_id}`);
+    const scale = Math.max(replayed, emitted, Number.MIN_VALUE);
+    assert.ok(Math.abs(replayed - emitted) / scale <= 1e-12,
+      `full-arm log-loss replay differs for ${row.episode_id}`);
+    return { episode_id: row.episode_id, emitted, replayed };
+  }).sort((left, right) => left.episode_id.localeCompare(right.episode_id));
+  const fullReplayByEpisode = new Map(fullReplay.map(item =>
+    [item.episode_id, item.replayed]));
+  const fullLoss = row => fullReplayByEpisode.get(row.episode_id);
+  const fullFamilies = programFamilyValues(nativeRows, "full", fullLoss);
   const priorFamilies = programFamilyValues(nativeRows, "program_prior_only",
     naturalLoss);
   const uniformFamilies = new Map([...fullFamilies.keys()].map(family =>
@@ -1264,13 +1313,24 @@ export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit,
   const failures = Object.entries(checks).filter(([, passed]) => !passed)
     .map(([name]) => name);
   const body = {
-    schema: "zero.reasoner56_channel_readiness_development.v1",
+    schema: "zero.reasoner56_channel_readiness_development.v2",
     scope: "development-only",
     status: failures.length === 0 ? "development-ready" : "development-no-go",
     checks,
     failures,
     metrics: {
-      full_mean_log_loss: mean(full.map(naturalLoss)),
+      full_mean_log_loss: mean(full.map(fullLoss)),
+      full_log_loss_replay: {
+        method: "stable-q20-score-logsumexp-minus-truth-score",
+        tail_rule: "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)",
+        episodes: fullReplay.length,
+        maximum_relative_error: Math.max(...fullReplay.map(item => {
+          const scale = Math.max(item.replayed, item.emitted, Number.MIN_VALUE);
+          return Math.abs(item.replayed - item.emitted) / scale;
+        })),
+        replay_sha256: canonicalDigest(
+          "r56-development-full-log-loss-replay", fullReplay),
+      },
       uniform_log_loss: Math.log(427),
       program_prior_only_mean_log_loss: mean(prior.map(naturalLoss)),
       comparisons,
@@ -1556,7 +1616,7 @@ function normalizeTraceRows(nativeRows, manifest) {
 
 export function buildR56HarnessBundle({ nativeRows, nativeResult,
   artifactBytes }) {
-  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v3");
+  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v4");
   assert.equal(nativeRows.length, 128 * R56_EXPECTED_ARMS.length);
   const splits = selectSemanticSplits();
   assert.equal(splits.source.length, nativeResult.source_semantic_classes);
@@ -1698,7 +1758,7 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
   const readiness = assessR56ChannelReadiness(nativeRows, audit, manifest,
     artifactBytes);
   const assessmentBody = {
-    schema: "zero.reasoner56_development_assessment.v1",
+    schema: "zero.reasoner56_development_assessment.v2",
     status: "development-only",
     scientific_decision: null,
     harness_gate: {

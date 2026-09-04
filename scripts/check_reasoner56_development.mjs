@@ -81,7 +81,7 @@ if (sanitizersOnly) {
 
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 assert.equal(contract.schema,
-  "zero.reasoner56_passive_noise_development_contract.v4");
+  "zero.reasoner56_passive_noise_development_contract.v5");
 assert.equal(contract.status, "development-only");
 assert.equal(contract.execution.authorized, false);
 assert.equal(contract.execution.sealed_seeds_present, false);
@@ -96,10 +96,29 @@ assert.equal(contract.calibration.candidate_set_coverage, 0.99);
 assert.equal(contract.calibration.fit_program_families, 16);
 assert.equal(contract.calibration.coverage_program_families, 99);
 assert.equal(contract.calibration.draws_per_program_family, 8);
+assert.equal(contract.calibration.log_loss_evaluation.score_domain_rule,
+  "logsumexp(score_q20/Q20)-truth_score_q20/Q20");
+assert.equal(contract.calibration.log_loss_evaluation.stable_tail_rule,
+  "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)");
+assert.equal(contract.calibration.log_loss_evaluation.probability_field_role,
+  "diagnostic only");
 assert.equal(contract.generators.development_program_families, 8);
 assert.equal(contract.generators.development_corruption_families, 8);
 assert.equal(contract.generators.nested_repeats, 2);
+assert.equal(contract.analysis.log_loss_comparison_input,
+  "stable score-domain normalized_log_loss; truth_probability is diagnostic only");
+assert.equal(contract.analysis.full_log_loss_replay_episodes, 128);
 assert.equal(contract.arms.length, 45);
+assert.equal(contract.shared_harness.commit,
+  "2303a1a1769a7e4ccd32f5167e18645550651509");
+assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
+  contract.shared_harness.library_sha256,
+"shared harness hash differs from the R5.6 contract");
+assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");
+assert.equal(contract.shared_harness.confidence_interval_method,
+  "ordinary-percentile-bootstrap");
+assert.equal(contract.shared_harness.p_value_method,
+  "recentered-null-bootstrap");
 
 for (const [file, expected] of Object.entries(contract.protected_sources))
   assert.equal(sha256(readFileSync(file)), expected,
@@ -139,7 +158,7 @@ try {
   const nativeResult = JSON.parse(first.result.toString("utf8"));
   const nativeRows = first.trace.toString("utf8").trim().split("\n")
     .map(JSON.parse);
-  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v3");
+  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v4");
   assert.equal(nativeResult.status, "development-only");
   assert.equal(nativeResult.scientific_decision, null);
   assert.equal(nativeResult.sealed_execution_authorized, false);
@@ -169,6 +188,8 @@ try {
   assert.equal(nativeResult.candidate_set_truth_covered, 128);
   assert.ok(nativeResult.target_only_median_cost >= 16);
   assert.equal(nativeRows.length, 5760);
+  assert.ok(nativeRows.every(row =>
+    row.schema === "zero.reasoner56_native_trace.v3"));
   assert.equal(new Set(nativeRows.map(row => row.episode_id)).size, 128);
   assert.equal(new Set(nativeRows.map(row => row.arm)).size, 45);
   assert.ok(nativeRows.every(row => row.exact && row.certificate_valid &&
@@ -180,7 +201,12 @@ try {
     row.verifier_checks === row.proposal_verifier_checks +
       row.fallback_verifier_checks &&
     row.partial_expansions >= row.verifier_checks &&
-    row.observation_queries === 18 && row.observations_consumed === 18));
+      row.observation_queries === 18 && row.observations_consumed === 18));
+  assert.ok(Number.isFinite(nativeResult.full_mean_normalized_log_loss) &&
+    nativeResult.full_mean_normalized_log_loss > 0);
+  assert.ok(nativeRows.some(row => row.arm === "full" &&
+    row.truth_probability === 1 && row.normalized_log_loss > 0),
+  "score-space loss must preserve competing mass after probability rounds to one");
 
   const splits = selectSemanticSplits();
   const splitClasses = [splits.source, splits.fit, splits.coverage,
@@ -217,11 +243,27 @@ try {
   assert.equal(bundle.result.status, "development-only");
   assert.equal(bundle.result.scientific_decision, null);
   assert.equal(bundle.result.exactness.all_final_answers_exact, true);
+  const inferences = [
+    bundle.result.registered_analysis.primary,
+    ...bundle.result.registered_analysis.strata.map(item => item.inference),
+    ...bundle.result.registered_analysis.mechanisms.map(item => item.inference),
+  ];
+  assert.ok(inferences.every(inference =>
+    inference.interval.schema.endsWith("_bootstrap.v2") &&
+    inference.interval.confidence_interval_method ===
+      "ordinary-percentile-bootstrap" &&
+    inference.interval.p_value_method === "recentered-null-bootstrap" &&
+    /^[0-9a-f]{64}$/u.test(inference.interval.null_bootstrap_sha256)));
+  assert.equal(bundle.result.registered_analysis.primary.interval
+    .null_bootstrap_sha256,
+  contract.shared_harness.primary_null_bootstrap_sha256);
   assert.equal(bundle.audit.passed, true);
   assert.equal(bundle.audit.accuracy_delta, 0);
   assert.ok(bundle.audit.severity.accuracy_delta <= 0.02);
   assert.ok(bundle.audit.maximum_severity_fraction_per_nonopaque_cell < 1);
   assert.equal(bundle.readiness.scope, "development-only");
+  assert.equal(bundle.readiness.schema,
+    "zero.reasoner56_channel_readiness_development.v2");
   assert.equal(bundle.readiness.status, "development-no-go");
   assert.deepEqual(bundle.readiness.failures,
     contract.development_expected_readiness_failures);
@@ -229,6 +271,16 @@ try {
   assert.equal(bundle.readiness.metrics.candidate_set
     .program_prior_only_mean_size, 427);
   assert.equal(bundle.readiness.metrics.candidate_set.size_ratio, 1);
+  assert.ok(bundle.readiness.metrics.full_mean_log_loss > 0);
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.method,
+    "stable-q20-score-logsumexp-minus-truth-score");
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.tail_rule,
+    "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)");
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.episodes, 128);
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.replay_sha256,
+    contract.analysis.full_log_loss_replay_sha256);
+  assert.ok(bundle.readiness.metrics.full_log_loss_replay
+    .maximum_relative_error <= 1e-12);
   assert.equal(bundle.readiness.metrics.candidate_set.coverage_families, 99);
   assert.equal(bundle.readiness.metrics.candidate_set.covered_families, 99);
   assert.ok(bundle.readiness.metrics.candidate_set

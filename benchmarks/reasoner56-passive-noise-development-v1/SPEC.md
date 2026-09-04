@@ -62,7 +62,11 @@ the complete artifact with SHA-256.
 The full score combines the frozen program guide, local emission scores, and
 the first-order state score. The main `robust_hamming` comparator uses the same
 program guide. Softmax runs over all 427 semantic classes after subtracting
-the largest score. Equal scores receive equal probability.
+the largest score. Equal scores receive equal probability. Calibration and
+development comparisons compute log loss directly from Q20 scores as
+`logsumexp(score) - truth_score`. The implementation separates maximum-score
+ties and applies `log1p` to the lower tail. This preserves small competing
+mass when the displayed truth probability rounds to one.
 
 Six temperatures are eligible: `0.25, 0.5, 1, 2, 4, 8`. Sixteen disjoint
 program families select one temperature from their family-mean log loss over
@@ -144,9 +148,12 @@ rejection, fallback accounting, derangement checks, and source-ablation
 equality pass.
 
 The separate channel-readiness assessment resolves `development-no-go`. The
-full arm has mean log loss 0, compared with 6.056784 for uniform and 9.234742
-for program-prior-only. The exact threshold-one rule gives both the full and
-program-prior-only arms a family-weighted mean candidate-set size of 427. The
+full arm has mean log loss 2.035434e-32, compared with 6.056784 for uniform
+and 9.234742 for program-prior-only. All 128 displayed full-arm truth
+probabilities round to one. Independent score replay preserves their positive
+loss and matches the native values within 2.08e-16 relative error. The exact
+threshold-one rule gives both the full and program-prior-only arms a
+family-weighted mean candidate-set size of 427. The
 size ratio is 1, so the registered 0.8 size gate fails. Candidate-set coverage
 comes from the registered disjoint calibration-coverage lane. Its 99
 program-family records bind all 792 draws. An independent JavaScript scorer
