@@ -12,7 +12,7 @@
       "path": "docs/REASONER5-NEXT.md",
       "sha256": "a479882ee565aea082da2f490a0d067a832f1fa2778f8b23af2ee59ecdf7792c"
     },
-    "shared_harness_commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f"
+    "shared_harness_commit": "a46382178fea84200a331c3ba0a0a22109b00747"
   },
   "execution": {
     "authorized": false,
@@ -54,7 +54,7 @@
       },
       "shared_harness": {
         "path": "scripts/lib/reasoner5_harness.mjs",
-        "sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5"
+        "sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883"
       },
       "development_document": {
         "path": "docs/REASONER58-DEVELOPMENT.md",
@@ -180,7 +180,7 @@
       },
       "result": {
         "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/DEVELOPMENT.json",
-        "file_sha256": "da3ee91095bf88897cf621539fea04a8ca34ea2ed90947f10bfabb7fdb3e1355"
+        "file_sha256": "3354d27f260d7c9ba461c86583dcda1a8cb51e164f072ec72ceb73a2e71f2e89"
       }
     }
   },
@@ -200,17 +200,17 @@
     "raw_rows": 1344,
     "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
     "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
-    "result_sha256": "e7ac1f1d3603e4043957f0d099d35f1ebdcce13df9e1944768d074a943e96f78",
-    "primary_null_bootstrap_sha256": "70f4a2f702fd856804595e1b387059663fcc8ba1a7b5d9037b923433d0005262",
-    "behavior_mechanism_null_bootstrap_sha256": "90217982c9ae1ddba3e30c28ec9a62d1960beb4d18701a12d7ad00b8b4be0fb5",
-    "behavior_mechanism_p_value": 0.1089455272363818,
+    "result_sha256": "efaf78bc71bf4026dd3db08bb461c2bb48f221589c22cd18b806a0132710b60a",
+    "primary_null_bootstrap_sha256": "0bfebc2767f742d61c96862db0ad02407c1a60ea41408ef8da9432dd8d86b07f",
+    "behavior_mechanism_null_bootstrap_sha256": "316ded0568fd16acf686116f2df2494cf88c1300c65c0b4dba0443075e75c6ca",
+    "behavior_mechanism_p_value": 0.10894552723638,
     "decision": "measurement-floor",
     "source_free_median_primary_cost": 6,
     "registered_headroom_minimum": 16,
-    "full_to_source_free_geometric_ratio": 1.1040313985489811,
+    "full_to_source_free_geometric_ratio": 1.1040313985489,
     "full_to_source_free_interval_99": [
-      0.9147958946431338,
-      1.3079624321642322
+      0.91479589464313,
+      1.3079624321642
     ],
     "wins": 7,
     "ties": 1,
