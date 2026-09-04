@@ -14,7 +14,7 @@
     "core_sha256": "8a946ce9f04b7d3ecbc530d4c893ea59ab78121e34e52e263457589a1cf2875c",
     "header_sha256": "3b0ec10cf07786c05236ff5b063c0848d19d63ef863afef040679909d255e218",
     "cli_sha256": "5df3da7f977358cd61eb53aae060dd23143360e8705a2f5291a2bb0f706bddb6",
-    "development_checker_sha256": "8cfbd6c98231e678be83a5974eb3f27aeaead263cf2d90abb6aea3fcb7b97948",
+    "development_checker_sha256": "4ea2d1376732b112ac6c17a28a5667f86f841da468d704276bff48b3c6166c5c",
     "shared_harness_commit": "a46382178fea84200a331c3ba0a0a22109b00747",
     "shared_harness_sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883",
     "replay_adapter_sha256": "dcca6e4f3e802315ae5c5611cd1baa7977982866cbd6937102eb003cce4d651d",

@@ -89,11 +89,11 @@ trace, the transform function, and one identity digest for every input row.
 - Shared coverage SHA-256:
   `5aeea10bd3eabc75e9eb03ac10dac43ff2639702e978ffc145359e30f70b5e30`
 - Replayed common result SHA-256:
-  `0dcdfca40c6d53176818401389f0dc17272e0c940fee2888ba4da5f95dd4be80`
+  `cccec48984de604b1e51444a480f54136807920c1e33c4cd5a31803d6c9b62a5`
 - Intersection-union analysis SHA-256:
-  `2b795b29ea59a7e43e597343a343016f9337e37f0f8d41643bd8f4c5942ee4d7`
+  `2e9b806a60de70f5403419e00e37549ba4cdaa4f22c1565c4e1a21a58a79e3ab`
 - Development analysis file SHA-256:
-  `3e513b3a746e5c54c696a2f90e29cd0000e3122ee508f732e3d33a3a8a095db6`
+  `42e3ef65e7b5c0ac6a6d15765ff2331df2c7b39f448b3ff4a9b164d30f26d5d5`
 - Scientific analysis-view receipt SHA-256:
   `d294335ce06ea744d81ec97ab52a8849dde7e0623700b08d4ef2f43475bffe98`
 

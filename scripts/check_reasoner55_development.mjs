@@ -20,6 +20,8 @@ import {
   createDeterministicRng,
   createReplayRegistry,
   createSplitState,
+  deterministicExp,
+  deterministicLog,
   aggregateNestedFamilies,
   buildResultFromRawTraces,
   factorialInteractionFamilies,
@@ -414,7 +416,8 @@ function sourceFreeSelectionReceipt(analysisRows) {
     nested_tie_repeats_per_unit: 2,
     source_free_jit_to_target_only_log_ratio: meanLogRatio,
     source_free_jit_to_target_only_ratio:
-      canonicalScientificNumber(Math.exp(meanLogRatio)),
+      canonicalScientificNumber(deterministicExp(meanLogRatio,
+        "R5.5 source-free selection log ratio")),
     selected_arm: selectedArm,
   };
   return {
@@ -449,7 +452,8 @@ function absoluteArmStatistic(analysisRows, arm) {
   for (const row of analysisRows.filter(item => item.arm === arm)) {
     const key = `${row.generator_id}\0${row.family_id}`;
     const values = grouped.get(key) ?? [];
-    values.push(canonicalScientificNumber(Math.log(row.primary_cost + 1)));
+    values.push(canonicalScientificNumber(deterministicLog(
+      row.primary_cost + 1, "R5.5 derangement cost")));
     grouped.set(key, values);
   }
   assert.equal(grouped.size, 16,
