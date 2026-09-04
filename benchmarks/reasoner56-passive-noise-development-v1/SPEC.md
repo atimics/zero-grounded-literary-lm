@@ -109,17 +109,21 @@ The target-only arm has a median verifier cost of 43, with a range from 34 to
 treatment effect.
 
 Repeat 0 trains the frozen static proxy classifier. Repeat 1 evaluates it. The
-sensor-only and augmented balanced accuracies are both 0.125. The maximum
-template fraction in every public static cell is 0.125. Runtime taint checks
-also pass.
+template and severity labels receive separate checks. The maximum registered
+gain is two balanced-accuracy points. No public static cell may identify one
+template or severity with certainty. Template balanced accuracy stays at
+0.125, with a gain of 0 and a maximum cell fraction of 0.125. Severity balanced
+accuracy changes from 0.284743 to 0.25, with a maximum cell fraction of 0.5625.
+Runtime taint checks also pass.
 
 ## Search and replay
 
 The ranker proposes at most 24 classes. A SHA-bound canonical order supplies
 fallback over the same immutable 427-class universe. Every proposal, fallback
-expansion, and verifier call is charged. A capped unsolved search costs the cap
-plus one. Each arm also receives an invalid first proposal, which the verifier
-must reject.
+expansion, and verifier call is charged. Every unsolved search costs the cap
+plus one. Its receipt distinguishes a cap stop from complete fallback
+exhaustion. Each arm also receives an invalid first proposal, which the
+verifier must reject.
 
 The native trace has 5,760 rows. The shared harness normalizes all rows to its
 strict schema, checks exact episode-by-arm coverage, reconstructs every family
@@ -136,16 +140,20 @@ fail: `primary_ratio`, `primary_upper_limit`, `family_win_rate`,
 rejection, fallback accounting, derangement checks, and source-ablation
 equality pass.
 
-The separate channel-readiness assessment resolves `development-ready`. The
+The separate channel-readiness assessment resolves `development-no-go`. The
 full arm has mean log loss 0, compared with 6.056784 for uniform and 9.234742
-for program-prior-only. Its candidate set has mean size 1 versus 427, with
-coverage 1 and a one-sided 95 percent Wilson lower bound of 0.979300. Its mean
-Brier score is about 5.30e-62 and its fallback rate is 0. All seven readiness
-checks pass.
+for program-prior-only. Its development candidate set has family-weighted mean
+size 1 versus 427. Candidate-set coverage comes from the registered disjoint
+calibration-coverage lane. Its 99 program-family records bind all 792 draws and
+use one worst-draw result per family. All 99 families cover the truth and their
+one-sided 95 percent Wilson lower bound is 0.973398. The development interface
+and proxy audits pass. The sealed interface and proxy audit remains pending,
+so the Reasoner 5.7 readiness gate stays closed.
 
 These values describe a deterministic engineering fixture. Fresh family
-selection, power analysis, a frozen publication rule, and explicit execution
-approval form the remaining scientific boundary.
+selection, power analysis, a frozen publication rule, the sealed interface and
+proxy audit, and explicit execution approval form the remaining scientific
+boundary.
 
 ## Execution boundary
 

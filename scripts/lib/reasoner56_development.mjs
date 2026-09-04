@@ -69,6 +69,12 @@ const REPEATS = 2;
 const OBSERVATIONS = 18;
 const GLOBAL_CAP = 427;
 const PROPOSAL_BUDGET = 24;
+const CALIBRATION_COVERAGE_FAMILIES = 99;
+const CALIBRATION_DRAWS = 8;
+const DEVELOPMENT_CORRUPTION_SEED = 0x56de0002n;
+const DEVELOPMENT_ORDER_SEED = 0x56de0003n;
+const COVERAGE_CORRUPTION_SEED = 0x56cb1200n;
+const COVERAGE_ORDER_SEED = 0x56cb1300n;
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -167,8 +173,8 @@ function sourceProgram(index) {
     0x56010001n, BigInt(index), BigInt(position), 56n, 0n, 0n) % 8n));
 }
 
-function corruptionFamily(index) {
-  const value = eventKey(0x56de0002n, BigInt(index), 0n, 0n, 0n, 0n);
+function corruptionFamily(index, corruptionSeed = DEVELOPMENT_CORRUPTION_SEED) {
+  const value = eventKey(corruptionSeed, BigInt(index), 0n, 0n, 0n, 0n);
   return {
     template_id: index % 8,
     severity: 1 + Number(value % 4n),
@@ -208,20 +214,21 @@ function channelState(family, seed, sensor, input, clean, previous, position) {
   return delta;
 }
 
-function developmentObservations({ episodeNonce, orderSlot, truthClass,
-  corruptionIndex }) {
+function generatedObservations({ episodeNonce, orderSlot, truthClass,
+  corruptionIndex, corruptionSeed = DEVELOPMENT_CORRUPTION_SEED,
+  orderSeed = DEVELOPMENT_ORDER_SEED }) {
   const order = Array.from({ length: 51 }, (_, index) => index);
   for (let index = order.length - 1; index > 0; --index) {
-    const selected = Number(eventKey(0x56de0003n, BigInt(orderSlot),
+    const selected = Number(eventKey(orderSeed, BigInt(orderSlot),
       BigInt(index), 2n, 0n, 0n) % BigInt(index + 1));
     [order[index], order[selected]] = [order[selected], order[index]];
   }
-  const family = corruptionFamily(corruptionIndex);
+  const family = corruptionFamily(corruptionIndex, corruptionSeed);
   const table = R56_UNIVERSE.semantic[truthClass].truth_table;
   const observations = [];
   const cleanValues = [];
   let previous = 0;
-  const channelSeed = 0x56de0002n ^ mix64(BigInt(episodeNonce));
+  const channelSeed = corruptionSeed ^ mix64(BigInt(episodeNonce));
   for (let position = 0; position < OBSERVATIONS; ++position) {
     const cell = order[position];
     const sensor = Math.floor(cell / MODULUS);
@@ -238,9 +245,13 @@ function developmentObservations({ episodeNonce, orderSlot, truthClass,
 }
 
 function generateEpisodeContent(program, mechanism, repeat, truthClass,
-  corruptionIndex, episodeNonce, orderSlot) {
-  const generated = developmentObservations({ episodeNonce, orderSlot,
-    truthClass, corruptionIndex });
+  corruptionIndex, episodeNonce, orderSlot, {
+    lane = "development",
+    corruptionSeed = DEVELOPMENT_CORRUPTION_SEED,
+    orderSeed = DEVELOPMENT_ORDER_SEED,
+  } = {}) {
+  const generated = generatedObservations({ episodeNonce, orderSlot,
+    truthClass, corruptionIndex, corruptionSeed, orderSeed });
   const semantic = R56_UNIVERSE.semantic[truthClass];
   return {
     public: { observations: generated.observations },
@@ -248,7 +259,7 @@ function generateEpisodeContent(program, mechanism, repeat, truthClass,
       ast: { kind: "compose", tokens: [...semantic.tokens] },
       behavior: { field: "GF(17)", truth_table: [...semantic.truth_table] },
       episode_spec: {
-        lane: "development",
+        lane,
         program_index: program,
         mechanism_index: mechanism,
         repeat_index: repeat,
@@ -274,16 +285,33 @@ export function replayR56Episode(recipe) {
     corruptionIndex, episodeNonce, orderSlot);
 }
 
+export function replayR56CalibrationCoverage(recipe) {
+  assert.equal(recipe.seed_binding.root_seed, "56cb120056cb1300");
+  const [lane, family, draw, truthClass, corruptionIndex, episodeNonce,
+    orderSlot] = recipe.seed_binding.derivation_path;
+  assert.equal(lane, "calibration-coverage");
+  assert.equal(episodeNonce, family * CALIBRATION_DRAWS + draw);
+  assert.equal(corruptionIndex,
+    draw + CALIBRATION_DRAWS * (family + 1000));
+  assert.equal(orderSlot, (family + draw) % MECHANISMS);
+  return generateEpisodeContent(family, draw, draw, truthClass,
+    corruptionIndex, episodeNonce, orderSlot, {
+      lane,
+      corruptionSeed: COVERAGE_CORRUPTION_SEED,
+      orderSeed: COVERAGE_ORDER_SEED,
+    });
+}
+
 const PROGRAM_GENERATOR_SHA256 = canonicalDigest("generator-source", [
-  mod17.toString(), applyPrimitive.toString(), programTable.toString(),
-  buildUniverse.toString(), sourceProgram.toString(),
-]);
+  mod17, applyPrimitive, programTable, buildUniverse, sourceProgram,
+].map(replayFunctionDigest));
 const INPUT_GENERATOR_SHA256 = canonicalDigest("input-generator-source", [
-  mix64.toString(), eventKey.toString(), corruptionFamily.toString(),
-  channelState.toString(), developmentObservations.toString(),
-  generateEpisodeContent.toString(),
-]);
+  mix64, eventKey, corruptionFamily, channelState, generatedObservations,
+  generateEpisodeContent,
+].map(replayFunctionDigest));
 const REPLAY_FUNCTION_SHA256 = replayFunctionDigest(replayR56Episode);
+const CALIBRATION_REPLAY_FUNCTION_SHA256 = replayFunctionDigest(
+  replayR56CalibrationCoverage);
 
 export function selectSemanticSplits() {
   const used = new Set();
@@ -324,6 +352,191 @@ export function selectSemanticSplits() {
   const sealed = Array.from({ length: 427 }, (_, index) => index)
     .filter(index => !used.has(index));
   return { source, fit, coverage, development, sealed, rejections };
+}
+
+function calibrationCoverageRecipe(family, draw, truthClass) {
+  const episodeNonce = family * CALIBRATION_DRAWS + draw;
+  const corruptionIndex = draw + CALIBRATION_DRAWS * (family + 1000);
+  const orderSlot = (family + draw) % MECHANISMS;
+  return {
+    schema: "zero.reasoner5_replay_recipe.v1",
+    generator_sha256: PROGRAM_GENERATOR_SHA256,
+    input_generator_sha256: INPUT_GENERATOR_SHA256,
+    replay_function_sha256: CALIBRATION_REPLAY_FUNCTION_SHA256,
+    seed_binding: {
+      root_seed: "56cb120056cb1300",
+      derivation_path: ["calibration-coverage", family, draw, truthClass,
+        corruptionIndex, episodeNonce, orderSlot],
+    },
+  };
+}
+
+function updateFNV64(hash, bytes) {
+  let value = hash;
+  for (const byte of bytes) {
+    value ^= BigInt(byte);
+    value = (value * 1099511628211n) & MASK64;
+  }
+  return value;
+}
+
+function calibrationCoverageNativeDigest(drawContents) {
+  let digest = 1469598103934665603n ^ 5609n;
+  for (const { content, truthClass } of drawContents) {
+    const observations = content.public.observations;
+    digest = updateFNV64(digest, [observations.length & 255,
+      (observations.length >>> 8) & 255,
+      (observations.length >>> 16) & 255,
+      (observations.length >>> 24) & 255]);
+    for (const observation of observations) {
+      digest = updateFNV64(digest, [observation.input, observation.sensor,
+        observation.observed, observation.missing ? 1 : 0]);
+    }
+    digest = updateFNV64(digest, [truthClass & 255,
+      (truthClass >>> 8) & 255]);
+  }
+  return digest.toString(16).padStart(16, "0");
+}
+
+function buildCalibrationCoverageReceipt(splits, nativeResult) {
+  const nativeRecords = nativeResult.calibration_coverage_records;
+  assert.ok(Array.isArray(nativeRecords));
+  assert.equal(nativeRecords.length, CALIBRATION_COVERAGE_FAMILIES);
+  const drawContents = [];
+  const families = splits.coverage.map((truthClass, family) => {
+    const native = nativeRecords[family];
+    assert.deepEqual(Object.keys(native).sort(), [
+      "all_draws_covered", "draws", "family_index", "semantic_class",
+      "worst_truth_cumulative_mass_q20",
+    ]);
+    assert.equal(native.family_index, family);
+    assert.equal(native.semantic_class, truthClass);
+    assert.equal(native.draws, CALIBRATION_DRAWS);
+    assert.ok(Number.isInteger(native.worst_truth_cumulative_mass_q20) &&
+      native.worst_truth_cumulative_mass_q20 >= 1 &&
+      native.worst_truth_cumulative_mass_q20 <= 1048576);
+    assert.equal(typeof native.all_draws_covered, "boolean");
+    const draws = Array.from({ length: CALIBRATION_DRAWS }, (_, draw) => {
+      const recipe = calibrationCoverageRecipe(family, draw, truthClass);
+      const content = replayR56CalibrationCoverage(recipe);
+      drawContents.push({ content, truthClass });
+      return {
+        draw_index: draw,
+        episode_id: `coverage-${canonicalDigest("r56-calibration-episode", {
+          family, draw, truthClass,
+        }).slice(0, 24)}`,
+        seed_ref: canonicalDigest("episode-seed-reference", recipe),
+        replay_recipe: recipe,
+        content_sha256: canonicalDigest(
+          "r56-calibration-coverage-content", content),
+      };
+    });
+    return {
+      family_id: `calibration-coverage-program-${String(truthClass)
+        .padStart(3, "0")}`,
+      family_index: family,
+      semantic_class: truthClass,
+      worst_truth_cumulative_mass_q20:
+        native.worst_truth_cumulative_mass_q20,
+      all_draws_covered: native.all_draws_covered,
+      draws,
+    };
+  });
+  const nativeDigest = calibrationCoverageNativeDigest(drawContents);
+  assert.equal(nativeDigest, nativeResult.calibration_coverage_digest);
+  const body = {
+    schema: "zero.reasoner56_calibration_coverage_receipt.v1",
+    lane: "calibration-coverage",
+    family_count: CALIBRATION_COVERAGE_FAMILIES,
+    draws_per_family: CALIBRATION_DRAWS,
+    episode_count: CALIBRATION_COVERAGE_FAMILIES * CALIBRATION_DRAWS,
+    generator_sha256: PROGRAM_GENERATOR_SHA256,
+    input_generator_sha256: INPUT_GENERATOR_SHA256,
+    replay_function_sha256: CALIBRATION_REPLAY_FUNCTION_SHA256,
+    native_calibration_coverage_digest: nativeDigest,
+    families,
+  };
+  return { ...body, receipt_sha256: canonicalDigest(
+    "r56-calibration-coverage-receipt", body) };
+}
+
+export function assertR56CalibrationCoverageReplay(manifest) {
+  const receipt = manifest.calibration_coverage_receipt;
+  assert.ok(receipt && typeof receipt === "object");
+  assert.deepEqual(Object.keys(receipt).sort(), [
+    "draws_per_family", "episode_count", "families", "family_count",
+    "generator_sha256", "input_generator_sha256", "lane",
+    "native_calibration_coverage_digest", "receipt_sha256",
+    "replay_function_sha256", "schema",
+  ]);
+  const body = structuredClone(receipt);
+  delete body.receipt_sha256;
+  assert.equal(receipt.receipt_sha256, canonicalDigest(
+    "r56-calibration-coverage-receipt", body));
+  assert.equal(receipt.schema,
+    "zero.reasoner56_calibration_coverage_receipt.v1");
+  assert.equal(receipt.lane, "calibration-coverage");
+  assert.equal(receipt.family_count, CALIBRATION_COVERAGE_FAMILIES);
+  assert.equal(receipt.draws_per_family, CALIBRATION_DRAWS);
+  assert.equal(receipt.episode_count,
+    CALIBRATION_COVERAGE_FAMILIES * CALIBRATION_DRAWS);
+  assert.equal(receipt.generator_sha256, PROGRAM_GENERATOR_SHA256);
+  assert.equal(receipt.input_generator_sha256, INPUT_GENERATOR_SHA256);
+  assert.equal(receipt.replay_function_sha256,
+    CALIBRATION_REPLAY_FUNCTION_SHA256);
+  assert.equal(receipt.families.length, CALIBRATION_COVERAGE_FAMILIES);
+  const expectedClasses = selectSemanticSplits().coverage;
+  const knownFamilies = new Map(manifest.families.map(family =>
+    [family.family_id, family]));
+  const seenEpisodes = new Set();
+  const drawContents = [];
+  let covered = 0;
+  for (const [familyIndex, family] of receipt.families.entries()) {
+    assert.deepEqual(Object.keys(family).sort(), [
+      "all_draws_covered", "draws", "family_id", "family_index",
+      "semantic_class", "worst_truth_cumulative_mass_q20",
+    ]);
+    assert.equal(family.family_index, familyIndex);
+    assert.equal(family.semantic_class, expectedClasses[familyIndex]);
+    assert.equal(family.family_id,
+      `calibration-coverage-program-${String(family.semantic_class)
+        .padStart(3, "0")}`);
+    assert.equal(knownFamilies.get(family.family_id)?.lane, "calibration");
+    assert.equal(knownFamilies.get(family.family_id)?.family_spec
+      ?.semantic_class, family.semantic_class);
+    assert.ok(Number.isInteger(family.worst_truth_cumulative_mass_q20) &&
+      family.worst_truth_cumulative_mass_q20 >= 1 &&
+      family.worst_truth_cumulative_mass_q20 <= 1048576);
+    assert.equal(typeof family.all_draws_covered, "boolean");
+    covered += family.all_draws_covered ? 1 : 0;
+    assert.equal(family.draws.length, CALIBRATION_DRAWS);
+    for (const [drawIndex, draw] of family.draws.entries()) {
+      assert.deepEqual(Object.keys(draw).sort(), ["content_sha256",
+        "draw_index", "episode_id", "replay_recipe", "seed_ref"]);
+      assert.equal(draw.draw_index, drawIndex);
+      assert.ok(!seenEpisodes.has(draw.episode_id));
+      seenEpisodes.add(draw.episode_id);
+      const expectedRecipe = calibrationCoverageRecipe(familyIndex,
+        drawIndex, family.semantic_class);
+      assert.deepEqual(draw.replay_recipe, expectedRecipe);
+      assert.equal(draw.seed_ref, canonicalDigest("episode-seed-reference",
+        expectedRecipe));
+      const content = replayR56CalibrationCoverage(expectedRecipe);
+      assert.equal(draw.content_sha256, canonicalDigest(
+        "r56-calibration-coverage-content", content),
+      "calibration coverage content digest changed");
+      drawContents.push({ content, truthClass: family.semantic_class });
+    }
+  }
+  const nativeDigest = calibrationCoverageNativeDigest(drawContents);
+  assert.equal(nativeDigest, receipt.native_calibration_coverage_digest);
+  return {
+    families: receipt.families.length,
+    episodes: seenEpisodes.size,
+    covered,
+    native_calibration_coverage_digest: nativeDigest,
+    receipt_sha256: receipt.receipt_sha256,
+  };
 }
 
 function programFamilySpec(semanticClass) {
@@ -490,13 +703,13 @@ function analysisContract() {
   };
 }
 
-function categoricalModel(training, feature) {
-  const global = Array(8).fill(0);
+function categoricalModel(training, feature, classCount) {
+  const global = Array(classCount).fill(0);
   const cells = new Map();
   for (const item of training) {
     global[item.label] += 1;
     const key = feature(item);
-    if (!cells.has(key)) cells.set(key, Array(8).fill(0));
+    if (!cells.has(key)) cells.set(key, Array(classCount).fill(0));
     cells.get(key)[item.label] += 1;
   }
   return item => {
@@ -508,22 +721,53 @@ function categoricalModel(training, feature) {
   };
 }
 
-function balancedAccuracy(items, predict) {
-  const correct = Array(8).fill(0);
-  const total = Array(8).fill(0);
+function balancedAccuracy(items, predict, classCount) {
+  const correct = Array(classCount).fill(0);
+  const total = Array(classCount).fill(0);
   for (const item of items) {
     total[item.label] += 1;
     if (predict(item) === item.label) correct[item.label] += 1;
   }
+  assert.ok(total.every(value => value > 0));
   return correct.reduce((sum, value, index) => sum + value / total[index], 0) /
-    8;
+    classCount;
+}
+
+function proxyClassification(items, labelName, classCount) {
+  const labelled = items.map(item => ({ ...item, label: item[labelName] }));
+  const training = labelled.filter(item => item.repeat === 0);
+  const testing = labelled.filter(item => item.repeat === 1);
+  const baseline = balancedAccuracy(testing,
+    categoricalModel(training, item => item.sensor, classCount), classCount);
+  const augmented = balancedAccuracy(testing, categoricalModel(training,
+    item => `${item.order}|${item.episode_id}|${item.seed_ref}`, classCount),
+  classCount);
+  const cells = new Map();
+  for (const item of labelled) {
+    if (!cells.has(item.order)) cells.set(item.order,
+      Array(classCount).fill(0));
+    cells.get(item.order)[item.label] += 1;
+  }
+  return {
+    training_episodes: training.length,
+    evaluation_episodes: testing.length,
+    sensor_only_balanced_accuracy: baseline,
+    augmented_static_balanced_accuracy: augmented,
+    accuracy_delta: augmented - baseline,
+    nonopaque_static_cells: cells.size,
+    maximum_hidden_label_fraction_per_nonopaque_cell: Math.max(
+      ...[...cells.values()].map(counts => Math.max(...counts) /
+        counts.reduce((sum, value) => sum + value, 0))),
+  };
 }
 
 export function auditR56ProxyTaint(manifest, rawRows, nativeResult) {
   const items = manifest.episodes.map(episode => {
     const observations = episode.content.public.observations;
+    const family = episode.content.evaluator.episode_spec.corruption_family;
     return {
-      label: Number(episode.cross_family_id.split("-").at(-1)),
+      template_label: Number(episode.cross_family_id.split("-").at(-1)),
+      severity_label: family.severity - 1,
       repeat: Number(episode.nested_repeat_id.split("-").at(-1)),
       sensor: observations.map(item => item.sensor).join(""),
       order: observations.map(item => `${item.input}:${item.sensor}`).join(","),
@@ -531,19 +775,12 @@ export function auditR56ProxyTaint(manifest, rawRows, nativeResult) {
       seed_ref: episode.seed_ref,
     };
   });
-  const training = items.filter(item => item.repeat === 0);
-  const testing = items.filter(item => item.repeat === 1);
-  const baseline = balancedAccuracy(testing,
-    categoricalModel(training, item => item.sensor));
-  const augmented = balancedAccuracy(testing, categoricalModel(training,
-    item => `${item.order}|${item.episode_id}|${item.seed_ref}`));
-  const cells = new Map();
-  for (const item of items) {
-    if (!cells.has(item.order)) cells.set(item.order, Array(8).fill(0));
-    cells.get(item.order)[item.label] += 1;
-  }
-  const maximumCellFraction = Math.max(...[...cells.values()].map(counts =>
-    Math.max(...counts) / counts.reduce((sum, value) => sum + value, 0)));
+  assert.ok(items.every(item => Number.isInteger(item.template_label) &&
+    item.template_label >= 0 && item.template_label < MECHANISMS &&
+    Number.isInteger(item.severity_label) && item.severity_label >= 0 &&
+    item.severity_label < 4 && [0, 1].includes(item.repeat)));
+  const template = proxyClassification(items, "template_label", MECHANISMS);
+  const severity = proxyClassification(items, "severity_label", 4);
   const sourceRows = rawRows.filter(row => ["source_free",
     "source_ablation"].includes(row.arm));
   const taintPassed = sourceRows.every(row => row.source_artifact_reads === 0) &&
@@ -552,20 +789,31 @@ export function auditR56ProxyTaint(manifest, rawRows, nativeResult) {
     schema: "zero.reasoner56_proxy_taint_audit.v1",
     classifier: "frozen categorical multinomial lookup with global fallback",
     split: "repeat-0 training and repeat-1 evaluation",
-    training_episodes: training.length,
-    evaluation_episodes: testing.length,
-    sensor_only_balanced_accuracy: baseline,
-    augmented_static_balanced_accuracy: augmented,
-    accuracy_delta: augmented - baseline,
+    hidden_labels: ["corruption-template", "severity"],
+    training_episodes: template.training_episodes,
+    evaluation_episodes: template.evaluation_episodes,
+    sensor_only_balanced_accuracy: template.sensor_only_balanced_accuracy,
+    augmented_static_balanced_accuracy:
+      template.augmented_static_balanced_accuracy,
+    accuracy_delta: template.accuracy_delta,
+    template,
+    severity,
     registered_maximum_delta: 0.02,
-    nonopaque_static_cells: cells.size,
-    maximum_template_fraction_per_nonopaque_cell: maximumCellFraction,
+    nonopaque_static_cells: template.nonopaque_static_cells,
+    maximum_template_fraction_per_nonopaque_cell:
+      template.maximum_hidden_label_fraction_per_nonopaque_cell,
+    maximum_severity_fraction_per_nonopaque_cell:
+      severity.maximum_hidden_label_fraction_per_nonopaque_cell,
     source_isolated_rows: sourceRows.length,
     source_isolation_taint_passed: taintPassed,
     native_proxy_audit_passed: nativeResult.proxy_audit_passed === true,
   };
-  const passed = body.accuracy_delta <= body.registered_maximum_delta + 1e-15 &&
-    maximumCellFraction < 1 && taintPassed &&
+  const passed = template.accuracy_delta <=
+      body.registered_maximum_delta + 1e-15 &&
+    severity.accuracy_delta <= body.registered_maximum_delta + 1e-15 &&
+    template.maximum_hidden_label_fraction_per_nonopaque_cell < 1 &&
+    severity.maximum_hidden_label_fraction_per_nonopaque_cell < 1 &&
+    taintPassed &&
     body.native_proxy_audit_passed;
   return { ...body, passed,
     audit_sha256: canonicalDigest("reasoner56-proxy-taint-audit", body) };
@@ -607,11 +855,21 @@ function pairedUpperInterval(left, right, seed) {
   };
 }
 
-export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit) {
+export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit,
+  manifest) {
   const full = nativeRows.filter(row => row.arm === "full");
   const prior = nativeRows.filter(row => row.arm === "program_prior_only");
   assert.equal(full.length, 128);
   assert.equal(prior.length, 128);
+  const calibrationReplay = assertR56CalibrationCoverageReplay(manifest);
+  const calibrationCoverageReceipt = manifest.calibration_coverage_receipt;
+  const sealedInterfaceAndProxyAuditPassed = false;
+  assert.equal(calibrationCoverageReceipt?.schema,
+    "zero.reasoner56_calibration_coverage_receipt.v1");
+  assert.equal(calibrationCoverageReceipt.families.length,
+    CALIBRATION_COVERAGE_FAMILIES);
+  assert.equal(calibrationReplay.episodes,
+    CALIBRATION_COVERAGE_FAMILIES * CALIBRATION_DRAWS);
   const naturalLoss = row => Math.max(0, -Math.log(row.truth_probability));
   const fullFamilies = programFamilyValues(nativeRows, "full", naturalLoss);
   const priorFamilies = programFamilyValues(nativeRows, "program_prior_only",
@@ -626,9 +884,15 @@ export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit) {
   const medianDerangement = derangementMeans[15];
   const medianDerangementFamilies = programFamilyValues(nativeRows,
     medianDerangement.arm, naturalLoss);
-  const fullCandidateMean = mean(full.map(row => row.candidate_set_size));
-  const priorCandidateMean = mean(prior.map(row => row.candidate_set_size));
-  const covered = full.filter(row => row.candidate_set_contains_truth).length;
+  const fullCandidateSizes = programFamilyValues(nativeRows, "full",
+    row => row.candidate_set_size);
+  const priorCandidateSizes = programFamilyValues(nativeRows,
+    "program_prior_only", row => row.candidate_set_size);
+  const fullCandidateMean = mean([...fullCandidateSizes.values()]);
+  const priorCandidateMean = mean([...priorCandidateSizes.values()]);
+  const covered = calibrationCoverageReceipt.families.filter(family =>
+    family.all_draws_covered).length;
+  const coverageFamilies = calibrationCoverageReceipt.families.length;
   const reliabilityBins = Array.from({ length: 10 }, (_, bin) => {
     const selected = full.filter(row => Math.min(9,
       Math.floor(row.truth_probability * 10)) === bin);
@@ -680,8 +944,10 @@ export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit) {
     candidate_set_size_ratio_at_matched_coverage:
       fullCandidateMean / priorCandidateMean <= 0.8,
     candidate_set_coverage_lower_bound:
-      wilsonLowerBound(covered, full.length) >= 0.97,
-    interface_and_proxy_audits_clean: proxyTaintAudit.passed === true,
+      wilsonLowerBound(covered, coverageFamilies) >= 0.97,
+    development_and_sealed_interface_and_proxy_audits_clean:
+      proxyTaintAudit.passed === true &&
+      sealedInterfaceAndProxyAuditPassed,
   };
   const failures = Object.entries(checks).filter(([, passed]) => !passed)
     .map(([name]) => name);
@@ -702,11 +968,29 @@ export function assessR56ChannelReadiness(nativeRows, proxyTaintAudit) {
         full_mean_size: fullCandidateMean,
         program_prior_only_mean_size: priorCandidateMean,
         size_ratio: fullCandidateMean / priorCandidateMean,
-        coverage: covered / full.length,
-        one_sided_95_wilson_lower: wilsonLowerBound(covered, full.length),
+        coverage_lane: "calibration-coverage",
+        coverage_independent_unit: "program-family-worst-draw",
+        coverage_families: coverageFamilies,
+        covered_families: covered,
+        coverage: covered / coverageFamilies,
+        one_sided_95_wilson_lower: wilsonLowerBound(covered,
+          coverageFamilies),
+        coverage_receipt_sha256: calibrationCoverageReceipt.receipt_sha256,
         conservative_threshold: 1,
         comparator_threshold: 1,
         threshold_basis: "99 disjoint program families with worst-draw score",
+      },
+      interface_and_proxy_audits: {
+        development: {
+          status: proxyTaintAudit.passed ? "passed" : "failed",
+          passed: proxyTaintAudit.passed === true,
+          audit_sha256: proxyTaintAudit.audit_sha256,
+        },
+        sealed: {
+          status: "pending-preregistration",
+          passed: false,
+          audit_sha256: null,
+        },
       },
       full_fallback_rate: full.filter(row => row.fallback_started).length /
         full.length,
@@ -960,12 +1244,14 @@ function normalizeTraceRows(nativeRows, manifest) {
 
 export function buildR56HarnessBundle({ nativeRows, nativeResult,
   artifactBytes }) {
-  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v2");
+  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v3");
   assert.equal(nativeRows.length, 128 * R56_EXPECTED_ARMS.length);
   const splits = selectSemanticSplits();
   assert.equal(splits.source.length, nativeResult.source_semantic_classes);
   assert.equal(splits.rejections, nativeResult.split_rejections);
   assert.deepEqual(splits.development, nativeResult.development_classes);
+  const calibrationCoverageReceipt = buildCalibrationCoverageReceipt(splits,
+    nativeResult);
   const artifactSha256 = sha256(artifactBytes);
   const state = createSplitState({ experiment_id: R56_EXPERIMENT });
   registerProgramFamilies(state, "source-training", splits.source,
@@ -1065,6 +1351,7 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
       finite_sample_rank: 99,
       fallback_threshold_if_rank_unavailable: 1,
     },
+    calibration_coverage_receipt: calibrationCoverageReceipt,
     analysis_contract: analysisContract(),
   });
   const registry = createReplayRegistry();
@@ -1075,6 +1362,8 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
     replay: replayR56Episode,
   });
   const replayReceipt = assertManifestReplay(manifest, registry);
+  const calibrationReplayReceipt = assertR56CalibrationCoverageReplay(
+    manifest);
   const rawRows = normalizeTraceRows(nativeRows, manifest);
   const coverage = assertRawTraceCoverage({ manifest, rawTraces: rawRows });
   const result = buildResultFromRawTraces({
@@ -1094,7 +1383,7 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
   });
   const audit = auditR56ProxyTaint(manifest, rawRows, nativeResult);
   assert.equal(audit.passed, true);
-  const readiness = assessR56ChannelReadiness(nativeRows, audit);
+  const readiness = assessR56ChannelReadiness(nativeRows, audit, manifest);
   const assessmentBody = {
     schema: "zero.reasoner56_development_assessment.v1",
     status: "development-only",
@@ -1111,5 +1400,5 @@ export function buildR56HarnessBundle({ nativeRows, nativeResult,
     assessment_sha256: canonicalDigest("r56-development-assessment",
       assessmentBody) };
   return { manifest, rawRows, result, audit, readiness, assessment,
-    replayReceipt, coverage };
+    replayReceipt, calibrationReplayReceipt, coverage };
 }

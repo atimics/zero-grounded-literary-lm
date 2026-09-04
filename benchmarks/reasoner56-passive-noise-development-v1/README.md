@@ -9,7 +9,8 @@ The checked fixture contains:
 - `development/result.json`, the native development summary;
 - `development/raw-trace.jsonl`, all 5,760 native episode-arm rows;
 - `development/artifact.bin`, the frozen little-endian development artifact;
-- `development/family-manifest.json`, all replayable episode envelopes;
+- `development/family-manifest.json`, development episodes and all 792
+  calibration-coverage draw receipts;
 - `development/harness-trace.jsonl.gz`, the strict shared-harness rows;
 - `development/harness-result.json`, the replayed search-cost analysis;
 - `development/proxy-taint-audit.json`, the public-boundary audit;
@@ -27,7 +28,8 @@ ranker schema, runs address and undefined-behavior sanitizers, and confirms
 that sealed execution stays closed.
 
 The deterministic fixture gives a search-cost `no-go` and a separate
-`development-ready` channel result. See [SPEC.md](SPEC.md) for the exact failed
-gates and readiness measures. Fresh sealed family selection, power analysis, a
-frozen publication rule, and explicit execution approval remain the scientific
+`development-no-go` channel result pending the sealed interface and proxy
+audit. See [SPEC.md](SPEC.md) for the exact failed gates and readiness
+measures. Fresh sealed family selection, power analysis, a frozen publication
+rule, the sealed audit, and explicit execution approval remain the scientific
 boundary.

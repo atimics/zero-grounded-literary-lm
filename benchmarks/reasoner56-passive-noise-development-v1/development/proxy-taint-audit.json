@@ -1,9 +1,14 @@
 {
   "accuracy_delta": 0,
-  "audit_sha256": "ad605d7c4204dfaddc1e3f3fab0739993c9d6d8600cdb76be8eec272bd8fe251",
+  "audit_sha256": "1c9c7a6e9127e59b2c86dae515948cc19c9377c0f04c1a07f949aefba01d95ca",
   "augmented_static_balanced_accuracy": 0.125,
   "classifier": "frozen categorical multinomial lookup with global fallback",
   "evaluation_episodes": 64,
+  "hidden_labels": [
+    "corruption-template",
+    "severity"
+  ],
+  "maximum_severity_fraction_per_nonopaque_cell": 0.5625,
   "maximum_template_fraction_per_nonopaque_cell": 0.125,
   "native_proxy_audit_passed": true,
   "nonopaque_static_cells": 8,
@@ -11,8 +16,26 @@
   "registered_maximum_delta": 0.02,
   "schema": "zero.reasoner56_proxy_taint_audit.v1",
   "sensor_only_balanced_accuracy": 0.125,
+  "severity": {
+    "accuracy_delta": -0.03474264705882352,
+    "augmented_static_balanced_accuracy": 0.25,
+    "evaluation_episodes": 64,
+    "maximum_hidden_label_fraction_per_nonopaque_cell": 0.5625,
+    "nonopaque_static_cells": 8,
+    "sensor_only_balanced_accuracy": 0.2847426470588235,
+    "training_episodes": 64
+  },
   "source_isolated_rows": 256,
   "source_isolation_taint_passed": true,
   "split": "repeat-0 training and repeat-1 evaluation",
+  "template": {
+    "accuracy_delta": 0,
+    "augmented_static_balanced_accuracy": 0.125,
+    "evaluation_episodes": 64,
+    "maximum_hidden_label_fraction_per_nonopaque_cell": 0.125,
+    "nonopaque_static_cells": 8,
+    "sensor_only_balanced_accuracy": 0.125,
+    "training_episodes": 64
+  },
   "training_episodes": 64
 }

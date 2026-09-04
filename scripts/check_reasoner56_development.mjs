@@ -15,6 +15,7 @@ import { gzipSync } from "node:zlib";
 
 import { stableJson } from "./zero_data_lib.mjs";
 import {
+  canonicalDigest,
   assertManifestDigest,
   assertRawTraceCoverage,
   assertResultReplay,
@@ -22,10 +23,12 @@ import {
 import {
   R56_ANALYSIS_SETTINGS,
   R56_EXPERIMENT,
+  assertR56CalibrationCoverageReplay,
   assessR56ChannelReadiness,
   auditR56ProxyTaint,
   buildR56HarnessBundle,
   reconstructR56Result,
+  selectSemanticSplits,
 } from "./lib/reasoner56_development.mjs";
 
 const root = `benchmarks/${R56_EXPERIMENT}`;
@@ -78,7 +81,7 @@ if (sanitizersOnly) {
 
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 assert.equal(contract.schema,
-  "zero.reasoner56_passive_noise_development_contract.v2");
+  "zero.reasoner56_passive_noise_development_contract.v3");
 assert.equal(contract.status, "development-only");
 assert.equal(contract.execution.authorized, false);
 assert.equal(contract.execution.sealed_seeds_present, false);
@@ -136,7 +139,7 @@ try {
   const nativeResult = JSON.parse(first.result.toString("utf8"));
   const nativeRows = first.trace.toString("utf8").trim().split("\n")
     .map(JSON.parse);
-  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v2");
+  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v3");
   assert.equal(nativeResult.status, "development-only");
   assert.equal(nativeResult.scientific_decision, null);
   assert.equal(nativeResult.sealed_execution_authorized, false);
@@ -152,6 +155,13 @@ try {
   assert.equal(nativeResult.calibration_coverage_episodes, 99);
   assert.equal(nativeResult.calibration_fit_families, 16);
   assert.equal(nativeResult.calibration_coverage_families, 99);
+  assert.equal(nativeResult.calibration_coverage_records.length, 99);
+  assert.ok(nativeResult.calibration_coverage_records.every((record, index) =>
+    record.family_index === index && record.draws === 8 &&
+    record.all_draws_covered === true &&
+    Number.isInteger(record.worst_truth_cumulative_mass_q20) &&
+    record.worst_truth_cumulative_mass_q20 >= 1 &&
+    record.worst_truth_cumulative_mass_q20 <= 1048576));
   assert.equal(nativeResult.proxy_audit_passed, true);
   assert.equal(nativeResult.taint_audit_passed, true);
   assert.ok(nativeResult.target_only_median_cost >= 16);
@@ -167,17 +177,49 @@ try {
     row.partial_expansions >= row.verifier_checks &&
     row.observation_queries === 18 && row.observations_consumed === 18));
 
+  const splits = selectSemanticSplits();
+  const splitClasses = [splits.source, splits.fit, splits.coverage,
+    splits.development, splits.sealed].flat();
+  assert.equal(new Set(splitClasses).size, splitClasses.length,
+    "semantic classes must stay disjoint across every registered lane");
+  const byEpisodeArm = new Map(nativeRows.map(row =>
+    [`${row.episode_id}:${row.arm}`, row]));
+  for (const episodeId of new Set(nativeRows.map(row => row.episode_id))) {
+    const sourceFree = structuredClone(byEpisodeArm.get(
+      `${episodeId}:source_free`));
+    const sourceAblation = structuredClone(byEpisodeArm.get(
+      `${episodeId}:source_ablation`));
+    delete sourceFree.arm;
+    delete sourceAblation.arm;
+    assert.deepEqual(sourceAblation, sourceFree,
+      `source-free aliases diverged for ${episodeId}`);
+  }
+
   const bundle = buildR56HarnessBundle({ nativeRows, nativeResult,
     artifactBytes: first.artifact });
   assert.equal(bundle.rawRows.length, 5760);
   assert.equal(bundle.coverage.rows, 5760);
   assert.equal(bundle.replayReceipt.episodes, 128);
+  assert.equal(bundle.calibrationReplayReceipt.families, 99);
+  assert.equal(bundle.calibrationReplayReceipt.episodes, 792);
+  assert.equal(bundle.calibrationReplayReceipt.covered, 99);
   assert.equal(bundle.result.status, "development-only");
   assert.equal(bundle.result.scientific_decision, null);
   assert.equal(bundle.result.exactness.all_final_answers_exact, true);
   assert.equal(bundle.audit.passed, true);
   assert.equal(bundle.audit.accuracy_delta, 0);
+  assert.ok(bundle.audit.severity.accuracy_delta <= 0.02);
+  assert.ok(bundle.audit.maximum_severity_fraction_per_nonopaque_cell < 1);
   assert.equal(bundle.readiness.scope, "development-only");
+  assert.equal(bundle.readiness.status, "development-no-go");
+  assert.deepEqual(bundle.readiness.failures,
+    ["development_and_sealed_interface_and_proxy_audits_clean"]);
+  assert.equal(bundle.readiness.metrics.candidate_set.coverage_families, 99);
+  assert.equal(bundle.readiness.metrics.candidate_set.covered_families, 99);
+  assert.ok(bundle.readiness.metrics.candidate_set
+    .one_sided_95_wilson_lower >= 0.97);
+  assert.equal(bundle.readiness.metrics.interface_and_proxy_audits
+    .sealed.status, "pending-preregistration");
   assert.deepEqual(bundle.assessment.harness_gate.failures,
     contract.development_expected_gate_failures);
 
@@ -217,6 +259,17 @@ try {
   badManifest.source_artifact.sha256 = "0".repeat(64);
   expectFailure(() => assertManifestDigest(badManifest), /SHA-256|digest/u);
 
+  const badCalibrationManifest = structuredClone(bundle.manifest);
+  const badCalibrationReceipt =
+    badCalibrationManifest.calibration_coverage_receipt;
+  badCalibrationReceipt.families[0].draws[0].content_sha256 = "0".repeat(64);
+  const badCalibrationBody = structuredClone(badCalibrationReceipt);
+  delete badCalibrationBody.receipt_sha256;
+  badCalibrationReceipt.receipt_sha256 = canonicalDigest(
+    "r56-calibration-coverage-receipt", badCalibrationBody);
+  expectFailure(() => assertR56CalibrationCoverageReplay(
+    badCalibrationManifest), /content digest changed/u);
+
   const taintedRows = [...bundle.rawRows];
   const sourceIndex = taintedRows.findIndex(row => row.arm === "source_free");
   taintedRows[sourceIndex] = { ...taintedRows[sourceIndex],
@@ -237,6 +290,18 @@ try {
   assert.equal(leakingAudit.passed, false);
   assert.equal(leakingAudit.maximum_template_fraction_per_nonopaque_cell, 1);
 
+  const severityLeakingManifest = structuredClone(bundle.manifest);
+  for (const episode of severityLeakingManifest.episodes) {
+    const orderSlot = episode.content.evaluator.episode_spec.order_slot;
+    episode.content.evaluator.episode_spec.corruption_family.severity =
+      1 + orderSlot % 4;
+  }
+  const severityLeakingAudit = auditR56ProxyTaint(severityLeakingManifest,
+    bundle.rawRows, nativeResult);
+  assert.equal(severityLeakingAudit.passed, false);
+  assert.equal(severityLeakingAudit
+    .maximum_severity_fraction_per_nonopaque_cell, 1);
+
   const changedResult = structuredClone(bundle.result);
   changedResult.result_sha256 = "0".repeat(64);
   expectFailure(() => assertResultReplay({
@@ -250,10 +315,12 @@ try {
 
   const changedReadiness = assessR56ChannelReadiness(nativeRows, {
     ...bundle.audit, passed: false,
-  });
+  }, bundle.manifest);
   assert.equal(changedReadiness.status, "development-no-go");
   assert.deepEqual(changedReadiness.failures,
-    ["interface_and_proxy_audits_clean"]);
+    ["development_and_sealed_interface_and_proxy_audits_clean"]);
+  assert.equal(changedReadiness.metrics.interface_and_proxy_audits
+    .development.status, "failed");
 
   assert.equal(first.artifact.subarray(0, 8).toString("ascii"), "R56ART1\0");
   assert.equal(first.artifact.readUInt32LE(8), 1);

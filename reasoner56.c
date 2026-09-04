@@ -9,9 +9,6 @@
 
 #define R56_ARTIFACT_VERSION 1u
 #define R56_SOURCE_PROGRAM_COUNT 256u
-#define R56_CALIBRATION_FIT_FAMILIES 16u
-#define R56_CALIBRATION_COVERAGE_FAMILIES 99u
-#define R56_CALIBRATION_DRAWS 8u
 #define R56_DEVELOPMENT_PROGRAM_FAMILIES 8u
 #define R56_DEVELOPMENT_CORRUPTION_FAMILIES 8u
 #define R56_DEVELOPMENT_REPEATS 2u
@@ -1210,20 +1207,20 @@ int r56_verified_search(const r56_universe *universe,
     result->accepted_class = UINT32_MAX;
     for (uint32_t phase = 0u; phase < 2u && !result->solved; ++phase) {
         uint32_t count = phase == 0u ? proposal_count : R56_SEMANTIC_CLASSES;
-        if (phase == 1u) result->fallback_started = 1u;
         for (uint32_t index = 0u; index < count; ++index) {
             uint16_t semantic = phase == 0u ? proposals[index] :
                 r56_canonical_fallback_order[index];
             r56_certificate certificate;
             int accepted;
             if (semantic >= R56_SEMANTIC_CLASSES) return 2;
-            result->partial_expansions += 1u;
-            if (phase == 1u) result->fallback_partial_expansions += 1u;
-            if (seen[semantic]) continue;
             if (result->verifier_checks >= global_cap) {
                 result->global_cap_hit = 1u;
                 break;
             }
+            if (phase == 1u) result->fallback_started = 1u;
+            result->partial_expansions += 1u;
+            if (phase == 1u) result->fallback_partial_expansions += 1u;
+            if (seen[semantic]) continue;
             seen[semantic] = 1u;
             accepted = r56_verify_semantic_class(universe, semantic, target,
                                                  &certificate);
@@ -1241,10 +1238,9 @@ int r56_verified_search(const r56_universe *universe,
         }
         if (result->global_cap_hit) break;
     }
-    if (!result->solved && result->verifier_checks >= global_cap)
-        result->global_cap_hit = 1u;
-    result->primary_cost = result->global_cap_hit ? global_cap + 1u :
-                           result->verifier_checks;
+    result->fallback_exhausted = !result->solved && !result->global_cap_hit;
+    result->primary_cost = result->solved ? result->verifier_checks :
+                           global_cap + 1u;
     return 0;
 }
 
@@ -2311,6 +2307,44 @@ int r56_run_development(r56_development_result *result,
         status = 5;
         goto cleanup;
     }
+    result->calibration_coverage_record_count =
+        R56_CALIBRATION_COVERAGE_FAMILIES;
+    for (uint32_t family = 0u;
+         family < R56_CALIBRATION_COVERAGE_FAMILIES; ++family) {
+        double worst_mass = 0.0;
+        uint32_t all_draws_covered = 1u;
+        for (uint32_t draw = 0u; draw < R56_CALIBRATION_DRAWS; ++draw) {
+            uint32_t episode = family * R56_CALIBRATION_DRAWS + draw;
+            double probability[R56_SEMANTIC_CLASSES];
+            int64_t score[R56_SEMANTIC_CLASSES];
+            uint8_t included[R56_SEMANTIC_CLASSES];
+            uint32_t reads;
+            double mass;
+            if (r56_posterior(artifact, universe, &coverage_views[episode],
+                    R56_ARM_FULL, probability, score, &reads) != 0 ||
+                r56_candidate_set(probability,
+                    (double)artifact->conformal_mass_q20 /
+                        (double)R56_Q20_ONE, included) == 0u) {
+                status = 5;
+                goto cleanup;
+            }
+            mass = r56_truth_cumulative(probability,
+                                        coverage_truth[episode]);
+            if (mass > worst_mass) worst_mass = mass;
+            if (!included[coverage_truth[episode]])
+                all_draws_covered = 0u;
+        }
+        result->calibration_coverage_classes[family] =
+            coverage_classes[family];
+        result->calibration_coverage_worst_mass_q20[family] =
+            (uint32_t)ceil(worst_mass * (double)R56_Q20_ONE);
+        if (result->calibration_coverage_worst_mass_q20[family] >
+            R56_Q20_ONE)
+            result->calibration_coverage_worst_mass_q20[family] =
+                R56_Q20_ONE;
+        result->calibration_coverage_family_covered[family] =
+            all_draws_covered;
+    }
     result->artifact_roundtrip_valid =
         roundtrip->artifact_digest == artifact->artifact_digest;
     trace = fopen(trace_path, "wb");
@@ -2666,10 +2700,24 @@ int r56_run_development(r56_development_result *result,
         result->calibration_fit_episodes != R56_CALIBRATION_FIT_FAMILIES ||
         result->calibration_coverage_episodes !=
             R56_CALIBRATION_COVERAGE_FAMILIES ||
+        result->calibration_coverage_record_count !=
+            R56_CALIBRATION_COVERAGE_FAMILIES ||
         result->target_only_median_cost < 16.0 ||
         !result->proxy_audit_passed || !result->taint_audit_passed) {
         status = 14;
         goto cleanup;
+    }
+    for (uint32_t family = 0u;
+         family < R56_CALIBRATION_COVERAGE_FAMILIES; ++family) {
+        if (!result->calibration_coverage_family_covered[family] ||
+            result->calibration_coverage_classes[family] !=
+                coverage_classes[family] ||
+            result->calibration_coverage_worst_mass_q20[family] == 0u ||
+            result->calibration_coverage_worst_mass_q20[family] >
+                R56_Q20_ONE) {
+            status = 14;
+            goto cleanup;
+        }
     }
     status = 0;
 
@@ -2694,7 +2742,7 @@ int r56_write_development_result(const char *path,
     if (!file) return 2;
     if (fprintf(file,
         "{\n"
-        "  \"schema\": \"zero.reasoner56_development_result.v2\",\n"
+        "  \"schema\": \"zero.reasoner56_development_result.v3\",\n"
         "  \"experiment\": \"reasoner56-passive-noise-development-v1\",\n"
         "  \"status\": \"development-only\",\n"
         "  \"scientific_decision\": null,\n"
@@ -2765,8 +2813,24 @@ int r56_write_development_result(const char *path,
         if (fprintf(file, "%s%u", index ? ", " : "",
                     result->development_classes[index]) < 0)
             ok = 0;
+    if (ok && fprintf(file, "],\n  \"calibration_coverage_records\": [\n") < 0)
+        ok = 0;
+    for (uint32_t index = 0u;
+         ok && index < result->calibration_coverage_record_count; ++index) {
+        if (fprintf(file,
+            "    %s{\"family_index\": %u, \"semantic_class\": %u, "
+            "\"draws\": %u, \"worst_truth_cumulative_mass_q20\": %u, "
+            "\"all_draws_covered\": %s}\n",
+            index ? "," : "", index,
+            result->calibration_coverage_classes[index],
+            R56_CALIBRATION_DRAWS,
+            result->calibration_coverage_worst_mass_q20[index],
+            result->calibration_coverage_family_covered[index] ?
+                "true" : "false") < 0)
+            ok = 0;
+    }
     if (ok && fprintf(file,
-        "],\n"
+        "  ],\n"
         "  \"artifact_digest\": \"%016llx\",\n"
         "  \"trace_digest\": \"%016llx\",\n"
         "  \"calibration_fit_digest\": \"%016llx\",\n"
@@ -3018,6 +3082,8 @@ int r56_self_test(void) {
             uint16_t proposal[1] = {invalid};
             r56_search_result capped;
             r56_search_result complete;
+            r56_search_result exhausted;
+            uint8_t impossible_target[R56_MODULUS];
             if (!r56_verify_semantic_class(universe, truth,
                     universe->semantic[truth].table, &certificate) ||
                 !certificate.valid || certificate.checked_points != R56_MODULUS ||
@@ -3029,7 +3095,10 @@ int r56_self_test(void) {
                     universe->semantic[truth].table, proposal, 1u, 1u,
                     invalid, &capped) != 0 || capped.solved ||
                 !capped.global_cap_hit || capped.primary_cost != 2u ||
-                !capped.invalid_first_rejected) {
+                !capped.invalid_first_rejected ||
+                capped.partial_expansions != 1u ||
+                capped.fallback_partial_expansions != 0u ||
+                capped.fallback_started) {
                 status = 24; goto bytes_done;
             }
             if (r56_verified_search(universe,
@@ -3038,6 +3107,18 @@ int r56_self_test(void) {
                 !complete.solved || !complete.certificate_valid ||
                 !complete.fallback_started ||
                 !complete.invalid_first_rejected) {
+                status = 25; goto bytes_done;
+            }
+            memset(impossible_target, 255, sizeof(impossible_target));
+            if (r56_verified_search(universe, impossible_target, proposal, 1u,
+                    R56_SEMANTIC_CLASSES, invalid, &exhausted) != 0 ||
+                exhausted.solved || exhausted.global_cap_hit ||
+                !exhausted.fallback_exhausted ||
+                exhausted.primary_cost != R56_SEMANTIC_CLASSES + 1u ||
+                exhausted.verifier_checks != R56_SEMANTIC_CLASSES ||
+                exhausted.partial_expansions != R56_SEMANTIC_CLASSES + 1u ||
+                !exhausted.fallback_started ||
+                !exhausted.invalid_first_rejected) {
                 status = 25; goto bytes_done;
             }
         }

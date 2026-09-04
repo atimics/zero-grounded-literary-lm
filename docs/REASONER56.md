@@ -13,6 +13,10 @@ canonical fallback, and the full control surface. Temperature fit and
 candidate-set coverage use separate semantic family lanes. Their counts and
 receipts are stored in the artifact.
 
+The calibration-coverage receipt records 99 independent program families. It
+binds and replays all eight corruption draws for each family, for 792 exact
+draw receipts. Coverage uses one worst-draw result per program family.
+
 The ranker boundary is structural. It accepts only the four declared leaves
 inside each public observation. Hidden target and channel values have no valid
 path through that interface. Missing observations have one canonical public
@@ -31,10 +35,14 @@ manifest replay, arm parity, exact-search receipts, two-way aggregation, and
 result replay.
 
 The search-cost gate gives a development `no-go`. The separate channel check
-is `development-ready`: all 128 full-arm candidate sets have size one and cover
-the truth, while the program-prior-only sets have mean size 427. The public
-interface, proxy classifier, and source-isolation taint checks pass.
+also gives a development `no-go`. All 99 calibration-coverage program families
+cover the truth across their eight draws. The one-sided Wilson lower bound is
+above 0.97. Full-arm candidate sets on the development lane have family-weighted
+mean size one, while the program-prior-only sets have mean size 427. The
+development interface, template proxy, severity proxy, and source-isolation
+taint checks pass. The sealed interface and proxy audit remains pending.
 
-The command for sealed execution stays closed. The next scientific step is a
-reviewed preregistration with fresh sealed families, a power result, a frozen
-publication rule, and explicit approval.
+The command for sealed execution stays closed. Reasoner 5.7 remains behind the
+channel-readiness gate. The next scientific step is a reviewed preregistration
+with fresh sealed families, a power result, a frozen publication rule, the
+sealed interface and proxy audit, and explicit approval.
