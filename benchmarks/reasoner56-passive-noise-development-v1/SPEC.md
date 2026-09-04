@@ -68,10 +68,11 @@ Six temperatures are eligible: `0.25, 0.5, 1, 2, 4, 8`. Sixteen disjoint
 program families select one temperature from their family-mean log loss over
 eight channel draws. A further 99 disjoint program families set the 99 percent
 candidate-mass threshold. Each family contributes its worst score over eight
-channel draws. The finite-sample rank is 99. The requested rank is unavailable
-with 99 families. The resulting threshold of 1 uses the exact full universe.
-This includes every smoothed positive-mass class even when its floating-point
-probability rounds to zero.
+channel draws. The finite-sample rank is 99, and its selected threshold is 1
+on this development fixture. The registered unavailable-rank fallback also
+uses 1. A threshold of 1 uses the exact full universe. This includes every
+smoothed positive-mass class even when its floating-point probability rounds
+to zero.
 
 ## Public ranker boundary
 
