@@ -88,9 +88,9 @@ ${directionLines}
 The common gate failures were ${result.gate.failures.join(", ")}.
 The required stratum failures were ${failedStrata.join(", ")}.
 Exactness, invalid-first rejection, fallback charging, source-ablation
-equality, subtype-preserving derangement integrity, and the source-free
-measurement floor passed. The derangement randomization p-value was above its
-registered maximum.
+equality, proposal-record binding, work-charge floors, subtype-preserving
+derangement integrity, and the source-free measurement floor passed. The
+derangement randomization p-value was above its registered maximum.
 
 This result is a development diagnostic. It supports a redesign of the
 generator-transfer prior before a sealed 5.9a run. Reasoner 5.9b stays closed.

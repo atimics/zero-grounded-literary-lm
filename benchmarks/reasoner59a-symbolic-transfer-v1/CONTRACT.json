@@ -23,8 +23,8 @@
   },
   "source_files": {
     "Makefile": {
-      "bytes": 134319,
-      "sha256": "1331cf9905a98e88bfa46e9280dbddc21dc370d7039f8ed3d44d1e9dcf109a95"
+      "bytes": 134508,
+      "sha256": "2d4153b9b43e4cf10777cbd5035c27cb8ab5e885b2c804afeeeadc4eb5be38df"
     },
     "reasoner59a.h": {
       "bytes": 1547,
@@ -39,28 +39,28 @@
       "sha256": "5560b6c6dab60fad1b0770502517b3a955ed5d93c0d28526b9382c6ff53dc5f6"
     },
     "scripts/lib/reasoner5_harness.mjs": {
-      "bytes": 136929,
-      "sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66"
+      "bytes": 137908,
+      "sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5"
     },
     "scripts/lib/reasoner59a_symbolic.mjs": {
       "bytes": 95345,
       "sha256": "86b208f554bec8cd1b0ab5d009d32f388f786dc9b4ea514ab649488318100abd"
     },
     "scripts/run_reasoner59a_development.mjs": {
-      "bytes": 8206,
-      "sha256": "7583cb2a271ac044fa1d68a9d3b9965da3133bcc4e4b8dd66bb820bbc676220d"
+      "bytes": 8251,
+      "sha256": "613fb1be99d2209fd86536b36f2ec755ed8ca5692ca0207289dcef0dd31c7662"
     },
     "scripts/check_reasoner59a_development.mjs": {
       "bytes": 28612,
       "sha256": "03e56942a4719b3c1a0068336754e9d61420e152c7975e4b39dee8104f5cfedb"
     },
     "benchmarks/reasoner59a-symbolic-transfer-v1/SPEC.md": {
-      "bytes": 3841,
-      "sha256": "e0fd17f58828e12ca24e1d7e4467456ffc8fb7dec024d647941baa2ae4a8f83b"
+      "bytes": 3983,
+      "sha256": "f401176ee76142bde3a809c8505998ff76f587ab69d4174ccbf3d079b28705ae"
     },
     "benchmarks/reasoner59a-symbolic-transfer-v1/DEVELOPMENT.md": {
-      "bytes": 1842,
-      "sha256": "450788212b91d34964a88841bff3f537a3b7dc75c9c4592bb7a06762794cabad"
+      "bytes": 1887,
+      "sha256": "8906f119150b4639976675c09e86e05d47507847a390ff9e6b00e750c2cdcc7f"
     },
     "benchmarks/reasoner5-next-set-v1/PLAN.json": {
       "bytes": 30437,
@@ -97,5 +97,5 @@
     "result_sha256": "3ac1b847b7b1ac2187ce0c6715ef7cfe5252acd6846c4cd6af90175cd768a00f",
     "result_decision": "no-go"
   },
-  "contract_sha256": "3e05ecf6929122c39ccc6fe2846f35c554f57f8c1ab267d6d552bdcac7d0b5c3"
+  "contract_sha256": "8a46f31a5b4b6fa00e54504ae3eae346cb77b1d70103786cad3cd9ed88db1d46"
 }

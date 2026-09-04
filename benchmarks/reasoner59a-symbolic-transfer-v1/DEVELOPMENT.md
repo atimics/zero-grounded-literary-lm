@@ -23,9 +23,9 @@ The two transfer directions had different totals:
 The common gate failures were primary_upper_limit, family_win_lower_limit, primary_strata, mechanism_effects, derangement_randomization.
 The required stratum failures were shift:operation-attribute-compound, direction:syntax-first=>behavior-constraint-first, support:greedy-version-space.
 Exactness, invalid-first rejection, fallback charging, source-ablation
-equality, subtype-preserving derangement integrity, and the source-free
-measurement floor passed. The derangement randomization p-value was above its
-registered maximum.
+equality, proposal-record binding, work-charge floors, subtype-preserving
+derangement integrity, and the source-free measurement floor passed. The
+derangement randomization p-value was above its registered maximum.
 
 This result is a development diagnostic. It supports a redesign of the
 generator-transfer prior before a sealed 5.9a run. Reasoner 5.9b stays closed.
