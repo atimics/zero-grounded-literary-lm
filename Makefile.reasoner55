@@ -1,0 +1,17 @@
+# Development targets extend the build through this separate entry point.
+# The R5.9a contract records the exact bytes of the main Makefile.
+include Makefile
+
+.PHONY: reasoner55-diagnostics reasoner55-diagnostics-check reasoner55-experiments-check
+build/reasoner55_diagnostics: reasoner55_diagnostics.c reasoner55.c reasoner55.h
+	mkdir -p build
+	$(CC) $(CFLAGS) reasoner55_diagnostics.c -o $@
+
+reasoner55-diagnostics: build/reasoner55_diagnostics
+	node scripts/run_reasoner55_diagnostics.mjs --write
+
+reasoner55-diagnostics-check: build/reasoner55_diagnostics
+	node scripts/check_reasoner55_diagnostics.mjs
+
+reasoner55-experiments-check: reasoner55-diagnostics-check
+check: reasoner55-experiments-check
