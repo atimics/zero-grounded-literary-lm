@@ -85,6 +85,7 @@ for (const required of [
   "exhausted-search cap-plus-one censoring reason",
   "full operational source-ablation equality",
   "family-level independent-unit restriction",
+  "portable numerical receipts",
   "ordinary percentile confidence interval",
   "recentered null one-way bootstrap",
   "recentered null stratified one-way bootstrap",

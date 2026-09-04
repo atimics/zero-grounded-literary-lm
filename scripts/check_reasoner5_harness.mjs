@@ -36,6 +36,8 @@ import {
   oneWayClusterBootstrap,
   orderHolmByCalibratedNullPValue,
   overlapReceipt,
+  portableNumber,
+  portableNumbers,
   reconstructCommonGate,
   registerReplayPipeline,
   registerEpisode,
@@ -1331,7 +1333,11 @@ function testGateAndTraceReplay() {
   assert.match(result.result_sha256, /^[0-9a-f]{64}$/u);
   assert.equal(result.decision, "pass");
   assert.equal(result.registered_analysis.primary.interval.point_ratio,
-    6 / 13);
+    portableNumber(Math.exp(portableNumber(Math.log(6 / 13)))));
+  assert.equal(portableNumber(0.6309092162584323),
+    portableNumber(0.6309092162584324));
+  assert.deepEqual(portableNumbers({ value: 1.8793185096513947 }),
+    { value: 1.87931850965139 });
   assert.equal(result.registered_analysis.derangement.values.length, 31);
   expectFailure(() => buildResultFromRawTraces({
     experiment: "reasoner5-harness-self-test",
@@ -1471,6 +1477,7 @@ const coverage = {
   source_ablation_trace_identity: true,
   nested_family_aggregation: true,
   family_level_unit_restriction: true,
+  portable_numerical_receipts: true,
   one_way_cluster_bootstrap: true,
   ordinary_percentile_confidence_bounds: true,
   recentered_null_one_way_bootstrap: true,

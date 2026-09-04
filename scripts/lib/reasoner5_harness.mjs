@@ -147,6 +147,23 @@ function finiteNumber(value, label, minimum = -Infinity) {
     `${label} must be a finite number at least ${minimum}`);
 }
 
+const PORTABLE_SIGNIFICANT_DIGITS = 15;
+
+export function portableNumber(value) {
+  finiteNumber(value, "portable number");
+  if (value === 0) return 0;
+  return Number(value.toPrecision(PORTABLE_SIGNIFICANT_DIGITS));
+}
+
+export function portableNumbers(value) {
+  if (typeof value === "number") return portableNumber(value);
+  if (Array.isArray(value)) return value.map(portableNumbers);
+  if (value !== null && typeof value === "object")
+    return Object.fromEntries(Object.entries(value)
+      .map(([key, item]) => [key, portableNumbers(item)]));
+  return value;
+}
+
 function assertExactKeys(value, expected, label) {
   plainObject(value, label);
   const actualKeys = Object.keys(value).sort();
@@ -1811,7 +1828,8 @@ export function aggregateNestedFamilies(rows, {
       nested_repeat_id: full[repeatField],
       full_cost: fullCost,
       comparator_cost: comparatorCost,
-      log_cost_ratio: Math.log((fullCost + 1) / (comparatorCost + 1)),
+      log_cost_ratio: portableNumber(
+        Math.log((fullCost + 1) / (comparatorCost + 1))),
     });
   }
   const grouped = new Map();
@@ -1827,15 +1845,15 @@ export function aggregateNestedFamilies(rows, {
       "nested repeat IDs must be unique inside a family unit");
     const mean = field => group.reduce((sum, row) => sum + row[field], 0) /
       group.length;
-    const meanLog = mean("log_cost_ratio");
+    const meanLog = portableNumber(mean("log_cost_ratio"));
     return {
       ...group[0].unit,
       unit: group[0].unit,
       nested_measurements: group.length,
-      mean_full_cost: mean("full_cost"),
-      mean_comparator_cost: mean("comparator_cost"),
+      mean_full_cost: portableNumber(mean("full_cost")),
+      mean_comparator_cost: portableNumber(mean("comparator_cost")),
       mean_log_ratio: meanLog,
-      geometric_mean_ratio: Math.exp(meanLog),
+      geometric_mean_ratio: portableNumber(Math.exp(meanLog)),
       win: meanLog < 0,
       tie: meanLog === 0,
     };
@@ -1850,24 +1868,26 @@ export function summarizeFamilyUnits(units,
     finiteNumber(unit.mean_log_ratio, "family mean log ratio");
     return unit.mean_log_ratio;
   });
-  const ratios = logRatios.map(Math.exp).sort((left, right) => left - right);
+  const ratios = logRatios.map(value => portableNumber(Math.exp(value)))
+    .sort((left, right) => left - right);
   const middle = Math.floor(ratios.length / 2);
   const median = ratios.length % 2 ? ratios[middle] :
     (ratios[middle - 1] + ratios[middle]) / 2;
   const wins = logRatios.filter(value => value < 0).length;
   const ties = logRatios.filter(value => value === 0).length;
   const losses = logRatios.length - wins - ties;
-  const meanLog = logRatios.reduce((sum, value) => sum + value, 0) /
-    logRatios.length;
+  const meanLog = portableNumber(
+    logRatios.reduce((sum, value) => sum + value, 0) / logRatios.length);
   return {
     schema: "zero.reasoner5_family_summary.v1",
     independent_families: units.length,
-    family_weighted_geometric_mean_ratio: Math.exp(meanLog),
-    family_weighted_median_ratio: median,
+    family_weighted_geometric_mean_ratio:
+      portableNumber(Math.exp(meanLog)),
+    family_weighted_median_ratio: portableNumber(median),
     wins,
     ties,
     losses,
-    win_rate: wins / units.length,
+    win_rate: portableNumber(wins / units.length),
     wilson_lower: wilsonLowerBound(wins, units.length, wilsonZ),
   };
 }
@@ -1909,8 +1929,8 @@ export function factorialInteractionFamilies(rows, {
     const logCost = arm => Math.log(armCost(arms.get(arm), costField) + 1);
     values.push({
       unit: Object.fromEntries(unitFields.map(field => [field, row[field]])),
-      interaction: logCost(adapterGuideArm) - logCost(adapterOnlyArm) -
-        logCost(guideOnlyArm) + logCost(rawArm),
+      interaction: portableNumber(logCost(adapterGuideArm) -
+        logCost(adapterOnlyArm) - logCost(guideOnlyArm) + logCost(rawArm)),
     });
   }
   const grouped = new Map();
@@ -1920,8 +1940,8 @@ export function factorialInteractionFamilies(rows, {
     grouped.get(key).push(value);
   }
   return [...grouped.values()].map(group => {
-    const mean = group.reduce((sum, value) => sum + value.interaction, 0) /
-      group.length;
+    const mean = portableNumber(group.reduce((sum, value) =>
+      sum + value.interaction, 0) / group.length);
     return {
       ...group[0].unit,
       unit: group[0].unit,
@@ -1943,19 +1963,21 @@ function conservativeQuantile(sorted, probability) {
 
 function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
   pointLogOverride = null) {
-  const pointLog = pointLogOverride ??
-    units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length;
+  const pointLog = portableNumber(pointLogOverride ??
+    units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length);
   requireValue(samples.length > 0 && nullSamples.length === samples.length,
     "bootstrap and recentered null samples must have equal nonzero length");
   for (const value of samples)
     finiteNumber(value, "ordinary bootstrap sample");
   for (const value of nullSamples)
     finiteNumber(value, "recentered null bootstrap sample");
-  const sortedSamples = [...samples].sort((left, right) => left - right);
-  const sortedNullSamples = [...nullSamples]
+  const sortedSamples = samples.map(portableNumber)
     .sort((left, right) => left - right);
-  const lowerLog = conservativeQuantile(sortedSamples, alpha);
-  const upperLog = conservativeQuantile(sortedSamples, 1 - alpha);
+  const sortedNullSamples = nullSamples.map(portableNumber)
+    .sort((left, right) => left - right);
+  const lowerLog = portableNumber(conservativeQuantile(sortedSamples, alpha));
+  const upperLog = portableNumber(
+    conservativeQuantile(sortedSamples, 1 - alpha));
   const oneSidedPLower = (sortedNullSamples.filter(value =>
     value <= pointLog).length + 1) / (sortedNullSamples.length + 1);
   const oneSidedPHigher = (sortedNullSamples.filter(value =>
@@ -1970,11 +1992,11 @@ function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
     replicates: samples.length,
     alpha,
     point_log_ratio: pointLog,
-    point_ratio: Math.exp(pointLog),
+    point_ratio: portableNumber(Math.exp(pointLog)),
     lower_log_ratio: lowerLog,
     upper_log_ratio: upperLog,
-    lower_ratio: Math.exp(lowerLog),
-    upper_ratio: Math.exp(upperLog),
+    lower_ratio: portableNumber(Math.exp(lowerLog)),
+    upper_ratio: portableNumber(Math.exp(upperLog)),
     confidence_interval_method: "ordinary-percentile-bootstrap",
     p_value_method: "recentered-null-bootstrap",
     null_hypothesis_point_log_ratio: 0,
@@ -2013,10 +2035,11 @@ export function oneWayClusterBootstrap(units, {
     if (!environments.has(environment)) environments.set(environment, []);
     environments.get(environment).push(unit);
   }
-  const pointLog = [...environments.values()].reduce((sum, environmentUnits) =>
+  const pointLog = portableNumber([...environments.values()]
+    .reduce((sum, environmentUnits) =>
     sum + environmentUnits.reduce((inner, unit) =>
       inner + unit.mean_log_ratio, 0) / environmentUnits.length, 0) /
-    environments.size;
+    environments.size);
   const rng = createDeterministicRng(seed, environmentField === null ?
     "one-way-cluster-bootstrap" : "stratified-one-way-cluster-bootstrap");
   const samples = [];
@@ -2030,9 +2053,9 @@ export function oneWayClusterBootstrap(units, {
           .mean_log_ratio;
       sum += environmentSum / environmentUnits.length;
     }
-    const sample = sum / environments.size;
+    const sample = portableNumber(sum / environments.size);
     samples.push(sample);
-    nullSamples.push(sample - pointLog);
+    nullSamples.push(portableNumber(sample - pointLog));
   }
   const receipt = bootstrapReceipt(units, samples, nullSamples, alpha,
     environmentField === null ? "one_way_cluster" :
@@ -2080,8 +2103,8 @@ export function twoWayClusterBootstrap(units, {
     for (const column of columns)
       requireValue(cells.has(stableJson([row, column])),
         `missing crossed cell ${row} by ${column}`);
-  const pointLog = [...cells.values()].reduce((sum, value) => sum + value, 0) /
-    cells.size;
+  const pointLog = portableNumber([...cells.values()]
+    .reduce((sum, value) => sum + value, 0) / cells.size);
   const rng = createDeterministicRng(seed, "two-way-cluster-bootstrap");
   const samples = [];
   const nullSamples = [];
@@ -2092,21 +2115,22 @@ export function twoWayClusterBootstrap(units, {
     for (const row of sampledRows)
       for (const column of sampledColumns)
         sum += cells.get(stableJson([row, column]));
-    const sample = sum / (sampledRows.length * sampledColumns.length);
+    const sample = portableNumber(
+      sum / (sampledRows.length * sampledColumns.length));
     samples.push(sample);
-    nullSamples.push(sample - pointLog);
+    nullSamples.push(portableNumber(sample - pointLog));
   }
   const receipt = bootstrapReceipt(units, samples, nullSamples, alpha,
     "two_way_cluster", pointLog);
   const rowUnits = rows.map(row => ({
     [rowField]: row,
-    mean_log_ratio: columns.reduce((sum, column) =>
-      sum + cells.get(stableJson([row, column])), 0) / columns.length,
+    mean_log_ratio: portableNumber(columns.reduce((sum, column) =>
+      sum + cells.get(stableJson([row, column])), 0) / columns.length),
   }));
   const columnUnits = columns.map(column => ({
     [columnField]: column,
-    mean_log_ratio: rows.reduce((sum, row) =>
-      sum + cells.get(stableJson([row, column])), 0) / rows.length,
+    mean_log_ratio: portableNumber(rows.reduce((sum, row) =>
+      sum + cells.get(stableJson([row, column])), 0) / rows.length),
   }));
   return {
     ...receipt,
@@ -2133,7 +2157,8 @@ export function familyInferenceReceipt(units, {
     "family inference design must be one-way or two-way");
   requireValue(["lower", "higher"].includes(direction),
     "family inference direction must be lower or higher");
-  const unitSnapshot = cloneJson(units, "family inference units");
+  const unitSnapshot = portableNumbers(
+    cloneJson(units, "family inference units"));
   const settings = {
     design,
     direction,
@@ -2230,7 +2255,7 @@ export function wilsonLowerBound(wins, total,
   const center = rate + z2 / (2 * total);
   const radius = z * Math.sqrt((rate * (1 - rate) + z2 / (4 * total)) /
     total);
-  return Math.max(0, (center - radius) / denominator);
+  return portableNumber(Math.max(0, (center - radius) / denominator));
 }
 
 export function derangementPValue(observed, derangements,
@@ -3147,7 +3172,7 @@ export function buildResultFromRawTraces({
     episodes: coverage.episodes,
     rows: coverage.rows,
   };
-  const body = {
+  const body = portableNumbers({
     ...analysisPayload,
     schema: "zero.reasoner5_trace_result.v1",
     experiment,
@@ -3167,7 +3192,7 @@ export function buildResultFromRawTraces({
     decision: gate.decision,
     gate,
     provenance,
-  };
+  });
   return {
     ...body,
     result_sha256: canonicalDigest("trace-result", body),
