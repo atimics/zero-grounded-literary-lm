@@ -2941,6 +2941,26 @@ clean: clean-reasoner5-followups
 clean-reasoner5-followups:
 	rm -f reasoner53 reasoner54
 
+.PHONY: reasoner56 reasoner56-check reasoner56-sanitize-check reasoner56-contract-check clean-reasoner56
+all: reasoner56
+
+reasoner56: reasoner56.c reasoner56.h reasoner56_cli.c
+	$(CC) $(CFLAGS) reasoner56.c reasoner56_cli.c -lm -o $@
+
+reasoner56-check: reasoner56
+	node scripts/check_reasoner56_development.mjs
+
+reasoner56-sanitize-check:
+	node scripts/check_reasoner56_development.mjs --sanitizers-only
+
+reasoner56-contract-check: reasoner56-check
+
+check: reasoner56-check
+clean: clean-reasoner56
+
+clean-reasoner56:
+	rm -f reasoner56
+
 REASONER55_FIXTURE := benchmarks/reasoner55-generated-primitive-transfer-v1
 
 .PHONY: reasoner55-check reasoner55-development-check \

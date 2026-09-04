@@ -442,6 +442,18 @@ finite primitive and program generators.
 
 ## R5.6: passive learned-noise transfer
 
+The development implementation and frozen local fixtures live in
+`reasoner56.c`, `reasoner56.h`, and
+`benchmarks/reasoner56-passive-noise-development-v1/`. This implementation is
+development-only. Its 5,760 rows now pass strict shared-harness coverage,
+manifest replay, arm parity, and result replay. The deterministic fixture gives
+a search-cost no-go. The frozen finite-sample threshold is one, so the exact
+candidate set contains all 427 positive-mass classes and fails the registered
+size-ratio readiness gate. The separate channel assessment also remains closed
+until the sealed interface and proxy audit passes.
+Preregistration, fresh sealed family selection, and explicit execution
+approval remain the next boundary.
+
 ### Question
 
 Can source episodes teach a small observation model that reduces exact search

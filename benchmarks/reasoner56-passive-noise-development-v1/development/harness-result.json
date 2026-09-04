@@ -1,0 +1,4568 @@
+{
+  "analysis_function_sha256": "38e46e48d569c61ecf0b98c50aec97bdc6dd7a82bc65564c91670fd4059fc773",
+  "analysis_settings_sha256": "ec33a929e2e38bad86cbf826664979b729bdf54bcd4b258daa5613337d583a79",
+  "arm_summaries": {
+    "channel_only": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 1967616
+    },
+    "clean_oracle": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 54656
+    },
+    "derangement_00": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.1015625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_01": {
+      "fallback_rate": 0.9921875,
+      "mean_primary_cost": 41.984375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_02": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.046875,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_03": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.7734375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_04": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.0546875,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_05": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.953125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_06": {
+      "fallback_rate": 0.9921875,
+      "mean_primary_cost": 42.09375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_07": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.9140625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_08": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.1328125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_09": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.8828125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_10": {
+      "fallback_rate": 0.9921875,
+      "mean_primary_cost": 41.703125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_11": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.7265625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_12": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.9921875,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_13": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.0703125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_14": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.984375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_15": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.890625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_16": {
+      "fallback_rate": 0.0703125,
+      "mean_primary_cost": 6.5078125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_17": {
+      "fallback_rate": 0.9921875,
+      "mean_primary_cost": 41.90625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_18": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.9921875,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_19": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.6953125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_20": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.9453125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_21": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.234375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_22": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.0078125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_23": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.0234375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_24": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.0859375,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_25": {
+      "fallback_rate": 0.0546875,
+      "mean_primary_cost": 5.5703125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_26": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.90625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_27": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.015625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_28": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.9921875,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_29": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.9765625,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "derangement_30": {
+      "fallback_rate": 0.9921875,
+      "mean_primary_cost": 41.8828125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "full": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "markov_off": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 1093120
+    },
+    "mask_only": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 41.8203125,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "one_trim": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 54656
+    },
+    "oracle_channel": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 54656
+    },
+    "program_prior_only": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.125,
+      "rows": 128,
+      "source_artifact_reads": 54656
+    },
+    "robust_hamming": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 54656
+    },
+    "shuffled_sensor": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 2022272
+    },
+    "source_ablation": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 0
+    },
+    "source_free": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 0
+    },
+    "target_only": {
+      "fallback_rate": 1,
+      "mean_primary_cost": 42.25,
+      "rows": 128,
+      "source_artifact_reads": 0
+    },
+    "value_only": {
+      "fallback_rate": 0,
+      "mean_primary_cost": 2,
+      "rows": 128,
+      "source_artifact_reads": 1757959
+    }
+  },
+  "cost_totals": {
+    "fallback_partial_expansions": 78558,
+    "fallback_verifier_checks": 74016,
+    "observation_queries": 103680,
+    "partial_expansions": 180829,
+    "peak_bytes": null,
+    "primary_cost": 176287,
+    "source_artifact_reads": 73849223,
+    "verifier_checks": 176287,
+    "wall_ns": null
+  },
+  "decision": "no-go",
+  "development_gate_only": true,
+  "episodes": 128,
+  "exact_rows": 5760,
+  "exactness": {
+    "all_certificates_valid": true,
+    "all_final_answers_exact": true,
+    "all_injected_invalid_first_candidates_rejected": true,
+    "all_primary_episodes_solved_within_global_cap": true,
+    "fallback_work_counted": true,
+    "premature_commits": 0,
+    "schema": "zero.reasoner5_trace_exactness.v1"
+  },
+  "experiment": "reasoner56-passive-noise-development-v1",
+  "gate": {
+    "checks": {
+      "all_certificates_valid": true,
+      "all_final_answers_exact": true,
+      "all_primary_episodes_solved": true,
+      "derangement_median": true,
+      "derangement_randomization": true,
+      "factorial_interaction": true,
+      "fallback_work_counted": true,
+      "family_win_lower_limit": false,
+      "family_win_rate": false,
+      "integrity_valid": true,
+      "invalid_first_candidates_rejected": true,
+      "marginal_win_gates": false,
+      "mechanism_effects": false,
+      "no_premature_commits": true,
+      "primary_ratio": false,
+      "primary_strata": false,
+      "primary_upper_limit": false,
+      "source_ablation_matches_source_free": true
+    },
+    "decision": "no-go",
+    "derangement": {
+      "beats_median": true,
+      "derangements": 31,
+      "median": 3.7521225126069,
+      "observed": 1.0986122886681,
+      "p_value": 0.03125
+    },
+    "failures": [
+      "primary_ratio",
+      "primary_upper_limit",
+      "family_win_rate",
+      "family_win_lower_limit",
+      "marginal_win_gates",
+      "primary_strata",
+      "mechanism_effects"
+    ],
+    "passed": false,
+    "registration_sha256": "3db77de71b19c73fc810eb57e2e537fb793355aa331fc376f5fc8404d2615d71"
+  },
+  "integrity": {
+    "coverage_sha256": "4c613af9c3cef7e3841b4506196981facfa49fa7d6619f1803e9273299109d78",
+    "manifest_digest_valid": true,
+    "trace_contract_valid": true
+  },
+  "manifest_sha256": "89da45b11dc5f3ca6d6db35a94e67eb4ff73aefada1223d74d21b3a31133bba6",
+  "provenance": {
+    "analysis_contract_sha256": "8850b8a94911ec2af996b00b5201c604c28283d8e1f2bbd96028f7413be0abc0",
+    "analysis_function_sha256": "38e46e48d569c61ecf0b98c50aec97bdc6dd7a82bc65564c91670fd4059fc773",
+    "analysis_settings_sha256": "ec33a929e2e38bad86cbf826664979b729bdf54bcd4b258daa5613337d583a79",
+    "common_gate_registration_sha256": "3db77de71b19c73fc810eb57e2e537fb793355aa331fc376f5fc8404d2615d71",
+    "episodes": 128,
+    "manifest_sha256": "89da45b11dc5f3ca6d6db35a94e67eb4ff73aefada1223d74d21b3a31133bba6",
+    "raw_trace_sha256": "b8c99ad304429779bf34e2572504806da57be59585623b1716b7a4169756fa93",
+    "rows": 5760,
+    "schema": "zero.reasoner5_result_provenance.v1",
+    "trace_coverage_sha256": "4c613af9c3cef7e3841b4506196981facfa49fa7d6619f1803e9273299109d78"
+  },
+  "raw_trace_sha256": "b8c99ad304429779bf34e2572504806da57be59585623b1716b7a4169756fa93",
+  "registered_analysis": {
+    "analysis_sha256": "07aec9b9b38081c8a439415fb63166fc44db3c8685bad340b89284ff8c30f0bc",
+    "derangement": {
+      "observed": 1.0986122886681,
+      "values": [
+        3.7555220960967,
+        3.7510970627891,
+        3.753905611318,
+        3.7474346770044,
+        3.7538156128459,
+        3.7516371378829,
+        3.7518857986949,
+        3.7515320378742,
+        3.7554991763517,
+        3.7497482242638,
+        3.7326561712528,
+        3.7473801062094,
+        3.7541225535063,
+        3.7553082911313,
+        3.7526070708194,
+        3.7502008787303,
+        1.5525679506431,
+        3.7369765419504,
+        3.7531636431868,
+        3.7463193200943,
+        3.7511146951897,
+        3.7579261436938,
+        3.7540371807239,
+        3.7536240555411,
+        3.7551459600424,
+        1.4634929384537,
+        3.7521225126069,
+        3.753992108662,
+        3.7530130788984,
+        3.7522871282985,
+        3.7370102980097
+      ]
+    },
+    "headroom": {
+      "comparator_arm": "target_only",
+      "measurement_floor": false,
+      "median_primary_cost": 43,
+      "registered_minimum": 16
+    },
+    "mechanisms": [
+      {
+        "inference": {
+          "interval": {
+            "alpha": 0.025,
+            "bootstrap_sha256": "5c5d124554ad625cc0b7907f6355e94b384b6211217bf2f116a61e45675b0bfa",
+            "column_families": 8,
+            "column_marginal_summary": {
+              "family_weighted_geometric_mean_ratio": 1,
+              "family_weighted_median_ratio": 1,
+              "independent_families": 8,
+              "losses": 0,
+              "schema": "zero.reasoner5_family_summary.v1",
+              "ties": 8,
+              "wilson_lower": 0,
+              "win_rate": 0,
+              "wins": 0
+            },
+            "complete_cells": 64,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "independent_units": 64,
+            "lower_log_ratio": 0,
+            "lower_ratio": 1,
+            "null_bootstrap_sha256": "5a41276af02b03f365bce505543adeb8f6638e9f3e7ab7aa4289eba3bac7afaf",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_higher_than_zero": 1,
+            "one_sided_p_lower_than_zero": 1,
+            "p_value_method": "recentered-null-bootstrap",
+            "point_log_ratio": 0,
+            "point_ratio": 1,
+            "replicates": 256,
+            "row_families": 8,
+            "row_marginal_summary": {
+              "family_weighted_geometric_mean_ratio": 1,
+              "family_weighted_median_ratio": 1,
+              "independent_families": 8,
+              "losses": 0,
+              "schema": "zero.reasoner5_family_summary.v1",
+              "ties": 8,
+              "wilson_lower": 0,
+              "win_rate": 0,
+              "wins": 0
+            },
+            "schema": "zero.reasoner5_two_way_cluster_bootstrap.v2",
+            "uncentered_sign_tail_fraction_higher": 1,
+            "uncentered_sign_tail_fraction_lower": 1,
+            "upper_log_ratio": 0,
+            "upper_ratio": 1
+          },
+          "receipt_sha256": "601686acc0bcd60f7c26677d7a4898d965cfcd6969f342c513baacc83f271a90",
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "alpha": 0.025,
+            "column_field": "cross_family_id",
+            "design": "two-way",
+            "direction": "higher",
+            "environment_field": null,
+            "replicates": 256,
+            "row_field": "family_id",
+            "seed": "5600000000005604",
+            "wilson_z": 1.6448536269514722
+          },
+          "summary": {
+            "family_weighted_geometric_mean_ratio": 1,
+            "family_weighted_median_ratio": 1,
+            "independent_families": 64,
+            "losses": 0,
+            "schema": "zero.reasoner5_family_summary.v1",
+            "ties": 64,
+            "wilson_lower": 0,
+            "win_rate": 0,
+            "wins": 0
+          },
+          "units": [
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-7"
+              },
+              "win": false
+            }
+          ]
+        },
+        "name": "markov-off"
+      },
+      {
+        "inference": {
+          "interval": {
+            "alpha": 0.05,
+            "bootstrap_sha256": "5c5d124554ad625cc0b7907f6355e94b384b6211217bf2f116a61e45675b0bfa",
+            "column_families": 8,
+            "column_marginal_summary": {
+              "family_weighted_geometric_mean_ratio": 1,
+              "family_weighted_median_ratio": 1,
+              "independent_families": 8,
+              "losses": 0,
+              "schema": "zero.reasoner5_family_summary.v1",
+              "ties": 8,
+              "wilson_lower": 0,
+              "win_rate": 0,
+              "wins": 0
+            },
+            "complete_cells": 64,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "independent_units": 64,
+            "lower_log_ratio": 0,
+            "lower_ratio": 1,
+            "null_bootstrap_sha256": "5a41276af02b03f365bce505543adeb8f6638e9f3e7ab7aa4289eba3bac7afaf",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_higher_than_zero": 1,
+            "one_sided_p_lower_than_zero": 1,
+            "p_value_method": "recentered-null-bootstrap",
+            "point_log_ratio": 0,
+            "point_ratio": 1,
+            "replicates": 256,
+            "row_families": 8,
+            "row_marginal_summary": {
+              "family_weighted_geometric_mean_ratio": 1,
+              "family_weighted_median_ratio": 1,
+              "independent_families": 8,
+              "losses": 0,
+              "schema": "zero.reasoner5_family_summary.v1",
+              "ties": 8,
+              "wilson_lower": 0,
+              "win_rate": 0,
+              "wins": 0
+            },
+            "schema": "zero.reasoner5_two_way_cluster_bootstrap.v2",
+            "uncentered_sign_tail_fraction_higher": 1,
+            "uncentered_sign_tail_fraction_lower": 1,
+            "upper_log_ratio": 0,
+            "upper_ratio": 1
+          },
+          "receipt_sha256": "88806feb5781c7fa449d3423f8c186e676ee8c2c7450b3774bffc5a8dea583c2",
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "alpha": 0.05,
+            "column_field": "cross_family_id",
+            "design": "two-way",
+            "direction": "higher",
+            "environment_field": null,
+            "replicates": 256,
+            "row_field": "family_id",
+            "seed": "5600000000005603",
+            "wilson_z": 1.6448536269514722
+          },
+          "summary": {
+            "family_weighted_geometric_mean_ratio": 1,
+            "family_weighted_median_ratio": 1,
+            "independent_families": 64,
+            "losses": 0,
+            "schema": "zero.reasoner5_family_summary.v1",
+            "ties": 64,
+            "wilson_lower": 0,
+            "win_rate": 0,
+            "wins": 0
+          },
+          "units": [
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-7"
+              },
+              "win": false
+            }
+          ]
+        },
+        "name": "one-trim"
+      }
+    ],
+    "primary": {
+      "interval": {
+        "alpha": 0.01,
+        "bootstrap_sha256": "5c5d124554ad625cc0b7907f6355e94b384b6211217bf2f116a61e45675b0bfa",
+        "column_families": 8,
+        "column_marginal_summary": {
+          "family_weighted_geometric_mean_ratio": 1,
+          "family_weighted_median_ratio": 1,
+          "independent_families": 8,
+          "losses": 0,
+          "schema": "zero.reasoner5_family_summary.v1",
+          "ties": 8,
+          "wilson_lower": 0,
+          "win_rate": 0,
+          "wins": 0
+        },
+        "complete_cells": 64,
+        "confidence_interval_method": "ordinary-percentile-bootstrap",
+        "independent_units": 64,
+        "lower_log_ratio": 0,
+        "lower_ratio": 1,
+        "null_bootstrap_sha256": "5a41276af02b03f365bce505543adeb8f6638e9f3e7ab7aa4289eba3bac7afaf",
+        "null_hypothesis_point_log_ratio": 0,
+        "one_sided_p_higher_than_zero": 1,
+        "one_sided_p_lower_than_zero": 1,
+        "p_value_method": "recentered-null-bootstrap",
+        "point_log_ratio": 0,
+        "point_ratio": 1,
+        "replicates": 256,
+        "row_families": 8,
+        "row_marginal_summary": {
+          "family_weighted_geometric_mean_ratio": 1,
+          "family_weighted_median_ratio": 1,
+          "independent_families": 8,
+          "losses": 0,
+          "schema": "zero.reasoner5_family_summary.v1",
+          "ties": 8,
+          "wilson_lower": 0,
+          "win_rate": 0,
+          "wins": 0
+        },
+        "schema": "zero.reasoner5_two_way_cluster_bootstrap.v2",
+        "uncentered_sign_tail_fraction_higher": 1,
+        "uncentered_sign_tail_fraction_lower": 1,
+        "upper_log_ratio": 0,
+        "upper_ratio": 1
+      },
+      "receipt_sha256": "dcbb2090c3df0467ae1675a149768e8f9db000ca1fbfdbf15021774b7ce61172",
+      "schema": "zero.reasoner5_family_inference.v1",
+      "settings": {
+        "alpha": 0.01,
+        "column_field": "cross_family_id",
+        "design": "two-way",
+        "direction": "lower",
+        "environment_field": null,
+        "replicates": 256,
+        "row_field": "family_id",
+        "seed": "5600000000005601",
+        "wilson_z": 1.6448536269514722
+      },
+      "summary": {
+        "family_weighted_geometric_mean_ratio": 1,
+        "family_weighted_median_ratio": 1,
+        "independent_families": 64,
+        "losses": 0,
+        "schema": "zero.reasoner5_family_summary.v1",
+        "ties": 64,
+        "wilson_lower": 0,
+        "win_rate": 0,
+        "wins": 0
+      },
+      "units": [
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-0",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-0",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-1",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-1",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-2",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-2",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-3",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-3",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-4",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-4",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-5",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-5",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-6",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-6",
+            "family_id": "program-7"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-0",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-0"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-1",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-1"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-2",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-2"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-3",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-3"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-4",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-4"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-5",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-5"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-6",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-6"
+          },
+          "win": false
+        },
+        {
+          "cross_family_id": "mechanism-7",
+          "family_id": "program-7",
+          "geometric_mean_ratio": 1,
+          "mean_comparator_cost": 2,
+          "mean_full_cost": 2,
+          "mean_log_ratio": 0,
+          "nested_measurements": 2,
+          "tie": true,
+          "unit": {
+            "cross_family_id": "mechanism-7",
+            "family_id": "program-7"
+          },
+          "win": false
+        }
+      ]
+    },
+    "schema": "zero.reasoner5_registered_analysis.v1",
+    "source_ablation": {
+      "episodes": 128,
+      "matches": true,
+      "receipt_sha256": "4d2ba638c7a9802b6b9622545f0f0cb29dc64cdd4903019188c2d2acec8af18d"
+    },
+    "strata": [
+      {
+        "inference": {
+          "interval": {
+            "alpha": 0.05,
+            "bootstrap_sha256": "5c5d124554ad625cc0b7907f6355e94b384b6211217bf2f116a61e45675b0bfa",
+            "column_families": 8,
+            "column_marginal_summary": {
+              "family_weighted_geometric_mean_ratio": 1,
+              "family_weighted_median_ratio": 1,
+              "independent_families": 8,
+              "losses": 0,
+              "schema": "zero.reasoner5_family_summary.v1",
+              "ties": 8,
+              "wilson_lower": 0,
+              "win_rate": 0,
+              "wins": 0
+            },
+            "complete_cells": 64,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "independent_units": 64,
+            "lower_log_ratio": 0,
+            "lower_ratio": 1,
+            "null_bootstrap_sha256": "5a41276af02b03f365bce505543adeb8f6638e9f3e7ab7aa4289eba3bac7afaf",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_higher_than_zero": 1,
+            "one_sided_p_lower_than_zero": 1,
+            "p_value_method": "recentered-null-bootstrap",
+            "point_log_ratio": 0,
+            "point_ratio": 1,
+            "replicates": 256,
+            "row_families": 8,
+            "row_marginal_summary": {
+              "family_weighted_geometric_mean_ratio": 1,
+              "family_weighted_median_ratio": 1,
+              "independent_families": 8,
+              "losses": 0,
+              "schema": "zero.reasoner5_family_summary.v1",
+              "ties": 8,
+              "wilson_lower": 0,
+              "win_rate": 0,
+              "wins": 0
+            },
+            "schema": "zero.reasoner5_two_way_cluster_bootstrap.v2",
+            "uncentered_sign_tail_fraction_higher": 1,
+            "uncentered_sign_tail_fraction_lower": 1,
+            "upper_log_ratio": 0,
+            "upper_ratio": 1
+          },
+          "receipt_sha256": "e283540d8324f8cf082571c68ca0e0192418a2b22bb8f3cca40e2e9edd68f4fd",
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "alpha": 0.05,
+            "column_field": "cross_family_id",
+            "design": "two-way",
+            "direction": "lower",
+            "environment_field": null,
+            "replicates": 256,
+            "row_field": "family_id",
+            "seed": "5600000000005602",
+            "wilson_z": 1.6448536269514722
+          },
+          "summary": {
+            "family_weighted_geometric_mean_ratio": 1,
+            "family_weighted_median_ratio": 1,
+            "independent_families": 64,
+            "losses": 0,
+            "schema": "zero.reasoner5_family_summary.v1",
+            "ties": 64,
+            "wilson_lower": 0,
+            "win_rate": 0,
+            "wins": 0
+          },
+          "units": [
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-0",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-0",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-1",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-1",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-2",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-2",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-3",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-3",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-4",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-4",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-5",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-5",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-6",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-6",
+                "family_id": "program-7"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-0",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-0"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-1",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-1"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-2",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-2"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-3",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-3"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-4",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-4"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-5",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-5"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-6",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-6"
+              },
+              "win": false
+            },
+            {
+              "cross_family_id": "mechanism-7",
+              "family_id": "program-7",
+              "geometric_mean_ratio": 1,
+              "mean_comparator_cost": 2,
+              "mean_full_cost": 2,
+              "mean_log_ratio": 0,
+              "nested_measurements": 2,
+              "tie": true,
+              "unit": {
+                "cross_family_id": "mechanism-7",
+                "family_id": "program-7"
+              },
+              "win": false
+            }
+          ]
+        },
+        "name": "primary-id"
+      }
+    ]
+  },
+  "result_sha256": "5c6ca8ad951666844e5210fcb2f785c4dd9fbfd4b6a7a6e1fe048f2559e6e5bb",
+  "schema": "zero.reasoner5_trace_result.v1",
+  "scientific_decision": null,
+  "sealed_execution_authorized": false,
+  "status": "development-only",
+  "trace_coverage_sha256": "4c613af9c3cef7e3841b4506196981facfa49fa7d6619f1803e9273299109d78",
+  "trace_rows": 5760
+}
