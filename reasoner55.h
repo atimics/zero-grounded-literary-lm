@@ -119,6 +119,8 @@ typedef struct {
     uint32_t target_only_median_cost;
     uint32_t target_only_minimum_cost;
     uint32_t target_only_maximum_cost;
+    uint32_t source_free_selection_pairs;
+    uint8_t strongest_source_free_arm;
     uint8_t artifact_sha256[32];
     uint8_t trace_sha256[32];
     r55_family_receipt family_receipts[R55_TOTAL_FAMILIES];

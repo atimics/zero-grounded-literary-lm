@@ -40,10 +40,14 @@ import {
   R55_DERANGEMENT_NAMESPACE,
   R55_DERANGEMENT_SEED,
   createR55ReplayCache,
+  buildR55AdapterProbes,
   decodeR55Replay,
   expectedObservationQueries,
   parseR55Artifact,
   publicR55Episode,
+  rawLexicalRoles,
+  reconstructR55Adapter,
+  replayR55EpisodeContent,
   replayR55Search,
   sourceArtifactBytesRead,
 } from "./lib/reasoner55_replay.mjs";
@@ -84,23 +88,21 @@ function sameFields(left, right, fields, label) {
   }
 }
 
-const replayedEpisodeContents = new Map();
-
-function replayR55EpisodeContent(recipe) {
-  const key = [recipe.seed_binding.root_seed,
-    ...recipe.seed_binding.derivation_path].join("|");
-  const content = replayedEpisodeContents.get(key);
-  if (content === undefined)
-    throw new Error(`missing R5.5 replay content for ${key}`);
-  return JSON.parse(JSON.stringify(content));
-}
-
 const R55_REPLAY_FUNCTION_SHA256 = replayFunctionDigest(
   replayR55EpisodeContent);
-const R55_GENERATOR_SHA256 = canonicalDigest("generator",
-  "reasoner55-generated-affine-families-v2");
-const R55_INPUT_GENERATOR_SHA256 = canonicalDigest("input-generator",
-  "reasoner55-zero-basis-and-demonstration-v2");
+const R55_GENERATOR_IMPLEMENTATION = Object.freeze({
+  c_core_sha256: sha256(readFileSync(resolve(root, "reasoner55.c"))),
+  replay_adapter_sha256: sha256(readFileSync(resolve(root,
+    "scripts/lib/reasoner55_replay.mjs"))),
+});
+const R55_GENERATOR_SHA256 = canonicalDigest("generator-implementation", {
+  version: "reasoner55-generated-affine-families-v3",
+  ...R55_GENERATOR_IMPLEMENTATION,
+});
+const R55_INPUT_GENERATOR_SHA256 = canonicalDigest("input-generator-implementation", {
+  version: "reasoner55-zero-basis-and-demonstration-v3",
+  ...R55_GENERATOR_IMPLEMENTATION,
+});
 const R55_RANKER_POLICY = Object.freeze({
   schema: "zero.reasoner5_ranker_policy.v1",
   leaf_whitelist: [
@@ -125,7 +127,9 @@ const R55_RANKER_POLICY = Object.freeze({
 const R55_ANALYSIS_SETTINGS = Object.freeze({
   lane: "development",
   cost_field: "primary_cost",
-  family_weighting: "target-family",
+  family_weighting: "target-family-within-fixed-source-to-target-environment",
+  source_free_selection_metric:
+    "environment-and-family-weighted-mean-paired-log-cost",
   intersection_union: {
     alpha: 0.01,
     independent_unit_fields: ["generator_id", "family_id"],
@@ -179,6 +183,17 @@ const R55_ANALYSIS_SETTINGS = Object.freeze({
 });
 
 const R55_UNIT_FIELDS = Object.freeze(["generator_id", "family_id"]);
+const R55_SIMPLE_PRIMARY = Object.freeze({
+  full_arm: "full",
+  comparator_arm: "adapter_only",
+  unit_fields: R55_UNIT_FIELDS,
+  design: "one-way",
+  direction: "lower",
+  replicates: 256,
+  alpha: 0.01,
+  environment_field: "generator_id",
+  seed: R55_ANALYSIS_SETTINGS.intersection_union.simple_effect.primary_seed,
+});
 const R55_OPERATIONAL_PRIMARY = Object.freeze({
   ...R55_ANALYSIS_SETTINGS.intersection_union.operational_comparator,
   seed: R55_ANALYSIS_SETTINGS.intersection_union.operational_comparator
@@ -200,6 +215,36 @@ function crossGeneratorEpisodeIds() {
 }
 
 function primaryStrata(comparison, seeds) {
+  assert.equal(seeds.length, 3, "R5.5 needs three registered strata seeds");
+  return [
+    {
+      ...comparison,
+      name: "target-syntax-first",
+      field: "target_generator_id",
+      values: ["syntax-first"],
+      seed: seeds[0],
+      alpha: 0.05,
+    },
+    {
+      ...comparison,
+      name: "target-skeleton-first",
+      field: "target_generator_id",
+      values: ["skeleton-first"],
+      seed: seeds[1],
+      alpha: 0.05,
+    },
+    {
+      ...comparison,
+      name: "cross-generator",
+      field: "generator_relation",
+      values: ["cross-generator"],
+      seed: seeds[2],
+      alpha: 0.05,
+    },
+  ];
+}
+
+function sharedPrimaryStrata(comparison, seeds) {
   assert.equal(seeds.length, 3, "R5.5 needs three registered strata seeds");
   return [
     {
@@ -229,6 +274,102 @@ function primaryStrata(comparison, seeds) {
   ];
 }
 
+function buildR55AnalysisView(nativeRows, strictRows, nativeRawTraceSha256) {
+  assert.equal(nativeRows.length, 1280,
+    "R5.5 analysis view needs 1,280 native rows");
+  assert.equal(strictRows.length, nativeRows.length,
+    "R5.5 analysis view must map every strict row once");
+  assert.match(nativeRawTraceSha256, /^[0-9a-f]{64}$/u);
+  const replayedNativeBytes = Buffer.from(
+    `${nativeRows.map(row => JSON.stringify(row)).join("\n")}\n`);
+  assert.equal(sha256(replayedNativeBytes), nativeRawTraceSha256,
+    "R5.5 analysis input rows must match the native raw trace bytes");
+  const inputRowIdentities = [];
+  const viewRows = nativeRows.map((nativeRow, index) => {
+    const strictRow = strictRows[index];
+    for (const field of ["episode_id", "family_id", "nested_repeat_id", "arm"])
+      assert.equal(nativeRow[field], strictRow[field],
+        `R5.5 analysis row ${index} changed ${field}`);
+    assert.equal(nativeRow.generator_id, strictRow.generator_id,
+      `R5.5 analysis row ${index} changed target generator`);
+    assert.ok(["syntax-first", "skeleton-first"].includes(
+      nativeRow.source_generator_id),
+    `R5.5 analysis row ${index} has an unknown source generator`);
+    assert.equal(nativeRow.generator_relation,
+      nativeRow.source_generator_id === nativeRow.generator_id ?
+        "same-generator" : "cross-generator",
+    `R5.5 analysis row ${index} changed generator relation`);
+    assert.ok(nativeRow.episode_id.startsWith(
+      `${nativeRow.source_generator_id}-to-${nativeRow.generator_id}-`),
+    `R5.5 analysis row ${index} changed source or target identity`);
+    const inputIdentity = canonicalDigest("reasoner55-native-trace-row",
+      nativeRow);
+    inputRowIdentities.push(inputIdentity);
+    return {
+      ...strictRow,
+      source_generator_id: nativeRow.source_generator_id,
+      target_generator_id: nativeRow.generator_id,
+      generator_relation: nativeRow.generator_relation,
+      generator_id:
+        `${nativeRow.source_generator_id}->${nativeRow.generator_id}`,
+      input_row_index: index,
+      input_row_identity_sha256: inputIdentity,
+    };
+  });
+  const environments = new Set(viewRows.map(row => row.generator_id));
+  assert.equal(new Set(inputRowIdentities).size, inputRowIdentities.length,
+    "R5.5 analysis needs one unique identity for every native row");
+  const units = new Map();
+  for (const row of viewRows) {
+    const key = `${row.generator_id}\0${row.family_id}`;
+    const unit = units.get(key) ?? { repeats: new Set(), rows: 0 };
+    unit.repeats.add(row.nested_repeat_id);
+    unit.rows += 1;
+    units.set(key, unit);
+  }
+  assert.equal(environments.size, 4,
+    "R5.5 analysis needs four fixed source-to-target environments");
+  assert.equal(units.size, 16,
+    "R5.5 analysis needs 16 environment-family units");
+  for (const unit of units.values()) {
+    assert.equal(unit.repeats.size, 2,
+      "R5.5 analysis units need two nested tie repeats");
+    assert.equal(unit.rows, 80,
+      "R5.5 analysis units need two repeats by 40 arms");
+  }
+  const body = {
+    schema: "zero.reasoner55_analysis_view_receipt.v1",
+    input_rows: nativeRows.length,
+    output_rows: viewRows.length,
+    native_raw_trace_sha256: nativeRawTraceSha256,
+    transform_function_sha256: R55_ANALYSIS_VIEW_TRANSFORM_SHA256,
+    input_row_identity_sha256: inputRowIdentities,
+    analysis_view_sha256: canonicalDigest("reasoner55-analysis-view", viewRows),
+    independent_environment_family_units: units.size,
+    nested_tie_repeats_per_unit: 2,
+    fixed_source_to_target_environments: [...environments].sort(),
+  };
+  return {
+    rows: viewRows,
+    receipt: {
+      ...body,
+      receipt_sha256: canonicalDigest("reasoner55-analysis-view-receipt", body),
+    },
+  };
+}
+
+const R55_ANALYSIS_VIEW_TRANSFORM_SHA256 = analysisFunctionDigest(
+  buildR55AnalysisView);
+
+function assertR55AnalysisView(nativeRows, strictRows, nativeRawTraceSha256,
+  analysisView) {
+  const replayed = buildR55AnalysisView(nativeRows, strictRows,
+    nativeRawTraceSha256);
+  assert.deepEqual(analysisView, replayed,
+    "R5.5 analysis view differs from its deterministic transform");
+  return true;
+}
+
 function comparisonRows(rawTraces, comparison) {
   if (comparison.field === undefined) return rawTraces;
   const values = new Set(comparison.values);
@@ -250,6 +391,78 @@ function comparisonInference(rawTraces, comparison) {
     alpha: comparison.alpha,
     environmentField: comparison.environment_field,
   });
+}
+
+function sourceFreeSelectionReceipt(analysisRows) {
+  const units = aggregateNestedFamilies(analysisRows, {
+    fullArm: "source_free_jit",
+    comparatorArm: "target_only",
+    unitFields: R55_UNIT_FIELDS,
+    costField: "primary_cost",
+  });
+  assert.equal(units.length, 16,
+    "source-free selection needs every environment-family unit");
+  const meanLogRatio = units.reduce((sum, unit) =>
+    sum + unit.mean_log_ratio, 0) / units.length;
+  const selectedArm = meanLogRatio < 0 ? "source_free_jit" : "target_only";
+  const body = {
+    schema: "zero.reasoner55_source_free_selection.v1",
+    candidates: ["target_only", "source_free_jit"],
+    metric: "environment-and-family-weighted-mean-paired-log-cost",
+    independent_environment_family_units: units.length,
+    nested_tie_repeats_per_unit: 2,
+    source_free_jit_to_target_only_log_ratio: meanLogRatio,
+    source_free_jit_to_target_only_ratio: Math.exp(meanLogRatio),
+    selected_arm: selectedArm,
+  };
+  return {
+    ...body,
+    receipt_sha256: canonicalDigest("reasoner55-source-free-selection", body),
+  };
+}
+
+function adapterAggregateReceipt(families) {
+  const receipts = [...families.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([familyId, family]) => reconstructR55Adapter(family, undefined,
+      familyId));
+  const body = {
+    schema: "zero.reasoner55_adapter_aggregate.v1",
+    families: receipts.length,
+    probe_queries: receipts.reduce((sum, item) => sum + item.probe_queries, 0),
+    domain_checks: receipts.reduce((sum, item) => sum + item.domain_checks, 0),
+    all_coefficients_exact: receipts.every(item => item.coefficients_exact),
+    all_roles_exact: receipts.every(item => item.roles_exact),
+    all_exact: receipts.every(item => item.exact),
+    family_receipts: receipts,
+  };
+  return {
+    ...body,
+    receipt_sha256: canonicalDigest("reasoner55-adapter-aggregate", body),
+  };
+}
+
+function absoluteArmStatistic(analysisRows, arm) {
+  const grouped = new Map();
+  for (const row of analysisRows.filter(item => item.arm === arm)) {
+    const key = `${row.generator_id}\0${row.family_id}`;
+    const values = grouped.get(key) ?? [];
+    values.push(Math.log(row.primary_cost + 1));
+    grouped.set(key, values);
+  }
+  assert.equal(grouped.size, 16,
+    `${arm} derangement statistic needs 16 independent units`);
+  const means = [...grouped.values()].map(values =>
+    values.reduce((sum, value) => sum + value, 0) / values.length);
+  return means.reduce((sum, value) => sum + value, 0) / means.length;
+}
+
+function derangementAnalysis(analysisRows) {
+  return {
+    observed: absoluteArmStatistic(analysisRows, "full"),
+    values: expectedArms.filter(arm => arm.startsWith("shuffled_"))
+      .map(arm => absoluteArmStatistic(analysisRows, arm)),
+  };
 }
 
 function operationalAnalysis(rawTraces) {
@@ -289,7 +502,7 @@ function reconstructR55Development(rawTraces) {
     status: "development-only",
     execution_authorized: false,
     arm_totals: arms,
-    operational_comparator: operationalAnalysis(rawTraces),
+    analysis_scope: "strict trace replay; R5.5 scientific view is separately bound",
   };
 }
 
@@ -387,16 +600,23 @@ check(result.fixture_qualification.target_only_headroom === headroomPass &&
   result.fixture_qualification.decision === (headroomPass ? "pass" : "no-go"),
 "fixture qualification must derive from the registered headroom range");
 const strongestSourceFree =
-  result.development_selection.target_only_primary_cost <=
-    result.development_selection.source_free_jit_primary_cost ?
-    "target_only" : "source_free_jit";
-check(result.development_selection.strongest_source_free_arm ===
-  strongestSourceFree &&
+  result.development_selection.strongest_source_free_arm;
+check(["target_only", "source_free_jit"].includes(strongestSourceFree) &&
+  result.development_selection.metric ===
+    R55_ANALYSIS_SETTINGS.source_free_selection_metric &&
+  result.development_selection.independent_environment_family_units === 16 &&
+  result.development_selection.nested_tie_repeats_per_unit === 2 &&
+  result.development_selection.paired_episode_measurements === 32 &&
   contract.development_selection.strongest_source_free_arm ===
-    strongestSourceFree,
-"development must freeze the measured strongest source-free comparator");
+    strongestSourceFree &&
+  contract.development_selection.selection_metric ===
+    R55_ANALYSIS_SETTINGS.source_free_selection_metric,
+"development must freeze one registered source-free comparator");
 check(contract.registered_analysis.primary_error_rule ===
     "intersection-union at one-sided alpha 0.01" &&
+  contract.registered_analysis.independent_unit ===
+    "target family within each fixed source-to-target generator environment" &&
+  contract.registered_analysis.exact_adapter_required === true &&
   contract.registered_analysis.simple_effect.full_arm === "full" &&
   contract.registered_analysis.simple_effect.comparator_arm ===
     "adapter_only" &&
@@ -412,6 +632,19 @@ check(contract.registered_analysis.primary_error_rule ===
   contract.registered_analysis.target_only_role ===
     "registered fixture headroom only",
 "registered intersection-union contract changed");
+check(contract.raw_lexical_control.mapping ===
+    "rank each public 32-bit surface label among the eight labels" &&
+  contract.raw_lexical_control.properties ===
+    "one-to-one, label-only, independent of hidden semantic roles",
+"registered raw lexical control changed");
+check(contract.shared_replay.scientific_analysis_view.native_rows === 1280 &&
+  contract.shared_replay.scientific_analysis_view
+    .independent_environment_family_units === 16 &&
+  contract.shared_replay.scientific_analysis_view
+    .nested_tie_repeats_per_unit === 2 &&
+  contract.shared_replay.scientific_analysis_view
+    .fixed_source_to_target_environments === 4,
+"registered R5.5 scientific analysis view changed");
 check(result.family_selection_rule ===
   contract.development_selection.family_headroom_rule,
 "development family headroom rule changed");
@@ -475,7 +708,8 @@ const equalityFields = [
   "exact", "certificate_valid", "premature_commit", "primary_cost",
   "verifier_checks", "partial_expansions",
   "verifier_domain_points", "fallback_started", "fallback_work_counted",
-  "global_cap_hit", "injected_invalid", "injected_invalid_rejected",
+  "global_cap_hit", "fallback_exhausted", "censoring_reason",
+  "injected_invalid", "injected_invalid_rejected",
   "injected_counterexample_index", "source_artifact_reads",
   "accepted_semantic_sha256", "proposal_order_sha256",
 ];
@@ -517,6 +751,8 @@ for (const [index, row] of rows.entries()) {
   check(row.verifier_domain_points === 125, `${label}: verifier domain`);
   check(row.fallback_work_counted === true, `${label}: fallback accounting`);
   check(row.global_cap_hit === false, `${label}: unexpected cap hit`);
+  check(row.fallback_exhausted === false && row.censoring_reason === null,
+    `${label}: unexpected fallback exhaustion`);
   check(row.primary_cost === row.verifier_checks,
     `${label}: primary cost accounting`);
   check(row.injected_invalid === true && row.injected_invalid_rejected === true,
@@ -708,7 +944,7 @@ function analysisContract() {
     },
     trace_schema: "zero.reasoner5_trace_row.v1",
     primary_analysis: comparison,
-    stratum_analyses: primaryStrata(comparison,
+    stratum_analyses: sharedPrimaryStrata(comparison,
       R55_ANALYSIS_SETTINGS.intersection_union.simple_effect.stratum_seeds),
     mechanism_analyses: [{
       ...comparison,
@@ -749,10 +985,68 @@ function analysisContract() {
   };
 }
 
-function operationalCommonGate(commonResult, rawTraces, registration) {
-  const operational = commonResult.operational_comparator;
-  check(operational.arm === "source_free_jit",
-    "operational comparator must stay frozen to source_free_jit");
+function scientificAnalysis(analysisRows) {
+  const simple = {
+    primary: comparisonInference(analysisRows, R55_SIMPLE_PRIMARY),
+    strata: primaryStrata(R55_SIMPLE_PRIMARY,
+      R55_ANALYSIS_SETTINGS.intersection_union.simple_effect.stratum_seeds)
+      .map(analysis => ({
+        name: analysis.name,
+        inference: comparisonInference(analysisRows, analysis),
+      })),
+  };
+  const operational = operationalAnalysis(analysisRows);
+  const mechanismComparison = {
+    ...R55_SIMPLE_PRIMARY,
+    full_arm: "raw_lexical",
+    comparator_arm: "full",
+    direction: "higher",
+    seed: R55_ANALYSIS_SETTINGS.intersection_union.formal_mechanism.seed,
+    alpha: R55_ANALYSIS_SETTINGS.intersection_union.formal_mechanism.alpha,
+  };
+  const mechanisms = [{
+    name: "raw-lexical-guide",
+    inference: comparisonInference(analysisRows, mechanismComparison),
+  }];
+  const factorialUnits = factorialInteractionFamilies(analysisRows, {
+    adapterGuideArm: "full",
+    adapterOnlyArm: "adapter_only",
+    guideOnlyArm: "raw_lexical",
+    rawArm: "target_only",
+    unitFields: R55_UNIT_FIELDS,
+    costField: "primary_cost",
+  });
+  const factorial = familyInferenceReceipt(factorialUnits, {
+    design: "one-way",
+    direction: "lower",
+    seed: R55_ANALYSIS_SETTINGS.intersection_union.factorial_interaction.seed,
+    replicates: 256,
+    alpha: 0.01,
+    environmentField: "generator_id",
+  });
+  const targetCosts = analysisRows.filter(row => row.arm === "target_only")
+    .map(row => row.primary_cost).sort((left, right) => left - right);
+  const middle = Math.floor(targetCosts.length / 2);
+  const headroomMedian = targetCosts.length % 2 ? targetCosts[middle] :
+    (targetCosts[middle - 1] + targetCosts[middle]) / 2;
+  return {
+    simple,
+    operational,
+    mechanisms,
+    factorial,
+    derangement: derangementAnalysis(analysisRows),
+    headroom: {
+      comparator_arm: "target_only",
+      median_primary_cost: headroomMedian,
+      registered_minimum:
+        contract.development_gates.target_only_median_minimum,
+      measurement_floor: headroomMedian <
+        contract.development_gates.target_only_median_minimum,
+    },
+  };
+}
+
+function r55CommonGate(commonResult, rawTraces, registration, analysis) {
   return reconstructCommonGate({
     integrity_valid: commonResult.integrity.manifest_digest_valid &&
       commonResult.integrity.trace_contract_valid,
@@ -761,23 +1055,23 @@ function operationalCommonGate(commonResult, rawTraces, registration) {
       ...commonResult.exactness,
       fallback_receipts: rawTraces.map(row => row.fallback_receipt),
     },
-    measurement_floor:
-      commonResult.registered_analysis.headroom.measurement_floor,
-    primary: { inference: operational.primary },
-    strata: operational.strata,
-    mechanisms: commonResult.registered_analysis.mechanisms,
-    derangement: commonResult.registered_analysis.derangement,
+    measurement_floor: analysis.headroom.measurement_floor,
+    primary: { inference: analysis.primary },
+    strata: analysis.strata,
+    mechanisms: analysis.mechanisms,
+    derangement: analysis.derangement,
     source_ablation_matches_source_free:
       commonResult.registered_analysis.source_ablation.matches,
     factorial: {
-      inference: commonResult.registered_analysis.factorial,
+      inference: analysis.factorial,
     },
   });
 }
 
 function intersectionUnionGate(simpleGate, operationalGate,
-  factorialInteraction) {
+  factorialInteraction, adapterReceipt) {
   const checks = {
+    adapter_exact: adapterReceipt?.all_exact === true,
     simple_effect_common_gate: simpleGate.passed === true,
     operational_comparator_common_gate: operationalGate.passed === true,
     negative_factorial_interaction: factorialInteraction === true,
@@ -785,7 +1079,8 @@ function intersectionUnionGate(simpleGate, operationalGate,
   const failures = Object.entries(checks)
     .filter(([, passed]) => !passed).map(([name]) => name);
   const invalid = [simpleGate, operationalGate]
-    .some(gate => gate.decision === "invalid-run");
+    .some(gate => gate.decision === "invalid-run") ||
+    adapterReceipt?.all_exact !== true;
   const measurementFloor = [simpleGate, operationalGate]
     .some(gate => gate.decision === "measurement-floor");
   const decision = invalid ? "invalid-run" : measurementFloor ?
@@ -793,7 +1088,7 @@ function intersectionUnionGate(simpleGate, operationalGate,
   const body = {
     schema: "zero.reasoner55_intersection_union_gate.v1",
     alpha: 0.01,
-    rule: "simple-effect common gate AND operational-comparator common gate AND negative factorial upper limit",
+    rule: "exact adapter AND simple-effect common gate AND operational-comparator common gate AND negative factorial upper limit",
     checks,
     failures,
     decision,
@@ -805,32 +1100,53 @@ function intersectionUnionGate(simpleGate, operationalGate,
   };
 }
 
-function buildR55AnalysisRecord(commonResult, rawTraces, registration) {
-  const operationalGate = operationalCommonGate(commonResult, rawTraces,
-    registration);
-  const factorial = commonResult.registered_analysis.factorial;
+function buildR55AnalysisRecord(commonResult, rawTraces, nativeRows,
+  nativeRawTraceSha256, familyCache, registration, nativeResultSha256) {
+  const analysisView = buildR55AnalysisView(nativeRows, rawTraces,
+    nativeRawTraceSha256);
+  const adapterReceipt = adapterAggregateReceipt(familyCache);
+  const selectionReceipt = sourceFreeSelectionReceipt(analysisView.rows);
+  const analysis = scientificAnalysis(analysisView.rows);
+  const simpleGate = r55CommonGate(commonResult, rawTraces, registration, {
+    primary: analysis.simple.primary,
+    strata: analysis.simple.strata,
+    mechanisms: analysis.mechanisms,
+    factorial: analysis.factorial,
+    derangement: analysis.derangement,
+    headroom: analysis.headroom,
+  });
+  const operationalGate = r55CommonGate(commonResult, rawTraces, registration, {
+    primary: analysis.operational.primary,
+    strata: analysis.operational.strata,
+    mechanisms: analysis.mechanisms,
+    factorial: analysis.factorial,
+    derangement: analysis.derangement,
+    headroom: analysis.headroom,
+  });
+  const factorial = analysis.factorial;
   const factorialPass = factorial.interval.upper_log_ratio < 0;
-  check(commonResult.gate.checks.factorial_interaction === factorialPass,
-    "shared factorial gate and registered receipt differ");
-  const gate = intersectionUnionGate(commonResult.gate, operationalGate,
-    factorialPass);
+  const gate = intersectionUnionGate(simpleGate, operationalGate,
+    factorialPass, adapterReceipt);
   const body = {
     schema: "zero.reasoner55_development_analysis.v1",
     experiment: commonResult.experiment,
     status: "development-only",
     execution_authorized: false,
+    adapter: adapterReceipt,
+    analysis_view: analysisView.receipt,
+    source_free_selection: selectionReceipt,
     simple_effect: {
       full_arm: "full",
       comparator_arm: "adapter_only",
-      primary: commonResult.registered_analysis.primary,
-      strata: commonResult.registered_analysis.strata,
-      common_gate: commonResult.gate,
+      primary: analysis.simple.primary,
+      strata: analysis.simple.strata,
+      common_gate: simpleGate,
     },
     operational_comparator: {
       full_arm: "full",
       comparator_arm: "source_free_jit",
-      primary: commonResult.operational_comparator.primary,
-      strata: commonResult.operational_comparator.strata,
+      primary: analysis.operational.primary,
+      strata: analysis.operational.strata,
       common_gate: operationalGate,
     },
     factorial_interaction: {
@@ -838,16 +1154,24 @@ function buildR55AnalysisRecord(commonResult, rawTraces, registration) {
       inference: factorial,
       upper_log_ratio_below_zero: factorialPass,
     },
-    formal_mechanisms: commonResult.registered_analysis.mechanisms,
-    target_only_headroom: commonResult.registered_analysis.headroom,
+    formal_mechanisms: analysis.mechanisms,
+    target_only_headroom: analysis.headroom,
     intersection_union_gate: gate,
     provenance: {
       common_result_sha256: commonResult.result_sha256,
+      native_result_sha256: nativeResultSha256,
+      native_raw_trace_sha256:
+        analysisView.receipt.native_raw_trace_sha256,
+      source_artifact_sha256: result.artifact_sha256,
       manifest_sha256: commonResult.manifest_sha256,
       raw_trace_sha256: commonResult.raw_trace_sha256,
       trace_coverage_sha256: commonResult.trace_coverage_sha256,
       analysis_settings_sha256: commonResult.analysis_settings_sha256,
       analysis_function_sha256: commonResult.analysis_function_sha256,
+      analysis_view_transform_sha256:
+        analysisView.receipt.transform_function_sha256,
+      r55_analysis_function_sha256: analysisFunctionDigest(
+        buildR55AnalysisRecord),
     },
   };
   return {
@@ -858,16 +1182,22 @@ function buildR55AnalysisRecord(commonResult, rawTraces, registration) {
 
 assert.equal(intersectionUnionGate(
   { passed: true, decision: "pass" },
-  { passed: true, decision: "pass" }, true).decision, "pass");
+  { passed: true, decision: "pass" }, true,
+  { all_exact: true }).decision, "pass");
 for (const [simple, operational, factorial] of [
   [false, true, true], [true, false, true], [true, true, false],
 ]) {
   assert.equal(intersectionUnionGate(
     { passed: simple, decision: simple ? "pass" : "no-go" },
     { passed: operational, decision: operational ? "pass" : "no-go" },
-    factorial).decision, "no-go",
+    factorial, { all_exact: true }).decision, "no-go",
   "every intersection-union component must fail closed");
 }
+assert.equal(intersectionUnionGate(
+  { passed: true, decision: "pass" },
+  { passed: true, decision: "pass" }, true,
+  { all_exact: false }).decision, "invalid-run",
+"an inexact adapter must invalidate the intersection-union result");
 
 function buildSharedManifestAndTraces() {
   const state = createSplitState({ experiment_id: result.experiment });
@@ -926,10 +1256,8 @@ function buildSharedManifestAndTraces() {
       parityCache.set(first.family_id, parity);
     }
     const rootSeed = family.familySeed.toString(16).padStart(16, "0");
-    const derivationPath = [first.source_generator_id,
-      Number(first.nested_repeat_id.slice(4))];
-    replayedEpisodeContents.set([rootSeed, ...derivationPath].join("|"),
-      parity.content);
+    const derivationPath = [first.generator_id, decoded.ordinal,
+      first.source_generator_id, Number(first.nested_repeat_id.slice(4))];
     const recipe = {
       schema: "zero.reasoner5_replay_recipe.v1",
       generator_sha256: R55_GENERATOR_SHA256,
@@ -1033,7 +1361,7 @@ function buildSharedManifestAndTraces() {
       fallback_receipt: search.fallback_receipt,
     });
   }
-  return { manifest, normalized };
+  return { manifest, normalized, familyCache };
 }
 
 const artifactGuides = parseR55Artifact(artifact);
@@ -1088,6 +1416,19 @@ assert.throws(() => assertRankerView({
   whitelist: R55_RANKER_POLICY.leaf_whitelist,
   leafContracts: R55_RANKER_POLICY.leaf_contracts,
 }), /complete registered schema/u);
+for (const hiddenField of ["target", "surface_to_role", "family_seed",
+  "atoms", "typed_subtrees"]) {
+  assert.throws(() => assertRankerView({
+    primitive_labels: ["p0"],
+    observations: [{ input: [0, 0, 0], observed: [0, 0, 0],
+      [hiddenField]: 1 }],
+    allowed_actions: [{ kind: "propose-four-symbol-program" }],
+  }, {
+    whitelist: R55_RANKER_POLICY.leaf_whitelist,
+    leafContracts: R55_RANKER_POLICY.leaf_contracts,
+  }), /complete registered schema|outside the registered schema|evaluator field/u,
+  `ranker view leaked hidden field ${hiddenField}`);
+}
 
 const censorUniverse = Object.freeze([0, 1, 2].map(value =>
   Object.freeze({ semantic: value, ast: value, partial_expansions: 1 })));
@@ -1144,17 +1485,131 @@ check(commonReplay.result_sha256 === commonResult.result_sha256 &&
   commonResult.integrity.manifest_digest_valid &&
   commonResult.integrity.trace_contract_valid,
 "common result must replay from strict raw traces");
+const analysisView = buildR55AnalysisView(rows, shared.normalized,
+  result.raw_trace_sha256);
+assertR55AnalysisView(rows, shared.normalized, result.raw_trace_sha256,
+  analysisView);
+const tamperedSourceRows = structuredClone(rows);
+tamperedSourceRows[0].source_generator_id =
+  tamperedSourceRows[0].source_generator_id === "syntax-first" ?
+    "skeleton-first" : "syntax-first";
+assert.throws(() => buildR55AnalysisView(tamperedSourceRows,
+  shared.normalized, result.raw_trace_sha256), /native raw trace bytes/u);
+const tamperedTargetRows = structuredClone(rows);
+tamperedTargetRows[0].generator_id =
+  tamperedTargetRows[0].generator_id === "syntax-first" ?
+    "skeleton-first" : "syntax-first";
+assert.throws(() => buildR55AnalysisView(tamperedTargetRows,
+  shared.normalized, result.raw_trace_sha256), /native raw trace bytes/u);
+const tamperedEnvironmentView = structuredClone(analysisView);
+tamperedEnvironmentView.rows[0].generator_id = "forged->environment";
+assert.throws(() => assertR55AnalysisView(rows, shared.normalized,
+  result.raw_trace_sha256, tamperedEnvironmentView),
+/deterministic transform/u);
+const tamperedIdentityView = structuredClone(analysisView);
+tamperedIdentityView.rows[0].input_row_identity_sha256 = "0".repeat(64);
+assert.throws(() => assertR55AnalysisView(rows, shared.normalized,
+  result.raw_trace_sha256, tamperedIdentityView), /deterministic transform/u);
+
+for (const [familyId, family] of shared.familyCache) {
+  const lexical = rawLexicalRoles(family);
+  check(new Set(lexical).size === 8,
+    `${familyId}: raw lexical guide must preserve eight public labels`);
+  const hiddenRoleTamper = structuredClone(family);
+  hiddenRoleTamper.surfaceToRole.reverse();
+  assert.deepEqual(rawLexicalRoles(hiddenRoleTamper), lexical,
+    `${familyId}: raw lexical mapping read a hidden semantic role`);
+}
+const adapterProbeFamily = shared.familyCache.values().next().value;
+const adapterProbes = buildR55AdapterProbes(adapterProbeFamily);
+check(reconstructR55Adapter(adapterProbeFamily, adapterProbes).exact,
+  "adapter reconstruction must derive from public probe responses");
+const tamperedProbes = structuredClone(adapterProbes);
+tamperedProbes[0].queries[0].observed[0] =
+  (tamperedProbes[0].queries[0].observed[0] + 1) % 5;
+check(!reconstructR55Adapter(adapterProbeFamily, tamperedProbes).exact,
+  "adapter receipt must reject a changed public probe response");
+const tamperedHiddenFamily = structuredClone(adapterProbeFamily);
+tamperedHiddenFamily.primitiveByRole[0].bias[0] =
+  (tamperedHiddenFamily.primitiveByRole[0].bias[0] + 1) % 5;
+check(!reconstructR55Adapter(tamperedHiddenFamily, adapterProbes).exact,
+  "adapter receipt must reject changed hidden generator coefficients");
+
+const sourceOnlyRow = rows.find(row => row.arm === "source_only");
+const sourceOnlyFamily = decodeR55Replay(sourceOnlyRow);
+const sourceOnlyPublicPrimitives = sourceOnlyFamily.surfaceToRole.map(role =>
+  structuredClone(sourceOnlyFamily.primitiveByRole[role]));
+const sourceOnlyHiddenTamper = structuredClone(sourceOnlyFamily);
+sourceOnlyHiddenTamper.surfaceToRole.reverse();
+sourceOnlyHiddenTamper.primitiveByRole = Array(8);
+sourceOnlyHiddenTamper.surfaceToRole.forEach((role, slot) => {
+  sourceOnlyHiddenTamper.primitiveByRole[role] =
+    sourceOnlyPublicPrimitives[slot];
+});
+replayR55Search(sourceOnlyRow, sourceOnlyHiddenTamper,
+  artifactGuides[sourceOnlyHiddenTamper.sourceGenerator],
+  createR55ReplayCache());
+
+const fullRow = rows.find(row => row.arm === "full");
+const oracleRow = rows.find(row => row.episode_id === fullRow.episode_id &&
+  row.arm === "oracle_adapter");
+const oracleFamily = decodeR55Replay(oracleRow);
+replayR55Search(oracleRow, oracleFamily,
+  artifactGuides[oracleFamily.sourceGenerator], createR55ReplayCache(),
+  { adapterProbes: [] });
+assert.throws(() => replayR55Search(fullRow, decodeR55Replay(fullRow),
+  artifactGuides[oracleFamily.sourceGenerator], createR55ReplayCache(),
+  { adapterProbes: [] }),
+"full must use the reconstructed adapter while oracle bypasses it");
+for (const arm of ["target_only", "raw_lexical", "frequency_lexical",
+  "source_only", "oracle_adapter"]) {
+  const adapterFreeRow = rows.find(row => row.episode_id ===
+    fullRow.episode_id && row.arm === arm);
+  const adapterFreeFamily = decodeR55Replay(adapterFreeRow);
+  replayR55Search(adapterFreeRow, adapterFreeFamily,
+    artifactGuides[adapterFreeFamily.sourceGenerator],
+    createR55ReplayCache(), { adapterProbes: [] });
+}
+
+const nativeResultSha256 = sha256(resultBytes);
 const r55Analysis = buildR55AnalysisRecord(commonResult, shared.normalized,
-  shared.manifest.analysis_contract.common_gate_registration);
+  rows, result.raw_trace_sha256, shared.familyCache,
+  shared.manifest.analysis_contract.common_gate_registration,
+  nativeResultSha256);
 const replayedR55Analysis = buildR55AnalysisRecord(commonResult,
-  shared.normalized,
-  shared.manifest.analysis_contract.common_gate_registration);
+  shared.normalized, rows, result.raw_trace_sha256, shared.familyCache,
+  shared.manifest.analysis_contract.common_gate_registration,
+  nativeResultSha256);
 assert.deepEqual(replayedR55Analysis, r55Analysis,
   "R5.5 intersection-union analysis must replay exactly");
+check(r55Analysis.source_free_selection.selected_arm ===
+    result.development_selection.strongest_source_free_arm &&
+  r55Analysis.source_free_selection.selected_arm ===
+    contract.development_selection.strongest_source_free_arm &&
+  r55Analysis.source_free_selection.independent_environment_family_units ===
+    16,
+"strongest source-free comparator must derive from the bound analysis view");
 check(r55Analysis.operational_comparator.comparator_arm ===
     contract.development_selection.strongest_source_free_arm &&
   r55Analysis.simple_effect.comparator_arm === "adapter_only",
 "registered intersection-union comparators changed");
+for (const inference of [r55Analysis.simple_effect.primary,
+  r55Analysis.operational_comparator.primary,
+  r55Analysis.factorial_interaction.inference,
+  r55Analysis.formal_mechanisms[0].inference]) {
+  check(inference.summary.independent_families === 16 &&
+    inference.interval.independent_units === 16 &&
+    inference.interval.fixed_environments === 4,
+  "primary R5.5 inference must keep 16 units in four fixed environments");
+}
+for (const analysis of [r55Analysis.simple_effect,
+  r55Analysis.operational_comparator]) {
+  check(analysis.strata.length === 3 &&
+    analysis.strata.every(stratum =>
+      stratum.inference.summary.independent_families === 8 &&
+      stratum.inference.interval.fixed_environments === 2),
+  "each R5.5 shift stratum must keep both registered environments");
+}
 check(r55Analysis.factorial_interaction.upper_log_ratio_below_zero ===
     r55Analysis.intersection_union_gate.checks
       .negative_factorial_interaction,
@@ -1175,7 +1630,14 @@ if (!writeAnalysis) {
     contract.shared_replay.coverage_sha256 === coverage.coverage_sha256 &&
     contract.shared_replay.common_result_sha256 === commonResult.result_sha256 &&
     contract.shared_replay.intersection_union_analysis_sha256 ===
-      r55Analysis.analysis_sha256,
+      r55Analysis.analysis_sha256 &&
+    contract.shared_replay.scientific_analysis_view
+      .transform_function_sha256 ===
+      r55Analysis.analysis_view.transform_function_sha256 &&
+    contract.shared_replay.scientific_analysis_view.analysis_view_sha256 ===
+      r55Analysis.analysis_view.analysis_view_sha256 &&
+    contract.shared_replay.scientific_analysis_view.receipt_sha256 ===
+      r55Analysis.analysis_view.receipt_sha256,
   "contract shared replay receipt changed");
 }
 const normalizedByEpisode = new Map();

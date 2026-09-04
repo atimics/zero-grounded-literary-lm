@@ -9,7 +9,7 @@ calibration and sealed lanes.
 
 ## Domain
 
-Each task uses three-value vectors over GF(5). The eight target primitives are
+Each task uses three-lane vectors over GF(5). The eight target primitives are
 fresh affine maps with these semantic roles:
 
 - axis and dense translations;
@@ -61,7 +61,7 @@ family state, and exact-test values stay in the evaluator view.
 The source artifact stores integer position counts and adjacent-role counts
 from canonical exact source solutions. It has a canonical 1,823-byte encoding.
 Its SHA-256 is
-`0f1f7b4f76a57328c717a3cbc552c5aebf76bfbadf0d7e493f03c628e8edfb14`.
+`a7b0caee7dcf4291828551baab8dcff2b63871e1bf075cd6296d4705b794ff32`.
 
 ## Arms
 
@@ -77,25 +77,31 @@ source-free just-in-time guide, its byte-for-byte source ablation path, a
 source-only guide, and 31 fixed role derangements.
 
 The registered decision is an intersection-union gate at one-sided alpha
-0.01. It requires all three of these results:
+0.01. It requires all four of these results:
 
-1. `full` passes the common gate against `adapter_only`.
-2. `full` passes the common gate against the frozen strongest source-free
+1. Every adapter reconstruction is exact.
+2. `full` passes the common gate against `adapter_only`.
+3. `full` passes the common gate against the frozen strongest source-free
    comparator, `source_free_jit`.
-3. The upper confidence limit for the adapter-by-guide log interaction is
+4. The upper confidence limit for the adapter-by-guide log interaction is
    below zero.
 
 `target_only` remains the registered headroom arm. It is also the off/off cell
-of the factorial. The raw lexical guide is the formal mechanism contrast.
-The common gates cover both target generators and the fixed cross-generator
-stratum.
+of the factorial. The raw lexical guide ranks the eight public surface labels.
+This gives each label one unique rank. It never reads a hidden semantic role.
+The raw lexical guide is the formal mechanism contrast. The common gates cover
+both target generators and the fixed cross-generator stratum.
 
 Every arm receives the same candidate multiset, evidence, allowed actions,
 latent task, potential responses, verifier, and caps. Canonical fallback order
 comes from the shared Reasoner 5 harness. Each raw row carries a source artifact
-digest and a hash-bound 190-byte replay preimage. The checker uses these bytes
-to rebuild all 4,096 candidates, every rank, and every 125-point verifier
-decision. It then converts every row to the strict shared trace schema.
+digest and a hash-bound 190-byte replay preimage. Manifest replay regenerates
+each family from its seed and the frozen generator logic. The checker rebuilds
+all 4,096 candidates, every rank, and every 125-point verifier decision. It
+then converts every row to the strict shared trace schema. A deterministic
+one-to-one view restores the source-to-target environment for scientific
+analysis. The view binds the native trace hash, its transform function, and an
+identity digest for each of the 1,280 input rows.
 
 The 31 role derangements come from a registered uniform Fisher-Yates sampler.
 Fixed-point and duplicate draws are rejected. Their shared canonical digest is
@@ -103,17 +109,19 @@ Fixed-point and duplicate draws are rejected. Their shared canonical digest is
 
 ## Development fixture
 
-The checked-in fixture has 1,280 raw arm rows. Its target-only median is 18
+The checked-in fixture has 1,280 raw arm rows. Its target-only median is 19
 checks, inside the registered 16-to-64 development range. This qualifies the
 fixture for analysis. The development lane selects `source_free_jit` as the
-stronger source-free comparator.
+stronger source-free comparator. Selection uses paired log cost over the 16
+fixed source-to-target environment-family units.
 
 The registered development analysis is a no-go. The full-to-adapter-only
-family-weighted cost ratio is 0.8551 with an upper limit of 1.2208. The
-full-to-`source_free_jit` ratio is 0.9901 with an upper limit of 1.9148. The
-factorial interaction is -0.0508 with an upper limit of 0.3952. The raw lexical
-mechanism ratio is 1.0521 with a lower limit of 0.7692. The result keeps the
-scientific gate closed while preserving the valid development measurements.
+family-weighted cost ratio is 0.7034 with an upper limit of 0.9898. The
+full-to-`source_free_jit` ratio is 1.1654 with an upper limit of 1.8793. The
+factorial interaction is 0.1963 with an upper limit of 0.7111. The raw lexical
+mechanism ratio is 0.8218 with a lower limit of 0.5932. The exact adapter gate
+passes on all eight families. The result keeps the scientific gate closed
+while preserving the valid development measurements.
 
 Observation queries and candidate expansions are logical work counters.
 Source artifact access counts the canonical guide bytes made available to an
@@ -131,9 +139,10 @@ make reasoner55-check
 
 The checker replays every aggregate from raw rows, confirms arm parity,
 validates artifact and trace hashes, verifies nested family structure, and
-compares a fresh deterministic run with the checked-in files. It also rebuilds
-both common gates from strict shared rows. It then rebuilds the complete
-intersection-union result from the raw traces.
+compares a fresh deterministic run with the checked-in files. It rebuilds both
+common gates from the bound source-to-target analysis view. The strict shared
+rows supply exactness and replay receipts. The checker then rebuilds the
+complete intersection-union result from the raw traces.
 
 See the [development record](../benchmarks/reasoner55-generated-primitive-transfer-v1/DEVELOPMENT.md),
 the [development analysis](../benchmarks/reasoner55-generated-primitive-transfer-v1/DEVELOPMENT-ANALYSIS.json),

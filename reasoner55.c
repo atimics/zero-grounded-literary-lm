@@ -75,6 +75,7 @@ typedef struct {
     uint8_t certificate_valid;
     uint8_t fallback_started;
     uint8_t global_cap_hit;
+    uint8_t fallback_exhausted;
     uint8_t invalid_first_rejected;
     uint8_t accepted_semantic[32];
     uint8_t proposal_order[32];
@@ -84,6 +85,42 @@ typedef struct {
     uint32_t key[R55_SEEN_SLOTS];
     uint8_t used[R55_SEEN_SLOTS];
 } r55_seen;
+
+enum { R55_PRODUCT_LIMBS = 16 };
+
+typedef struct {
+    uint32_t limb[R55_PRODUCT_LIMBS];
+} r55_product;
+
+static void r55_product_one(r55_product *product)
+{
+    memset(product, 0, sizeof(*product));
+    product->limb[0] = 1u;
+}
+
+static int r55_product_multiply(r55_product *product, uint32_t factor)
+{
+    uint64_t carry = 0u;
+    uint32_t index;
+    for (index = 0; index < R55_PRODUCT_LIMBS; ++index) {
+        uint64_t value = (uint64_t)product->limb[index] * factor + carry;
+        product->limb[index] = (uint32_t)value;
+        carry = value >> 32u;
+    }
+    return carry != 0u;
+}
+
+static int r55_product_compare(const r55_product *left,
+                               const r55_product *right)
+{
+    uint32_t index = R55_PRODUCT_LIMBS;
+    while (index > 0u) {
+        --index;
+        if (left->limb[index] != right->limb[index])
+            return left->limb[index] < right->limb[index] ? -1 : 1;
+    }
+    return 0;
+}
 
 static uint32_t r55_rotr(uint32_t value, uint8_t bits)
 {
@@ -393,8 +430,10 @@ static uint8_t r55_role_of(const r55_affine *map)
 static r55_affine r55_axis_translation(r55_rng *rng)
 {
     r55_affine map = r55_identity();
-    map.bias[r55_rng_index(rng, R55_LANES)] =
-        (uint8_t)(1u + r55_rng_index(rng, R55_MODULUS - 1u));
+    uint32_t lane = r55_rng_index(rng, R55_LANES);
+    uint8_t value = (uint8_t)(1u +
+        r55_rng_index(rng, R55_MODULUS - 1u));
+    map.bias[lane] = value;
     return map;
 }
 
@@ -1205,14 +1244,14 @@ static int r55_search_candidate(r55_seen *seen, const r55_candidate *candidate,
     uint32_t key = r55_semantic_key(&candidate->semantic);
     uint32_t counterexample;
     int fresh;
-    ++result->partial_expansions;
-    fresh = r55_seen_add(seen, key);
-    if (fresh < 0) return -1;
-    if (!fresh) return 0;
     if (result->verifier_checks >= global_cap) {
         result->global_cap_hit = 1u;
         return 1;
     }
+    ++result->partial_expansions;
+    fresh = r55_seen_add(seen, key);
+    if (fresh < 0) return -1;
+    if (!fresh) return 0;
     ++result->verifier_checks;
     if (r55_exact_verify(&candidate->semantic, target, &counterexample)) {
         result->exact = 1u;
@@ -1253,10 +1292,16 @@ static int r55_search(const r55_public_episode *public_episode,
     for (slot = 0; slot < R55_PRIMITIVES; ++slot)
         mapped_role[slot] = recovered_role[slot];
     if (arm == R55_ARM_RAW_LEXICAL || arm == R55_ARM_FREQUENCY_LEXICAL ||
-        arm == R55_ARM_SOURCE_ONLY)
-        for (slot = 0; slot < R55_PRIMITIVES; ++slot)
-            mapped_role[slot] = (uint8_t)(
-                public_episode->surface_id[slot] % R55_ROLES);
+        arm == R55_ARM_SOURCE_ONLY) {
+        for (slot = 0; slot < R55_PRIMITIVES; ++slot) {
+            uint32_t other;
+            uint8_t lexical_rank = 0u;
+            for (other = 0; other < R55_PRIMITIVES; ++other)
+                lexical_rank += public_episode->surface_id[other] <
+                    public_episode->surface_id[slot];
+            mapped_role[slot] = lexical_rank;
+        }
+    }
     if (arm == R55_ARM_ORACLE_ADAPTER)
         for (slot = 0; slot < R55_PRIMITIVES; ++slot)
             mapped_role[slot] = oracle_role[slot];
@@ -1328,12 +1373,11 @@ static int r55_search(const r55_public_episode *public_episode,
             if (state < 0) return 1;
             if (state == 1 || state == 2) break;
         }
-        if (!result->exact) result->global_cap_hit = 1u;
+        if (!result->exact && !result->global_cap_hit)
+            result->fallback_exhausted = 1u;
     }
-    if (!result->exact && result->verifier_checks >= global_cap)
-        result->global_cap_hit = 1u;
-    result->primary_cost = result->global_cap_hit ?
-        global_cap + 1u : result->verifier_checks;
+    result->primary_cost = result->exact ?
+        result->verifier_checks : global_cap + 1u;
     return 0;
 }
 
@@ -1420,6 +1464,7 @@ static int r55_same_search(const r55_search_result *left,
         left->certificate_valid == right->certificate_valid &&
         left->fallback_started == right->fallback_started &&
         left->global_cap_hit == right->global_cap_hit &&
+        left->fallback_exhausted == right->fallback_exhausted &&
         left->invalid_first_rejected == right->invalid_first_rejected &&
         memcmp(left->accepted_semantic, right->accepted_semantic, 32u) == 0 &&
         memcmp(left->proposal_order, right->proposal_order, 32u) == 0;
@@ -1501,7 +1546,8 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
         "\"observation_queries\":%u,\"wall_ns\":null,\"peak_bytes\":null,"
         "\"verifier_domain_points\":125,"
         "\"fallback_started\":%s,\"fallback_work_counted\":true,"
-        "\"global_cap_hit\":%s,\"injected_invalid\":true,"
+        "\"global_cap_hit\":%s,\"fallback_exhausted\":%s,"
+        "\"censoring_reason\":%s,\"injected_invalid\":true,"
         "\"injected_invalid_rejected\":%s,"
         "\"injected_counterexample_index\":%u,"
         "\"ast_sha256\":\"%s\",\"behavior_sha256\":\"%s\","
@@ -1526,6 +1572,9 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
         search->partial_expansions, search->observation_queries,
         search->fallback_started ? "true" : "false",
         search->global_cap_hit ? "true" : "false",
+        search->fallback_exhausted ? "true" : "false",
+        search->exact ? "null" : search->global_cap_hit ?
+            "\"global-cap\"" : "\"fallback-exhausted\"",
         search->invalid_first_rejected ? "true" : "false",
         search->first_counterexample,
         ast_hex, behavior_hex, spec_hex, actions_hex, behavior_hex,
@@ -1552,9 +1601,12 @@ int r55_run_development(r55_development_result *result,
     uint32_t target_costs[R55_GENERATORS * R55_GENERATORS *
         R55_DEVELOPMENT_FAMILIES * R55_TIE_REPEATS];
     uint32_t target_cost_count = 0;
+    r55_product target_only_product, source_free_jit_product;
     r55_sha256 trace_sha;
     uint32_t target_generator, ordinal, source_generator, tie, arm;
     memset(result, 0, sizeof(*result));
+    r55_product_one(&target_only_product);
+    r55_product_one(&source_free_jit_product);
     if (!trace) return 1;
     if (r55_make_derangements(derangements) != 0) return 1;
     if (r55_build_source_artifact(artifact, used, &used_count,
@@ -1658,6 +1710,12 @@ int r55_run_development(r55_development_result *result,
                         &episode[R55_ARM_ORACLE_ADAPTER]);
                     target_costs[target_cost_count++] =
                         episode[R55_ARM_TARGET_ONLY].primary_cost;
+                    if (r55_product_multiply(&target_only_product,
+                            episode[R55_ARM_TARGET_ONLY].primary_cost + 1u) ||
+                        r55_product_multiply(&source_free_jit_product,
+                            episode[R55_ARM_SOURCE_FREE_JIT].primary_cost +
+                                1u))
+                        return 1;
                 }
             }
         }
@@ -1671,6 +1729,11 @@ int r55_run_development(r55_development_result *result,
         target_costs[target_cost_count / 2u] :
         (target_costs[target_cost_count / 2u - 1u] +
          target_costs[target_cost_count / 2u]) / 2u;
+    result->source_free_selection_pairs = target_cost_count;
+    result->strongest_source_free_arm =
+        r55_product_compare(&source_free_jit_product,
+                            &target_only_product) < 0 ?
+            R55_ARM_SOURCE_FREE_JIT : R55_ARM_TARGET_ONLY;
     return 0;
 }
 
@@ -1710,6 +1773,7 @@ int r55_self_test(void)
     uint8_t sequential[R55_LANES], composed[R55_LANES], middle[R55_LANES];
     r55_affine first, second, combined;
     uint64_t tie_salt = UINT64_C(0x55abcdef01234567);
+    r55_product product_left, product_right;
 #define R55_TEST(condition, name) do { \
     if (!(condition)) { \
         fprintf(stderr, "Reasoner 5.5 self-test failed: %s\n", name); \
@@ -1717,6 +1781,14 @@ int r55_self_test(void)
     } \
 } while (0)
     R55_TEST(r55_sha_self_test() == 0, "sha256");
+    r55_product_one(&product_left);
+    r55_product_one(&product_right);
+    R55_TEST(!r55_product_multiply(&product_left, 17u) &&
+             !r55_product_multiply(&product_left, 19u) &&
+             !r55_product_multiply(&product_right, 18u) &&
+             !r55_product_multiply(&product_right, 18u) &&
+             r55_product_compare(&product_left, &product_right) < 0,
+             "exact source-free geometric-product comparison");
     R55_TEST(r55_generate_family(
         &a, R55_DEVELOPMENT_ROOT, 0u, 0u, 0u) == 0,
         "syntax-first generator");
@@ -1773,9 +1845,13 @@ int r55_self_test(void)
              "source-ablation equality");
     {
         uint8_t poisoned_role[R55_PRIMITIVES];
-        for (role = 0; role < R55_PRIMITIVES; ++role)
+        uint8_t poisoned_oracle_role[R55_PRIMITIVES];
+        for (role = 0; role < R55_PRIMITIVES; ++role) {
             poisoned_role[role] = (uint8_t)((recovered_role[role] + 1u) %
                                              R55_ROLES);
+            poisoned_oracle_role[role] = (uint8_t)(R55_ROLES - 1u -
+                                                    a.surface_to_role[role]);
+        }
         R55_TEST(r55_search(&public_a, &a.target, a.surface_to_role,
                 recovered_role, &jit, &jit,
                 R55_ARM_FULL, derangements, tie_salt,
@@ -1801,12 +1877,12 @@ int r55_self_test(void)
                 recovered_role, &jit, &jit,
                 R55_ARM_SOURCE_ONLY, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &source_exact) == 0 &&
-            r55_search(&public_a, &a.target, a.surface_to_role,
+            r55_search(&public_a, &a.target, poisoned_oracle_role,
                 poisoned_role, &jit, &jit,
                 R55_ARM_SOURCE_ONLY, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &source_poisoned) == 0 &&
             r55_same_search(&source_exact, &source_poisoned),
-            "source-only arm has no adapter access");
+            "source-only arm has no adapter or oracle-role access");
     }
     impossible = a.target;
     memset(impossible.matrix, 0, sizeof(impossible.matrix));
@@ -1819,8 +1895,10 @@ int r55_self_test(void)
                 "capped search");
     }
     R55_TEST(!capped.exact && capped.fallback_started &&
-             capped.global_cap_hit && capped.primary_cost == 3u &&
-             capped.invalid_first_rejected,
+             capped.global_cap_hit && !capped.fallback_exhausted &&
+             capped.primary_cost == 3u &&
+             capped.invalid_first_rejected &&
+             capped.partial_expansions == R55_CANDIDATES + 2u,
              "cap-plus-one and fallback accounting");
     {
         R55_TEST(r55_search(&public_a, &impossible, a.surface_to_role,
@@ -1830,7 +1908,7 @@ int r55_self_test(void)
                 "exhausted fallback search");
     }
     R55_TEST(!exhausted.exact && exhausted.fallback_started &&
-             exhausted.global_cap_hit &&
+             !exhausted.global_cap_hit && exhausted.fallback_exhausted &&
              exhausted.primary_cost == R55_GLOBAL_CAP + 1u &&
              exhausted.verifier_checks < R55_GLOBAL_CAP,
              "exhausted semantic universe is upper-censored");
@@ -1900,7 +1978,13 @@ int r55_write_development_json(const char *path,
         "  \"family_selection_rule\": "
         "\"target-only median over four fixed generator-tie environments "
         "must be 16 through 64 before split freeze\",\n"
-        "  \"development_selection\": {\"strongest_source_free_arm\": \"%s\", \"target_only_primary_cost\": %" PRIu64 ", \"source_free_jit_primary_cost\": %" PRIu64 "},\n"
+        "  \"development_selection\": {\"strongest_source_free_arm\": \"%s\", "
+        "\"metric\": \"environment-and-family-weighted-mean-paired-log-cost\", "
+        "\"independent_environment_family_units\": 16, "
+        "\"nested_tie_repeats_per_unit\": 2, "
+        "\"paired_episode_measurements\": %u, "
+        "\"target_only_primary_cost\": %" PRIu64 ", "
+        "\"source_free_jit_primary_cost\": %" PRIu64 "},\n"
         "  \"proposal_budget\": 64,\n"
         "  \"global_cap\": 4096,\n"
         "  \"derangements\": 31,\n"
@@ -1921,9 +2005,9 @@ int r55_write_development_json(const char *path,
         result->target_only_median_cost >= R55_HEADROOM_MINIMUM &&
             result->target_only_median_cost <= R55_HEADROOM_MAXIMUM ?
             "pass" : "no-go",
-        result->arms[R55_ARM_TARGET_ONLY].primary_cost <=
-            result->arms[R55_ARM_SOURCE_FREE_JIT].primary_cost ?
-            "target_only" : "source_free_jit",
+        result->strongest_source_free_arm == R55_ARM_SOURCE_FREE_JIT ?
+            "source_free_jit" : "target_only",
+        result->source_free_selection_pairs,
         result->arms[R55_ARM_TARGET_ONLY].primary_cost,
         result->arms[R55_ARM_SOURCE_FREE_JIT].primary_cost,
         artifact, trace) < 0) {

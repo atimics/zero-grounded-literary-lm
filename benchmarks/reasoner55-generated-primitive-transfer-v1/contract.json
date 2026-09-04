@@ -11,12 +11,12 @@
     "cloud_run": null
   },
   "implementation": {
-    "core_sha256": "6c9d1d58408dbd998b4807a9aed424d7e3141ad5a7934982ffe9b353beab4bdd",
-    "header_sha256": "3d9f607aa2963dad7e3000afff9897c77fa0a827483d825deac7761fecfe85e7",
+    "core_sha256": "8a946ce9f04b7d3ecbc530d4c893ea59ab78121e34e52e263457589a1cf2875c",
+    "header_sha256": "3b0ec10cf07786c05236ff5b063c0848d19d63ef863afef040679909d255e218",
     "cli_sha256": "5df3da7f977358cd61eb53aae060dd23143360e8705a2f5291a2bb0f706bddb6",
-    "development_checker_sha256": "e12163524b25a657cac1f621481fad77ee8c6394f341047ed605853734a4c358",
-    "shared_harness_sha256": "32f24aaa946ab8611a6085830ce0172835394fdf077cab41b9e014460a425e6c",
-    "replay_adapter_sha256": "f97ab3efb1055ac2db8457e1cdc7ac8e00a27f1ba744aba79e070101f9cc9a3b",
+    "development_checker_sha256": "b3827d14e62c9b5f52b8b4b663a042def6ac371b4c685734d402ea62ce061282",
+    "shared_harness_sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66",
+    "replay_adapter_sha256": "dcca6e4f3e802315ae5c5611cd1baa7977982866cbd6937102eb003cce4d651d",
     "protected_predecessors": {
       "reasoner51_c_sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
       "reasoner52_c_sha256": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
@@ -70,8 +70,8 @@
     "development_families_per_generator": 4,
     "tie_repeats_per_generator_environment": 2,
     "generator_environments": 4,
-    "family_units": 8,
-    "generator_environment_views": 16,
+    "target_families": 8,
+    "independent_environment_family_units": 16,
     "episodes": 32
   },
   "development_family_selection": {
@@ -85,7 +85,7 @@
     "schema": "R55A0001",
     "learning_rule": "Laplace-smoothed position and adjacent-role counts from canonical exact source solutions",
     "canonical_bytes": 1823,
-    "sha256": "0f1f7b4f76a57328c717a3cbc552c5aebf76bfbadf0d7e493f03c628e8edfb14"
+    "sha256": "a7b0caee7dcf4291828551baab8dcff2b63871e1bf075cd6296d4705b794ff32"
   },
   "search": {
     "candidate_order": "initial evidence loss, source guide score, frozen tie salt, syntax index",
@@ -102,6 +102,10 @@
     "adapter_on_guide_off": "adapter_only",
     "adapter_off_guide_on": "raw_lexical",
     "adapter_on_guide_on": "full"
+  },
+  "raw_lexical_control": {
+    "mapping": "rank each public 32-bit surface label among the eight labels",
+    "properties": "one-to-one, label-only, independent of hidden semantic roles"
   },
   "controls": [
     "oracle_adapter",
@@ -120,10 +124,13 @@
   "development_selection": {
     "source_free_candidates": ["target_only", "source_free_jit"],
     "strongest_source_free_arm": "source_free_jit",
+    "selection_metric": "environment-and-family-weighted-mean-paired-log-cost",
     "family_headroom_rule": "target-only median over four fixed generator-tie environments must be 16 through 64 before split freeze"
   },
   "registered_analysis": {
     "primary_error_rule": "intersection-union at one-sided alpha 0.01",
+    "independent_unit": "target family within each fixed source-to-target generator environment",
+    "exact_adapter_required": true,
     "simple_effect": {
       "full_arm": "full",
       "comparator_arm": "adapter_only",
@@ -156,7 +163,7 @@
     "schema": "zero.reasoner55_trace_row.v1",
     "row_grain": "one arm by episode",
     "rows": 1280,
-    "raw_sha256": "7f5acbab6f1b76c11962c4084f46e227843b5836154b89ff761644b1e3771c27",
+    "raw_sha256": "60f0886ec2291374c5a46c7ee69d104b2486f9962cc8833718178543c9f30287",
     "cross_family_id": null,
     "family_unit_fields": [
       "source_generator_id",
@@ -167,10 +174,26 @@
   },
   "shared_replay": {
     "strict_trace_schema": "zero.reasoner5_trace_row.v1",
-    "coverage_sha256": "a221aa499220e85473f3a60272fc9066dc6a859346c5a4745bd341f853f0a78b",
-    "common_result_sha256": "6a9f1485bd03b0a5e7f3cf05b32b259923fb0ee73a32feb891611b015fd88380",
-    "intersection_union_analysis_sha256": "99806f32e24766fdb07e2dd4c2b67d48ab7e8a219a40325d45e3ec340a3cd14a",
-    "development_analysis_file_sha256": "dd0795d6be587a81b2fe3e33395f1f93caf355abbb95a594d430aa00810721fb"
+    "scientific_analysis_view": {
+      "schema": "zero.reasoner55_analysis_view_receipt.v1",
+      "mapping": "one native row to one analysis row",
+      "native_rows": 1280,
+      "independent_environment_family_units": 16,
+      "nested_tie_repeats_per_unit": 2,
+      "fixed_source_to_target_environments": 4,
+      "transform_function_sha256": "01f164ab59d52a89f05351f00534ad52f3ccbe1c2e6713c5862ab23d6b3e34e4",
+      "analysis_view_sha256": "04f2bab354b5e4fcfb7b93916e54d466c9a04a688be165b940cd3cfa138578f1",
+      "receipt_sha256": "d294335ce06ea744d81ec97ab52a8849dde7e0623700b08d4ef2f43475bffe98",
+      "bindings": [
+        "native raw trace SHA-256",
+        "deterministic transform function SHA-256",
+        "one native row identity SHA-256 per row"
+      ]
+    },
+    "coverage_sha256": "5aeea10bd3eabc75e9eb03ac10dac43ff2639702e978ffc145359e30f70b5e30",
+    "common_result_sha256": "0dcdfca40c6d53176818401389f0dc17272e0c940fee2888ba4da5f95dd4be80",
+    "intersection_union_analysis_sha256": "2b795b29ea59a7e43e597343a343016f9337e37f0f8d41643bd8f4c5942ee4d7",
+    "development_analysis_file_sha256": "3e513b3a746e5c54c696a2f90e29cd0000e3122ee508f732e3d33a3a8a095db6"
   },
   "development_gates": {
     "target_only_median_minimum": 16,
