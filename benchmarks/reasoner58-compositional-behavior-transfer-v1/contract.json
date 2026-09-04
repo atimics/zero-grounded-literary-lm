@@ -12,7 +12,7 @@
       "path": "docs/REASONER5-NEXT.md",
       "sha256": "a479882ee565aea082da2f490a0d067a832f1fa2778f8b23af2ee59ecdf7792c"
     },
-    "shared_harness_commit": "24e113f34185aca28092e92d0c7f6f7a79f4ab4e"
+    "shared_harness_commit": "2303a1a1769a7e4ccd32f5167e18645550651509"
   },
   "execution": {
     "authorized": false,
@@ -50,15 +50,15 @@
       },
       "contract_check": {
         "path": "scripts/check_reasoner58_contract.mjs",
-        "sha256": "181934a6b723290b4bbaf3f8011d9153ee65c4f55dc4f78e6b36fffa3eb5baa8"
+        "sha256": "88ba47e66db9338e2b238fc8378dde18ca6b67c8906b6587c8a30ac8e73f3928"
       },
       "shared_harness": {
         "path": "scripts/lib/reasoner5_harness.mjs",
-        "sha256": "32f24aaa946ab8611a6085830ce0172835394fdf077cab41b9e014460a425e6c"
+        "sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66"
       },
       "development_document": {
         "path": "docs/REASONER58-DEVELOPMENT.md",
-        "sha256": "3e101c546ac118095ebe29dfcc87f2cb6ab86b637ed26dab801c9fdbd1a5986d"
+        "sha256": "9d647954e13aa1323af909b1bf61c94cd1f97ede3771ff8e9d3b18c699f98511"
       }
     },
     "protected_predecessors": {
@@ -180,7 +180,7 @@
       },
       "result": {
         "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/DEVELOPMENT.json",
-        "file_sha256": "80df0ab2a59b548304e1c675fe0dd74935969aa7c40434daad534b585193bcd9"
+        "file_sha256": "da3ee91095bf88897cf621539fea04a8ca34ea2ed90947f10bfabb7fdb3e1355"
       }
     }
   },
@@ -200,7 +200,10 @@
     "raw_rows": 1344,
     "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
     "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
-    "result_sha256": "4ad32bf0183d4adb4dd3cb2b273b2f801f4fdafbdb679b171cb5ee3c5e9f2baf",
+    "result_sha256": "e7ac1f1d3603e4043957f0d099d35f1ebdcce13df9e1944768d074a943e96f78",
+    "primary_null_bootstrap_sha256": "70f4a2f702fd856804595e1b387059663fcc8ba1a7b5d9037b923433d0005262",
+    "behavior_mechanism_null_bootstrap_sha256": "90217982c9ae1ddba3e30c28ec9a62d1960beb4d18701a12d7ad00b8b4be0fb5",
+    "behavior_mechanism_p_value": 0.1089455272363818,
     "decision": "measurement-floor",
     "source_free_median_primary_cost": 6,
     "registered_headroom_minimum": 16,

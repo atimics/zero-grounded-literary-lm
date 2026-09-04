@@ -95,6 +95,10 @@ Generator code, input generation, replay code, source counts, artifact bytes,
 raw rows, analysis settings, and the final result all have linked SHA-256
 receipts.
 
+The v2 bootstrap receipt keeps percentile confidence bounds on the ordinary
+family draws. It computes one-sided p-values from recentered null draws with
+the same family design. Ordinary and null samples have separate receipts.
+
 ## Development result
 
 The full crossed development set has 16 independent program families, 32

@@ -86,6 +86,31 @@ assert(result.raw_trace_sha256 === contract.measurements.raw_trace_sha256,
   "Reasoner 5.8 raw trace receipt changed");
 assert(result.result_sha256 === contract.measurements.result_sha256,
   "Reasoner 5.8 result receipt changed");
+const registeredInferences = [
+  result.registered_analysis.primary,
+  ...result.registered_analysis.strata.map(item => item.inference),
+  ...result.registered_analysis.mechanisms.map(item => item.inference),
+];
+for (const inference of registeredInferences) {
+  assert(inference.interval.confidence_interval_method ===
+    "ordinary-percentile-bootstrap",
+  "Reasoner 5.8 confidence interval method changed");
+  assert(inference.interval.p_value_method === "recentered-null-bootstrap",
+    "Reasoner 5.8 p-value method changed");
+  assert(/^[0-9a-f]{64}$/u.test(inference.interval.null_bootstrap_sha256),
+    "Reasoner 5.8 null bootstrap receipt changed");
+}
+assert(result.registered_analysis.primary.interval.null_bootstrap_sha256 ===
+  contract.measurements.primary_null_bootstrap_sha256,
+"Reasoner 5.8 primary null bootstrap receipt changed");
+const behaviorMechanism = result.registered_analysis.mechanisms.find(item =>
+  item.name === "behavior-features");
+assert(behaviorMechanism?.inference.interval.null_bootstrap_sha256 ===
+  contract.measurements.behavior_mechanism_null_bootstrap_sha256,
+"Reasoner 5.8 behavior mechanism null bootstrap receipt changed");
+assert(behaviorMechanism?.inference.interval.one_sided_p_higher_than_zero ===
+  contract.measurements.behavior_mechanism_p_value,
+"Reasoner 5.8 behavior mechanism calibrated p-value changed");
 assert(result.decision === contract.measurements.decision,
   "Reasoner 5.8 development decision changed");
 assert(result.development_measurements.episodes === 32 &&
