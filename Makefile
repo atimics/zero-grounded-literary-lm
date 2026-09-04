@@ -2961,6 +2961,36 @@ clean: clean-reasoner56
 clean-reasoner56:
 	rm -f reasoner56
 
+.PHONY: reasoner57 reasoner57-check reasoner57-contract-check reasoner57-sanitize reasoner57-sanitize-check clean-reasoner57
+all: reasoner57
+
+reasoner57: reasoner56.c reasoner56.h reasoner57.c reasoner57.h reasoner57_cli.c
+	$(CC) $(CFLAGS) reasoner56.c reasoner57.c reasoner57_cli.c -lm -o $@
+
+reasoner57-check: reasoner57
+	./reasoner57 --self-test
+	@if ./reasoner57 develop /tmp/reasoner57-blocked-result /tmp/reasoner57-blocked-trace /tmp/reasoner57-blocked-policy; then exit 1; else test $$? -eq 3; fi
+	@if ./reasoner57 execute; then exit 1; else test $$? -eq 3; fi
+	@test ! -e /tmp/reasoner57-blocked-result
+	@test ! -e /tmp/reasoner57-blocked-trace
+	@test ! -e /tmp/reasoner57-blocked-policy
+
+reasoner57-contract-check:
+	node scripts/check_reasoner57_scaffolding.mjs
+
+reasoner57-sanitize: reasoner56.c reasoner56.h reasoner57.c reasoner57.h reasoner57_cli.c
+	$(CC) -O1 -g -std=c11 -Wall -Wextra -Wpedantic -fsanitize=address,undefined reasoner56.c reasoner57.c reasoner57_cli.c -lm -o $@
+
+reasoner57-sanitize-check: reasoner57-sanitize
+	ASAN_OPTIONS=halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./reasoner57-sanitize --self-test
+
+check: reasoner57-check reasoner57-contract-check
+
+clean: clean-reasoner57
+
+clean-reasoner57:
+	rm -f reasoner57 reasoner57-sanitize
+	rm -rf reasoner57-sanitize.dSYM
 REASONER55_FIXTURE := benchmarks/reasoner55-generated-primitive-transfer-v1
 
 .PHONY: reasoner55-check reasoner55-development-check \

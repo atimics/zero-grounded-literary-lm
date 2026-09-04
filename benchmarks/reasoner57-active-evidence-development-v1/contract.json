@@ -1,0 +1,131 @@
+{
+  "schema": "zero.reasoner57_active_evidence_development_contract.v6",
+  "experiment": "reasoner57-active-evidence-development-v1",
+  "version": "5.7-development-scaffolding-6",
+  "status": "gated-development-scaffolding",
+  "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
+  "prerequisite": {
+    "state": "blocked-reasoner56-channel-readiness-gate",
+    "base_commit": "01902c18e9bdde747022fc961ca15ac9452308e4",
+    "r56_contract": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/contract.json",
+      "sha256": "270ffe750995e253a791ca11a3fbc9c4ff9de3eb6eaa9dd0fe7bf4c3a8c8c230",
+      "schema": "zero.reasoner56_passive_noise_development_contract.v7"
+    },
+    "r56_artifact": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
+      "sha256": "404cff98a8d92eb11cf203710c20c356fbaec31370ea525c416857e641bd4004"
+    },
+    "r56_family_manifest": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/family-manifest.json",
+      "sha256": "7fac3d33b5f9f406794508fb8d19cb6eed09bdd2934a526e2c1c02e2f655bfda"
+    },
+    "r56_assessment": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
+      "sha256": "52e1eb8abe6c10b118196f81d8e41a1dce1408add79e33458443397beab07d21",
+      "schema": "zero.reasoner56_development_assessment.v2",
+      "channel_readiness_schema": "zero.reasoner56_channel_readiness_development.v2",
+      "channel_readiness_assessment_sha256": "86d3727f7ee9cd0aea1a7cb37b03be3777723875480d19376a62ed8f57e82145",
+      "channel_readiness_status": "development-no-go",
+      "full_mean_log_loss": 2.0354340134641815e-32,
+      "full_log_loss_replay_sha256": "e96badecce81e8fc614099a96fab1ea0138d4355f4f0bca74022ba7e43717f98"
+    },
+    "family_coverage": {
+      "program_families": 99,
+      "registered_draws": 792,
+      "covered_families": 99,
+      "one_sided_95_wilson_lower": 0.97339826953172,
+      "required_lower": 0.97,
+      "passed": true
+    },
+    "candidate_set_utility": {
+      "threshold": 1,
+      "full_mean_size": 427,
+      "program_prior_only_mean_size": 427,
+      "size_ratio": 1,
+      "required_maximum_ratio": 0.8,
+      "passed": false
+    },
+    "development_interface_template_proxy_severity_proxy_and_taint_passed": true,
+    "pending_evidence": [
+      "new preregistered R5.6 evidence that passes candidate-set utility",
+      "prospective sealed-interface audit",
+      "sealed static-metadata proxy audit"
+    ],
+    "required_passing_assessment_sha256": null
+  },
+  "semantic_splits": {
+    "policy_training_families": 48,
+    "selector_choice_families": 12,
+    "policy_calibration_families": 16,
+    "development_program_families": 8,
+    "sealed_reserve_families": 27,
+    "split_before_generation": true,
+    "all_five_identities_are_disjoint": true,
+    "disjoint_from_all_reasoner56_lanes": true
+  },
+  "primary": {
+    "initial_reads": 3,
+    "active_queries": 4,
+    "actions": 51,
+    "action_order": "input-then-sensor",
+    "outcomes": 18,
+    "missing_outcome": 17,
+    "exact_semantic_classes": 427,
+    "exact_verifier_points": 17
+  },
+  "analytic_controls": {
+    "likelihood": "r(h,y|a)=exp((local_log_q20+transition_log_q20)/temperature_q20); L(h,y|a)=r(h,y|a)/sum_z r(h,z|a)",
+    "predictive_outcome": "q(y|a)=sum_h p(h)L(h,y|a)",
+    "multiclass_noisy_gbs": "1-max_y q(y|a)",
+    "posterior_l2_ec2_edge_cut": "sum_y q(y|a) sum_h (p(h)L(h,y|a)/q(y|a))^2-sum_h p(h)^2",
+    "tie_break": "canonical input-then-sensor order",
+    "channel_source": "exact R5.6 local emission, first-order transition, and temperature bytes"
+  },
+  "control_tests": {
+    "two_hypothesis_ec2_expected": 0.32,
+    "two_hypothesis_noisy_gbs_balanced_expected": 0.5,
+    "two_hypothesis_noisy_gbs_skewed_expected": 0.2,
+    "uniform_18_outcome_noisy_gbs_expected": "17/18",
+    "likelihood_row_normalization_is_checked": true
+  },
+  "shared_harness": {
+    "commit": "a46382178fea84200a331c3ba0a0a22109b00747",
+    "library": "scripts/lib/reasoner5_harness.mjs",
+    "library_sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883",
+    "scientific_number_encoding": "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero",
+    "scientific_relative_tolerance": 1e-13,
+    "reference_math_algorithm": "pure-js-binary64-fixed-order-v1",
+    "reference_math_functions": ["log", "exp", "sqrt"],
+    "reference_math_relative_or_near_zero_absolute_tolerance": 2e-14,
+    "proposal_record_binding": true,
+    "proposal_work_charge_floor": true,
+    "bootstrap_receipt_schema": "v2",
+    "confidence_interval_method": "ordinary-percentile-bootstrap",
+    "p_value_method": "recentered-null-bootstrap",
+    "development_receipts": "gated by Reasoner 5.6 channel readiness"
+  },
+  "development_outputs": null,
+  "scientific_decision": null,
+  "protected_sources": {
+    "reasoner51.c": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
+    "reasoner52.c": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+    "reasoner5_followup.c": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+  },
+  "implementation": {
+    "files": [
+      "reasoner57.c",
+      "reasoner57.h",
+      "reasoner57_cli.c",
+      "scripts/check_reasoner57_scaffolding.mjs"
+    ]
+  },
+  "execution": {
+    "authorized": false,
+    "sealed_seeds_present": false,
+    "development_fixture_generation_open": false,
+    "scientific_executions": 0,
+    "scientific_retries": 0,
+    "cloud_resources": false
+  }
+}
