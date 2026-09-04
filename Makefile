@@ -2958,6 +2958,17 @@ clean: clean-reasoner56
 clean-reasoner56:
 	rm -f reasoner56
 
+.PHONY: reasoner57 clean-reasoner57
+all: reasoner57
+
+reasoner57: reasoner56.c reasoner56.h reasoner57.c reasoner57.h reasoner57_cli.c
+	$(CC) $(CFLAGS) reasoner56.c reasoner57.c reasoner57_cli.c -lm -o $@
+
+clean: clean-reasoner57
+
+clean-reasoner57:
+	rm -f reasoner57
+
 .PHONY: reasoner5-harness-check reasoner5-harness-contract-check
 reasoner5-harness-check:
 	node scripts/check_reasoner5_harness.mjs
