@@ -114,6 +114,8 @@ assert(!userData.includes("run_zero5_c61_shared_state.mjs"),
 assert(!userData.includes("--steps"),
   "evaluation user-data contains a training step option");
 assert(userData.includes("run_zero5_c61_evaluation_recovery.mjs"));
+assert(userData.includes("preflight_zero5_c61_evaluator.mjs"),
+  "evaluation user-data does not run the evaluator preflight");
 const launcher = fs.readFileSync(contract.implementation.launcher.path, "utf8");
 assert(launcher.includes("evaluation-v1.lock"));
 assert(launcher.includes("training_authorized:false"));

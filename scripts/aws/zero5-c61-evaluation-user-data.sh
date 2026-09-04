@@ -201,6 +201,8 @@ runner_args=(
   --atlas-validation build/zero5-c2-v1/import-final/atlas.validation.byte-bpe512.tok
   --anchor-train build/zero5-c0-v1/corpus-one/train.byte-bpe512.tok
   --anchor-validation build/zero5-c0-v1/corpus-one/validation.byte-bpe512.tok)
+node scripts/preflight_zero5_c61_evaluator.mjs \
+  "${runner_args[@]}" >/dev/null
 node scripts/run_zero5_c61_evaluation_recovery.mjs \
   "${runner_args[@]}" --preflight-only >/dev/null
 
@@ -213,7 +215,9 @@ remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 180))
 test "$remaining" -gt 0
 set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
-  node scripts/run_zero5_c61_evaluation_recovery.mjs \
+  node scripts/preflight_zero5_c61_evaluator.mjs \
+  "${runner_args[@]}" >/dev/null
+node scripts/run_zero5_c61_evaluation_recovery.mjs \
     "${runner_args[@]}" --out "$OUT" &
 RUNNER_PID=$!
 while kill -0 "$RUNNER_PID" 2>/dev/null; do
