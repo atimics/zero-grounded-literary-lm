@@ -1,0 +1,131 @@
+{
+  "schema": "zero.reasoner55_development_contract.v1",
+  "experiment": "reasoner55-generated-primitive-transfer-v1",
+  "status": "development-only",
+  "purpose": "qualify generated unseen-primitive transfer before preregistration",
+  "execution": {
+    "authorized": false,
+    "allowed_lane": "development",
+    "sealed_manifest": null,
+    "sealed_seed_family": null,
+    "cloud_run": null
+  },
+  "implementation": {
+    "core_sha256": "208e1fda6ce0ca978aae11a1e23dcd9b270ae0e258efa61b88db3c8c8656d11e",
+    "header_sha256": "45d0729c468d7de6c9764c8348dc31c9cdda46ee0ec98556fa228bfc49c7492e",
+    "cli_sha256": "5df3da7f977358cd61eb53aae060dd23143360e8705a2f5291a2bb0f706bddb6",
+    "development_checker_sha256": "9be3d6fccdd83e2f8620132a06c7f123a5c6437a043ed3c054be3aaadf061812",
+    "protected_predecessors": {
+      "reasoner51_c_sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
+      "reasoner52_c_sha256": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+      "reasoner5_followup_c_sha256": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+    }
+  },
+  "domain": {
+    "field": "GF(5)",
+    "vectors": 3,
+    "exhaustive_points": 125,
+    "primitive_roles": 8,
+    "program_length": 4,
+    "syntax_candidates": 4096,
+    "semantic_identity": "canonical affine matrix and bias"
+  },
+  "primitive_roles": [
+    "axis_translation",
+    "dense_translation",
+    "axis_scale",
+    "dense_scale",
+    "permutation",
+    "shear",
+    "linear_mix",
+    "affine_mix"
+  ],
+  "adapter": {
+    "queries_per_primitive": 4,
+    "query_vectors": "zero plus three basis vectors",
+    "receipt": "canonical matrix, bias, role, and exhaustive-domain equality",
+    "hidden_coefficient_check": true
+  },
+  "generators": [
+    {
+      "id": "syntax-first",
+      "program_rule": "sample a legal four-role syntax sequence"
+    },
+    {
+      "id": "skeleton-first",
+      "program_rule": "sample a semantic skeleton before binding legal roles"
+    }
+  ],
+  "random_streams": {
+    "program_and_primitive_family": "independent from input and surface streams",
+    "surface": "independent token permutation and 32-bit surface labels",
+    "input": "independent GF(5)^3 demonstration vector"
+  },
+  "development_split": {
+    "source_root": "0x55a10ce5f0012026",
+    "development_root": "0x55de7e10f0013162",
+    "source_families_per_generator": 64,
+    "development_families_per_generator": 4,
+    "tie_repeats_per_generator_environment": 2,
+    "generator_environments": 4,
+    "family_units": 16,
+    "episodes": 32
+  },
+  "source_artifact": {
+    "schema": "R55A0001",
+    "learning_rule": "Laplace-smoothed position and adjacent-role counts from canonical exact source solutions",
+    "canonical_bytes": 1823,
+    "sha256": "7e62f3276023af86d2a8c34bbb32991522f2eaa501fae960f015f6445c05fd8e"
+  },
+  "search": {
+    "candidate_order": "initial evidence loss, source guide score, frozen tie salt, syntax index",
+    "proposal_budget": 64,
+    "charged_fallback": "canonical exhaustive syntax order with semantic deduplication",
+    "global_distinct_semantic_cap": 4096,
+    "cap_value": 4097,
+    "primary_cost": "distinct complete semantic classes submitted to the exact verifier",
+    "verifier": "all 125 GF(5)^3 vectors",
+    "commit_rule": "exact verifier acceptance only"
+  },
+  "factorial_arms": {
+    "adapter_off_guide_off": "target_only",
+    "adapter_on_guide_off": "adapter_only",
+    "adapter_off_guide_on": "raw_lexical",
+    "adapter_on_guide_on": "full"
+  },
+  "controls": [
+    "oracle_adapter",
+    "frequency_lexical",
+    "source_free_jit",
+    "source_ablation",
+    "source_only",
+    "31_frozen_frequency_preserving_role_derangements"
+  ],
+  "development_selection": {
+    "source_free_candidates": ["target_only", "source_free_jit"],
+    "strongest_source_free_arm": "target_only"
+  },
+  "trace": {
+    "schema": "zero.reasoner55_trace_row.v1",
+    "row_grain": "one arm by episode",
+    "rows": 1280,
+    "raw_sha256": "0a85404650cbd854ef6a2f847657c149891ca45fb72275956b2a5521b33ed945",
+    "cross_family_id": null,
+    "family_unit_fields": [
+      "source_generator_id",
+      "generator_id",
+      "family_id"
+    ],
+    "nested_repeat_field": "nested_repeat_id"
+  },
+  "development_gates": {
+    "target_only_median_minimum": 16,
+    "target_only_median_maximum": 64,
+    "adapter_exact_on_every_family": true,
+    "invalid_first_rejected_on_every_arm": true,
+    "source_ablation_matches_source_free_path": true,
+    "full_matches_oracle_adapter": true,
+    "arm_parity_digests_match_within_episode": true
+  },
+  "next_boundary": "freeze larger calibration and sealed family sets in a later preregistration"
+}
