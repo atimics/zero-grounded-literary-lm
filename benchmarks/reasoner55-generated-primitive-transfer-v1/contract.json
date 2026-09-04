@@ -15,7 +15,7 @@
     "header_sha256": "3b0ec10cf07786c05236ff5b063c0848d19d63ef863afef040679909d255e218",
     "cli_sha256": "5df3da7f977358cd61eb53aae060dd23143360e8705a2f5291a2bb0f706bddb6",
     "development_checker_sha256": "b3827d14e62c9b5f52b8b4b663a042def6ac371b4c685734d402ea62ce061282",
-    "shared_harness_sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66",
+    "shared_harness_sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5",
     "replay_adapter_sha256": "dcca6e4f3e802315ae5c5611cd1baa7977982866cbd6937102eb003cce4d651d",
     "protected_predecessors": {
       "reasoner51_c_sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
