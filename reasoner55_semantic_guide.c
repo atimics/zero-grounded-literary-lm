@@ -303,7 +303,8 @@ static int r55sg_train(const r55d_corpus *corpus, r55_artifact *artifact, r55sg_
 }
 
 static int r55sg_search(const r55_public_episode *episode, const r55_affine *target,
-    r55sg_universe *universe, r55_search_result *result)
+    r55sg_universe *universe, uint32_t proposal_budget, uint32_t global_cap,
+    r55_search_result *result)
 {
     r55_seen seen = {{0}, {0}};
     result->first_counterexample = UINT32_MAX;
@@ -313,11 +314,11 @@ static int r55sg_search(const r55_public_episode *episode, const r55_affine *tar
         const r55_candidate *candidate = &universe->programs[universe->groups[index].representative].candidate;
         if (!r55_affine_equal(&candidate->semantic, target)) { injected = candidate; break; }
     }
-    if (!injected || r55_search_candidate(&seen, injected, target, result, R55_GLOBAL_CAP) != 0) return 1;
+    if (!injected || r55_search_candidate(&seen, injected, target, result, global_cap) != 0) return 1;
     result->invalid_first_rejected = 1;
-    for (uint32_t index = 0; index < R55_PROPOSAL_BUDGET && index < universe->count; ++index) {
+    for (uint32_t index = 0; index < proposal_budget && index < universe->count; ++index) {
         const r55_candidate *candidate = &universe->programs[universe->groups[index].representative].candidate;
-        int state = r55_search_candidate(&seen, candidate, target, result, R55_GLOBAL_CAP);
+        int state = r55_search_candidate(&seen, candidate, target, result, global_cap);
         if (state < 0) return 1;
         if (state > 0) break;
     }
@@ -328,13 +329,13 @@ static int r55sg_search(const r55_public_episode *episode, const r55_affine *tar
         for (uint32_t index = 0; index < R55_CANDIDATES; ++index) {
             int state = r55_search_candidate(&seen,
                 &universe->programs[fallback[index].syntax_index].candidate,
-                target, result, R55_GLOBAL_CAP);
+                target, result, global_cap);
             if (state < 0) return 1;
             if (state > 0) break;
         }
         result->fallback_exhausted = !result->exact && !result->global_cap_hit;
     }
-    result->primary_cost = result->exact ? result->verifier_checks : R55_GLOBAL_CAP + 1;
+    result->primary_cost = result->exact ? result->verifier_checks : global_cap + 1;
     return 0;
 }
 
@@ -404,7 +405,8 @@ static int r55sg_episode(const r55_family *family, uint32_t source, uint32_t tie
     r55_sha256_final(&order, result->proposal_order);
     timing->receipt += r55d_now() - phase;
     phase = r55d_now();
-    int failed = r55sg_search(&episode, &family->target, u, result);
+    int failed = r55sg_search(&episode, &family->target, u,
+        R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, result);
     timing->search = r55d_now() - phase;
     *group_count = u->count;
     free(u);
@@ -490,8 +492,45 @@ static int r55sg_run(uint32_t arm, uint32_t repeats)
     return ferror(stdout) ? 1 : 0;
 }
 
+static int r55sg_self_test(void)
+{
+    r55d_corpus corpus;
+    r55_public_episode episode;
+    uint8_t roles[R55_ROLES];
+    if (r55d_make_corpus(&corpus) != 0 ||
+        r55sg_public(&corpus.development[0][0], &episode, roles) != 0) return 1;
+    r55sg_universe *u = calloc(1, sizeof(*u));
+    if (!u) return 1;
+    int failed = r55sg_enumerate(&episode, roles, u) || r55sg_group_programs(u);
+    for (uint32_t index = 0; index < R55_CANDIDATES && !failed; ++index) {
+        r55_candidate original;
+        r55_fill_candidate(&episode, roles, NULL, 0, 0, 0, (uint16_t)index, &original);
+        const r55_candidate *candidate = &u->programs[index].candidate;
+        failed = !r55_affine_equal(&candidate->semantic, &original.semantic) ||
+            candidate->evidence_loss != original.evidence_loss ||
+            memcmp(candidate->role, original.role, sizeof(candidate->role)) != 0;
+    }
+    if (!failed) {
+        r55_search_result exact = {0}, capped = {0};
+        failed = r55sg_search(&episode, &corpus.development[0][0].target,
+            u, 0, R55_GLOBAL_CAP, &exact) ||
+            !exact.exact || !exact.certificate_valid || !exact.fallback_started ||
+            !exact.invalid_first_rejected || exact.global_cap_hit ||
+            r55sg_search(&episode, &corpus.development[0][0].target, u, 0, 1, &capped) ||
+            capped.exact || capped.certificate_valid || !capped.global_cap_hit ||
+            capped.primary_cost != 2 || !capped.invalid_first_rejected;
+    }
+    free(u);
+    return failed;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc == 2 && strcmp(argv[1], "--self-test") == 0) {
+        if (r55sg_self_test() != 0) return 1;
+        puts("Reasoner 5.5 semantic guide self-test passed");
+        return 0;
+    }
     if (argc == 2 && strcmp(argv[1], "--list-arms") == 0) {
         for (uint32_t arm = 0; arm < R55SG_ARMS; ++arm) {
             char name[40]; puts(r55sg_name(arm, name));
