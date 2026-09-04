@@ -13,10 +13,10 @@ function sha256(path) {
 }
 
 assert.equal(contract.schema,
-  "zero.reasoner57_active_evidence_development_contract.v5");
+  "zero.reasoner57_active_evidence_development_contract.v6");
 assert.equal(contract.status, "gated-development-scaffolding");
 assert.equal(contract.prerequisite.base_commit,
-  "ea006c398010773b2186e3b7b4de68f0c4370ae5");
+  "01902c18e9bdde747022fc961ca15ac9452308e4");
 assert.equal(contract.prerequisite.state,
   "blocked-reasoner56-channel-readiness-gate");
 

@@ -152,3 +152,9 @@ noise channel, active evidence selection, nonlinear compositional transfer,
 and ambiguous grounded concepts. Bounded recursion follows a positive
 nonlinear composition result. Its machine-readable order and common gates are
 in the [plan](../benchmarks/reasoner5-next-set-v1/PLAN.json).
+
+The [Reasoner 5.5 development implementation](REASONER55.md) now exercises the
+first design on deterministic GF(5)^3 fixtures. It includes two generators,
+exact zero-plus-basis adaptation, canonical semantic search, the full control
+set, arm-parity receipts, and raw replayable traces. Its execution boundary
+stays development-only until a later preregistration and explicit approval.

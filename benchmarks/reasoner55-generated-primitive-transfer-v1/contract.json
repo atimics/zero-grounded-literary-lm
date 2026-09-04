@@ -1,0 +1,216 @@
+{
+  "schema": "zero.reasoner55_development_contract.v1",
+  "experiment": "reasoner55-generated-primitive-transfer-v1",
+  "status": "development-only",
+  "purpose": "qualify generated unseen-primitive transfer before preregistration",
+  "execution": {
+    "authorized": false,
+    "allowed_lane": "development",
+    "sealed_manifest": null,
+    "sealed_seed_family": null,
+    "cloud_run": null
+  },
+  "implementation": {
+    "core_sha256": "8a946ce9f04b7d3ecbc530d4c893ea59ab78121e34e52e263457589a1cf2875c",
+    "header_sha256": "3b0ec10cf07786c05236ff5b063c0848d19d63ef863afef040679909d255e218",
+    "cli_sha256": "5df3da7f977358cd61eb53aae060dd23143360e8705a2f5291a2bb0f706bddb6",
+    "development_checker_sha256": "4ea2d1376732b112ac6c17a28a5667f86f841da468d704276bff48b3c6166c5c",
+    "shared_harness_commit": "a46382178fea84200a331c3ba0a0a22109b00747",
+    "shared_harness_sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883",
+    "replay_adapter_sha256": "dcca6e4f3e802315ae5c5611cd1baa7977982866cbd6937102eb003cce4d651d",
+    "protected_predecessors": {
+      "reasoner51_c_sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
+      "reasoner52_c_sha256": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+      "reasoner5_followup_c_sha256": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+    }
+  },
+  "domain": {
+    "field": "GF(5)",
+    "vectors": 3,
+    "exhaustive_points": 125,
+    "primitive_roles": 8,
+    "program_length": 4,
+    "syntax_candidates": 4096,
+    "semantic_identity": "canonical affine matrix and bias"
+  },
+  "primitive_roles": [
+    "axis_translation",
+    "dense_translation",
+    "axis_scale",
+    "dense_scale",
+    "permutation",
+    "shear",
+    "linear_mix",
+    "affine_mix"
+  ],
+  "adapter": {
+    "queries_per_primitive": 4,
+    "query_vectors": "zero plus three basis vectors",
+    "receipt": "canonical matrix, bias, role, and exhaustive-domain equality",
+    "hidden_coefficient_check": true
+  },
+  "generators": [
+    {
+      "id": "syntax-first",
+      "program_rule": "sample a legal four-role syntax sequence"
+    },
+    {
+      "id": "skeleton-first",
+      "program_rule": "sample a semantic skeleton before binding legal roles"
+    }
+  ],
+  "random_streams": {
+    "program_and_primitive_family": "independent from input and surface streams",
+    "surface": "independent token permutation and 32-bit surface labels",
+    "input": "independent GF(5)^3 demonstration vector"
+  },
+  "development_split": {
+    "source_root": "0x55a10ce5f0012026",
+    "development_root": "0x55de7e10f0013162",
+    "source_families_per_generator": 64,
+    "development_families_per_generator": 4,
+    "tie_repeats_per_generator_environment": 2,
+    "generator_environments": 4,
+    "target_families": 8,
+    "independent_environment_family_units": 16,
+    "episodes": 32
+  },
+  "development_family_selection": {
+    "metric": "target-only median primary cost across two source-generator views and two fixed tie salts",
+    "minimum": 16,
+    "maximum": 64,
+    "timing": "before family split freeze",
+    "maximum_generation_attempts": 65536
+  },
+  "source_artifact": {
+    "schema": "R55A0001",
+    "learning_rule": "Laplace-smoothed position and adjacent-role counts from canonical exact source solutions",
+    "canonical_bytes": 1823,
+    "sha256": "a7b0caee7dcf4291828551baab8dcff2b63871e1bf075cd6296d4705b794ff32"
+  },
+  "search": {
+    "candidate_order": "initial evidence loss, source guide score, frozen tie salt, syntax index",
+    "proposal_budget": 64,
+    "charged_fallback": "shared canonical candidate-record order with semantic deduplication",
+    "global_distinct_semantic_cap": 4096,
+    "cap_value": 4097,
+    "primary_cost": "distinct complete semantic classes submitted to the exact verifier",
+    "verifier": "all 125 GF(5)^3 vectors",
+    "commit_rule": "exact verifier acceptance only"
+  },
+  "factorial_arms": {
+    "adapter_off_guide_off": "target_only",
+    "adapter_on_guide_off": "adapter_only",
+    "adapter_off_guide_on": "raw_lexical",
+    "adapter_on_guide_on": "full"
+  },
+  "raw_lexical_control": {
+    "mapping": "rank each public 32-bit surface label among the eight labels",
+    "properties": "one-to-one, label-only, independent of hidden semantic roles"
+  },
+  "controls": [
+    "oracle_adapter",
+    "frequency_lexical",
+    "source_free_jit",
+    "source_ablation",
+    "source_only",
+    "31_frozen_frequency_preserving_role_derangements"
+  ],
+  "derangement_registration": {
+    "sampler": "uniform Fisher-Yates with fixed-point and duplicate rejection",
+    "seed": "55d3a6e77a11c0de",
+    "namespace": "reasoner55-role-derangements-v1",
+    "sha256": "4b29c6f5236276a53adc0fbabacb758b44078146a70fbc3213cac29d55d0e588"
+  },
+  "development_selection": {
+    "source_free_candidates": ["target_only", "source_free_jit"],
+    "strongest_source_free_arm": "source_free_jit",
+    "selection_metric": "environment-and-family-weighted-mean-paired-log-cost",
+    "family_headroom_rule": "target-only median over four fixed generator-tie environments must be 16 through 64 before split freeze"
+  },
+  "registered_analysis": {
+    "primary_error_rule": "intersection-union at one-sided alpha 0.01",
+    "independent_unit": "target family within each fixed source-to-target generator environment",
+    "exact_adapter_required": true,
+    "simple_effect": {
+      "full_arm": "full",
+      "comparator_arm": "adapter_only",
+      "required_gate": "full common gate"
+    },
+    "operational_comparator": {
+      "full_arm": "full",
+      "comparator_arm": "source_free_jit",
+      "selection": "frozen strongest source-free development arm",
+      "required_gate": "full common gate"
+    },
+    "factorial_interaction": {
+      "contrast": "log(full) - log(adapter_only) - log(raw_lexical) + log(target_only)",
+      "required_upper_log_ratio": 0
+    },
+    "primary_strata": [
+      "target-syntax-first",
+      "target-skeleton-first",
+      "cross-generator"
+    ],
+    "formal_mechanism": {
+      "contrast": "raw_lexical versus full",
+      "required_point_ratio": 1.1,
+      "required_lower_ratio": 1,
+      "alpha": 0.05
+    },
+    "target_only_role": "registered fixture headroom only"
+  },
+  "trace": {
+    "schema": "zero.reasoner55_trace_row.v1",
+    "row_grain": "one arm by episode",
+    "rows": 1280,
+    "raw_sha256": "60f0886ec2291374c5a46c7ee69d104b2486f9962cc8833718178543c9f30287",
+    "cross_family_id": null,
+    "family_unit_fields": [
+      "source_generator_id",
+      "generator_id",
+      "family_id"
+    ],
+    "nested_repeat_field": "nested_repeat_id"
+  },
+  "shared_replay": {
+    "strict_trace_schema": "zero.reasoner5_trace_row.v1",
+    "scientific_analysis_view": {
+      "schema": "zero.reasoner55_analysis_view_receipt.v1",
+      "mapping": "one native row to one analysis row",
+      "native_rows": 1280,
+      "independent_environment_family_units": 16,
+      "nested_tie_repeats_per_unit": 2,
+      "fixed_source_to_target_environments": 4,
+      "transform_function_sha256": "01f164ab59d52a89f05351f00534ad52f3ccbe1c2e6713c5862ab23d6b3e34e4",
+      "analysis_view_sha256": "04f2bab354b5e4fcfb7b93916e54d466c9a04a688be165b940cd3cfa138578f1",
+      "receipt_sha256": "d294335ce06ea744d81ec97ab52a8849dde7e0623700b08d4ef2f43475bffe98",
+      "bindings": [
+        "native raw trace SHA-256",
+        "deterministic transform function SHA-256",
+        "one native row identity SHA-256 per row"
+      ]
+    },
+    "coverage_sha256": "5aeea10bd3eabc75e9eb03ac10dac43ff2639702e978ffc145359e30f70b5e30",
+    "common_result_sha256": "cccec48984de604b1e51444a480f54136807920c1e33c4cd5a31803d6c9b62a5",
+    "intersection_union_analysis_sha256": "2e9b806a60de70f5403419e00e37549ba4cdaa4f22c1565c4e1a21a58a79e3ab",
+    "development_analysis_file_sha256": "42e3ef65e7b5c0ac6a6d15765ff2331df2c7b39f448b3ff4a9b164d30f26d5d5"
+  },
+  "development_gates": {
+    "target_only_median_minimum": 16,
+    "target_only_median_maximum": 64,
+    "adapter_exact_on_every_family": true,
+    "invalid_first_rejected_on_every_arm": true,
+    "source_ablation_matches_source_free_path": true,
+    "full_matches_oracle_adapter": true,
+    "arm_parity_digests_match_within_episode": true
+  },
+  "resource_measurement": {
+    "observation_queries": "logical target primitive calls",
+    "partial_expansions": "candidate construction plus every proposed or fallback occurrence",
+    "source_artifact_reads": "canonical guide bytes made available to the arm",
+    "wall_ns": null,
+    "peak_bytes": null
+  },
+  "next_boundary": "freeze larger calibration and sealed family sets in a later preregistration"
+}

@@ -1,12 +1,12 @@
 {
-  "schema": "zero.reasoner57_active_evidence_development_contract.v5",
+  "schema": "zero.reasoner57_active_evidence_development_contract.v6",
   "experiment": "reasoner57-active-evidence-development-v1",
-  "version": "5.7-development-scaffolding-5",
+  "version": "5.7-development-scaffolding-6",
   "status": "gated-development-scaffolding",
   "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
   "prerequisite": {
     "state": "blocked-reasoner56-channel-readiness-gate",
-    "base_commit": "ea006c398010773b2186e3b7b4de68f0c4370ae5",
+    "base_commit": "01902c18e9bdde747022fc961ca15ac9452308e4",
     "r56_contract": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/contract.json",
       "sha256": "270ffe750995e253a791ca11a3fbc9c4ff9de3eb6eaa9dd0fe7bf4c3a8c8c230",

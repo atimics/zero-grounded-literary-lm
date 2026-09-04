@@ -16,7 +16,7 @@ proxy, and source-isolation checks pass. The prospective sealed interface and
 static-metadata proxy audit also remains pending. R5.7 development fixture
 generation starts after the complete R5.6 channel-readiness gate passes.
 
-The draft binds the final portable R5.6 tree at `ea006c3` and shared harness
+The draft binds the stacked R5.6 tree at `01902c1` and shared harness
 at `a463821`. The harness uses fixed-order binary64 reference math and a
 bounded 14-digit final receipt encoding for portable evidence bytes.
 
