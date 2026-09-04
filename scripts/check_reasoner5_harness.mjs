@@ -4,6 +4,10 @@ import assert from "node:assert/strict";
 
 import { stableJson } from "./zero_data_lib.mjs";
 import {
+  REASONER5_REFERENCE_MATH_RELATIVE_TOLERANCE,
+  REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE,
+  REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS,
+  REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS,
   REASONER5_SPLIT_LANES,
   REASONER5_TRACE_ROW_FIELDS,
   aggregateNestedFamilies,
@@ -24,10 +28,15 @@ import {
   canonicalCandidateOrder,
   canonicalBytes,
   canonicalDigest,
+  canonicalScientificNumber,
+  canonicalScientificValue,
   createReplayRegistry,
   createDeterministicRng,
   createSplitState,
   derangementPValue,
+  deterministicExp,
+  deterministicLog,
+  deterministicSqrt,
   deriveSeed,
   finalizeManifest,
   familyInferenceReceipt,
@@ -109,6 +118,12 @@ function fixtureReplayRegistry() {
 
 function expectFailure(action, pattern) {
   assert.throws(action, pattern);
+}
+
+function withinScientificTolerance(actual, expected) {
+  return expected === 0 ? actual === 0 :
+    Math.abs(actual - expected) <=
+      REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE * Math.abs(expected);
 }
 
 function familyId(lane, index = 0) {
@@ -392,6 +407,125 @@ function testCanonicalDataAndSeeds() {
   const cycle = {};
   cycle.self = cycle;
   expectFailure(() => canonicalBytes(cycle), /cycle/u);
+}
+
+function testDeterministicReferenceMath() {
+  assert.equal(REASONER5_REFERENCE_MATH_RELATIVE_TOLERANCE, 2e-14);
+  assert.equal(REASONER5_SCIENTIFIC_SOURCE_SIGNIFICANT_DIGITS, 17);
+  assert.equal(REASONER5_SCIENTIFIC_SIGNIFICANT_DIGITS, 14);
+  assert.equal(REASONER5_SCIENTIFIC_RELATIVE_TOLERANCE, 1e-13);
+  const withinReferenceTolerance = (actual, expected) =>
+    Math.abs(actual - expected) <=
+      REASONER5_REFERENCE_MATH_RELATIVE_TOLERANCE *
+        Math.max(1, Math.abs(expected));
+  for (let value = 1; value <= 4097; ++value) {
+    assert.ok(withinReferenceTolerance(deterministicLog(value),
+      Math.log(value)), `reference log missed ${value}`);
+    assert.ok(withinReferenceTolerance(deterministicSqrt(value),
+      Math.sqrt(value)), `reference square root missed ${value}`);
+    assert.ok(withinReferenceTolerance(
+      deterministicExp(deterministicLog(value)), value),
+    `reference log/exp round trip missed ${value}`);
+  }
+  for (let numerator = 1; numerator <= 4097; numerator *= 2) {
+    for (let denominator = 1; denominator <= 4097; denominator *= 2) {
+      const ratio = numerator / denominator;
+      assert.ok(withinReferenceTolerance(deterministicLog(ratio),
+        Math.log(ratio)), `reference ratio log missed ${ratio}`);
+    }
+  }
+  for (let step = -133; step <= 133; ++step) {
+    const value = step / 16;
+    assert.ok(withinReferenceTolerance(deterministicExp(value),
+      Math.exp(value)), `reference exponential missed ${value}`);
+  }
+
+  const exactReferenceCases = [
+    ["R5.5 paired cost", deterministicLog(22 / 23),
+      -0.0444517625708338],
+    ["R5.6 derangement cost", deterministicLog(47),
+      3.8501476017100584],
+    ["R5.9a observed ratio", deterministicLog(19 / 15),
+      0.2363887780642303],
+    ["R5.9a paired cost", deterministicLog(33 / 26),
+      0.23841102344499815],
+  ];
+  for (const [label, actual, expected] of exactReferenceCases)
+    assert.equal(actual, expected, `${label} changed`);
+  assert.equal(deterministicExp(deterministicLog(22 / 23)), 22 / 23);
+  assert.equal(deterministicExp(0.6309092162584323),
+    1.8793185096513945);
+
+  const r55RuntimePairs = [
+    [0.20411951749544477, 0.2041195174954448],
+    [0.6309092162584323, 0.6309092162584324],
+    [1.8793185096513945, 1.8793185096513947],
+  ];
+  const r56RuntimePairs = [
+    [6.389945594502464e-59, 6.389945594502465e-59],
+    [1.9646127668504199, 1.9646127668504201],
+  ];
+  const r59RuntimePairs = [
+    [0.23638877806423034, 0.23638877806423036],
+  ];
+  const doubleBits = value => {
+    const bytes = new ArrayBuffer(8);
+    const view = new DataView(bytes);
+    view.setFloat64(0, value);
+    return view.getBigUint64(0);
+  };
+  for (const [left, right] of [
+    ...r55RuntimePairs, ...r56RuntimePairs, ...r59RuntimePairs,
+  ]) {
+    assert.equal(doubleBits(right) - doubleBits(left), 1n);
+    const canonicalLeft = canonicalScientificNumber(left);
+    const canonicalRight = canonicalScientificNumber(right);
+    assert.equal(canonicalLeft, canonicalRight);
+    assert.equal(canonicalScientificNumber(canonicalLeft), canonicalLeft);
+    assert.ok(withinScientificTolerance(canonicalLeft, left));
+    assert.ok(withinScientificTolerance(canonicalRight, right));
+  }
+  assert.equal(canonicalScientificNumber(r56RuntimePairs[0][0]),
+    6.3899455945024e-59);
+  assert.equal(canonicalScientificNumber(r56RuntimePairs[1][0]),
+    1.9646127668504);
+  const encodingBoundary = [1.0062660919960997, 1.0062660919961];
+  assert.equal(doubleBits(encodingBoundary[1]) -
+    doubleBits(encodingBoundary[0]), 1n);
+  assert.notEqual(canonicalScientificNumber(encodingBoundary[0]),
+    canonicalScientificNumber(encodingBoundary[1]));
+  for (const value of encodingBoundary) {
+    const canonical = canonicalScientificNumber(value);
+    assert.equal(canonicalScientificNumber(canonical), canonical);
+    assert.ok(withinScientificTolerance(canonical, value));
+  }
+  assert.equal(canonicalScientificNumber(-1.234567890123456),
+    -1.2345678901234);
+  assert.equal(Object.is(canonicalScientificNumber(-0), -0), false);
+  assert.deepEqual(canonicalScientificValue({ value: -0, count: 3 }),
+    { value: 0, count: 3 });
+  expectFailure(() => canonicalScientificNumber(Number.NaN), /finite number/u);
+  expectFailure(() => canonicalScientificNumber(Number.POSITIVE_INFINITY),
+    /finite number/u);
+
+  const referenceUnits = [[22, 23], [47, 47], [33, 26], [19, 15]]
+    .map(([full, comparator], index) => ({
+      family_id: `reference-${index}`,
+      mean_log_ratio: deterministicLog(full / comparator),
+    }));
+  const settings = {
+    design: "one-way",
+    direction: "lower",
+    seed: DEVELOPMENT_SEED_A,
+    replicates: 64,
+    alpha: 0.05,
+  };
+  const firstReceipt = familyInferenceReceipt(referenceUnits, settings);
+  const secondReceipt = familyInferenceReceipt(referenceUnits, settings);
+  assert.deepEqual(firstReceipt, secondReceipt);
+  assert.equal(firstReceipt.receipt_sha256,
+    "b5eb4f093c6cbfe3d9320727fc63681354bf8b36d7c994db64ab1efeb64051b9");
+  assertFamilyInferenceReceipt(firstReceipt);
 }
 
 function crossLaneState() {
@@ -1330,8 +1464,8 @@ function testGateAndTraceReplay() {
   });
   assert.match(result.result_sha256, /^[0-9a-f]{64}$/u);
   assert.equal(result.decision, "pass");
-  assert.equal(result.registered_analysis.primary.interval.point_ratio,
-    6 / 13);
+  assert.ok(withinScientificTolerance(
+    result.registered_analysis.primary.interval.point_ratio, 6 / 13));
   assert.equal(result.registered_analysis.derangement.values.length, 31);
   expectFailure(() => buildResultFromRawTraces({
     experiment: "reasoner5-harness-self-test",
@@ -1436,6 +1570,7 @@ function testGateAndTraceReplay() {
 }
 
 testCanonicalDataAndSeeds();
+testDeterministicReferenceMath();
 testSplitsReplayAndOverlap();
 testRankerViewsAndParity();
 testVerifierAndAblation();
@@ -1445,6 +1580,16 @@ testGateAndTraceReplay();
 
 const coverage = {
   canonical_sha256: true,
+  deterministic_reference_logarithm: true,
+  deterministic_reference_exponential: true,
+  deterministic_reference_square_root: true,
+  registered_reference_math_accuracy: true,
+  reasoner55_numeric_regressions: true,
+  reasoner56_numeric_regressions: true,
+  reasoner59_numeric_regressions: true,
+  bounded_scientific_number_encoding: true,
+  scientific_number_encoding_idempotence: true,
+  deterministic_scientific_receipt_hash: true,
   hex_seed_handling: true,
   split_before_episode: true,
   cross_lane_ast_behavior_episode_rejection: true,
