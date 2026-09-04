@@ -10,6 +10,9 @@
 #ifndef R55_DEVELOPMENT_ROOT
 #define R55_DEVELOPMENT_ROOT UINT64_C(0x55de7e10f0013162)
 #endif
+#ifndef R55_TIE_NAMESPACE
+#define R55_TIE_NAMESPACE UINT64_C(0x726561736f6e3535)
+#endif
 
 typedef struct {
     uint32_t state[8];
@@ -51,6 +54,7 @@ typedef struct {
     uint32_t primary_cost;
     uint32_t verifier_checks;
     uint32_t partial_expansions;
+    uint32_t observation_queries;
     uint32_t first_counterexample;
     uint32_t source_artifact_reads;
     uint8_t exact;
@@ -446,17 +450,10 @@ static void r55_syntax_first_roles(uint64_t seed,
                                    uint8_t roles[R55_PROGRAM_LEN])
 {
     r55_rng rng;
+    uint32_t position;
     r55_rng_init(&rng, seed, UINT64_C(0x73796e746178));
-    roles[0] = (uint8_t)(r55_rng_index(&rng, 2u) ?
-        R55_ROLE_LINEAR_MIX : R55_ROLE_PERMUTATION);
-    if (roles[0] == R55_ROLE_PERMUTATION)
-        roles[1] = (uint8_t)(R55_ROLE_AXIS_SCALE + r55_rng_index(&rng, 2u));
-    else
-        roles[1] = (uint8_t)(r55_rng_index(&rng, 2u) ?
-            R55_ROLE_SHEAR : R55_ROLE_DENSE_SCALE);
-    roles[2] = (uint8_t)(R55_ROLE_AXIS_TRANSLATION + r55_rng_index(&rng, 2u));
-    roles[3] = (uint8_t)(r55_rng_index(&rng, 3u) == 0u ?
-        R55_ROLE_DENSE_TRANSLATION : R55_ROLE_AFFINE_MIX);
+    for (position = 0; position < R55_PROGRAM_LEN; ++position)
+        roles[position] = (uint8_t)r55_rng_index(&rng, R55_ROLES);
 }
 
 static void r55_skeleton_first_roles(uint64_t seed,
@@ -469,10 +466,19 @@ static void r55_skeleton_first_roles(uint64_t seed,
         {4u, 2u, 1u, 7u}, {6u, 3u, 0u, 1u}
     };
     r55_rng rng;
-    uint32_t index;
+    uint8_t binding[R55_ROLES];
+    uint32_t index, role;
     r55_rng_init(&rng, seed, UINT64_C(0x736b656c65746f6e));
     index = r55_rng_index(&rng, 8u);
-    memcpy(roles, skeletons[index], R55_PROGRAM_LEN);
+    for (role = 0; role < R55_ROLES; ++role) binding[role] = (uint8_t)role;
+    for (role = R55_ROLES - 1u; role > 0u; --role) {
+        uint32_t other = r55_rng_index(&rng, role + 1u);
+        uint8_t temporary = binding[role];
+        binding[role] = binding[other];
+        binding[other] = temporary;
+    }
+    for (role = 0; role < R55_PROGRAM_LEN; ++role)
+        roles[role] = binding[skeletons[index][role]];
 }
 
 static r55_affine r55_program_from_roles(const r55_family *family,
@@ -554,10 +560,12 @@ static int r55_generate_family(r55_family *family, uint64_t root,
     for (slot = 0; slot < R55_PRIMITIVES; ++slot) {
         uint32_t other;
         family->role_to_surface[family->surface_to_role[slot]] = (uint8_t)slot;
-        family->surface_id[slot] = (uint32_t)r55_rng_next(&surface_rng);
-        for (other = 0; other < slot; ++other)
-            if (family->surface_id[slot] == family->surface_id[other])
-                family->surface_id[slot] ^= UINT32_C(0x9e3779b9) + slot;
+        do {
+            family->surface_id[slot] = (uint32_t)r55_rng_next(&surface_rng);
+            for (other = 0; other < slot; ++other)
+                if (family->surface_id[slot] == family->surface_id[other])
+                    break;
+        } while (other < slot);
     }
     if (generator == R55_GENERATOR_SYNTAX_FIRST)
         r55_syntax_first_roles(r55_mix64(family_seed ^ UINT64_C(0x70726f6772616d)),
@@ -603,16 +611,38 @@ static int r55_map_used(const r55_affine *used, uint32_t count,
     return 0;
 }
 
+static uint32_t r55_ast_key(const uint8_t roles[R55_PROGRAM_LEN])
+{
+    uint32_t key = 0;
+    uint32_t position;
+    for (position = 0; position < R55_PROGRAM_LEN; ++position)
+        key = key * R55_ROLES + roles[position];
+    return key;
+}
+
+static int r55_ast_used(const uint32_t *used, uint32_t count, uint32_t key)
+{
+    uint32_t index;
+    for (index = 0; index < count; ++index)
+        if (used[index] == key) return 1;
+    return 0;
+}
+
 static int r55_make_unique_family(r55_family *family, uint64_t root,
                                   uint8_t generator, uint32_t ordinal,
-                                  r55_affine *used, uint32_t *used_count)
+                                  r55_affine *used, uint32_t *used_count,
+                                  uint32_t *used_ast,
+                                  uint32_t *used_ast_count)
 {
     uint32_t nonce;
     for (nonce = 0; nonce < 4096u; ++nonce) {
         if (r55_generate_family(family, root, generator, ordinal, nonce) != 0)
             continue;
         if (r55_map_used(used, *used_count, &family->target)) continue;
+        if (r55_ast_used(used_ast, *used_ast_count,
+                         r55_ast_key(family->target_roles))) continue;
         used[(*used_count)++] = family->target;
+        used_ast[(*used_ast_count)++] = r55_ast_key(family->target_roles);
         return 0;
     }
     return 1;
@@ -635,6 +665,23 @@ static int r55_canonical_solution(const r55_family *family,
     return 1;
 }
 
+static int r55_record_family_receipt(r55_development_result *result,
+                                     const r55_family *family, uint8_t lane)
+{
+    r55_family_receipt *receipt;
+    if (result->family_receipt_count >= R55_TOTAL_FAMILIES) return 1;
+    receipt = &result->family_receipts[result->family_receipt_count++];
+    memset(receipt, 0, sizeof(*receipt));
+    receipt->lane = lane;
+    receipt->generator_id = family->generator_id;
+    receipt->ordinal = family->ordinal;
+    r55_digest("reasoner55-target-ast", family->target_roles,
+               sizeof(family->target_roles), receipt->ast_sha256);
+    r55_digest("reasoner55-affine", &family->target,
+               sizeof(family->target), receipt->behavior_sha256);
+    return 0;
+}
+
 static void r55_guide_add(r55_guide *guide,
                           const uint8_t roles[R55_PROGRAM_LEN])
 {
@@ -648,7 +695,10 @@ static void r55_guide_add(r55_guide *guide,
 
 static int r55_build_source_artifact(r55_artifact *artifact,
                                      r55_affine *used,
-                                     uint32_t *used_count)
+                                     uint32_t *used_count,
+                                     uint32_t *used_ast,
+                                     uint32_t *used_ast_count,
+                                     r55_development_result *result)
 {
     uint32_t generator, ordinal;
     memset(artifact, 0, sizeof(*artifact));
@@ -659,9 +709,11 @@ static int r55_build_source_artifact(r55_artifact *artifact,
             r55_family family;
             uint8_t solution[R55_PROGRAM_LEN];
             if (r55_make_unique_family(&family, R55_SOURCE_ROOT,
-                    (uint8_t)generator, ordinal, used, used_count) != 0)
+                    (uint8_t)generator, ordinal, used, used_count,
+                    used_ast, used_ast_count) != 0)
                 return 1;
             if (r55_canonical_solution(&family, solution) != 0) return 1;
+            if (r55_record_family_receipt(result, &family, 0u) != 0) return 1;
             r55_guide_add(guide, solution);
             ++guide->source_families;
         }
@@ -675,6 +727,62 @@ static size_t r55_put_u32(uint8_t *bytes, size_t offset, uint32_t value)
     bytes[offset++] = (uint8_t)(value >> 8u);
     bytes[offset++] = (uint8_t)(value >> 16u);
     bytes[offset++] = (uint8_t)(value >> 24u);
+    return offset;
+}
+
+static size_t r55_put_u64(uint8_t *bytes, size_t offset, uint64_t value)
+{
+    uint32_t index;
+    for (index = 0; index < 8u; ++index)
+        bytes[offset++] = (uint8_t)(value >> (index * 8u));
+    return offset;
+}
+
+static size_t r55_family_replay_bytes(const r55_family *family,
+                                      uint32_t source_generator,
+                                      uint32_t tie, uint32_t arm,
+                                      uint64_t tie_salt,
+                                      uint8_t bytes[256])
+{
+    static const uint8_t magic[8] = {'R','5','5','R','0','0','0','1'};
+    size_t offset = 0;
+    uint32_t role, slot;
+    memcpy(bytes + offset, magic, sizeof(magic)); offset += sizeof(magic);
+    for (role = 0; role < R55_ROLES; ++role) {
+        memcpy(bytes + offset, family->primitive_by_role[role].matrix,
+               sizeof(family->primitive_by_role[role].matrix));
+        offset += sizeof(family->primitive_by_role[role].matrix);
+        memcpy(bytes + offset, family->primitive_by_role[role].bias,
+               sizeof(family->primitive_by_role[role].bias));
+        offset += sizeof(family->primitive_by_role[role].bias);
+    }
+    memcpy(bytes + offset, family->surface_to_role,
+           sizeof(family->surface_to_role));
+    offset += sizeof(family->surface_to_role);
+    for (slot = 0; slot < R55_PRIMITIVES; ++slot)
+        offset = r55_put_u32(bytes, offset, family->surface_id[slot]);
+    memcpy(bytes + offset, family->target_roles,
+           sizeof(family->target_roles));
+    offset += sizeof(family->target_roles);
+    memcpy(bytes + offset, family->target.matrix,
+           sizeof(family->target.matrix));
+    offset += sizeof(family->target.matrix);
+    memcpy(bytes + offset, family->target.bias,
+           sizeof(family->target.bias));
+    offset += sizeof(family->target.bias);
+    memcpy(bytes + offset, family->example_input,
+           sizeof(family->example_input));
+    offset += sizeof(family->example_input);
+    memcpy(bytes + offset, family->example_output,
+           sizeof(family->example_output));
+    offset += sizeof(family->example_output);
+    bytes[offset++] = family->generator_id;
+    offset = r55_put_u32(bytes, offset, family->ordinal);
+    offset = r55_put_u64(bytes, offset, family->family_seed);
+    offset = r55_put_u64(bytes, offset, tie_salt);
+    bytes[offset++] = (uint8_t)source_generator;
+    bytes[offset++] = (uint8_t)tie;
+    bytes[offset++] = (uint8_t)arm;
     return offset;
 }
 
@@ -877,45 +985,24 @@ static int r55_exact_verify(const r55_affine *candidate,
     return exact;
 }
 
-static int r55_next_permutation(uint8_t values[R55_ROLES])
-{
-    int pivot = R55_ROLES - 2;
-    int right = R55_ROLES - 1;
-    int left;
-    while (pivot >= 0 && values[pivot] >= values[pivot + 1]) --pivot;
-    if (pivot < 0) return 0;
-    while (values[right] <= values[pivot]) --right;
-    {
-        uint8_t temporary = values[pivot];
-        values[pivot] = values[right];
-        values[right] = temporary;
-    }
-    left = pivot + 1;
-    right = R55_ROLES - 1;
-    while (left < right) {
-        uint8_t temporary = values[left];
-        values[left++] = values[right];
-        values[right--] = temporary;
-    }
-    return 1;
-}
-
 static int r55_make_derangements(
     uint8_t output[R55_DERANGEMENTS][R55_ROLES])
 {
-    uint8_t permutation[R55_ROLES];
-    uint32_t index, count = 0;
-    for (index = 0; index < R55_ROLES; ++index)
-        permutation[index] = (uint8_t)index;
-    while (r55_next_permutation(permutation)) {
-        int valid = 1;
-        for (index = 0; index < R55_ROLES; ++index)
-            if (permutation[index] == index) valid = 0;
-        if (!valid) continue;
-        memcpy(output[count++], permutation, R55_ROLES);
-        if (count == R55_DERANGEMENTS) return 0;
-    }
-    return 1;
+    static const uint8_t frozen[R55_DERANGEMENTS][R55_ROLES] = {
+        {6,3,5,0,2,7,4,1}, {2,7,4,5,0,6,3,1}, {2,6,1,5,3,7,0,4},
+        {1,6,4,7,5,0,3,2}, {7,3,1,6,0,4,2,5}, {3,4,5,0,7,6,2,1},
+        {2,0,5,4,3,6,7,1}, {1,0,4,7,3,2,5,6}, {5,0,6,4,1,7,2,3},
+        {5,3,4,1,0,7,2,6}, {4,3,5,6,2,0,7,1}, {1,0,5,6,7,3,2,4},
+        {4,3,5,7,0,6,1,2}, {5,3,6,7,2,0,4,1}, {3,5,4,6,7,0,1,2},
+        {3,5,7,0,2,4,1,6}, {7,5,6,1,0,3,4,2}, {7,4,6,1,0,3,2,5},
+        {7,2,0,6,5,1,3,4}, {3,2,1,6,7,0,5,4}, {5,3,1,4,2,0,7,6},
+        {6,4,3,1,5,7,2,0}, {5,6,3,0,7,1,2,4}, {7,4,0,6,1,3,5,2},
+        {1,3,6,7,5,2,0,4}, {2,6,4,0,5,1,7,3}, {2,4,3,5,6,7,0,1},
+        {2,5,1,6,7,3,0,4}, {3,0,7,1,5,2,4,6}, {2,0,6,7,3,1,5,4},
+        {4,6,7,0,2,1,5,3}
+    };
+    memcpy(output, frozen, sizeof(frozen));
+    return 0;
 }
 
 static void r55_digest_map(const r55_affine *map, uint8_t digest[32])
@@ -1048,11 +1135,16 @@ static int r55_search(const r55_family *family,
     memset(result, 0, sizeof(*result));
     memset(&seen, 0, sizeof(seen));
     result->first_counterexample = UINT32_MAX;
+    result->partial_expansions = R55_CANDIDATES;
     for (slot = 0; slot < R55_PRIMITIVES; ++slot)
         mapped_role[slot] = recovered_role[slot];
-    if (arm == R55_ARM_RAW_LEXICAL || arm == R55_ARM_FREQUENCY_LEXICAL)
+    if (arm == R55_ARM_RAW_LEXICAL || arm == R55_ARM_FREQUENCY_LEXICAL ||
+        arm == R55_ARM_SOURCE_ONLY)
         for (slot = 0; slot < R55_PRIMITIVES; ++slot)
-            mapped_role[slot] = (uint8_t)slot;
+            mapped_role[slot] = (uint8_t)(family->surface_id[slot] % R55_ROLES);
+    if (arm == R55_ARM_ORACLE_ADAPTER)
+        for (slot = 0; slot < R55_PRIMITIVES; ++slot)
+            mapped_role[slot] = family->surface_to_role[slot];
     if (arm >= R55_BASE_ARMS) {
         uint32_t shuffle = arm - R55_BASE_ARMS;
         for (slot = 0; slot < R55_PRIMITIVES; ++slot)
@@ -1066,7 +1158,12 @@ static int r55_search(const r55_family *family,
     } else if (arm == R55_ARM_SOURCE_FREE_JIT ||
                arm == R55_ARM_SOURCE_ABLATION) {
         guide = jit_guide;
+        result->partial_expansions += R55_CANDIDATES;
     }
+    if (arm == R55_ARM_ADAPTER_ONLY || arm == R55_ARM_FULL ||
+        arm == R55_ARM_SOURCE_FREE_JIT || arm == R55_ARM_SOURCE_ABLATION ||
+        arm >= R55_BASE_ARMS)
+        result->observation_queries = R55_PRIMITIVES * (R55_LANES + 1u);
     frequency_only = arm == R55_ARM_FREQUENCY_LEXICAL;
     ignore_evidence = arm == R55_ARM_SOURCE_ONLY;
     for (index = 0; index < R55_CANDIDATES; ++index) {
@@ -1110,6 +1207,7 @@ static int r55_search(const r55_family *family,
             if (state < 0) return 1;
             if (state == 1 || state == 2) break;
         }
+        if (!result->exact) result->global_cap_hit = 1u;
     }
     if (!result->exact && result->verifier_checks >= global_cap)
         result->global_cap_hit = 1u;
@@ -1154,6 +1252,8 @@ static int r55_same_search(const r55_search_result *left,
 static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
                           const r55_family *family, uint32_t source_generator,
                           uint32_t tie, uint32_t arm,
+                          uint64_t tie_salt,
+                          const uint8_t source_artifact_sha256[32],
                           const r55_search_result *search,
                           const uint8_t candidate_digest[32],
                           const uint8_t ast[32], const uint8_t behavior[32],
@@ -1170,13 +1270,16 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
     char candidate_hex[65], ast_hex[65], behavior_hex[65], spec_hex[65];
     char evidence_hex[65], potential_hex[65], grammar_hex[65];
     char actions_hex[65], verifier_hex[65], caps_hex[65], accepted_hex[65];
-    char order_hex[65], arm_buffer[24], line[4096];
+    uint8_t replay_bytes[256], replay_sha256[32];
+    char replay_hex[513], replay_sha256_hex[65], artifact_hex[65];
+    char order_hex[65], arm_buffer[24], line[8192];
     const char *arm_name = r55_arm_name(arm, arm_buffer);
     const char *source_name = r55_generator_name(source_generator);
     const char *target_name = r55_generator_name(family->generator_id);
-    const char *shift = source_generator == family->generator_id ?
+    const char *relation = source_generator == family->generator_id ?
         "same-generator" : "cross-generator";
     int length;
+    size_t replay_length, replay_index;
     r55_digest("reasoner55-grammar", grammar, sizeof(grammar) - 1u,
                grammar_digest);
     r55_digest("reasoner55-actions", actions, sizeof(actions) - 1u,
@@ -1191,6 +1294,20 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
     r55_hex(verifier_digest, verifier_hex); r55_hex(caps_digest, caps_hex);
     r55_hex(search->accepted_semantic, accepted_hex);
     r55_hex(search->proposal_order, order_hex);
+    replay_length = r55_family_replay_bytes(family, source_generator, tie,
+                                            arm, tie_salt, replay_bytes);
+    for (replay_index = 0; replay_index < replay_length; ++replay_index)
+        snprintf(replay_hex + replay_index * 2u, 3u, "%02x",
+                 replay_bytes[replay_index]);
+    replay_hex[replay_length * 2u] = '\0';
+    {
+        r55_sha256 replay_sha;
+        r55_sha256_init(&replay_sha);
+        r55_sha256_update(&replay_sha, replay_bytes, replay_length);
+        r55_sha256_final(&replay_sha, replay_sha256);
+    }
+    r55_hex(replay_sha256, replay_sha256_hex);
+    r55_hex(source_artifact_sha256, artifact_hex);
     length = snprintf(line, sizeof(line),
         "{\"schema\":\"zero.reasoner55_trace_row.v1\","
         "\"experiment\":\"reasoner55-generated-primitive-transfer-v1\","
@@ -1199,11 +1316,13 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
         "\"family_id\":\"development-%s-%03u\","
         "\"cross_family_id\":null,"
         "\"episode_id\":\"%s-to-%s-%03u-tie-%u\","
-        "\"nested_repeat_id\":\"tie-%u\",\"shift_stratum\":\"%s\","
+        "\"nested_repeat_id\":\"tie-%u\","
+        "\"shift_stratum\":\"generated-affine\","
+        "\"generator_relation\":\"%s\","
         "\"arm\":\"%s\",\"exact\":%s,\"certificate_valid\":%s,"
         "\"premature_commit\":false,\"primary_cost\":%u,"
         "\"verifier_checks\":%u,\"partial_expansions\":%u,"
-        "\"observation_queries\":0,\"wall_ns\":0,\"peak_bytes\":0,"
+        "\"observation_queries\":%u,\"wall_ns\":null,\"peak_bytes\":null,"
         "\"verifier_domain_points\":125,"
         "\"fallback_started\":%s,\"fallback_work_counted\":true,"
         "\"global_cap_hit\":%s,\"injected_invalid\":true,"
@@ -1219,13 +1338,16 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
         "\"grammar_digest\":\"%s\",\"verifier_digest\":\"%s\","
         "\"caps_digest\":\"%s\",\"source_artifact_reads\":%u,"
         "\"accepted_semantic_sha256\":\"%s\","
-        "\"proposal_order_sha256\":\"%s\"}\n",
+        "\"proposal_order_sha256\":\"%s\","
+        "\"source_artifact_sha256\":\"%s\","
+        "\"family_replay_sha256\":\"%s\","
+        "\"family_replay_hex\":\"%s\"}\n",
         source_name, target_name, target_name, family->ordinal,
-        source_name, target_name, family->ordinal, tie, tie, shift, arm_name,
+        source_name, target_name, family->ordinal, tie, tie, relation, arm_name,
         search->exact ? "true" : "false",
         search->certificate_valid ? "true" : "false",
         search->primary_cost, search->verifier_checks,
-        search->partial_expansions,
+        search->partial_expansions, search->observation_queries,
         search->fallback_started ? "true" : "false",
         search->global_cap_hit ? "true" : "false",
         search->invalid_first_rejected ? "true" : "false",
@@ -1233,7 +1355,7 @@ static int r55_emit_trace(FILE *trace, r55_sha256 *trace_sha,
         ast_hex, behavior_hex, spec_hex, actions_hex, behavior_hex,
         potential_hex, candidate_hex, evidence_hex, grammar_hex,
         verifier_hex, caps_hex, search->source_artifact_reads,
-        accepted_hex, order_hex);
+        accepted_hex, order_hex, artifact_hex, replay_sha256_hex, replay_hex);
     if (length < 0 || (size_t)length >= sizeof(line)) return 1;
     if (fwrite(line, (size_t)length, 1u, trace) != 1u) return 1;
     r55_sha256_update(trace_sha, line, (size_t)length);
@@ -1247,6 +1369,9 @@ int r55_run_development(r55_development_result *result,
         (R55_SOURCE_FAMILIES + R55_DEVELOPMENT_FAMILIES)];
     r55_family development[R55_GENERATORS][R55_DEVELOPMENT_FAMILIES];
     uint32_t used_count = 0;
+    uint32_t used_ast[R55_GENERATORS *
+        (R55_SOURCE_FAMILIES + R55_DEVELOPMENT_FAMILIES)];
+    uint32_t used_ast_count = 0;
     uint8_t derangements[R55_DERANGEMENTS][R55_ROLES];
     uint32_t target_costs[R55_GENERATORS * R55_GENERATORS *
         R55_DEVELOPMENT_FAMILIES * R55_TIE_REPEATS];
@@ -1256,7 +1381,9 @@ int r55_run_development(r55_development_result *result,
     memset(result, 0, sizeof(*result));
     if (!trace) return 1;
     if (r55_make_derangements(derangements) != 0) return 1;
-    if (r55_build_source_artifact(artifact, used, &used_count) != 0) return 1;
+    if (r55_build_source_artifact(artifact, used, &used_count,
+                                  used_ast, &used_ast_count, result) != 0)
+        return 1;
     r55_finish_artifact(artifact);
     memcpy(result->artifact_sha256, artifact->digest, 32u);
     result->source_families = R55_GENERATORS * R55_SOURCE_FAMILIES;
@@ -1269,7 +1396,10 @@ int r55_run_development(r55_development_result *result,
             if (r55_make_unique_family(
                     &development[target_generator][ordinal],
                     R55_DEVELOPMENT_ROOT, (uint8_t)target_generator, ordinal,
-                    used, &used_count) != 0)
+                    used, &used_count, used_ast, &used_ast_count) != 0)
+                return 1;
+            else if (r55_record_family_receipt(
+                    result, &development[target_generator][ordinal], 1u) != 0)
                 return 1;
     for (ordinal = 0; ordinal < R55_DEVELOPMENT_FAMILIES; ++ordinal)
         result->generator_sequence_differences += memcmp(
@@ -1305,7 +1435,8 @@ int r55_run_development(r55_development_result *result,
                 for (tie = 0; tie < R55_TIE_REPEATS; ++tie) {
                     r55_search_result episode[R55_ARMS];
                     uint64_t tie_salt = r55_mix64(family->family_seed ^
-                        ((uint64_t)source_generator << 48u) ^ tie);
+                        ((uint64_t)source_generator << 48u) ^ tie ^
+                        R55_TIE_NAMESPACE);
                     ++result->episodes;
                     for (arm = 0; arm < R55_ARMS; ++arm) {
                         if (r55_search(family, recovered_role,
@@ -1328,7 +1459,8 @@ int r55_run_development(r55_development_result *result,
                         result->arms[arm].invalid_first_rejected +=
                             episode[arm].invalid_first_rejected;
                         if (r55_emit_trace(trace, &trace_sha, family,
-                                source_generator, tie, arm, &episode[arm],
+                                source_generator, tie, arm, tie_salt,
+                                artifact->digest, &episode[arm],
                                 candidate_digest, ast, behavior,
                                 specification, evidence, potential) != 0)
                             return 1;
@@ -1386,7 +1518,10 @@ int r55_self_test(void)
     uint8_t candidate_digest[32];
     uint32_t distinct;
     r55_guide jit;
-    r55_search_result capped, jit_result, ablated_result;
+    r55_search_result capped, exhausted, jit_result, ablated_result;
+    r55_search_result full_exact, full_poisoned;
+    r55_search_result oracle_exact, oracle_poisoned;
+    r55_search_result source_exact, source_poisoned;
     r55_affine impossible;
     uint8_t input[R55_LANES] = {2u, 3u, 4u};
     uint8_t sequential[R55_LANES], composed[R55_LANES], middle[R55_LANES];
@@ -1450,6 +1585,37 @@ int r55_self_test(void)
             "source-ablation search");
     R55_TEST(r55_same_search(&jit_result, &ablated_result),
              "source-ablation equality");
+    {
+        uint8_t poisoned_role[R55_PRIMITIVES];
+        for (role = 0; role < R55_PRIMITIVES; ++role)
+            poisoned_role[role] = (uint8_t)((recovered_role[role] + 1u) %
+                                             R55_ROLES);
+        R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+                R55_ARM_FULL, derangements, tie_salt,
+                R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &full_exact) == 0 &&
+            r55_search(&a, poisoned_role, &jit, &jit,
+                R55_ARM_FULL, derangements, tie_salt,
+                R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &full_poisoned) == 0,
+            "full adapter sensitivity setup");
+        R55_TEST(!r55_same_search(&full_exact, &full_poisoned),
+            "full arm uses reconstructed adapter");
+        R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+                R55_ARM_ORACLE_ADAPTER, derangements, tie_salt,
+                R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &oracle_exact) == 0 &&
+            r55_search(&a, poisoned_role, &jit, &jit,
+                R55_ARM_ORACLE_ADAPTER, derangements, tie_salt,
+                R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &oracle_poisoned) == 0 &&
+            r55_same_search(&oracle_exact, &oracle_poisoned),
+            "oracle bypasses reconstructed adapter");
+        R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+                R55_ARM_SOURCE_ONLY, derangements, tie_salt,
+                R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &source_exact) == 0 &&
+            r55_search(&a, poisoned_role, &jit, &jit,
+                R55_ARM_SOURCE_ONLY, derangements, tie_salt,
+                R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &source_poisoned) == 0 &&
+            r55_same_search(&source_exact, &source_poisoned),
+            "source-only arm has no adapter access");
+    }
     impossible = a.target;
     memset(impossible.matrix, 0, sizeof(impossible.matrix));
     memset(impossible.bias, 0, sizeof(impossible.bias));
@@ -1465,6 +1631,19 @@ int r55_self_test(void)
              capped.global_cap_hit && capped.primary_cost == 3u &&
              capped.invalid_first_rejected,
              "cap-plus-one and fallback accounting");
+    {
+        r55_family impossible_family = a;
+        impossible_family.target = impossible;
+        R55_TEST(r55_search(&impossible_family, recovered_role, &jit, &jit,
+                R55_ARM_TARGET_ONLY, derangements, tie_salt, 0u,
+                R55_GLOBAL_CAP, &exhausted) == 0,
+                "exhausted fallback search");
+    }
+    R55_TEST(!exhausted.exact && exhausted.fallback_started &&
+             exhausted.global_cap_hit &&
+             exhausted.primary_cost == R55_GLOBAL_CAP + 1u &&
+             exhausted.verifier_checks < R55_GLOBAL_CAP,
+             "exhausted semantic universe is upper-censored");
     {
         uint32_t counterexample;
         r55_affine changed = a.target;
@@ -1502,7 +1681,7 @@ int r55_write_development_json(const char *path,
                                const r55_development_result *result)
 {
     FILE *file = fopen(path, "wb");
-    uint32_t arm;
+    uint32_t arm, family_index;
     char artifact[65], trace[65];
     if (!file) return 1;
     r55_hex(result->artifact_sha256, artifact);
@@ -1532,7 +1711,7 @@ int r55_write_development_json(const char *path,
         "  \"derangements\": 31,\n"
         "  \"artifact_sha256\": \"%s\",\n"
         "  \"raw_trace_sha256\": \"%s\",\n"
-        "  \"arms\": [\n",
+        "  \"split_families\": [\n",
         result->source_families, result->development_families,
         result->generator_environments, result->episodes, result->trace_rows,
         result->adapter_reconstructions, result->adapter_exact,
@@ -1547,6 +1726,30 @@ int r55_write_development_json(const char *path,
         result->arms[R55_ARM_TARGET_ONLY].primary_cost,
         result->arms[R55_ARM_SOURCE_FREE_JIT].primary_cost,
         artifact, trace) < 0) {
+        fclose(file);
+        return 1;
+    }
+    for (family_index = 0; family_index < result->family_receipt_count;
+         ++family_index) {
+        const r55_family_receipt *receipt =
+            &result->family_receipts[family_index];
+        char ast[65], behavior[65];
+        const char *lane = receipt->lane == 0u ? "source-training" :
+            "development";
+        r55_hex(receipt->ast_sha256, ast);
+        r55_hex(receipt->behavior_sha256, behavior);
+        if (fprintf(file,
+            "    {\"lane\": \"%s\", \"generator_id\": \"%s\", "
+            "\"ordinal\": %u, \"ast_sha256\": \"%s\", "
+            "\"behavior_sha256\": \"%s\"}%s\n",
+            lane, r55_generator_name(receipt->generator_id),
+            receipt->ordinal, ast, behavior,
+            family_index + 1u == result->family_receipt_count ? "" : ",") < 0) {
+            fclose(file);
+            return 1;
+        }
+    }
+    if (fprintf(file, "  ],\n  \"arms\": [\n") < 0) {
         fclose(file);
         return 1;
     }

@@ -22,6 +22,8 @@ enum {
     R55_ARMS = R55_BASE_ARMS + R55_DERANGEMENTS,
     R55_PROPOSAL_BUDGET = 64,
     R55_GLOBAL_CAP = R55_CANDIDATES,
+    R55_TOTAL_FAMILIES = R55_GENERATORS *
+        (R55_SOURCE_FAMILIES + R55_DEVELOPMENT_FAMILIES),
     R55_GUIDE_POSITION_CELLS = R55_PROGRAM_LEN * R55_ROLES,
     R55_GUIDE_TRANSITION_CELLS =
         (R55_PROGRAM_LEN - 1) * R55_ROLES * R55_ROLES,
@@ -89,6 +91,14 @@ typedef struct {
 } r55_arm_summary;
 
 typedef struct {
+    uint8_t lane;
+    uint8_t generator_id;
+    uint32_t ordinal;
+    uint8_t ast_sha256[32];
+    uint8_t behavior_sha256[32];
+} r55_family_receipt;
+
+typedef struct {
     uint32_t source_families;
     uint32_t development_families;
     uint32_t generator_environments;
@@ -103,11 +113,13 @@ typedef struct {
     uint32_t source_ablation_cases;
     uint32_t full_oracle_matches;
     uint32_t full_oracle_cases;
+    uint32_t family_receipt_count;
     uint32_t target_only_median_cost;
     uint32_t target_only_minimum_cost;
     uint32_t target_only_maximum_cost;
     uint8_t artifact_sha256[32];
     uint8_t trace_sha256[32];
+    r55_family_receipt family_receipts[R55_TOTAL_FAMILIES];
     r55_arm_summary arms[R55_ARMS];
 } r55_development_result;
 
