@@ -110,7 +110,7 @@ assert.equal(contract.analysis.log_loss_comparison_input,
 assert.equal(contract.analysis.full_log_loss_replay_episodes, 128);
 assert.equal(contract.arms.length, 45);
 assert.equal(contract.shared_harness.commit,
-  "d4697c5de800390384ad90d62ec994470352af70");
+  "2914e89bb514adf5d9b570a2c42426dcd15c0340");
 assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
   contract.shared_harness.library_sha256,
 "shared harness hash differs from the R5.6 contract");
