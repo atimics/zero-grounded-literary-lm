@@ -1,0 +1,169 @@
+{
+  "schema": "zero.reasoner56_passive_noise_development_contract.v1",
+  "experiment": "reasoner56-passive-noise-development-v1",
+  "version": "5.6-development",
+  "status": "development-only",
+  "question": "Can a frozen source-learned observation model improve exact search on new GF(17) program and corruption families?",
+  "domain": {
+    "field_modulus": 17,
+    "program_depth": 3,
+    "primitive_count": 8,
+    "syntax_programs": 512,
+    "semantic_classes": 427,
+    "semantic_identity": "exact 17-value truth table",
+    "exact_verifier_points": 17
+  },
+  "generators": {
+    "source_program": "counter-keyed deterministic three-token generator",
+    "corruption_family": "counter-keyed deterministic eight-template generator",
+    "source_programs": 256,
+    "source_reads_per_program": 51,
+    "development_program_families": 3,
+    "development_corruption_families": 2,
+    "nested_repeats": 1
+  },
+  "channel": {
+    "sensors": 3,
+    "observable_states": 18,
+    "local_backoff": [
+      "sensor-input-candidate-value",
+      "sensor-candidate-value",
+      "sensor",
+      "global"
+    ],
+    "transition_backoff": [
+      "previous-sensor-current-sensor-previous-state",
+      "current-sensor-previous-state",
+      "previous-state",
+      "global"
+    ],
+    "minimum_leaf_support": 32,
+    "smoothing": "plus-one over every legal outcome",
+    "score_format": "signed Q20 with int64 accumulation"
+  },
+  "calibration": {
+    "temperature_grid": [0.25, 0.5, 1, 2, 4, 8],
+    "candidate_set_coverage": 0.99,
+    "fit_episodes": 8,
+    "coverage_episodes": 8,
+    "fit_and_coverage_lanes_are_separate": true,
+    "fit_seed_roots": ["0x56ca1100", "0x56ca1200", "0x56ca1300"],
+    "coverage_seed_roots": ["0x56cb1100", "0x56cb1200", "0x56cb1300"]
+  },
+  "ranker_interface": {
+    "public_recursive_leaf_paths": [
+      "observations[].input",
+      "observations[].sensor",
+      "observations[].observed",
+      "observations[].missing"
+    ],
+    "candidate_semantics_are_read_only": true,
+    "frozen_artifact_is_read_only": true,
+    "hidden_fields_rejected": [
+      "target",
+      "clean_value",
+      "corruption_family",
+      "corruption_rate",
+      "corruption_location",
+      "corruption_direction",
+      "seed"
+    ]
+  },
+  "arms": [
+    "full",
+    "source_free",
+    "source_ablation",
+    "one_trim",
+    "markov_off"
+  ],
+  "search": {
+    "semantic_deduplication": true,
+    "canonical_fallback_classes": 427,
+    "global_cap": 427,
+    "cap_cost": 428,
+    "exact_verifier_is_authoritative": true,
+    "invalid_first_candidate_required": true
+  },
+  "artifact": {
+    "schema": "R56ART1",
+    "byte_order": "little-endian",
+    "serialized_bytes": 175224,
+    "integrity": "domain-separated FNV-1a 64-bit payload checksum",
+    "stores": [
+      "class priors",
+      "local counts and Q20 log scores",
+      "initial-state counts and Q20 log scores",
+      "transition counts and Q20 log scores",
+      "support counts",
+      "temperature",
+      "conformal cumulative mass",
+      "disjoint calibration lane counts and digests",
+      "source generator receipts"
+    ]
+  },
+  "development_fixture": {
+    "target_program_seed": "0x56de0001",
+    "target_corruption_seed": "0x56de0002",
+    "public_order_seed": "0x56de0003",
+    "source_seed": "0x56010001",
+    "corruption_seed": "0x56020002",
+    "episodes": 6,
+    "trace_rows": 30,
+    "scientific_claim": false
+  },
+  "execution": {
+    "authorized": false,
+    "sealed_seeds_present": false,
+    "scientific_executions": 0,
+    "scientific_retries": 0,
+    "cloud_resources": false,
+    "publication_rule_frozen": false
+  },
+  "protected_sources": {
+    "reasoner51.c": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
+    "reasoner52.c": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+    "reasoner5_followup.c": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+  },
+  "implementation": {
+    "files": {
+      "reasoner56.c": "430ce2d52431c26a751d289744ec307ebb862d04830db1ab35ce56b3cdd9c819",
+      "reasoner56.h": "d5439dc714c05c65ded224608b2e339f01eaf2ddbe266875feb7926ea4808548",
+      "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
+      "scripts/check_reasoner56_development.mjs": "f2b691dc7e00822f0a3135e993d8ebad63bdbaebc084add1116efd7f53c759bf"
+    }
+  },
+  "development_outputs": {
+    "result": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/result.json",
+      "sha256": "9d5b974885fd71492a31858913fcd846772fd0f13e225d7bf05a3c22e39065a6"
+    },
+    "trace": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/raw-trace.jsonl",
+      "sha256": "47a8f47803447e6de825ed92e8d3cdd9e5b25a6935f63cf97305e8a7e28bf74d"
+    },
+    "artifact": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
+      "sha256": "164ff45f3d6ab349e3215bbb7e45a59a71d39f3b3974583fb70a3cd6bb2eeefd"
+    }
+  },
+  "shared_harness": {
+    "required_before_preregistration": true,
+    "integrated": false,
+    "required_receipts": [
+      "family split manifest",
+      "seed commitments",
+      "arm parity",
+      "raw trace coverage",
+      "two-way program-by-corruption bootstrap",
+      "result replay"
+    ]
+  },
+  "non_claims": [
+    "sealed result",
+    "channel-readiness pass",
+    "scientific pass or no-go",
+    "mechanism-OOD result",
+    "severity-OOD result",
+    "active evidence selection"
+  ]
+}

@@ -442,6 +442,12 @@ finite primitive and program generators.
 
 ## R5.6: passive learned-noise transfer
 
+The development implementation and frozen local fixtures live in
+`reasoner56.c`, `reasoner56.h`, and
+`benchmarks/reasoner56-passive-noise-development-v1/`. This implementation is
+development-only. Shared-harness integration and preregistration remain the
+next boundary.
+
 ### Question
 
 Can source episodes teach a small observation model that reduces exact search
