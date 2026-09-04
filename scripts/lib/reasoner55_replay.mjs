@@ -1,0 +1,823 @@
+import { createHash } from "node:crypto";
+import assert from "node:assert/strict";
+
+import {
+  canonicalCandidateOrder,
+  canonicalDigest,
+  candidateSemanticDigest,
+  runVerifiedSearch,
+} from "./reasoner5_harness.mjs";
+
+export const R55_DERANGEMENT_SEED = "55d3a6e77a11c0de";
+export const R55_DERANGEMENT_NAMESPACE = "reasoner55-role-derangements-v1";
+export const R55_DERANGEMENT_DIGEST =
+  "4b29c6f5236276a53adc0fbabacb758b44078146a70fbc3213cac29d55d0e588";
+
+export const R55_DERANGEMENTS = Object.freeze([
+  [6,3,5,0,2,7,4,1], [2,7,4,5,0,6,3,1], [2,6,1,5,3,7,0,4],
+  [1,6,4,7,5,0,3,2], [7,3,1,6,0,4,2,5], [3,4,5,0,7,6,2,1],
+  [2,0,5,4,3,6,7,1], [1,0,4,7,3,2,5,6], [5,0,6,4,1,7,2,3],
+  [5,3,4,1,0,7,2,6], [4,3,5,6,2,0,7,1], [1,0,5,6,7,3,2,4],
+  [4,3,5,7,0,6,1,2], [5,3,6,7,2,0,4,1], [3,5,4,6,7,0,1,2],
+  [3,5,7,0,2,4,1,6], [7,5,6,1,0,3,4,2], [7,4,6,1,0,3,2,5],
+  [7,2,0,6,5,1,3,4], [3,2,1,6,7,0,5,4], [5,3,1,4,2,0,7,6],
+  [6,4,3,1,5,7,2,0], [5,6,3,0,7,1,2,4], [7,4,0,6,1,3,5,2],
+  [1,3,6,7,5,2,0,4], [2,6,4,0,5,1,7,3], [2,4,3,5,6,7,0,1],
+  [2,5,1,6,7,3,0,4], [3,0,7,1,5,2,4,6], [2,0,6,7,3,1,5,4],
+  [4,6,7,0,2,1,5,3],
+].map(row => Object.freeze(row)));
+
+export const R55_BASE_ARMS = Object.freeze([
+  "target_only", "adapter_only", "raw_lexical", "full",
+  "oracle_adapter", "frequency_lexical", "source_free_jit",
+  "source_ablation", "source_only",
+]);
+
+export const R55_ARMS = Object.freeze([
+  ...R55_BASE_ARMS,
+  ...R55_DERANGEMENTS.map((_, index) =>
+    `shuffled_${String(index).padStart(2, "0")}`),
+]);
+
+const MASK64 = (1n << 64n) - 1n;
+const UINT64_RANGE = 1n << 64n;
+const MIX_CONSTANT = 0x9e3779b97f4a7c15n;
+const R55_TIE_NAMESPACE = 0x726561736f6e3535n;
+
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function taggedDigest(kind, bytes) {
+  return createHash("sha256").update(kind).update(Buffer.from([0]))
+    .update(bytes).digest("hex");
+}
+
+function affineBytes(affine) {
+  return Buffer.from([...affine.matrix, ...affine.bias]);
+}
+
+function mix64(input) {
+  let value = (input + MIX_CONSTANT) & MASK64;
+  value = ((value ^ (value >> 30n)) * 0xbf58476d1ce4e5b9n) & MASK64;
+  value = ((value ^ (value >> 27n)) * 0x94d049bb133111ebn) & MASK64;
+  return (value ^ (value >> 31n)) & MASK64;
+}
+
+export function deriveR55TieSalt(familySeed, sourceGenerator, tie,
+  namespace = R55_TIE_NAMESPACE) {
+  return mix64(familySeed ^ (BigInt(sourceGenerator) << 48n) ^ BigInt(tie) ^
+    namespace);
+}
+
+function makeR55Rng(seed, stream) {
+  let state = mix64(seed ^ mix64(stream));
+  return {
+    next() {
+      state = (state + MIX_CONSTANT) & MASK64;
+      return mix64(state);
+    },
+    index(bound) {
+      assert.ok(Number.isSafeInteger(bound) && bound > 0);
+      const bigBound = BigInt(bound);
+      const threshold = UINT64_RANGE % bigBound;
+      let value;
+      do value = this.next(); while (value < threshold);
+      return Number(value % bigBound);
+    },
+  };
+}
+
+function readAffine(bytes, offset) {
+  return {
+    value: {
+      matrix: [...bytes.subarray(offset, offset + 9)],
+      bias: [...bytes.subarray(offset + 9, offset + 12)],
+    },
+    offset: offset + 12,
+  };
+}
+
+export function decodeR55Replay(row) {
+  assert.match(row.family_replay_hex, /^[0-9a-f]+$/u);
+  const bytes = Buffer.from(row.family_replay_hex, "hex");
+  assert.equal(bytes.length, 190, "R5.5 replay byte length");
+  assert.equal(bytes.subarray(0, 8).toString("ascii"), "R55R0001");
+  assert.equal(sha256(bytes), row.family_replay_sha256,
+    "R5.5 replay digest");
+  let offset = 8;
+  const primitiveByRole = [];
+  for (let role = 0; role < 8; role += 1) {
+    const decoded = readAffine(bytes, offset);
+    primitiveByRole.push(decoded.value);
+    offset = decoded.offset;
+  }
+  const surfaceToRole = [...bytes.subarray(offset, offset + 8)];
+  offset += 8;
+  const surfaceIds = [];
+  for (let slot = 0; slot < 8; slot += 1) {
+    surfaceIds.push(bytes.readUInt32LE(offset));
+    offset += 4;
+  }
+  const targetRoles = [...bytes.subarray(offset, offset + 4)];
+  offset += 4;
+  const targetDecoded = readAffine(bytes, offset);
+  const target = targetDecoded.value;
+  offset = targetDecoded.offset;
+  const exampleInput = [...bytes.subarray(offset, offset + 3)];
+  offset += 3;
+  const exampleOutput = [...bytes.subarray(offset, offset + 3)];
+  offset += 3;
+  const generator = bytes[offset++];
+  const ordinal = bytes.readUInt32LE(offset);
+  offset += 4;
+  const familySeed = bytes.readBigUInt64LE(offset);
+  offset += 8;
+  const tieSalt = bytes.readBigUInt64LE(offset);
+  offset += 8;
+  const sourceGenerator = bytes[offset++];
+  const tie = bytes[offset++];
+  const arm = bytes[offset++];
+  assert.equal(offset, bytes.length);
+  assert.equal(generator, row.generator_id === "syntax-first" ? 0 : 1);
+  assert.equal(sourceGenerator,
+    row.source_generator_id === "syntax-first" ? 0 : 1);
+  assert.equal(ordinal,
+    Number(row.family_id.match(/-(\d+)$/u)?.[1]), "R5.5 family ordinal");
+  assert.equal(tie, Number(row.nested_repeat_id.slice(4)), "R5.5 tie index");
+  assert.equal(R55_ARMS[arm], row.arm, "R5.5 arm index");
+  assert.equal(taggedDigest("reasoner55-target-ast", Buffer.from(targetRoles)),
+    row.ast_sha256, "R5.5 target AST digest");
+  assert.equal(taggedDigest("reasoner55-affine", affineBytes(target)),
+    row.behavior_sha256, "R5.5 target behavior digest");
+  assert.equal(taggedDigest("reasoner55-affine", affineBytes(target)),
+    row.accepted_semantic_sha256, "R5.5 accepted behavior digest");
+  const regenerated = generateR55FamilyFromSeed({
+    familySeed, generator, ordinal,
+  });
+  for (const field of ["primitiveByRole", "surfaceToRole", "surfaceIds",
+    "targetRoles", "target", "exampleInput", "exampleOutput"])
+    assert.deepEqual(regenerated[field], {
+      primitiveByRole, surfaceToRole, surfaceIds, targetRoles, target,
+      exampleInput, exampleOutput,
+    }[field], `R5.5 seed-only family replay changed ${field}`);
+  assert.equal(tieSalt, deriveR55TieSalt(familySeed, sourceGenerator, tie),
+    "R5.5 seed-only tie salt replay");
+  return {
+    primitiveByRole, surfaceToRole, surfaceIds, targetRoles, target,
+    exampleInput, exampleOutput, generator, ordinal, familySeed, tieSalt,
+    sourceGenerator, tie, arm,
+  };
+}
+
+export function parseR55Artifact(bytes) {
+  assert.equal(bytes.subarray(0, 8).toString("ascii"), "R55A0001");
+  assert.deepEqual([...bytes.subarray(8, 13)], [5, 3, 8, 4, 2]);
+  let offset = 13;
+  const guides = [];
+  for (let generator = 0; generator < 2; generator += 1) {
+    assert.equal(bytes[offset++], generator);
+    const sourceFamilies = bytes.readUInt32LE(offset); offset += 4;
+    const sourceSolutions = bytes.readUInt32LE(offset); offset += 4;
+    const positions = Array.from({ length: 4 }, () => Array(8).fill(0));
+    const transitions = Array.from({ length: 3 }, () =>
+      Array.from({ length: 8 }, () => Array(8).fill(0)));
+    for (let position = 0; position < 4; position += 1)
+      for (let role = 0; role < 8; role += 1) {
+        positions[position][role] = bytes.readUInt32LE(offset);
+        offset += 4;
+      }
+    for (let position = 0; position < 3; position += 1)
+      for (let role = 0; role < 8; role += 1)
+        for (let next = 0; next < 8; next += 1) {
+          transitions[position][role][next] = bytes.readUInt32LE(offset);
+          offset += 4;
+        }
+    guides.push({ generator, sourceFamilies, sourceSolutions,
+      positions, transitions });
+  }
+  assert.equal(offset, bytes.length, "R5.5 artifact trailing bytes");
+  return guides;
+}
+
+function compose(after, before) {
+  const matrix = Array(9).fill(0);
+  const bias = Array(3).fill(0);
+  for (let row = 0; row < 3; row += 1) {
+    for (let column = 0; column < 3; column += 1) {
+      let value = 0;
+      for (let inner = 0; inner < 3; inner += 1)
+        value += after.matrix[row * 3 + inner] *
+          before.matrix[inner * 3 + column];
+      matrix[row * 3 + column] = value % 5;
+    }
+    let value = after.bias[row];
+    for (let inner = 0; inner < 3; inner += 1)
+      value += after.matrix[row * 3 + inner] * before.bias[inner];
+    bias[row] = value % 5;
+  }
+  return { matrix, bias };
+}
+
+function apply(affine, input) {
+  return Array.from({ length: 3 }, (_, row) => {
+    let value = affine.bias[row];
+    for (let column = 0; column < 3; column += 1)
+      value += affine.matrix[row * 3 + column] * input[column];
+    return value % 5;
+  });
+}
+
+function tokensFor(index) {
+  const tokens = Array(4);
+  for (let position = 3; position >= 0; position -= 1) {
+    tokens[position] = index & 7;
+    index >>= 3;
+  }
+  return tokens;
+}
+
+function publicRuntimeFromFamily(family) {
+  return {
+    primitiveBySurface: family.surfaceToRole.map(role =>
+      family.primitiveByRole[role]),
+    surfaceIds: [...family.surfaceIds],
+    exampleInput: [...family.exampleInput],
+    exampleOutput: [...family.exampleOutput],
+    tieSalt: family.tieSalt,
+  };
+}
+
+function programSemantic(publicRuntime, tokens) {
+  let result = { matrix: [1,0,0,0,1,0,0,0,1], bias: [0,0,0] };
+  for (const token of tokens)
+    result = compose(publicRuntime.primitiveBySurface[token], result);
+  return result;
+}
+
+function semanticKey(semantic) {
+  let result = 0;
+  let power = 1;
+  for (const value of [...semantic.matrix, ...semantic.bias]) {
+    result += value * power;
+    power *= 5;
+  }
+  return result;
+}
+
+function sameAffine(left, right) {
+  return left.matrix.every((value, index) => value === right.matrix[index]) &&
+    left.bias.every((value, index) => value === right.bias[index]);
+}
+
+function identityAffine() {
+  return { matrix: [1,0,0,0,1,0,0,0,1], bias: [0,0,0] };
+}
+
+function roleOf(affine) {
+  const identity = identityAffine();
+  const biasSupport = affine.bias.filter(value => value !== 0).length;
+  if (affine.matrix.every((value, index) => value === identity.matrix[index])) {
+    if (biasSupport === 1) return 0;
+    if (biasSupport > 1) return 1;
+    return -1;
+  }
+  if (biasSupport > 0) return 7;
+  let diagonal = true;
+  let permutation = true;
+  let shear = true;
+  let diagonalChanges = 0;
+  let offDiagonalNonzero = 0;
+  for (let row = 0; row < 3; row += 1) {
+    let rowNonzero = 0;
+    let columnNonzero = 0;
+    for (let column = 0; column < 3; column += 1) {
+      const value = affine.matrix[row * 3 + column];
+      const columnValue = affine.matrix[column * 3 + row];
+      if (row !== column && value !== 0) {
+        diagonal = false;
+        offDiagonalNonzero += 1;
+      }
+      rowNonzero += Number(value !== 0);
+      columnNonzero += Number(columnValue !== 0);
+      if ((value !== 0 && value !== 1) ||
+          (columnValue !== 0 && columnValue !== 1)) permutation = false;
+      if (row === column && value !== 1) shear = false;
+    }
+    diagonalChanges += Number(affine.matrix[row * 3 + row] !== 1);
+    if (rowNonzero !== 1 || columnNonzero !== 1) permutation = false;
+  }
+  if (diagonal) return diagonalChanges === 1 ? 2 : 3;
+  if (permutation) return 4;
+  if (shear && offDiagonalNonzero === 1) return 5;
+  return 6;
+}
+
+function axisTranslation(rng) {
+  const affine = identityAffine();
+  affine.bias[rng.index(3)] = 1 + rng.index(4);
+  return affine;
+}
+
+function denseTranslation(rng) {
+  const affine = identityAffine();
+  for (let lane = 0; lane < 3; lane += 1)
+    affine.bias[lane] = 1 + rng.index(4);
+  return affine;
+}
+
+function axisScale(rng) {
+  const affine = identityAffine();
+  const lane = rng.index(3);
+  affine.matrix[lane * 3 + lane] = 2 + rng.index(3);
+  return affine;
+}
+
+function denseScale(rng) {
+  const affine = identityAffine();
+  for (let lane = 0; lane < 3; lane += 1)
+    affine.matrix[lane * 3 + lane] = 2 + rng.index(3);
+  return affine;
+}
+
+function permutation(rng) {
+  const permutations = [
+    [0,2,1], [1,0,2], [1,2,0], [2,0,1], [2,1,0],
+  ];
+  const selected = permutations[rng.index(permutations.length)];
+  const affine = { matrix: Array(9).fill(0), bias: [0,0,0] };
+  for (let row = 0; row < 3; row += 1)
+    affine.matrix[row * 3 + selected[row]] = 1;
+  return affine;
+}
+
+function shear(rng) {
+  const affine = identityAffine();
+  const row = rng.index(3);
+  let column = rng.index(2);
+  if (column >= row) column += 1;
+  affine.matrix[row * 3 + column] = 1 + rng.index(4);
+  return affine;
+}
+
+function linearMix(rng) {
+  for (let attempt = 0; attempt < 64; attempt += 1) {
+    const scale = denseScale(rng);
+    const shearMap = shear(rng);
+    const permutationMap = permutation(rng);
+    const mixed = compose(permutationMap, compose(shearMap, scale));
+    if (roleOf(mixed) === 6) return mixed;
+  }
+  return identityAffine();
+}
+
+function makeRole(role, seed) {
+  const rng = makeR55Rng(seed, 0x7072696d69746976n + BigInt(role));
+  if (role === 0) return axisTranslation(rng);
+  if (role === 1) return denseTranslation(rng);
+  if (role === 2) return axisScale(rng);
+  if (role === 3) return denseScale(rng);
+  if (role === 4) return permutation(rng);
+  if (role === 5) return shear(rng);
+  if (role === 6) return linearMix(rng);
+  const affine = linearMix(rng);
+  for (let lane = 0; lane < 3; lane += 1)
+    affine.bias[lane] = 1 + rng.index(4);
+  return affine;
+}
+
+function syntaxFirstRoles(seed) {
+  const rng = makeR55Rng(seed, 0x73796e746178n);
+  return Array.from({ length: 4 }, () => rng.index(8));
+}
+
+function skeletonFirstRoles(seed) {
+  const skeletons = [
+    [4,2,0,7], [6,3,1,7], [4,5,1,7], [6,2,0,1],
+    [4,3,0,7], [6,5,1,7], [4,2,1,7], [6,3,0,1],
+  ];
+  const rng = makeR55Rng(seed, 0x736b656c65746f6en);
+  const skeleton = skeletons[rng.index(skeletons.length)];
+  const binding = [0,1,2,3,4,5,6,7];
+  for (let role = 7; role > 0; role -= 1) {
+    const other = rng.index(role + 1);
+    [binding[role], binding[other]] = [binding[other], binding[role]];
+  }
+  return skeleton.map(role => binding[role]);
+}
+
+export function generateR55FamilyFromSeed({ familySeed, generator, ordinal }) {
+  const seed = typeof familySeed === "bigint" ? familySeed :
+    BigInt(`0x${familySeed}`);
+  assert.ok(generator === 0 || generator === 1, "R5.5 target generator");
+  assert.ok(Number.isSafeInteger(ordinal) && ordinal >= 0,
+    "R5.5 family ordinal");
+  const primitiveByRole = Array.from({ length: 8 }, (_, role) =>
+    makeRole(role, mix64(seed ^ (BigInt(role) << 40n))));
+  primitiveByRole.forEach((affine, role) =>
+    assert.equal(roleOf(affine), role, `R5.5 generated primitive role ${role}`));
+  const surfaceToRole = [0,1,2,3,4,5,6,7];
+  const surfaceRng = makeR55Rng(seed, 0x73757266616365n);
+  for (let slot = 7; slot > 0; slot -= 1) {
+    const other = surfaceRng.index(slot + 1);
+    [surfaceToRole[slot], surfaceToRole[other]] =
+      [surfaceToRole[other], surfaceToRole[slot]];
+  }
+  const roleToSurface = Array(8);
+  const surfaceIds = [];
+  for (let slot = 0; slot < 8; slot += 1) {
+    roleToSurface[surfaceToRole[slot]] = slot;
+    let surfaceId;
+    do surfaceId = Number(surfaceRng.next() & 0xffffffffn);
+    while (surfaceIds.includes(surfaceId));
+    surfaceIds.push(surfaceId);
+  }
+  const programSeed = mix64(seed ^ 0x70726f6772616dn);
+  const targetRoles = generator === 0 ? syntaxFirstRoles(programSeed) :
+    skeletonFirstRoles(programSeed);
+  const targetSurface = targetRoles.map(role => roleToSurface[role]);
+  let target = identityAffine();
+  for (const role of targetRoles)
+    target = compose(primitiveByRole[role], target);
+  const inputRng = makeR55Rng(seed, 0x696e707574n);
+  const exampleInput = Array.from({ length: 3 }, () => inputRng.index(5));
+  const exampleOutput = apply(target, exampleInput);
+  return {
+    primitiveByRole, surfaceToRole, roleToSurface, surfaceIds, targetRoles,
+    targetSurface, target, exampleInput, exampleOutput, generator, ordinal,
+    familySeed: seed,
+  };
+}
+
+export function rawLexicalRoles(family) {
+  assert.equal(new Set(family.surfaceIds).size, 8,
+    "R5.5 surface IDs must be unique");
+  return family.surfaceIds.map(value =>
+    family.surfaceIds.filter(other => other < value).length);
+}
+
+export function buildR55AdapterProbes(family) {
+  const inputs = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
+  return family.surfaceIds.map((surfaceId, slot) => {
+    const runtime = family.primitiveByRole[family.surfaceToRole[slot]];
+    return {
+      surface_id: surfaceId,
+      queries: inputs.map(input => ({ input: [...input], observed: apply(runtime,
+        input) })),
+    };
+  });
+}
+
+function recoverR55AdapterProbes(probes) {
+  const expectedInputs = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
+  assert.equal(probes.length, 8, "R5.5 adapter needs eight primitive blocks");
+  const recovered = probes.map(block => {
+    assert.equal(block.queries.length, 4,
+      "R5.5 adapter needs zero plus three basis queries");
+    block.queries.forEach((query, index) => {
+      assert.deepEqual(query.input, expectedInputs[index],
+        "R5.5 adapter query vector changed");
+      assert.equal(query.observed.length, 3,
+        "R5.5 adapter response needs three lanes");
+      query.observed.forEach(value => assert.ok(Number.isInteger(value) &&
+        value >= 0 && value < 5, "R5.5 adapter response must lie in GF(5)"));
+    });
+    const bias = [...block.queries[0].observed];
+    const matrix = Array(9).fill(0);
+    for (let column = 0; column < 3; column += 1)
+      for (let row = 0; row < 3; row += 1)
+        matrix[row * 3 + column] =
+          (block.queries[column + 1].observed[row] - bias[row] + 5) % 5;
+    return { matrix, bias };
+  });
+  return { recovered, roles: recovered.map(roleOf) };
+}
+
+export function reconstructR55Adapter(family,
+  probes = buildR55AdapterProbes(family), familyId = null) {
+  assert.equal(probes.length, 8, "R5.5 adapter needs eight primitive blocks");
+  probes.forEach((block, slot) => assert.equal(block.surface_id,
+    family.surfaceIds[slot], "R5.5 adapter surface label order"));
+  const { recovered, roles } = recoverR55AdapterProbes(probes);
+  let domainChecks = 0;
+  let coefficientsExact = true;
+  let rolesExact = true;
+  recovered.forEach((affine, slot) => {
+    const runtime = family.primitiveByRole[family.surfaceToRole[slot]];
+    coefficientsExact &&= sameAffine(affine, runtime);
+    rolesExact &&= roles[slot] === family.surfaceToRole[slot];
+    for (let x0 = 0; x0 < 5; x0 += 1)
+      for (let x1 = 0; x1 < 5; x1 += 1)
+        for (let x2 = 0; x2 < 5; x2 += 1) {
+          domainChecks += 1;
+          coefficientsExact &&= apply(affine, [x0,x1,x2]).every(
+            (value, index) => value === apply(runtime, [x0,x1,x2])[index]);
+        }
+  });
+  const body = {
+    schema: "zero.reasoner55_adapter_receipt.v1",
+    family_id: familyId,
+    primitive_blocks: probes.length,
+    probe_queries: probes.reduce((sum, block) => sum + block.queries.length, 0),
+    domain_checks: domainChecks,
+    coefficients_exact: coefficientsExact,
+    roles_exact: rolesExact,
+    exact: coefficientsExact && rolesExact,
+    probe_transcript_sha256: canonicalDigest("reasoner55-adapter-probes", probes),
+    recovered_coefficients_sha256: canonicalDigest(
+      "reasoner55-recovered-adapter", recovered),
+  };
+  return {
+    ...body,
+    receipt_sha256: canonicalDigest("reasoner55-adapter-receipt", body),
+  };
+}
+
+function makeBaseCandidates(publicRuntime) {
+  return Array.from({ length: 4096 }, (_, syntaxIndex) => {
+    const tokens = tokensFor(syntaxIndex);
+    return {
+      syntaxIndex,
+      tokens,
+      semantic: programSemantic(publicRuntime, tokens),
+      ast: {
+        surface_ids: tokens.map(token => publicRuntime.surfaceIds[token]),
+      },
+    };
+  });
+}
+
+function deepFreeze(value) {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const item of Object.values(value)) deepFreeze(item);
+  }
+  return value;
+}
+
+export function createR55ReplayCache() {
+  return new Map();
+}
+
+function addGuide(guide, roles) {
+  for (let position = 0; position < 4; position += 1)
+    guide.positions[position][roles[position]] += 1;
+  for (let position = 0; position < 3; position += 1)
+    guide.transitions[position][roles[position]][roles[position + 1]] += 1;
+  guide.sourceSolutions += 1;
+}
+
+function makeJitGuide(publicRuntime, baseCandidates, recoveredRoles) {
+  const guide = {
+    sourceSolutions: 0,
+    positions: Array.from({ length: 4 }, () => Array(8).fill(0)),
+    transitions: Array.from({ length: 3 }, () =>
+      Array.from({ length: 8 }, () => Array(8).fill(0))),
+  };
+  for (const candidate of baseCandidates) {
+    if (apply(candidate.semantic, publicRuntime.exampleInput)
+        .every((value, index) => value === publicRuntime.exampleOutput[index]))
+      addGuide(guide, candidate.tokens.map(token => recoveredRoles[token]));
+  }
+  assert.ok(guide.sourceSolutions > 0);
+  return guide;
+}
+
+function guideScore(guide, roles, frequencyOnly) {
+  let score = 1;
+  const scale = guide.sourceSolutions > 512 ?
+    Math.ceil(guide.sourceSolutions / 512) : 1;
+  for (let position = 0; position < 4; position += 1)
+    score *= 1 + Math.floor(guide.positions[position][roles[position]] / scale);
+  if (!frequencyOnly)
+    for (let position = 0; position < 3; position += 1)
+      score *= 1 + Math.floor(
+        guide.transitions[position][roles[position]][roles[position + 1]] /
+        scale);
+  assert.ok(Number.isSafeInteger(score));
+  return score;
+}
+
+function mappedRolesFor(publicRuntime, recoveredRoles, oracleRoles, arm) {
+  if (["raw_lexical", "frequency_lexical", "source_only"].includes(arm))
+    return rawLexicalRoles(publicRuntime);
+  if (arm.startsWith("shuffled_")) {
+    const shuffle = Number(arm.slice(-2));
+    return recoveredRoles.map(role => R55_DERANGEMENTS[shuffle][role]);
+  }
+  return arm === "oracle_adapter" ? [...oracleRoles] : [...recoveredRoles];
+}
+
+function rankCandidates(publicRuntime, baseCandidates, recoveredRoles,
+  oracleRoles, sourceGuide, arm) {
+  const mapped = mappedRolesFor(publicRuntime, recoveredRoles, oracleRoles,
+    arm);
+  const jit = ["source_free_jit", "source_ablation"].includes(arm) ?
+    makeJitGuide(publicRuntime, baseCandidates, recoveredRoles) : null;
+  const sourceArms = new Set(["raw_lexical", "full", "oracle_adapter",
+    "frequency_lexical", "source_only"]);
+  const guide = jit ?? (sourceArms.has(arm) || arm.startsWith("shuffled_") ?
+    sourceGuide : null);
+  const frequencyOnly = arm === "frequency_lexical";
+  const ignoreEvidence = arm === "source_only";
+  return baseCandidates.map(candidate => {
+    const roles = candidate.tokens.map(token => mapped[token]);
+    const observed = apply(candidate.semantic, publicRuntime.exampleInput);
+    const evidenceLoss = ignoreEvidence ? 0 : Number(!observed.every(
+      (value, index) => value === publicRuntime.exampleOutput[index]));
+    const prior = guide ? guideScore(guide, roles, frequencyOnly) : 0;
+    const product = (BigInt(candidate.syntaxIndex) * MIX_CONSTANT) & MASK64;
+    const tie = mix64(publicRuntime.tieSalt ^ product);
+    return { ...candidate, evidenceLoss, prior, tie };
+  }).sort((left, right) => left.evidenceLoss - right.evidenceLoss ||
+    right.prior - left.prior ||
+    (left.tie < right.tie ? -1 : left.tie > right.tie ? 1 : 0) ||
+    left.syntaxIndex - right.syntaxIndex);
+}
+
+export function targetOnlyReplayCost(family, tieSalt) {
+  const adjusted = { ...family, tieSalt };
+  const publicRuntime = publicRuntimeFromFamily(adjusted);
+  const candidates = makeBaseCandidates(publicRuntime);
+  const noRoles = Array(8).fill(0);
+  const ranked = rankCandidates(publicRuntime, candidates, noRoles, noRoles,
+    null, "target_only");
+  const injection = ranked.find(candidate =>
+    !sameAffine(candidate.semantic, adjusted.target));
+  const stream = [injection, ...ranked.slice(0, 64), ...candidates];
+  const seen = new Set();
+  let checks = 0;
+  for (const candidate of stream) {
+    const key = semanticKey(candidate.semantic);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    checks += 1;
+    if (sameAffine(candidate.semantic, adjusted.target)) return checks;
+  }
+  return 4097;
+}
+
+function exactVerdict(candidate, target) {
+  let ordinal = 0;
+  for (let x0 = 0; x0 < 5; x0 += 1)
+    for (let x1 = 0; x1 < 5; x1 += 1)
+      for (let x2 = 0; x2 < 5; x2 += 1, ordinal += 1) {
+        const input = [x0, x1, x2];
+        const actual = apply(candidate.semantic, input);
+        const expected = apply(target, input);
+        if (!actual.every((value, index) => value === expected[index]))
+          return { accepted: false, certificate_valid: false,
+            counterexample: { ordinal, input, actual, expected } };
+      }
+  return {
+    accepted: true,
+    certificate_valid: true,
+    certificate: { method: "exhaustive-gf5-v3", points: 125,
+      semantic: candidate.semantic },
+    answer_ir: { kind: "affine-gf5-v3", semantic: candidate.semantic },
+  };
+}
+
+function rankedSemanticOrderDigest(ranked) {
+  const bytes = Buffer.alloc(ranked.length * 4);
+  ranked.forEach((candidate, index) =>
+    bytes.writeUInt32LE(semanticKey(candidate.semantic), index * 4));
+  return sha256(bytes);
+}
+
+export function replayR55Search(row, family, sourceGuide, cache = null,
+  { adapterProbes = null } = {}) {
+  const publicRuntime = publicRuntimeFromFamily(family);
+  const adapterArms = new Set(["adapter_only", "full", "source_free_jit",
+    "source_ablation"]);
+  const usesAdapter = adapterArms.has(row.arm) || row.arm.startsWith(
+    "shuffled_");
+  const recoveredRoles = usesAdapter ? recoverR55AdapterProbes(
+    adapterProbes ?? buildR55AdapterProbes(family)).roles : Array(8).fill(0);
+  let cached = cache?.get(row.family_id);
+  if (cached === undefined) {
+    const baseCandidates = makeBaseCandidates(publicRuntime);
+    const universe = deepFreeze(baseCandidates.map(candidate => ({
+      semantic: semanticKey(candidate.semantic),
+      ast: candidate.syntaxIndex,
+      partial_expansions: 1,
+    })));
+    const fallback = deepFreeze(canonicalCandidateOrder(universe));
+    cached = { baseCandidates, universe, fallback };
+    cache?.set(row.family_id, cached);
+  }
+  const { baseCandidates, universe, fallback } = cached;
+  const ranked = rankCandidates(publicRuntime, baseCandidates, recoveredRoles,
+    family.surfaceToRole, sourceGuide, row.arm);
+  assert.equal(rankedSemanticOrderDigest(ranked), row.proposal_order_sha256,
+    `${row.episode_id} ${row.arm}: ranked proposal order`);
+  const injection = ranked.find(candidate =>
+    !sameAffine(candidate.semantic, family.target));
+  assert.ok(injection, "R5.5 injected invalid candidate");
+  const buildCost = 4096 +
+    (["source_free_jit", "source_ablation"].includes(row.arm) ? 4096 : 0);
+  const harnessCandidate = (candidate, partialExpansions = 1) => ({
+    semantic: semanticKey(candidate.semantic),
+    ast: candidate.syntaxIndex,
+    partial_expansions: partialExpansions,
+  });
+  const proposals = [harnessCandidate(injection, buildCost + 1),
+    ...ranked.slice(0, 64).map(candidate => harnessCandidate(candidate))];
+  const search = runVerifiedSearch({
+    proposals,
+    fallback,
+    candidate_universe: universe,
+    verify: candidate => exactVerdict(baseCandidates[candidate.ast],
+      family.target),
+    global_cap: 4096,
+    injected_invalid_sha256: candidateSemanticDigest(proposals[0]),
+  });
+  assert.equal(search.primary_cost, row.primary_cost,
+    `${row.episode_id} ${row.arm}: primary cost replay`);
+  assert.equal(search.verifier_checks, row.verifier_checks,
+    `${row.episode_id} ${row.arm}: verifier count replay`);
+  assert.equal(search.partial_expansions, row.partial_expansions,
+    `${row.episode_id} ${row.arm}: expansion count replay`);
+  assert.equal(search.fallback_started, row.fallback_started,
+    `${row.episode_id} ${row.arm}: fallback replay`);
+  assert.equal(search.global_cap_hit, row.global_cap_hit,
+    `${row.episode_id} ${row.arm}: censoring replay`);
+  assert.equal(search.fallback_exhausted, row.fallback_exhausted,
+    `${row.episode_id} ${row.arm}: fallback exhaustion replay`);
+  assert.equal(search.censoring_reason, row.censoring_reason,
+    `${row.episode_id} ${row.arm}: censoring reason replay`);
+  assert.equal(search.solved, row.exact,
+    `${row.episode_id} ${row.arm}: exactness replay`);
+  assert.equal(search.injected_invalid?.rejected,
+    row.injected_invalid_rejected,
+    `${row.episode_id} ${row.arm}: invalid injection replay`);
+  assert.equal(search.evaluator_trace[0]?.counterexample?.ordinal,
+    row.injected_counterexample_index,
+    `${row.episode_id} ${row.arm}: counterexample replay`);
+  return { search, baseCandidates, universe };
+}
+
+export function publicR55Episode(family) {
+  const primitiveLabels = family.surfaceIds.map(value => String(value));
+  return {
+    public: {
+      primitive_labels: primitiveLabels,
+      observations: [{ input: family.exampleInput,
+        observed: family.exampleOutput }],
+      allowed_actions: [{ kind: "propose-four-symbol-program" }],
+    },
+    evaluator: {
+      ast: { surface_program: family.targetRoles.map(role =>
+        primitiveLabels[family.surfaceToRole.indexOf(role)]) },
+      behavior: { affine: family.target },
+      episode_spec: {
+        primitive_labels: primitiveLabels,
+        demonstration: { input: family.exampleInput,
+          observed: family.exampleOutput },
+      },
+      target: family.target,
+      surface_to_role: family.surfaceToRole,
+      adapter_probes: buildR55AdapterProbes(family),
+      family_seed_commitment: sha256(Buffer.from(
+        family.familySeed.toString(16).padStart(16, "0"))),
+      atoms: family.primitiveByRole,
+      typed_subtrees: family.targetRoles.map(role => `role-${role}`),
+    },
+  };
+}
+
+export function replayR55EpisodeContent(recipe) {
+  assert.equal(recipe.schema, "zero.reasoner5_replay_recipe.v1");
+  const path = recipe.seed_binding.derivation_path;
+  assert.equal(path.length, 4, "R5.5 replay derivation path");
+  const [targetName, ordinal, sourceName, tie] = path;
+  const generator = targetName === "syntax-first" ? 0 :
+    targetName === "skeleton-first" ? 1 : -1;
+  const sourceGenerator = sourceName === "syntax-first" ? 0 :
+    sourceName === "skeleton-first" ? 1 : -1;
+  assert.ok(generator >= 0 && sourceGenerator >= 0,
+    "R5.5 replay generator name");
+  assert.ok(Number.isSafeInteger(ordinal) && ordinal >= 0,
+    "R5.5 replay ordinal");
+  assert.ok(Number.isSafeInteger(tie) && tie >= 0 && tie < 2,
+    "R5.5 replay tie");
+  const family = generateR55FamilyFromSeed({
+    familySeed: recipe.seed_binding.root_seed,
+    generator,
+    ordinal,
+  });
+  family.sourceGenerator = sourceGenerator;
+  family.tie = tie;
+  family.tieSalt = deriveR55TieSalt(family.familySeed, sourceGenerator, tie);
+  return publicR55Episode(family);
+}
+
+export function expectedObservationQueries(arm) {
+  return ["adapter_only", "full", "source_free_jit", "source_ablation"]
+      .includes(arm) || arm.startsWith("shuffled_") ? 32 : 0;
+}
+
+export function sourceArtifactBytesRead(arm) {
+  return ["raw_lexical", "full", "oracle_adapter", "frequency_lexical",
+    "source_only"].includes(arm) || arm.startsWith("shuffled_") ? 905 : 0;
+}
