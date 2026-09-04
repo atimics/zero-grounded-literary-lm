@@ -5,6 +5,10 @@ Read [**The ZERO Manifesto**](MANIFESTO.md) and the
 
 ## Start here
 
+The deployed model has a model card with charts: [MODEL_CARD.md](MODEL_CARD.md),
+or the visual version at
+[the model card page](https://atimics.github.io/zero-grounded-literary-lm/model-card.html).
+
 This repository is a research lab for small language models and small
 reasoning systems. The code is written in C so that each important step can be
 read, tested, and reproduced.
