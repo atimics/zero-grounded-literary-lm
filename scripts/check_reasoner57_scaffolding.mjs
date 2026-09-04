@@ -13,12 +13,12 @@ function sha256(path) {
 }
 
 assert.equal(contract.schema,
-  "zero.reasoner57_active_evidence_development_contract.v1");
+  "zero.reasoner57_active_evidence_development_contract.v2");
 assert.equal(contract.status, "gated-development-scaffolding");
 assert.equal(contract.prerequisite.base_commit,
-  "1606515ba363a74d62d9659dbf5189434abd84fa");
+  "ea466a593ea65c9657e9355d064b8cba5c2e8e47");
 assert.equal(contract.prerequisite.state,
-  "pending-reasoner56-sealed-interface-proxy-audit");
+  "blocked-reasoner56-channel-readiness-gate");
 
 for (const receipt of [
   contract.prerequisite.r56_artifact,
@@ -36,13 +36,36 @@ assert.equal(readiness.assessment_sha256,
   contract.prerequisite.r56_assessment.channel_readiness_assessment_sha256);
 assert.equal(readiness.status, "development-no-go");
 assert.deepEqual(readiness.failures,
-  ["development_and_sealed_interface_and_proxy_audits_clean"]);
+  ["candidate_set_size_ratio_at_matched_coverage",
+    "development_and_sealed_interface_and_proxy_audits_clean"]);
 assert.equal(readiness.metrics.candidate_set.coverage_families, 99);
 assert.equal(readiness.metrics.candidate_set.covered_families, 99);
 assert.equal(readiness.metrics.candidate_set.one_sided_95_wilson_lower,
   contract.prerequisite.family_coverage.one_sided_95_wilson_lower);
 assert.ok(readiness.metrics.candidate_set.one_sided_95_wilson_lower >=
   contract.prerequisite.family_coverage.required_lower);
+assert.equal(readiness.metrics.candidate_set.conservative_threshold,
+  contract.prerequisite.candidate_set_utility.threshold);
+assert.equal(readiness.metrics.candidate_set.full_mean_size,
+  contract.prerequisite.candidate_set_utility.full_mean_size);
+assert.equal(readiness.metrics.candidate_set.program_prior_only_mean_size,
+  contract.prerequisite.candidate_set_utility.program_prior_only_mean_size);
+assert.equal(readiness.metrics.candidate_set.size_ratio,
+  contract.prerequisite.candidate_set_utility.size_ratio);
+assert.ok(readiness.metrics.candidate_set.size_ratio >
+  contract.prerequisite.candidate_set_utility.required_maximum_ratio);
+assert.equal(contract.prerequisite.candidate_set_utility.passed, false);
+const r56Manifest = JSON.parse(readFileSync(
+  contract.prerequisite.r56_family_manifest.path, "utf8"));
+assert.equal(r56Manifest.calibration_coverage_receipt.schema,
+  "zero.reasoner56_calibration_coverage_receipt.v2");
+assert.equal(r56Manifest.calibration_coverage_receipt.artifact_sha256,
+  contract.prerequisite.r56_artifact.sha256);
+assert.equal(r56Manifest.calibration_coverage_receipt.candidate_set_rule,
+  "exact-full-universe-at-threshold-one");
+assert.ok(r56Manifest.calibration_coverage_receipt.families.every(family =>
+  family.all_draws_covered && family.draws.every(draw =>
+    draw.candidate_set_size === 427 && draw.candidate_set_contains_truth)));
 assert.equal(readiness.metrics.interface_and_proxy_audits.development.passed,
   true);
 assert.equal(readiness.metrics.interface_and_proxy_audits.sealed.passed,

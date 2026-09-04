@@ -1,24 +1,24 @@
 {
-  "schema": "zero.reasoner57_active_evidence_development_contract.v1",
+  "schema": "zero.reasoner57_active_evidence_development_contract.v2",
   "experiment": "reasoner57-active-evidence-development-v1",
-  "version": "5.7-development-scaffolding-1",
+  "version": "5.7-development-scaffolding-2",
   "status": "gated-development-scaffolding",
   "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
   "prerequisite": {
-    "state": "pending-reasoner56-sealed-interface-proxy-audit",
-    "base_commit": "1606515ba363a74d62d9659dbf5189434abd84fa",
+    "state": "blocked-reasoner56-channel-readiness-gate",
+    "base_commit": "ea466a593ea65c9657e9355d064b8cba5c2e8e47",
     "r56_artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
       "sha256": "404cff98a8d92eb11cf203710c20c356fbaec31370ea525c416857e641bd4004"
     },
     "r56_family_manifest": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/family-manifest.json",
-      "sha256": "f162c5c255cf578a704f90b44582b7821d9eff205fce9fdc4b03f64b6016c7b7"
+      "sha256": "7fac3d33b5f9f406794508fb8d19cb6eed09bdd2934a526e2c1c02e2f655bfda"
     },
     "r56_assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "a03d2857663ae1bb33da6a95dc3e361cef0900e3ce39f6a32d17baa4a498df15",
-      "channel_readiness_assessment_sha256": "4d8533921272e267c613bd040e65bc963605d0c21cbf584222ca1905adf3b2ee",
+      "sha256": "e1d5b82e18e8cbadb555827f9c12688a75f2a74ed26a1b07fdb6d248dab12007",
+      "channel_readiness_assessment_sha256": "ce52e6d23ce35ef3d9455db0b0369f3fc70cade016f09ee0fb4afdd4b5d98d6d",
       "channel_readiness_status": "development-no-go"
     },
     "family_coverage": {
@@ -29,8 +29,17 @@
       "required_lower": 0.97,
       "passed": true
     },
+    "candidate_set_utility": {
+      "threshold": 1,
+      "full_mean_size": 427,
+      "program_prior_only_mean_size": 427,
+      "size_ratio": 1,
+      "required_maximum_ratio": 0.8,
+      "passed": false
+    },
     "development_interface_template_proxy_severity_proxy_and_taint_passed": true,
     "pending_evidence": [
+      "new preregistered R5.6 evidence that passes candidate-set utility",
       "prospective sealed-interface audit",
       "sealed static-metadata proxy audit"
     ],

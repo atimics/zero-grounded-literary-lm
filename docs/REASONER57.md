@@ -6,12 +6,15 @@ semantic universe and the frozen observation model from Reasoner 5.6. Every
 answer still passes the exhaustive exact verifier.
 
 The current branch contains development scaffolding. Its scientific
-prerequisite is pending. The corrected Reasoner 5.6 assessment uses 99
-independent calibration program families and reports a one-sided 95 percent
-Wilson lower bound of 0.9733982695. Its development interface, template proxy,
-severity proxy, and source-isolation checks pass. The prospective sealed
-interface and static-metadata proxy audit remains pending. R5.7 development
-fixture generation starts after that audit passes.
+prerequisite is blocked by the corrected Reasoner 5.6 readiness result. That
+assessment uses 99 independent calibration program families and reports a
+one-sided 95 percent Wilson lower bound of 0.9733982695. Its selected threshold
+is one. The exact threshold rule includes all 427 classes for the full and
+program-prior-only arms, which gives a size ratio of one and fails the
+registered maximum of 0.8. Its development interface, template proxy, severity
+proxy, and source-isolation checks pass. The prospective sealed interface and
+static-metadata proxy audit also remains pending. R5.7 development fixture
+generation starts after the complete R5.6 channel-readiness gate passes.
 
 ## Analytic query controls
 
@@ -53,5 +56,6 @@ The branch keeps sealed execution closed. It carries no R5.7 development
 result, raw trace, shared-harness result, or scientific decision. After the
 R5.6 prerequisite passes, the next layer will add shared-harness replay, run
 the frozen development crossing, and publish its truthful pass or no-go
-result. The current contract already binds the exact R5.6 artifact,
-family-manifest, assessment, and channel-readiness assessment receipts.
+result. The current contract binds the exact corrected R5.6 artifact, family
+manifest, assessment, independent calibration replay, and channel-readiness
+receipt.

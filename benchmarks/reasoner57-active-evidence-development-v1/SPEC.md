@@ -1,16 +1,19 @@
 # Reasoner 5.7 development specification
 
 Status: gated development scaffolding. The bound R5.6 channel-readiness
-assessment is `development-no-go` while its prospective sealed interface and
-proxy audit is pending.
+assessment is `development-no-go`. Its exact threshold-one candidate sets have
+a full-to-program-prior size ratio of one, above the registered maximum of
+0.8. Its prospective sealed interface and proxy audit is also pending.
 
 R5.7 consumes the exact published R5.6 observation artifact after channel
 readiness passes. The current R5.6 assessment uses 99 independent calibration
 program families. All 99 cover the truth across their registered corruption
-draws. Its one-sided 95 percent Wilson lower bound is 0.9733982695. The sealed
-interface and proxy audit remains pending. Policy training, selector choice,
-calibration, development, and sealed identities are separate semantic
-partitions.
+draws. An independent artifact scorer replays all 792 draws. The one-sided 95
+percent Wilson lower bound is 0.9733982695. The selected threshold is one, so
+the exact candidate set is the complete 427-class universe and the candidate-
+set utility gate fails. The sealed interface and proxy audit remains pending.
+Policy training, selector choice, calibration, development, and sealed
+identities are separate semantic partitions.
 
 Every primary arm starts with three reads at inputs 0, 1, and 2, with one read
 per sensor. Every arm then buys four unit-cost input-and-sensor reads. The
