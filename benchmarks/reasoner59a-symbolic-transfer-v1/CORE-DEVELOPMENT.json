@@ -1,0 +1,18 @@
+{
+  "schema": "zero.reasoner59a_core_development.v1",
+  "status": "development-only",
+  "execution_authorized": false,
+  "scene_count": 25344,
+  "smoke_behaviors": [
+    {"index": 0, "positive_scenes": 17520, "fnv1a64": "cb70635da95e62f5"},
+    {"index": 1, "positive_scenes": 1104, "fnv1a64": "883d01aae83c0ef5"},
+    {"index": 2, "positive_scenes": 9234, "fnv1a64": "f9db792c819daa35"},
+    {"index": 3, "positive_scenes": 6264, "fnv1a64": "7171903cd09dbfed"},
+    {"index": 4, "positive_scenes": 7360, "fnv1a64": "a6b86a5539a52d65"},
+    {"index": 5, "positive_scenes": 9054, "fnv1a64": "028e08bcc5d3cba5"},
+    {"index": 6, "positive_scenes": 5034, "fnv1a64": "98aeb40fcef7c2c5"},
+    {"index": 7, "positive_scenes": 4464, "fnv1a64": "dff8cb8747a13795"},
+    {"index": 8, "positive_scenes": 4376, "fnv1a64": "53841ff5b0260c9d"},
+    {"index": 9, "positive_scenes": 21192, "fnv1a64": "df58a65358c6d42d"}
+  ]
+}

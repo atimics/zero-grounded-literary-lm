@@ -3050,6 +3050,36 @@ reasoner5-harness-contract-check:
 
 check: reasoner5-harness-check reasoner5-harness-contract-check
 
+.PHONY: reasoner59a-core-check reasoner59a-development-fixture \
+	reasoner59a-check reasoner59a-sanitize-check clean-reasoner59a
+
+reasoner59a: reasoner59a.c reasoner59a.h reasoner59a_cli.c
+	$(CC) $(CFLAGS) reasoner59a.c reasoner59a_cli.c -o $@
+
+reasoner59a-core-check: reasoner59a
+	./reasoner59a --self-test
+	@if ./reasoner59a execute >/dev/null 2>&1; then \
+		echo "Reasoner 5.9a sealed execution unexpectedly opened"; exit 1; \
+	fi
+
+reasoner59a-development-fixture: reasoner59a
+	node scripts/run_reasoner59a_development.mjs --write
+
+reasoner59a-check: reasoner59a-core-check
+	node scripts/check_reasoner59a_development.mjs
+
+reasoner59a-sanitize-check:
+	$(CC) -O1 -g -std=c11 -Wall -Wextra -Wpedantic \
+		-fsanitize=address,undefined -fno-omit-frame-pointer \
+		reasoner59a.c reasoner59a_cli.c -o /tmp/reasoner59a-sanitize
+	/tmp/reasoner59a-sanitize --self-test
+
+all: reasoner59a
+check: reasoner59a-check
+clean: clean-reasoner59a
+clean-reasoner59a:
+	rm -f reasoner59a
+
 # Regenerate the model-card charts from frozen benchmark records.
 .PHONY: model-card-charts
 model-card-charts:
