@@ -119,14 +119,19 @@ async function runTaskPool(directory, tasks, jobs, progressPath, bindingSha256) 
   const results = new Map();
   let cursor = 0;
   const completed = new Set();
+  const taskKeys = new Set(tasks.map(task => task.key));
+  if (taskKeys.size !== tasks.length)
+    fail("evaluation task keys must be unique");
+  let resumedFromCheckpoint = false;
   const writeProgress = () => {
     if (!progressPath) return;
     const record = {
       schema: "zero.c61_evaluation_progress_checkpoint.v1",
       total_tasks: tasks.length,
       completed_tasks: completed.size,
+      completed_task_keys: [...completed].sort(),
       binding_sha256: bindingSha256,
-      resumed: completed.size > 0 && cursor > 0,
+      resumed: resumedFromCheckpoint,
     };
     const temporary = `${progressPath}.${process.pid}.tmp`;
     fs.writeFileSync(temporary, JSON.stringify(record, null, 2) + "\n",
@@ -138,8 +143,14 @@ async function runTaskPool(directory, tasks, jobs, progressPath, bindingSha256) 
     const checkpoint = JSON.parse(fs.readFileSync(progressPath, "utf8"));
     if (checkpoint.schema !== "zero.c61_evaluation_progress_checkpoint.v1" ||
         checkpoint.total_tasks !== tasks.length ||
-        checkpoint.binding_sha256 !== bindingSha256)
+        checkpoint.binding_sha256 !== bindingSha256 ||
+        !Array.isArray(checkpoint.completed_task_keys) ||
+        checkpoint.completed_tasks !== checkpoint.completed_task_keys.length ||
+        new Set(checkpoint.completed_task_keys).size !==
+          checkpoint.completed_task_keys.length ||
+        checkpoint.completed_task_keys.some(key => !taskKeys.has(key)))
       fail("evaluation progress checkpoint does not match its binding");
+    resumedFromCheckpoint = checkpoint.completed_tasks > 0;
   };
   loadProgress();
   async function worker() {
@@ -304,15 +315,21 @@ async function selfTest() {
         return { value: index };
       },
     }));
-    const first = await runTaskPool(directory, tasks, 2);
+    const progressPath = path.join(directory, "progress.json");
+    const binding = sha256(Buffer.from("self-test-progress"));
+    const first = await runTaskPool(directory, tasks, 2, progressPath, binding);
     assert.equal(first.get("task-4").value, 4);
     assert.equal(executions, 5);
+    assert.equal(JSON.parse(fs.readFileSync(progressPath)).resumed, false);
     const cached = await runTaskPool(directory, tasks.map(task => ({
       ...task,
       compute: async () => { throw new Error("cache was not reused"); },
-    })), 3);
+    })), 3, progressPath, binding);
     assert.equal(cached.get("task-0").value, 0);
     assert.equal(executions, 5);
+    const resumed = JSON.parse(fs.readFileSync(progressPath));
+    assert.equal(resumed.resumed, true);
+    assert.equal(resumed.completed_tasks, tasks.length);
   } finally {
     fs.rmSync(directory, { recursive: true });
   }

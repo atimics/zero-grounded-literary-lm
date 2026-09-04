@@ -27,6 +27,7 @@ metadata() {
 tag() { metadata "tags/instance/$1"; }
 
 RUN_ID=$(tag RunId)
+ATTEMPT=$(tag Attempt)
 SOURCE_COMMIT=$(tag Commit)
 SOURCE_KEY=$(tag SourceKey)
 SOURCE_SHA256=$(tag SourceSha256)
@@ -38,12 +39,16 @@ AWS_DEFAULT_REGION=$(tag Region)
 LAUNCH_EPOCH=$(tag LaunchEpoch)
 MAX_INSTANCE_SECONDS=$(tag MaxInstanceSeconds)
 MAX_COMPUTE_USD=$(tag MaxComputeUsd)
+MAX_CUMULATIVE_SECONDS=$(tag MaxCumulativeSeconds)
+MAX_CUMULATIVE_USD=$(tag MaxCumulativeUsd)
 HOURLY_PRICE=$(tag HourlyPrice)
 APPROVAL_ID=$(tag ApprovalId)
 INSTANCE_ID=$(metadata instance-id)
 INSTANCE_TYPE=$(metadata instance-type)
-RESULT_PREFIX="experiments/zero5-c61-shared-state-v1/evaluation-recovery/${RUN_ID}"
-STATE_PREFIX="${RESULT_PREFIX}/state"
+SERIES_PREFIX="experiments/zero5-c61-shared-state-v1/evaluation-recovery-v2"
+RESULT_PREFIX="${SERIES_PREFIX}/runs/${RUN_ID}"
+ATTEMPT_PREFIX="${SERIES_PREFIX}/attempts/${ATTEMPT}"
+STATE_PREFIX="${SERIES_PREFIX}/state"
 STATUS_FILE=/tmp/zero5-c61-evaluation-status.json
 TERMINAL_WRITTEN=0
 PHASE=bootstrap
@@ -53,9 +58,12 @@ test "$AWS_DEFAULT_REGION" = us-east-1
 test "$INSTANCE_TYPE" = c6i.4xlarge
 test "$MAX_INSTANCE_SECONDS" = 9000
 test "$MAX_COMPUTE_USD" = 1.7
+test "$MAX_CUMULATIVE_SECONDS" = 45000
+test "$MAX_CUMULATIVE_USD" = 8.5
 test "$HOURLY_PRICE" = 0.68
-test "$APPROVAL_ID" = zero5-c61-evaluation-recovery-aws-2026-09-01-v1
+test "$APPROVAL_ID" = zero5-c61-evaluation-recovery-aws-2026-09-04-v2
 [[ "$RUN_ID" =~ ^[a-z0-9-]{12,100}$ ]]
+[[ "$ATTEMPT" =~ ^[1-5]$ ]]
 [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_SHA256" =~ ^[0-9a-f]{64}$ ]]
 [[ "$ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
@@ -87,7 +95,9 @@ write_status() {
     --arg result_key "$result_key" --arg result_sha256 "$result_sha256" \
     --argjson exit_code "$exit_code" --argjson elapsed "$elapsed" \
     --argjson cost "$cost" \
-    '{schema:"zero.c61_evaluation_aws_status.v1",status:$status,phase:$phase,
+    --argjson attempt "$ATTEMPT" \
+    '{schema:"zero.c61_evaluation_aws_status.v2",status:$status,phase:$phase,
+      attempt:$attempt,
       run_id:$run_id,instance_id:$instance_id,git_commit:$git_commit,
       recovery_contract_sha256:$recovery_contract_sha256,
       training_executed:false,exit_code:$exit_code,
@@ -99,6 +109,8 @@ write_status() {
 upload_status() {
   aws s3 cp "$STATUS_FILE" \
     "s3://${TRAINING_BUCKET}/${RESULT_PREFIX}/status.json" --only-show-errors
+  aws s3 cp "$STATUS_FILE" \
+    "s3://${TRAINING_BUCKET}/${ATTEMPT_PREFIX}/status.json" --only-show-errors
 }
 sync_state() {
   aws s3 sync "$OUT/" "s3://${TRAINING_BUCKET}/${STATE_PREFIX}/" \
@@ -146,8 +158,8 @@ test "$(sha256sum /tmp/source.tar.gz | awk '{print $1}')" = "$SOURCE_SHA256"
 tar -xzf /tmp/source.tar.gz -C /opt/zero/repo
 cd /opt/zero/repo
 test "$(cat SOURCE_COMMIT)" = "$SOURCE_COMMIT"
-RECOVERY_CONTRACT=benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json
-EVALUATION_AUTH=benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json
+RECOVERY_CONTRACT=benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract-v2.json
+EVALUATION_AUTH=benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws-v2.json
 test "$(sha256sum "$RECOVERY_CONTRACT" | awk '{print $1}')" = \
   "$RECOVERY_CONTRACT_SHA256"
 test "$(jq -r .authorization.approval_id "$RECOVERY_CONTRACT")" = \

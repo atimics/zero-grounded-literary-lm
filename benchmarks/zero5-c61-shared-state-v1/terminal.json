@@ -13,9 +13,9 @@
     "training_authorization": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
     "training_authorization_sha256": "9ee9cb31b26629d225dfba90ebe105e902a7360409e1419f068fd14c30b3ca5c",
     "evaluation_recovery_contract": "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json",
-    "evaluation_recovery_contract_sha256": "50bc8455a8af1af7bb9eb987895df963e988d01e5131f14d631ddb869ddb4e9f",
+    "evaluation_recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
     "evaluation_authorization": "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json",
-    "evaluation_authorization_sha256": "72fa2d7b672b403a49fa09c1199e62122b015ab4d63432aacdeafaa32cb32775"
+    "evaluation_authorization_sha256": "6f60177bd77c3b44dcfcececc6412db155a03c8b6bd826b165464a3dc721da78"
   },
   "training": {
     "source_run_id": "zero5-c61-aws-20260831-e977b63r1",
@@ -46,11 +46,11 @@
     },
     "launch_receipt": {
       "path": "benchmarks/zero5-c61-shared-state-v1/evaluation/zero5-c61-eval-20260901-10f8435/launch.json",
-      "sha256": "73af7fd6c051014c6198585338951c457f1878dd2c40161eb97d793d4f640206"
+      "sha256": "a11fd6ba9a76b3162400bb76453b3d5418fd1a6491434c6fb01becfc1cb0b3e3"
     },
     "status_receipt": {
       "path": "benchmarks/zero5-c61-shared-state-v1/evaluation/zero5-c61-eval-20260901-10f8435/status.json",
-      "sha256": "b91f1b4936c0804b22edc74c16359ab1cb57267df82f70600767deabc3ec5a6a"
+      "sha256": "8168264c7aa2471bab2eba600888cf376bc3589fa4c483a3f1f1caec3604be72"
     }
   },
   "gates": {

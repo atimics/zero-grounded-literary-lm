@@ -1,8 +1,11 @@
 {
   "schema": "zero.c61_runtime_safety_amendment.v1",
   "purpose": "Install shutdown protection before metadata reads and bound each request.",
-  "execution_authorized": false,
-  "recovery_contract_sha256": "50bc8455a8af1af7bb9eb987895df963e988d01e5131f14d631ddb869ddb4e9f",
+  "execution_authorized": true,
+  "recovery_contract": "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract-v2.json",
+  "recovery_contract_sha256": "996c33f33b5432a5879f7df84a1f54f1fbf473b949e17a23c0ebfbc835294cfa",
+  "historical_recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+  "approval_id": "zero5-c61-evaluation-recovery-aws-2026-09-04-v2",
   "historical": {
     "path": "benchmarks/zero5-c61-shared-state-v1/history/evaluation-user-data-v1.sh",
     "sha256": "9e28ff5d920f5306281ebc6d4deec56a9afdf10c0fa9981d128743319263c567",
@@ -10,7 +13,7 @@
   },
   "current": {
     "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
-    "sha256": "cc2e960878d4e10f329bdfe7b5ffde6ad510693dee8fa0367efd8ff9e5d77ea9",
-    "bytes": 9423
+    "sha256": "41ecb76ab5b423f3a8789fd4e78c5a952d54b4f74b2ba2ab37c28063425ecfe2",
+    "bytes": 9908
   }
 }

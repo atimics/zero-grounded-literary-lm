@@ -1,10 +1,10 @@
 {
-  "schema": "zero.c61_evaluation_recovery_contract.v1",
+  "schema": "zero.c61_evaluation_recovery_contract.v2",
   "experiment": "zero5-c61-shared-state-v1",
   "status": "evaluation-authorized",
   "authorized": true,
   "training_authorized": false,
-  "purpose": "Complete the unchanged frozen C6.1 validation and bridge-off ablation from the already-trained private checkpoint without another training update.",
+  "purpose": "Resume the unchanged frozen C6.1 validation and bridge-off ablation from hash-bound atomic evaluation state.",
   "source_training": {
     "scientific_contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
     "scientific_contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
@@ -44,34 +44,36 @@
     "ablation_arm": "same checkpoint with bridge scale zero",
     "atomic_tasks": 18,
     "cache_binding": "scientific contract, checkpoint pair, evaluator, binaries, task arguments, and bridge state",
+    "progress_schema": "zero.c61_evaluation_progress_checkpoint.v1",
+    "shared_state_prefix": "experiments/zero5-c61-shared-state-v1/evaluation-recovery-v2/state",
     "sealed_test_opened": false,
     "training_updates": 0
   },
   "implementation": {
     "evaluator": {
       "path": "scripts/evaluate_zero5_c61_shared_state_recovery.mjs",
-      "sha256": "ead4b1141bca1fcdcb8b4220eaac8af632c7bd875f965ca4ea8e3334ef5e8baf",
-      "bytes": 20006
+      "sha256": "5956569d91beb6ad15881681b034f22ea8fcc0755d317f9cf8423346c1d647ce",
+      "bytes": 22427
     },
     "runner": {
       "path": "scripts/run_zero5_c61_evaluation_recovery.mjs",
-      "sha256": "e4a8d63a325441854e60ca0b03f4a3d801dadf77391495bb406f520f0efb6aa7",
-      "bytes": 11470
+      "sha256": "c0e478a227e1236ae6c5f116c64394d245d06ebf5d39f400a653d8c7e9363681",
+      "bytes": 12616
     },
     "user_data": {
       "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
-      "sha256": "9e28ff5d920f5306281ebc6d4deec56a9afdf10c0fa9981d128743319263c567",
-      "bytes": 8548
+      "sha256": "41ecb76ab5b423f3a8789fd4e78c5a952d54b4f74b2ba2ab37c28063425ecfe2",
+      "bytes": 9908
     },
     "launcher": {
       "path": "scripts/aws/zero5-c61-evaluation-run-instance.sh",
-      "sha256": "6caa75cfe77712829d035f44b7439f2523bd51ecf714b023dbdb48c1492bad81",
-      "bytes": 5935
+      "sha256": "df86e1556599032df3e7bc0d88e67d31850b8d3b048aace6f3d57626a3e102ea",
+      "bytes": 7743
     },
     "stager": {
       "path": "scripts/aws/zero5-c61-evaluation-stage.sh",
-      "sha256": "5afc7a646737fc6c24a33d24dc2dcaffabbd8e6c4640356485cc31da2e11a6c2",
-      "bytes": 2366
+      "sha256": "17161cfe22328f1bb31a03ec478a4826d7eef83394df07e2522f6cc639cfadec",
+      "bytes": 2369
     }
   },
   "execution": {
@@ -79,16 +81,26 @@
     "instance_type": "c6i.4xlarge",
     "maximum_execution_seconds": 9000,
     "maximum_ec2_usd": 1.7,
+    "maximum_attempts": 5,
+    "maximum_cumulative_execution_seconds": 45000,
+    "maximum_cumulative_ec2_usd": 8.5,
+    "approved_outer_maximum_ec2_usd": 10,
     "on_demand_usd_per_hour": 0.68,
     "evaluation_jobs": 4,
     "openblas_threads": 16,
     "cache_sync_seconds": 30,
     "automatic_termination": true,
     "independent_retry_authorized": false,
+    "continuation_requires_prior_recoverable_status": true,
     "asset_archive": {
       "key": "experiments/zero5-c61-shared-state-v1/inputs/assets-b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94.tar.gz",
       "sha256": "b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94"
-    }
+    },
+    "budget": "benchmarks/zero5-c61-shared-state-v1/evaluation-budget.json",
+    "budget_sha256": "4ef19abe213817254812de1c707dadea1194fd823b02db649716c78e2be32d39",
+    "measured_full_cycle_seconds": 18300,
+    "measured_full_cycle_ec2_usd": 3.46,
+    "resumable_evaluation": true
   },
   "claim_boundary": {
     "evaluation_only": true,
@@ -101,7 +113,7 @@
     "sealed_test_access_authorized": false
   },
   "authorization": {
-    "approval_id": "zero5-c61-evaluation-recovery-aws-2026-09-01-v1",
-    "record": "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json"
+    "approval_id": "zero5-c61-evaluation-recovery-aws-2026-09-04-v2",
+    "record": "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws-v2.json"
   }
 }

@@ -99,12 +99,22 @@ The phase profiling to size this correctly already exists
   calibration: base arm 1,103s, candidate arm 781s, ablation arm 760s,
   auxiliary 427s; on-instance anchor ratio 2.81x).
 - **Full cycle**: 18,260s / $3.45.
-- **Cumulative budget**: 18,300s / $3.46 across 3 instances (2 training, 1
-  evaluation), replacing the per-instance ceiling as the governing limit.
+- **Measured full-cycle envelope**: 18,300s / $3.46 across the recorded
+  training and evaluation phases.
+
+The completed v1 contract, authorization, launch receipt, status receipt, and
+terminal record keep their original hashes. The resumable implementation uses
+`evaluation-recovery-contract-v2.json` and
+`evaluation-authorization-aws-v2.json`.
+
+The v2 recovery has five continuation slots. Each slot is limited to 9,000
+seconds and $1.70. The full recovery series is limited to 45,000 instance
+seconds and $8.50. This leaves $1.50 unused under the approved $10 limit. A
+slot after the first requires the previous slot to end with a `recoverable`
+status.
 
 The evaluator now emits a `zero.c61_evaluation_progress_checkpoint.v1` file
-after each atomic task completes. The user-data downloads prior synced state
-(including the hash-bound task cache) before starting evaluation, and passes
-`--resume-evaluation` when a prior `execution.json` exists without a result.
-A `recoverable` termination therefore continues evaluation from the cached
-atomic-task checkpoints instead of restarting it.
+after each atomic task completes. All continuation slots share one private,
+hash-bound state prefix. The user-data downloads that state before evaluation
+and passes `--resume-evaluation` when it finds an incomplete execution. A
+`recoverable` receipt can therefore continue from completed atomic tasks.

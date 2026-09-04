@@ -9,7 +9,7 @@ const budgetPath =
 const phaseProfilePath =
   "benchmarks/zero5-cpu-phase-profile-v1/result.json";
 const recoveryContractPath =
-  "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json";
+  "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract-v2.json";
 
 function sha256(file) {
   return crypto.createHash("sha256")
@@ -34,8 +34,8 @@ assert.equal(budget.schema, "zero.c61_evaluation_experiment_budget.v1",
   "unsupported budget schema");
 assert.equal(budget.experiment, "zero5-c61-shared-state-v1",
   "budget experiment drifted");
-assert.equal(budget.status, "preregistered",
-  "budget must be preregistered");
+assert.equal(budget.status, "authorized",
+  "budget must be authorized");
 assert.equal(budget.scientific_inference_allowed, false,
   "budget must forbid scientific inference");
 
@@ -142,6 +142,44 @@ assert.ok(phases[0].max_instance_seconds >= costs.training.wall_seconds,
 assert.ok(phases[1].max_instance_seconds >= costs.evaluation.wall_seconds,
   "evaluation phase budget must cover measured evaluation cost");
 
+// ── Authorized continuation cap ──
+const continuation = budget.authorized_continuation_budget;
+const authorization = budget.authorization;
+assert.equal(continuation.maximum_attempts, 5,
+  "continuation attempts drifted");
+assert.equal(continuation.max_instance_seconds_each,
+  ceiling.max_instance_seconds,
+  "continuation instance cap must match the per-instance ceiling");
+assert.equal(continuation.max_cumulative_instance_seconds,
+  continuation.maximum_attempts * continuation.max_instance_seconds_each,
+  "continuation time cap must cover exactly the authorized attempts");
+assert.equal(continuation.max_cumulative_compute_usd,
+  continuation.maximum_attempts * ceiling.max_compute_usd,
+  "continuation cost cap must cover exactly the authorized attempts");
+assert.equal(continuation.attempts_after_first_require_prior_recoverable_status,
+  true, "continuations must require a recoverable prior status");
+assert.equal(continuation.shared_state_across_attempts, true,
+  "continuations must share checkpoint state");
+assert.equal(authorization.authorized, true,
+  "continuation budget needs authorization");
+assert.equal(authorization.approved_by, "ratimics",
+  "continuation approver drifted");
+assert.equal(authorization.maximum_compute_usd, 10,
+  "approved outer cost cap drifted");
+assert.equal(continuation.max_cumulative_compute_usd <=
+  authorization.maximum_compute_usd, true,
+"operating cost cap exceeds the approval");
+assert.equal(continuation.unused_approval_reserve_usd,
+  authorization.maximum_compute_usd -
+    continuation.max_cumulative_compute_usd,
+"approval reserve does not reconcile");
+assert.equal(authorization.one_recovery_series_only, true,
+  "authorization must cover one recovery series");
+assert.equal(authorization.training_updates_authorized, 0,
+  "recovery authorization must keep training closed");
+assert.equal(authorization.independent_scientific_retries_authorized, 0,
+  "recovery authorization must keep independent retries closed");
+
 // ── Evaluation resume ──
 const resume = budget.evaluation_resume;
 assert.equal(resume.checkpoint_strategy,
@@ -198,6 +236,9 @@ const mutations = [
   ["scientific inference allowed", copy => {
     copy.scientific_inference_allowed = true;
   }],
+  ["continuation cap above approval", copy => {
+    copy.authorized_continuation_budget.max_cumulative_compute_usd = 10.01;
+  }],
 ];
 
 for (const [name, mutate] of mutations) {
@@ -218,6 +259,9 @@ for (const [name, mutate] of mutations) {
       throw new Error("restart on recoverable");
     if (copy.scientific_inference_allowed === true)
       throw new Error("scientific inference allowed");
+    if (copy.authorized_continuation_budget.max_cumulative_compute_usd >
+        copy.authorization.maximum_compute_usd)
+      throw new Error("continuation cap above approval");
   } catch {
     rejected = true;
   }

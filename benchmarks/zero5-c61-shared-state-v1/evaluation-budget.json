@@ -1,7 +1,7 @@
 {
   "schema": "zero.c61_evaluation_experiment_budget.v1",
   "experiment": "zero5-c61-shared-state-v1",
-  "status": "preregistered",
+  "status": "authorized",
   "purpose": "Size the evaluation-only recovery venue envelope from measured C6.1 phase costs so that a recoverable termination continues evaluation from synced atomic-task checkpoints instead of restarting it.",
   "scientific_inference_allowed": false,
   "phase_profile_source": {
@@ -60,6 +60,25 @@
         "resumable": true
       }
     ]
+  },
+  "authorized_continuation_budget": {
+    "maximum_attempts": 5,
+    "max_instance_seconds_each": 9000,
+    "max_cumulative_instance_seconds": 45000,
+    "max_cumulative_compute_usd": 8.5,
+    "unused_approval_reserve_usd": 1.5,
+    "attempts_after_first_require_prior_recoverable_status": true,
+    "shared_state_across_attempts": true
+  },
+  "authorization": {
+    "authorized": true,
+    "approved_by": "ratimics",
+    "approved_at": "2026-09-04T08:55:39Z",
+    "approved_statement": "I approve up to $10 of spend on both and the next experiment",
+    "maximum_compute_usd": 10,
+    "one_recovery_series_only": true,
+    "training_updates_authorized": 0,
+    "independent_scientific_retries_authorized": 0
   },
   "evaluation_resume": {
     "checkpoint_strategy": "hash-bound atomic task cache synced to S3 every 30 seconds",
