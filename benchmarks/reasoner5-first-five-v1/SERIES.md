@@ -40,5 +40,11 @@ The recommended order is:
 This path keeps the exact verifier as the safety boundary. It also gives the
 learned ranker enough search space for transfer gains to be measured.
 
+The comprehensive [next-set design](../../docs/REASONER5-NEXT.md) refines this
+order after a local implementation audit and primary-source review. It
+separates learned passive noise from active query choice, places bounded
+recursion after a nonlinear composition pass, and defines generated-family
+splits, causal controls, family-level statistics, and shared sealed gates.
+
 The machine-readable [series record](series.json) links every raw result and
 provenance record.

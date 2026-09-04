@@ -51,6 +51,10 @@ way and the complete conjunctive gate passes.
 | 4.1 | Joint induction of unseen representations and laws | Pass: 33,232/33,232 sealed episodes |
 | 4.2 | Exact discovery and reuse of derived adapter abstractions | Pass: 34/34 sealed episodes |
 | 5.0 | Contract-preserved frozen-ranker and residual transfer | No-go: 7.7% versus required 20% search reduction |
+| 5.1 | Exact adaptation to two unseen primitive IDs | Pass: 45 checks versus 105 target-only |
+| 5.2 | Nonlinear depth transfer | No-go: aggregate gain reached only 8 of 16 required row wins |
+| 5.3 | Missing evidence plus one fixed changed value | Pass: 48 checks versus 66 target-only |
+| 5.4 | Calibrated synthetic pixels | No-go: full and target-only both reached the one-check floor |
 
 The version-specific documents and benchmark result files contain the frozen
 contracts, controls, receipts, digests, and exact counts. Negative results are
@@ -127,3 +131,24 @@ adapter and frozen class prior used 45 candidate expansions against 105 for
 target-only. All 24 accepted programs were exact. The source corpus and
 semantic classes were fixed during design. The control table and scope are
 in the [result](../benchmarks/reasoner51-unseen-primitive-v1/RESULT.md).
+
+## Reasoner 5 first-series boundary
+
+Reasoner 5.0 through 5.4 are complete. The five one-time local runs produced
+192 exact final answers, two passes, three no-go decisions, and zero retries.
+The [series audit](../benchmarks/reasoner5-first-five-v1/SERIES.md) preserves
+the result table and links every raw record.
+
+Version 5.1 is the strongest transfer result. Its exact semantic adapter
+preserved a useful source guide across two new primitive IDs. Version 5.2 has
+an aggregate nonlinear lead and weak family coverage. Version 5.3 supports a
+fixed one-outlier rule plus the source prior. Version 5.4 supports exact
+decoding of its fully calibrated synthetic channel and exposes a ranking
+measurement floor.
+
+The researched [next-set design](REASONER5-NEXT.md) turns those limits into
+five separate experiments: generated unseen primitives, a learned passive
+noise channel, active evidence selection, nonlinear compositional transfer,
+and ambiguous grounded concepts. Bounded recursion follows a positive
+nonlinear composition result. Its machine-readable order and common gates are
+in the [plan](../benchmarks/reasoner5-next-set-v1/PLAN.json).
