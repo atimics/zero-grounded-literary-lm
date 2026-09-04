@@ -64,30 +64,33 @@ record. This follow-up is development evidence.
 ## Costs
 
 Each method runs in its own process with one warmup pass and three measured
-passes. The recorded host is an Apple M4 Max. The source fits take about 77 ms.
-That is preparation time for both models together.
+passes. The recorded host is an Apple M4 Max. The task-guide process spends
+about 210 ms fitting both source models together.
 
 Across the 32 task-guide episodes, the recorded full pipeline takes about
-22 ms. About 13 ms goes to hashing the full feature and ranking records, 4.9 ms
-to sorting, 1.6 ms to enumeration, 1.2 ms to feature scoring, and 0.14 ms to
+53 ms. About 31 ms goes to hashing the full feature and ranking records, 12 ms
+to sorting, 3.6 ms to enumeration, 2.9 ms to feature scoring, and 0.39 ms to
 verification and fallback. [TIMING.json](TIMING.json) contains each raw sample,
 the host, the binary digest, and the exact totals.
 
 The prefix cache builds 4,680 compositions for each episode. Directly building
 each four-step program would require 16,384 compositions. The independent
 checker reconstructs each program directly and verifies the same groups and
-features. This gives the cache a complete behavior check.
+features. Native parity also checks all 557,056 individual program maps and
+prefix features across the 136 source and target families.
 
 The full timing includes allocation, adapter recovery and its domain audit,
 enumeration, grouping, scoring, sorting, record hashes, exact verification,
-fallback, and release. The group-size baseline takes about 21 ms. The fitted
+fallback, and release. The group-size baseline takes about 62 ms. The fitted
 guide trades additional scoring work for fewer verification checks. The full
 feature hashes make this a heavier audit than the original R5.5 timing sample.
 The separate stage measurements show that cost explicitly.
 
 Peak RSS covers the entire process, including source preparation and warmup.
 Method order is fixed. Further timing comparisons can vary process order and
-host while keeping the deterministic search results fixed.
+host while keeping the deterministic search results fixed. An earlier recording
+on the same host took about 22 ms for the task guide and 21 ms for group-size
+ranking. This variation calls for controlled timing runs before a speed claim.
 
 ## Reproduction
 

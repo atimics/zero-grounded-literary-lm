@@ -497,19 +497,44 @@ static int r55sg_self_test(void)
     r55d_corpus corpus;
     r55_public_episode episode;
     uint8_t roles[R55_ROLES];
-    if (r55d_make_corpus(&corpus) != 0 ||
-        r55sg_public(&corpus.development[0][0], &episode, roles) != 0) return 1;
+    if (r55d_make_corpus(&corpus) != 0) return 1;
     r55sg_universe *u = calloc(1, sizeof(*u));
     if (!u) return 1;
-    int failed = r55sg_enumerate(&episode, roles, u) || r55sg_group_programs(u);
-    for (uint32_t index = 0; index < R55_CANDIDATES && !failed; ++index) {
-        r55_candidate original;
-        r55_fill_candidate(&episode, roles, NULL, 0, 0, 0, (uint16_t)index, &original);
-        const r55_candidate *candidate = &u->programs[index].candidate;
-        failed = !r55_affine_equal(&candidate->semantic, &original.semantic) ||
-            candidate->evidence_loss != original.evidence_loss ||
-            memcmp(candidate->role, original.role, sizeof(candidate->role)) != 0;
+    int failed = 0;
+    uint32_t compared = 0;
+    for (uint32_t lane = 0; lane < 2 && !failed; ++lane) {
+        uint32_t tasks = lane == 0 ? R55_SOURCE_FAMILIES : R55_DEVELOPMENT_FAMILIES;
+        for (uint32_t gen = 0; gen < R55_GENERATORS && !failed; ++gen)
+            for (uint32_t task = 0; task < tasks && !failed; ++task) {
+                const r55_family *family = lane == 0 ?
+                    &corpus.source[gen][task] : &corpus.development[gen][task];
+                failed = r55sg_public(family, &episode, roles) ||
+                    r55sg_enumerate(&episode, roles, u) || r55sg_group_programs(u);
+                for (uint32_t index = 0; index < R55_CANDIDATES && !failed; ++index) {
+                    r55_candidate original;
+                    uint8_t value[R55_LANES], prefix_matches = 0;
+                    r55_fill_candidate(&episode, roles, NULL, 0, 0, 0,
+                        (uint16_t)index, &original);
+                    memcpy(value, episode.example_input, sizeof(value));
+                    for (uint32_t pos = 0; pos + 1 < R55_PROGRAM_LEN; ++pos) {
+                        uint8_t next[R55_LANES];
+                        r55_apply(&episode.primitive_by_surface[original.token[pos]], value, next);
+                        for (uint32_t index_lane = 0; index_lane < R55_LANES; ++index_lane)
+                            prefix_matches += next[index_lane] == episode.example_output[index_lane];
+                        memcpy(value, next, sizeof(value));
+                    }
+                    const r55_candidate *candidate = &u->programs[index].candidate;
+                    failed = !r55_affine_equal(&candidate->semantic, &original.semantic) ||
+                        candidate->evidence_loss != original.evidence_loss ||
+                        memcmp(candidate->role, original.role, sizeof(candidate->role)) != 0 ||
+                        u->programs[index].prefix_matches != prefix_matches;
+                    ++compared;
+                }
+            }
     }
+    failed |= compared != R55_TOTAL_FAMILIES * R55_CANDIDATES;
+    if (!failed) failed = r55sg_public(&corpus.development[0][0], &episode, roles) ||
+        r55sg_enumerate(&episode, roles, u) || r55sg_group_programs(u);
     if (!failed) {
         r55_search_result exact = {0}, capped = {0};
         failed = r55sg_search(&episode, &corpus.development[0][0].target,
@@ -528,7 +553,7 @@ int main(int argc, char **argv)
 {
     if (argc == 2 && strcmp(argv[1], "--self-test") == 0) {
         if (r55sg_self_test() != 0) return 1;
-        puts("Reasoner 5.5 semantic guide self-test passed");
+        puts("Reasoner 5.5 semantic guide self-test passed: 557056 program maps and prefix features, fallback, cap");
         return 0;
     }
     if (argc == 2 && strcmp(argv[1], "--list-arms") == 0) {
