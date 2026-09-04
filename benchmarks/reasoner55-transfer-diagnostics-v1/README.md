@@ -101,7 +101,7 @@ make -f Makefile.reasoner55 reasoner55-diagnostics-check
 ```
 
 The separate make file extends the build. The main Makefile is recorded by the
-R5.9a contract. CI runs the experiment checks on all three build platforms.
+R5.9a contract. A separate workflow runs the experiment checks on Linux and macOS.
 The first command writes the two result files. The second rebuilds and compares
 all deterministic native rows. It independently reconstructs the source guides
 and replays all 480 search rows with the existing R5.5 replay code. It also
