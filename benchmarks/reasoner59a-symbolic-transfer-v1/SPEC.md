@@ -18,14 +18,20 @@ universe. It rejects a grammar above 16,384 pairs. It then deduplicates pairs
 by their complete Boolean behavior across all 25,344 scenes.
 
 Two concept generators and two support builders form a complete two-by-two
-development matrix. Sparse positive and negative support examples retain at
+development matrix. Each prior component learns from one concept generator.
+It ranks targets from the other generator. The transfer direction is a fixed
+analysis environment. Sparse positive and negative support examples retain at
 least eight exact semantic classes. Development families also require a
 target-only median from 16 through 64 verifier checks before family splits
-freeze.
+freeze. This headroom calculation includes the 64-proposal path and canonical
+fallback.
 
-The source artifact contains smoothed integer counts for typed productions,
-subtree roles, atom frequencies, and legend-binding patterns. The primary
-contrast is `full` against `target_only`. Controls include a source-free guide,
+The source artifact contains two generator-specific components. Each feature
+event from each registered source concept adds one count. Every categorical
+table starts with one smoothing count per value. Counts are normalized within
+their feature group. Natural log probabilities are rounded to signed Q20
+integers. A candidate score sums exactly two registered events in each enabled
+group. The primary contrast is `full` against `target_only`. Controls include a source-free guide,
 its exact source ablation, a binding-feature ablation, a frequency-only prior,
 a source-only arm, a consistent surface-label bijection, oracle program order,
 and 31 type-and-frequency-preserving prior derangements.
