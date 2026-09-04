@@ -153,7 +153,7 @@
     "headroom_comparator": "target_only",
     "log_loss_comparison_input": "stable score-domain normalized_log_loss; truth_probability is diagnostic only",
     "full_log_loss_replay_episodes": 128,
-    "full_log_loss_replay_sha256": "b29871d1599061d48e9653aadcbfdfbeedc60c31d5a008cfefb6726316f2fb93",
+    "full_log_loss_replay_sha256": "7388a266f0341ec58bf55f972d1b4be992f1ee35879ef4aeca75be1177cf181c",
     "minimum_development_median_cost": 16,
     "development_decision_has_no_scientific_authority": true
   },
@@ -211,21 +211,21 @@
   },
   "implementation": {
     "files": {
-      "reasoner56.c": "c208fca19b477724afeee2e50bcfad1f41b842dd911004be394bcb88f5e1032c",
+      "reasoner56.c": "5990e9ad9212b1719a969705ef18525f44231b6071f98172c60fcab8c63109c2",
       "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
       "scripts/lib/reasoner56_development.mjs": "234f0e18ab9e22ed6bdd62b0793f421dbbac673631982d0742bd07d14c106137",
-      "scripts/check_reasoner56_development.mjs": "463091cca3064db60d92ed6dcc56a92c27c68df55c63111881001a8cb4551e58"
+      "scripts/check_reasoner56_development.mjs": "d1b3bb4334f1840ac75fe03905d34775fe52c3252045e6c7251ad594be07ca09"
     }
   },
   "development_outputs": {
     "result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/result.json",
-      "sha256": "609d64c4a41e2c7791c73a030ac07db4ffd5a1786d9c1674860b6881442659de"
+      "sha256": "75438f49cdf3fc800376cce3dea75b222be6ff587cb4d44a2b4735b8ff607a54"
     },
     "trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/raw-trace.jsonl",
-      "sha256": "1310a29272ac32679c29bcc56aa610d0de303644a1d18e9683b7d9dae97a1b34"
+      "sha256": "5d510f3618c579e58900ead467e6b22d010e0c773f68c0cb67498b893c06d247"
     },
     "artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
@@ -241,7 +241,7 @@
     },
     "harness_result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-result.json",
-      "sha256": "dfe76019c9a1959e10659f3d7acab673e5bdd6a25fae388d6d6773d3e1fbc5e6"
+      "sha256": "813f57ae039861f0f7f59ab044101d79cf2482cc0f547243c949226550fa55d0"
     },
     "audit": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/proxy-taint-audit.json",
@@ -249,13 +249,13 @@
     },
     "assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "165c973fc2d796347544fe55beea9ecfbb8e9828112d0a64cc3b03e63fccfbeb"
+      "sha256": "f4e355d2cb400ba311864a06470b0ff93be1aff39965ff503962144df09ad361"
     }
   },
   "shared_harness": {
     "integrated": true,
-    "commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f",
-    "library_sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5",
+    "commit": "d4697c5de800390384ad90d62ec994470352af70",
+    "library_sha256": "bcaf2eba7685df9bb94b971ebb09849c7e6eb19a8c772ef7f74d3ac267f33bfb",
     "bootstrap_receipt_schema": "v2",
     "confidence_interval_method": "ordinary-percentile-bootstrap",
     "p_value_method": "recentered-null-bootstrap",

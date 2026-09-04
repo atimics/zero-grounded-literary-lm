@@ -37,8 +37,8 @@
   "target_only_min_cost": 34,
   "target_only_max_cost": 51,
   "target_only_median_cost": 43,
-  "full_mean_normalized_log_loss": 3.3605854344790717e-33,
-  "full_mean_brier": 5.3030289404845934e-62,
+  "full_mean_normalized_log_loss": 3.36058543447907e-33,
+  "full_mean_brier": 5.30302894048459e-62,
   "development_classes": [165, 48, 107, 418, 127, 417, 391, 407],
   "calibration_coverage_records": [
     {"family_index": 0, "semantic_class": 298, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
@@ -142,7 +142,7 @@
     ,{"family_index": 98, "semantic_class": 205, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
   ],
   "artifact_digest": "0ea69dbf1705cb12",
-  "trace_digest": "4d24644a08dc4941",
+  "trace_digest": "6f6e5a544de0cfaa",
   "calibration_fit_digest": "9d62b059e8a38575",
   "calibration_coverage_digest": "16a77c9a7c4ebd8f"
 }

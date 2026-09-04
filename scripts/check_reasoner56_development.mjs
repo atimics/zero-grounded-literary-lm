@@ -110,7 +110,7 @@ assert.equal(contract.analysis.log_loss_comparison_input,
 assert.equal(contract.analysis.full_log_loss_replay_episodes, 128);
 assert.equal(contract.arms.length, 45);
 assert.equal(contract.shared_harness.commit,
-  "db3e85b5808252bbd174e95e8b17ee804594ae2f");
+  "d4697c5de800390384ad90d62ec994470352af70");
 assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
   contract.shared_harness.library_sha256,
 "shared harness hash differs from the R5.6 contract");
@@ -142,6 +142,19 @@ function runDevelopment(directory) {
     result: readFileSync(resultPath),
     trace: readFileSync(tracePath),
     artifact: readFileSync(artifactPath),
+  };
+}
+
+function cloneCalibrationManifest(manifest) {
+  const receipt = manifest.calibration_coverage_receipt;
+  const families = [...receipt.families];
+  families[0] = {
+    ...families[0],
+    draws: [{ ...families[0].draws[0] }, ...families[0].draws.slice(1)],
+  };
+  return {
+    ...manifest,
+    calibration_coverage_receipt: { ...receipt, families },
   };
 }
 
@@ -324,42 +337,46 @@ try {
     }
   }
 
-  const badManifest = structuredClone(bundle.manifest);
-  badManifest.source_artifact.sha256 = "0".repeat(64);
+  const badManifest = { ...bundle.manifest,
+    source_artifact: { ...bundle.manifest.source_artifact,
+      sha256: "0".repeat(64) } };
   expectFailure(() => assertManifestDigest(badManifest), /SHA-256|digest/u);
 
-  const badCalibrationManifest = structuredClone(bundle.manifest);
+  const badCalibrationManifest = cloneCalibrationManifest(bundle.manifest);
   const badCalibrationReceipt =
     badCalibrationManifest.calibration_coverage_receipt;
   badCalibrationReceipt.families[0].draws[0].content_sha256 = "0".repeat(64);
-  const badCalibrationBody = structuredClone(badCalibrationReceipt);
+  const badCalibrationBody = { ...badCalibrationReceipt };
   delete badCalibrationBody.receipt_sha256;
   badCalibrationReceipt.receipt_sha256 = canonicalDigest(
     "r56-calibration-coverage-receipt", badCalibrationBody);
   expectFailure(() => assertR56CalibrationCoverageReplay(
     badCalibrationManifest, first.artifact), /content digest changed/u);
 
-  const forgedCoverageManifest = structuredClone(bundle.manifest);
+  const forgedCoverageManifest = cloneCalibrationManifest(bundle.manifest);
   const forgedCoverageReceipt =
     forgedCoverageManifest.calibration_coverage_receipt;
   forgedCoverageReceipt.families[0].all_draws_covered = false;
-  const forgedCoverageBody = structuredClone(forgedCoverageReceipt);
+  const forgedCoverageBody = { ...forgedCoverageReceipt };
   delete forgedCoverageBody.receipt_sha256;
   forgedCoverageReceipt.receipt_sha256 = canonicalDigest(
     "r56-calibration-coverage-receipt", forgedCoverageBody);
   expectFailure(() => assertR56CalibrationCoverageReplay(
     forgedCoverageManifest, first.artifact), /family coverage changed/u);
 
-  const forgedNativeResult = structuredClone(nativeResult);
-  forgedNativeResult.calibration_coverage_records[0].all_draws_covered = false;
+  const forgedNativeResult = { ...nativeResult,
+    calibration_coverage_records:
+      [{ ...nativeResult.calibration_coverage_records[0],
+        all_draws_covered: false },
+      ...nativeResult.calibration_coverage_records.slice(1)] };
   expectFailure(() => buildR56HarnessBundle({ nativeRows,
     nativeResult: forgedNativeResult, artifactBytes: first.artifact }),
   /native calibration coverage differs from independent replay/u);
 
-  const forgedDrawManifest = structuredClone(bundle.manifest);
+  const forgedDrawManifest = cloneCalibrationManifest(bundle.manifest);
   const forgedDrawReceipt = forgedDrawManifest.calibration_coverage_receipt;
   forgedDrawReceipt.families[0].draws[0].candidate_set_size = 1;
-  const forgedDrawBody = structuredClone(forgedDrawReceipt);
+  const forgedDrawBody = { ...forgedDrawReceipt };
   delete forgedDrawBody.receipt_sha256;
   forgedDrawReceipt.receipt_sha256 = canonicalDigest(
     "r56-calibration-coverage-receipt", forgedDrawBody);
@@ -381,30 +398,33 @@ try {
     nativeResult);
   assert.equal(taintedAudit.passed, false);
 
-  const leakingManifest = structuredClone(bundle.manifest);
-  for (const episode of leakingManifest.episodes) {
-    const orderSlot = episode.content.evaluator.episode_spec.order_slot;
-    episode.cross_family_id = `mechanism-${orderSlot}`;
-  }
+  const leakingManifest = { ...bundle.manifest,
+    episodes: bundle.manifest.episodes.map(episode => ({
+      ...episode,
+      cross_family_id:
+        `mechanism-${episode.content.evaluator.episode_spec.order_slot}`,
+    })) };
   const leakingAudit = auditR56ProxyTaint(leakingManifest, bundle.rawRows,
     nativeResult);
   assert.equal(leakingAudit.passed, false);
   assert.equal(leakingAudit.maximum_template_fraction_per_nonopaque_cell, 1);
 
-  const severityLeakingManifest = structuredClone(bundle.manifest);
-  for (const episode of severityLeakingManifest.episodes) {
-    const orderSlot = episode.content.evaluator.episode_spec.order_slot;
-    episode.content.evaluator.episode_spec.corruption_family.severity =
-      1 + orderSlot % 4;
-  }
+  const severityLeakingManifest = { ...bundle.manifest,
+    episodes: bundle.manifest.episodes.map(episode => {
+      const episodeSpec = episode.content.evaluator.episode_spec;
+      return { ...episode, content: { ...episode.content,
+        evaluator: { ...episode.content.evaluator,
+          episode_spec: { ...episodeSpec,
+            corruption_family: { ...episodeSpec.corruption_family,
+              severity: 1 + episodeSpec.order_slot % 4 } } } } };
+    }) };
   const severityLeakingAudit = auditR56ProxyTaint(severityLeakingManifest,
     bundle.rawRows, nativeResult);
   assert.equal(severityLeakingAudit.passed, false);
   assert.equal(severityLeakingAudit
     .maximum_severity_fraction_per_nonopaque_cell, 1);
 
-  const changedResult = structuredClone(bundle.result);
-  changedResult.result_sha256 = "0".repeat(64);
+  const changedResult = { ...bundle.result, result_sha256: "0".repeat(64) };
   expectFailure(() => assertResultReplay({
     experiment: R56_EXPERIMENT,
     manifest: bundle.manifest,
