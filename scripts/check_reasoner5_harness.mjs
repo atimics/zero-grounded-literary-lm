@@ -1337,7 +1337,7 @@ function testGateAndTraceReplay() {
   assert.equal(portableNumber(0.6309092162584323),
     portableNumber(0.6309092162584324));
   assert.deepEqual(portableNumbers({ value: 1.8793185096513947 }),
-    { value: 1.87931850965139 });
+    { value: 1.87931850965 });
   assert.equal(result.registered_analysis.derangement.values.length, 31);
   expectFailure(() => buildResultFromRawTraces({
     experiment: "reasoner5-harness-self-test",

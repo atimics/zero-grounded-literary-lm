@@ -147,7 +147,7 @@ function finiteNumber(value, label, minimum = -Infinity) {
     `${label} must be a finite number at least ${minimum}`);
 }
 
-const PORTABLE_SIGNIFICANT_DIGITS = 15;
+const PORTABLE_SIGNIFICANT_DIGITS = 12;
 
 export function portableNumber(value) {
   finiteNumber(value, "portable number");
