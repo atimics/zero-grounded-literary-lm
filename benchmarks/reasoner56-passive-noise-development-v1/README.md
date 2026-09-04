@@ -24,7 +24,8 @@ make reasoner56-check
 
 The focused check rebuilds every development file twice, checks byte identity,
 compares it with the committed fixture, audits every raw row, checks the public
-ranker schema, runs address and undefined-behavior sanitizers, and confirms
+ranker schema, independently replays full-arm log loss from Q20 scores, runs
+address and undefined-behavior sanitizers, and confirms
 that sealed execution stays closed.
 
 The deterministic fixture gives a search-cost `no-go` and a separate

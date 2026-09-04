@@ -983,6 +983,30 @@ int r56_posterior(const r56_artifact *artifact, const r56_universe *universe,
     return 0;
 }
 
+static double r56_score_log_loss(
+    const int64_t score_q20[R56_SEMANTIC_CLASSES], uint16_t truth) {
+    int64_t maximum = INT64_MIN;
+    uint32_t maximum_ties = 0u;
+    double lower_tail = 0.0;
+    if (!score_q20 || truth >= R56_SEMANTIC_CLASSES) return NAN;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic)
+        if (score_q20[semantic] > maximum) maximum = score_q20[semantic];
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic) {
+        if (score_q20[semantic] == maximum) {
+            maximum_ties += 1u;
+        } else {
+            lower_tail += exp(((double)score_q20[semantic] -
+                               (double)maximum) /
+                              (double)R56_Q20_ONE);
+        }
+    }
+    if (maximum_ties == 0u || !isfinite(lower_tail)) return NAN;
+    return ((double)maximum - (double)score_q20[truth]) /
+               (double)R56_Q20_ONE +
+           log((double)maximum_ties) +
+           log1p(lower_tail / (double)maximum_ties);
+}
+
 static void r56_probability_order(
     const double probability[R56_SEMANTIC_CLASSES],
     uint16_t order[R56_SEMANTIC_CLASSES]) {
@@ -1107,8 +1131,13 @@ int r56_calibrate(r56_artifact *artifact, const r56_universe *universe,
                                   R56_ARM_FULL, probability, score,
                                   &reads) != 0)
                     return 2;
-                family_loss -= log(probability[fit_truth[episode]] > 1e-300 ?
-                    probability[fit_truth[episode]] : 1e-300);
+                {
+                    double episode_loss = r56_score_log_loss(
+                        score, fit_truth[episode]);
+                    if (!isfinite(episode_loss) || episode_loss < 0.0)
+                        return 2;
+                    family_loss += episode_loss;
+                }
             }
             loss += family_loss / (double)draws_per_family;
         }
@@ -2448,9 +2477,13 @@ int r56_run_development(r56_development_result *result,
                         result->normalized_rows += 1u;
                     truth_rank = r56_truth_rank(probability, truth);
                     truth_probability = probability[truth];
-                    normalized_log_loss = -log(truth_probability > 1e-300 ?
-                        truth_probability : 1e-300) /
+                    normalized_log_loss = r56_score_log_loss(score, truth) /
                         log((double)R56_SEMANTIC_CLASSES);
+                    if (!isfinite(normalized_log_loss) ||
+                        normalized_log_loss < 0.0) {
+                        status = 9;
+                        goto cleanup;
+                    }
                     brier = r56_brier_score(probability, truth);
                     candidate_set_size = r56_candidate_set(probability,
                         (double)artifact->conformal_mass_q20 /
@@ -2518,7 +2551,7 @@ int r56_run_development(r56_development_result *result,
                         result->source_ablation_matches += 1u;
                     }
                     if (r56_append(line, sizeof(line), &length,
-                        "{\"schema\":\"zero.reasoner56_native_trace.v2\","
+                        "{\"schema\":\"zero.reasoner56_native_trace.v3\","
                         "\"experiment\":\"reasoner56-passive-noise-development-v1\","
                         "\"lane\":\"development\",\"generator_id\":\"r56-gf17-v2\","
                         "\"family_id\":\"program-%u\","
@@ -2749,7 +2782,7 @@ int r56_write_development_result(const char *path,
     if (!file) return 2;
     if (fprintf(file,
         "{\n"
-        "  \"schema\": \"zero.reasoner56_development_result.v3\",\n"
+        "  \"schema\": \"zero.reasoner56_development_result.v4\",\n"
         "  \"experiment\": \"reasoner56-passive-noise-development-v1\",\n"
         "  \"status\": \"development-only\",\n"
         "  \"scientific_decision\": null,\n"
@@ -3093,6 +3126,24 @@ int r56_self_test(void) {
             for (uint32_t semantic = 0u;
                  semantic < R56_SEMANTIC_CLASSES; ++semantic) {
                 if (!included[semantic]) { status = 22; goto bytes_done; }
+            }
+        }
+        {
+            int64_t dominant_score[R56_SEMANTIC_CLASSES];
+            double rounded_probability[R56_SEMANTIC_CLASSES];
+            double stable_loss;
+            double expected_loss = log1p(exp(-72.0));
+            dominant_score[0] = 0;
+            dominant_score[1] = -72 * (int64_t)R56_Q20_ONE;
+            for (uint32_t semantic = 2u;
+                 semantic < R56_SEMANTIC_CLASSES; ++semantic)
+                dominant_score[semantic] = -1000 * (int64_t)R56_Q20_ONE;
+            stable_loss = r56_score_log_loss(dominant_score, 0u);
+            if (r56_normalize_scores(dominant_score,
+                    rounded_probability) != 0 ||
+                rounded_probability[0] != 1.0 || !(stable_loss > 0.0) ||
+                fabs(stable_loss - expected_loss) > expected_loss * 1e-12) {
+                status = 22; goto bytes_done;
             }
         }
         {

@@ -1,7 +1,7 @@
 {
-  "schema": "zero.reasoner56_passive_noise_development_contract.v4",
+  "schema": "zero.reasoner56_passive_noise_development_contract.v5",
   "experiment": "reasoner56-passive-noise-development-v1",
-  "version": "5.6-development-4",
+  "version": "5.6-development-5",
   "status": "development-only",
   "question": "Can a frozen source-learned observation model improve exact search on new GF(17) program and corruption families?",
   "domain": {
@@ -65,6 +65,11 @@
     "coverage_program_families": 99,
     "draws_per_program_family": 8,
     "fit_statistic": "mean log loss per program family",
+    "log_loss_evaluation": {
+      "score_domain_rule": "logsumexp(score_q20/Q20)-truth_score_q20/Q20",
+      "stable_tail_rule": "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)",
+      "probability_field_role": "diagnostic only"
+    },
     "coverage_statistic": "worst corruption-draw cumulative mass per program family",
     "finite_sample_rank": 99,
     "rank_unavailable_rule": "use the exact full-universe set at threshold 1, including classes whose positive mass rounds to zero",
@@ -146,6 +151,9 @@
     "formal_mechanisms": ["one_trim", "markov_off"],
     "derangements": 31,
     "headroom_comparator": "target_only",
+    "log_loss_comparison_input": "stable score-domain normalized_log_loss; truth_probability is diagnostic only",
+    "full_log_loss_replay_episodes": 128,
+    "full_log_loss_replay_sha256": "b29871d1599061d48e9653aadcbfdfbeedc60c31d5a008cfefb6726316f2fb93",
     "minimum_development_median_cost": 16,
     "development_decision_has_no_scientific_authority": true
   },
@@ -203,21 +211,21 @@
   },
   "implementation": {
     "files": {
-      "reasoner56.c": "d91d1066005aa9bbe653678320e3f322e6798f38bb823cd63853e453a00c067a",
+      "reasoner56.c": "c208fca19b477724afeee2e50bcfad1f41b842dd911004be394bcb88f5e1032c",
       "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
-      "scripts/lib/reasoner56_development.mjs": "fd8dd5afc4b3f43a8951267f12d74aada1061e16db66e9600d0f1f5eb8af1ecb",
-      "scripts/check_reasoner56_development.mjs": "5dafe3d2796c20dcf657441342ee30e82e58b38de782c9c1f6cf4d117f6320d4"
+      "scripts/lib/reasoner56_development.mjs": "234f0e18ab9e22ed6bdd62b0793f421dbbac673631982d0742bd07d14c106137",
+      "scripts/check_reasoner56_development.mjs": "8a1910a9144e6184ae979cd9c458bfaccd165f2cf00a98d8796c00eaebd2fec2"
     }
   },
   "development_outputs": {
     "result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/result.json",
-      "sha256": "0988457a91f26612845ac0d0f4bce043954eceeaa5ed2030e9069140a7db09e5"
+      "sha256": "609d64c4a41e2c7791c73a030ac07db4ffd5a1786d9c1674860b6881442659de"
     },
     "trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/raw-trace.jsonl",
-      "sha256": "3ff60f255378aacd0d968ee50cb136065a089266ad3a1eedbc3970dc5db19cbd"
+      "sha256": "1310a29272ac32679c29bcc56aa610d0de303644a1d18e9683b7d9dae97a1b34"
     },
     "artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
@@ -241,7 +249,7 @@
     },
     "assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "e1d5b82e18e8cbadb555827f9c12688a75f2a74ed26a1b07fdb6d248dab12007"
+      "sha256": "165c973fc2d796347544fe55beea9ecfbb8e9828112d0a64cc3b03e63fccfbeb"
     }
   },
   "shared_harness": {
