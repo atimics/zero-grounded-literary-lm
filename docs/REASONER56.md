@@ -39,13 +39,13 @@ result replay.
 The search-cost gate gives a development `no-go`. The separate channel check
 also gives a development `no-go`. All 99 calibration-coverage program families
 cover the truth across their eight draws. The one-sided Wilson lower bound is
-above 0.97. The finite-sample rank is unavailable, so the frozen threshold is
-one. Its exact rule includes all 427 smoothed positive-mass classes. Both the
-full and program-prior-only candidate sets therefore have family-weighted mean
-size 427. Their size ratio is one, which fails the registered 0.8 readiness
-gate. The development interface, template proxy, severity proxy, and
-source-isolation taint checks pass. The sealed interface and proxy audit
-remains pending.
+above 0.97. The finite-sample calibration selects a frozen threshold of one on
+this fixture. Its exact rule includes all 427 smoothed positive-mass classes.
+Both the full and program-prior-only candidate sets therefore have
+family-weighted mean size 427. Their size ratio is one, which fails the
+registered 0.8 readiness gate. The development interface, template proxy,
+severity proxy, and source-isolation taint checks pass. The sealed interface
+and proxy audit remains pending.
 
 The command for sealed execution stays closed. Reasoner 5.7 remains behind the
 channel-readiness gate. The next scientific step is a reviewed preregistration
