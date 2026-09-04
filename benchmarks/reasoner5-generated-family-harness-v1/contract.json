@@ -24,7 +24,9 @@
   "digest": {
     "algorithm": "sha256",
     "canonical_encoding": "stable-json-utf8",
-    "seed_encoding": "lowercase-hex-string"
+    "seed_encoding": "lowercase-hex-string",
+    "scientific_number_encoding": "truncate-first-14-of-17-scientific-digits-toward-zero",
+    "scientific_relative_tolerance": 1e-13
   },
   "statistics": {
     "confidence_interval": "ordinary percentile cluster bootstrap",
@@ -35,6 +37,7 @@
   },
   "required_checks": [
     "strict canonical JSON domain",
+    "portable canonical scientific numbers",
     "byte-identical manifest replay",
     "hash-bound replay registry",
     "intrinsic function-source hashing",
