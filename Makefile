@@ -2961,6 +2961,53 @@ clean: clean-reasoner56
 clean-reasoner56:
 	rm -f reasoner56
 
+REASONER55_FIXTURE := benchmarks/reasoner55-generated-primitive-transfer-v1
+
+.PHONY: reasoner55-check reasoner55-development-check \
+	reasoner55-development-fixture reasoner55-development-analysis-fixture \
+	clean-reasoner55
+
+all: reasoner55
+
+reasoner55: reasoner55.c reasoner55.h reasoner55_cli.c
+	$(CC) $(CFLAGS) reasoner55.c reasoner55_cli.c -o $@
+
+reasoner55-development-fixture: reasoner55
+	mkdir -p $(REASONER55_FIXTURE)
+	./reasoner55 development \
+		$(REASONER55_FIXTURE)/DEVELOPMENT.json \
+		$(REASONER55_FIXTURE)/DEVELOPMENT-TRACE.jsonl \
+		$(REASONER55_FIXTURE)/SOURCE_ARTIFACT.hex
+
+reasoner55-development-analysis-fixture: reasoner55-development-fixture
+	node scripts/check_reasoner55_development.mjs --write-analysis
+
+reasoner55-development-check:
+	node scripts/check_reasoner55_development.mjs
+
+reasoner55-check: reasoner55 reasoner55-development-check
+	./reasoner55 --self-test
+	@status=0; ./reasoner55 execute >/tmp/reasoner55-authorization-check.txt \
+		2>&1 || status=$$?; test $$status -eq 3
+	./reasoner55 development /tmp/reasoner55-development.json \
+		/tmp/reasoner55-development-trace.jsonl \
+		/tmp/reasoner55-source-artifact.hex
+	node scripts/check_reasoner55_development.mjs \
+		/tmp/reasoner55-development.json \
+		/tmp/reasoner55-development-trace.jsonl \
+		/tmp/reasoner55-source-artifact.hex
+	cmp $(REASONER55_FIXTURE)/DEVELOPMENT.json \
+		/tmp/reasoner55-development.json
+	cmp $(REASONER55_FIXTURE)/DEVELOPMENT-TRACE.jsonl \
+		/tmp/reasoner55-development-trace.jsonl
+	cmp $(REASONER55_FIXTURE)/SOURCE_ARTIFACT.hex \
+		/tmp/reasoner55-source-artifact.hex
+
+check: reasoner55-check
+clean: clean-reasoner55
+clean-reasoner55:
+	rm -f reasoner55
+
 .PHONY: reasoner5-harness-check reasoner5-harness-contract-check
 reasoner5-harness-check:
 	node scripts/check_reasoner5_harness.mjs
