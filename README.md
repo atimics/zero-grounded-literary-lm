@@ -146,6 +146,8 @@ small browser runtime:
 - `reasoner52`: Reasoner 5.2, a frozen semantic-transition ranker tested on a
   deeper nonlinear polynomial family, with acceptance decided only by an exact
   finite-domain truth-table verifier.
+- `reasoner58`: Reasoner 5.8, a development-only behavior guide for exact
+  nonlinear composition search over exhaustive `GF(17)` truth tables.
 - `reasoner56`: the development implementation of Reasoner 5.6. It learns a
   passive corruption and missingness channel from source sequences, ranks all
   427 exact GF(17) semantic classes, and replays a complete 8 by 8 family
