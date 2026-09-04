@@ -13,7 +13,7 @@
         "primary_cost_median": 6.5,
         "verifier_checks_total": 1352,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "target_only",
@@ -45,11 +45,11 @@
       {
         "arm": "binding_off",
         "episodes": 32,
-        "primary_cost_total": 1404,
+        "primary_cost_total": 1406,
         "primary_cost_median": 7.5,
-        "verifier_checks_total": 1404,
+        "verifier_checks_total": 1406,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "frequency_only",
@@ -58,7 +58,7 @@
         "primary_cost_median": 15.5,
         "verifier_checks_total": 1526,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "source_only",
@@ -67,7 +67,7 @@
         "primary_cost_median": 100,
         "verifier_checks_total": 6646,
         "fallback_episodes": 18,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "surface_bijection",
@@ -76,7 +76,7 @@
         "primary_cost_median": 6.5,
         "verifier_checks_total": 1352,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "oracle_program_order",
@@ -90,281 +90,281 @@
       {
         "arm": "shuffled_00",
         "episodes": 32,
-        "primary_cost_total": 641,
-        "primary_cost_median": 19.5,
-        "verifier_checks_total": 641,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1853,
+        "primary_cost_median": 26.5,
+        "verifier_checks_total": 1853,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_01",
         "episodes": 32,
-        "primary_cost_total": 710,
-        "primary_cost_median": 21,
-        "verifier_checks_total": 710,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 2705,
+        "primary_cost_median": 22.5,
+        "verifier_checks_total": 2705,
+        "fallback_episodes": 4,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_02",
         "episodes": 32,
-        "primary_cost_total": 538,
-        "primary_cost_median": 14,
-        "verifier_checks_total": 538,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1835,
+        "primary_cost_median": 25.5,
+        "verifier_checks_total": 1835,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_03",
         "episodes": 32,
-        "primary_cost_total": 1794,
-        "primary_cost_median": 27,
-        "verifier_checks_total": 1794,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 628,
+        "primary_cost_median": 15.5,
+        "verifier_checks_total": 628,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_04",
         "episodes": 32,
-        "primary_cost_total": 624,
-        "primary_cost_median": 19.5,
-        "verifier_checks_total": 624,
+        "primary_cost_total": 702,
+        "primary_cost_median": 23.5,
+        "verifier_checks_total": 702,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_05",
         "episodes": 32,
-        "primary_cost_total": 1815,
-        "primary_cost_median": 25.5,
-        "verifier_checks_total": 1815,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 697,
+        "primary_cost_median": 21,
+        "verifier_checks_total": 697,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_06",
         "episodes": 32,
-        "primary_cost_total": 815,
-        "primary_cost_median": 29,
-        "verifier_checks_total": 815,
+        "primary_cost_total": 541,
+        "primary_cost_median": 11.5,
+        "verifier_checks_total": 541,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_07",
         "episodes": 32,
-        "primary_cost_total": 1907,
-        "primary_cost_median": 27,
-        "verifier_checks_total": 1907,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 634,
+        "primary_cost_median": 20,
+        "verifier_checks_total": 634,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_08",
         "episodes": 32,
-        "primary_cost_total": 659,
-        "primary_cost_median": 24.5,
-        "verifier_checks_total": 659,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1738,
+        "primary_cost_median": 22.5,
+        "verifier_checks_total": 1738,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_09",
         "episodes": 32,
-        "primary_cost_total": 794,
-        "primary_cost_median": 28.5,
-        "verifier_checks_total": 794,
+        "primary_cost_total": 760,
+        "primary_cost_median": 28,
+        "verifier_checks_total": 760,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_10",
         "episodes": 32,
-        "primary_cost_total": 574,
-        "primary_cost_median": 11.5,
-        "verifier_checks_total": 574,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1879,
+        "primary_cost_median": 27.5,
+        "verifier_checks_total": 1879,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_11",
         "episodes": 32,
-        "primary_cost_total": 721,
-        "primary_cost_median": 23.5,
-        "verifier_checks_total": 721,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1636,
+        "primary_cost_median": 17.5,
+        "verifier_checks_total": 1636,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_12",
         "episodes": 32,
-        "primary_cost_total": 2698,
-        "primary_cost_median": 16.5,
-        "verifier_checks_total": 2698,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 732,
+        "primary_cost_median": 27.5,
+        "verifier_checks_total": 732,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_13",
         "episodes": 32,
-        "primary_cost_total": 649,
-        "primary_cost_median": 20,
-        "verifier_checks_total": 649,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 2714,
+        "primary_cost_median": 17,
+        "verifier_checks_total": 2714,
+        "fallback_episodes": 4,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_14",
         "episodes": 32,
-        "primary_cost_total": 2603,
-        "primary_cost_median": 17.5,
-        "verifier_checks_total": 2603,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1797,
+        "primary_cost_median": 24,
+        "verifier_checks_total": 1797,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_15",
         "episodes": 32,
-        "primary_cost_total": 1658,
-        "primary_cost_median": 17,
-        "verifier_checks_total": 1658,
+        "primary_cost_total": 1835,
+        "primary_cost_median": 26.5,
+        "verifier_checks_total": 1835,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_16",
         "episodes": 32,
-        "primary_cost_total": 726,
-        "primary_cost_median": 22.5,
-        "verifier_checks_total": 726,
+        "primary_cost_total": 664,
+        "primary_cost_median": 21.5,
+        "verifier_checks_total": 664,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_17",
         "episodes": 32,
-        "primary_cost_total": 1876,
-        "primary_cost_median": 29,
-        "verifier_checks_total": 1876,
+        "primary_cost_total": 1838,
+        "primary_cost_median": 25.5,
+        "verifier_checks_total": 1838,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_18",
         "episodes": 32,
-        "primary_cost_total": 1784,
-        "primary_cost_median": 23.5,
-        "verifier_checks_total": 1784,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 2759,
+        "primary_cost_median": 22,
+        "verifier_checks_total": 2759,
+        "fallback_episodes": 4,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_19",
         "episodes": 32,
-        "primary_cost_total": 728,
-        "primary_cost_median": 26.5,
-        "verifier_checks_total": 728,
+        "primary_cost_total": 622,
+        "primary_cost_median": 21,
+        "verifier_checks_total": 622,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_20",
         "episodes": 32,
-        "primary_cost_total": 673,
-        "primary_cost_median": 20,
-        "verifier_checks_total": 673,
+        "primary_cost_total": 699,
+        "primary_cost_median": 20.5,
+        "verifier_checks_total": 699,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_21",
         "episodes": 32,
-        "primary_cost_total": 628,
-        "primary_cost_median": 21,
-        "verifier_checks_total": 628,
+        "primary_cost_total": 891,
+        "primary_cost_median": 26.5,
+        "verifier_checks_total": 891,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_22",
         "episodes": 32,
-        "primary_cost_total": 826,
-        "primary_cost_median": 29,
-        "verifier_checks_total": 826,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1688,
+        "primary_cost_median": 19.5,
+        "verifier_checks_total": 1688,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_23",
         "episodes": 32,
-        "primary_cost_total": 798,
-        "primary_cost_median": 23.5,
-        "verifier_checks_total": 798,
+        "primary_cost_total": 838,
+        "primary_cost_median": 27,
+        "verifier_checks_total": 838,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_24",
         "episodes": 32,
-        "primary_cost_total": 783,
-        "primary_cost_median": 22.5,
-        "verifier_checks_total": 783,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 1617,
+        "primary_cost_median": 16,
+        "verifier_checks_total": 1617,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_25",
         "episodes": 32,
-        "primary_cost_total": 1689,
-        "primary_cost_median": 26,
-        "verifier_checks_total": 1689,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 573,
+        "primary_cost_median": 19.5,
+        "verifier_checks_total": 573,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_26",
         "episodes": 32,
-        "primary_cost_total": 830,
-        "primary_cost_median": 28.5,
-        "verifier_checks_total": 830,
+        "primary_cost_total": 899,
+        "primary_cost_median": 29,
+        "verifier_checks_total": 899,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_27",
         "episodes": 32,
-        "primary_cost_total": 877,
-        "primary_cost_median": 26.5,
-        "verifier_checks_total": 877,
+        "primary_cost_total": 567,
+        "primary_cost_median": 20,
+        "verifier_checks_total": 567,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_28",
         "episodes": 32,
-        "primary_cost_total": 522,
-        "primary_cost_median": 13.5,
-        "verifier_checks_total": 522,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 2824,
+        "primary_cost_median": 26.5,
+        "verifier_checks_total": 2824,
+        "fallback_episodes": 4,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_29",
         "episodes": 32,
-        "primary_cost_total": 641,
-        "primary_cost_median": 21,
-        "verifier_checks_total": 641,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "primary_cost_total": 2603,
+        "primary_cost_median": 16,
+        "verifier_checks_total": 2603,
+        "fallback_episodes": 4,
+        "source_artifact_reads": 1460384
       },
       {
         "arm": "shuffled_30",
         "episodes": 32,
-        "primary_cost_total": 731,
-        "primary_cost_median": 25.5,
-        "verifier_checks_total": 731,
+        "primary_cost_total": 822,
+        "primary_cost_median": 33,
+        "verifier_checks_total": 822,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1455072
+        "source_artifact_reads": 1460384
       }
     ],
     "transfer_directions": [
@@ -388,15 +388,15 @@
   },
   "schema": "zero.reasoner5_trace_result.v1",
   "experiment": "reasoner59a-symbolic-transfer-v1",
-  "manifest_sha256": "1797f401fb10e4564549bae06ffcf75ee4d124d16ab33878f957e1c1293647cc",
-  "raw_trace_sha256": "a8e4d747285e5d75450b5b60eb15717e75ff11e2f1094f9d5aec7495ce605a3e",
-  "trace_coverage_sha256": "9742d37ed87601b6281bbf41b710af584e249aebff546b9113899dd8fc978e2d",
+  "manifest_sha256": "a24cc351e47bf5d6cb2b07d3c08f7773e42546d937d889792daebaa78811deb3",
+  "raw_trace_sha256": "276dcb2623e34d40da9b60691ac9bb5edd87226030130feb3fe9270b5118188a",
+  "trace_coverage_sha256": "390c3acf7465163aba679148327ff30bfa8c0100de9690162f902c5725a5d792",
   "analysis_settings_sha256": "f939eac1376e94936be3cc7dbe41e93b53f317495b79e4730476a84c96badddb",
   "analysis_function_sha256": "1e72ffdb92c5f8c24c837e43155fa2584d768919e10a68a00945cbed73f01e94",
   "integrity": {
     "manifest_digest_valid": true,
     "trace_contract_valid": true,
-    "coverage_sha256": "9742d37ed87601b6281bbf41b710af584e249aebff546b9113899dd8fc978e2d"
+    "coverage_sha256": "390c3acf7465163aba679148327ff30bfa8c0100de9690162f902c5725a5d792"
   },
   "exactness": {
     "schema": "zero.reasoner5_trace_exactness.v1",
@@ -408,15 +408,15 @@
     "fallback_work_counted": true
   },
   "cost_totals": {
-    "primary_cost": 52318,
-    "verifier_checks": 52318,
-    "partial_expansions": 180998,
-    "fallback_verifier_checks": 23152,
-    "fallback_partial_expansions": 86480,
+    "primary_cost": 61598,
+    "verifier_checks": 61598,
+    "partial_expansions": 217808,
+    "fallback_verifier_checks": 31772,
+    "fallback_partial_expansions": 118700,
     "observation_queries": 8080,
     "wall_ns": null,
     "peak_bytes": null,
-    "source_artifact_reads": 52382592
+    "source_artifact_reads": 52573824
   },
   "registered_analysis": {
     "schema": "zero.reasoner5_registered_analysis.v1",
@@ -1299,10 +1299,10 @@
                 "family_id": "r59a-development-g0-b0-s1-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 12,
+              "mean_full_cost": 13,
               "mean_comparator_cost": 8,
-              "mean_log_ratio": 0.36772478012531734,
-              "geometric_mean_ratio": 1.4444444444444444,
+              "mean_log_ratio": 0.44183275227903923,
+              "geometric_mean_ratio": 1.5555555555555556,
               "win": false,
               "tie": false
             },
@@ -1520,7 +1520,7 @@
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 16,
-            "family_weighted_geometric_mean_ratio": 1.0529383835901962,
+            "family_weighted_geometric_mean_ratio": 1.0578266409656434,
             "family_weighted_median_ratio": 1.0517241379310345,
             "wins": 4,
             "ties": 4,
@@ -1533,22 +1533,22 @@
             "independent_units": 16,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": 0.05158471633073733,
-            "point_ratio": 1.0529383835901962,
-            "lower_log_ratio": -0.10100594941730898,
-            "upper_log_ratio": 0.20804171737328025,
-            "lower_ratio": 0.9039276550270297,
-            "upper_ratio": 1.2312645335996286,
-            "one_sided_p_lower_than_zero": 0.7016491754122939,
-            "one_sided_p_higher_than_zero": 0.2988505747126437,
-            "bootstrap_sha256": "7e338b6c9aeb42ba869902f70cfbd395e6817c581a846364101f46c7beac30c1",
+            "point_log_ratio": 0.05621646459034495,
+            "point_ratio": 1.0578266409656434,
+            "lower_log_ratio": -0.09854907209996039,
+            "upper_log_ratio": 0.21684250884218187,
+            "lower_ratio": 0.9061512247797331,
+            "upper_ratio": 1.2421484593331202,
+            "one_sided_p_lower_than_zero": 0.7126436781609196,
+            "one_sided_p_higher_than_zero": 0.28785607196401797,
+            "bootstrap_sha256": "b7daee5cf7bd3a0ece5ba8204f525c363287416408814c9227667dc87341f898",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-constraint-first=>syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 8,
-                "family_weighted_geometric_mean_ratio": 0.8671354110672532,
+                "family_weighted_geometric_mean_ratio": 0.8752054375515625,
                 "family_weighted_median_ratio": 0.9166666666666667,
                 "wins": 4,
                 "ties": 1,
@@ -1569,50 +1569,50 @@
               }
             }
           },
-          "receipt_sha256": "5dfce25e23c14123986011c83d80569644f0a283ae2831bf4bd861b3bc391e9b"
+          "receipt_sha256": "199ee5b43f91f3311aa3371d65a9684405e3e585521a36b1153ff9cfc3538f79"
         }
       }
     ],
     "derangement": {
       "observed": 2.3390268825189144,
       "values": [
-        2.8962499419269583,
-        3.0258476453681853,
-        2.4669629825669506,
-        3.3303569804155404,
-        2.849896181408352,
-        3.225486701071541,
-        3.1172723608757327,
-        3.4168449483446524,
-        2.8348696993180686,
-        2.9618669968350364,
-        2.54620523888919,
-        3.0257311374654505,
-        3.202568525410104,
-        2.9376961125432697,
-        3.097739453579597,
-        3.1040692574107367,
-        2.887423677193597,
-        3.331643427871918,
-        3.1988308977952356,
-        2.937267196460789,
-        2.9909368740011373,
-        2.8615861407751715,
-        3.1498043127814617,
-        3.06830708431731,
-        3.091750075397698,
-        3.054800748994311,
-        3.0788523296959505,
-        3.162848955308756,
-        2.53315587013978,
-        2.8265930920119566,
-        3.0244569813810718
+        3.323173523596324,
+        3.266830781458083,
+        3.2879656491129916,
+        2.7999683312408434,
+        2.971660915405679,
+        2.8792145332009365,
+        2.4828230734018195,
+        2.8854751464545587,
+        3.100803760427723,
+        3.031595767680802,
+        3.317275505523949,
+        3.0230593385681983,
+        2.9567770520648353,
+        3.312437929889724,
+        3.277692275885234,
+        3.3183775195181298,
+        2.7105036802459437,
+        3.3688310422716783,
+        3.3549344321300656,
+        2.70785661511319,
+        2.9418885990750865,
+        3.2509193018590454,
+        2.9882941315916525,
+        3.256551752385082,
+        2.869324483828452,
+        2.6756792954973134,
+        3.2007618605264843,
+        2.703596496069237,
+        3.4727598741945442,
+        3.0897428538556677,
+        3.0490720118912353
       ]
     },
     "source_ablation": {
       "matches": true,
       "episodes": 32,
-      "receipt_sha256": "e5f39a0ecece3558b22e1389c3b7b4e65ebc8989d07713d82d249667398bb1f4"
+      "receipt_sha256": "e00032f75c10216bcf3dd0f883acf482f3344cdfb61e15c60199e29ca8c52c01"
     },
     "headroom": {
       "comparator_arm": "target_only",
@@ -1620,7 +1620,7 @@
       "registered_minimum": 16,
       "measurement_floor": false
     },
-    "analysis_sha256": "a406bd4235750900d6de39ed43c51edf30dd9547643c4ac3c4c8982c5ce6901a"
+    "analysis_sha256": "14ce4fb111590254dd4bde0355d54508d4b108ca42a9c40b9a942a2423fbf5c9"
   },
   "decision": "no-go",
   "gate": {
@@ -1655,16 +1655,16 @@
     "derangement": {
       "observed": 2.3390268825189144,
       "derangements": 31,
-      "median": 3.0258476453681853,
+      "median": 3.0490720118912353,
       "beats_median": true,
       "p_value": 0.03125
     }
   },
   "provenance": {
     "schema": "zero.reasoner5_result_provenance.v1",
-    "manifest_sha256": "1797f401fb10e4564549bae06ffcf75ee4d124d16ab33878f957e1c1293647cc",
-    "raw_trace_sha256": "a8e4d747285e5d75450b5b60eb15717e75ff11e2f1094f9d5aec7495ce605a3e",
-    "trace_coverage_sha256": "9742d37ed87601b6281bbf41b710af584e249aebff546b9113899dd8fc978e2d",
+    "manifest_sha256": "a24cc351e47bf5d6cb2b07d3c08f7773e42546d937d889792daebaa78811deb3",
+    "raw_trace_sha256": "276dcb2623e34d40da9b60691ac9bb5edd87226030130feb3fe9270b5118188a",
+    "trace_coverage_sha256": "390c3acf7465163aba679148327ff30bfa8c0100de9690162f902c5725a5d792",
     "analysis_contract_sha256": "bb518bd5e16970cb22dcc01ce9cdf2989a0c70da887c36926e453e4f356d11ef",
     "analysis_settings_sha256": "f939eac1376e94936be3cc7dbe41e93b53f317495b79e4730476a84c96badddb",
     "analysis_function_sha256": "1e72ffdb92c5f8c24c837e43155fa2584d768919e10a68a00945cbed73f01e94",
@@ -1672,5 +1672,5 @@
     "episodes": 32,
     "rows": 1280
   },
-  "result_sha256": "626728caf3e5d0e8fdc87061f101f42e06732990993abc723d3a0e380d2ef1b8"
+  "result_sha256": "f63c5a876169003827db61d9575069cadd133cd44fbeec7b03e22e55a603faeb"
 }

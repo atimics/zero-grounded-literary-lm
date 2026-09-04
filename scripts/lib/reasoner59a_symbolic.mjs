@@ -367,7 +367,9 @@ export function enumerateR59Universe() {
           assert(existing.behavior.equals(behavior.bytes),
             "R5.9a behavior digest collision");
           existing.multiplicity += 1;
-          if (canonicalBytes(ast).compare(canonicalBytes(existing.ast)) < 0) {
+          if (form.node_count < existing.nodeCount ||
+              (form.node_count === existing.nodeCount &&
+               canonicalBytes(ast).compare(canonicalBytes(existing.ast)) < 0)) {
             existing.ast = ast;
             existing.features = candidateFeatures(form, legend);
             existing.nodeCount = form.node_count;
@@ -413,6 +415,8 @@ export function enumerateR59Universe() {
     schema: "zero.reasoner59a_joint_universe.v1",
     scene_universe_sha256: r59SceneUniverseSha256(),
     grammar_forms: R59A_FORMS,
+    representative_rule:
+      "minimum AST node count, then canonical AST and legend bytes",
     joint_pairs: jointPairs,
     semantic_classes: candidates.length,
     candidates: candidates.map(candidate => ({
@@ -424,6 +428,7 @@ export function enumerateR59Universe() {
   };
   UNIVERSE_CACHE = deepFreeze({
     schema: body.schema,
+    representativeRule: body.representative_rule,
     forms: R59A_FORMS,
     jointPairs,
     semanticClasses: candidates.length,
@@ -1588,6 +1593,7 @@ export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
       semantic_collisions: universe.semanticCollisions,
       candidate_universe_sha256: universe.sha256,
       semantic_identity: "complete Boolean behavior over all 25344 scenes",
+      canonical_representative_rule: universe.representativeRule,
     },
     concept_generators: CONCEPT_GENERATOR_SPECS,
     support_builders: SUPPORT_BUILDER_SPECS,

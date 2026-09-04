@@ -9,17 +9,16 @@ counter, family statistic, and final result replays from the frozen manifest
 and raw trace.
 
 The full source prior had a family-weighted geometric mean cost ratio of
-0.4594 against target-only. It won 13 of 16 families. Its one-sided 99.5
-percent upper ratio was 1.0027. The registered upper-limit test therefore did
-not pass. The target-only median was 25.5 verifier checks, inside the frozen
-16 through 64 measurement range.
+0.4594 against target-only. It won
+13 of 16 families. Its one-sided 99.5 percent upper ratio was
+1.0027. The registered upper-limit test therefore did not
+pass. The target-only median was 25.5 verifier checks,
+inside the frozen 16 through 64 measurement range.
 
 The two transfer directions had different totals:
 
-- behavior-constraint-first to syntax-first: 174 full checks and 369
-  target-only checks;
-- syntax-first to behavior-constraint-first: 1,178 full checks and 465
-  target-only checks.
+- behavior-constraint-first to syntax-first: 174 full checks and 369 target-only checks;
+- syntax-first to behavior-constraint-first: 1,178 full checks and 465 target-only checks;
 
 The common gate also recorded incomplete evidence across all four shift
 strata and for the legend-binding mechanism contrast. Exactness, invalid-first

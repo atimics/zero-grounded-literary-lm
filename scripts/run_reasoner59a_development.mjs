@@ -52,6 +52,48 @@ function sourceReceipt(paths) {
   }));
 }
 
+function developmentNote(result) {
+  const primary = result.registered_analysis.primary;
+  const headroom = result.registered_analysis.headroom;
+  const directions = result.development_measurements.transfer_directions;
+  const directionLines = directions.map(direction =>
+    `- ${direction.source_generator} to ${direction.target_generator}: ` +
+    `${direction.full_primary_cost.toLocaleString("en-US")} full checks and ` +
+    `${direction.target_only_primary_cost.toLocaleString("en-US")} ` +
+    "target-only checks;").join("\n");
+  return `# Reasoner 5.9a development result
+
+Status: \`${result.decision}\` development evidence.
+
+The symbolic prerequisite ran on 16 generated families with two public tie
+orders per family. This produced 32 episodes and 1,280 arm rows. Every answer
+was checked against all 25,344 symbolic scenes. Every answer, certificate,
+counter, family statistic, and final result replays from the frozen manifest
+and raw trace.
+
+The full source prior had a family-weighted geometric mean cost ratio of
+${primary.summary.family_weighted_geometric_mean_ratio.toFixed(4)} against target-only. It won
+${primary.summary.wins} of 16 families. Its one-sided 99.5 percent upper ratio was
+${primary.interval.upper_ratio.toFixed(4)}. The registered upper-limit test therefore did not
+pass. The target-only median was ${headroom.median_primary_cost.toFixed(1)} verifier checks,
+inside the frozen 16 through 64 measurement range.
+
+The two transfer directions had different totals:
+
+${directionLines}
+
+The common gate also recorded incomplete evidence across all four shift
+strata and for the legend-binding mechanism contrast. Exactness, invalid-first
+rejection, fallback charging, source-ablation equality, the 31-derangement
+checks, and the source-free measurement floor all passed.
+
+This result is a development diagnostic. It supports a redesign of the
+generator-transfer prior before a sealed 5.9a run. Reasoner 5.9b stays closed.
+Its parser, renderer, pixel-family manifest, controls, and analysis still need
+complete hash commitments before any sealed 5.9a seed can open.
+`;
+}
+
 function main() {
   if (!process.argv.includes("--write"))
     throw new Error("development fixture generation requires explicit --write");
@@ -87,6 +129,7 @@ function main() {
     atomicWrite(resolve(output, "MANIFEST.json"), manifestBytes);
     atomicWrite(resolve(output, "DEVELOPMENT-TRACE.jsonl"), traceBytes);
     atomicWrite(resolve(output, "DEVELOPMENT.json"), resultBytes);
+    atomicWrite(resolve(output, "DEVELOPMENT.md"), developmentNote(result));
     const contractBody = {
       schema: "zero.reasoner59a_development_contract.v1",
       experiment: R59A_EXPERIMENT,
