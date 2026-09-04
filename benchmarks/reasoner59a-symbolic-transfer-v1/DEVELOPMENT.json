@@ -9,74 +9,74 @@
       {
         "arm": "full",
         "episodes": 32,
-        "primary_cost_total": 1352,
-        "primary_cost_median": 6.5,
-        "verifier_checks_total": 1352,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 539,
+        "primary_cost_median": 14,
+        "verifier_checks_total": 539,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "target_only",
         "episodes": 32,
-        "primary_cost_total": 834,
-        "primary_cost_median": 25.5,
-        "verifier_checks_total": 834,
+        "primary_cost_total": 812,
+        "primary_cost_median": 26,
+        "verifier_checks_total": 812,
         "fallback_episodes": 0,
         "source_artifact_reads": 0
       },
       {
         "arm": "source_free_jit",
         "episodes": 32,
-        "primary_cost_total": 2914,
-        "primary_cost_median": 32,
-        "verifier_checks_total": 2914,
-        "fallback_episodes": 4,
+        "primary_cost_total": 1706,
+        "primary_cost_median": 24,
+        "verifier_checks_total": 1706,
+        "fallback_episodes": 2,
         "source_artifact_reads": 0
       },
       {
         "arm": "source_ablation",
         "episodes": 32,
-        "primary_cost_total": 2914,
-        "primary_cost_median": 32,
-        "verifier_checks_total": 2914,
-        "fallback_episodes": 4,
+        "primary_cost_total": 1706,
+        "primary_cost_median": 24,
+        "verifier_checks_total": 1706,
+        "fallback_episodes": 2,
         "source_artifact_reads": 0
       },
       {
         "arm": "binding_off",
         "episodes": 32,
-        "primary_cost_total": 1406,
-        "primary_cost_median": 7.5,
-        "verifier_checks_total": 1406,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 531,
+        "primary_cost_median": 17.5,
+        "verifier_checks_total": 531,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "frequency_only",
         "episodes": 32,
-        "primary_cost_total": 1526,
-        "primary_cost_median": 15.5,
-        "verifier_checks_total": 1526,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 643,
+        "primary_cost_median": 16.5,
+        "verifier_checks_total": 643,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "source_only",
         "episodes": 32,
-        "primary_cost_total": 6646,
-        "primary_cost_median": 100,
-        "verifier_checks_total": 6646,
-        "fallback_episodes": 18,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 9337,
+        "primary_cost_median": 269.5,
+        "verifier_checks_total": 9337,
+        "fallback_episodes": 28,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "surface_bijection",
         "episodes": 32,
-        "primary_cost_total": 1352,
-        "primary_cost_median": 6.5,
-        "verifier_checks_total": 1352,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 539,
+        "primary_cost_median": 14,
+        "verifier_checks_total": 539,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "oracle_program_order",
@@ -90,281 +90,281 @@
       {
         "arm": "shuffled_00",
         "episodes": 32,
-        "primary_cost_total": 1853,
-        "primary_cost_median": 26.5,
-        "verifier_checks_total": 1853,
+        "primary_cost_total": 1665,
+        "primary_cost_median": 20.5,
+        "verifier_checks_total": 1665,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_01",
         "episodes": 32,
-        "primary_cost_total": 2705,
-        "primary_cost_median": 22.5,
-        "verifier_checks_total": 2705,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 502,
+        "primary_cost_median": 12,
+        "verifier_checks_total": 502,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_02",
         "episodes": 32,
-        "primary_cost_total": 1835,
-        "primary_cost_median": 25.5,
-        "verifier_checks_total": 1835,
+        "primary_cost_total": 1627,
+        "primary_cost_median": 20.5,
+        "verifier_checks_total": 1627,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_03",
         "episodes": 32,
-        "primary_cost_total": 628,
-        "primary_cost_median": 15.5,
-        "verifier_checks_total": 628,
+        "primary_cost_total": 696,
+        "primary_cost_median": 24,
+        "verifier_checks_total": 696,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_04",
         "episodes": 32,
-        "primary_cost_total": 702,
-        "primary_cost_median": 23.5,
-        "verifier_checks_total": 702,
+        "primary_cost_total": 665,
+        "primary_cost_median": 22.5,
+        "verifier_checks_total": 665,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_05",
         "episodes": 32,
-        "primary_cost_total": 697,
-        "primary_cost_median": 21,
-        "verifier_checks_total": 697,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 1606,
+        "primary_cost_median": 22,
+        "verifier_checks_total": 1606,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_06",
         "episodes": 32,
-        "primary_cost_total": 541,
-        "primary_cost_median": 11.5,
-        "verifier_checks_total": 541,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 1609,
+        "primary_cost_median": 17,
+        "verifier_checks_total": 1609,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_07",
         "episodes": 32,
-        "primary_cost_total": 634,
-        "primary_cost_median": 20,
-        "verifier_checks_total": 634,
+        "primary_cost_total": 617,
+        "primary_cost_median": 16.5,
+        "verifier_checks_total": 617,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_08",
         "episodes": 32,
-        "primary_cost_total": 1738,
-        "primary_cost_median": 22.5,
-        "verifier_checks_total": 1738,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 546,
+        "primary_cost_median": 17.5,
+        "verifier_checks_total": 546,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_09",
         "episodes": 32,
-        "primary_cost_total": 760,
-        "primary_cost_median": 28,
-        "verifier_checks_total": 760,
+        "primary_cost_total": 605,
+        "primary_cost_median": 17.5,
+        "verifier_checks_total": 605,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_10",
         "episodes": 32,
-        "primary_cost_total": 1879,
-        "primary_cost_median": 27.5,
-        "verifier_checks_total": 1879,
+        "primary_cost_total": 1635,
+        "primary_cost_median": 19,
+        "verifier_checks_total": 1635,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_11",
         "episodes": 32,
-        "primary_cost_total": 1636,
-        "primary_cost_median": 17.5,
-        "verifier_checks_total": 1636,
+        "primary_cost_total": 1545,
+        "primary_cost_median": 18.5,
+        "verifier_checks_total": 1545,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_12",
         "episodes": 32,
-        "primary_cost_total": 732,
-        "primary_cost_median": 27.5,
-        "verifier_checks_total": 732,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 1625,
+        "primary_cost_median": 22.5,
+        "verifier_checks_total": 1625,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_13",
         "episodes": 32,
-        "primary_cost_total": 2714,
-        "primary_cost_median": 17,
-        "verifier_checks_total": 2714,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 490,
+        "primary_cost_median": 10,
+        "verifier_checks_total": 490,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_14",
         "episodes": 32,
-        "primary_cost_total": 1797,
-        "primary_cost_median": 24,
-        "verifier_checks_total": 1797,
+        "primary_cost_total": 1541,
+        "primary_cost_median": 16.5,
+        "verifier_checks_total": 1541,
         "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_15",
         "episodes": 32,
-        "primary_cost_total": 1835,
-        "primary_cost_median": 26.5,
-        "verifier_checks_total": 1835,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 546,
+        "primary_cost_median": 13,
+        "verifier_checks_total": 546,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_16",
         "episodes": 32,
-        "primary_cost_total": 664,
-        "primary_cost_median": 21.5,
-        "verifier_checks_total": 664,
+        "primary_cost_total": 584,
+        "primary_cost_median": 18,
+        "verifier_checks_total": 584,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_17",
         "episodes": 32,
-        "primary_cost_total": 1838,
-        "primary_cost_median": 25.5,
-        "verifier_checks_total": 1838,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 671,
+        "primary_cost_median": 26.5,
+        "verifier_checks_total": 671,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_18",
         "episodes": 32,
-        "primary_cost_total": 2759,
-        "primary_cost_median": 22,
-        "verifier_checks_total": 2759,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 557,
+        "primary_cost_median": 19,
+        "verifier_checks_total": 557,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_19",
         "episodes": 32,
-        "primary_cost_total": 622,
-        "primary_cost_median": 21,
-        "verifier_checks_total": 622,
+        "primary_cost_total": 560,
+        "primary_cost_median": 13,
+        "verifier_checks_total": 560,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_20",
         "episodes": 32,
-        "primary_cost_total": 699,
-        "primary_cost_median": 20.5,
-        "verifier_checks_total": 699,
+        "primary_cost_total": 679,
+        "primary_cost_median": 21,
+        "verifier_checks_total": 679,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_21",
         "episodes": 32,
-        "primary_cost_total": 891,
-        "primary_cost_median": 26.5,
-        "verifier_checks_total": 891,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 1525,
+        "primary_cost_median": 14.5,
+        "verifier_checks_total": 1525,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_22",
         "episodes": 32,
-        "primary_cost_total": 1688,
-        "primary_cost_median": 19.5,
-        "verifier_checks_total": 1688,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 656,
+        "primary_cost_median": 21,
+        "verifier_checks_total": 656,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_23",
         "episodes": 32,
-        "primary_cost_total": 838,
-        "primary_cost_median": 27,
-        "verifier_checks_total": 838,
-        "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 1648,
+        "primary_cost_median": 23,
+        "verifier_checks_total": 1648,
+        "fallback_episodes": 2,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_24",
         "episodes": 32,
-        "primary_cost_total": 1617,
-        "primary_cost_median": 16,
-        "verifier_checks_total": 1617,
-        "fallback_episodes": 2,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 536,
+        "primary_cost_median": 14.5,
+        "verifier_checks_total": 536,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_25",
         "episodes": 32,
-        "primary_cost_total": 573,
-        "primary_cost_median": 19.5,
-        "verifier_checks_total": 573,
+        "primary_cost_total": 651,
+        "primary_cost_median": 16,
+        "verifier_checks_total": 651,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_26",
         "episodes": 32,
-        "primary_cost_total": 899,
-        "primary_cost_median": 29,
-        "verifier_checks_total": 899,
+        "primary_cost_total": 816,
+        "primary_cost_median": 24.5,
+        "verifier_checks_total": 816,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_27",
         "episodes": 32,
-        "primary_cost_total": 567,
-        "primary_cost_median": 20,
-        "verifier_checks_total": 567,
+        "primary_cost_total": 555,
+        "primary_cost_median": 19,
+        "verifier_checks_total": 555,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_28",
         "episodes": 32,
-        "primary_cost_total": 2824,
-        "primary_cost_median": 26.5,
-        "verifier_checks_total": 2824,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 519,
+        "primary_cost_median": 15,
+        "verifier_checks_total": 519,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_29",
         "episodes": 32,
-        "primary_cost_total": 2603,
-        "primary_cost_median": 16,
-        "verifier_checks_total": 2603,
-        "fallback_episodes": 4,
-        "source_artifact_reads": 1460384
+        "primary_cost_total": 647,
+        "primary_cost_median": 19,
+        "verifier_checks_total": 647,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 1460448
       },
       {
         "arm": "shuffled_30",
         "episodes": 32,
-        "primary_cost_total": 822,
-        "primary_cost_median": 33,
-        "verifier_checks_total": 822,
+        "primary_cost_total": 687,
+        "primary_cost_median": 23,
+        "verifier_checks_total": 687,
         "fallback_episodes": 0,
-        "source_artifact_reads": 1460384
+        "source_artifact_reads": 1460448
       }
     ],
     "transfer_directions": [
@@ -373,30 +373,30 @@
         "target_generator": "syntax-first",
         "generator_id": "behavior-constraint-first=>syntax-first",
         "families": 8,
-        "full_primary_cost": 174,
-        "target_only_primary_cost": 369
+        "full_primary_cost": 248,
+        "target_only_primary_cost": 355
       },
       {
         "source_generator": "syntax-first",
         "target_generator": "behavior-constraint-first",
         "generator_id": "syntax-first=>behavior-constraint-first",
         "families": 8,
-        "full_primary_cost": 1178,
-        "target_only_primary_cost": 465
+        "full_primary_cost": 291,
+        "target_only_primary_cost": 457
       }
     ]
   },
   "schema": "zero.reasoner5_trace_result.v1",
   "experiment": "reasoner59a-symbolic-transfer-v1",
-  "manifest_sha256": "a24cc351e47bf5d6cb2b07d3c08f7773e42546d937d889792daebaa78811deb3",
-  "raw_trace_sha256": "276dcb2623e34d40da9b60691ac9bb5edd87226030130feb3fe9270b5118188a",
-  "trace_coverage_sha256": "390c3acf7465163aba679148327ff30bfa8c0100de9690162f902c5725a5d792",
-  "analysis_settings_sha256": "f939eac1376e94936be3cc7dbe41e93b53f317495b79e4730476a84c96badddb",
+  "manifest_sha256": "4c4b7d6bb891835afa983f3766f1999ccf5d0a73038dad23bcda0d71e0f9a0ab",
+  "raw_trace_sha256": "523e12c6fc0274c813b74ca6f7a764def9458f15a5e6919d2f60ceff469204b0",
+  "trace_coverage_sha256": "ee16237a5c79df3b14dee3be3cd957c9c4b75a451c9f7e73ffc25906935a33c7",
+  "analysis_settings_sha256": "881bcc27389c222f724e9b940b548612ce40f64b9ebded7234e586f14ce3d4a3",
   "analysis_function_sha256": "1e72ffdb92c5f8c24c837e43155fa2584d768919e10a68a00945cbed73f01e94",
   "integrity": {
     "manifest_digest_valid": true,
     "trace_contract_valid": true,
-    "coverage_sha256": "390c3acf7465163aba679148327ff30bfa8c0100de9690162f902c5725a5d792"
+    "coverage_sha256": "ee16237a5c79df3b14dee3be3cd957c9c4b75a451c9f7e73ffc25906935a33c7"
   },
   "exactness": {
     "schema": "zero.reasoner5_trace_exactness.v1",
@@ -408,15 +408,15 @@
     "fallback_work_counted": true
   },
   "cost_totals": {
-    "primary_cost": 61598,
-    "verifier_checks": 61598,
-    "partial_expansions": 217808,
-    "fallback_verifier_checks": 31772,
-    "fallback_partial_expansions": 118700,
-    "observation_queries": 8080,
+    "primary_cost": 44688,
+    "verifier_checks": 44688,
+    "partial_expansions": 151450,
+    "fallback_verifier_checks": 18593,
+    "fallback_partial_expansions": 68868,
+    "observation_queries": 6800,
     "wall_ns": null,
     "peak_bytes": null,
-    "source_artifact_reads": 52573824
+    "source_artifact_reads": 52576128
   },
   "registered_analysis": {
     "schema": "zero.reasoner5_registered_analysis.v1",
@@ -442,11 +442,11 @@
             "family_id": "r59a-development-g0-b0-s0-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 9,
-          "mean_comparator_cost": 24,
-          "mean_log_ratio": -0.8866279988317477,
-          "geometric_mean_ratio": 0.4120428217151646,
-          "win": true,
+          "mean_full_cost": 32,
+          "mean_comparator_cost": 27.5,
+          "mean_log_ratio": 0.15046569021316603,
+          "geometric_mean_ratio": 1.1623754235659722,
+          "win": false,
           "tie": false
         },
         {
@@ -457,10 +457,10 @@
             "family_id": "r59a-development-g0-b0-s1-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 8,
-          "mean_comparator_cost": 17.5,
-          "mean_log_ratio": -0.7172482314688842,
-          "geometric_mean_ratio": 0.48809353009197637,
+          "mean_full_cost": 14,
+          "mean_comparator_cost": 27,
+          "mean_log_ratio": -0.6138446654716261,
+          "geometric_mean_ratio": 0.5412658773652741,
           "win": true,
           "tie": false
         },
@@ -472,11 +472,11 @@
             "family_id": "r59a-development-g0-b0-s2-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 7,
-          "mean_comparator_cost": 19,
-          "mean_log_ratio": -0.8840214713053695,
-          "geometric_mean_ratio": 0.4131182235954578,
-          "win": true,
+          "mean_full_cost": 24,
+          "mean_comparator_cost": 16,
+          "mean_log_ratio": 0.5108256237659907,
+          "geometric_mean_ratio": 1.6666666666666667,
+          "win": false,
           "tie": false
         },
         {
@@ -487,10 +487,10 @@
             "family_id": "r59a-development-g0-b0-s3-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 8,
-          "mean_comparator_cost": 28.5,
-          "mean_log_ratio": -1.1694763685824603,
-          "geometric_mean_ratio": 0.3105295017040594,
+          "mean_full_cost": 13,
+          "mean_comparator_cost": 17,
+          "mean_log_ratio": -0.23722898979755794,
+          "geometric_mean_ratio": 0.7888106377466154,
           "win": true,
           "tie": false
         },
@@ -502,10 +502,10 @@
             "family_id": "r59a-development-g0-b1-s0-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 2,
-          "mean_comparator_cost": 31,
-          "mean_log_ratio": -2.3592494356475475,
-          "geometric_mean_ratio": 0.09449111825230679,
+          "mean_full_cost": 3,
+          "mean_comparator_cost": 28,
+          "mean_log_ratio": -1.9810014688665833,
+          "geometric_mean_ratio": 0.13793103448275862,
           "win": true,
           "tie": false
         },
@@ -517,10 +517,10 @@
             "family_id": "r59a-development-g0-b1-s1-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 6,
-          "mean_comparator_cost": 25,
-          "mean_log_ratio": -1.2624559922008498,
-          "geometric_mean_ratio": 0.2829582292090551,
+          "mean_full_cost": 4,
+          "mean_comparator_cost": 21.5,
+          "mean_log_ratio": -1.4451858789480823,
+          "geometric_mean_ratio": 0.23570226039551587,
           "win": true,
           "tie": false
         },
@@ -532,11 +532,11 @@
             "family_id": "r59a-development-g0-b1-s2-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 5,
-          "mean_comparator_cost": 16.5,
-          "mean_log_ratio": -0.9689709897030683,
-          "geometric_mean_ratio": 0.3794733192202055,
-          "win": true,
+          "mean_full_cost": 30,
+          "mean_comparator_cost": 24.5,
+          "mean_log_ratio": 0.30899958335540473,
+          "geometric_mean_ratio": 1.362061803007615,
+          "win": false,
           "tie": false
         },
         {
@@ -547,11 +547,11 @@
             "family_id": "r59a-development-g0-b1-s3-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 42,
-          "mean_comparator_cost": 23,
-          "mean_log_ratio": 0.5910204638296863,
-          "geometric_mean_ratio": 1.8058302599329745,
-          "win": false,
+          "mean_full_cost": 4,
+          "mean_comparator_cost": 16,
+          "mean_log_ratio": -1.2220423276338725,
+          "geometric_mean_ratio": 0.2946278254943948,
+          "win": true,
           "tie": false
         },
         {
@@ -562,10 +562,10 @@
             "family_id": "r59a-development-g1-b0-s0-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 4,
+          "mean_full_cost": 13,
           "mean_comparator_cost": 29,
-          "mean_log_ratio": -1.7827906188847213,
-          "geometric_mean_ratio": 0.1681681984990781,
+          "mean_log_ratio": -0.7531712017035632,
+          "geometric_mean_ratio": 0.47087095579741867,
           "win": true,
           "tie": false
         },
@@ -577,11 +577,11 @@
             "family_id": "r59a-development-g1-b0-s1-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 6,
-          "mean_comparator_cost": 18.5,
-          "mean_log_ratio": -0.8533008304438741,
-          "geometric_mean_ratio": 0.4260064336151292,
-          "win": true,
+          "mean_full_cost": 26,
+          "mean_comparator_cost": 23.5,
+          "mean_log_ratio": 0.17863150314514334,
+          "geometric_mean_ratio": 1.1955800954791287,
+          "win": false,
           "tie": false
         },
         {
@@ -592,10 +592,10 @@
             "family_id": "r59a-development-g1-b0-s2-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 6,
-          "mean_comparator_cost": 20.5,
-          "mean_log_ratio": -0.8188043947003983,
-          "geometric_mean_ratio": 0.44095855184409843,
+          "mean_full_cost": 12.5,
+          "mean_comparator_cost": 20,
+          "mean_log_ratio": -0.3139378951033607,
+          "geometric_mean_ratio": 0.7305643983770036,
           "win": true,
           "tie": false
         },
@@ -607,11 +607,11 @@
             "family_id": "r59a-development-g1-b0-s3-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 28,
-          "mean_comparator_cost": 17.5,
-          "mean_log_ratio": 0.9258948686932885,
-          "geometric_mean_ratio": 2.5241260113576187,
-          "win": false,
+          "mean_full_cost": 22,
+          "mean_comparator_cost": 31.5,
+          "mean_log_ratio": -0.33991316829214235,
+          "geometric_mean_ratio": 0.7118321296786988,
+          "win": true,
           "tie": false
         },
         {
@@ -622,10 +622,10 @@
             "family_id": "r59a-development-g1-b1-s0-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 8,
-          "mean_comparator_cost": 19,
-          "mean_log_ratio": -0.15754052331994772,
-          "geometric_mean_ratio": 0.8542421961772491,
+          "mean_full_cost": 9,
+          "mean_comparator_cost": 25,
+          "mean_log_ratio": -0.9178881773224147,
+          "geometric_mean_ratio": 0.3993615319154359,
           "win": true,
           "tie": false
         },
@@ -637,10 +637,10 @@
             "family_id": "r59a-development-g1-b1-s1-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 2,
-          "mean_comparator_cost": 27,
-          "mean_log_ratio": -2.179066157237223,
-          "geometric_mean_ratio": 0.1131471429607071,
+          "mean_full_cost": 16,
+          "mean_comparator_cost": 22.5,
+          "mean_log_ratio": -0.30510840061460615,
+          "geometric_mean_ratio": 0.737043474095502,
           "win": true,
           "tie": false
         },
@@ -652,11 +652,11 @@
             "family_id": "r59a-development-g1-b1-s2-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 4,
-          "mean_comparator_cost": 38.5,
-          "mean_log_ratio": -2.048503839820792,
-          "geometric_mean_ratio": 0.1289276557823492,
-          "win": true,
+          "mean_full_cost": 33,
+          "mean_comparator_cost": 16,
+          "mean_log_ratio": 1.0379936534058742,
+          "geometric_mean_ratio": 2.8235463150271594,
+          "win": false,
           "tie": false
         },
         {
@@ -667,58 +667,64 @@
             "family_id": "r59a-development-g1-b1-s3-00"
           },
           "nested_measurements": 2,
-          "mean_full_cost": 531,
-          "mean_comparator_cost": 62.5,
-          "mean_log_ratio": 2.1256345844660425,
-          "geometric_mean_ratio": 8.378212485037873,
-          "win": false,
+          "mean_full_cost": 14,
+          "mean_comparator_cost": 61,
+          "mean_log_ratio": -1.4185636216886763,
+          "geometric_mean_ratio": 0.24206145913796354,
+          "win": true,
           "tie": false
         }
       ],
       "summary": {
         "schema": "zero.reasoner5_family_summary.v1",
         "independent_families": 16,
-        "family_weighted_geometric_mean_ratio": 0.4593953165694006,
-        "family_weighted_median_ratio": 0.4125805226553112,
-        "wins": 13,
+        "family_weighted_geometric_mean_ratio": 0.6312453852923138,
+        "family_weighted_median_ratio": 0.7211982640278511,
+        "wins": 11,
         "ties": 0,
-        "losses": 3,
-        "win_rate": 0.8125,
-        "wilson_lower": 0.6121302575521457
+        "losses": 5,
+        "win_rate": 0.6875,
+        "wilson_lower": 0.48202618536167036
       },
       "interval": {
-        "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+        "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
         "independent_units": 16,
         "replicates": 2000,
         "alpha": 0.005,
-        "point_log_ratio": -0.7778441834473666,
-        "point_ratio": 0.4593953165694007,
-        "lower_log_ratio": -1.4689664269065308,
-        "upper_log_ratio": 0.0026901374329011407,
-        "lower_ratio": 0.23016325283567118,
-        "upper_ratio": 1.0026937590994704,
-        "one_sided_p_lower_than_zero": 0.006496751624187906,
-        "one_sided_p_higher_than_zero": 0.9940029985007496,
-        "bootstrap_sha256": "64a0400549247bfdb68cc0580e4ec9fa5ca11adfe9179a7ee8b3213bb5d452df",
+        "point_log_ratio": -0.46006060884730665,
+        "point_ratio": 0.6312453852923137,
+        "lower_log_ratio": -0.9365359449547747,
+        "upper_log_ratio": 0.02292849699136342,
+        "lower_ratio": 0.39198333809498076,
+        "upper_ratio": 1.0231933755267577,
+        "confidence_interval_method": "ordinary-percentile-bootstrap",
+        "p_value_method": "recentered-null-bootstrap",
+        "null_hypothesis_point_log_ratio": 0,
+        "one_sided_p_lower_than_zero": 0.005997001499250375,
+        "one_sided_p_higher_than_zero": 0.9945027486256871,
+        "uncentered_sign_tail_fraction_lower": 0.0069965017491254375,
+        "uncentered_sign_tail_fraction_higher": 0.993503248375812,
+        "bootstrap_sha256": "057e3d41a46f1e006f37b012b1da9ff0817aebf88620329e8e4094a75c5e4ad3",
+        "null_bootstrap_sha256": "4874dd2ab00ba1c2d635e8f2070b46f8279d14eeda3170fe9e19cf2b4820903e",
         "fixed_environments": 2,
         "fixed_environment_weighting": "equal",
         "environment_summaries": {
           "behavior-constraint-first=>syntax-first": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 8,
-            "family_weighted_geometric_mean_ratio": 0.3839938458370772,
-            "family_weighted_median_ratio": 0.3957580704676851,
-            "wins": 7,
+            "family_weighted_geometric_mean_ratio": 0.5677202187869453,
+            "family_weighted_median_ratio": 0.6650382575559448,
+            "wins": 5,
             "ties": 0,
-            "losses": 1,
-            "win_rate": 0.875,
-            "wilson_lower": 0.5888566256699879
+            "losses": 3,
+            "win_rate": 0.625,
+            "wilson_lower": 0.3479914384047327
           },
           "syntax-first=>behavior-constraint-first": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 8,
-            "family_weighted_geometric_mean_ratio": 0.5496027063294203,
-            "family_weighted_median_ratio": 0.4334824927296138,
+            "family_weighted_geometric_mean_ratio": 0.7018787129059079,
+            "family_weighted_median_ratio": 0.7211982640278511,
             "wins": 6,
             "ties": 0,
             "losses": 2,
@@ -727,11 +733,11 @@
           }
         }
       },
-      "receipt_sha256": "9350f7ba79f40b1bd0fc3d7acba4bf629f0bde36f6e1f3033de377c09b8198ee"
+      "receipt_sha256": "9d4c173160baf5e8538291010ad62908166e445b70756f88b391b6be93f73beb"
     },
     "strata": [
       {
-        "name": "color-shape-binding",
+        "name": "shift:color-shape-binding",
         "inference": {
           "schema": "zero.reasoner5_family_inference.v1",
           "settings": {
@@ -754,11 +760,11 @@
                 "family_id": "r59a-development-g0-b0-s0-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 9,
-              "mean_comparator_cost": 24,
-              "mean_log_ratio": -0.8866279988317477,
-              "geometric_mean_ratio": 0.4120428217151646,
-              "win": true,
+              "mean_full_cost": 32,
+              "mean_comparator_cost": 27.5,
+              "mean_log_ratio": 0.15046569021316603,
+              "geometric_mean_ratio": 1.1623754235659722,
+              "win": false,
               "tie": false
             },
             {
@@ -769,10 +775,10 @@
                 "family_id": "r59a-development-g0-b1-s0-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 2,
-              "mean_comparator_cost": 31,
-              "mean_log_ratio": -2.3592494356475475,
-              "geometric_mean_ratio": 0.09449111825230679,
+              "mean_full_cost": 3,
+              "mean_comparator_cost": 28,
+              "mean_log_ratio": -1.9810014688665833,
+              "geometric_mean_ratio": 0.13793103448275862,
               "win": true,
               "tie": false
             },
@@ -784,10 +790,10 @@
                 "family_id": "r59a-development-g1-b0-s0-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 4,
+              "mean_full_cost": 13,
               "mean_comparator_cost": 29,
-              "mean_log_ratio": -1.7827906188847213,
-              "geometric_mean_ratio": 0.1681681984990781,
+              "mean_log_ratio": -0.7531712017035632,
+              "geometric_mean_ratio": 0.47087095579741867,
               "win": true,
               "tie": false
             },
@@ -799,10 +805,10 @@
                 "family_id": "r59a-development-g1-b1-s0-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 8,
-              "mean_comparator_cost": 19,
-              "mean_log_ratio": -0.15754052331994772,
-              "geometric_mean_ratio": 0.8542421961772491,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 25,
+              "mean_log_ratio": -0.9178881773224147,
+              "geometric_mean_ratio": 0.3993615319154359,
               "win": true,
               "tie": false
             }
@@ -810,47 +816,53 @@
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 4,
-            "family_weighted_geometric_mean_ratio": 0.2734730651179719,
-            "family_weighted_median_ratio": 0.2901055101071214,
-            "wins": 4,
+            "family_weighted_geometric_mean_ratio": 0.41669581265852706,
+            "family_weighted_median_ratio": 0.4351162438564273,
+            "wins": 3,
             "ties": 0,
-            "losses": 0,
-            "win_rate": 1,
-            "wilson_lower": 0.5965213747972954
+            "losses": 1,
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985064
           },
           "interval": {
-            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
             "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": -1.296552144170991,
-            "point_ratio": 0.2734730651179719,
-            "lower_log_ratio": -2.0710200272661345,
-            "upper_log_ratio": -0.5220842610758477,
-            "lower_ratio": 0.12605713439013988,
-            "upper_ratio": 0.5932827023780761,
+            "point_log_ratio": -0.8753987894198487,
+            "point_ratio": 0.41669581265852706,
+            "lower_log_ratio": -1.449444823094499,
+            "upper_log_ratio": -0.3013527557451986,
+            "lower_ratio": 0.2347005522569457,
+            "upper_ratio": 0.7398167521014503,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
             "one_sided_p_lower_than_zero": 0.0004997501249375312,
             "one_sided_p_higher_than_zero": 1,
-            "bootstrap_sha256": "3d6c09ab1344fd6cb0cfd109a7d04dde4f502c64ac1a1ba3caa259c093c58945",
+            "uncentered_sign_tail_fraction_lower": 0.0004997501249375312,
+            "uncentered_sign_tail_fraction_higher": 1,
+            "bootstrap_sha256": "933e86f79ca3865df97903fb39fcf0b576581775537ccbb08905feb98cbafb3c",
+            "null_bootstrap_sha256": "d7f77549326c1fde19fc1300cb023edce9c0baf98ebdd80aa6e5327fb265a5dc",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-constraint-first=>syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.19731798446087415,
-                "family_weighted_median_ratio": 0.2532669699837357,
-                "wins": 2,
+                "family_weighted_geometric_mean_ratio": 0.4004093463317125,
+                "family_weighted_median_ratio": 0.6501532290243655,
+                "wins": 1,
                 "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.42503060900634637
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227365
               },
               "syntax-first=>behavior-constraint-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.37902027810266836,
-                "family_weighted_median_ratio": 0.5112051973381636,
+                "family_weighted_geometric_mean_ratio": 0.4336447235257713,
+                "family_weighted_median_ratio": 0.4351162438564273,
                 "wins": 2,
                 "ties": 0,
                 "losses": 0,
@@ -859,11 +871,11 @@
               }
             }
           },
-          "receipt_sha256": "255ed996c68b38620f9a6ddd2350ede2380c7daf8f1c0f7957282954467fc89b"
+          "receipt_sha256": "26ddabd2c72499e4760269a24ce1d35d3cb2657e584c9477835edfda7b003437"
         }
       },
       {
-        "name": "relation-attribute-binding",
+        "name": "shift:relation-attribute-binding",
         "inference": {
           "schema": "zero.reasoner5_family_inference.v1",
           "settings": {
@@ -886,10 +898,10 @@
                 "family_id": "r59a-development-g0-b0-s1-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 8,
-              "mean_comparator_cost": 17.5,
-              "mean_log_ratio": -0.7172482314688842,
-              "geometric_mean_ratio": 0.48809353009197637,
+              "mean_full_cost": 14,
+              "mean_comparator_cost": 27,
+              "mean_log_ratio": -0.6138446654716261,
+              "geometric_mean_ratio": 0.5412658773652741,
               "win": true,
               "tie": false
             },
@@ -901,10 +913,10 @@
                 "family_id": "r59a-development-g0-b1-s1-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 6,
-              "mean_comparator_cost": 25,
-              "mean_log_ratio": -1.2624559922008498,
-              "geometric_mean_ratio": 0.2829582292090551,
+              "mean_full_cost": 4,
+              "mean_comparator_cost": 21.5,
+              "mean_log_ratio": -1.4451858789480823,
+              "geometric_mean_ratio": 0.23570226039551587,
               "win": true,
               "tie": false
             },
@@ -916,11 +928,11 @@
                 "family_id": "r59a-development-g1-b0-s1-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 6,
-              "mean_comparator_cost": 18.5,
-              "mean_log_ratio": -0.8533008304438741,
-              "geometric_mean_ratio": 0.4260064336151292,
-              "win": true,
+              "mean_full_cost": 26,
+              "mean_comparator_cost": 23.5,
+              "mean_log_ratio": 0.17863150314514334,
+              "geometric_mean_ratio": 1.1955800954791287,
+              "win": false,
               "tie": false
             },
             {
@@ -931,10 +943,10 @@
                 "family_id": "r59a-development-g1-b1-s1-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 2,
-              "mean_comparator_cost": 27,
-              "mean_log_ratio": -2.179066157237223,
-              "geometric_mean_ratio": 0.1131471429607071,
+              "mean_full_cost": 16,
+              "mean_comparator_cost": 22.5,
+              "mean_log_ratio": -0.30510840061460615,
+              "geometric_mean_ratio": 0.737043474095502,
               "win": true,
               "tie": false
             }
@@ -942,36 +954,42 @@
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 4,
-            "family_weighted_geometric_mean_ratio": 0.2856414851786209,
-            "family_weighted_median_ratio": 0.3544823314120922,
-            "wins": 4,
+            "family_weighted_geometric_mean_ratio": 0.5790439714720318,
+            "family_weighted_median_ratio": 0.6391546757303881,
+            "wins": 3,
             "ties": 0,
-            "losses": 0,
-            "win_rate": 1,
-            "wilson_lower": 0.5965213747972954
+            "losses": 1,
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985064
           },
           "interval": {
-            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
             "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": -1.2530178028377077,
-            "point_ratio": 0.2856414851786209,
-            "lower_log_ratio": -1.7207610747190363,
-            "upper_log_ratio": -0.7852745309563791,
-            "lower_ratio": 0.1789299170407942,
-            "upper_ratio": 0.45599449999435476,
+            "point_log_ratio": -0.5463768604722928,
+            "point_ratio": 0.5790439714720318,
+            "lower_log_ratio": -0.8751471397813442,
+            "upper_log_ratio": -0.21760658116324139,
+            "lower_ratio": 0.41680068720441626,
+            "upper_ratio": 0.8044418620012068,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
             "one_sided_p_lower_than_zero": 0.0004997501249375312,
             "one_sided_p_higher_than_zero": 1,
-            "bootstrap_sha256": "c08d30082eb7c14e9dc74b64971628fb39fefd05d30f348d3b741ae95298a28b",
+            "uncentered_sign_tail_fraction_lower": 0.0004997501249375312,
+            "uncentered_sign_tail_fraction_higher": 1,
+            "bootstrap_sha256": "c64dc1bd955b69d7bce5d102a36d48e13195d2becde3f3f13f6aba039e4e3811",
+            "null_bootstrap_sha256": "418cff5f20edb819e33040b10aa29244b5b97f0780cfd18f240c8d802ee2b871",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-constraint-first=>syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.37163164688064754,
-                "family_weighted_median_ratio": 0.38552587965051577,
+                "family_weighted_geometric_mean_ratio": 0.35718005371234995,
+                "family_weighted_median_ratio": 0.388484068880395,
                 "wins": 2,
                 "ties": 0,
                 "losses": 0,
@@ -981,21 +999,21 @@
               "syntax-first=>behavior-constraint-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.21954819709219206,
-                "family_weighted_median_ratio": 0.26957678828791815,
-                "wins": 2,
+                "family_weighted_geometric_mean_ratio": 0.9387196104968559,
+                "family_weighted_median_ratio": 0.9663117847873153,
+                "wins": 1,
                 "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.42503060900634637
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227365
               }
             }
           },
-          "receipt_sha256": "27a3780130afe1255e469544157ffdd7d423f3839dc131c7d93db318edcfcc15"
+          "receipt_sha256": "b176324522279e24d9c564e6c71c536134b6cbd955e9b39c74d3ab321a6fdc57"
         }
       },
       {
-        "name": "operation-attribute-compound",
+        "name": "shift:operation-attribute-compound",
         "inference": {
           "schema": "zero.reasoner5_family_inference.v1",
           "settings": {
@@ -1018,11 +1036,11 @@
                 "family_id": "r59a-development-g0-b0-s2-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 7,
-              "mean_comparator_cost": 19,
-              "mean_log_ratio": -0.8840214713053695,
-              "geometric_mean_ratio": 0.4131182235954578,
-              "win": true,
+              "mean_full_cost": 24,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 0.5108256237659907,
+              "geometric_mean_ratio": 1.6666666666666667,
+              "win": false,
               "tie": false
             },
             {
@@ -1033,11 +1051,11 @@
                 "family_id": "r59a-development-g0-b1-s2-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 5,
-              "mean_comparator_cost": 16.5,
-              "mean_log_ratio": -0.9689709897030683,
-              "geometric_mean_ratio": 0.3794733192202055,
-              "win": true,
+              "mean_full_cost": 30,
+              "mean_comparator_cost": 24.5,
+              "mean_log_ratio": 0.30899958335540473,
+              "geometric_mean_ratio": 1.362061803007615,
+              "win": false,
               "tie": false
             },
             {
@@ -1048,10 +1066,10 @@
                 "family_id": "r59a-development-g1-b0-s2-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 6,
-              "mean_comparator_cost": 20.5,
-              "mean_log_ratio": -0.8188043947003983,
-              "geometric_mean_ratio": 0.44095855184409843,
+              "mean_full_cost": 12.5,
+              "mean_comparator_cost": 20,
+              "mean_log_ratio": -0.3139378951033607,
+              "geometric_mean_ratio": 0.7305643983770036,
               "win": true,
               "tie": false
             },
@@ -1063,71 +1081,77 @@
                 "family_id": "r59a-development-g1-b1-s2-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 4,
-              "mean_comparator_cost": 38.5,
-              "mean_log_ratio": -2.048503839820792,
-              "geometric_mean_ratio": 0.1289276557823492,
-              "win": true,
+              "mean_full_cost": 33,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 1.0379936534058742,
+              "geometric_mean_ratio": 2.8235463150271594,
+              "win": false,
               "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 4,
-            "family_weighted_geometric_mean_ratio": 0.30725564013358103,
-            "family_weighted_median_ratio": 0.3962957714078317,
-            "wins": 4,
+            "family_weighted_geometric_mean_ratio": 1.47104089398107,
+            "family_weighted_median_ratio": 1.5143642348371409,
+            "wins": 1,
             "ties": 0,
-            "losses": 0,
-            "win_rate": 1,
-            "wilson_lower": 0.5965213747972954
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
           },
           "interval": {
-            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
             "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": -1.1800751738824071,
-            "point_ratio": 0.30725564013358103,
-            "lower_log_ratio": -1.5087374147619301,
-            "upper_log_ratio": -0.8514129330028839,
-            "lower_ratio": 0.2211890717892911,
-            "upper_ratio": 0.42681144972582397,
-            "one_sided_p_lower_than_zero": 0.0004997501249375312,
-            "one_sided_p_higher_than_zero": 1,
-            "bootstrap_sha256": "2628775dc377cfe6a4eb67b28bea1c2e83a24c194c2cac9ff4e956de05226850",
+            "point_log_ratio": 0.38597024135597724,
+            "point_ratio": 1.47104089398107,
+            "lower_log_ratio": -0.002469155873977974,
+            "upper_log_ratio": 0.7744096385859325,
+            "lower_ratio": 0.997533889983972,
+            "upper_ratio": 2.1693110715259962,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.9400299850074962,
+            "one_sided_p_higher_than_zero": 0.06046976511744128,
+            "uncentered_sign_tail_fraction_lower": 0.9440279860069966,
+            "uncentered_sign_tail_fraction_higher": 0.05647176411794103,
+            "bootstrap_sha256": "fd82404738345070a5f0f1e27c84e4b826f8150400defa1104e6f4d3a65ff13b",
+            "null_bootstrap_sha256": "ae379b4cbcc62d2eaaa123c2c9cd249c7c7fdbd1d57cc8d2569ec4d3a33a7074",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-constraint-first=>syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.3959385603071813,
-                "family_weighted_median_ratio": 0.3962957714078317,
-                "wins": 2,
+                "family_weighted_geometric_mean_ratio": 1.5066861003582304,
+                "family_weighted_median_ratio": 1.5143642348371409,
+                "wins": 0,
                 "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.42503060900634637
+                "losses": 2,
+                "win_rate": 0,
+                "wilson_lower": 0
               },
               "syntax-first=>behavior-constraint-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.23843605513101224,
-                "family_weighted_median_ratio": 0.2849431038132238,
-                "wins": 2,
+                "family_weighted_geometric_mean_ratio": 1.4362389825260355,
+                "family_weighted_median_ratio": 1.7770553567020815,
+                "wins": 1,
                 "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.42503060900634637
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227365
               }
             }
           },
-          "receipt_sha256": "13417ae931fdfe969c2c99ba62d4624e5fff4a4ef03fbeed64824880c81bd5eb"
+          "receipt_sha256": "96b2e6cb2e4fa3fd92ccd69dae85ea526c96a5139296a06a0be14e3b75d68f3c"
         }
       },
       {
-        "name": "episode-local-legend",
+        "name": "shift:episode-local-legend",
         "inference": {
           "schema": "zero.reasoner5_family_inference.v1",
           "settings": {
@@ -1150,10 +1174,10 @@
                 "family_id": "r59a-development-g0-b0-s3-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 8,
-              "mean_comparator_cost": 28.5,
-              "mean_log_ratio": -1.1694763685824603,
-              "geometric_mean_ratio": 0.3105295017040594,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 17,
+              "mean_log_ratio": -0.23722898979755794,
+              "geometric_mean_ratio": 0.7888106377466154,
               "win": true,
               "tie": false
             },
@@ -1165,11 +1189,11 @@
                 "family_id": "r59a-development-g0-b1-s3-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 42,
-              "mean_comparator_cost": 23,
-              "mean_log_ratio": 0.5910204638296863,
-              "geometric_mean_ratio": 1.8058302599329745,
-              "win": false,
+              "mean_full_cost": 4,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -1.2220423276338725,
+              "geometric_mean_ratio": 0.2946278254943948,
+              "win": true,
               "tie": false
             },
             {
@@ -1180,10 +1204,395 @@
                 "family_id": "r59a-development-g1-b0-s3-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 28,
-              "mean_comparator_cost": 17.5,
-              "mean_log_ratio": 0.9258948686932885,
-              "geometric_mean_ratio": 2.5241260113576187,
+              "mean_full_cost": 22,
+              "mean_comparator_cost": 31.5,
+              "mean_log_ratio": -0.33991316829214235,
+              "geometric_mean_ratio": 0.7118321296786988,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s3-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 14,
+              "mean_comparator_cost": 61,
+              "mean_log_ratio": -1.4185636216886763,
+              "geometric_mean_ratio": 0.24206145913796354,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.4473396959193743,
+            "family_weighted_median_ratio": 0.5032299775865468,
+            "wins": 4,
+            "ties": 0,
+            "losses": 0,
+            "win_rate": 1,
+            "wilson_lower": 0.5965213747972954
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 4,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": -0.8044370268530623,
+            "point_ratio": 0.4473396959193743,
+            "lower_log_ratio": -1.3203029746612744,
+            "upper_log_ratio": -0.28857107904485013,
+            "lower_ratio": 0.2670543789976463,
+            "upper_ratio": 0.7493335413421622,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.0004997501249375312,
+            "one_sided_p_higher_than_zero": 1,
+            "uncentered_sign_tail_fraction_lower": 0.0004997501249375312,
+            "uncentered_sign_tail_fraction_higher": 1,
+            "bootstrap_sha256": "7bd8bd953d600e4547a94c84a73c8d40e9c8c48eb02b319d8767551a8c0c32b9",
+            "null_bootstrap_sha256": "01d6e18317e90974f74fdc5965a500dc3c1ce9905d79c9df84bf668e7fb3d19b",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-constraint-first=>syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 0.4820846014198463,
+                "family_weighted_median_ratio": 0.5417192316205051,
+                "wins": 2,
+                "ties": 0,
+                "losses": 0,
+                "win_rate": 1,
+                "wilson_lower": 0.42503060900634637
+              },
+              "syntax-first=>behavior-constraint-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 0.4150989327513501,
+                "family_weighted_median_ratio": 0.47694679440833115,
+                "wins": 2,
+                "ties": 0,
+                "losses": 0,
+                "win_rate": 1,
+                "wilson_lower": 0.42503060900634637
+              }
+            }
+          },
+          "receipt_sha256": "bdbdf005ce4e7bd8e34ce2b88ccde8f12b1c90ac091ec7639b48a632c4558e50"
+        }
+      },
+      {
+        "name": "direction:behavior-constraint-first=>syntax-first",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "59a4000000000000",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s0-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 32,
+              "mean_comparator_cost": 27.5,
+              "mean_log_ratio": 0.15046569021316603,
+              "geometric_mean_ratio": 1.1623754235659722,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s1-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 14,
+              "mean_comparator_cost": 27,
+              "mean_log_ratio": -0.6138446654716261,
+              "geometric_mean_ratio": 0.5412658773652741,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s2-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 24,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 0.5108256237659907,
+              "geometric_mean_ratio": 1.6666666666666667,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s3-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 17,
+              "mean_log_ratio": -0.23722898979755794,
+              "geometric_mean_ratio": 0.7888106377466154,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s0-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 3,
+              "mean_comparator_cost": 28,
+              "mean_log_ratio": -1.9810014688665833,
+              "geometric_mean_ratio": 0.13793103448275862,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s1-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4,
+              "mean_comparator_cost": 21.5,
+              "mean_log_ratio": -1.4451858789480823,
+              "geometric_mean_ratio": 0.23570226039551587,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s2-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 30,
+              "mean_comparator_cost": 24.5,
+              "mean_log_ratio": 0.30899958335540473,
+              "geometric_mean_ratio": 1.362061803007615,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s3-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -1.2220423276338725,
+              "geometric_mean_ratio": 0.2946278254943948,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.5677202187869453,
+            "family_weighted_median_ratio": 0.6650382575559448,
+            "wins": 5,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.625,
+            "wilson_lower": 0.3479914384047327
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 8,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": -0.566126554172895,
+            "point_ratio": 0.5677202187869453,
+            "lower_log_ratio": -1.0484995411763365,
+            "upper_log_ratio": -0.08245194426514599,
+            "lower_ratio": 0.3504632104124809,
+            "upper_ratio": 0.9208556891903694,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.030484757621189407,
+            "one_sided_p_higher_than_zero": 0.9700149925037481,
+            "uncentered_sign_tail_fraction_lower": 0.02448775612193903,
+            "uncentered_sign_tail_fraction_higher": 0.9760119940029985,
+            "bootstrap_sha256": "6ecb433e9f2f87756dde086259c03f034b48713f280529124633f64c1f8b2e93",
+            "null_bootstrap_sha256": "a8d09016e28f84a3e4d9393618d5aacd726372895e1695f8c677002189e0e989",
+            "fixed_environments": 1,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-constraint-first=>syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 8,
+                "family_weighted_geometric_mean_ratio": 0.5677202187869453,
+                "family_weighted_median_ratio": 0.6650382575559448,
+                "wins": 5,
+                "ties": 0,
+                "losses": 3,
+                "win_rate": 0.625,
+                "wilson_lower": 0.3479914384047327
+              }
+            }
+          },
+          "receipt_sha256": "c84cf4de02c4cfbfb66d157799af82ea892e4f0be7b960f7a1c1fb0f85347713"
+        }
+      },
+      {
+        "name": "direction:syntax-first=>behavior-constraint-first",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "59a4000000000001",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s0-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 29,
+              "mean_log_ratio": -0.7531712017035632,
+              "geometric_mean_ratio": 0.47087095579741867,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s1-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 26,
+              "mean_comparator_cost": 23.5,
+              "mean_log_ratio": 0.17863150314514334,
+              "geometric_mean_ratio": 1.1955800954791287,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s2-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12.5,
+              "mean_comparator_cost": 20,
+              "mean_log_ratio": -0.3139378951033607,
+              "geometric_mean_ratio": 0.7305643983770036,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s3-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 22,
+              "mean_comparator_cost": 31.5,
+              "mean_log_ratio": -0.33991316829214235,
+              "geometric_mean_ratio": 0.7118321296786988,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s0-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 25,
+              "mean_log_ratio": -0.9178881773224147,
+              "geometric_mean_ratio": 0.3993615319154359,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s1-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 16,
+              "mean_comparator_cost": 22.5,
+              "mean_log_ratio": -0.30510840061460615,
+              "geometric_mean_ratio": 0.737043474095502,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s2-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 33,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 1.0379936534058742,
+              "geometric_mean_ratio": 2.8235463150271594,
               "win": false,
               "tie": false
             },
@@ -1195,67 +1604,458 @@
                 "family_id": "r59a-development-g1-b1-s3-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 531,
-              "mean_comparator_cost": 62.5,
-              "mean_log_ratio": 2.1256345844660425,
-              "geometric_mean_ratio": 8.378212485037873,
-              "win": false,
+              "mean_full_cost": 14,
+              "mean_comparator_cost": 61,
+              "mean_log_ratio": -1.4185636216886763,
+              "geometric_mean_ratio": 0.24206145913796354,
+              "win": true,
               "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 4,
-            "family_weighted_geometric_mean_ratio": 1.8557118834462738,
-            "family_weighted_median_ratio": 2.1649781356452964,
-            "wins": 1,
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.7018787129059079,
+            "family_weighted_median_ratio": 0.7211982640278511,
+            "wins": 6,
             "ties": 0,
-            "losses": 3,
-            "win_rate": 0.25,
-            "wilson_lower": 0.05790732119985868
+            "losses": 2,
+            "win_rate": 0.75,
+            "wilson_lower": 0.4601530454871806
           },
           "interval": {
-            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-            "independent_units": 4,
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 8,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": 0.6182683871016392,
-            "point_ratio": 1.8557118834462738,
-            "lower_log_ratio": -0.12179074994458589,
-            "upper_log_ratio": 1.3583275241478643,
-            "lower_ratio": 0.8853336052275076,
-            "upper_ratio": 3.8896824587142884,
-            "one_sided_p_lower_than_zero": 0.9410294852573713,
-            "one_sided_p_higher_than_zero": 0.059470264867566215,
-            "bootstrap_sha256": "2a1d29a0664bdcf2b17de123beb0b965095ca86b1dd7b5064c51c95cdc4bf859",
+            "point_log_ratio": -0.35399466352171827,
+            "point_ratio": 0.7018787129059079,
+            "lower_log_ratio": -0.7550045078007719,
+            "upper_log_ratio": 0.039905642695335516,
+            "lower_ratio": 0.47000849602110145,
+            "upper_ratio": 1.0407125707262497,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.07796101949025487,
+            "one_sided_p_higher_than_zero": 0.9225387306346826,
+            "uncentered_sign_tail_fraction_lower": 0.07196401799100449,
+            "uncentered_sign_tail_fraction_higher": 0.928535732133933,
+            "bootstrap_sha256": "6de7d5844b914fd1c69a24b295bce76fad9fc92f4e2c112171a76cdcc7e476e3",
+            "null_bootstrap_sha256": "683193d204f95ddb16643ab33a55c493eb45b640ddba523f03ff2feec693e805",
+            "fixed_environments": 1,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "syntax-first=>behavior-constraint-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 8,
+                "family_weighted_geometric_mean_ratio": 0.7018787129059079,
+                "family_weighted_median_ratio": 0.7211982640278511,
+                "wins": 6,
+                "ties": 0,
+                "losses": 2,
+                "win_rate": 0.75,
+                "wilson_lower": 0.4601530454871806
+              }
+            }
+          },
+          "receipt_sha256": "e77bac9faaf64cf466ae03be22560a2ed739f68029b820d3c863d3945fa73c26"
+        }
+      },
+      {
+        "name": "support:greedy-version-space",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "59a5000000000000",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s0-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 32,
+              "mean_comparator_cost": 27.5,
+              "mean_log_ratio": 0.15046569021316603,
+              "geometric_mean_ratio": 1.1623754235659722,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s1-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 14,
+              "mean_comparator_cost": 27,
+              "mean_log_ratio": -0.6138446654716261,
+              "geometric_mean_ratio": 0.5412658773652741,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s2-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 24,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 0.5108256237659907,
+              "geometric_mean_ratio": 1.6666666666666667,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b0-s3-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 17,
+              "mean_log_ratio": -0.23722898979755794,
+              "geometric_mean_ratio": 0.7888106377466154,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s0-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 29,
+              "mean_log_ratio": -0.7531712017035632,
+              "geometric_mean_ratio": 0.47087095579741867,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s1-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 26,
+              "mean_comparator_cost": 23.5,
+              "mean_log_ratio": 0.17863150314514334,
+              "geometric_mean_ratio": 1.1955800954791287,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s2-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12.5,
+              "mean_comparator_cost": 20,
+              "mean_log_ratio": -0.3139378951033607,
+              "geometric_mean_ratio": 0.7305643983770036,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s3-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 22,
+              "mean_comparator_cost": 31.5,
+              "mean_log_ratio": -0.33991316829214235,
+              "geometric_mean_ratio": 0.7118321296786988,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.8375522426829546,
+            "family_weighted_median_ratio": 0.7596875180618095,
+            "wins": 5,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.625,
+            "wilson_lower": 0.3479914384047327
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 8,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": -0.17727163790549377,
+            "point_ratio": 0.8375522426829546,
+            "lower_log_ratio": -0.3905007118556234,
+            "upper_log_ratio": 0.03798940380979127,
+            "lower_ratio": 0.6767179489532724,
+            "upper_ratio": 1.0387202263430921,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.09645177411294353,
+            "one_sided_p_higher_than_zero": 0.904047976011994,
+            "uncentered_sign_tail_fraction_lower": 0.09995002498750624,
+            "uncentered_sign_tail_fraction_higher": 0.9005497251374313,
+            "bootstrap_sha256": "097061954b75aaf3d1640a083915c6f49b8bad09b37f4cdf7155171477a68802",
+            "null_bootstrap_sha256": "7aafa2722e3663deeeadaa69d9c5341b8506eb968ef78606f3263b574ed4ae88",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-constraint-first=>syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.7488414857492196,
-                "family_weighted_median_ratio": 1.058179880818517,
-                "wins": 1,
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.9536623649508014,
+                "family_weighted_median_ratio": 0.9755930306562939,
+                "wins": 2,
                 "ties": 0,
-                "losses": 1,
+                "losses": 2,
                 "win_rate": 0.5,
-                "wilson_lower": 0.12086631942227365
+                "wilson_lower": 0.18240016325464492
               },
               "syntax-first=>behavior-constraint-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 4.598658941709555,
-                "family_weighted_median_ratio": 5.451169248197745,
-                "wins": 0,
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.7355787383509008,
+                "family_weighted_median_ratio": 0.7211982640278511,
+                "wins": 3,
                 "ties": 0,
-                "losses": 2,
-                "win_rate": 0,
-                "wilson_lower": 0
+                "losses": 1,
+                "win_rate": 0.75,
+                "wilson_lower": 0.3561680085985064
               }
             }
           },
-          "receipt_sha256": "71d6fbd8bb23ab45ad7a7e30a44d6ecd310981b8da97f8629518c18a0ed5fbae"
+          "receipt_sha256": "c95ab0c90efb51606847f49aeed2cd6baffb8c548d93aaea20a1d897e45dd6db"
+        }
+      },
+      {
+        "name": "support:hard-negative-balanced",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "59a5000000000001",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s0-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 3,
+              "mean_comparator_cost": 28,
+              "mean_log_ratio": -1.9810014688665833,
+              "geometric_mean_ratio": 0.13793103448275862,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s1-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4,
+              "mean_comparator_cost": 21.5,
+              "mean_log_ratio": -1.4451858789480823,
+              "geometric_mean_ratio": 0.23570226039551587,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s2-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 30,
+              "mean_comparator_cost": 24.5,
+              "mean_log_ratio": 0.30899958335540473,
+              "geometric_mean_ratio": 1.362061803007615,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-constraint-first=>syntax-first",
+              "family_id": "r59a-development-g0-b1-s3-00",
+              "unit": {
+                "generator_id": "behavior-constraint-first=>syntax-first",
+                "family_id": "r59a-development-g0-b1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -1.2220423276338725,
+              "geometric_mean_ratio": 0.2946278254943948,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s0-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 25,
+              "mean_log_ratio": -0.9178881773224147,
+              "geometric_mean_ratio": 0.3993615319154359,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s1-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 16,
+              "mean_comparator_cost": 22.5,
+              "mean_log_ratio": -0.30510840061460615,
+              "geometric_mean_ratio": 0.737043474095502,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s2-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 33,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 1.0379936534058742,
+              "geometric_mean_ratio": 2.8235463150271594,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s3-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 14,
+              "mean_comparator_cost": 61,
+              "mean_log_ratio": -1.4185636216886763,
+              "geometric_mean_ratio": 0.24206145913796354,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.47575627661912656,
+            "family_weighted_median_ratio": 0.34699467870491535,
+            "wins": 6,
+            "ties": 0,
+            "losses": 2,
+            "win_rate": 0.75,
+            "wilson_lower": 0.4601530454871806
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 8,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": -0.7428495797891196,
+            "point_ratio": 0.47575627661912656,
+            "lower_log_ratio": -1.2248804119837042,
+            "upper_log_ratio": -0.21650673761436484,
+            "lower_ratio": 0.2937928323248274,
+            "upper_ratio": 0.805327108920895,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.0024987506246876563,
+            "one_sided_p_higher_than_zero": 0.9980009995002499,
+            "uncentered_sign_tail_fraction_lower": 0.013493253373313344,
+            "uncentered_sign_tail_fraction_higher": 0.9870064967516242,
+            "bootstrap_sha256": "8632103c4e5052021d1d075ad3413bbc5fc338abf151e3004c101975145685e2",
+            "null_bootstrap_sha256": "7e08bef8a7a20b1e5b5498c72768bd5d05c1718e25e913cc168f7f74a11d3c58",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-constraint-first=>syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.3379668304684798,
+                "family_weighted_median_ratio": 0.26516504294495535,
+                "wins": 3,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.75,
+                "wilson_lower": 0.3561680085985064
+              },
+              "syntax-first=>behavior-constraint-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.6697226305573933,
+                "family_weighted_median_ratio": 0.5682025030054689,
+                "wins": 3,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.75,
+                "wilson_lower": 0.3561680085985064
+              }
+            }
+          },
+          "receipt_sha256": "3af81b84d64fbdb0dd856be6aa9730fda83bab3f6f3955531de282302db12ac9"
         }
       }
     ],
@@ -1284,12 +2084,12 @@
                 "family_id": "r59a-development-g0-b0-s0-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 7,
-              "mean_comparator_cost": 9,
-              "mean_log_ratio": -0.2231435513142097,
-              "geometric_mean_ratio": 0.8,
-              "win": true,
-              "tie": false
+              "mean_full_cost": 32,
+              "mean_comparator_cost": 32,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
             },
             {
               "generator_id": "behavior-constraint-first=>syntax-first",
@@ -1299,10 +2099,10 @@
                 "family_id": "r59a-development-g0-b0-s1-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 13,
-              "mean_comparator_cost": 8,
-              "mean_log_ratio": 0.44183275227903923,
-              "geometric_mean_ratio": 1.5555555555555556,
+              "mean_full_cost": 18,
+              "mean_comparator_cost": 14,
+              "mean_log_ratio": 0.23638877806423034,
+              "geometric_mean_ratio": 1.2666666666666666,
               "win": false,
               "tie": false
             },
@@ -1314,11 +2114,11 @@
                 "family_id": "r59a-development-g0-b0-s2-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 11.5,
-              "mean_comparator_cost": 7,
-              "mean_log_ratio": 0.4454864619449326,
-              "geometric_mean_ratio": 1.5612494995995996,
-              "win": false,
+              "mean_full_cost": 23,
+              "mean_comparator_cost": 24,
+              "mean_log_ratio": -0.040821994520255166,
+              "geometric_mean_ratio": 0.96,
+              "win": true,
               "tie": false
             },
             {
@@ -1329,11 +2129,11 @@
                 "family_id": "r59a-development-g0-b0-s3-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 3,
-              "mean_comparator_cost": 8,
-              "mean_log_ratio": -0.8109302162163288,
-              "geometric_mean_ratio": 0.4444444444444444,
-              "win": true,
+              "mean_full_cost": 17,
+              "mean_comparator_cost": 13,
+              "mean_log_ratio": 0.25131442828090617,
+              "geometric_mean_ratio": 1.2857142857142858,
+              "win": false,
               "tie": false
             },
             {
@@ -1345,11 +2145,11 @@
               },
               "nested_measurements": 2,
               "mean_full_cost": 2,
-              "mean_comparator_cost": 2,
-              "mean_log_ratio": 0,
-              "geometric_mean_ratio": 1,
-              "win": false,
-              "tie": true
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": -0.2876820724517809,
+              "geometric_mean_ratio": 0.75,
+              "win": true,
+              "tie": false
             },
             {
               "generator_id": "behavior-constraint-first=>syntax-first",
@@ -1360,9 +2160,9 @@
               },
               "nested_measurements": 2,
               "mean_full_cost": 2,
-              "mean_comparator_cost": 6,
-              "mean_log_ratio": -0.8472978603872037,
-              "geometric_mean_ratio": 0.42857142857142855,
+              "mean_comparator_cost": 4,
+              "mean_log_ratio": -0.5108256237659907,
+              "geometric_mean_ratio": 0.6,
               "win": true,
               "tie": false
             },
@@ -1374,11 +2174,11 @@
                 "family_id": "r59a-development-g0-b1-s2-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 4,
-              "mean_comparator_cost": 5,
-              "mean_log_ratio": -0.1823215567939546,
-              "geometric_mean_ratio": 0.8333333333333334,
-              "win": true,
+              "mean_full_cost": 31,
+              "mean_comparator_cost": 30,
+              "mean_log_ratio": 0.03174869831458027,
+              "geometric_mean_ratio": 1.032258064516129,
+              "win": false,
               "tie": false
             },
             {
@@ -1387,111 +2187,6 @@
               "unit": {
                 "generator_id": "behavior-constraint-first=>syntax-first",
                 "family_id": "r59a-development-g0-b1-s3-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 47,
-              "mean_comparator_cost": 42,
-              "mean_log_ratio": 0.11000089521432849,
-              "geometric_mean_ratio": 1.1162790697674418,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b0-s0-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b0-s0-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 4,
-              "mean_comparator_cost": 4,
-              "mean_log_ratio": 0,
-              "geometric_mean_ratio": 1,
-              "win": false,
-              "tie": true
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b0-s1-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b0-s1-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 8,
-              "mean_comparator_cost": 6,
-              "mean_log_ratio": 0.25131442828090617,
-              "geometric_mean_ratio": 1.2857142857142858,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b0-s2-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b0-s2-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 10.5,
-              "mean_comparator_cost": 6,
-              "mean_log_ratio": 0.49549081223787206,
-              "geometric_mean_ratio": 1.6413036132965795,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b0-s3-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b0-s3-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 31,
-              "mean_comparator_cost": 28,
-              "mean_log_ratio": 0.09844007281325251,
-              "geometric_mean_ratio": 1.103448275862069,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b1-s0-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b1-s0-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 22,
-              "mean_comparator_cost": 8,
-              "mean_log_ratio": 0.9382696385929302,
-              "geometric_mean_ratio": 2.5555555555555554,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b1-s1-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b1-s1-00"
-              },
-              "nested_measurements": 2,
-              "mean_full_cost": 2,
-              "mean_comparator_cost": 2,
-              "mean_log_ratio": 0,
-              "geometric_mean_ratio": 1,
-              "win": false,
-              "tie": true
-            },
-            {
-              "generator_id": "syntax-first=>behavior-constraint-first",
-              "family_id": "r59a-development-g1-b1-s2-00",
-              "unit": {
-                "generator_id": "syntax-first=>behavior-constraint-first",
-                "family_id": "r59a-development-g1-b1-s2-00"
               },
               "nested_measurements": 2,
               "mean_full_cost": 5,
@@ -1503,124 +2198,235 @@
             },
             {
               "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s0-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12,
+              "mean_comparator_cost": 13,
+              "mean_log_ratio": -0.07410797215372185,
+              "geometric_mean_ratio": 0.9285714285714286,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s1-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 26,
+              "mean_comparator_cost": 26,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s2-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 24,
+              "mean_comparator_cost": 12.5,
+              "mean_log_ratio": 0.6136621974283417,
+              "geometric_mean_ratio": 1.847183778644646,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b0-s3-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 19,
+              "mean_comparator_cost": 22,
+              "mean_log_ratio": -0.13976194237515874,
+              "geometric_mean_ratio": 0.8695652173913043,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s0-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 9,
+              "mean_log_ratio": -0.5108256237659907,
+              "geometric_mean_ratio": 0.6,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s1-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -0.8873031950009028,
+              "geometric_mean_ratio": 0.4117647058823529,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
+              "family_id": "r59a-development-g1-b1-s2-00",
+              "unit": {
+                "generator_id": "syntax-first=>behavior-constraint-first",
+                "family_id": "r59a-development-g1-b1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 33.5,
+              "mean_comparator_cost": 33,
+              "mean_log_ratio": 0.014493768436626094,
+              "geometric_mean_ratio": 1.0145993123917847,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first=>behavior-constraint-first",
               "family_id": "r59a-development-g1-b1-s3-00",
               "unit": {
                 "generator_id": "syntax-first=>behavior-constraint-first",
                 "family_id": "r59a-development-g1-b1-s3-00"
               },
               "nested_measurements": 2,
-              "mean_full_cost": 531,
-              "mean_comparator_cost": 531,
-              "mean_log_ratio": 0,
-              "geometric_mean_ratio": 1,
-              "win": false,
-              "tie": true
+              "mean_full_cost": 10,
+              "mean_comparator_cost": 14,
+              "mean_log_ratio": -0.3101549283038396,
+              "geometric_mean_ratio": 0.7333333333333333,
+              "win": true,
+              "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
             "independent_families": 16,
-            "family_weighted_geometric_mean_ratio": 1.0578266409656434,
-            "family_weighted_median_ratio": 1.0517241379310345,
-            "wins": 4,
-            "ties": 4,
-            "losses": 8,
-            "win_rate": 0.25,
-            "wilson_lower": 0.11755580446533705
+            "family_weighted_geometric_mean_ratio": 0.9144137583376737,
+            "family_weighted_median_ratio": 0.98,
+            "wins": 8,
+            "ties": 2,
+            "losses": 6,
+            "win_rate": 0.5,
+            "wilson_lower": 0.30984309684657163
           },
           "interval": {
-            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
             "independent_units": 16,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": 0.05621646459034495,
-            "point_ratio": 1.0578266409656434,
-            "lower_log_ratio": -0.09854907209996039,
-            "upper_log_ratio": 0.21684250884218187,
-            "lower_ratio": 0.9061512247797331,
-            "upper_ratio": 1.2421484593331202,
-            "one_sided_p_lower_than_zero": 0.7126436781609196,
-            "one_sided_p_higher_than_zero": 0.28785607196401797,
-            "bootstrap_sha256": "b7daee5cf7bd3a0ece5ba8204f525c363287416408814c9227667dc87341f898",
+            "point_log_ratio": -0.08947212031368759,
+            "point_ratio": 0.9144137583376737,
+            "lower_log_ratio": -0.2288612239702576,
+            "upper_log_ratio": 0.0547009532640887,
+            "lower_ratio": 0.7954389137002001,
+            "upper_ratio": 1.056224706891268,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.13493253373313344,
+            "one_sided_p_higher_than_zero": 0.8655672163918041,
+            "uncentered_sign_tail_fraction_lower": 0.14642678660669664,
+            "uncentered_sign_tail_fraction_higher": 0.8540729635182409,
+            "bootstrap_sha256": "87166f18418629079f9d43ce584b4ab64516a63d57ebe65578c98215b10ad495",
+            "null_bootstrap_sha256": "42d41005a984a7a8402de2abf9da2037b98a6ffbec62345834a5140aeb00839c",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-constraint-first=>syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 8,
-                "family_weighted_geometric_mean_ratio": 0.8752054375515625,
-                "family_weighted_median_ratio": 0.9166666666666667,
-                "wins": 4,
+                "family_weighted_geometric_mean_ratio": 0.9829524536113754,
+                "family_weighted_median_ratio": 1.0161290322580645,
+                "wins": 3,
                 "ties": 1,
-                "losses": 3,
-                "win_rate": 0.5,
-                "wilson_lower": 0.24864189021250815
+                "losses": 4,
+                "win_rate": 0.375,
+                "wilson_lower": 0.16117233776067347
               },
               "syntax-first=>behavior-constraint-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 8,
-                "family_weighted_geometric_mean_ratio": 1.2785537592946352,
-                "family_weighted_median_ratio": 1.1517241379310343,
-                "wins": 0,
-                "ties": 3,
-                "losses": 5,
-                "win_rate": 0,
-                "wilson_lower": 0
+                "family_weighted_geometric_mean_ratio": 0.8506540864364277,
+                "family_weighted_median_ratio": 0.8990683229813665,
+                "wins": 5,
+                "ties": 1,
+                "losses": 2,
+                "win_rate": 0.625,
+                "wilson_lower": 0.3479914384047327
               }
             }
           },
-          "receipt_sha256": "199ee5b43f91f3311aa3371d65a9684405e3e585521a36b1153ff9cfc3538f79"
+          "receipt_sha256": "70c4a774114b3937a658dcfd910b17d4edc41c67be00e0b2deb2c5c38b537af4"
         }
       }
     ],
     "derangement": {
-      "observed": 2.3390268825189144,
+      "observed": 2.696515576586322,
       "values": [
-        3.323173523596324,
-        3.266830781458083,
-        3.2879656491129916,
-        2.7999683312408434,
-        2.971660915405679,
-        2.8792145332009365,
-        2.4828230734018195,
-        2.8854751464545587,
-        3.100803760427723,
-        3.031595767680802,
-        3.317275505523949,
-        3.0230593385681983,
-        2.9567770520648353,
-        3.312437929889724,
-        3.277692275885234,
-        3.3183775195181298,
-        2.7105036802459437,
-        3.3688310422716783,
-        3.3549344321300656,
-        2.70785661511319,
-        2.9418885990750865,
-        3.2509193018590454,
-        2.9882941315916525,
-        3.256551752385082,
-        2.869324483828452,
-        2.6756792954973134,
-        3.2007618605264843,
-        2.703596496069237,
-        3.4727598741945442,
-        3.0897428538556677,
-        3.0490720118912353
+        3.145901504446461,
+        2.505503355224834,
+        3.069697156354769,
+        3.00732357352192,
+        2.8886614473253003,
+        2.9274242448410432,
+        3.073226256655196,
+        2.6812641200159173,
+        2.6879163579343235,
+        2.683568277630593,
+        3.049192308925576,
+        2.8086001717061535,
+        3.004627800520987,
+        2.5188536233898224,
+        2.885319003321172,
+        2.6069850720332104,
+        2.8135771161595207,
+        2.8654025223775017,
+        2.689592032843347,
+        2.5881354792122595,
+        2.923100725142568,
+        2.8079888635561066,
+        2.891317044386146,
+        3.007649667337304,
+        2.442640591441594,
+        2.801374428982392,
+        3.128728457870648,
+        2.626675128159587,
+        2.651847179344859,
+        2.9052458665461547,
+        2.9932019035855095
       ]
     },
     "source_ablation": {
       "matches": true,
       "episodes": 32,
-      "receipt_sha256": "e00032f75c10216bcf3dd0f883acf482f3344cdfb61e15c60199e29ca8c52c01"
+      "receipt_sha256": "912eadf7ea1f749f41359bd9d42d36c0cea5a1d2b22dc14d0f4f3880c4af6d48"
     },
     "headroom": {
       "comparator_arm": "target_only",
-      "median_primary_cost": 25.5,
+      "median_primary_cost": 26,
       "registered_minimum": 16,
       "measurement_floor": false
     },
-    "analysis_sha256": "14ce4fb111590254dd4bde0355d54508d4b108ca42a9c40b9a942a2423fbf5c9"
+    "analysis_sha256": "3bfd7251dc5bc0aa32d2724f0dbf52d2f03c91c8fd9d14f6d33d0c790d0fdc0c"
   },
   "decision": "no-go",
   "gate": {
@@ -1628,8 +2434,10 @@
     "passed": false,
     "failures": [
       "primary_upper_limit",
+      "family_win_lower_limit",
       "primary_strata",
-      "mechanism_effects"
+      "mechanism_effects",
+      "derangement_randomization"
     ],
     "checks": {
       "integrity_valid": true,
@@ -1642,35 +2450,35 @@
       "primary_ratio": true,
       "primary_upper_limit": false,
       "family_win_rate": true,
-      "family_win_lower_limit": true,
+      "family_win_lower_limit": false,
       "marginal_win_gates": true,
       "primary_strata": false,
       "mechanism_effects": false,
       "factorial_interaction": true,
       "derangement_median": true,
-      "derangement_randomization": true,
+      "derangement_randomization": false,
       "source_ablation_matches_source_free": true
     },
-    "registration_sha256": "d3bb0ba1acd1b7bd0a5cc4dab4cd386927fb3a504927955bb50459bf03aeb365",
+    "registration_sha256": "5bdb1e6b1475f212158d5fe86951e1d0603ea9fab8ad948c672c5f54f2e34f72",
     "derangement": {
-      "observed": 2.3390268825189144,
+      "observed": 2.696515576586322,
       "derangements": 31,
-      "median": 3.0490720118912353,
+      "median": 2.8654025223775017,
       "beats_median": true,
-      "p_value": 0.03125
+      "p_value": 0.375
     }
   },
   "provenance": {
     "schema": "zero.reasoner5_result_provenance.v1",
-    "manifest_sha256": "a24cc351e47bf5d6cb2b07d3c08f7773e42546d937d889792daebaa78811deb3",
-    "raw_trace_sha256": "276dcb2623e34d40da9b60691ac9bb5edd87226030130feb3fe9270b5118188a",
-    "trace_coverage_sha256": "390c3acf7465163aba679148327ff30bfa8c0100de9690162f902c5725a5d792",
-    "analysis_contract_sha256": "bb518bd5e16970cb22dcc01ce9cdf2989a0c70da887c36926e453e4f356d11ef",
-    "analysis_settings_sha256": "f939eac1376e94936be3cc7dbe41e93b53f317495b79e4730476a84c96badddb",
+    "manifest_sha256": "4c4b7d6bb891835afa983f3766f1999ccf5d0a73038dad23bcda0d71e0f9a0ab",
+    "raw_trace_sha256": "523e12c6fc0274c813b74ca6f7a764def9458f15a5e6919d2f60ceff469204b0",
+    "trace_coverage_sha256": "ee16237a5c79df3b14dee3be3cd957c9c4b75a451c9f7e73ffc25906935a33c7",
+    "analysis_contract_sha256": "c094cb64b87ff566c6d5676dc8812fc54cf76a9d18e2445ee4e1221de89655bc",
+    "analysis_settings_sha256": "881bcc27389c222f724e9b940b548612ce40f64b9ebded7234e586f14ce3d4a3",
     "analysis_function_sha256": "1e72ffdb92c5f8c24c837e43155fa2584d768919e10a68a00945cbed73f01e94",
-    "common_gate_registration_sha256": "d3bb0ba1acd1b7bd0a5cc4dab4cd386927fb3a504927955bb50459bf03aeb365",
+    "common_gate_registration_sha256": "5bdb1e6b1475f212158d5fe86951e1d0603ea9fab8ad948c672c5f54f2e34f72",
     "episodes": 32,
     "rows": 1280
   },
-  "result_sha256": "f63c5a876169003827db61d9575069cadd133cd44fbeec7b03e22e55a603faeb"
+  "result_sha256": "3ac1b847b7b1ac2187ce0c6715ef7cfe5252acd6846c4cd6af90175cd768a00f"
 }

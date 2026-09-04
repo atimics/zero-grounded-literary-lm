@@ -339,6 +339,40 @@ function conceptAst(form, legend) {
   };
 }
 
+function surfaceBijectionForm(form) {
+  const transformed = structuredClone(form);
+  if (Object.hasOwn(transformed, "symbol")) transformed.symbol = 1 - form.symbol;
+  if (Object.hasOwn(transformed, "orientation"))
+    transformed.orientation = 1 - form.orientation;
+  if (form.kind === "count-compare") {
+    if (form.comparison === "greater") transformed.comparison = "less";
+    if (form.comparison === "less") transformed.comparison = "greater";
+  }
+  if (form.kind === "relation") {
+    const reverse = {
+      left: "right",
+      right: "left",
+      above: "below",
+      below: "above",
+      "same-row": "same-row",
+      "same-column": "same-column",
+    };
+    transformed.relation = reverse[form.relation];
+    assert(transformed.relation,
+      `R5.9a surface transform lacks relation ${form.relation}`);
+  }
+  return transformed;
+}
+
+export function applyR59AstSurfaceBijection(ast) {
+  assert.equal(ast?.type, "reasoner59a-symbolic-concept");
+  const first = R59A_ATOMS.indexOf(ast.legend.glyph_a);
+  const second = R59A_ATOMS.indexOf(ast.legend.glyph_b);
+  assert(first >= 0 && second >= 0 && first !== second,
+    "R5.9a surface transform needs an injective legend");
+  return conceptAst(surfaceBijectionForm(ast.form), [second, first]);
+}
+
 function behaviorLabel(bytes, sceneIndex) {
   return (bytes[sceneIndex >> 3] >> (sceneIndex & 7)) & 1;
 }
@@ -346,10 +380,15 @@ function behaviorLabel(bytes, sceneIndex) {
 let UNIVERSE_CACHE = null;
 let CANONICAL_ORDER_CACHE = null;
 
+function r59AstSha256(ast) {
+  return canonicalDigest("reasoner59a-raw-ast", ast);
+}
+
 export function enumerateR59Universe() {
   if (UNIVERSE_CACHE !== null) return UNIVERSE_CACHE;
   enumerateR59Scenes();
   const byBehavior = new Map();
+  const rawPairs = [];
   let jointPairs = 0;
   for (const form of R59A_FORMS)
     for (let first = 0; first < 8; first += 1)
@@ -362,6 +401,13 @@ export function enumerateR59Universe() {
         const behavior = behaviorFor(form, legend);
         const behaviorSha256 = sha256(behavior.bytes);
         const ast = conceptAst(form, legend);
+        rawPairs.push({
+          pair_index: jointPairs - 1,
+          ast,
+          ast_sha256: r59AstSha256(ast),
+          behavior_sha256: behaviorSha256,
+          positive_scenes: behavior.positives,
+        });
         const existing = byBehavior.get(behaviorSha256);
         if (existing !== undefined) {
           assert(existing.behavior.equals(behavior.bytes),
@@ -389,9 +435,10 @@ export function enumerateR59Universe() {
   const classes = [...byBehavior.values()].sort((left, right) =>
     left.behaviorSha256.localeCompare(right.behaviorSha256));
   const behaviorByDigest = new Map();
+  const candidateByBehavior = new Map();
   const candidates = classes.map((item, classIndex) => {
     behaviorByDigest.set(item.behaviorSha256, item.behavior);
-    return deepFreeze({
+    const candidate = deepFreeze({
       class_index: classIndex,
       semantic: { behavior_sha256: item.behaviorSha256 },
       ast: item.ast,
@@ -400,7 +447,15 @@ export function enumerateR59Universe() {
       joint_pair_multiplicity: item.multiplicity,
       partial_expansions: item.multiplicity,
     });
+    candidateByBehavior.set(item.behaviorSha256, candidate);
+    return candidate;
   });
+  const registeredRawPairs = rawPairs.map(pair => deepFreeze({
+    ...pair,
+    class_index: candidateByBehavior.get(pair.behavior_sha256).class_index,
+  }));
+  const candidateByAstSha256 = new Map(registeredRawPairs.map(pair =>
+    [pair.ast_sha256, candidateByBehavior.get(pair.behavior_sha256)]));
   const words = Math.ceil(candidates.length / 32);
   const truthByScene = Array.from({ length: R59A_SCENE_COUNT }, () =>
     new Uint32Array(words));
@@ -418,6 +473,12 @@ export function enumerateR59Universe() {
     representative_rule:
       "minimum AST node count, then canonical AST and legend bytes",
     joint_pairs: jointPairs,
+    raw_pair_order_sha256: canonicalDigest("reasoner59a-raw-joint-pairs",
+      registeredRawPairs.map(pair => ({
+        pair_index: pair.pair_index,
+        ast_sha256: pair.ast_sha256,
+        behavior_sha256: pair.behavior_sha256,
+      }))),
     semantic_classes: candidates.length,
     candidates: candidates.map(candidate => ({
       class_index: candidate.class_index,
@@ -434,7 +495,10 @@ export function enumerateR59Universe() {
     semanticClasses: candidates.length,
     semanticCollisions: jointPairs - candidates.length,
     candidates: deepFreeze(candidates),
+    rawPairs: deepFreeze(registeredRawPairs),
+    rawPairOrderSha256: body.raw_pair_order_sha256,
     behaviorByDigest,
+    candidateByAstSha256,
     truthByScene,
     sha256: canonicalDigest("reasoner59a-joint-universe", body),
   });
@@ -459,6 +523,51 @@ export function evaluateR59Candidate(candidate, sceneIndex) {
   assert(Number.isSafeInteger(sceneIndex) && sceneIndex >= 0 &&
     sceneIndex < R59A_SCENE_COUNT);
   return behaviorLabel(r59BehaviorForCandidate(candidate), sceneIndex);
+}
+
+export function r59BehaviorSha256ForAst(ast) {
+  const candidate = enumerateR59Universe().candidateByAstSha256.get(
+    r59AstSha256(ast));
+  assert(candidate, "R5.9a AST is outside the complete joint universe");
+  return candidate.semantic.behavior_sha256;
+}
+
+export function applyR59CandidateSurfaceBijection(candidate) {
+  const ast = applyR59AstSurfaceBijection(candidate.ast);
+  const legend = [R59A_ATOMS.indexOf(ast.legend.glyph_a),
+    R59A_ATOMS.indexOf(ast.legend.glyph_b)];
+  assert(legend.every(index => index >= 0));
+  const transformed = {
+    ...structuredClone(candidate),
+    ast,
+    feature_groups: candidateFeatures(ast.form, legend),
+  };
+  assert.equal(r59BehaviorSha256ForAst(transformed.ast),
+    candidate.semantic.behavior_sha256,
+  "R5.9a consistent surface bijection changed candidate behavior");
+  return deepFreeze(transformed);
+}
+
+export function applyR59EvaluatorSurfaceBijection(evaluator) {
+  const transformed = structuredClone(evaluator);
+  const candidate = enumerateR59Universe().candidateByAstSha256.get(
+    r59AstSha256(evaluator.ast));
+  assert(candidate, "R5.9a evaluator AST is outside the complete universe");
+  const surfaced = applyR59CandidateSurfaceBijection({
+    ...candidate,
+    ast: evaluator.ast,
+    feature_groups: candidateFeatures(evaluator.ast.form, [
+      R59A_ATOMS.indexOf(evaluator.ast.legend.glyph_a),
+      R59A_ATOMS.indexOf(evaluator.ast.legend.glyph_b),
+    ]),
+  });
+  transformed.ast = surfaced.ast;
+  transformed.typed_subtrees = Object.values(surfaced.feature_groups)
+    .flat().sort();
+  assert.equal(r59BehaviorSha256ForAst(transformed.ast),
+    evaluator.behavior.behavior_sha256,
+  "R5.9a evaluator surface transform changed target behavior");
+  return deepFreeze(transformed);
 }
 
 export function r59SmokeReceipts() {
@@ -492,10 +601,10 @@ export function r59SmokeReceipts() {
   });
 }
 
-function targetStratum(candidate) {
-  const form = candidate.ast.form;
-  const first = R59A_ATOMS.indexOf(candidate.ast.legend.glyph_a);
-  const second = R59A_ATOMS.indexOf(candidate.ast.legend.glyph_b);
+function targetStratumForAst(ast) {
+  const form = ast.form;
+  const first = R59A_ATOMS.indexOf(ast.legend.glyph_a);
+  const second = R59A_ATOMS.indexOf(ast.legend.glyph_b);
   const domains = [atomDomain(first), atomDomain(second)];
   if (["exists-and", "exists-xor", "count-compare"].includes(form.kind) &&
       new Set(domains).has("color") && new Set(domains).has("shape"))
@@ -509,19 +618,25 @@ function targetStratum(candidate) {
   return null;
 }
 
-function fixedPreference(candidate) {
+function targetStratum(candidate) {
+  return targetStratumForAst(candidate.ast);
+}
+
+export function r59HeldOutCompoundSignature(candidate) {
+  const stratum = targetStratum(candidate);
+  if (stratum === null) return null;
   const form = candidate.ast.form;
-  const atoms = [candidate.ast.legend.glyph_a, candidate.ast.legend.glyph_b];
-  let score = 0;
-  if (["red", "circle", "small"].includes(atoms[0])) score += 8;
-  if (["green", "square", "large"].includes(atoms[1])) score += 5;
-  if (["exists-and", "relation", "boolean-and", "exists-xor"]
-    .includes(form.kind)) score += 6;
-  if (["left", "above", "same-row"].includes(form.relation)) score += 4;
-  if (form.threshold === 2) score += 3;
-  const density = candidate.positive_scenes / R59A_SCENE_COUNT;
-  if (density >= 0.15 && density <= 0.85) score += 4;
-  return score;
+  const first = candidate.ast.legend.glyph_a;
+  const second = candidate.ast.legend.glyph_b;
+  if (stratum === R59A_SHIFT_STRATA[0])
+    return `color-shape:${form.kind}:${[first, second].sort().join(":")}`;
+  if (stratum === R59A_SHIFT_STRATA[1])
+    return `relation-attribute:${form.relation}:${first}:${second}`;
+  if (stratum === R59A_SHIFT_STRATA[2])
+    return `operation-attribute:${form.kind}:${form.orientation}:` +
+      `${form.threshold}:${first}:${second}`;
+  return `episode-legend:${form.kind}:${form.comparison ?? "none"}:` +
+    `${first}:${second}`;
 }
 
 const POPCOUNT8 = Uint8Array.from({ length: 256 }, (_, value) => {
@@ -718,35 +833,196 @@ function buildSupport(target, root, generatorIndex, supportIndex,
     buildHardNegativeSupport(target, seed);
 }
 
-function stratumPool(stratumIndex, generatorIndex) {
-  const stratum = R59A_SHIFT_STRATA[stratumIndex];
-  const candidates = enumerateR59Universe().candidates.filter(candidate =>
-    targetStratum(candidate) === stratum);
-  assert(candidates.length > 16, `R5.9a stratum ${stratum} is too small`);
-  return [...candidates].sort((left, right) => {
-    const preference = fixedPreference(right) - fixedPreference(left);
-    if (preference !== 0) return preference;
-    if (generatorIndex === 0)
-      return canonicalBytes(left.ast).compare(canonicalBytes(right.ast));
-    const leftDensity = Math.abs(left.positive_scenes / R59A_SCENE_COUNT - 0.5);
-    const rightDensity = Math.abs(right.positive_scenes / R59A_SCENE_COUNT - 0.5);
-    return leftDensity - rightDensity ||
-      left.ast.form.node_count - right.ast.form.node_count ||
-      left.semantic.behavior_sha256.localeCompare(
-        right.semantic.behavior_sha256);
+const R59A_DEVELOPMENT_SIGNATURES_PER_STRATUM = 8;
+const R59A_CALIBRATION_SIGNATURES_PER_STRATUM = 4;
+const R59A_BEHAVIOR_CONSTRAINT_SCENES = Object.freeze(
+  Array.from({ length: 12 }, (_, index) =>
+    Math.floor(((index * 2) + 1) * R59A_SCENE_COUNT / 24)),
+);
+let SPLIT_SIGNATURE_CACHE = null;
+
+function laneFromRoot(root) {
+  const lane = Object.entries(LANE_ROOT).find(([, value]) => value === root)?.[0];
+  assert(lane, "R5.9a target selection used an unregistered lane root");
+  return lane;
+}
+
+export function r59GeneratorSplitPlan() {
+  if (SPLIT_SIGNATURE_CACHE !== null) return SPLIT_SIGNATURE_CACHE;
+  const strata = R59A_SHIFT_STRATA.map(stratum => {
+    const signatures = [...new Set(enumerateR59Universe().candidates
+      .filter(candidate => targetStratum(candidate) === stratum)
+      .map(r59HeldOutCompoundSignature))].sort((left, right) =>
+      canonicalDigest("reasoner59a-compound-partition-key", {
+        stratum, signature: left,
+      }).localeCompare(canonicalDigest("reasoner59a-compound-partition-key", {
+        stratum, signature: right,
+      })) || left.localeCompare(right));
+    const development = signatures.slice(0,
+      R59A_DEVELOPMENT_SIGNATURES_PER_STRATUM);
+    const calibration = signatures.slice(
+      R59A_DEVELOPMENT_SIGNATURES_PER_STRATUM,
+      R59A_DEVELOPMENT_SIGNATURES_PER_STRATUM +
+        R59A_CALIBRATION_SIGNATURES_PER_STRATUM);
+    const source = signatures.slice(
+      R59A_DEVELOPMENT_SIGNATURES_PER_STRATUM +
+        R59A_CALIBRATION_SIGNATURES_PER_STRATUM);
+    assert.equal(development.length,
+      R59A_DEVELOPMENT_SIGNATURES_PER_STRATUM);
+    assert.equal(calibration.length,
+      R59A_CALIBRATION_SIGNATURES_PER_STRATUM);
+    const sourceCandidates = enumerateR59Universe().candidates.filter(
+      candidate => targetStratum(candidate) === stratum &&
+        source.includes(r59HeldOutCompoundSignature(candidate)));
+    assert(sourceCandidates.length >= 16,
+      `R5.9a source split has too few ${stratum} candidates`);
+    return {
+      stratum,
+      signatures_by_lane: {
+        "source-training": source,
+        calibration,
+        development,
+      },
+    };
   });
+  const body = {
+    schema: "zero.reasoner59a_compound_split.v1",
+    allocation_rule:
+      "digest order, eight development, four calibration, remainder source",
+    partition_key: "complete registered stratum compound signature",
+    strata,
+  };
+  SPLIT_SIGNATURE_CACHE = deepFreeze({
+    ...body,
+    split_sha256: canonicalDigest("reasoner59a-compound-split", body),
+  });
+  return SPLIT_SIGNATURE_CACHE;
+}
+
+function stratumPool(lane, stratumIndex) {
+  const stratum = R59A_SHIFT_STRATA[stratumIndex];
+  const registered = r59GeneratorSplitPlan().strata[stratumIndex]
+    .signatures_by_lane[lane];
+  const candidates = enumerateR59Universe().candidates.filter(candidate =>
+    targetStratum(candidate) === stratum &&
+    registered.includes(r59HeldOutCompoundSignature(candidate)));
+  assert(candidates.length >= (lane === "source-training" ? 16 : 2),
+    `R5.9a ${lane} ${stratum} pool is too small`);
+  return [...candidates].sort((left, right) =>
+    left.semantic.behavior_sha256.localeCompare(
+      right.semantic.behavior_sha256));
+}
+
+function targetSelectionRng(root, generatorIndex, supportIndex, stratumIndex,
+  ordinal, attempt, namespace) {
+  return createDeterministicRng(canonicalDigest(
+    "reasoner59a-target-selection-seed", {
+      root, generatorIndex, supportIndex, stratumIndex, ordinal, attempt,
+    }).slice(0, 16), namespace);
+}
+
+function syntaxFirstDraw(lane, root, generatorIndex, supportIndex,
+  stratumIndex, ordinal, attempt) {
+  const classPool = new Set(stratumPool(lane, stratumIndex).map(candidate =>
+    candidate.class_index));
+  const stratum = R59A_SHIFT_STRATA[stratumIndex];
+  const rawPool = enumerateR59Universe().rawPairs.filter(pair =>
+    classPool.has(pair.class_index) &&
+    targetStratumForAst(pair.ast) === stratum);
+  assert(rawPool.length > 0, `R5.9a ${lane} syntax pool is empty`);
+  const rng = targetSelectionRng(root, generatorIndex, supportIndex,
+    stratumIndex, ordinal, attempt, "reasoner59a-syntax-first-raw-ast");
+  const raw = rawPool[rng.index(rawPool.length)];
+  const candidate = enumerateR59Universe().candidates[raw.class_index];
+  const receipt = {
+    schema: "zero.reasoner59a_generator_draw.v1",
+    mechanism: "syntax-first",
+    sampled_object: "uniform registered raw typed AST and legend pair",
+    raw_pool_size: rawPool.length,
+    raw_pair_index: raw.pair_index,
+    raw_ast_sha256: raw.ast_sha256,
+    selected_behavior_sha256: raw.behavior_sha256,
+    selected_class_index: raw.class_index,
+  };
+  return { candidate, receipt: deepFreeze({
+    ...receipt,
+    receipt_sha256: canonicalDigest("reasoner59a-generator-draw", receipt),
+  }) };
+}
+
+function behaviorConstraint(candidate) {
+  const labels = R59A_BEHAVIOR_CONSTRAINT_SCENES.map(sceneIndex =>
+    evaluateR59Candidate(candidate, sceneIndex));
+  return {
+    exact_positive_scenes: candidate.positive_scenes,
+    probe_scene_indices: [...R59A_BEHAVIOR_CONSTRAINT_SCENES],
+    probe_labels: labels,
+  };
+}
+
+function behaviorConstraintDraw(lane, root, generatorIndex, supportIndex,
+  stratumIndex, ordinal, attempt) {
+  const candidates = stratumPool(lane, stratumIndex).filter(candidate => {
+    const density = candidate.positive_scenes / R59A_SCENE_COUNT;
+    const labels = behaviorConstraint(candidate).probe_labels;
+    return density >= 0.1 && density <= 0.9 &&
+      labels.includes(0) && labels.includes(1);
+  });
+  const groups = new Map();
+  for (const candidate of candidates) {
+    const constraint = behaviorConstraint(candidate);
+    const key = canonicalDigest("reasoner59a-behavior-constraint", constraint);
+    if (!groups.has(key)) groups.set(key, { constraint, candidates: [] });
+    groups.get(key).candidates.push(candidate);
+  }
+  const constraints = [...groups.entries()].sort(([left], [right]) =>
+    left.localeCompare(right));
+  const minimum = lane === "source-training" ? 8 :
+    lane === "development" ? 2 : 1;
+  assert(constraints.length >= minimum,
+    `R5.9a ${lane} behavior constraint pool is too small`);
+  const rng = createDeterministicRng(canonicalDigest(
+    "reasoner59a-target-selection-seed", {
+      root, generatorIndex, supportIndex, stratumIndex, ordinal, attempt,
+    }).slice(0, 16), "reasoner59a-behavior-constraint-first");
+  const [constraintSha256, selected] = constraints[rng.index(
+    constraints.length)];
+  const legal = [...selected.candidates].sort((left, right) =>
+    left.ast.form.node_count - right.ast.form.node_count ||
+    canonicalBytes(left.ast).compare(canonicalBytes(right.ast)));
+  const candidate = legal[0];
+  const receipt = {
+    schema: "zero.reasoner59a_generator_draw.v1",
+    mechanism: "behavior-constraint-first",
+    sampled_object: "balanced exact behavior constraint",
+    constraint_sha256: constraintSha256,
+    constraint: selected.constraint,
+    constraint_pool_size: constraints.length,
+    legal_classes: legal.length,
+    shortest_node_count: candidate.ast.form.node_count,
+    selected_behavior_sha256: candidate.semantic.behavior_sha256,
+    selected_class_index: candidate.class_index,
+  };
+  return { candidate, receipt: deepFreeze({
+    ...receipt,
+    receipt_sha256: canonicalDigest("reasoner59a-generator-draw", receipt),
+  }) };
+}
+
+export function drawR59GeneratorTarget(root, generatorIndex, supportIndex,
+  stratumIndex, ordinal, attempt) {
+  const lane = laneFromRoot(root);
+  assert([0, 1].includes(generatorIndex));
+  return generatorIndex === 0 ? syntaxFirstDraw(lane, root, generatorIndex,
+    supportIndex, stratumIndex, ordinal, attempt) :
+    behaviorConstraintDraw(lane, root, generatorIndex, supportIndex,
+      stratumIndex, ordinal, attempt);
 }
 
 function selectTarget(root, generatorIndex, supportIndex, stratumIndex,
   ordinal, attempt) {
-  const pool = stratumPool(stratumIndex, generatorIndex);
-  const preferred = pool.slice(0, Math.min(64, pool.length));
-  const rng = createDeterministicRng(canonicalDigest(
-    "reasoner59a-target-selection-seed", {
-      root, generatorIndex, supportIndex, stratumIndex, ordinal, attempt,
-    }).slice(0, 16), generatorIndex === 0 ?
-    "reasoner59a-syntax-first" : "reasoner59a-behavior-first");
-  return preferred[rng.index(preferred.length)];
+  return drawR59GeneratorTarget(root, generatorIndex, supportIndex,
+    stratumIndex, ordinal, attempt).candidate;
 }
 
 function evidenceLoss(candidate, publicView) {
@@ -812,8 +1088,9 @@ function registeredFamilyPlan() {
     const root = LANE_ROOT[lane];
     let attempt = 0;
     for (; attempt < 4096; attempt += 1) {
-      const target = selectTarget(root, generatorIndex, supportIndex,
+      const draw = drawR59GeneratorTarget(root, generatorIndex, supportIndex,
         stratumIndex, ordinal, attempt);
+      const target = draw.candidate;
       if (usedBehaviors.has(target.semantic.behavior_sha256)) {
         rejections.duplicate_behavior += 1;
         continue;
@@ -856,10 +1133,13 @@ function registeredFamilyPlan() {
           semantic_stratum: lane === "source-training" ?
             `source-${R59A_SHIFT_STRATA[stratumIndex]}` :
             R59A_SHIFT_STRATA[stratumIndex],
+          held_out_compound_signature: r59HeldOutCompoundSignature(target),
+          generator_draw_sha256: draw.receipt.receipt_sha256,
           target_class_commitment: target.semantic.behavior_sha256,
         },
         coordinates: { lane, generatorIndex, supportIndex, stratumIndex,
-          ordinal, attempt, targetClassIndex: target.class_index },
+          ordinal, attempt, targetClassIndex: target.class_index,
+          generatorDrawSha256: draw.receipt.receipt_sha256 },
       });
       return;
     }
@@ -908,6 +1188,12 @@ function registeredFamilyPlan() {
 export const R59A_DERANGEMENT_SEED = "59ad3a6e00000001";
 let DERANGEMENT_CACHE = null;
 
+function featureEventSubtype(key) {
+  const subtype = key.split(":", 1)[0];
+  assert(subtype.length > 0, "R5.9a feature event subtype is empty");
+  return subtype;
+}
+
 function featureVocabulary() {
   const vocabulary = { production: new Set(), subtree: new Set(),
     binding: new Set(), atom: new Set() };
@@ -924,26 +1210,38 @@ export function buildR59Derangements() {
   const vocabulary = featureVocabulary();
   const rng = createDeterministicRng(R59A_DERANGEMENT_SEED,
     "reasoner59a-prior-derangements-v1");
+  const subtypePartitions = Object.fromEntries(Object.entries(vocabulary).map(
+    ([group, keys]) => {
+      const partitions = {};
+      for (const [index, key] of keys.entries()) {
+        const subtype = featureEventSubtype(key);
+        if (!Object.hasOwn(partitions, subtype)) partitions[subtype] = [];
+        partitions[subtype].push(index);
+      }
+      return [group, partitions];
+    }));
   const permutations = [];
   const seen = new Set();
   while (permutations.length < 31) {
     const byGroup = {};
-    let valid = true;
     for (const [group, keys] of Object.entries(vocabulary)) {
-      const permutation = Array.from({ length: keys.length }, (_, index) =>
-        index);
-      for (let index = permutation.length - 1; index > 0; index -= 1) {
-        const other = rng.index(index + 1);
-        [permutation[index], permutation[other]] =
-          [permutation[other], permutation[index]];
-      }
-      if (permutation.some((value, index) => value === index)) {
-        valid = false;
-        break;
+      const permutation = Array.from({ length: keys.length }, (_, index) => index);
+      for (const indices of Object.values(subtypePartitions[group])) {
+        if (indices.length === 1) continue;
+        let shuffled;
+        do {
+          shuffled = [...indices];
+          for (let index = shuffled.length - 1; index > 0; index -= 1) {
+            const other = rng.index(index + 1);
+            [shuffled[index], shuffled[other]] =
+              [shuffled[other], shuffled[index]];
+          }
+        } while (shuffled.some((value, index) => value === indices[index]));
+        for (let index = 0; index < indices.length; index += 1)
+          permutation[indices[index]] = shuffled[index];
       }
       byGroup[group] = permutation;
     }
-    if (!valid) continue;
     const key = JSON.stringify(byGroup);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -952,8 +1250,13 @@ export function buildR59Derangements() {
   DERANGEMENT_CACHE = deepFreeze({
     seed: R59A_DERANGEMENT_SEED,
     namespace: "reasoner59a-prior-derangements-v1",
+    event_subtype_rule: "feature token prefix before the first colon",
+    subtype_partitions: subtypePartitions,
     permutations,
-    sha256: canonicalDigest("reasoner59a-prior-derangements", permutations),
+    sha256: canonicalDigest("reasoner59a-prior-derangements", {
+      subtype_partitions: subtypePartitions,
+      permutations,
+    }),
   });
   return DERANGEMENT_CACHE;
 }
@@ -1213,8 +1516,20 @@ const CONCEPT_GENERATOR_SPECS = R59A_CONCEPT_GENERATORS.map(
     schema: "zero.reasoner59a_concept_generator.v1",
     generator,
     rule: index === 0 ?
-      "sample typed syntax then take its exact behavior class" :
-      "sample a balanced behavior constraint then take the shortest legal AST",
+      "sample a registered raw typed AST and legend pair uniformly, then take its exact canonical behavior class" :
+      "sample a balanced exact-density and 12-probe behavior constraint uniformly, then take its shortest legal AST",
+    sampled_object: index === 0 ? "raw-typed-ast-and-legend" :
+      "behavior-constraint",
+    raw_pair_order_sha256: enumerateR59Universe().rawPairOrderSha256,
+    compound_split_sha256: r59GeneratorSplitPlan().split_sha256,
+    implementation_sha256: replayFunctionDigest(index === 0 ?
+      syntaxFirstDraw : behaviorConstraintDraw),
+    ...(index === 0 ? {} : {
+      behavior_constraint_probe_scenes:
+        [...R59A_BEHAVIOR_CONSTRAINT_SCENES],
+      positive_density_range: [0.1, 0.9],
+      shortest_tie_rule: "node count then canonical AST bytes",
+    }),
   }));
 const SUPPORT_BUILDER_SPECS = R59A_SUPPORT_BUILDERS.map((builder, index) => ({
   schema: "zero.reasoner59a_support_builder.v1",
@@ -1255,8 +1570,9 @@ export function replayR59Episode(recipe) {
   assert(lane && LANE_ROOT[lane] === recipe.seed_binding.root_seed);
   assert.equal(recipe.generator_sha256, R59A_GENERATOR_DIGESTS[generatorIndex]);
   assert.equal(recipe.input_generator_sha256, R59A_SUPPORT_DIGESTS[supportIndex]);
-  const target = selectTarget(recipe.seed_binding.root_seed, generatorIndex,
-    supportIndex, stratumIndex, ordinal, attempt);
+  const draw = drawR59GeneratorTarget(recipe.seed_binding.root_seed,
+    generatorIndex, supportIndex, stratumIndex, ordinal, attempt);
+  const target = draw.candidate;
   const support = buildSupport(target, recipe.seed_binding.root_seed,
     generatorIndex, supportIndex, stratumIndex, ordinal, attempt);
   const tieSalt = rankingOrderKey(recipe.seed_binding.root_seed,
@@ -1281,11 +1597,13 @@ export function replayR59Episode(recipe) {
         support_scene_indices: support.sceneIndices,
         consistent_semantic_classes: support.consistentClasses,
         selection_attempt: attempt,
+        generator_draw: draw.receipt,
       },
       target: target.semantic,
       tie_salt: tieSalt,
       atoms: [target.ast.legend.glyph_a, target.ast.legend.glyph_b].sort(),
       typed_subtrees: Object.values(target.feature_groups).flat().sort(),
+      held_out_compounds: [r59HeldOutCompoundSignature(target)],
       exact_test_domain: {
         scenes: R59A_SCENE_COUNT,
         scene_universe_sha256: r59SceneUniverseSha256(),
@@ -1353,6 +1671,11 @@ export const R59A_ANALYSIS_SETTINGS = deepFreeze({
   bootstrap_replicates: 2_000,
   primary_alpha: 0.005,
   stratum_alpha: 0.05,
+  required_primary_strata: [
+    "four semantic shifts",
+    "two transfer directions",
+    "two support builders",
+  ],
   mechanism_family_alpha: 0.05,
   derangements: 31,
 });
@@ -1372,6 +1695,36 @@ function comparison(fullArm, comparatorArm, direction, seed, alpha) {
 }
 
 function analysisContract() {
+  const developmentFamilies = registeredFamilyPlan().families.filter(family =>
+    family.lane === "development");
+  const shiftAnalyses = R59A_SHIFT_STRATA.map((name, index) => ({
+    name: `shift:${name}`,
+    ...comparison("full", "target_only", "lower",
+      `59a2${String(index).padStart(12, "0")}`, 0.05),
+    field: "shift_stratum",
+    values: [name],
+  }));
+  const directionAnalyses = R59A_TRANSFER_DIRECTIONS.map((direction, index) => ({
+    name: `direction:${direction.id}`,
+    ...comparison("full", "target_only", "lower",
+      `59a4${String(index).padStart(12, "0")}`, 0.05),
+    field: "generator_id",
+    values: [direction.id],
+  }));
+  const supportAnalyses = R59A_SUPPORT_BUILDERS.map((builder, index) => ({
+    name: `support:${builder}`,
+    ...comparison("full", "target_only", "lower",
+      `59a5${String(index).padStart(12, "0")}`, 0.05),
+    field: "family_id",
+    values: developmentFamilies.filter(family =>
+      family.family_spec.support_mechanism === builder).map(family =>
+      family.family_id).sort(),
+  }));
+  const stratumAnalyses = [
+    ...shiftAnalyses,
+    ...directionAnalyses,
+    ...supportAnalyses,
+  ];
   return {
     schema: "zero.reasoner5_analysis_contract.v1",
     expected_arms: [...R59A_ARMS],
@@ -1385,13 +1738,7 @@ function analysisContract() {
       reconstructR59Development),
     primary_analysis: comparison("full", "target_only", "lower",
       "59a1000000000001", 0.005),
-    stratum_analyses: R59A_SHIFT_STRATA.map((name, index) => ({
-      name,
-      ...comparison("full", "target_only", "lower",
-        `59a2${String(index).padStart(12, "0")}`, 0.05),
-      field: "shift_stratum",
-      values: [name],
-    })),
+    stratum_analyses: stratumAnalyses,
     mechanism_analyses: [{
       name: "legend-binding-features",
       ...comparison("binding_off", "full", "higher",
@@ -1413,7 +1760,7 @@ function analysisContract() {
     },
     common_gate_registration: {
       primary_alpha: 0.005,
-      primary_strata: [...R59A_SHIFT_STRATA],
+      primary_strata: stratumAnalyses.map(analysis => analysis.name),
       formal_mechanisms: ["legend-binding-features"],
       crossed_design: false,
       marginal_axes: [],
@@ -1498,6 +1845,25 @@ export function reconstructR59SourceArtifact(episodes) {
   };
 }
 
+function compoundOverlapReceipt(episodes, leftLane, rightLane) {
+  const values = lane => new Set(episodes.filter(episode =>
+    episode.lane === lane).flatMap(episode =>
+    episode.content.evaluator.held_out_compounds));
+  const left = values(leftLane);
+  const right = values(rightLane);
+  const overlap = [...left].filter(value => right.has(value)).sort();
+  return {
+    schema: "zero.reasoner59a_compound_overlap.v1",
+    field: "held_out_compounds",
+    left_lane: leftLane,
+    right_lane: rightLane,
+    left_distinct: left.size,
+    right_distinct: right.size,
+    overlap_count: overlap.length,
+    overlap_sha256: canonicalDigest("reasoner59a-compound-overlap", overlap),
+  };
+}
+
 export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
   const parsedArtifact = parseR59SourceArtifact(artifact);
   const state = createSplitState({ experiment_id: R59A_EXPERIMENT });
@@ -1516,6 +1882,9 @@ export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
       assert.equal(content.evaluator.episode_spec.target_class_index,
         family.coordinates.targetClassIndex,
       "R5.9a family plan and replay target differ");
+      assert.equal(content.evaluator.episode_spec.generator_draw.receipt_sha256,
+        family.coordinates.generatorDrawSha256,
+      "R5.9a family plan and replay generator draw differ");
       assertRankerView(content.public, {
         whitelist: R59A_RANKER_POLICY.leaf_whitelist,
         leafContracts: R59A_RANKER_POLICY.leaf_contracts,
@@ -1558,6 +1927,12 @@ export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
     ["calibration", "development"]])
     for (const field of ["atoms", "typed_subtrees"])
       overlap.push(overlapReceipt(state.episodes, field, leftLane, rightLane));
+  const compoundOverlap = [
+    compoundOverlapReceipt(state.episodes, "source-training", "development"),
+    compoundOverlapReceipt(state.episodes, "calibration", "development"),
+  ];
+  assert(compoundOverlap.every(receipt => receipt.overlap_count === 0),
+    "R5.9a held-out compound partition leaked across lanes");
   const universe = enumerateR59Universe();
   const derangements = buildR59Derangements();
   return finalizeManifest(state, {
@@ -1602,9 +1977,11 @@ export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
       target_only_median_minimum: R59A_HEADROOM_MINIMUM,
       target_only_median_maximum: R59A_HEADROOM_MAXIMUM,
       timing: "before-family-split-freeze",
+      compound_split: r59GeneratorSplitPlan(),
       rejection_counts: plan.rejections,
     },
     split_overlap: overlap,
+    compound_split_overlap: compoundOverlap,
     source_artifact: {
       schema: parsedArtifact.schema,
       sha256: parsedArtifact.artifact_sha256,
@@ -1629,10 +2006,7 @@ export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
     controls: {
       source_ablation: "byte-identical source-free path except arm identity",
       source_only: "source prior with public support labels ignored",
-      surface_bijection: {
-        mapping: { "glyph-a": "glyph-b", "glyph-b": "glyph-a" },
-        normalized_artifact_action: "identity after canonical symbol roles",
-      },
+      surface_bijection: surfaceBijectionRegistration(parsedArtifact),
       exact_scene_graph_oracle: "oracle_program_order",
       prior_derangements: 31,
     },
@@ -1641,7 +2015,9 @@ export function buildR59Manifest(artifact = buildR59SourceArtifact()) {
       namespace: derangements.namespace,
       count: derangements.permutations.length,
       sha256: derangements.sha256,
-      rule: "uniform Fisher-Yates within each feature group with fixed-point and duplicate rejection",
+      event_subtype_rule: derangements.event_subtype_rule,
+      subtype_partitions: derangements.subtype_partitions,
+      rule: "uniform Fisher-Yates inside each registered event subtype with fixed-point and duplicate rejection",
     },
     analysis_contract: analysisContract(),
   });
@@ -1686,13 +2062,54 @@ export function applyR59SurfaceBijection(publicView) {
     leafContracts: R59A_RANKER_POLICY.leaf_contracts,
   });
   const transformed = structuredClone(publicView);
-  transformed.legend_symbols = [publicView.legend_symbols[1],
-    publicView.legend_symbols[0]];
+  const symbolMap = { "glyph-a": "glyph-b", "glyph-b": "glyph-a" };
+  transformed.legend_symbols = publicView.legend_symbols.map(symbol => {
+    assert(symbolMap[symbol], `R5.9a surface transform lacks symbol ${symbol}`);
+    return symbolMap[symbol];
+  });
+  const grammarMap = new Map(R59A_FORMS.map(form => [formProduction(form),
+    formProduction(surfaceBijectionForm(form))]));
+  transformed.grammar.forms = publicView.grammar.forms.map(form => {
+    const mapped = grammarMap.get(form);
+    assert(mapped, `R5.9a surface transform lacks grammar form ${form}`);
+    return mapped;
+  });
   assertRankerView(transformed, {
     whitelist: R59A_RANKER_POLICY.leaf_whitelist,
     leafContracts: R59A_RANKER_POLICY.leaf_contracts,
   });
   return transformed;
+}
+
+function surfaceBijectionRegistration(artifact) {
+  const universe = enumerateR59Universe();
+  const originalSequence = universe.rawPairs.map(pair => pair.ast_sha256);
+  const surfacedSequence = universe.rawPairs.map(pair =>
+    r59AstSha256(applyR59AstSurfaceBijection(pair.ast)));
+  const body = {
+    schema: "zero.reasoner59a_surface_bijection.v1",
+    mapping: { "glyph-a": "glyph-b", "glyph-b": "glyph-a" },
+    public_transform_sha256: replayFunctionDigest(applyR59SurfaceBijection),
+    ast_transform_sha256: replayFunctionDigest(applyR59AstSurfaceBijection),
+    evaluator_transform_sha256:
+      replayFunctionDigest(applyR59EvaluatorSurfaceBijection),
+    candidate_transform_sha256:
+      replayFunctionDigest(applyR59CandidateSurfaceBijection),
+    original_ast_sequence_sha256: canonicalDigest(
+      "reasoner59a-original-ast-sequence", originalSequence),
+    surfaced_ast_sequence_sha256: canonicalDigest(
+      "reasoner59a-surfaced-ast-sequence", surfacedSequence),
+    artifact_sha256: artifact.artifact_sha256,
+    artifact_action:
+      "apply the same involution again before canonical feature lookup",
+  };
+  assert.notEqual(body.original_ast_sequence_sha256,
+    body.surfaced_ast_sequence_sha256,
+  "R5.9a surface bijection did not change the ordered AST surface");
+  return {
+    ...body,
+    receipt_sha256: canonicalDigest("reasoner59a-surface-bijection", body),
+  };
 }
 
 export function rankR59Candidates(publicView, candidates, artifact, arm,
@@ -1713,12 +2130,17 @@ export function rankR59Candidates(publicView, candidates, artifact, arm,
   const free = new Map();
   const ties = new Map();
   for (const candidate of candidates) {
-    losses.set(candidate.class_index, evidenceLoss(candidate, publicView));
-    free.set(candidate.class_index, sourceFreeScore(candidate, publicView));
-    ties.set(candidate.class_index, candidateTie(candidate, publicView));
-    if (usesPrior)
-      guide.set(candidate.class_index, scoreR59Candidate(candidate, artifact,
+    const rankerCandidate = arm === "surface_bijection" ?
+      applyR59CandidateSurfaceBijection(candidate) : candidate;
+    losses.set(candidate.class_index, evidenceLoss(rankerCandidate, publicView));
+    free.set(candidate.class_index, sourceFreeScore(rankerCandidate, publicView));
+    ties.set(candidate.class_index, candidateTie(rankerCandidate, publicView));
+    if (usesPrior) {
+      const artifactView = arm === "surface_bijection" ?
+        applyR59CandidateSurfaceBijection(rankerCandidate) : rankerCandidate;
+      guide.set(candidate.class_index, scoreR59Candidate(artifactView, artifact,
         mode, derangementIndex, sourceGenerator));
+    }
   }
   return [...candidates].sort((left, right) => {
     if (arm !== "source_only") {
@@ -1805,9 +2227,13 @@ function armUsesArtifact(arm) {
 export function executeR59Arm(episode, candidates, artifact, arm,
   frozenFallback = null) {
   assert(R59A_ARMS.includes(arm), `unknown R5.9a arm ${arm}`);
-  const publicView = arm === "surface_bijection" ?
+  const usesSurfaceBijection = arm === "surface_bijection";
+  const publicView = usesSurfaceBijection ?
     applyR59SurfaceBijection(episode.content.public) : episode.content.public;
-  const targetDigest = episode.content.evaluator.behavior.behavior_sha256;
+  const evaluatorView = usesSurfaceBijection ?
+    applyR59EvaluatorSurfaceBijection(episode.content.evaluator) :
+    episode.content.evaluator;
+  const targetDigest = evaluatorView.behavior.behavior_sha256;
   const target = candidates.find(candidate =>
     candidate.semantic.behavior_sha256 === targetDigest);
   assert(target, "R5.9a episode target is outside the complete universe");
@@ -1818,13 +2244,20 @@ export function executeR59Arm(episode, candidates, artifact, arm,
   const ranking = arm === "oracle_program_order" ?
     rankR59OracleCandidates(publicView, candidates, targetDigest) :
     rankR59Candidates(publicView, candidates, artifact, arm, sourceGenerator);
+  const verifierTarget = usesSurfaceBijection ?
+    applyR59CandidateSurfaceBijection(target) : target;
+  if (usesSurfaceBijection)
+    assert.deepEqual(verifierTarget.ast, evaluatorView.ast,
+      "R5.9a surface evaluator and verifier target differ");
+  const verify = exactVerifier(verifierTarget);
   const proposals = [invalid, ...ranking.filter(candidate =>
     candidate !== invalid)].slice(0, 64);
   const search = runVerifiedSearch({
     proposals,
     fallback: frozenFallback ?? r59CanonicalCandidates(),
     candidate_universe: candidates,
-    verify: exactVerifier(target),
+    verify: candidate => verify(usesSurfaceBijection ?
+      applyR59CandidateSurfaceBijection(candidate) : candidate),
     global_cap: candidates.length,
     injected_invalid_sha256: candidateSemanticDigest(invalid),
   });

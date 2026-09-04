@@ -56,6 +56,9 @@ function developmentNote(result) {
   const primary = result.registered_analysis.primary;
   const headroom = result.registered_analysis.headroom;
   const directions = result.development_measurements.transfer_directions;
+  const failedStrata = result.registered_analysis.strata.filter(item =>
+    item.inference.interval.point_ratio > 0.9 ||
+    item.inference.interval.upper_ratio >= 1).map(item => item.name);
   const directionLines = directions.map(direction =>
     `- ${direction.source_generator} to ${direction.target_generator}: ` +
     `${direction.full_primary_cost.toLocaleString("en-US")} full checks and ` +
@@ -67,9 +70,9 @@ Status: \`${result.decision}\` development evidence.
 
 The symbolic prerequisite ran on 16 generated families with two public tie
 orders per family. This produced 32 episodes and 1,280 arm rows. Every answer
-was checked against all 25,344 symbolic scenes. Every answer, certificate,
-counter, family statistic, and final result replays from the frozen manifest
-and raw trace.
+was checked against all 25,344 symbolic scenes. The checker executes every raw
+row again from the frozen manifest and source artifact. It then rebuilds every
+answer, certificate, counter, family statistic, and final result.
 
 The full source prior had a family-weighted geometric mean cost ratio of
 ${primary.summary.family_weighted_geometric_mean_ratio.toFixed(4)} against target-only. It won
@@ -82,10 +85,12 @@ The two transfer directions had different totals:
 
 ${directionLines}
 
-The common gate also recorded incomplete evidence across all four shift
-strata and for the legend-binding mechanism contrast. Exactness, invalid-first
-rejection, fallback charging, source-ablation equality, the 31-derangement
-checks, and the source-free measurement floor all passed.
+The common gate failures were ${result.gate.failures.join(", ")}.
+The required stratum failures were ${failedStrata.join(", ")}.
+Exactness, invalid-first rejection, fallback charging, source-ablation
+equality, subtype-preserving derangement integrity, and the source-free
+measurement floor passed. The derangement randomization p-value was above its
+registered maximum.
 
 This result is a development diagnostic. It supports a redesign of the
 generator-transfer prior before a sealed 5.9a run. Reasoner 5.9b stays closed.
@@ -158,11 +163,13 @@ function main() {
         "reasoner59a.h",
         "reasoner59a.c",
         "reasoner59a_cli.c",
+        "scripts/lib/reasoner5_harness.mjs",
         "scripts/lib/reasoner59a_symbolic.mjs",
         "scripts/run_reasoner59a_development.mjs",
         "scripts/check_reasoner59a_development.mjs",
         "benchmarks/reasoner59a-symbolic-transfer-v1/SPEC.md",
         "benchmarks/reasoner59a-symbolic-transfer-v1/DEVELOPMENT.md",
+        "benchmarks/reasoner5-next-set-v1/PLAN.json",
       ]),
       fixtures: {
         "CORE-DEVELOPMENT.json": { bytes: coreBytes.length,

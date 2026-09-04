@@ -118,12 +118,55 @@ static int r59a_relation(uint8_t relation, uint8_t left, uint8_t right)
     }
 }
 
+static int r59a_valid_scene(const r59a_scene *scene)
+{
+    uint8_t left, right;
+    if (!scene || scene->object_count < 1u ||
+        scene->object_count > R59A_MAX_OBJECTS) return 0;
+    for (left = 0u; left < scene->object_count; ++left) {
+        const r59a_object *object = &scene->objects[left];
+        if (object->cell >= R59A_GRID_CELLS ||
+            object->color >= R59A_COLORS ||
+            object->shape >= R59A_SHAPES ||
+            object->size >= R59A_SIZES) return 0;
+        for (right = (uint8_t)(left + 1u);
+             right < scene->object_count; ++right)
+            if (object->cell == scene->objects[right].cell) return 0;
+    }
+    return 1;
+}
+
+static int r59a_valid_concept(const r59a_concept *concept)
+{
+    if (!concept || concept->kind > R59A_BOOLEAN_OR ||
+        concept->legend[0] >= R59A_ATOMS ||
+        concept->legend[1] >= R59A_ATOMS ||
+        concept->legend[0] == concept->legend[1]) return 0;
+    switch (concept->kind) {
+        case R59A_EXISTS:
+        case R59A_ALL:
+        case R59A_EXISTS_AND:
+        case R59A_EXISTS_XOR:
+            return concept->parameter == 0u;
+        case R59A_COUNT_EQ:
+            return concept->parameter >= 1u && concept->parameter <= 3u;
+        case R59A_COUNT_GE:
+        case R59A_BOOLEAN_AND:
+        case R59A_BOOLEAN_OR:
+            return concept->parameter >= 2u && concept->parameter <= 3u;
+        case R59A_COUNT_COMPARE:
+            return concept->parameter <= 2u;
+        case R59A_RELATION_EXISTS:
+            return concept->parameter < R59A_RELATIONS;
+        default:
+            return 0;
+    }
+}
+
 int r59a_evaluate(const r59a_concept *concept, const r59a_scene *scene)
 {
     uint8_t first, second, left, right;
-    if (!concept || !scene || concept->legend[0] >= R59A_ATOMS ||
-        concept->legend[1] >= R59A_ATOMS ||
-        concept->legend[0] == concept->legend[1]) return -1;
+    if (!r59a_valid_concept(concept) || !r59a_valid_scene(scene)) return -1;
     first = r59a_count(concept->legend[0], scene);
     second = r59a_count(concept->legend[1], scene);
     switch (concept->kind) {
@@ -266,5 +309,16 @@ int r59a_self_test(void)
         counterexample != UINT32_MAX) return 1;
     if (r59a_verify_exact(&first, &second, &counterexample) ||
         counterexample >= R59A_SCENES) return 1;
+    scene.object_count = (uint8_t)(R59A_MAX_OBJECTS + 1u);
+    if (r59a_evaluate(&first, &scene) >= 0) return 1;
+    if (r59a_scene_at(0u, &scene) != 0) return 1;
+    scene.objects[0].color = R59A_COLORS;
+    if (r59a_evaluate(&first, &scene) >= 0) return 1;
+    if (r59a_scene_at(72u, &scene) != 0 || scene.object_count != 2u) return 1;
+    scene.objects[1].cell = scene.objects[0].cell;
+    if (r59a_evaluate(&first, &scene) >= 0) return 1;
+    if (r59a_scene_at(0u, &scene) != 0) return 1;
+    first.parameter = 4u;
+    if (r59a_evaluate(&first, &scene) >= 0) return 1;
     return 0;
 }

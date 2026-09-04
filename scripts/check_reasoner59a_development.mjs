@@ -15,6 +15,7 @@ import {
   assertResultReplay,
   assertSourceAblationMatches,
   assertVerifiedSearchReceipt,
+  canonicalBytes,
   canonicalCandidateOrder,
   canonicalDigest,
   candidateSemanticDigest,
@@ -39,6 +40,9 @@ import {
   R59A_SOURCE_ISOLATED_ARMS,
   R59A_SUPPORT_BUILDERS,
   R59A_TRANSFER_DIRECTIONS,
+  applyR59AstSurfaceBijection,
+  applyR59CandidateSurfaceBijection,
+  applyR59EvaluatorSurfaceBijection,
   applyR59SurfaceBijection,
   buildR59Derangements,
   buildR59Manifest,
@@ -46,9 +50,14 @@ import {
   createR59ReplayRegistry,
   enumerateR59Scenes,
   enumerateR59Universe,
+  evaluateR59Candidate,
   executeR59Arm,
+  generateR59RawRows,
   parseR59SourceArtifact,
   r59BehaviorForCandidate,
+  r59BehaviorSha256ForAst,
+  r59GeneratorSplitPlan,
+  r59HeldOutCompoundSignature,
   r59SceneUniverseSha256,
   r59SmokeReceipts,
   rankR59Candidates,
@@ -149,6 +158,9 @@ assert.equal(universe.jointPairs, 1_848);
 assert(universe.jointPairs <= R59A_JOINT_CANDIDATE_CAP);
 assert.equal(universe.semanticClasses, 560);
 assert.equal(universe.semanticCollisions, 1_288);
+assert.equal(universe.rawPairs.length, universe.jointPairs);
+assert.equal(new Set(universe.rawPairs.map(pair => pair.ast_sha256)).size,
+  universe.jointPairs);
 assert.equal(universe.candidates.reduce((sum, candidate) =>
   sum + candidate.joint_pair_multiplicity, 0), universe.jointPairs,
 "complete AST and legend enumeration must never truncate");
@@ -159,6 +171,25 @@ for (const candidate of universe.candidates) {
   assert.equal(behavior.length, Math.ceil(R59A_SCENE_COUNT / 8));
   assert.equal(sha256(behavior), candidate.semantic.behavior_sha256);
   assert(candidate.ast.form.node_count <= 7);
+  const surfaced = applyR59CandidateSurfaceBijection(candidate);
+  assert.equal(r59BehaviorSha256ForAst(surfaced.ast),
+    candidate.semantic.behavior_sha256);
+  assert.deepEqual(applyR59CandidateSurfaceBijection(surfaced), candidate,
+    "candidate surface bijection must be an involution");
+}
+for (const pair of universe.rawPairs) {
+  const surfaced = applyR59AstSurfaceBijection(pair.ast);
+  assert.equal(r59BehaviorSha256ForAst(surfaced), pair.behavior_sha256);
+  assert.deepEqual(applyR59AstSurfaceBijection(surfaced), pair.ast,
+    "raw AST surface bijection must be an involution");
+}
+const splitPlan = r59GeneratorSplitPlan();
+assert.match(splitPlan.split_sha256, SHA256);
+for (const stratum of splitPlan.strata) {
+  const lanes = Object.values(stratum.signatures_by_lane);
+  assert.equal(new Set(lanes.flat()).size,
+    lanes.reduce((sum, values) => sum + values.length, 0),
+  `${stratum.stratum} compound signatures must be split before generation`);
 }
 
 const rebuiltArtifact = buildR59SourceArtifact();
@@ -237,6 +268,19 @@ assert(Object.values(manifest.ordered_stage_contract
 assert.equal(manifest.episodes.some(episode => episode.lane === "sealed"),
   false);
 assert.equal(JSON.stringify(manifest).includes("sealed_root"), false);
+const surfaceRegistration = manifest.controls.surface_bijection;
+const surfaceRegistrationBody = structuredClone(surfaceRegistration);
+delete surfaceRegistrationBody.receipt_sha256;
+assert.equal(surfaceRegistration.receipt_sha256,
+  canonicalDigest("reasoner59a-surface-bijection", surfaceRegistrationBody));
+assert.notEqual(surfaceRegistration.original_ast_sequence_sha256,
+  surfaceRegistration.surfaced_ast_sequence_sha256);
+assert.equal(surfaceRegistration.artifact_sha256, artifact.artifact_sha256);
+const generatedFamilies = manifest.families.filter(family =>
+  family.lane !== "sealed");
+assert.equal(new Set(generatedFamilies.map(family =>
+  family.family_spec.target_class_commitment)).size, generatedFamilies.length,
+"target behavior classes must stay disjoint across generated families");
 assert.equal(buildR59Manifest(artifact).manifest_sha256,
   manifest.manifest_sha256);
 assert.deepEqual(buildR59Manifest(artifact), manifest);
@@ -249,6 +293,46 @@ assert.equal(canonicalDigest("reasoner59a-source-artifact",
 assert.deepEqual(new Set(manifest.episodes.filter(episode =>
   episode.lane === "source-training").map(episode => episode.family_id)),
 new Set(artifact.source_family_ids));
+
+for (const episode of manifest.episodes) {
+  const draw = episode.content.evaluator.episode_spec.generator_draw;
+  const drawBody = structuredClone(draw);
+  delete drawBody.receipt_sha256;
+  assert.equal(draw.receipt_sha256,
+    canonicalDigest("reasoner59a-generator-draw", drawBody));
+  const target = universe.candidates[
+    episode.content.evaluator.episode_spec.target_class_index];
+  assert.equal(target.semantic.behavior_sha256,
+    draw.selected_behavior_sha256);
+  const family = manifest.families.find(item =>
+    item.family_id === episode.family_id);
+  assert.equal(draw.receipt_sha256,
+    family.family_spec.generator_draw_sha256);
+  assert.equal(r59HeldOutCompoundSignature(target),
+    family.family_spec.held_out_compound_signature);
+  if (draw.mechanism === "syntax-first") {
+    const pair = universe.rawPairs[draw.raw_pair_index];
+    assert.equal(pair.ast_sha256, draw.raw_ast_sha256);
+    assert.equal(pair.class_index, target.class_index);
+    continue;
+  }
+  assert.equal(draw.mechanism, "behavior-constraint-first");
+  const semanticStratum = episode.content.evaluator.episode_spec.semantic_stratum
+    .replace(/^source-/u, "");
+  const laneSignatures = splitPlan.strata.find(item =>
+    item.stratum === semanticStratum).signatures_by_lane[episode.lane];
+  const legal = universe.candidates.filter(candidate =>
+    laneSignatures.includes(r59HeldOutCompoundSignature(candidate)) &&
+    candidate.positive_scenes === draw.constraint.exact_positive_scenes &&
+    draw.constraint.probe_scene_indices.every((sceneIndex, index) =>
+      evaluateR59Candidate(candidate, sceneIndex) ===
+        draw.constraint.probe_labels[index])).sort((left, right) =>
+    left.ast.form.node_count - right.ast.form.node_count ||
+    canonicalBytes(left.ast).compare(canonicalBytes(right.ast)));
+  assert(legal.length > 0);
+  assert.equal(legal[0].class_index, target.class_index,
+    "behavior-first must select the shortest legal AST after the constraint");
+}
 
 const developmentFamilies = manifest.families.filter(family =>
   family.lane === "development");
@@ -295,6 +379,20 @@ for (const registered of manifest.split_overlap) {
     registered.left_lane, registered.right_lane);
   assertRegisteredOverlap(actual, registered);
 }
+assert.equal(manifest.compound_split_overlap.length, 2);
+for (const registered of manifest.compound_split_overlap) {
+  const laneValues = lane => new Set(manifest.episodes.filter(episode =>
+    episode.lane === lane).flatMap(episode =>
+    episode.content.evaluator.held_out_compounds));
+  const left = laneValues(registered.left_lane);
+  const right = laneValues(registered.right_lane);
+  const overlap = [...left].filter(value => right.has(value)).sort();
+  assert.equal(overlap.length, 0,
+    `${registered.left_lane} leaked a held-out target compound`);
+  assert.equal(registered.overlap_count, 0);
+  assert.equal(registered.overlap_sha256,
+    canonicalDigest("reasoner59a-compound-overlap", overlap));
+}
 
 for (const episode of manifest.episodes)
   assertRankerView(episode.content.public, {
@@ -332,8 +430,23 @@ for (const episode of developmentEpisodes) {
     item.id === episode.generator_id);
   const full = rankR59Candidates(episode.content.public, universe.candidates,
     artifact, "full", direction.sourceGenerator);
+  const surfacedPublic = applyR59SurfaceBijection(episode.content.public);
+  assert.notEqual(canonicalDigest("reasoner59a-public-surface",
+    surfacedPublic), canonicalDigest("reasoner59a-public-surface",
+    episode.content.public));
+  assert.deepEqual(applyR59SurfaceBijection(surfacedPublic),
+    episode.content.public,
+  "public surface bijection must be an involution");
+  const surfacedEvaluator = applyR59EvaluatorSurfaceBijection(
+    episode.content.evaluator);
+  assert.notEqual(canonicalDigest("reasoner59a-evaluator-surface",
+    surfacedEvaluator.ast), canonicalDigest("reasoner59a-evaluator-surface",
+    episode.content.evaluator.ast));
+  assert.deepEqual(applyR59EvaluatorSurfaceBijection(surfacedEvaluator),
+    episode.content.evaluator,
+  "evaluator surface bijection must be an involution");
   const surfaced = rankR59Candidates(
-    applyR59SurfaceBijection(episode.content.public), universe.candidates,
+    surfacedPublic, universe.candidates,
     artifact, "surface_bijection", direction.sourceGenerator);
   assert.deepEqual(orderDigest(surfaced), orderDigest(full),
     "consistent surface bijection changed semantic order");
@@ -410,14 +523,24 @@ for (const permutation of derangements.permutations)
     assert.deepEqual([...values].sort((left, right) => left - right),
       Array.from({ length: values.length }, (_, index) => index));
     assert(values.every((value, index) => value !== index));
+    const keys = artifact.components[0].feature_groups[group].keys;
+    assert(values.every((value, index) =>
+      keys[value].split(":", 1)[0] === keys[index].split(":", 1)[0]),
+    `${group} derangement crossed a registered event subtype`);
     for (const component of artifact.components)
       assert.deepEqual(values.map(index =>
         component.feature_groups[group].counts[index]).sort((left, right) =>
         left - right), [...component.feature_groups[group].counts]
         .sort((left, right) => left - right));
   }
+assert.deepEqual(manifest.derangement_registration.subtype_partitions,
+  derangements.subtype_partitions);
+assert.equal(manifest.derangement_registration.sha256, derangements.sha256);
 
 assert.equal(rawTraces.length, developmentEpisodes.length * R59A_ARMS.length);
+const regeneratedRawTraces = generateR59RawRows(manifest, artifact);
+assert.deepEqual(regeneratedRawTraces, rawTraces,
+  "raw traces must re-execute exactly from the manifest and source artifact");
 const coverage = assertRawTraceCoverage({ manifest, rawTraces,
   expectedArms: R59A_ARMS, selectedLanes: ["development"],
   sourceIsolatedArms: R59A_SOURCE_ISOLATED_ARMS });
@@ -425,6 +548,8 @@ assert.equal(coverage.exactness.all_final_answers_exact, true);
 assert.equal(coverage.exactness.all_certificates_valid, true);
 assert.equal(coverage.exactness.all_injected_invalid_first_candidates_rejected,
   true);
+const developmentEpisodeById = new Map(developmentEpisodes.map(episode =>
+  [episode.episode_id, episode]));
 for (const row of rawTraces) {
   assertVerifiedSearchReceipt(row.verified_search);
   assertInjectedInvalidRejected(row.verified_search);
@@ -432,6 +557,10 @@ for (const row of rawTraces) {
   assert.equal(row.verifier_checks, row.verified_search.verifier_checks);
   assert.equal(row.partial_expansions,
     row.verified_search.partial_expansions);
+  assert.equal(r59BehaviorSha256ForAst(row.answer_ir),
+    developmentEpisodeById.get(row.episode_id).content.evaluator.behavior
+      .behavior_sha256,
+    "accepted answer IR must resolve to the episode target behavior");
   const family = developmentFamilies.find(item =>
     item.family_id === row.family_id);
   assert.equal(row.generator_id,
@@ -477,6 +606,15 @@ assert.equal(result.registered_analysis.primary.interval.fixed_environments, 2);
 assert.deepEqual(Object.keys(result.registered_analysis.primary.interval
   .environment_summaries).sort(), R59A_TRANSFER_DIRECTIONS.map(item =>
   item.id).sort());
+const registeredStrata = result.registered_analysis.strata.map(item =>
+  item.name).sort();
+assert.deepEqual(registeredStrata, [
+  ...R59A_SHIFT_STRATA.map(name => `shift:${name}`),
+  ...R59A_TRANSFER_DIRECTIONS.map(direction => `direction:${direction.id}`),
+  ...R59A_SUPPORT_BUILDERS.map(builder => `support:${builder}`),
+].sort(), "common gate must include shifts, directions, and support builders");
+assert.equal(manifest.analysis_contract.common_gate_registration
+  .primary_strata.length, 8);
 assert.equal(result.development_measurements.episodes, 32);
 assert.equal(result.development_measurements.rows, 1_280);
 assert.equal(contract.receipts.result_decision, result.decision);
