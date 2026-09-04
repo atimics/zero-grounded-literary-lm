@@ -16,7 +16,7 @@ assert.equal(authorization.schema, "zero.ht1_training_authorization.v1");
 assert.equal(authorization.authorization_id,
   "zero5-ht1-mergetree-aws-2026-09-04-v1");
 assert.equal(authorization.experiment, "zero5-ht1-mergetree-v1");
-assert.equal(authorization.status, "authorized-launch-path-pending");
+assert.equal(authorization.status, "authorized-launch-path-ready");
 assert.equal(authorization.authorized, true);
 assert.equal(authorization.approved_by, "ratimics");
 assert.equal(authorization.approved_at, "2026-09-04T08:55:39Z");
@@ -28,6 +28,11 @@ for (const name of ["contract", "series", "implementation",
   const file = authorization.bindings[name];
   assert.equal(sha256(file), authorization.bindings[`${name}_sha256`],
     `${name} hash`);
+}
+for (const name of ["authorized_evaluator", "stage", "launcher",
+  "user_data"]) {
+  assert.equal(sha256(authorization.execution[name]),
+    authorization.execution[`${name}_sha256`], `${name} hash`);
 }
 
 const contract = JSON.parse(fs.readFileSync(authorization.bindings.contract));
@@ -97,9 +102,10 @@ for (const name of ["independent_retries_authorized",
   assert.equal(authorization.scope[name], false, name);
 }
 assert.equal(authorization.launch_readiness.ready, false);
+assert.equal(authorization.launch_readiness.code_ready, true);
 assert.equal(authorization.launch_readiness.status,
-  "authorization-recorded-launcher-next");
-assert(authorization.launch_readiness.required_before_launch.length >= 5);
+  "launcher-ready-awaiting-input-and-upload-approval");
+assert(authorization.launch_readiness.required_before_launch.length >= 4);
 
 for (const file of [authorizationPath, notesPath]) {
   const source = fs.readFileSync(file, "utf8");

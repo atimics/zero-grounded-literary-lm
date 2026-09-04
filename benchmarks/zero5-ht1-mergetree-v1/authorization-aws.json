@@ -2,7 +2,7 @@
   "schema": "zero.ht1_training_authorization.v1",
   "authorization_id": "zero5-ht1-mergetree-aws-2026-09-04-v1",
   "experiment": "zero5-ht1-mergetree-v1",
-  "status": "authorized-launch-path-pending",
+  "status": "authorized-launch-path-ready",
   "authorized": true,
   "approved_by": "ratimics",
   "approved_at": "2026-09-04T08:55:39Z",
@@ -20,6 +20,25 @@
     "trainer_sha256": "edf82dd3a625cb0b767ca917710a46807796fb499bf6ff77ca288b4ea907761c",
     "evaluator": "scripts/evaluate_zero5_ht1_mergetree.mjs",
     "evaluator_sha256": "9cf2755632abc252eb8048c5b333e718ce4305c7abd0a7c62a822550d2221458"
+  },
+  "execution": {
+    "authorized_evaluator": "scripts/evaluate_zero5_ht1_authorized.mjs",
+    "authorized_evaluator_sha256": "e052ebc713087fc44252635cbeece22c7b770c25762e693f061286ddde13ebc8",
+    "stage": "scripts/aws/zero5-ht1-stage.sh",
+    "stage_sha256": "b0a7c36aa090c4c45fd444c2d79a2c13b19371b208550425af49b6e34f0a9893",
+    "launcher": "scripts/aws/zero5-ht1-run-instance.sh",
+    "launcher_sha256": "1a7e7a1a28fff306cf4fb1f8177c2c205256e222a52467120c42956f3a8f2ad0",
+    "user_data": "scripts/aws/zero5-ht1-user-data.sh",
+    "user_data_sha256": "a5f5bbf31bc7f03afbb666f9a57dffdc20ca3bcbfb0eefd3ee1a4086f1c764f4",
+    "state_sync_seconds": 30,
+    "checkpoint_every_updates": 250,
+    "phases": [
+      "training",
+      "candidate-tasks",
+      "candidate-depth",
+      "control-depth",
+      "result"
+    ]
   },
   "pilot": {
     "training_trajectories": 1,
@@ -68,13 +87,14 @@
   },
   "launch_readiness": {
     "ready": false,
-    "status": "authorization-recorded-launcher-next",
+    "code_ready": true,
+    "status": "launcher-ready-awaiting-input-and-upload-approval",
     "required_before_launch": [
-      "merge this authorization record",
-      "bind and review the resumable AWS launcher",
+      "merge this authorization and launcher",
       "place the hash-bound C5.1 control checkpoint in the private input bundle",
       "refresh the AWS session",
-      "approve the exact source and private artifact upload"
+      "approve the exact source and private artifact upload",
+      "record the upload approval and pass the AWS dry run"
     ]
   }
 }
