@@ -53,15 +53,26 @@ behavior signatures, consistent token permutation, source-only scoring, and
 oracle truth rank. Thirty-one frozen behavior derangements support the random
 order check.
 
+The queue releases a semantic child only after its canonical semantic parent
+has been popped. Every primary development row supplies the complete
+parent-gated order. The canonical digest-bound fallback remains available for
+censoring and recovery. Focused tests check parent-before-child order for every
+arm and every development episode.
+
 The behavior-off path reads the same artifact bytes and keeps the typed roles,
 transitions, source labels, and binary layout. It removes behavior feature
 scores at the ranking boundary. The source-ablation row is a byte-for-byte
 copy of the source-free operational row with only the arm name changed.
 
 Every proposed answer enters the exact verifier. An injected wrong candidate
-enters first in every arm. Target-only search enters the canonical fallback,
-so development data exercises fallback accounting. Separate adversarial tests
-cover cap-plus-one and complete-exhaustion charges.
+enters first in every arm. The target-only arm uses direct size enumeration in
+the same complete bottom-up queue. Separate adversarial tests exercise
+canonical fallback, cap-plus-one charging, and complete-exhaustion charging.
+
+The source raw-token table uses the canonical source vocabulary. Each target
+episode registers a surface-token permutation. Raw-token scores respond to
+that mapping. The semantic guide keeps the same order when the mapping is
+applied consistently, which is also checked against the `token_permuted` arm.
 
 ## Data boundary and replay
 

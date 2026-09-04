@@ -80,6 +80,15 @@ assert(contract.derangements === 31,
   "Reasoner 5.8 contract needs 31 derangements");
 assert(contract.shift_strata.length === 4,
   "Reasoner 5.8 contract needs four shifts");
+assert(contract.search?.enumerator ===
+  "parent-gated bottom-up priority queue",
+"Reasoner 5.8 search must stay parent-gated and bottom-up");
+assert(contract.search?.development_proposals ===
+  "complete 428-class semantic order",
+"Reasoner 5.8 development rows need the complete proposal queue");
+assert(contract.search?.censoring_charge ===
+  "cap plus one for every unsolved search",
+"Reasoner 5.8 unsolved searches need conservative charging");
 
 const makefile = readFileSync("Makefile", "utf8");
 for (const target of ["reasoner58-check:", "reasoner58-sanitize-check:",

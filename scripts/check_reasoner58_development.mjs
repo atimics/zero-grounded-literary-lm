@@ -29,14 +29,20 @@ import {
   R58_RANKER_POLICY,
   R58_SHIFT_STRATA,
   R58_SOURCE_ISOLATED_ARMS,
+  applyR58TokenBijection,
   buildR58Manifest,
   createR58ReplayRegistry,
   enumerateR58Universe,
   executeR58Program,
   parseR58Artifact,
+  rankR58Candidates,
+  rankR58OracleCandidates,
   reconstructR58SourceCounts,
+  r58OperationBySurface,
+  r58SurfaceByOperation,
   r58UniverseSha256,
   reconstructR58Development,
+  scoreR58Candidate,
 } from "./lib/reasoner58_replay.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -166,6 +172,79 @@ for (const shift of R58_SHIFT_STRATA) {
   assert.equal(new Set(selected.map(episode => episode.generator_id)).size, 2,
     `${shift} needs both independent generators`);
 }
+
+const candidateBySemantic = new Map(universe.candidates.map(candidate =>
+  [candidate.semantic.join(","), candidate]));
+function assertParentBeforeChild(order, label) {
+  assert.equal(order.length, universe.candidates.length,
+    `${label} omitted semantic classes`);
+  const positions = new Map();
+  for (const [index, candidate] of order.entries()) {
+    const key = candidate.semantic.join(",");
+    assert.equal(positions.has(key), false,
+      `${label} repeated a semantic class`);
+    positions.set(key, index);
+  }
+  for (const [index, candidate] of order.entries()) {
+    if (candidate.ast.operations.length === 0) continue;
+    const parentKey = executeR58Program(
+      candidate.ast.operations.slice(0, -1)).join(",");
+    const parent = candidateBySemantic.get(parentKey);
+    assert(parent, `${label} has an unregistered semantic parent`);
+    assert(positions.get(parentKey) < index,
+      `${label} popped a child before its semantic parent`);
+  }
+}
+
+const identitySurface = Array.from({ length: 8 }, (_, index) => index);
+for (const episode of developmentEpisodes) {
+  const registeredPermutation =
+    episode.content.evaluator.episode_spec.surface_permutation;
+  assert.deepEqual(r58OperationBySurface(episode.content.public),
+    registeredPermutation,
+    "public grammar differs from its registered token bijection");
+  const registeredSurfaceByOperation = Array(8);
+  for (const [surface, operation] of registeredPermutation.entries())
+    registeredSurfaceByOperation[operation] = surface;
+  assert.deepEqual(r58SurfaceByOperation(episode.content.public),
+    registeredSurfaceByOperation,
+    "public grammar differs from its registered surface permutation");
+  const canonicalTokenView = applyR58TokenBijection(
+    episode.content.public, registeredPermutation);
+  assert.deepEqual(r58SurfaceByOperation(canonicalTokenView), identitySurface,
+    "registered token bijection did not recover canonical surface tokens");
+
+  assert(universe.candidates.some(candidate =>
+    scoreR58Candidate(candidate, artifact, "raw-token", 0,
+      registeredSurfaceByOperation) !==
+    scoreR58Candidate(candidate, artifact, "raw-token", 0, identitySurface)),
+  "raw-token scores must respond to the registered surface permutation");
+
+  const fullOrder = rankR58Candidates(episode.content.public,
+    universe.candidates, artifact, "full");
+  const tokenPermutedOrder = rankR58Candidates(canonicalTokenView,
+    universe.candidates, artifact, "token_permuted");
+  assert.deepEqual(tokenPermutedOrder.map(candidateSemanticDigest),
+    fullOrder.map(candidateSemanticDigest),
+    "consistent token bijection changed behavior-guide search order");
+
+  for (const arm of R58_ARMS) {
+    let order;
+    if (arm === "oracle_truth_rank") {
+      order = rankR58OracleCandidates(universe.candidates,
+        episode.content.evaluator.episode_spec.operation_roles);
+    } else {
+      order = rankR58Candidates(arm === "token_permuted"
+        ? canonicalTokenView : episode.content.public,
+      universe.candidates, artifact, arm);
+    }
+    assertParentBeforeChild(order, `${episode.episode_id}/${arm}`);
+  }
+}
+assert.throws(() => applyR58TokenBijection(
+  developmentEpisodes[0].content.public, Array(8).fill(0)), /bijection/u,
+"invalid token mappings must fail closed");
+
 for (const registered of manifest.split_divergence) {
   const actual = overlapReceipt(manifest.episodes, registered.field,
     registered.left_lane, registered.right_lane);
@@ -231,9 +310,6 @@ for (const row of rawTraces) {
   assert.equal(row.exact, true);
   assert.equal(row.global_cap_hit, false);
 }
-assert(rawTraces.filter(row => row.arm === "target_only")
-  .every(row => row.fallback_started),
-"target-only enumeration must exercise charged canonical fallback");
 assert(rawTraces.filter(row => R58_SOURCE_ISOLATED_ARMS.includes(row.arm))
   .every(row => row.source_artifact_reads === 0));
 assert(rawTraces.filter(row => row.arm === "behavior_off")

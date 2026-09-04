@@ -373,7 +373,7 @@ function derangeFeature(feature, derangement) {
 }
 
 export function scoreR58Candidate(candidate, artifact, mode = "full",
-  derangement = 0) {
+  derangement = 0, surfaceByOperation = null) {
   const guide = artifact.guide;
   let score = 0n;
   if (["full", "behavior-off", "shuffled"].includes(mode)) {
@@ -392,8 +392,12 @@ export function scoreR58Candidate(candidate, artifact, mode = "full",
     for (const transition of transitionIndices(candidate))
       score += BigInt(guide.transitionLogOddsQ20[transition]);
   if (mode === "raw-token")
-    for (const token of rawTokenIndices(candidate))
-      score += BigInt(guide.rawTokenLogOddsQ20[token]);
+    for (const [position, operation] of candidate.ast.operations.entries()) {
+      const token = surfaceByOperation === null ? operation :
+        surfaceByOperation[operation];
+      score += BigInt(guide.rawTokenLogOddsQ20[
+        position * OPERATION_SPECS.length + token]);
+    }
   const number = Number(score);
   assert(Number.isSafeInteger(number), "R5.8 Q20 score exceeds int64-safe JS range");
   return number;
@@ -489,7 +493,9 @@ export function replayR58Episode(recipe) {
   const coordinates = [laneCode, generatorIndex, stratumIndex, ordinal];
   const candidate = selectEpisodeCandidate(lane, generatorIndex,
     stratumIndex, ordinal, rootSeed);
-  const surface = surfacePermutation(rootSeed, coordinates);
+  const surface = lane === "source-training"
+    ? Array.from({ length: OPERATION_SPECS.length }, (_, index) => index)
+    : surfacePermutation(rootSeed, coordinates);
   const symbolByOperation = Array(OPERATION_SPECS.length);
   for (let symbol = 0; symbol < surface.length; symbol += 1)
     symbolByOperation[surface[symbol]] = `u${symbol}`;
@@ -888,15 +894,11 @@ function evidenceLoss(candidate, publicView) {
     (candidate.semantic[example.input_symbol] !== example.observed_symbol), 0);
 }
 
-function justInTimeScore(candidate, publicView) {
-  let score = 0;
-  for (const operation of candidate.ast.operations) {
-    for (const example of publicView.examples)
-      score += applyR58Operation(operation, example.input_symbol) ===
-        example.observed_symbol ? 1 : 0;
-  }
-  score += distinctOutputs(candidate.semantic) === R58_MODULUS ? 1 : 0;
-  return score;
+function extensionSupport(candidate, consistentPrograms) {
+  const prefix = candidate.ast.operations;
+  return consistentPrograms.reduce((count, complete) => count +
+    prefix.every((operation, index) =>
+      complete.ast.operations[index] === operation), 0);
 }
 
 function canonicalTie(candidate) {
@@ -904,6 +906,57 @@ function canonicalTie(candidate) {
     semantic: candidate.semantic,
     ast: candidate.ast,
   });
+}
+
+export function r58SurfaceByOperation(publicView) {
+  const mapping = Array(OPERATION_SPECS.length).fill(-1);
+  for (const [surface, visible] of publicView.grammar.operations.entries()) {
+    const operation = OPERATION_SPECS.findIndex(spec =>
+      spec.algebraicForm === visible.algebraic_form &&
+      spec.coefficient === visible.coefficient &&
+      spec.constant === visible.constant);
+    assert(operation >= 0 && mapping[operation] === -1,
+      "public grammar must map every operation to one surface token");
+    mapping[operation] = surface;
+  }
+  assert(mapping.every(value => value >= 0),
+    "public grammar surface mapping must be complete");
+  return mapping;
+}
+
+export function r58OperationBySurface(publicView) {
+  const surface = r58SurfaceByOperation(publicView);
+  const mapping = Array(OPERATION_SPECS.length);
+  for (const [operation, symbol] of surface.entries())
+    mapping[symbol] = operation;
+  return mapping;
+}
+
+export function applyR58TokenBijection(publicView, oldToNew) {
+  assertRankerView(publicView, {
+    whitelist: R58_RANKER_POLICY.leaf_whitelist,
+    leafContracts: R58_RANKER_POLICY.leaf_contracts,
+  });
+  assert(Array.isArray(oldToNew) &&
+    oldToNew.length === OPERATION_SPECS.length &&
+    oldToNew.every(value => Number.isInteger(value) && value >= 0 &&
+      value < OPERATION_SPECS.length) &&
+    new Set(oldToNew).size === OPERATION_SPECS.length,
+  "R5.8 token bijection must be a complete permutation");
+  const transformed = structuredClone(publicView);
+  transformed.grammar.operations = Array(OPERATION_SPECS.length);
+  for (let oldSymbol = 0; oldSymbol < oldToNew.length; oldSymbol += 1) {
+    const newSymbol = oldToNew[oldSymbol];
+    transformed.grammar.operations[newSymbol] = {
+      ...structuredClone(publicView.grammar.operations[oldSymbol]),
+      surface_symbol: `u${newSymbol}`,
+    };
+  }
+  assertRankerView(transformed, {
+    whitelist: R58_RANKER_POLICY.leaf_whitelist,
+    leafContracts: R58_RANKER_POLICY.leaf_contracts,
+  });
+  return transformed;
 }
 
 function scoreModeForArm(arm) {
@@ -916,6 +969,33 @@ function scoreModeForArm(arm) {
   return ["full", 0];
 }
 
+function bottomUpOrder(candidates, compare) {
+  const bySemantic = new Map(candidates.map(candidate =>
+    [candidate.semantic.join(","), candidate]));
+  const children = new Map(candidates.map(candidate => [candidate.class_index, []]));
+  const available = [];
+  for (const candidate of candidates) {
+    if (candidate.ast.operations.length === 0) {
+      available.push(candidate);
+      continue;
+    }
+    const parentSemantic = executeR58Program(candidate.ast.operations.slice(0, -1));
+    const parent = bySemantic.get(parentSemantic.join(","));
+    assert(parent, "canonical semantic partial needs a registered parent");
+    children.get(parent.class_index).push(candidate);
+  }
+  const ordered = [];
+  while (available.length > 0) {
+    available.sort(compare);
+    const candidate = available.shift();
+    ordered.push(candidate);
+    available.push(...children.get(candidate.class_index));
+  }
+  assert.equal(ordered.length, candidates.length,
+    "bottom-up priority queue omitted a semantic partial");
+  return ordered;
+}
+
 export function rankR58Candidates(publicView, candidates, artifact, arm) {
   assertRankerView(publicView, {
     whitelist: R58_RANKER_POLICY.leaf_whitelist,
@@ -923,21 +1003,48 @@ export function rankR58Candidates(publicView, candidates, artifact, arm) {
   });
   assert(R58_ARMS.includes(arm) && arm !== "oracle_truth_rank");
   const [mode, derangement] = scoreModeForArm(arm);
-  return [...candidates].sort((left, right) => {
-    const loss = evidenceLoss(left, publicView) - evidenceLoss(right, publicView);
-    if (arm !== "source_only" && loss !== 0) return loss;
+  const surface = r58SurfaceByOperation(publicView);
+  const consistentPrograms = candidates.filter(candidate =>
+    candidate.ast.operations.length === R58_MAX_DEPTH &&
+    evidenceLoss(candidate, publicView) === 0);
+  const support = new Map(candidates.map(candidate => [candidate.class_index,
+    extensionSupport(candidate, consistentPrograms)]));
+  const guideScores = new Map();
+  if (!["target_only", "source_free_jit", "source_ablation"].includes(arm))
+    for (const candidate of candidates)
+      guideScores.set(candidate.class_index, scoreR58Candidate(candidate,
+        artifact, mode, derangement, mode === "raw-token" ? surface : null));
+  const ties = new Map(candidates.map(candidate =>
+    [candidate.class_index, canonicalTie(candidate)]));
+  const compare = (left, right) => {
+    const depth = left.ast.operations.length - right.ast.operations.length;
+    if (arm === "target_only" && depth !== 0) return depth;
+    if (arm !== "source_only" && arm !== "target_only") {
+      const supportDifference = support.get(right.class_index) -
+        support.get(left.class_index);
+      if (supportDifference !== 0) return supportDifference;
+    }
     if (["target_only"].includes(arm)) {
-      const depth = left.ast.operations.length - right.ast.operations.length;
-      if (depth !== 0) return depth;
+      /* The depth key above defines target-only size enumeration. */
     } else if (["source_free_jit", "source_ablation"].includes(arm)) {
-      const jit = justInTimeScore(right, publicView) -
-        justInTimeScore(left, publicView);
-      if (jit !== 0) return jit;
+      if (depth !== 0) return -depth;
     } else {
-      const guide = scoreR58Candidate(right, artifact, mode, derangement) -
-        scoreR58Candidate(left, artifact, mode, derangement);
+      const guide = guideScores.get(right.class_index) -
+        guideScores.get(left.class_index);
       if (guide !== 0) return guide;
     }
+    if (depth !== 0) return depth;
+    return ties.get(left.class_index).localeCompare(ties.get(right.class_index));
+  };
+  return bottomUpOrder(candidates, compare);
+}
+
+export function rankR58OracleCandidates(candidates, targetOperations) {
+  const isTargetPrefix = candidate => candidate.ast.operations.every(
+    (operation, index) => operation === targetOperations[index]);
+  return bottomUpOrder(candidates, (left, right) => {
+    const prefix = Number(isTargetPrefix(right)) - Number(isTargetPrefix(left));
+    if (prefix !== 0) return prefix;
     const depth = left.ast.operations.length - right.ast.operations.length;
     if (depth !== 0) return depth;
     return canonicalTie(left).localeCompare(canonicalTie(right));
@@ -988,14 +1095,16 @@ export function executeR58Arm(episode, candidates, artifact, arm,
     "fixed injected-invalid candidate became exact");
   let ranking;
   if (arm === "oracle_truth_rank") {
-    const exact = candidates.find(candidate =>
-      candidate.semantic.every((value, input) => value === expected[input]));
-    ranking = [exact, ...candidates.filter(candidate => candidate !== exact)];
+    ranking = rankR58OracleCandidates(candidates,
+      episode.content.evaluator.episode_spec.operation_roles);
   } else {
-    ranking = rankR58Candidates(publicView, candidates, artifact, arm);
+    const rankerView = arm === "token_permuted"
+      ? applyR58TokenBijection(publicView,
+        r58OperationBySurface(publicView))
+      : publicView;
+    ranking = rankR58Candidates(rankerView, candidates, artifact, arm);
   }
-  const proposals = arm === "target_only" ? [invalid] :
-    [invalid, ...ranking.filter(candidate => candidate !== invalid)];
+  const proposals = [invalid, ...ranking.filter(candidate => candidate !== invalid)];
   const search = runVerifiedSearch({
     proposals,
     fallback: frozenFallback ?? deepFreeze(canonicalCandidateOrder(candidates)),
