@@ -178,6 +178,46 @@ static float ht1_validation(MergeTree *tree, Model *model,
     return loss;
 }
 
+/* A stable digest lets the artifact preflight compare every validation logit
+   and loss bit after loading the two different checkpoint layouts. */
+static void ht1_identity_evaluation(MergeTree *tree, Model *model,
+                                    const PackedSet *set, int batches)
+{
+    float *mask = zero_alloc((size_t)set->context, sizeof(*mask));
+    uint64_t hash = UINT64_C(1469598103934665603), active_total = 0;
+    int sample;
+    if (batches > (int)set->pack_count) batches = (int)set->pack_count;
+    ht1_bind(tree, model, NULL);
+    for (sample = 0; sample < batches; ++sample) {
+        uint32_t pack = batches == 1
+                            ? 0U
+                            : (uint32_t)((uint64_t)sample *
+                                         (set->pack_count - 1U) /
+                                         (uint64_t)(batches - 1));
+        size_t token_start = (size_t)pack * ((size_t)set->context + 1U);
+        uint64_t active = packed_mask(set, pack, mask, 1.0f, 1.0f, 1.0f);
+        float loss;
+        if (active == 0U) continue;
+        loss = model_forward_masked(model, set->tokens + token_start,
+                                    set->tokens + token_start + 1U,
+                                    0.0f, NULL, mask);
+        hash = hash_bytes(hash, &pack, sizeof(pack));
+        hash = hash_bytes(hash, &active, sizeof(active));
+        hash = hash_bytes(hash, &loss, sizeof(loss));
+        hash = hash_bytes(hash, model->probs,
+                          (size_t)model->cfg.context * model->cfg.vocab *
+                              sizeof(*model->probs));
+        active_total += active;
+    }
+    ht1_release(tree, model, NULL);
+    free(mask);
+    if (active_total == 0U) fail("HT1 identity evaluation selected no targets");
+    printf("{\"schema\":\"zero.ht1_identity_eval.v1\",\"batches\":%d,"
+           "\"active_targets\":%llu,\"logits_and_loss_fnv1a64\":\"%016llx\"}\n",
+           batches, (unsigned long long)active_total,
+           (unsigned long long)hash);
+}
+
 /* All active targets count once, including structural targets with zero bytes. */
 static void ht1_depth_evaluation(MergeTree *tree, Model *model,
                                  const PackedSet *set)
@@ -330,7 +370,7 @@ int main(int argc, char **argv)
     Rng rng;
     Config cfg;
     CheckpointOrchestrationV6 resume = {0};
-    const char *depth_path = NULL, *text_path = NULL;
+    const char *depth_path = NULL, *identity_path = NULL, *text_path = NULL;
     uint64_t step = 0, attempts = 0;
     uint32_t rejections = 0, transaction = 0;
     int i, gate_off = 0, extended = 0, training;
@@ -354,7 +394,8 @@ int main(int argc, char **argv)
         if (strcmp(key, "--eval-only") == 0) { options.eval_only = 1; continue; }
         if (strcmp(key, "--help") == 0) {
             puts("HT1: --init/--resume FILE --tokenizer FILE\n"
-                 "  --depth-eval PACKS | --completion-eval FILE | --span-choice-eval FILE\n"
+                 "  --depth-eval PACKS | --identity-eval PACKS | --completion-eval FILE\n"
+                 "  --span-choice-eval FILE\n"
                  "  --packed-validation PACKS --eval-only [--validation N]\n"
                  "  --validation-text TOKENS --eval-only [--validation N]\n"
                  "  --packed-train PACKS --packed-validation PACKS --run-contract-sha256 HASH\n"
@@ -397,6 +438,7 @@ int main(int argc, char **argv)
         else HT1_FLOAT("--cloze-answer-weight", cloze_answer_weight);
         else HT1_FLOAT("--retrieval-answer-weight", retrieval_answer_weight);
         else if (strcmp(key, "--depth-eval") == 0) depth_path = value;
+        else if (strcmp(key, "--identity-eval") == 0) identity_path = value;
         else if (strcmp(key, "--validation-text") == 0) text_path = value;
         else if (strcmp(key, "--text") == 0) { /* C4.3 scorer supplies train text too. */ }
         else fail("unknown HT1 option");
@@ -510,6 +552,13 @@ int main(int argc, char **argv)
             PackedSet set = {0};
             packed_set_load(&set, depth_path, &cfg);
             ht1_depth_evaluation(&tree, &model, &set);
+            packed_set_destroy(&set);
+        }
+        if (identity_path) {
+            PackedSet set = {0};
+            packed_set_load(&set, identity_path, &cfg);
+            ht1_identity_evaluation(&tree, &model, &set,
+                                    options.validation_batches);
             packed_set_destroy(&set);
         }
     }

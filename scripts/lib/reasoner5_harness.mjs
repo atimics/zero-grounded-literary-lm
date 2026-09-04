@@ -125,7 +125,7 @@ export const REASONER5_TRACE_ROW_FIELDS = Object.freeze([
 const CANDIDATE_SNAPSHOT_CACHE = new WeakMap();
 const CANDIDATE_RECEIPT_CACHE = new WeakMap();
 const CANDIDATE_ORDER_CACHE = new WeakMap();
-const CANDIDATE_KEY_CACHE = new WeakMap();
+const CANDIDATE_PROPOSAL_CACHE = new WeakMap();
 
 function plainObject(value, label) {
   requireValue(value !== null && typeof value === "object" &&
@@ -1081,6 +1081,20 @@ function candidateOrderEntry(candidate) {
   };
 }
 
+function candidateProposalEntry(candidate) {
+  const record = cloneJson(candidate, "candidate proposal record");
+  let partialExpansions = 0;
+  if (record !== null && typeof record === "object" &&
+      !Array.isArray(record) && Object.hasOwn(record, "partial_expansions")) {
+    partialExpansions = record.partial_expansions;
+    delete record.partial_expansions;
+  }
+  return {
+    record_sha256: canonicalDigest("candidate-proposal-record", record),
+    partial_expansions: partialExpansions,
+  };
+}
+
 function compareCandidateEntries(left, right) {
   return left.semantic_sha256.localeCompare(right.semantic_sha256) ||
     left.ast_sha256.localeCompare(right.ast_sha256) ||
@@ -1258,16 +1272,28 @@ export function runVerifiedSearch({
   requireValue(isDeepStrictEqual(fallbackCandidates, canonicalFallback),
     "fallback order differs from the canonical candidate order");
   const fallbackOrderSha256 = candidateSequenceDigest(fallbackCandidates);
-  let universeKeys = CANDIDATE_KEY_CACHE.get(universeCandidates);
-  if (universeKeys === undefined) {
-    universeKeys = new Set(universeCandidates.map(candidate =>
-      `${candidateSemanticDigest(candidate)}:${candidateAstDigest(candidate)}`));
-    CANDIDATE_KEY_CACHE.set(universeCandidates, universeKeys);
+  let universeProposalRecords = CANDIDATE_PROPOSAL_CACHE.get(
+    universeCandidates);
+  if (universeProposalRecords === undefined) {
+    universeProposalRecords = new Map();
+    for (const candidate of universeCandidates) {
+      const entry = candidateProposalEntry(candidate);
+      const prior = universeProposalRecords.get(entry.record_sha256) ?? 0;
+      universeProposalRecords.set(entry.record_sha256,
+        Math.max(prior, entry.partial_expansions));
+    }
+    CANDIDATE_PROPOSAL_CACHE.set(universeCandidates,
+      universeProposalRecords);
   }
-  for (const candidate of proposalCandidates)
-    requireValue(universeKeys.has(
-      `${candidateSemanticDigest(candidate)}:${candidateAstDigest(candidate)}`),
-    "proposal falls outside the canonical candidate universe");
+  for (const candidate of proposalCandidates) {
+    const entry = candidateProposalEntry(candidate);
+    const baseline = universeProposalRecords.get(entry.record_sha256);
+    requireValue(baseline !== undefined,
+      "proposal falls outside the canonical candidate universe due to a " +
+      "record mismatch");
+    requireValue(entry.partial_expansions >= baseline,
+      "proposal partial expansions fall below the frozen candidate baseline");
+  }
   const seen = new Set();
   const trace = [];
   const evaluatorTrace = [];

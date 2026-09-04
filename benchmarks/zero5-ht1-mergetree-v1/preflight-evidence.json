@@ -1,0 +1,96 @@
+{
+  "schema": "zero.ht1_preflight_evidence.v1",
+  "experiment": "zero5-ht1-mergetree-v1",
+  "status": "complete-pass",
+  "contract_sha256": "bcb6eb3f139725a7abb30a27c87947f3144bf5ffff6babacd40052247937c317",
+  "implementation_sha256": "7c03f4805127753507c0f9a3863d8ccff10167915d769083312cd8ca79c15a9f",
+  "bindings": {
+    "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "training_packs_sha256": "96cd33db03f5cc4e837d4ff2cdfd2bf4aaf845b731a189ea7d4ae770a730b59f",
+    "validation_packs_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "control_trainer_sha256": "ba1ca4254779adca8879caae41666543b4347d49737b1bf4f3ed25968ce5e993",
+    "trainer_sha256": "1a493307ed3fb4f2f5593433162a7a0e663783f80fc7d3975723fabf5275afcf",
+    "gate_off_control_checkpoint_sha256": "8440bbdef70a3aaf881c547257e34504e6c511c5bd8e0cc4105db7649f10689f",
+    "gate_off_ht1_checkpoint_sha256": "ba2dcb94b0f1d0b344c7a676314cb9626ee42ed018826c5564f3a17d840b7e32",
+    "shared_state_sha256": "a14e534dd77fd136ad7bf6f31fe33ade8b0646b4db4fa42d7b322e40585df844",
+    "orchestration_sha256": "e903843fae6fce21f7eaf9392614fa94e122e4e7e176ae582343235f06982da9",
+    "synthetic_checker_sha256": "9e4043e46ebbe416b38ecb20c43c5b04c7e9818b877846ddbea32e26cc2fc7b5",
+    "synthetic_checker_stdout_sha256": "6ba7309e200b57dd4442685d87119a3df63db20e5462f241837f45a42085e053"
+  },
+  "mechanics": {
+    "gate_off_shared_state_identity": true,
+    "gate_off_logits_and_loss_identity": true,
+    "exact_round_trip": true,
+    "causality": true,
+    "finite_gradients": true,
+    "tied_effective_table": true,
+    "gate_off_updates": 10
+  },
+  "identity_evaluation": {
+    "schema": "zero.ht1_identity_eval.v1",
+    "batches": 64,
+    "active_targets": 24091,
+    "logits_and_loss_fnv1a64": "7b2e5239f8ab3363"
+  },
+  "resources": {
+    "compute_ratio": 1.00005011948993,
+    "wall_time_ratio": 0.8879536174606378,
+    "operations": {
+      "schema": "zero.ht1_scalar_operation_count.v1",
+      "method": "executed-shape-conservative-dense-denominator",
+      "updates": 10,
+      "sequences": 14,
+      "control_operations": 208574349312,
+      "added_mergetree_operations": 10453640,
+      "treatment_operations": 208584802952,
+      "compute_ratio": 1.00005011948993
+    },
+    "wall": {
+      "schema": "zero.ht1_wall_time_measurement.v1",
+      "clock": "monotonic",
+      "timed_scope": "process-start-through-ten-training-updates",
+      "warmups": 1,
+      "trials": 3,
+      "control_seconds": [
+        2.570805375,
+        2.538864875,
+        2.206499041
+      ],
+      "treatment_seconds": [
+        2.403173834,
+        2.186535917,
+        2.25439425
+      ],
+      "control_median_seconds": 2.538864875,
+      "treatment_median_seconds": 2.25439425,
+      "wall_time_ratio": 0.8879536174606378
+    },
+    "environment": {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "release": "25.3.0",
+      "cpu_model": "Apple M4 Max",
+      "logical_cpus": 14,
+      "blas_threads": 4,
+      "math_backend": "accelerate-vforce",
+      "attention_backend": "dense-blas"
+    }
+  },
+  "gates": {
+    "compute": true,
+    "wall_time": true
+  },
+  "eligible_for_pilot_authorization": true,
+  "experiment_runs_completed": 0,
+  "pilot_training_run_executed": false,
+  "diagnostic_training_updates_executed": 100,
+  "test": {
+    "content_present": false,
+    "parsed": false,
+    "tokenized": false,
+    "packed": false,
+    "scored": false,
+    "metrics_opened": false
+  }
+}
