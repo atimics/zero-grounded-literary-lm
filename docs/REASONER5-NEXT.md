@@ -310,9 +310,9 @@ Each experiment ends in one of four states:
 Every primary episode must end with an exact result. An abstention or proposal
 budget limit starts the same canonical exhaustive fallback for every arm. All
 fallback expansions and verifier checks count toward cost. An episode that
-reaches the common global cap is unsolved, receives a frozen cap-plus-one cost,
-and fails the exact-result gate. Solve-versus-budget curves use the same
-censoring rule.
+remains unsolved receives a frozen cap-plus-one cost and fails the exact-result
+gate. Its receipt distinguishes a global-cap stop from complete fallback
+exhaustion. Solve-versus-budget curves use the same censoring rule.
 
 The common pass gate is conjunctive:
 
@@ -1258,10 +1258,15 @@ The harness must pass these tests:
   complete episode specification crosses split lanes;
 - registered atom and subtree overlap matches each compositional split;
 - every arm receives the same eligible candidate multiset;
-- source ablation matches the source-free path;
+- fallback follows one digest-bound canonical order and links each expansion
+  to its verifier row;
+- source ablation matches the full source-free operational row apart from its
+  registered arm name;
 - hidden fields fail the ranker interface audit;
 - an injected invalid top candidate is rejected;
 - nested repeats collapse to one family block in the statistics;
+- registered evidence units use only family-level axes;
+- raw trace rows use the fixed shared schema;
 - all result hashes reproduce from raw traces.
 
 ### Phase B: two independent early tracks

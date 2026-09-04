@@ -37,7 +37,8 @@ export const REASONER5_EVALUATOR_ONLY_FIELDS = Object.freeze([
 const SHA256 = /^[0-9a-f]{64}$/u;
 const HEX_SEED = /^[0-9a-f]{16,64}$/u;
 const MASK64 = (1n << 64n) - 1n;
-const REPLAY_REGISTRY_TOKEN = Symbol("reasoner5-replay-registry");
+const FUNCTION_TO_STRING = Function.prototype.toString;
+const REPLAY_REGISTRIES = new WeakMap();
 const TRACE_BINDING_FIELDS = Object.freeze([
   "candidate_universe_digest",
   "grammar_digest",
@@ -67,6 +68,60 @@ const PUBLIC_PROVENANCE_CLASSES = new Set([
   "public-constant",
   "public-mask",
 ]);
+const FAMILY_UNIT_FIELDS = new Set([
+  "family_id",
+  "cross_family_id",
+  "generator_id",
+]);
+export const REASONER5_TRACE_ROW_FIELDS = Object.freeze([
+  "allowed_actions_digest",
+  "answer_ir",
+  "answer_ir_sha256",
+  "arm",
+  "ast_sha256",
+  "behavior_sha256",
+  "candidate_universe_digest",
+  "caps_digest",
+  "certificate_sha256",
+  "certificate_valid",
+  "censoring_reason",
+  "cross_family_id",
+  "episode_bytes_sha256",
+  "episode_id",
+  "episode_spec_sha256",
+  "exact",
+  "execution_trace_sha256",
+  "experiment",
+  "fallback_exhausted",
+  "fallback_partial_expansions",
+  "fallback_receipt",
+  "fallback_started",
+  "fallback_verifier_checks",
+  "family_id",
+  "generator_id",
+  "global_cap_hit",
+  "grammar_digest",
+  "initial_evidence_digest",
+  "injected_invalid",
+  "injected_invalid_rejected",
+  "lane",
+  "latent_episode_digest",
+  "nested_repeat_id",
+  "observation_queries",
+  "parity_digest",
+  "partial_expansions",
+  "peak_bytes",
+  "potential_response_digest",
+  "premature_commit",
+  "primary_cost",
+  "schema",
+  "shift_stratum",
+  "source_artifact_reads",
+  "verified_search",
+  "verifier_checks",
+  "verifier_digest",
+  "wall_ns",
+]);
 
 function plainObject(value, label) {
   requireValue(value !== null && typeof value === "object" &&
@@ -86,6 +141,40 @@ function safeInteger(value, label, minimum = 0) {
 function finiteNumber(value, label, minimum = -Infinity) {
   requireValue(Number.isFinite(value) && value >= minimum,
     `${label} must be a finite number at least ${minimum}`);
+}
+
+function assertExactKeys(value, expected, label) {
+  plainObject(value, label);
+  const actualKeys = Object.keys(value).sort();
+  const expectedKeys = [...expected].sort();
+  const extra = actualKeys.filter(key => !expectedKeys.includes(key));
+  const missing = expectedKeys.filter(key => !actualKeys.includes(key));
+  requireValue(isDeepStrictEqual(actualKeys, expectedKeys),
+    `${label} differs from its fixed schema; extra=${extra.join(",")}; missing=${missing.join(",")}`);
+}
+
+function functionSource(fn, label) {
+  requireValue(typeof fn === "function", `${label} must be a function`);
+  const source = FUNCTION_TO_STRING.call(fn);
+  requireValue(!source.includes("[native code]"),
+    `${label} must have inspectable JavaScript source`);
+  return source;
+}
+
+function assertFamilyUnitFields(fields, label, { crossed = false } = {}) {
+  requireValue(Array.isArray(fields) && fields.length > 0 &&
+    sortedUnique(fields).length === fields.length,
+  `${label} needs unique unit fields`);
+  for (const field of fields) {
+    stringValue(field, `${label} unit field`);
+    requireValue(FAMILY_UNIT_FIELDS.has(field),
+      `${label} unit field ${field} is not a family-level axis`);
+  }
+  requireValue(fields.includes("family_id"),
+    `${label} must include family_id`);
+  requireValue(crossed === fields.includes("cross_family_id"),
+    crossed ? `${label} must include cross_family_id` :
+      `${label} cannot include cross_family_id in a one-way design`);
 }
 
 function assertCanonicalJsonValue(value, label = "canonical value",
@@ -190,16 +279,6 @@ function validateReplayRecipe(recipe) {
 
 function fieldDigest(kind, value) {
   return canonicalDigest(kind, value);
-}
-
-function nestedOmit(value, omitted) {
-  if (Array.isArray(value)) return value.map(item => nestedOmit(item, omitted));
-  if (value !== null && typeof value === "object") {
-    return Object.fromEntries(Object.entries(value)
-      .filter(([key]) => !omitted.has(key))
-      .map(([key, item]) => [key, nestedOmit(item, omitted)]));
-  }
-  return value;
 }
 
 function getUnitField(unit, field) {
@@ -379,7 +458,17 @@ export function registerEpisode(state, episode) {
     episode.cross_family_id === null ||
     (typeof episode.cross_family_id === "string" &&
       episode.cross_family_id.length > 0),
-  "episode cross_family_id must be null or a non-empty string");
+  "episode cross_family_id must be null or a registered family ID");
+  if (episode.cross_family_id !== undefined &&
+      episode.cross_family_id !== null) {
+    const crossFamily = state._indexes.families.get(episode.cross_family_id);
+    requireValue(crossFamily !== undefined,
+      `unknown episode cross family ${episode.cross_family_id}`);
+    requireValue(crossFamily.lane === episode.lane,
+      `episode lane differs from cross family ${episode.cross_family_id}`);
+    requireValue(crossFamily.family_id !== family.family_id,
+      "episode family and cross family must differ");
+  }
   plainObject(episode.public, "episode public view");
   plainObject(episode.evaluator, "episode evaluator view");
   validateReplayRecipe(episode.replay_recipe);
@@ -505,6 +594,13 @@ function validateSplitState(state) {
     const family = families.get(episode.family_id);
     requireValue(family !== undefined && family.lane === episode.lane,
       `stored episode ${episode.episode_id} changed family or lane`);
+    if (episode.cross_family_id !== null) {
+      const crossFamily = families.get(episode.cross_family_id);
+      requireValue(crossFamily !== undefined &&
+        crossFamily.lane === episode.lane &&
+        crossFamily.family_id !== family.family_id,
+      `stored episode ${episode.episode_id} changed cross family or lane`);
+    }
     requireValue(episode.generator_id === family.generator_id &&
       episode.shift_stratum === family.shift_stratum,
     `stored episode ${episode.episode_id} changed family metadata`);
@@ -512,6 +608,7 @@ function validateSplitState(state) {
     requireValue(episode.seed_ref === canonicalDigest("episode-seed-reference",
       episode.replay_recipe),
     `stored episode ${episode.episode_id} changed its replay recipe`);
+    assertRankerPolicy(episode.ranker_policy);
     assertRankerView(episode.content.public, {
       whitelist: episode.ranker_policy.leaf_whitelist,
       leafContracts: episode.ranker_policy.leaf_contracts,
@@ -627,19 +724,28 @@ export function assertManifestDigest(manifest) {
 }
 
 export function replayFunctionDigest(replay) {
-  requireValue(typeof replay === "function", "episode replay must be a function");
-  return canonicalDigest("episode-replay-function-source", replay.toString());
+  return canonicalDigest("episode-replay-function-source",
+    functionSource(replay, "episode replay"));
+}
+
+export function analysisFunctionDigest(reconstruct) {
+  return canonicalDigest("analysis-function-source",
+    functionSource(reconstruct, "raw-trace reconstruction"));
 }
 
 export function createReplayRegistry() {
-  return { [REPLAY_REGISTRY_TOKEN]: new Map() };
+  const registry = Object.freeze({
+    schema: "zero.reasoner5_replay_registry.v1",
+  });
+  REPLAY_REGISTRIES.set(registry, new Map());
+  return registry;
 }
 
 function replayRegistryMap(registry) {
   requireValue(registry !== null && typeof registry === "object" &&
-    registry[REPLAY_REGISTRY_TOKEN] instanceof Map,
+    REPLAY_REGISTRIES.has(registry),
   "episode replay needs a harness replay registry");
-  return registry[REPLAY_REGISTRY_TOKEN];
+  return REPLAY_REGISTRIES.get(registry);
 }
 
 function replayRegistryKey(generatorSha256, inputGeneratorSha256,
@@ -664,7 +770,7 @@ export function registerReplayPipeline(registry, {
   const key = replayRegistryKey(generator_sha256, input_generator_sha256,
     replay_function_sha256);
   requireValue(!pipelines.has(key), "replay pipeline is already registered");
-  pipelines.set(key, Object.freeze({ replay }));
+  pipelines.set(key, Object.freeze({ replay, replay_function_sha256 }));
   return key;
 }
 
@@ -681,6 +787,11 @@ export function assertManifestReplay(manifest, registry) {
     const pipeline = pipelines.get(key);
     requireValue(pipeline !== undefined,
       `episode ${episode.episode_id} has no hash-matched replay pipeline`);
+    requireValue(replayFunctionDigest(pipeline.replay) ===
+      pipeline.replay_function_sha256 &&
+      pipeline.replay_function_sha256 ===
+        episode.replay_recipe.replay_function_sha256,
+    `episode ${episode.episode_id} replay function source changed`);
     const content = pipeline.replay(cloneJson(episode.replay_recipe,
       "episode replay recipe"));
     plainObject(content, "replayed episode content");
@@ -761,36 +872,74 @@ function collectObjectKeys(value, output = []) {
   return output;
 }
 
-function collectLeafPaths(value, path = "", output = []) {
-  if (Array.isArray(value)) {
-    const arrayPath = `${path}[]`;
-    if (value.length === 0) output.push(arrayPath);
-    for (const item of value) collectLeafPaths(item, arrayPath, output);
-  } else if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value);
-    if (entries.length === 0) output.push(path);
-    for (const [key, item] of entries)
-      collectLeafPaths(item, path ? `${path}.${key}` : key, output);
-  } else {
-    output.push(path);
-  }
-  return output;
+const RANKER_PATH = /^[A-Za-z_][A-Za-z0-9_]*(?:\[\])?(?:\.[A-Za-z_][A-Za-z0-9_]*(?:\[\])?)*$/u;
+
+function rankerPathParts(path) {
+  requireValue(RANKER_PATH.test(path),
+    `ranker whitelist path ${path} has invalid syntax`);
+  return path.split(".").map(part => ({
+    field: part.endsWith("[]") ? part.slice(0, -2) : part,
+    array: part.endsWith("[]"),
+  }));
 }
 
-function collectLeafEntries(value, path = "", output = []) {
-  if (Array.isArray(value)) {
-    const arrayPath = `${path}[]`;
-    if (value.length === 0) output.push([arrayPath, value]);
-    for (const item of value) collectLeafEntries(item, arrayPath, output);
-  } else if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value);
-    if (entries.length === 0) output.push([path, value]);
-    for (const [key, item] of entries)
-      collectLeafEntries(item, path ? `${path}.${key}` : key, output);
-  } else {
-    output.push([path, value]);
+function assertPublicPath(path) {
+  const hidden = new Set(REASONER5_EVALUATOR_ONLY_FIELDS.map(field =>
+    field.toLowerCase()));
+  for (const part of rankerPathParts(path))
+    requireValue(!hidden.has(part.field.toLowerCase()),
+      `ranker policy exposes evaluator field ${part.field}`);
+}
+
+function buildRankerSchema(whitelist, leafContracts) {
+  const root = { children: new Map(), contract: null };
+  for (const path of whitelist) {
+    let node = root;
+    for (const [index, part] of rankerPathParts(path).entries()) {
+      requireValue(node.contract === null,
+        `ranker path ${path} extends a registered leaf`);
+      const prior = node.children.get(part.field);
+      if (prior !== undefined)
+        requireValue(prior.array === part.array,
+          `ranker field ${part.field} has conflicting array shape`);
+      const child = prior ?? { array: part.array, children: new Map(),
+        contract: null };
+      node.children.set(part.field, child);
+      node = child;
+      if (index === rankerPathParts(path).length - 1) {
+        requireValue(node.children.size === 0 && node.contract === null,
+          `ranker path ${path} conflicts with another leaf`);
+        node.contract = leafContracts[path];
+      }
+    }
   }
-  return output;
+  return root;
+}
+
+function assertRankerSchemaValue(value, node, path = "ranker") {
+  if (node.contract !== null) {
+    requireValue(rankerLeafTypeMatches(value, node.contract.type),
+      `ranker field ${path} differs from its registered type`);
+    return;
+  }
+  plainObject(value, `ranker field ${path}`);
+  requireValue(isDeepStrictEqual(Object.keys(value).sort(),
+    [...node.children.keys()].sort()),
+  `ranker field ${path} differs from its complete registered schema`);
+  for (const [field, child] of node.children) {
+    const nextPath = path === "ranker" ? field : `${path}.${field}`;
+    const item = value[field];
+    if (child.array) {
+      requireValue(Array.isArray(item),
+        `ranker field ${nextPath} must be an array`);
+      for (const member of item)
+        assertRankerSchemaValue(member, child, `${nextPath}[]`);
+    } else {
+      requireValue(!Array.isArray(item),
+        `ranker field ${nextPath} must not be an array`);
+      assertRankerSchemaValue(item, child, nextPath);
+    }
+  }
 }
 
 function assertRankerPolicy(policy) {
@@ -803,8 +952,10 @@ function assertRankerPolicy(policy) {
   requireValue(Array.isArray(policy.leaf_whitelist) &&
     policy.leaf_whitelist.length > 0,
   "episode ranker policy needs a leaf whitelist");
-  for (const path of policy.leaf_whitelist)
+  for (const path of policy.leaf_whitelist) {
     stringValue(path, "episode ranker whitelist path");
+    assertPublicPath(path);
+  }
   requireValue(sortedUnique(policy.leaf_whitelist).length ===
     policy.leaf_whitelist.length,
   "episode ranker whitelist paths must be unique");
@@ -842,24 +993,23 @@ export function assertRankerView(view, {
   plainObject(view, "ranker view");
   requireValue(Array.isArray(whitelist) && whitelist.length > 0,
     "ranker whitelist must be a non-empty leaf-path array");
-  for (const path of whitelist) stringValue(path, "ranker whitelist path");
+  for (const path of whitelist) {
+    stringValue(path, "ranker whitelist path");
+    assertPublicPath(path);
+  }
   requireValue(sortedUnique(whitelist).length === whitelist.length,
     "ranker whitelist paths must be unique");
-  const allowed = new Set(whitelist);
   plainObject(leafContracts, "ranker leaf contracts");
   requireValue(isDeepStrictEqual(Object.keys(leafContracts).sort(),
     [...whitelist].sort()),
   "ranker leaf contracts must match the whitelist");
-  for (const [path, value] of collectLeafEntries(view)) {
-    requireValue(allowed.has(path),
-      `ranker field ${path} is outside the whitelist`);
-    const contract = leafContracts[path];
-    requireValue(rankerLeafTypeMatches(value, contract.type),
-      `ranker field ${path} differs from its registered type`);
-  }
-  const hidden = new Set(REASONER5_EVALUATOR_ONLY_FIELDS);
+  const schema = buildRankerSchema(whitelist, leafContracts);
+  assertRankerSchemaValue(view, schema);
+  const hidden = new Set(REASONER5_EVALUATOR_ONLY_FIELDS.map(field =>
+    field.toLowerCase()));
   for (const key of collectObjectKeys(view))
-    requireValue(!hidden.has(key), `ranker view exposes evaluator field ${key}`);
+    requireValue(!hidden.has(key.toLowerCase()),
+      `ranker view exposes evaluator field ${key}`);
   return true;
 }
 
@@ -914,6 +1064,35 @@ export function candidateAstDigest(candidate) {
   return canonicalDigest("candidate-ast", ast);
 }
 
+function candidateOrderEntry(candidate) {
+  return {
+    semantic_sha256: candidateSemanticDigest(candidate),
+    ast_sha256: candidateAstDigest(candidate),
+    record_sha256: canonicalDigest("candidate-record", candidate),
+  };
+}
+
+function compareCandidateEntries(left, right) {
+  return left.semantic_sha256.localeCompare(right.semantic_sha256) ||
+    left.ast_sha256.localeCompare(right.ast_sha256) ||
+    left.record_sha256.localeCompare(right.record_sha256);
+}
+
+function candidateSequenceDigest(candidates) {
+  return canonicalDigest("candidate-canonical-order",
+    candidates.map(candidateOrderEntry));
+}
+
+export function canonicalCandidateOrder(candidates) {
+  requireValue(Array.isArray(candidates) && candidates.length > 0,
+    "canonical candidate order needs a non-empty array");
+  return cloneJson(candidates, "canonical candidate order").map(candidate => ({
+    candidate,
+    entry: candidateOrderEntry(candidate),
+  })).sort((left, right) => compareCandidateEntries(left.entry, right.entry))
+    .map(item => item.candidate);
+}
+
 export function candidateMultisetReceipt(candidates) {
   requireValue(Array.isArray(candidates) && candidates.length > 0,
     "candidate multiset must be a non-empty array");
@@ -925,6 +1104,9 @@ export function candidateMultisetReceipt(candidates) {
       semantic_sha256: candidateSemanticDigest(candidate),
       ast_sha256: candidateAstDigest(candidate),
     })).sort();
+  const recordDigests = snapshots.map(candidate =>
+    canonicalDigest("candidate-record", candidate)).sort();
+  const canonicalOrder = canonicalCandidateOrder(snapshots);
   return {
     schema: "zero.reasoner5_candidate_multiset.v1",
     count: digests.length,
@@ -934,6 +1116,9 @@ export function candidateMultisetReceipt(candidates) {
     ast_multiset_sha256: canonicalDigest("candidate-ast-multiset", astDigests),
     semantic_ast_pair_multiset_sha256: canonicalDigest(
       "candidate-semantic-ast-pair-multiset", pairDigests),
+    candidate_record_multiset_sha256: canonicalDigest(
+      "candidate-record-multiset", recordDigests),
+    canonical_order_sha256: candidateSequenceDigest(canonicalOrder),
   };
 }
 
@@ -1043,6 +1228,10 @@ export function runVerifiedSearch({
   const fallbackReceipt = candidateMultisetReceipt(fallbackCandidates);
   requireValue(isDeepStrictEqual(universeReceipt, fallbackReceipt),
     "fallback must cover the complete canonical candidate universe");
+  const canonicalFallback = canonicalCandidateOrder(universeCandidates);
+  requireValue(isDeepStrictEqual(fallbackCandidates, canonicalFallback),
+    "fallback order differs from the canonical candidate order");
+  const fallbackOrderSha256 = candidateSequenceDigest(fallbackCandidates);
   const universeKeys = new Set(universeCandidates.map(candidate =>
     `${candidateSemanticDigest(candidate)}:${candidateAstDigest(candidate)}`));
   for (const candidate of proposalCandidates)
@@ -1059,15 +1248,20 @@ export function runVerifiedSearch({
   let acceptedAnswerSha256 = null;
   let acceptedCertificateSha256 = null;
   let globalCapHit = false;
+  let fallbackExhausted = false;
+  let stoppedByCap = false;
   for (const [phase, candidates] of [["proposal", proposalCandidates],
     ["fallback", fallbackCandidates]]) {
+    let completedPhase = true;
     for (const candidate of candidates) {
       if (trace.length >= global_cap) {
-        globalCapHit = true;
+        stoppedByCap = true;
+        completedPhase = false;
         break;
       }
       const digest = candidateSemanticDigest(candidate);
       const astDigest = candidateAstDigest(candidate);
+      const recordDigest = canonicalDigest("candidate-record", candidate);
       const partialExpansions = candidate && typeof candidate === "object" &&
         Object.hasOwn(candidate, "partial_expansions") ?
         candidate.partial_expansions : 0;
@@ -1077,6 +1271,7 @@ export function runVerifiedSearch({
         phase,
         candidate_sha256: digest,
         candidate_ast_sha256: astDigest,
+        candidate_record_sha256: recordDigest,
         duplicate_semantic: duplicateSemantic,
         charged_partial_expansions: partialExpansions,
       });
@@ -1148,12 +1343,19 @@ export function runVerifiedSearch({
         acceptedAnswerSha256 = canonicalDigest("final-answer-ir",
           acceptedAnswer);
         acceptedCertificateSha256 = certificateSha256;
+        completedPhase = false;
         break;
       }
     }
-    if (solved || globalCapHit) break;
+    if (phase === "fallback" && completedPhase && !solved && !stoppedByCap)
+      fallbackExhausted = true;
+    if (solved || stoppedByCap) break;
   }
-  if (!solved && trace.length >= global_cap) globalCapHit = true;
+  globalCapHit = !solved && stoppedByCap;
+  requireValue(solved || globalCapHit || fallbackExhausted,
+    "unsolved search has no censoring reason");
+  const censoringReason = solved ? null :
+    (globalCapHit ? "global-cap" : "fallback-exhausted");
   const injection = injected_invalid_sha256 === undefined ? null : {
     candidate_sha256: injected_invalid_sha256,
     checked_first: trace[0]?.candidate_sha256 === injected_invalid_sha256,
@@ -1173,7 +1375,9 @@ export function runVerifiedSearch({
     distinct_semantic_classes: seen.size,
     fallback_started: expansionTrace.some(row => row.phase === "fallback"),
     global_cap_hit: globalCapHit,
-    primary_cost: globalCapHit ? global_cap + 1 : trace.length,
+    fallback_exhausted: fallbackExhausted,
+    censoring_reason: censoringReason,
+    primary_cost: solved ? trace.length : global_cap + 1,
     proposal_verifier_checks: trace.filter(row => row.phase === "proposal").length,
     fallback_verifier_checks: trace.filter(row => row.phase === "fallback").length,
     partial_expansions: expansionTrace.reduce((sum, row) =>
@@ -1185,6 +1389,7 @@ export function runVerifiedSearch({
       complete: true,
       candidate_universe: universeReceipt,
       fallback: fallbackReceipt,
+      canonical_order_sha256: fallbackOrderSha256,
       fallback_verifier_checks: trace.filter(row => row.phase === "fallback").length,
       fallback_candidate_occurrences: expansionTrace
         .filter(row => row.phase === "fallback").length,
@@ -1195,7 +1400,8 @@ export function runVerifiedSearch({
         sum + row.charged_verifier_check, 0),
       charged_partial_expansions: expansionTrace.reduce((sum, row) =>
         sum + row.charged_partial_expansions, 0),
-      censoring_charge: globalCapHit ? 1 : 0,
+      censoring_charge: solved ? 0 : 1,
+      censoring_reason: censoringReason,
       all_work_charged: trace.every(row => row.charged_verifier_check === 1) &&
         trace.length === seen.size && expansionTrace.every(row =>
           Number.isSafeInteger(row.charged_partial_expansions) &&
@@ -1213,7 +1419,10 @@ export function runVerifiedSearch({
 }
 
 function assertCandidateMultisetReceiptShape(receipt, label) {
-  plainObject(receipt, label);
+  assertExactKeys(receipt, ["schema", "count", "distinct_count",
+    "semantic_multiset_sha256", "ast_multiset_sha256",
+    "semantic_ast_pair_multiset_sha256",
+    "candidate_record_multiset_sha256", "canonical_order_sha256"], label);
   requireValue(receipt.schema === "zero.reasoner5_candidate_multiset.v1",
     `${label} has the wrong schema`);
   safeInteger(receipt.count, `${label} count`, 1);
@@ -1221,13 +1430,22 @@ function assertCandidateMultisetReceiptShape(receipt, label) {
   requireValue(receipt.distinct_count <= receipt.count,
     `${label} distinct count exceeds its count`);
   for (const field of ["semantic_multiset_sha256", "ast_multiset_sha256",
-    "semantic_ast_pair_multiset_sha256"])
+    "semantic_ast_pair_multiset_sha256", "candidate_record_multiset_sha256",
+    "canonical_order_sha256"])
     requireValue(typeof receipt[field] === "string" && SHA256.test(receipt[field]),
       `${label} needs ${field}`);
 }
 
 export function assertVerifiedSearchReceipt(search) {
-  plainObject(search, "verified search receipt");
+  assertExactKeys(search, ["schema", "global_cap", "solved",
+    "accepted_candidate_sha256", "answer_ir", "answer_ir_sha256",
+    "certificate_sha256", "premature_commits", "verifier_checks",
+    "distinct_semantic_classes", "fallback_started", "global_cap_hit",
+    "fallback_exhausted", "censoring_reason", "primary_cost",
+    "proposal_verifier_checks", "fallback_verifier_checks",
+    "partial_expansions", "fallback_partial_expansions", "fallback_receipt",
+    "injected_invalid", "trace", "evaluator_trace", "expansion_trace",
+    "search_sha256"], "verified search receipt");
   requireValue(search.schema === "zero.reasoner5_verified_search.v1",
     "verified search receipt has the wrong schema");
   requireValue(typeof search.search_sha256 === "string" &&
@@ -1239,7 +1457,8 @@ export function assertVerifiedSearchReceipt(search) {
     "verified-search-receipt", body),
   "verified search receipt digest changed");
   safeInteger(search.global_cap, "verified search global cap", 1);
-  for (const field of ["solved", "fallback_started", "global_cap_hit"])
+  for (const field of ["solved", "fallback_started", "global_cap_hit",
+    "fallback_exhausted"])
     requireValue(typeof search[field] === "boolean",
       `verified search receipt needs boolean ${field}`);
   for (const field of ["verifier_checks", "distinct_semantic_classes",
@@ -1259,7 +1478,10 @@ export function assertVerifiedSearchReceipt(search) {
   const semanticSeen = new Set();
   let acceptedRows = 0;
   for (const [index, row] of search.trace.entries()) {
-    plainObject(row, "verified search trace row");
+    assertExactKeys(row, ["ordinal", "phase", "candidate_sha256",
+      "verifier_accepted", "certificate_valid", "certificate_sha256",
+      "counterexample_sha256", "accepted", "charged_verifier_check",
+      "partial_expansions"], "verified search trace row");
     requireValue(row.ordinal === index &&
       ["proposal", "fallback"].includes(row.phase),
     "verified search trace order or phase changed");
@@ -1285,6 +1507,11 @@ export function assertVerifiedSearchReceipt(search) {
       "verified search accepted a candidate without a valid certificate");
     if (row.accepted) acceptedRows += 1;
     const evaluator = search.evaluator_trace[index];
+    assertExactKeys(evaluator, row.accepted ? ["ordinal", "candidate_sha256",
+      "accepted", "certificate", "certificate_sha256", "answer_ir",
+      "answer_ir_sha256"] : ["ordinal", "candidate_sha256", "accepted",
+      "counterexample", "counterexample_sha256"],
+    "verified search evaluator trace row");
     requireValue(evaluator.ordinal === index &&
       evaluator.candidate_sha256 === row.candidate_sha256 &&
       evaluator.accepted === row.accepted,
@@ -1306,12 +1533,19 @@ export function assertVerifiedSearchReceipt(search) {
     }
   }
   const expansionSeen = new Set();
+  let verifierIndex = 0;
+  let lastFallbackEntry = null;
   for (const [index, row] of search.expansion_trace.entries()) {
+    assertExactKeys(row, ["ordinal", "phase", "candidate_sha256",
+      "candidate_ast_sha256", "candidate_record_sha256",
+      "duplicate_semantic", "charged_partial_expansions"],
+    "verified search expansion row");
     requireValue(row.ordinal === index &&
       ["proposal", "fallback"].includes(row.phase),
     "verified search expansion order or phase changed");
     requireValue(SHA256.test(row.candidate_sha256) &&
-      SHA256.test(row.candidate_ast_sha256),
+      SHA256.test(row.candidate_ast_sha256) &&
+      SHA256.test(row.candidate_record_sha256),
     "verified search expansion needs candidate digests");
     requireValue(row.duplicate_semantic === expansionSeen.has(
       row.candidate_sha256),
@@ -1319,7 +1553,29 @@ export function assertVerifiedSearchReceipt(search) {
     expansionSeen.add(row.candidate_sha256);
     safeInteger(row.charged_partial_expansions,
       "verified search charged partial expansions");
+    if (row.phase === "fallback") {
+      const entry = {
+        semantic_sha256: row.candidate_sha256,
+        ast_sha256: row.candidate_ast_sha256,
+        record_sha256: row.candidate_record_sha256,
+      };
+      requireValue(lastFallbackEntry === null ||
+        compareCandidateEntries(lastFallbackEntry, entry) <= 0,
+      "verified search fallback expansion order is not canonical");
+      lastFallbackEntry = entry;
+    }
+    if (!row.duplicate_semantic) {
+      const verifierRow = search.trace[verifierIndex];
+      requireValue(verifierRow !== undefined &&
+        verifierRow.phase === row.phase &&
+        verifierRow.candidate_sha256 === row.candidate_sha256 &&
+        verifierRow.partial_expansions === row.charged_partial_expansions,
+      "verified search expansion differs from its verifier trace");
+      verifierIndex += 1;
+    }
   }
+  requireValue(verifierIndex === search.trace.length,
+    "verified search verifier trace has no matching expansion");
   requireValue(search.distinct_semantic_classes === semanticSeen.size &&
     search.verifier_checks === semanticSeen.size,
   "verified search semantic-class counters disagree");
@@ -1337,11 +1593,22 @@ export function assertVerifiedSearchReceipt(search) {
   requireValue(search.fallback_started === search.expansion_trace.some(row =>
     row.phase === "fallback"),
   "verified search fallback-start marker changed");
-  requireValue(search.global_cap_hit ===
-    (!search.solved && search.verifier_checks >= search.global_cap),
+  requireValue(search.solved ?
+    !search.global_cap_hit && !search.fallback_exhausted &&
+      search.censoring_reason === null :
+    search.global_cap_hit !== search.fallback_exhausted &&
+      search.censoring_reason === (search.global_cap_hit ?
+        "global-cap" : "fallback-exhausted"),
+  "verified search censoring markers disagree");
+  requireValue(!search.global_cap_hit ||
+    search.verifier_checks === search.global_cap,
   "verified search cap-hit marker changed");
-  requireValue(search.primary_cost === (search.global_cap_hit ?
-    search.global_cap + 1 : search.verifier_checks),
+  requireValue(!search.fallback_exhausted ||
+    search.expansion_trace.filter(row => row.phase === "fallback").length ===
+      search.fallback_receipt.fallback.count,
+  "verified search exhausted marker changed");
+  requireValue(search.primary_cost === (search.solved ?
+    search.verifier_checks : search.global_cap + 1),
   "verified search primary cost differs from cap accounting");
   requireValue(search.solved ? acceptedRows === 1 &&
     search.trace.at(-1).accepted === true : acceptedRows === 0,
@@ -1361,7 +1628,12 @@ export function assertVerifiedSearchReceipt(search) {
       search.certificate_sha256 === null,
     "unsolved verified search contains a final answer");
   }
-  plainObject(search.fallback_receipt, "verified search fallback receipt");
+  assertExactKeys(search.fallback_receipt, ["complete",
+    "candidate_universe", "fallback", "canonical_order_sha256",
+    "fallback_verifier_checks", "fallback_candidate_occurrences",
+    "fallback_partial_expansions", "charged_verifier_checks",
+    "charged_partial_expansions", "censoring_charge", "censoring_reason",
+    "all_work_charged"], "verified search fallback receipt");
   assertCandidateMultisetReceiptShape(search.fallback_receipt.candidate_universe,
     "verified search candidate universe");
   assertCandidateMultisetReceiptShape(search.fallback_receipt.fallback,
@@ -1369,6 +1641,9 @@ export function assertVerifiedSearchReceipt(search) {
   requireValue(isDeepStrictEqual(search.fallback_receipt.candidate_universe,
     search.fallback_receipt.fallback),
   "verified search fallback differs from its candidate universe");
+  requireValue(search.fallback_receipt.canonical_order_sha256 ===
+    search.fallback_receipt.candidate_universe.canonical_order_sha256,
+  "verified search fallback order differs from its canonical universe");
   requireValue(search.fallback_receipt.complete === true &&
     search.fallback_receipt.all_work_charged === true &&
     search.fallback_receipt.fallback_verifier_checks ===
@@ -1381,8 +1656,8 @@ export function assertVerifiedSearchReceipt(search) {
       search.verifier_checks &&
     search.fallback_receipt.charged_partial_expansions ===
       search.partial_expansions &&
-    search.fallback_receipt.censoring_charge ===
-      (search.global_cap_hit ? 1 : 0),
+    search.fallback_receipt.censoring_charge === (search.solved ? 0 : 1) &&
+    search.fallback_receipt.censoring_reason === search.censoring_reason,
   "verified search fallback receipt counters disagree");
   if (search.injected_invalid !== null) {
     requireValue(SHA256.test(search.injected_invalid.candidate_sha256) &&
@@ -1415,7 +1690,8 @@ export function assertSourceAblationMatches(sourceAblationTrace,
     "source-ablation comparison needs two trace arrays");
   cloneJson(sourceAblationTrace, "source-ablation trace");
   cloneJson(sourceFreeTrace, "source-free trace");
-  const omitted = new Set(omit);
+  requireValue(isDeepStrictEqual(omit, ["arm"]),
+    "source-ablation comparison may omit only registered arm identity");
   for (const [label, trace] of [["source ablation", sourceAblationTrace],
     ["source-free", sourceFreeTrace]]) {
     for (const row of trace) {
@@ -1424,8 +1700,10 @@ export function assertSourceAblationMatches(sourceAblationTrace,
       `${label} path must read zero source-artifact bytes`);
     }
   }
-  const left = nestedOmit(sourceAblationTrace, omitted);
-  const right = nestedOmit(sourceFreeTrace, omitted);
+  const withoutArm = trace => trace.map(row => Object.fromEntries(
+    Object.entries(row).filter(([key]) => key !== "arm")));
+  const left = withoutArm(sourceAblationTrace);
+  const right = withoutArm(sourceFreeTrace);
   requireValue(isDeepStrictEqual(left, right),
     "source ablation differs from the source-free implementation path");
   return true;
@@ -1446,8 +1724,9 @@ export function aggregateNestedFamilies(rows, {
 } = {}) {
   requireValue(Array.isArray(rows) && rows.length > 0,
     "family aggregation needs trace rows");
-  requireValue(Array.isArray(unitFields) && unitFields.length > 0,
-    "family aggregation needs unit fields");
+  assertFamilyUnitFields(unitFields, "family aggregation", {
+    crossed: unitFields.includes("cross_family_id"),
+  });
   const episodes = new Map();
   for (const row of rows) {
     plainObject(row, "trace row");
@@ -1542,13 +1821,16 @@ export function factorialInteractionFamilies(rows, {
   adapterOnlyArm = "adapter_only",
   guideOnlyArm = "guide_only",
   rawArm = "raw",
-  unitFields = ["generator_environment", "family_id"],
+  unitFields = ["generator_id", "family_id"],
   episodeField = "episode_id",
   repeatField = "nested_repeat_id",
   costField = "primary_cost",
 } = {}) {
   requireValue(Array.isArray(rows) && rows.length > 0,
     "factorial interaction needs trace rows");
+  assertFamilyUnitFields(unitFields, "factorial interaction", {
+    crossed: unitFields.includes("cross_family_id"),
+  });
   const requiredArms = [adapterGuideArm, adapterOnlyArm, guideOnlyArm, rawArm];
   const episodes = new Map();
   for (const row of rows) {
@@ -1999,9 +2281,11 @@ export function reconstructCommonGate(input) {
         (mechanismValues.length - index);
       const inference = validateInference(value.mechanism,
         `formal mechanism ${value.name}`, "higher", alpha);
-      requireValue(value.p_value <= alpha,
-        `formal mechanism ${value.name} misses its Holm threshold`);
-      mechanismInferences.set(value.name, inference);
+      mechanismInferences.set(value.name, {
+        inference,
+        p_value: value.p_value,
+        holm_alpha: alpha,
+      });
     }
     const marginalSummaries = registration.crossed_design ? [
       primary.interval.row_marginal_summary,
@@ -2049,9 +2333,10 @@ export function reconstructCommonGate(input) {
       primary_strata: stratumInferences.every(([, inference]) =>
         inference.interval.point_ratio <= 0.9 &&
         inference.interval.upper_ratio < 1),
-      mechanism_effects: [...mechanismInferences.values()].every(inference =>
-        inference.interval.point_ratio >= 1.1 &&
-        inference.interval.lower_ratio > 1),
+      mechanism_effects: [...mechanismInferences.values()].every(value =>
+        value.p_value <= value.holm_alpha &&
+        value.inference.interval.point_ratio >= 1.1 &&
+        value.inference.interval.lower_ratio > 1),
       factorial_interaction: factorialPass,
       derangement_median: derangement.beats_median,
       derangement_randomization: derangement.p_value <= 0.05,
@@ -2115,15 +2400,11 @@ function registeredAnalysisContract(manifest) {
         `${label} has an unregistered ${field}`);
     requireValue(comparison.full_arm !== comparison.comparator_arm,
       `${label} must compare two different arms`);
-    requireValue(Array.isArray(comparison.unit_fields) &&
-      comparison.unit_fields.length > 0 &&
-      sortedUnique(comparison.unit_fields).length ===
-        comparison.unit_fields.length,
-    `${label} needs unique unit fields`);
-    for (const field of comparison.unit_fields)
-      stringValue(field, `${label} unit field`);
     requireValue(["one-way", "two-way"].includes(comparison.design),
       `${label} has an unsupported design`);
+    assertFamilyUnitFields(comparison.unit_fields, label, {
+      crossed: comparison.design === "two-way",
+    });
     requireValue(["lower", "higher"].includes(comparison.direction),
       `${label} has an unsupported direction`);
     normalizeHexSeed(comparison.seed, `${label} seed`);
@@ -2133,13 +2414,20 @@ function registeredAnalysisContract(manifest) {
       `${label} alpha must lie between zero and one half`);
     requireValue(comparison.environment_field === null ||
       comparison.environment_field === undefined ||
-      typeof comparison.environment_field === "string",
-    `${label} environment field must be null or a string`);
-    if (comparison.design === "one-way" && comparison.environment_field)
-      requireValue(comparison.unit_fields.includes(
-        comparison.environment_field),
-      `${label} environment field must be an independent unit field`);
+      comparison.environment_field === "generator_id",
+    `${label} environment field must be null or generator_id`);
+    if (comparison.environment_field)
+      requireValue(comparison.design === "one-way" &&
+        comparison.unit_fields.includes("generator_id"),
+      `${label} generator environment requires a one-way generator_id unit`);
     if (comparison.design === "two-way") {
+      requireValue(new Set([comparison.row_field,
+        comparison.column_field]).size === 2 &&
+        new Set([comparison.row_field, comparison.column_field]).has(
+          "family_id") &&
+        new Set([comparison.row_field, comparison.column_field]).has(
+          "cross_family_id"),
+      `${label} crossed fields must be family_id and cross_family_id`);
       for (const field of [comparison.row_field, comparison.column_field])
         requireValue(typeof field === "string" &&
           comparison.unit_fields.includes(field),
@@ -2204,30 +2492,35 @@ function registeredAnalysisContract(manifest) {
       factorial.adapter_only_arm, factorial.guide_only_arm,
       factorial.raw_arm]).size === 4,
     "registered factorial analysis needs four different arms");
-    requireValue(Array.isArray(factorial.unit_fields) &&
-      factorial.unit_fields.length > 0 &&
-      sortedUnique(factorial.unit_fields).length ===
-        factorial.unit_fields.length,
-    "registered factorial analysis needs unique unit fields");
-    for (const field of factorial.unit_fields)
-      stringValue(field, "registered factorial unit field");
     requireValue(["one-way", "two-way"].includes(factorial.design) &&
       factorial.direction === "lower",
     "registered factorial analysis needs a supported lower-tail design");
+    assertFamilyUnitFields(factorial.unit_fields,
+      "registered factorial analysis", {
+        crossed: factorial.design === "two-way",
+      });
     normalizeHexSeed(factorial.seed, "registered factorial seed");
     safeInteger(factorial.replicates, "registered factorial replicates", 1);
     requireValue(factorial.alpha ===
       contract.common_gate_registration.primary_alpha,
     "registered factorial alpha differs from the common gate");
-    if (factorial.design === "one-way" && factorial.environment_field)
-      requireValue(factorial.unit_fields.includes(
-        factorial.environment_field),
-      "registered factorial environment must be a unit field");
+    requireValue(factorial.environment_field === null ||
+      factorial.environment_field === undefined ||
+      factorial.environment_field === "generator_id",
+    "registered factorial environment must be null or generator_id");
+    if (factorial.environment_field)
+      requireValue(factorial.design === "one-way" &&
+        factorial.unit_fields.includes("generator_id"),
+      "registered factorial generator environment needs a one-way generator_id unit");
     if (factorial.design === "two-way") {
       requireValue(factorial.unit_fields.includes(factorial.row_field) &&
         factorial.unit_fields.includes(factorial.column_field) &&
-        factorial.row_field !== factorial.column_field,
-      "registered factorial crossed fields must be distinct unit fields");
+        new Set([factorial.row_field, factorial.column_field]).size === 2 &&
+        new Set([factorial.row_field, factorial.column_field]).has(
+          "family_id") &&
+        new Set([factorial.row_field, factorial.column_field]).has(
+          "cross_family_id"),
+      "registered factorial crossed fields must be family_id and cross_family_id");
     }
   }
   plainObject(contract.derangement_analysis,
@@ -2246,9 +2539,10 @@ function registeredAnalysisContract(manifest) {
   requireValue(!contract.derangement_analysis.reference_arms.includes(
     contract.derangement_analysis.observed_arm),
   "registered derangement references include the observed arm");
-  requireValue(Array.isArray(contract.derangement_analysis.unit_fields) &&
-    contract.derangement_analysis.unit_fields.length > 0,
-  "registered derangement analysis needs unit fields");
+  assertFamilyUnitFields(contract.derangement_analysis.unit_fields,
+    "registered derangement analysis", {
+      crossed: contract.common_gate_registration.crossed_design,
+    });
   plainObject(contract.source_ablation, "registered source ablation");
   for (const field of ["ablation_arm", "source_free_arm"])
     requireValue(contract.expected_arms.includes(contract.source_ablation[field]) &&
@@ -2362,15 +2656,12 @@ function deriveSourceAblation(rawTraces, registration) {
     `source ablation needs both registered arms for ${episodeId}`);
     const ablation = arms.get(registration.ablation_arm);
     const sourceFree = arms.get(registration.source_free_arm);
-    requireValue(ablation.source_artifact_reads === 0 &&
-      sourceFree.source_artifact_reads === 0,
-    `source ablation pair ${episodeId} read the source artifact`);
-    requireValue(ablation.execution_trace_sha256 ===
-      sourceFree.execution_trace_sha256 &&
-      isDeepStrictEqual(ablation.verified_search, sourceFree.verified_search),
-    `source ablation differs from source-free execution for ${episodeId}`);
+    assertSourceAblationMatches([ablation], [sourceFree]);
+    const operational = Object.fromEntries(Object.entries(ablation)
+      .filter(([key]) => key !== "arm"));
     pairs.push({ episode_id: episodeId,
-      execution_trace_sha256: ablation.execution_trace_sha256 });
+      operational_row_sha256: canonicalDigest(
+        "source-ablation-operational-row", operational) });
   }
   pairs.sort((left, right) => left.episode_id.localeCompare(right.episode_id));
   return {
@@ -2498,7 +2789,7 @@ export function assertRawTraceCoverage({
     [family.family_id, family]));
   const seen = new Set();
   for (const row of rawTraces) {
-    plainObject(row, "raw trace row");
+    assertExactKeys(row, REASONER5_TRACE_ROW_FIELDS, "raw trace row");
     requireValue(row.schema === contract.trace_schema,
       "raw trace row has the wrong schema");
     requireValue(row.experiment === manifest.experiment_id,
@@ -2547,10 +2838,13 @@ export function assertRawTraceCoverage({
       "peak_bytes", "source_artifact_reads"])
       safeInteger(row[field], `raw trace ${row.episode_id} ${field}`);
     for (const field of ["exact", "certificate_valid", "premature_commit",
-      "fallback_started", "global_cap_hit", "injected_invalid",
-      "injected_invalid_rejected"])
+      "fallback_started", "global_cap_hit", "fallback_exhausted",
+      "injected_invalid", "injected_invalid_rejected"])
       requireValue(typeof row[field] === "boolean",
         `raw trace ${row.episode_id} needs boolean ${field}`);
+    requireValue(row.censoring_reason === null ||
+      ["global-cap", "fallback-exhausted"].includes(row.censoring_reason),
+    `raw trace ${row.episode_id} has an invalid censoring reason`);
     const derivedPrimaryCost = contract.primary_cost_rule ===
       "verified-search" ? search.primary_cost : search.partial_expansions;
     requireValue(row.primary_cost === derivedPrimaryCost &&
@@ -2565,6 +2859,8 @@ export function assertRawTraceCoverage({
       row.premature_commit === (search.premature_commits > 0) &&
       row.fallback_started === search.fallback_started &&
       row.global_cap_hit === search.global_cap_hit &&
+      row.fallback_exhausted === search.fallback_exhausted &&
+      row.censoring_reason === search.censoring_reason &&
       row.injected_invalid === (search.injected_invalid !== null) &&
       row.injected_invalid_rejected ===
         (search.injected_invalid?.rejected === true) &&
@@ -2595,7 +2891,8 @@ export function assertRawTraceCoverage({
         row.fallback_partial_expansions &&
       fallbackReceipt.charged_verifier_checks === row.verifier_checks &&
       fallbackReceipt.charged_partial_expansions === row.partial_expansions &&
-      fallbackReceipt.censoring_charge === (row.global_cap_hit ? 1 : 0) &&
+      fallbackReceipt.censoring_charge === (row.exact ? 0 : 1) &&
+      fallbackReceipt.censoring_reason === row.censoring_reason &&
       row.fallback_started ===
         (fallbackReceipt.fallback_candidate_occurrences > 0),
     `raw trace ${row.episode_id} counters differ from its fallback receipt`);
@@ -2685,8 +2982,7 @@ export function buildResultFromRawTraces({
   const contract = registeredAnalysisContract(manifest);
   requireValue(analysisSettingsSha256 === contract.analysis_settings_sha256,
     "analysis settings differ from the manifest contract");
-  const analysisFunctionSha256 = canonicalDigest("analysis-function-source",
-    reconstruct.toString());
+  const analysisFunctionSha256 = analysisFunctionDigest(reconstruct);
   requireValue(analysisFunctionSha256 === contract.analysis_function_sha256,
     "analysis function differs from the manifest contract");
   const coverage = assertRawTraceCoverage({ manifest, rawTraces, expectedArms,

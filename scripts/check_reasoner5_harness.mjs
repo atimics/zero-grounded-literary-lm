@@ -5,7 +5,9 @@ import assert from "node:assert/strict";
 import { stableJson } from "./zero_data_lib.mjs";
 import {
   REASONER5_SPLIT_LANES,
+  REASONER5_TRACE_ROW_FIELDS,
   aggregateNestedFamilies,
+  analysisFunctionDigest,
   armParityReceipt,
   assertArmParity,
   assertInjectedInvalidRejected,
@@ -18,6 +20,7 @@ import {
   buildResultFromRawTraces,
   candidateMultisetReceipt,
   candidateSemanticDigest,
+  canonicalCandidateOrder,
   canonicalBytes,
   canonicalDigest,
   createReplayRegistry,
@@ -143,7 +146,7 @@ function fixtureSearch(checks) {
   const proposals = [...candidates.slice(0, checks - 1), truth];
   return runVerifiedSearch({
     proposals,
-    fallback: candidates,
+    fallback: canonicalCandidateOrder(candidates),
     candidate_universe: candidates,
     global_cap: 64,
     injected_invalid_sha256: candidateSemanticDigest(candidates[0]),
@@ -310,8 +313,7 @@ function buildManifest(seed, analysisFunction = reconstructFixtureResult) {
       primary_cost_rule: "verified-search",
       analysis_settings_sha256: canonicalDigest("analysis-settings",
         ANALYSIS_SETTINGS),
-      analysis_function_sha256: canonicalDigest("analysis-function-source",
-        analysisFunction.toString()),
+      analysis_function_sha256: analysisFunctionDigest(analysisFunction),
       common_gate_registration: GATE_REGISTRATION,
       trace_schema: "zero.reasoner5_trace_row.v1",
       primary_analysis: {
@@ -466,6 +468,52 @@ function testSplitsReplayAndOverlap() {
     replay_function_sha256: FIXTURE_REPLAY_FUNCTION_SHA256,
     replay: recipe => replayFixtureEpisode(recipe),
   }), /function differs from its registered digest/u);
+  function spoofedReplay() { return { attacker: true }; }
+  Object.defineProperty(spoofedReplay, "toString", {
+    value: () => replayFixtureEpisode.toString(),
+  });
+  expectFailure(() => registerReplayPipeline(createReplayRegistry(), {
+    generator_sha256: FIXTURE_GENERATOR_SHA256,
+    input_generator_sha256: FIXTURE_INPUT_GENERATOR_SHA256,
+    replay_function_sha256: FIXTURE_REPLAY_FUNCTION_SHA256,
+    replay: spoofedReplay,
+  }), /function differs from its registered digest/u);
+  expectFailure(() => registerEpisode(crossLaneState(), {
+    episode_id: "unknown-cross-family",
+    lane: "sealed",
+    family_id: "target",
+    cross_family_id: "unregistered-corruption-family",
+    nested_repeat_id: "r0",
+    seed_ref: "0".repeat(64),
+  }), /unknown episode cross family/u);
+  const crossedState = createSplitState({
+    experiment_id: "registered-cross-family-self-test",
+  });
+  registerFamily(crossedState, {
+    family_id: "program-family", lane: "development", generator_id: "g0",
+    shift_stratum: "crossed", family_spec: { axis: "program", value: 0 },
+  });
+  registerFamily(crossedState, {
+    family_id: "corruption-family", lane: "development", generator_id: "g1",
+    shift_stratum: "crossed", family_spec: { axis: "corruption", value: 0 },
+  });
+  freezeFamilySplits(crossedState);
+  const crossedRecipe = replayRecipe("registered-cross-family", {
+    lane: "development",
+  });
+  registerEpisode(crossedState, {
+    episode_id: "registered-cross-episode",
+    lane: "development",
+    family_id: "program-family",
+    cross_family_id: "corruption-family",
+    nested_repeat_id: "r0",
+    seed_ref: seedReference(crossedRecipe),
+    replay_recipe: crossedRecipe,
+    ...parityBundle("registered-cross-family"),
+    ...episodeContent("development", DEVELOPMENT_SEED_A, "crossed", 0),
+  });
+  assert.equal(finalizeManifest(crossedState).episodes[0].cross_family_id,
+    "corruption-family");
   const countTamper = JSON.parse(stableJson(first));
   countTamper.family_counts.calibration += 1;
   const countTamperBody = { ...countTamper };
@@ -594,7 +642,7 @@ function testRankerViewsAndParity() {
         "observations[]": { type: "json", provenance: "generated-query" },
       },
     },
-  }), /outside the whitelist/u);
+  }), /complete registered schema/u);
   expectFailure(() => buildRankerView({
     public: { observations: [{ input: "hidden-alias" }] }, evaluator: {},
     ranker_policy: {
@@ -630,7 +678,47 @@ function testRankerViewsAndParity() {
         },
       },
     },
-  }), /outside the whitelist/u);
+  }), /complete registered schema/u);
+  expectFailure(() => buildRankerView({
+    public: { x: 1 }, evaluator: {},
+    ranker_policy: {
+      schema: "zero.reasoner5_ranker_policy.v1",
+      leaf_whitelist: ["x", "y"],
+      leaf_contracts: {
+        x: { type: "integer", provenance: "public-constant" },
+        y: { type: "integer", provenance: "public-constant" },
+      },
+    },
+  }), /complete registered schema/u);
+  expectFailure(() => buildRankerView({
+    public: { observations: [
+      { input: 1, observed: 2 },
+      { input: 3 },
+    ] },
+    evaluator: {},
+    ranker_policy: {
+      schema: "zero.reasoner5_ranker_policy.v1",
+      leaf_whitelist: ["observations[].input", "observations[].observed"],
+      leaf_contracts: {
+        "observations[].input": {
+          type: "integer", provenance: "generated-query",
+        },
+        "observations[].observed": {
+          type: "integer", provenance: "observed-response",
+        },
+      },
+    },
+  }), /complete registered schema/u);
+  expectFailure(() => buildRankerView({
+    public: { TARGET: 7 }, evaluator: {},
+    ranker_policy: {
+      schema: "zero.reasoner5_ranker_policy.v1",
+      leaf_whitelist: ["TARGET"],
+      leaf_contracts: {
+        TARGET: { type: "integer", provenance: "public-constant" },
+      },
+    },
+  }), /exposes evaluator field TARGET/u);
 
   const candidates = [
     { semantic: [0, 1, 2], ast: { op: "a" } },
@@ -644,6 +732,8 @@ function testRankerViewsAndParity() {
   assert.equal(receipt.distinct_count, 2);
   assert.equal(receipt.semantic_multiset_sha256,
     permuted.semantic_multiset_sha256);
+  assert.equal(receipt.canonical_order_sha256,
+    permuted.canonical_order_sha256);
   assert.notEqual(receipt.semantic_multiset_sha256,
     candidateMultisetReceipt([...candidates,
       { semantic: [3], ast: { op: "c" } }])
@@ -653,6 +743,11 @@ function testRankerViewsAndParity() {
       { ...candidates[0], ast: { op: "changed" } },
       candidates[1], candidates[2],
     ]).semantic_ast_pair_multiset_sha256);
+  assert.notEqual(receipt.candidate_record_multiset_sha256,
+    candidateMultisetReceipt([
+      { ...candidates[0], partial_expansions: 9 },
+      candidates[1], candidates[2],
+    ]).candidate_record_multiset_sha256);
 
   const common = {
     candidates,
@@ -680,7 +775,7 @@ function testVerifierAndAblation() {
   const invalidDigest = candidateSemanticDigest(invalid);
   const search = runVerifiedSearch({
     proposals: [invalid, duplicateInvalid],
-    fallback: [duplicateInvalid, truth],
+    fallback: canonicalCandidateOrder([duplicateInvalid, truth]),
     candidate_universe: [duplicateInvalid, truth],
     global_cap: 4,
     injected_invalid_sha256: invalidDigest,
@@ -707,6 +802,14 @@ function testVerifierAndAblation() {
   assert.equal(search.accepted_candidate_sha256,
     candidateSemanticDigest(truth));
   assertVerifiedSearchReceipt(search);
+  const forgedExpansion = structuredClone(search);
+  forgedExpansion.expansion_trace[0].candidate_sha256 = canonicalDigest(
+    "forged-expansion", 0);
+  delete forgedExpansion.search_sha256;
+  forgedExpansion.search_sha256 = canonicalDigest("verified-search-receipt",
+    forgedExpansion);
+  expectFailure(() => assertVerifiedSearchReceipt(forgedExpansion),
+    /expansion differs from its verifier trace/u);
   expectFailure(() => assertVerifiedSearchReceipt({
     ...search,
     verifier_checks: search.verifier_checks + 1,
@@ -723,9 +826,22 @@ function testVerifierAndAblation() {
     verify: () => ({ accepted: false, certificate_valid: false,
       counterexample: { input: 0 } }),
   }), /proposal falls outside/u);
+  const canonicalFallback = canonicalCandidateOrder([invalid, truth]);
+  expectFailure(() => runVerifiedSearch({
+    proposals: [invalid],
+    fallback: [...canonicalFallback].reverse(),
+    candidate_universe: [invalid, truth],
+    global_cap: 4,
+    verify: candidate => ({ accepted: candidate.semantic[0] === 2,
+      certificate_valid: candidate.semantic[0] === 2,
+      ...(candidate.semantic[0] === 2 ? {
+        certificate: { exact: true }, answer_ir: { value: 2 },
+      } : { counterexample: { input: 0 } }),
+    }),
+  }), /fallback order differs/u);
   const capped = runVerifiedSearch({
     proposals: [invalid],
-    fallback: [invalid, truth],
+    fallback: canonicalCandidateOrder([invalid, truth]),
     candidate_universe: [invalid, truth],
     global_cap: 1,
     verify: candidate => ({ accepted: false, certificate_valid: false,
@@ -733,9 +849,26 @@ function testVerifierAndAblation() {
   });
   assert.equal(capped.solved, false);
   assert.equal(capped.global_cap_hit, true);
+  assert.equal(capped.fallback_exhausted, false);
+  assert.equal(capped.censoring_reason, "global-cap");
   assert.equal(capped.primary_cost, 2);
   assert.equal(capped.fallback_receipt.censoring_charge, 1);
   assertVerifiedSearchReceipt(capped);
+  const exhausted = runVerifiedSearch({
+    proposals: [invalid],
+    fallback: canonicalFallback,
+    candidate_universe: [invalid, truth],
+    global_cap: 5,
+    verify: candidate => ({ accepted: false, certificate_valid: false,
+      counterexample: { candidate: candidate.semantic } }),
+  });
+  assert.equal(exhausted.solved, false);
+  assert.equal(exhausted.global_cap_hit, false);
+  assert.equal(exhausted.fallback_exhausted, true);
+  assert.equal(exhausted.censoring_reason, "fallback-exhausted");
+  assert.equal(exhausted.primary_cost, 6);
+  assert.equal(exhausted.fallback_receipt.censoring_charge, 1);
+  assertVerifiedSearchReceipt(exhausted);
 
   const ablation = [{ arm: "source_ablation", step: 0,
     candidate_sha256: invalidDigest, source_artifact_reads: 0,
@@ -818,6 +951,8 @@ function rawTraceRows(manifest) {
         premature_commit: search.premature_commits > 0,
         fallback_started: search.fallback_started,
         global_cap_hit: search.global_cap_hit,
+        fallback_exhausted: search.fallback_exhausted,
+        censoring_reason: search.censoring_reason,
         injected_invalid: search.injected_invalid !== null,
         injected_invalid_rejected: search.injected_invalid?.rejected === true,
         answer_ir: search.answer_ir,
@@ -846,6 +981,8 @@ function withVerifiedSearch(row, search) {
     premature_commit: search.premature_commits > 0,
     fallback_started: search.fallback_started,
     global_cap_hit: search.global_cap_hit,
+    fallback_exhausted: search.fallback_exhausted,
+    censoring_reason: search.censoring_reason,
     injected_invalid: search.injected_invalid !== null,
     injected_invalid_rejected: search.injected_invalid?.rejected === true,
     answer_ir: search.answer_ir,
@@ -857,6 +994,9 @@ function withVerifiedSearch(row, search) {
 
 function testFamilyStatistics() {
   const rows = longRows(["f0", "f1", "f2"]);
+  expectFailure(() => aggregateNestedFamilies(rows, {
+    unitFields: ["episode_id"],
+  }), /not a family-level axis/u);
   const units = aggregateNestedFamilies(rows, {
     unitFields: ["generator_id", "family_id"],
   });
@@ -1000,6 +1140,24 @@ function testGateAndTraceReplay() {
   });
   assert.equal(missed.decision, "no-go");
   assert.deepEqual(missed.failures, ["primary_ratio"]);
+  const mechanismMissInference = familyInferenceReceipt(
+    Array.from({ length: 8 }, (_, index) => ({
+      family_id: `mechanism-miss-${index}`,
+      mean_log_ratio: Math.log(0.9),
+    })), {
+      design: "one-way", direction: "higher", seed: DEVELOPMENT_SEED_B,
+      replicates: 64, alpha: 0.05,
+    });
+  const mechanismMiss = reconstructCommonGate({
+    ...passingGate(),
+    registration: {
+      ...GATE_REGISTRATION,
+      formal_mechanisms: ["markov-off"],
+    },
+    mechanisms: [{ name: "markov-off", inference: mechanismMissInference }],
+  });
+  assert.equal(mechanismMiss.decision, "no-go");
+  assert.ok(mechanismMiss.failures.includes("mechanism_effects"));
   assert.equal(reconstructCommonGate({ integrity_valid: false }).decision,
     "invalid-run");
   assert.equal(reconstructCommonGate({ ...passingGate(),
@@ -1019,6 +1177,9 @@ function testGateAndTraceReplay() {
 
   const manifest = buildManifest(DEVELOPMENT_SEED_A);
   const rawTraces = rawTraceRows(manifest);
+  for (const row of rawTraces)
+    assert.deepEqual(Object.keys(row).sort(),
+      [...REASONER5_TRACE_ROW_FIELDS].sort());
   const reconstruct = reconstructFixtureResult;
   const result = buildResultFromRawTraces({
     experiment: "reasoner5-harness-self-test",
@@ -1032,6 +1193,39 @@ function testGateAndTraceReplay() {
   assert.equal(result.registered_analysis.primary.interval.point_ratio,
     6 / 13);
   assert.equal(result.registered_analysis.derangement.values.length, 31);
+  expectFailure(() => buildResultFromRawTraces({
+    experiment: "reasoner5-harness-self-test",
+    manifest,
+    rawTraces: rawTraces.map(row => row.arm === "source_ablation" ? {
+      ...row,
+      observation_queries: row.observation_queries + 1,
+    } : row),
+    reconstruct,
+    analysisSettings: ANALYSIS_SETTINGS,
+  }), /source ablation differs from the source-free implementation path/u);
+  expectFailure(() => buildResultFromRawTraces({
+    experiment: "reasoner5-harness-self-test",
+    manifest,
+    rawTraces: rawTraces.map((row, index) => index === 0 ? {
+      ...row,
+      complete_hidden_target: { ast: "leak" },
+    } : row),
+    reconstruct,
+    analysisSettings: ANALYSIS_SETTINGS,
+  }), /raw trace row differs from its fixed schema/u);
+  const episodeUnitManifest = structuredClone(manifest);
+  episodeUnitManifest.analysis_contract.primary_analysis.unit_fields =
+    ["generator_id", "episode_id"];
+  delete episodeUnitManifest.manifest_sha256;
+  episodeUnitManifest.manifest_sha256 = canonicalDigest(
+    "generated-family-manifest", episodeUnitManifest);
+  expectFailure(() => buildResultFromRawTraces({
+    experiment: "reasoner5-harness-self-test",
+    manifest: episodeUnitManifest,
+    rawTraces,
+    reconstruct,
+    analysisSettings: ANALYSIS_SETTINGS,
+  }), /unit field episode_id is not a family-level axis/u);
   const inventedManifest = buildManifest(DEVELOPMENT_SEED_A,
     reconstructWithInventedGate);
   expectFailure(() => buildResultFromRawTraces({
@@ -1093,7 +1287,7 @@ function testGateAndTraceReplay() {
       withVerifiedSearch(row, fixtureSearch(9)) : row),
     reconstruct,
     analysisSettings: ANALYSIS_SETTINGS,
-  }), /source ablation differs from source-free execution/u);
+  }), /source ablation differs from the source-free implementation path/u);
   expectFailure(() => assertResultReplay({
     experiment: "reasoner5-harness-self-test", manifest, rawTraces,
     reconstruct, analysisSettings: ANALYSIS_SETTINGS,
@@ -1115,23 +1309,33 @@ const coverage = {
   cross_lane_ast_behavior_episode_rejection: true,
   byte_identical_manifest_replay: true,
   hash_bound_replay_registry: true,
+  intrinsic_function_source_hashing: true,
   manifest_structure_replay: true,
+  registered_cross_family_axis: true,
   registered_atom_subtree_overlap: true,
   whitelist_ranker_view: true,
   typed_public_projection: true,
+  complete_ranker_leaf_schema: true,
+  case_insensitive_hidden_field_rejection: true,
   candidate_multiset_arm_parity: true,
   exact_invalid_candidate_rejection: true,
   verified_search_receipt_replay: true,
+  expansion_verifier_trace_cross_link: true,
+  canonical_fallback_order: true,
   cap_plus_one_censoring: true,
+  exhausted_fallback_cap_plus_one_censoring: true,
   source_ablation_trace_identity: true,
   nested_family_aggregation: true,
+  family_level_unit_restriction: true,
   one_way_cluster_bootstrap: true,
   complete_crossing_two_way_bootstrap: true,
   wilson_lower_bound: true,
   derangement_randomization: true,
   common_gate_reconstruction: true,
+  mechanism_miss_is_no_go: true,
   exactness_before_measurement_floor: true,
   registered_raw_trace_analysis: true,
+  strict_raw_trace_keys: true,
   raw_trace_result_replay: true,
 };
 assert.equal(Object.values(coverage).every(Boolean), true);
