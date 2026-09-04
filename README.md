@@ -148,6 +148,10 @@ small browser runtime:
   finite-domain truth-table verifier.
 - `reasoner58`: Reasoner 5.8, a development-only behavior guide for exact
   nonlinear composition search over exhaustive `GF(17)` truth tables.
+- `reasoner56`: the development implementation of Reasoner 5.6. It learns a
+  passive corruption and missingness channel from source sequences, ranks all
+  427 exact GF(17) semantic classes, and replays a complete 8 by 8 family
+  crossing through the shared Reasoner 5 evidence harness.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
