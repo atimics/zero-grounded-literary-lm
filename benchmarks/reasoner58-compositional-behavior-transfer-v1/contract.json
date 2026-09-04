@@ -12,7 +12,7 @@
       "path": "docs/REASONER5-NEXT.md",
       "sha256": "a479882ee565aea082da2f490a0d067a832f1fa2778f8b23af2ee59ecdf7792c"
     },
-    "shared_harness_commit": "2303a1a1769a7e4ccd32f5167e18645550651509"
+    "shared_harness_commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f"
   },
   "execution": {
     "authorized": false,
@@ -54,7 +54,7 @@
       },
       "shared_harness": {
         "path": "scripts/lib/reasoner5_harness.mjs",
-        "sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66"
+        "sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5"
       },
       "development_document": {
         "path": "docs/REASONER58-DEVELOPMENT.md",
