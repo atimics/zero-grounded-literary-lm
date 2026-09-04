@@ -26,6 +26,13 @@
     "canonical_encoding": "stable-json-utf8",
     "seed_encoding": "lowercase-hex-string"
   },
+  "statistics": {
+    "confidence_interval": "ordinary percentile cluster bootstrap",
+    "one_sided_p_value": "recentered null cluster bootstrap",
+    "fixed_environment_weighting": "equal",
+    "ordinary_and_null_sample_receipts": "separate SHA-256 digests",
+    "holm_ordering": "calibrated null p-values"
+  },
   "required_checks": [
     "strict canonical JSON domain",
     "byte-identical manifest replay",
@@ -58,6 +65,12 @@
     "exhausted-search cap-plus-one censoring reason",
     "nested repeats collapsed to family blocks",
     "family-level independent-unit restriction",
+    "ordinary percentile confidence interval",
+    "recentered null one-way bootstrap",
+    "recentered null stratified one-way bootstrap",
+    "recentered null two-way bootstrap",
+    "null-bootstrap digest binding",
+    "Holm ordering on calibrated null p-values",
     "complete-crossing two-way bootstrap",
     "registered confidence and gate reconstruction",
     "strict raw-trace schema and provenance derivation",

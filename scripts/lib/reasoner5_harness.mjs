@@ -1915,19 +1915,31 @@ function conservativeQuantile(sorted, probability) {
   return sorted[index];
 }
 
-function bootstrapReceipt(units, samples, alpha, kind,
+function bootstrapReceipt(units, samples, nullSamples, alpha, kind,
   pointLogOverride = null) {
   const pointLog = pointLogOverride ??
     units.reduce((sum, unit) => sum + unit.mean_log_ratio, 0) / units.length;
-  samples.sort((left, right) => left - right);
-  const lowerLog = conservativeQuantile(samples, alpha);
-  const upperLog = conservativeQuantile(samples, 1 - alpha);
-  const oneSidedPLower = (samples.filter(value => value >= 0).length + 1) /
-    (samples.length + 1);
-  const oneSidedPHigher = (samples.filter(value => value <= 0).length + 1) /
-    (samples.length + 1);
+  requireValue(samples.length > 0 && nullSamples.length === samples.length,
+    "bootstrap and recentered null samples must have equal nonzero length");
+  for (const value of samples)
+    finiteNumber(value, "ordinary bootstrap sample");
+  for (const value of nullSamples)
+    finiteNumber(value, "recentered null bootstrap sample");
+  const sortedSamples = [...samples].sort((left, right) => left - right);
+  const sortedNullSamples = [...nullSamples]
+    .sort((left, right) => left - right);
+  const lowerLog = conservativeQuantile(sortedSamples, alpha);
+  const upperLog = conservativeQuantile(sortedSamples, 1 - alpha);
+  const oneSidedPLower = (sortedNullSamples.filter(value =>
+    value <= pointLog).length + 1) / (sortedNullSamples.length + 1);
+  const oneSidedPHigher = (sortedNullSamples.filter(value =>
+    value >= pointLog).length + 1) / (sortedNullSamples.length + 1);
+  const uncenteredTailLower = (sortedSamples.filter(value => value >= 0)
+    .length + 1) / (sortedSamples.length + 1);
+  const uncenteredTailHigher = (sortedSamples.filter(value => value <= 0)
+    .length + 1) / (sortedSamples.length + 1);
   return {
-    schema: `zero.reasoner5_${kind}_bootstrap.v1`,
+    schema: `zero.reasoner5_${kind}_bootstrap.v2`,
     independent_units: units.length,
     replicates: samples.length,
     alpha,
@@ -1937,9 +1949,17 @@ function bootstrapReceipt(units, samples, alpha, kind,
     upper_log_ratio: upperLog,
     lower_ratio: Math.exp(lowerLog),
     upper_ratio: Math.exp(upperLog),
+    confidence_interval_method: "ordinary-percentile-bootstrap",
+    p_value_method: "recentered-null-bootstrap",
+    null_hypothesis_point_log_ratio: 0,
     one_sided_p_lower_than_zero: oneSidedPLower,
     one_sided_p_higher_than_zero: oneSidedPHigher,
-    bootstrap_sha256: canonicalDigest(`${kind}-bootstrap-samples`, samples),
+    uncentered_sign_tail_fraction_lower: uncenteredTailLower,
+    uncentered_sign_tail_fraction_higher: uncenteredTailHigher,
+    bootstrap_sha256: canonicalDigest(`${kind}-bootstrap-samples`,
+      sortedSamples),
+    null_bootstrap_sha256: canonicalDigest(
+      `${kind}-recentered-null-bootstrap-samples`, sortedNullSamples),
   };
 }
 
@@ -1967,10 +1987,14 @@ export function oneWayClusterBootstrap(units, {
     if (!environments.has(environment)) environments.set(environment, []);
     environments.get(environment).push(unit);
   }
-  const rng = createDeterministicRng(seed,
-    environmentField === null ? "one-way-cluster-bootstrap" :
-      "stratified-one-way-cluster-bootstrap");
+  const pointLog = [...environments.values()].reduce((sum, environmentUnits) =>
+    sum + environmentUnits.reduce((inner, unit) =>
+      inner + unit.mean_log_ratio, 0) / environmentUnits.length, 0) /
+    environments.size;
+  const rng = createDeterministicRng(seed, environmentField === null ?
+    "one-way-cluster-bootstrap" : "stratified-one-way-cluster-bootstrap");
   const samples = [];
+  const nullSamples = [];
   for (let replicate = 0; replicate < replicates; ++replicate) {
     let sum = 0;
     for (const environmentUnits of environments.values()) {
@@ -1980,13 +2004,11 @@ export function oneWayClusterBootstrap(units, {
           .mean_log_ratio;
       sum += environmentSum / environmentUnits.length;
     }
-    samples.push(sum / environments.size);
+    const sample = sum / environments.size;
+    samples.push(sample);
+    nullSamples.push(sample - pointLog);
   }
-  const pointLog = [...environments.values()].reduce((sum, environmentUnits) =>
-    sum + environmentUnits.reduce((inner, unit) =>
-      inner + unit.mean_log_ratio, 0) / environmentUnits.length, 0) /
-    environments.size;
-  const receipt = bootstrapReceipt(units, samples, alpha,
+  const receipt = bootstrapReceipt(units, samples, nullSamples, alpha,
     environmentField === null ? "one_way_cluster" :
       "stratified_one_way_cluster", pointLog);
   return {
@@ -2032,8 +2054,11 @@ export function twoWayClusterBootstrap(units, {
     for (const column of columns)
       requireValue(cells.has(stableJson([row, column])),
         `missing crossed cell ${row} by ${column}`);
+  const pointLog = [...cells.values()].reduce((sum, value) => sum + value, 0) /
+    cells.size;
   const rng = createDeterministicRng(seed, "two-way-cluster-bootstrap");
   const samples = [];
+  const nullSamples = [];
   for (let replicate = 0; replicate < replicates; ++replicate) {
     const sampledRows = rows.map(() => rows[rng.index(rows.length)]);
     const sampledColumns = columns.map(() => columns[rng.index(columns.length)]);
@@ -2041,9 +2066,12 @@ export function twoWayClusterBootstrap(units, {
     for (const row of sampledRows)
       for (const column of sampledColumns)
         sum += cells.get(stableJson([row, column]));
-    samples.push(sum / (sampledRows.length * sampledColumns.length));
+    const sample = sum / (sampledRows.length * sampledColumns.length);
+    samples.push(sample);
+    nullSamples.push(sample - pointLog);
   }
-  const receipt = bootstrapReceipt(units, samples, alpha, "two_way_cluster");
+  const receipt = bootstrapReceipt(units, samples, nullSamples, alpha,
+    "two_way_cluster", pointLog);
   const rowUnits = rows.map(row => ({
     [rowField]: row,
     mean_log_ratio: columns.reduce((sum, column) =>
@@ -2134,6 +2162,34 @@ export function assertFamilyInferenceReceipt(receipt) {
   requireValue(isDeepStrictEqual(receipt, expected),
     "family inference receipt does not replay");
   return expected;
+}
+
+export function orderHolmByCalibratedNullPValue(mechanisms) {
+  requireValue(Array.isArray(mechanisms),
+    "Holm ordering needs formal mechanism inferences");
+  const names = new Set();
+  for (const mechanism of mechanisms) {
+    plainObject(mechanism, "Holm mechanism");
+    stringValue(mechanism.name, "Holm mechanism name");
+    requireValue(!names.has(mechanism.name),
+      `Holm mechanism name ${mechanism.name} is duplicated`);
+    names.add(mechanism.name);
+    plainObject(mechanism.inference, `${mechanism.name} inference`);
+    plainObject(mechanism.inference.interval,
+      `${mechanism.name} inference interval`);
+    requireValue(mechanism.inference.interval.p_value_method ===
+      "recentered-null-bootstrap",
+    `${mechanism.name} Holm ordering needs a calibrated null p-value`);
+    const pValue = mechanism.inference.interval
+      .one_sided_p_higher_than_zero;
+    finiteNumber(pValue, `${mechanism.name} calibrated null p-value`, 0);
+    requireValue(pValue <= 1,
+      `${mechanism.name} calibrated null p-value must be at most one`);
+  }
+  return [...mechanisms].sort((left, right) =>
+    left.inference.interval.one_sided_p_higher_than_zero -
+      right.inference.interval.one_sided_p_higher_than_zero ||
+    left.name.localeCompare(right.name));
 }
 
 export function wilsonLowerBound(wins, total,
@@ -2298,13 +2354,15 @@ export function reconstructCommonGate(input) {
     const stratumInferences = [...strata.entries()].map(([name, stratum]) =>
       [name, validateInference(stratum, `primary stratum ${name}`, "lower",
         0.05)]);
-    const mechanismValues = [...mechanisms.entries()].map(([name, mechanism]) =>
-      ({ name, mechanism, p_value:
-        mechanism.inference?.interval?.one_sided_p_higher_than_zero }));
-    for (const value of mechanismValues)
-      finiteNumber(value.p_value, `formal mechanism ${value.name} p-value`, 0);
-    mechanismValues.sort((left, right) =>
-      left.p_value - right.p_value || left.name.localeCompare(right.name));
+    const mechanismValues = orderHolmByCalibratedNullPValue(
+      [...mechanisms.entries()].map(([name, mechanism]) => ({
+        name,
+        mechanism,
+        inference: mechanism.inference,
+      }))).map(value => ({
+        ...value,
+        p_value: value.inference.interval.one_sided_p_higher_than_zero,
+      }));
     const mechanismInferences = new Map();
     for (const [index, value] of mechanismValues.entries()) {
       const alpha = registration.mechanism_family_alpha /
@@ -2725,14 +2783,13 @@ export function deriveRegisteredAnalysis(rawTraces, manifest) {
     name: analysis.name,
     inference: deriveComparison(rawTraces, analysis),
   }));
-  const provisionalMechanisms = contract.mechanism_analyses.map(analysis => ({
-    analysis,
-    inference: deriveComparison(rawTraces, analysis,
-      contract.common_gate_registration.mechanism_family_alpha),
-  })).sort((left, right) =>
-    left.inference.interval.one_sided_p_higher_than_zero -
-      right.inference.interval.one_sided_p_higher_than_zero ||
-    left.analysis.name.localeCompare(right.analysis.name));
+  const provisionalMechanisms = orderHolmByCalibratedNullPValue(
+    contract.mechanism_analyses.map(analysis => ({
+      name: analysis.name,
+      analysis,
+      inference: deriveComparison(rawTraces, analysis,
+        contract.common_gate_registration.mechanism_family_alpha),
+    })));
   const mechanisms = provisionalMechanisms.map((item, index) => ({
     name: item.analysis.name,
     inference: deriveComparison(rawTraces, item.analysis,

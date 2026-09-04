@@ -76,8 +76,17 @@ families. Two-way analysis requires a complete crossing and resamples both
 family axes. Registered independent-unit fields are limited to `family_id`,
 `cross_family_id`, and the optional fixed `generator_id` environment. Episode
 and nested-repeat IDs remain nested. The harness reports paired log cost,
-geometric and median ratios,
-wins, ties, losses, a bootstrap interval, and a one-sided Wilson lower bound.
+geometric and median ratios, wins, ties, losses, a bootstrap interval, and a
+one-sided Wilson lower bound.
+
+Confidence bounds are percentile limits from the ordinary cluster bootstrap.
+One-sided p-values come from a separate recentered null distribution. Each
+null sample uses the same family draws as its ordinary sample and subtracts
+the observed equal-weight point estimate. Stratified one-way analysis keeps
+equal weight across fixed generator environments. Two-way analysis keeps the
+registered row and column resampling. Ordinary and null samples have separate
+SHA-256 receipts. The output labels the ordinary sign-tail fraction as a
+diagnostic. Holm ordering and gates use only the calibrated null p-values.
 
 The common gate is rebuilt from registered names and raw-trace measurements.
 Missing measurements fail closed. Exactness, certificate validity, fallback
