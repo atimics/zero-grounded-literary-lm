@@ -1,0 +1,84 @@
+{
+  "schema": "zero.reasoner5_generated_family_harness_contract.v1",
+  "experiment": "reasoner5-generated-family-harness-v1",
+  "status": "development-only",
+  "base_design": {
+    "path": "benchmarks/reasoner5-next-set-v1/PLAN.json",
+    "sha256": "2e1b2ad724e44f6dd8aa87b21dc3ac80d46a4ad4a490c3bfe5506ad110973c7f"
+  },
+  "execution": {
+    "authorized": false,
+    "sealed_seeds_present": false,
+    "scientific_executions": 0
+  },
+  "implementation": {
+    "library": "scripts/lib/reasoner5_harness.mjs",
+    "check": "scripts/check_reasoner5_harness.mjs"
+  },
+  "lanes": [
+    "source-training",
+    "calibration",
+    "development",
+    "sealed"
+  ],
+  "digest": {
+    "algorithm": "sha256",
+    "canonical_encoding": "stable-json-utf8",
+    "seed_encoding": "lowercase-hex-string"
+  },
+  "statistics": {
+    "confidence_interval": "ordinary percentile cluster bootstrap",
+    "one_sided_p_value": "recentered null cluster bootstrap",
+    "fixed_environment_weighting": "equal",
+    "ordinary_and_null_sample_receipts": "separate SHA-256 digests",
+    "holm_ordering": "calibrated null p-values"
+  },
+  "required_checks": [
+    "strict canonical JSON domain",
+    "byte-identical manifest replay",
+    "hash-bound replay registry",
+    "intrinsic function-source hashing",
+    "manifest structural replay",
+    "sealed-seed commitment sensitivity",
+    "SHA-256 seed-reference validation",
+    "cross-lane family rejection",
+    "global semantic-family fingerprint rejection",
+    "transactional registration rollback",
+    "cross-lane AST rejection",
+    "cross-lane behavior rejection",
+    "cross-lane episode rejection",
+    "registered crossed-family references",
+    "registered atom and subtree overlap",
+    "semantic and syntax candidate-multiset parity",
+    "source-ablation trace equality",
+    "full operational source-ablation equality",
+    "recursive public ranker-view isolation",
+    "typed public leaf provenance",
+    "complete recursive ranker schema",
+    "case-insensitive evaluator-field rejection",
+    "registered candidate-universe enforcement",
+    "proposal record binding and work-charge floor",
+    "immutable verifier input",
+    "invalid-first-candidate rejection",
+    "canonical digest-bound fallback order",
+    "expansion-to-verifier trace linkage",
+    "complete charged fallback and cap-plus-one censoring",
+    "exhausted-search cap-plus-one censoring reason",
+    "nested repeats collapsed to family blocks",
+    "family-level independent-unit restriction",
+    "ordinary percentile confidence interval",
+    "recentered null one-way bootstrap",
+    "recentered null stratified one-way bootstrap",
+    "recentered null two-way bootstrap",
+    "null-bootstrap digest binding",
+    "Holm ordering on calibrated null p-values",
+    "complete-crossing two-way bootstrap",
+    "registered confidence and gate reconstruction",
+    "strict raw-trace schema and provenance derivation",
+    "scientific mechanism miss produces no-go",
+    "registered analysis derived from raw traces",
+    "exactness validated before measurement floor",
+    "raw-trace result digest replay",
+    "common pass-gate reconstruction"
+  ]
+}
