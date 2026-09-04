@@ -91,5 +91,25 @@ for (const filename of [
 assert(preflightSource.includes("test_metrics_opened: false"),
   "preflight does not seal test metrics");
 
+// ── Real launch wiring: use the scientific contract and keep the paid
+//    evaluator inside the hard timeout ──
+const userData = fs.readFileSync(
+  "scripts/aws/zero5-c61-evaluation-user-data.sh", "utf8");
+assert.match(userData,
+  /--recovery-contract "\$RECOVERY_CONTRACT"\s+--scientific-contract benchmarks\/zero5-c61-shared-state-v1\/contract\.json/u,
+  "evaluation user-data does not pass the scientific contract to preflight");
+assert.match(userData,
+  /timeout --signal=TERM --kill-after=90s "\$\{remaining\}s" \\\n\s+node scripts\/run_zero5_c61_evaluation_recovery\.mjs \\\n\s+"\$\{runner_args\[@\]\}" --out "\$OUT" &/u,
+  "evaluation runner escaped its hard timeout");
+
+// ── Hash coverage: derived contracts, receipts, and checkpoint state must
+//    be checked against trusted records before parsing ──
+for (const label of ["C5.1 contract", "C5.1 import receipt", "C4.3 contract",
+  "C4.3 import receipt", "C6.1 checkpoint", "C6.1 bottleneck checkpoint",
+  "C6.1 training log"]) {
+  assert(preflightSource.includes(label),
+    `preflight does not hash-bind ${label}`);
+}
+
 process.stdout.write(
   "ZERO.5 C6.1 evaluator preflight checks passed\n");

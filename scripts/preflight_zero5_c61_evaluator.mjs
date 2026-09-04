@@ -648,12 +648,23 @@ if (process.argv.includes("--trace")) {
 /* ── Main: walk the evaluator read-set and parse every record ── */
 
 try {
-  const contractPath = path.resolve(option("--contract", option("--recovery-contract", null),
-    "benchmarks/zero5-c61-shared-state-v1/contract.json"));
+  const recoveryContractPath = option("--recovery-contract");
+  const recoveryContract = recoveryContractPath
+    ? JSON.parse(fs.readFileSync(path.resolve(recoveryContractPath)))
+    : null;
+  if (recoveryContract &&
+      recoveryContract.schema !== "zero.c61_evaluation_recovery_contract.v1")
+    fail("wrong C6.1 evaluation recovery contract");
+  const contractPath = path.resolve(option("--scientific-contract",
+    option("--contract", recoveryContract?.source_training.scientific_contract ??
+      "benchmarks/zero5-c61-shared-state-v1/contract.json")));
   const contractBytes = fs.readFileSync(contractPath);
   const contract = JSON.parse(contractBytes);
   if (contract.schema !== "zero.c61_shared_state_contract.v1")
     fail("wrong C6.1 contract");
+  if (recoveryContract && sha256(contractBytes) !==
+      recoveryContract.source_training.scientific_contract_sha256)
+    fail("source C6.1 scientific contract changed");
 
   const model = {
     vocab: contract.model.language_vocabulary,
@@ -713,7 +724,15 @@ try {
   verified.control_result = artifact(controlResult);
 
   /* 4. C5.1 import receipt + C5.2 completion-eval bins */
+  const c51ContractPath = path.resolve(contract.control.c51_contract);
+  requireArtifact(c51ContractPath, contract.control.c51_contract_sha256,
+    "C5.1 contract");
+  const c51Contract = JSON.parse(fs.readFileSync(c51ContractPath));
+  verified.c51_contract = artifact(c51ContractPath);
   const c51ReceiptPath = path.join(c51Import, "import.json");
+  requireArtifact(c51ReceiptPath, c51Contract.verified_import.receipt_sha256,
+    "C5.1 import receipt");
+  const c51Receipt = JSON.parse(fs.readFileSync(c51ReceiptPath));
   verified.c51_receipt = artifact(c51ReceiptPath);
 
   const c51CompletionFiles = {
@@ -725,14 +744,23 @@ try {
       "c52.choice-b.validation.completion-eval.bin"),
   };
   for (const [name, file] of Object.entries(c51CompletionFiles)) {
-    if (!fs.existsSync(file)) fail(`C5.2 ${name} completion-eval is missing`);
+    const receiptName = name.replace("c52.", "").replace("-", "_");
+    requireArtifact(file, c51Receipt.outputs.evaluation[receiptName],
+      `C5.2 ${name} completion-eval`);
     verified[`c51_${name}`] = artifact(file);
     parsed[`c51_${name}`] = scanCompletion(fs.readFileSync(file), model,
       `${name}.completion-eval`, trace);
   }
 
   /* 5. C4.3 import receipt + frozen validation bins */
+  const c43ContractPath = path.resolve(c51Contract.control.contract_path);
+  requireArtifact(c43ContractPath, c51Contract.control.contract_sha256,
+    "C4.3 contract");
+  const c43Contract = JSON.parse(fs.readFileSync(c43ContractPath));
+  verified.c43_contract = artifact(c43ContractPath);
   const c43ReceiptPath = path.join(c43Import, "import.json");
+  requireArtifact(c43ReceiptPath, c43Contract.verified_import.first_receipt_sha256,
+    "C4.3 import receipt");
   verified.c43_receipt = artifact(c43ReceiptPath);
 
   const frozenDir = path.join(c43Import, "frozen-validation");
@@ -748,30 +776,21 @@ try {
       path.join(frozenDir, "retrieval.validation.span-choice-eval.bin"),
   };
 
-  /* Verify frozen validation hashes from the C4.3 contract */
-  const c43ContractPath = contract.control.c51_contract ?
-    JSON.parse(fs.readFileSync(
-      path.resolve(contract.control.c51_contract))).control.contract_path :
-    null;
-  if (c43ContractPath && fs.existsSync(c43ContractPath)) {
-    const c43Contract = JSON.parse(fs.readFileSync(c43ContractPath));
-    const fv = c43Contract.verified_import?.frozen_validation;
-    if (fv) {
-      requireArtifact(frozenFiles["validation.z5pack"],
-        { sha256: fv.combined_sha256 }, "frozen combined validation packs");
-      requireArtifact(frozenFiles["evidence-bundle.validation.z5pack"],
-        { sha256: fv.evidence_validation_sha256 },
-        "frozen evidence validation packs");
-      requireArtifact(frozenFiles["cloze.validation.completion-eval.bin"],
-        { sha256: fv.cloze_completion_sha256 }, "frozen cloze evaluation");
-      requireArtifact(frozenFiles["claim.validation.span-choice-eval.bin"],
-        { sha256: fv.claim_span_choices_sha256 },
-        "frozen claim span-choice evaluation");
-      requireArtifact(frozenFiles["retrieval.validation.span-choice-eval.bin"],
-        { sha256: fv.retrieval_span_choices_sha256 },
-        "frozen retrieval span-choice evaluation");
-    }
-  }
+  /* Verify frozen validation hashes from the hash-bound C4.3 contract */
+  const fv = c43Contract.verified_import.frozen_validation;
+  requireArtifact(frozenFiles["validation.z5pack"],
+    { sha256: fv.combined_sha256 }, "frozen combined validation packs");
+  requireArtifact(frozenFiles["evidence-bundle.validation.z5pack"],
+    { sha256: fv.evidence_validation_sha256 },
+    "frozen evidence validation packs");
+  requireArtifact(frozenFiles["cloze.validation.completion-eval.bin"],
+    { sha256: fv.cloze_completion_sha256 }, "frozen cloze evaluation");
+  requireArtifact(frozenFiles["claim.validation.span-choice-eval.bin"],
+    { sha256: fv.claim_span_choices_sha256 },
+    "frozen claim span-choice evaluation");
+  requireArtifact(frozenFiles["retrieval.validation.span-choice-eval.bin"],
+    { sha256: fv.retrieval_span_choices_sha256 },
+    "frozen retrieval span-choice evaluation");
 
   for (const [name, file] of Object.entries(frozenFiles)) {
     if (!fs.existsSync(file)) fail(`frozen validation file missing: ${file}`);
@@ -797,15 +816,28 @@ try {
 
   /* 6. Checkpoint pair + training log (if provided) */
   if (checkpoint) {
-    const ckpt = artifact(checkpoint);
-    verified.checkpoint = ckpt;
+    if (recoveryContract)
+      requireArtifact(checkpoint, recoveryContract.source_training.checkpoint,
+        "C6.1 checkpoint");
+    verified.checkpoint = artifact(checkpoint);
     if (bottleneckCheckpoint) {
+      if (recoveryContract)
+        requireArtifact(bottleneckCheckpoint,
+          recoveryContract.source_training.bottleneck,
+          "C6.1 bottleneck checkpoint");
       verified.bottleneck_checkpoint = artifact(bottleneckCheckpoint);
     } else if (fs.existsSync(`${checkpoint}.aux`)) {
+      if (recoveryContract)
+        requireArtifact(`${checkpoint}.aux`,
+          recoveryContract.source_training.bottleneck,
+          "C6.1 bottleneck checkpoint");
       verified.bottleneck_checkpoint = artifact(`${checkpoint}.aux`);
     }
   }
   if (trainingLog) {
+    if (recoveryContract)
+      requireArtifact(trainingLog, recoveryContract.source_training.training_log,
+        "C6.1 training log");
     verified.training_log = artifact(trainingLog);
   }
   if (baselineCheckpoint) {
@@ -822,6 +854,9 @@ try {
     ["anchor-train", anchorTrain],
     ["anchor-validation", anchorValidation]]) {
     if (file) {
+      const contractName = name.replace(/-([a-z])/gu,
+        (_, letter) => letter.toUpperCase());
+      requireArtifact(file, contract.inputs[contractName], name);
       verified[name.replace(/-/g, "_")] = artifact(file);
     }
   }

@@ -188,6 +188,7 @@ make zero5_c61_bottleneck_lm zero5_c32_lm_vector_math
 node scripts/check_zero5_c61_evaluation_recovery.mjs
 runner_args=(
   --recovery-contract "$RECOVERY_CONTRACT"
+  --scientific-contract benchmarks/zero5-c61-shared-state-v1/contract.json
   --authorization "$EVALUATION_AUTH"
   --checkpoint "$INPUT/best.ckpt"
   --training-log "$INPUT/training.log"
@@ -215,9 +216,7 @@ remaining=$((LAUNCH_EPOCH + MAX_INSTANCE_SECONDS - $(date +%s) - 180))
 test "$remaining" -gt 0
 set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
-  node scripts/preflight_zero5_c61_evaluator.mjs \
-  "${runner_args[@]}" >/dev/null
-node scripts/run_zero5_c61_evaluation_recovery.mjs \
+  node scripts/run_zero5_c61_evaluation_recovery.mjs \
     "${runner_args[@]}" --out "$OUT" &
 RUNNER_PID=$!
 while kill -0 "$RUNNER_PID" 2>/dev/null; do
