@@ -2980,3 +2980,12 @@ check: reasoner55-check
 clean: clean-reasoner55
 clean-reasoner55:
 	rm -f reasoner55
+
+.PHONY: reasoner5-harness-check reasoner5-harness-contract-check
+reasoner5-harness-check:
+	node scripts/check_reasoner5_harness.mjs
+
+reasoner5-harness-contract-check:
+	node scripts/check_reasoner5_harness_contract.mjs
+
+check: reasoner5-harness-check reasoner5-harness-contract-check

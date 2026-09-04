@@ -1241,6 +1241,9 @@ ranker. It owns family splits, semantic deduplication, episode manifests,
 nested repeat IDs, arm parity checks, metrics, confidence intervals, and
 provenance.
 
+The development implementation and its executable acceptance checks are
+defined in the [generated-family harness specification](../benchmarks/reasoner5-generated-family-harness-v1/SPEC.md).
+
 The harness must pass these tests:
 
 - replay from a manifest yields byte-identical episodes;
