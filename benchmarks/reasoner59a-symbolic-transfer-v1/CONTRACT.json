@@ -40,7 +40,7 @@
     },
     "scripts/lib/reasoner5_harness.mjs": {
       "bytes": 139038,
-      "sha256": "bcaf2eba7685df9bb94b971ebb09849c7e6eb19a8c772ef7f74d3ac267f33bfb"
+      "sha256": "3e57c5839c352b0e7ea9acb51df1a98741ee836045c41718c3432b4b9753ba9a"
     },
     "scripts/lib/reasoner59a_symbolic.mjs": {
       "bytes": 95345,
@@ -85,8 +85,8 @@
       "sha256": "417a3f22b6f76f4c3a547a038d99ce127a88f7356a962ae4effa915730859a13"
     },
     "DEVELOPMENT.json": {
-      "bytes": 96359,
-      "sha256": "5884dcebe6b2d7ef433d496d70c3bf8dccd87e1fe8eea515ca5e8a1aca0b02eb"
+      "bytes": 95257,
+      "sha256": "f0e62c8b73cb1c28cb06ac78d206e19470001cdc81feea00d0266260ce41586f"
     }
   },
   "receipts": {
@@ -94,8 +94,8 @@
     "manifest_sha256": "4c4b7d6bb891835afa983f3766f1999ccf5d0a73038dad23bcda0d71e0f9a0ab",
     "manifest_replay_sha256": "562c3e790adb5af33fa0fb6ac81c22338b2e6705e30f2d5df64bd24a1d79efcf",
     "raw_trace_sha256": "523e12c6fc0274c813b74ca6f7a764def9458f15a5e6919d2f60ceff469204b0",
-    "result_sha256": "3a88eabae799921e395b63e41a1df84b071d25bb0294b3cfd7a0697a7c3a7ee1",
+    "result_sha256": "35f764d52894ff86ab536c0e67f11305f6205f7d917983baef13888126407772",
     "result_decision": "no-go"
   },
-  "contract_sha256": "541d31772aa19aa97994a53a801e13d9def0f481e57150a67fc1906c90476f17"
+  "contract_sha256": "13e9220ac3854a1a9c38135589a8362714dabd623c634f688290c37a0f50dda4"
 }
