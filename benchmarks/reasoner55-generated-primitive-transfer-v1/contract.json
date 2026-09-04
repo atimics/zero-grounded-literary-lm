@@ -11,10 +11,12 @@
     "cloud_run": null
   },
   "implementation": {
-    "core_sha256": "208e1fda6ce0ca978aae11a1e23dcd9b270ae0e258efa61b88db3c8c8656d11e",
-    "header_sha256": "45d0729c468d7de6c9764c8348dc31c9cdda46ee0ec98556fa228bfc49c7492e",
+    "core_sha256": "f9d8676b06050285b2fda612de21465f00f22c7d5f3a3609f6a7fa44f6fa841a",
+    "header_sha256": "3d9f607aa2963dad7e3000afff9897c77fa0a827483d825deac7761fecfe85e7",
     "cli_sha256": "5df3da7f977358cd61eb53aae060dd23143360e8705a2f5291a2bb0f706bddb6",
-    "development_checker_sha256": "9be3d6fccdd83e2f8620132a06c7f123a5c6437a043ed3c054be3aaadf061812",
+    "development_checker_sha256": "37b65cce4c01d78ab28fcdc438006fad188a3f2aec1d1906cd5aad78dfa47200",
+    "shared_harness_sha256": "32f24aaa946ab8611a6085830ce0172835394fdf077cab41b9e014460a425e6c",
+    "replay_adapter_sha256": "f97ab3efb1055ac2db8457e1cdc7ac8e00a27f1ba744aba79e070101f9cc9a3b",
     "protected_predecessors": {
       "reasoner51_c_sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
       "reasoner52_c_sha256": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
@@ -68,19 +70,27 @@
     "development_families_per_generator": 4,
     "tie_repeats_per_generator_environment": 2,
     "generator_environments": 4,
-    "family_units": 16,
+    "family_units": 8,
+    "generator_environment_views": 16,
     "episodes": 32
+  },
+  "development_family_selection": {
+    "metric": "target-only median primary cost across two source-generator views and two fixed tie salts",
+    "minimum": 16,
+    "maximum": 64,
+    "timing": "before family split freeze",
+    "maximum_generation_attempts": 65536
   },
   "source_artifact": {
     "schema": "R55A0001",
     "learning_rule": "Laplace-smoothed position and adjacent-role counts from canonical exact source solutions",
     "canonical_bytes": 1823,
-    "sha256": "7e62f3276023af86d2a8c34bbb32991522f2eaa501fae960f015f6445c05fd8e"
+    "sha256": "0f1f7b4f76a57328c717a3cbc552c5aebf76bfbadf0d7e493f03c628e8edfb14"
   },
   "search": {
     "candidate_order": "initial evidence loss, source guide score, frozen tie salt, syntax index",
     "proposal_budget": 64,
-    "charged_fallback": "canonical exhaustive syntax order with semantic deduplication",
+    "charged_fallback": "shared canonical candidate-record order with semantic deduplication",
     "global_distinct_semantic_cap": 4096,
     "cap_value": 4097,
     "primary_cost": "distinct complete semantic classes submitted to the exact verifier",
@@ -101,15 +111,22 @@
     "source_only",
     "31_frozen_frequency_preserving_role_derangements"
   ],
+  "derangement_registration": {
+    "sampler": "uniform Fisher-Yates with fixed-point and duplicate rejection",
+    "seed": "55d3a6e77a11c0de",
+    "namespace": "reasoner55-role-derangements-v1",
+    "sha256": "4b29c6f5236276a53adc0fbabacb758b44078146a70fbc3213cac29d55d0e588"
+  },
   "development_selection": {
     "source_free_candidates": ["target_only", "source_free_jit"],
-    "strongest_source_free_arm": "target_only"
+    "strongest_source_free_arm": "source_free_jit",
+    "family_headroom_rule": "target-only median over four fixed generator-tie environments must be 16 through 64 before split freeze"
   },
   "trace": {
     "schema": "zero.reasoner55_trace_row.v1",
     "row_grain": "one arm by episode",
     "rows": 1280,
-    "raw_sha256": "0a85404650cbd854ef6a2f847657c149891ca45fb72275956b2a5521b33ed945",
+    "raw_sha256": "7f5acbab6f1b76c11962c4084f46e227843b5836154b89ff761644b1e3771c27",
     "cross_family_id": null,
     "family_unit_fields": [
       "source_generator_id",
@@ -117,6 +134,11 @@
       "family_id"
     ],
     "nested_repeat_field": "nested_repeat_id"
+  },
+  "shared_replay": {
+    "strict_trace_schema": "zero.reasoner5_trace_row.v1",
+    "coverage_sha256": "307bef880949ce04c786c76b9d0b51bd15179f9f842c7dae49be4c086c9110a7",
+    "common_result_sha256": "36ffc6cfd29e249825211caf78e0ff5ef1471c0d1a939f1506aab1d9b3a645a6"
   },
   "development_gates": {
     "target_only_median_minimum": 16,
@@ -126,6 +148,13 @@
     "source_ablation_matches_source_free_path": true,
     "full_matches_oracle_adapter": true,
     "arm_parity_digests_match_within_episode": true
+  },
+  "resource_measurement": {
+    "observation_queries": "logical target primitive calls",
+    "partial_expansions": "candidate construction plus every proposed or fallback occurrence",
+    "source_artifact_reads": "canonical guide bytes made available to the arm",
+    "wall_ns": null,
+    "peak_bytes": null
   },
   "next_boundary": "freeze larger calibration and sealed family sets in a later preregistration"
 }

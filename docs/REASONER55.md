@@ -37,8 +37,15 @@ random streams.
 
 The development fixture uses 64 source families from each generator and four
 target families from each generator. Source and target generators form four
-fixed environments. Two tie salts are nested inside each family and
-environment, producing 32 episodes.
+fixed views. Two tie salts are nested inside each target family and view,
+producing 32 episodes. The generator keeps a development family only when its
+target-only median across the four fixed view and tie combinations is between
+16 and 64 checks. This registered ambiguity rule creates measurement headroom
+before the family split freezes.
+
+Target AST and complete behavior fingerprints are unique across all 128 source
+families and all eight development families. The split receipt records every
+fingerprint before episode generation.
 
 ## Semantic adapter and guide
 
@@ -47,10 +54,14 @@ basis vectors. Those four outputs reconstruct the exact 3 by 3 matrix and
 bias. The development evaluator compares the reconstruction with the hidden
 coefficients and then checks all 125 inputs.
 
+The ranker receives a typed public view containing surface labels, the single
+demonstration, and the allowed action. Target coefficients, semantic roles,
+family state, and exact-test values stay in the evaluator view.
+
 The source artifact stores integer position counts and adjacent-role counts
 from canonical exact source solutions. It has a canonical 1,823-byte encoding.
 Its SHA-256 is
-`7e62f3276023af86d2a8c34bbb32991522f2eaa501fae960f015f6445c05fd8e`.
+`0f1f7b4f76a57328c717a3cbc552c5aebf76bfbadf0d7e493f03c628e8edfb14`.
 
 ## Arms
 
@@ -66,14 +77,26 @@ source-free just-in-time guide, its byte-for-byte source ablation path, a
 source-only guide, and 31 fixed role derangements.
 
 Every arm receives the same candidate multiset, evidence, allowed actions,
-latent task, potential responses, verifier, and caps. Each raw row carries
-digests for these values so the shared Reasoner 5 harness can verify parity.
+latent task, potential responses, verifier, and caps. Canonical fallback order
+comes from the shared Reasoner 5 harness. Each raw row carries a source artifact
+digest and a hash-bound 190-byte replay preimage. The checker uses these bytes
+to rebuild all 4,096 candidates, every rank, and every 125-point verifier
+decision. It then converts every row to the strict shared trace schema.
+
+The 31 role derangements come from a registered uniform Fisher-Yates sampler.
+Fixed-point and duplicate draws are rejected. Their shared canonical digest is
+`4b29c6f5236276a53adc0fbabacb758b44078146a70fbc3213cac29d55d0e588`.
 
 ## Development fixture
 
-The checked-in fixture has 1,280 raw arm rows. Its target-only median is 16
-checks, inside the selected 16-to-64 development range. The development lane
-selects `target_only` as the stronger source-free comparator.
+The checked-in fixture has 1,280 raw arm rows. Its target-only median is 18
+checks, inside the registered 16-to-64 development range. The development lane
+selects `source_free_jit` as the stronger source-free comparator.
+
+Observation queries and candidate expansions are logical work counters.
+Source artifact access counts the canonical guide bytes made available to an
+arm. Wall time and peak memory are explicitly unmeasured in this deterministic
+development fixture.
 
 The fixture is a calibration record. The scientific decision begins with a
 future frozen contract and its own explicit run approval.
@@ -86,7 +109,9 @@ make reasoner55-check
 
 The checker replays every aggregate from raw rows, confirms arm parity,
 validates artifact and trace hashes, verifies nested family structure, and
-compares a fresh deterministic run with the checked-in files.
+compares a fresh deterministic run with the checked-in files. It also rebuilds
+the common result from strict shared rows and verifies that result a second
+time from the raw traces.
 
 See the [development record](../benchmarks/reasoner55-generated-primitive-transfer-v1/DEVELOPMENT.md),
 the [development contract](../benchmarks/reasoner55-generated-primitive-transfer-v1/contract.json),

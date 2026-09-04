@@ -41,6 +41,13 @@ typedef struct {
 } r55_family;
 
 typedef struct {
+    r55_affine primitive_by_surface[R55_PRIMITIVES];
+    uint32_t surface_id[R55_PRIMITIVES];
+    uint8_t example_input[R55_LANES];
+    uint8_t example_output[R55_LANES];
+} r55_public_episode;
+
+typedef struct {
     uint16_t syntax_index;
     uint8_t token[R55_PROGRAM_LEN];
     uint8_t role[R55_PROGRAM_LEN];
@@ -49,6 +56,13 @@ typedef struct {
     uint64_t prior;
     uint64_t tie;
 } r55_candidate;
+
+typedef struct {
+    uint16_t syntax_index;
+    uint8_t semantic_sha256[32];
+    uint8_t ast_sha256[32];
+    uint8_t record_sha256[32];
+} r55_canonical_candidate;
 
 typedef struct {
     uint32_t primary_cost;
@@ -201,6 +215,42 @@ static void r55_hex(const uint8_t digest[32], char output[65])
         output[index * 2u + 1u] = digits[digest[index] & 15u];
     }
     output[64] = '\0';
+}
+
+static int r55_canonical_number_digest(const char *kind, uint32_t value,
+                                       uint8_t digest[32])
+{
+    char json[256];
+    int length = snprintf(json, sizeof(json),
+        "{\n  \"kind\": \"%s\",\n"
+        "  \"schema\": \"zero.reasoner5_canonical.v1\",\n"
+        "  \"value\": %u\n}\n", kind, value);
+    r55_sha256 sha;
+    if (length < 0 || (size_t)length >= sizeof(json)) return 1;
+    r55_sha256_init(&sha);
+    r55_sha256_update(&sha, json, (size_t)length);
+    r55_sha256_final(&sha, digest);
+    return 0;
+}
+
+static int r55_canonical_record_digest(uint32_t ast, uint32_t semantic,
+                                       uint8_t digest[32])
+{
+    char json[384];
+    int length = snprintf(json, sizeof(json),
+        "{\n  \"kind\": \"candidate-record\",\n"
+        "  \"schema\": \"zero.reasoner5_canonical.v1\",\n"
+        "  \"value\": {\n"
+        "    \"ast\": %u,\n"
+        "    \"partial_expansions\": 1,\n"
+        "    \"semantic\": %u\n"
+        "  }\n}\n", ast, semantic);
+    r55_sha256 sha;
+    if (length < 0 || (size_t)length >= sizeof(json)) return 1;
+    r55_sha256_init(&sha);
+    r55_sha256_update(&sha, json, (size_t)length);
+    r55_sha256_final(&sha, digest);
+    return 0;
 }
 
 static uint64_t r55_mix64(uint64_t value)
@@ -502,19 +552,36 @@ static void r55_program_tokens(uint16_t index,
     }
 }
 
-static r55_affine r55_program_from_surface(const r55_family *family,
-                                           const uint8_t token[R55_PROGRAM_LEN])
+static void r55_make_public_episode(const r55_family *family,
+                                    r55_public_episode *public_episode)
+{
+    uint32_t slot;
+    memset(public_episode, 0, sizeof(*public_episode));
+    for (slot = 0; slot < R55_PRIMITIVES; ++slot) {
+        public_episode->primitive_by_surface[slot] =
+            family->primitive_by_role[family->surface_to_role[slot]];
+        public_episode->surface_id[slot] = family->surface_id[slot];
+    }
+    memcpy(public_episode->example_input, family->example_input,
+           sizeof(public_episode->example_input));
+    memcpy(public_episode->example_output, family->example_output,
+           sizeof(public_episode->example_output));
+}
+
+static r55_affine r55_public_program_semantic(
+    const r55_public_episode *public_episode,
+    const uint8_t token[R55_PROGRAM_LEN])
 {
     r55_affine result = r55_identity();
     uint32_t position;
-    for (position = 0; position < R55_PROGRAM_LEN; ++position) {
-        uint8_t role = family->surface_to_role[token[position]];
-        result = r55_compose(&family->primitive_by_role[role], &result);
-    }
+    for (position = 0; position < R55_PROGRAM_LEN; ++position)
+        result = r55_compose(
+            &public_episode->primitive_by_surface[token[position]], &result);
     return result;
 }
 
-static void r55_public_program_apply(const r55_family *family,
+static void r55_public_program_apply(
+                                     const r55_public_episode *public_episode,
                                      const uint8_t token[R55_PROGRAM_LEN],
                                      const uint8_t input[R55_LANES],
                                      uint8_t output[R55_LANES])
@@ -524,8 +591,8 @@ static void r55_public_program_apply(const r55_family *family,
     uint32_t position;
     memcpy(current, input, sizeof(current));
     for (position = 0; position < R55_PROGRAM_LEN; ++position) {
-        uint8_t role = family->surface_to_role[token[position]];
-        r55_apply(&family->primitive_by_role[role], current, next);
+        r55_apply(&public_episode->primitive_by_surface[token[position]],
+                  current, next);
         memcpy(current, next, sizeof(current));
     }
     memcpy(output, current, sizeof(current));
@@ -881,7 +948,7 @@ static uint64_t r55_guide_score(const r55_guide *guide,
     return score;
 }
 
-static void r55_fill_candidate(const r55_family *family,
+static void r55_fill_candidate(const r55_public_episode *public_episode,
                                const uint8_t mapped_role[R55_PRIMITIVES],
                                const r55_guide *guide, int frequency_only,
                                int ignore_evidence, uint64_t tie_salt,
@@ -895,11 +962,12 @@ static void r55_fill_candidate(const r55_family *family,
     r55_program_tokens(syntax_index, candidate->token);
     for (position = 0; position < R55_PROGRAM_LEN; ++position)
         candidate->role[position] = mapped_role[candidate->token[position]];
-    candidate->semantic = r55_program_from_surface(family, candidate->token);
-    r55_public_program_apply(family, candidate->token,
-        family->example_input, observed);
+    candidate->semantic = r55_public_program_semantic(
+        public_episode, candidate->token);
+    r55_public_program_apply(public_episode, candidate->token,
+        public_episode->example_input, observed);
     candidate->evidence_loss = ignore_evidence ? 0u :
-        (uint8_t)(memcmp(observed, family->example_output,
+        (uint8_t)(memcmp(observed, public_episode->example_output,
                          sizeof(observed)) != 0);
     candidate->prior = guide ?
         r55_guide_score(guide, candidate->role, frequency_only) : 0u;
@@ -923,7 +991,7 @@ static int r55_candidate_compare(const void *left_pointer,
     return 0;
 }
 
-static int r55_build_jit_guide(const r55_family *family,
+static int r55_build_jit_guide(const r55_public_episode *public_episode,
                                const uint8_t recovered_role[R55_PRIMITIVES],
                                r55_guide *guide)
 {
@@ -936,8 +1004,10 @@ static int r55_build_jit_guide(const r55_family *family,
         uint8_t observed[R55_LANES];
         uint32_t position;
         r55_program_tokens(index, token);
-        r55_public_program_apply(family, token, family->example_input, observed);
-        if (memcmp(observed, family->example_output, sizeof(observed)) != 0)
+        r55_public_program_apply(public_episode, token,
+                                 public_episode->example_input, observed);
+        if (memcmp(observed, public_episode->example_output,
+                   sizeof(observed)) != 0)
             continue;
         for (position = 0; position < R55_PROGRAM_LEN; ++position)
             roles[position] = recovered_role[token[position]];
@@ -1061,7 +1131,49 @@ static int r55_key_compare(const void *left, const void *right)
     return a < b ? -1 : a > b;
 }
 
-static uint32_t r55_candidate_universe(const r55_family *family,
+static int r55_canonical_candidate_compare(const void *left_pointer,
+                                           const void *right_pointer)
+{
+    const r55_canonical_candidate *left = left_pointer;
+    const r55_canonical_candidate *right = right_pointer;
+    int compared = memcmp(left->semantic_sha256, right->semantic_sha256, 32u);
+    if (compared != 0) return compared;
+    compared = memcmp(left->ast_sha256, right->ast_sha256, 32u);
+    if (compared != 0) return compared;
+    compared = memcmp(left->record_sha256, right->record_sha256, 32u);
+    if (compared != 0) return compared;
+    return left->syntax_index < right->syntax_index ? -1 :
+        left->syntax_index > right->syntax_index;
+}
+
+static int r55_canonical_fallback_order(
+    const r55_public_episode *public_episode,
+    r55_canonical_candidate output[R55_CANDIDATES])
+{
+    uint32_t index;
+    for (index = 0; index < R55_CANDIDATES; ++index) {
+        uint8_t token[R55_PROGRAM_LEN];
+        r55_affine semantic;
+        uint32_t semantic_key;
+        output[index].syntax_index = (uint16_t)index;
+        r55_program_tokens((uint16_t)index, token);
+        semantic = r55_public_program_semantic(public_episode, token);
+        semantic_key = r55_semantic_key(&semantic);
+        if (r55_canonical_number_digest("candidate-semantic-class",
+                semantic_key, output[index].semantic_sha256) != 0 ||
+            r55_canonical_number_digest("candidate-ast", index,
+                output[index].ast_sha256) != 0 ||
+            r55_canonical_record_digest(index, semantic_key,
+                output[index].record_sha256) != 0)
+            return 1;
+    }
+    qsort(output, R55_CANDIDATES, sizeof(output[0]),
+          r55_canonical_candidate_compare);
+    return 0;
+}
+
+static uint32_t r55_candidate_universe(
+                                       const r55_public_episode *public_episode,
                                        uint8_t digest[32])
 {
     uint32_t keys[R55_CANDIDATES];
@@ -1072,7 +1184,7 @@ static uint32_t r55_candidate_universe(const r55_family *family,
         uint8_t token[R55_PROGRAM_LEN];
         r55_affine map;
         r55_program_tokens((uint16_t)index, token);
-        map = r55_program_from_surface(family, token);
+        map = r55_public_program_semantic(public_episode, token);
         keys[index] = r55_semantic_key(&map);
     }
     qsort(keys, R55_CANDIDATES, sizeof(keys[0]), r55_key_compare);
@@ -1113,7 +1225,9 @@ static int r55_search_candidate(r55_seen *seen, const r55_candidate *candidate,
     return 0;
 }
 
-static int r55_search(const r55_family *family,
+static int r55_search(const r55_public_episode *public_episode,
+                      const r55_affine *target,
+                      const uint8_t oracle_role[R55_PRIMITIVES],
                       const uint8_t recovered_role[R55_PRIMITIVES],
                       const r55_guide *source_guide,
                       const r55_guide *jit_guide,
@@ -1141,10 +1255,11 @@ static int r55_search(const r55_family *family,
     if (arm == R55_ARM_RAW_LEXICAL || arm == R55_ARM_FREQUENCY_LEXICAL ||
         arm == R55_ARM_SOURCE_ONLY)
         for (slot = 0; slot < R55_PRIMITIVES; ++slot)
-            mapped_role[slot] = (uint8_t)(family->surface_id[slot] % R55_ROLES);
+            mapped_role[slot] = (uint8_t)(
+                public_episode->surface_id[slot] % R55_ROLES);
     if (arm == R55_ARM_ORACLE_ADAPTER)
         for (slot = 0; slot < R55_PRIMITIVES; ++slot)
-            mapped_role[slot] = family->surface_to_role[slot];
+            mapped_role[slot] = oracle_role[slot];
     if (arm >= R55_BASE_ARMS) {
         uint32_t shuffle = arm - R55_BASE_ARMS;
         for (slot = 0; slot < R55_PRIMITIVES; ++slot)
@@ -1167,7 +1282,7 @@ static int r55_search(const r55_family *family,
     frequency_only = arm == R55_ARM_FREQUENCY_LEXICAL;
     ignore_evidence = arm == R55_ARM_SOURCE_ONLY;
     for (index = 0; index < R55_CANDIDATES; ++index) {
-        r55_fill_candidate(family, mapped_role, guide, frequency_only,
+        r55_fill_candidate(public_episode, mapped_role, guide, frequency_only,
             ignore_evidence, tie_salt, (uint16_t)index, &ranked[index]);
     }
     qsort(ranked, R55_CANDIDATES, sizeof(ranked[0]), r55_candidate_compare);
@@ -1181,28 +1296,34 @@ static int r55_search(const r55_family *family,
     r55_sha256_final(&order_sha, result->proposal_order);
     injection = ranked[0];
     for (index = 0; index < R55_CANDIDATES; ++index)
-        if (!r55_affine_equal(&ranked[index].semantic, &family->target)) {
+        if (!r55_affine_equal(&ranked[index].semantic, target)) {
             injection = ranked[index];
             break;
         }
-    state = r55_search_candidate(&seen, &injection, &family->target,
+    state = r55_search_candidate(&seen, &injection, target,
                                  result, global_cap);
     if (state != 0) return state < 0 ? 1 : 0;
     result->invalid_first_rejected = 1u;
     if (proposal_budget > R55_CANDIDATES) proposal_budget = R55_CANDIDATES;
     for (index = 0; index < proposal_budget; ++index) {
-        state = r55_search_candidate(&seen, &ranked[index], &family->target,
+        state = r55_search_candidate(&seen, &ranked[index], target,
                                      result, global_cap);
         if (state < 0) return 1;
         if (state == 1 || state == 2) break;
     }
     if (!result->exact && !result->global_cap_hit) {
+        r55_canonical_candidate fallback_order[R55_CANDIDATES];
         result->fallback_started = 1u;
+        if (r55_canonical_fallback_order(public_episode,
+                                         fallback_order) != 0)
+            return 1;
         for (index = 0; index < R55_CANDIDATES; ++index) {
             r55_candidate candidate;
-            r55_fill_candidate(family, mapped_role, guide, frequency_only,
-                ignore_evidence, tie_salt, (uint16_t)index, &candidate);
-            state = r55_search_candidate(&seen, &candidate, &family->target,
+            r55_fill_candidate(public_episode, mapped_role, guide,
+                frequency_only,
+                ignore_evidence, tie_salt, fallback_order[index].syntax_index,
+                &candidate);
+            state = r55_search_candidate(&seen, &candidate, target,
                                          result, global_cap);
             if (state < 0) return 1;
             if (state == 1 || state == 2) break;
@@ -1214,6 +1335,61 @@ static int r55_search(const r55_family *family,
     result->primary_cost = result->global_cap_hit ?
         global_cap + 1u : result->verifier_checks;
     return 0;
+}
+
+static int r55_development_family_has_headroom(
+    const r55_family *family,
+    const uint8_t derangements[R55_DERANGEMENTS][R55_ROLES])
+{
+    r55_public_episode public_episode;
+    uint8_t public_roles[R55_PRIMITIVES];
+    uint32_t costs[R55_GENERATORS * R55_TIE_REPEATS];
+    uint32_t source_generator, tie, count = 0;
+    r55_make_public_episode(family, &public_episode);
+    for (source_generator = 0; source_generator < R55_PRIMITIVES;
+         ++source_generator)
+        public_roles[source_generator] = (uint8_t)source_generator;
+    for (source_generator = 0; source_generator < R55_GENERATORS;
+         ++source_generator)
+        for (tie = 0; tie < R55_TIE_REPEATS; ++tie) {
+            r55_search_result search;
+            uint64_t tie_salt = r55_mix64(family->family_seed ^
+                ((uint64_t)source_generator << 48u) ^ tie ^
+                R55_TIE_NAMESPACE);
+            if (r55_search(&public_episode, &family->target,
+                    family->surface_to_role, public_roles, NULL, NULL,
+                    R55_ARM_TARGET_ONLY, derangements, tie_salt,
+                    R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &search) != 0)
+                return 0;
+            costs[count++] = search.primary_cost;
+        }
+    qsort(costs, count, sizeof(costs[0]), r55_key_compare);
+    return (costs[1] + costs[2]) / 2u >= R55_HEADROOM_MINIMUM &&
+        (costs[1] + costs[2]) / 2u <= R55_HEADROOM_MAXIMUM;
+}
+
+static int r55_make_unique_development_family(
+    r55_family *family, uint8_t generator, uint32_t ordinal,
+    r55_affine *used, uint32_t *used_count,
+    uint32_t *used_ast, uint32_t *used_ast_count,
+    const uint8_t derangements[R55_DERANGEMENTS][R55_ROLES])
+{
+    uint32_t nonce;
+    for (nonce = 0; nonce < 65536u; ++nonce) {
+        uint32_t ast_key;
+        if (r55_generate_family(family, R55_DEVELOPMENT_ROOT, generator,
+                                ordinal, nonce) != 0)
+            continue;
+        ast_key = r55_ast_key(family->target_roles);
+        if (r55_map_used(used, *used_count, &family->target) ||
+            r55_ast_used(used_ast, *used_ast_count, ast_key) ||
+            !r55_development_family_has_headroom(family, derangements))
+            continue;
+        used[(*used_count)++] = family->target;
+        used_ast[(*used_ast_count)++] = ast_key;
+        return 0;
+    }
+    return 1;
 }
 
 const char *r55_generator_name(uint32_t generator)
@@ -1393,10 +1569,11 @@ int r55_run_development(r55_development_result *result,
     for (target_generator = 0; target_generator < R55_GENERATORS;
          ++target_generator)
         for (ordinal = 0; ordinal < R55_DEVELOPMENT_FAMILIES; ++ordinal)
-            if (r55_make_unique_family(
+            if (r55_make_unique_development_family(
                     &development[target_generator][ordinal],
-                    R55_DEVELOPMENT_ROOT, (uint8_t)target_generator, ordinal,
-                    used, &used_count, used_ast, &used_ast_count) != 0)
+                    (uint8_t)target_generator, ordinal,
+                    used, &used_count, used_ast, &used_ast_count,
+                    derangements) != 0)
                 return 1;
             else if (r55_record_family_receipt(
                     result, &development[target_generator][ordinal], 1u) != 0)
@@ -1410,14 +1587,17 @@ int r55_run_development(r55_development_result *result,
          ++target_generator) {
         for (ordinal = 0; ordinal < R55_DEVELOPMENT_FAMILIES; ++ordinal) {
             r55_family *family = &development[target_generator][ordinal];
+            r55_public_episode public_episode;
             r55_affine recovered[R55_PRIMITIVES];
             uint8_t recovered_role[R55_PRIMITIVES];
             r55_guide jit_guide;
             uint8_t candidate_digest[32], ast[32], behavior[32];
             uint8_t specification[32], evidence[32], potential[32];
-            uint32_t distinct = r55_candidate_universe(family,
-                                                       candidate_digest);
+            uint32_t distinct;
             uint32_t domain_checks = 0;
+            r55_make_public_episode(family, &public_episode);
+            distinct = r55_candidate_universe(&public_episode,
+                                              candidate_digest);
             result->semantic_collisions += R55_CANDIDATES - distinct;
             ++result->adapter_reconstructions;
             if (r55_reconstruct_adapter(family, recovered, recovered_role,
@@ -1426,7 +1606,8 @@ int r55_run_development(r55_development_result *result,
             else
                 return 1;
             result->adapter_domain_checks += domain_checks;
-            if (r55_build_jit_guide(family, recovered_role, &jit_guide) != 0)
+            if (r55_build_jit_guide(
+                    &public_episode, recovered_role, &jit_guide) != 0)
                 return 1;
             r55_digest_family_parts(family, ast, behavior, specification,
                                     evidence, potential);
@@ -1439,7 +1620,8 @@ int r55_run_development(r55_development_result *result,
                         R55_TIE_NAMESPACE);
                     ++result->episodes;
                     for (arm = 0; arm < R55_ARMS; ++arm) {
-                        if (r55_search(family, recovered_role,
+                        if (r55_search(&public_episode, &family->target,
+                                family->surface_to_role, recovered_role,
                                 &artifact->guides[source_generator],
                                 &jit_guide, arm, derangements, tie_salt,
                                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP,
@@ -1510,6 +1692,7 @@ static int r55_sha_self_test(void)
 int r55_self_test(void)
 {
     r55_family a, replay, b;
+    r55_public_episode public_a;
     r55_affine recovered[R55_PRIMITIVES];
     uint8_t recovered_role[R55_PRIMITIVES];
     uint32_t checks = 0;
@@ -1554,6 +1737,7 @@ int r55_self_test(void)
     R55_TEST(r55_reconstruct_adapter(
         &a, recovered, recovered_role, &checks) == 0,
         "zero-plus-basis reconstruction");
+    r55_make_public_episode(&a, &public_a);
     R55_TEST(checks == R55_PRIMITIVES * R55_DOMAIN_POINTS,
              "adapter exhaustive domain count");
     first = a.primitive_by_role[R55_ROLE_SHEAR];
@@ -1564,7 +1748,7 @@ int r55_self_test(void)
     r55_apply(&combined, input, composed);
     R55_TEST(memcmp(sequential, composed, sizeof(composed)) == 0,
              "affine composition");
-    distinct = r55_candidate_universe(&a, candidate_digest);
+    distinct = r55_candidate_universe(&public_a, candidate_digest);
     R55_TEST(distinct > 0u && distinct < R55_CANDIDATES,
              "semantic collisions");
     R55_TEST(r55_make_derangements(derangements) == 0,
@@ -1573,13 +1757,15 @@ int r55_self_test(void)
         for (role = 0; role < R55_ROLES; ++role)
             R55_TEST(derangements[shuffle][role] != role,
                      "derangement fixed point");
-    R55_TEST(r55_build_jit_guide(&a, recovered_role, &jit) == 0,
+    R55_TEST(r55_build_jit_guide(&public_a, recovered_role, &jit) == 0,
              "source-free guide");
-    R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+    R55_TEST(r55_search(&public_a, &a.target, a.surface_to_role,
+            recovered_role, &jit, &jit,
             R55_ARM_SOURCE_FREE_JIT, derangements, tie_salt,
             R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &jit_result) == 0,
             "source-free search");
-    R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+    R55_TEST(r55_search(&public_a, &a.target, a.surface_to_role,
+            recovered_role, &jit, &jit,
             R55_ARM_SOURCE_ABLATION, derangements, tie_salt,
             R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &ablated_result) == 0,
             "source-ablation search");
@@ -1590,27 +1776,33 @@ int r55_self_test(void)
         for (role = 0; role < R55_PRIMITIVES; ++role)
             poisoned_role[role] = (uint8_t)((recovered_role[role] + 1u) %
                                              R55_ROLES);
-        R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+        R55_TEST(r55_search(&public_a, &a.target, a.surface_to_role,
+                recovered_role, &jit, &jit,
                 R55_ARM_FULL, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &full_exact) == 0 &&
-            r55_search(&a, poisoned_role, &jit, &jit,
+            r55_search(&public_a, &a.target, a.surface_to_role,
+                poisoned_role, &jit, &jit,
                 R55_ARM_FULL, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &full_poisoned) == 0,
             "full adapter sensitivity setup");
         R55_TEST(!r55_same_search(&full_exact, &full_poisoned),
             "full arm uses reconstructed adapter");
-        R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+        R55_TEST(r55_search(&public_a, &a.target, a.surface_to_role,
+                recovered_role, &jit, &jit,
                 R55_ARM_ORACLE_ADAPTER, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &oracle_exact) == 0 &&
-            r55_search(&a, poisoned_role, &jit, &jit,
+            r55_search(&public_a, &a.target, a.surface_to_role,
+                poisoned_role, &jit, &jit,
                 R55_ARM_ORACLE_ADAPTER, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &oracle_poisoned) == 0 &&
             r55_same_search(&oracle_exact, &oracle_poisoned),
             "oracle bypasses reconstructed adapter");
-        R55_TEST(r55_search(&a, recovered_role, &jit, &jit,
+        R55_TEST(r55_search(&public_a, &a.target, a.surface_to_role,
+                recovered_role, &jit, &jit,
                 R55_ARM_SOURCE_ONLY, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &source_exact) == 0 &&
-            r55_search(&a, poisoned_role, &jit, &jit,
+            r55_search(&public_a, &a.target, a.surface_to_role,
+                poisoned_role, &jit, &jit,
                 R55_ARM_SOURCE_ONLY, derangements, tie_salt,
                 R55_PROPOSAL_BUDGET, R55_GLOBAL_CAP, &source_poisoned) == 0 &&
             r55_same_search(&source_exact, &source_poisoned),
@@ -1620,9 +1812,8 @@ int r55_self_test(void)
     memset(impossible.matrix, 0, sizeof(impossible.matrix));
     memset(impossible.bias, 0, sizeof(impossible.bias));
     {
-        r55_family impossible_family = a;
-        impossible_family.target = impossible;
-        R55_TEST(r55_search(&impossible_family, recovered_role, &jit, &jit,
+        R55_TEST(r55_search(&public_a, &impossible, a.surface_to_role,
+                recovered_role, &jit, &jit,
                 R55_ARM_TARGET_ONLY, derangements, tie_salt, 0u, 2u,
                 &capped) == 0,
                 "capped search");
@@ -1632,9 +1823,8 @@ int r55_self_test(void)
              capped.invalid_first_rejected,
              "cap-plus-one and fallback accounting");
     {
-        r55_family impossible_family = a;
-        impossible_family.target = impossible;
-        R55_TEST(r55_search(&impossible_family, recovered_role, &jit, &jit,
+        R55_TEST(r55_search(&public_a, &impossible, a.surface_to_role,
+                recovered_role, &jit, &jit,
                 R55_ARM_TARGET_ONLY, derangements, tie_salt, 0u,
                 R55_GLOBAL_CAP, &exhausted) == 0,
                 "exhausted fallback search");
@@ -1705,6 +1895,11 @@ int r55_write_development_json(const char *path,
         "  \"source_ablation\": {\"matches\": %u, \"cases\": %u},\n"
         "  \"full_oracle\": {\"matches\": %u, \"cases\": %u},\n"
         "  \"target_only_headroom\": {\"minimum\": %u, \"median\": %u, \"maximum\": %u},\n"
+        "  \"development_gate\": {\"target_only_headroom\": %s, "
+        "\"decision\": \"%s\"},\n"
+        "  \"family_selection_rule\": "
+        "\"target-only median over four fixed generator-tie environments "
+        "must be 16 through 64 before split freeze\",\n"
         "  \"development_selection\": {\"strongest_source_free_arm\": \"%s\", \"target_only_primary_cost\": %" PRIu64 ", \"source_free_jit_primary_cost\": %" PRIu64 "},\n"
         "  \"proposal_budget\": 64,\n"
         "  \"global_cap\": 4096,\n"
@@ -1720,6 +1915,12 @@ int r55_write_development_json(const char *path,
         result->source_ablation_cases, result->full_oracle_matches,
         result->full_oracle_cases, result->target_only_minimum_cost,
         result->target_only_median_cost, result->target_only_maximum_cost,
+        result->target_only_median_cost >= R55_HEADROOM_MINIMUM &&
+            result->target_only_median_cost <= R55_HEADROOM_MAXIMUM ?
+            "true" : "false",
+        result->target_only_median_cost >= R55_HEADROOM_MINIMUM &&
+            result->target_only_median_cost <= R55_HEADROOM_MAXIMUM ?
+            "pass" : "no-go",
         result->arms[R55_ARM_TARGET_ONLY].primary_cost <=
             result->arms[R55_ARM_SOURCE_FREE_JIT].primary_cost ?
             "target_only" : "source_free_jit",
