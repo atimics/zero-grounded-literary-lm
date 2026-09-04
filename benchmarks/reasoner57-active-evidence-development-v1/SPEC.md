@@ -45,6 +45,7 @@ Canonical input-then-sensor order resolves ties.
 The native checkpoint includes deterministic semantic splits, source policy
 training, selector choice, policy calibration, fixed development identities,
 all registered controls, exact verification, and a fail-closed execution
-entrypoint. The scaffolding binds shared harness commit `2303a1a` and its v2
-recentered-null bootstrap receipts. Shared-harness replay and frozen R5.7
-output files will be added after the prerequisite passes.
+entrypoint. The scaffolding binds shared harness commit `db3e85b`, its proposal
+record and work-charge guarantees, and its v2 recentered-null bootstrap
+receipts. Shared-harness replay and frozen R5.7 output files will be added after
+the prerequisite passes.

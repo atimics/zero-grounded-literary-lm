@@ -13,14 +13,15 @@ function sha256(path) {
 }
 
 assert.equal(contract.schema,
-  "zero.reasoner57_active_evidence_development_contract.v3");
+  "zero.reasoner57_active_evidence_development_contract.v4");
 assert.equal(contract.status, "gated-development-scaffolding");
 assert.equal(contract.prerequisite.base_commit,
-  "80e3bbb757ad4e516b9ec7c86ea505782cb8284b");
+  "c9e635bebd82e89aeb468201098baa3b2e9e3f2d");
 assert.equal(contract.prerequisite.state,
   "blocked-reasoner56-channel-readiness-gate");
 
 for (const receipt of [
+  contract.prerequisite.r56_contract,
   contract.prerequisite.r56_artifact,
   contract.prerequisite.r56_family_manifest,
   contract.prerequisite.r56_assessment,
@@ -28,6 +29,17 @@ for (const receipt of [
   assert.equal(sha256(receipt.path), receipt.sha256,
     `Reasoner 5.6 receipt changed: ${receipt.path}`);
 }
+
+const r56Contract = JSON.parse(readFileSync(
+  contract.prerequisite.r56_contract.path, "utf8"));
+assert.equal(r56Contract.schema,
+  contract.prerequisite.r56_contract.schema);
+assert.equal(r56Contract.shared_harness.commit,
+  contract.shared_harness.commit);
+assert.equal(r56Contract.shared_harness.library_sha256,
+  contract.shared_harness.library_sha256);
+assert.equal(r56Contract.shared_harness.proposal_record_binding, true);
+assert.equal(r56Contract.shared_harness.proposal_work_charge_floor, true);
 
 const assessment = JSON.parse(readFileSync(
   contract.prerequisite.r56_assessment.path, "utf8"));
@@ -91,11 +103,13 @@ assert.equal(contract.analytic_controls.posterior_l2_ec2_edge_cut,
 assert.equal(contract.primary.outcomes, 18);
 assert.equal(contract.primary.missing_outcome, 17);
 assert.equal(contract.shared_harness.commit,
-  "2303a1a1769a7e4ccd32f5167e18645550651509");
+  "db3e85b5808252bbd174e95e8b17ee804594ae2f");
 assert.equal(contract.shared_harness.library,
   "scripts/lib/reasoner5_harness.mjs");
 assert.equal(sha256(contract.shared_harness.library),
   contract.shared_harness.library_sha256);
+assert.equal(contract.shared_harness.proposal_record_binding, true);
+assert.equal(contract.shared_harness.proposal_work_charge_floor, true);
 assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");
 assert.equal(contract.shared_harness.confidence_interval_method,
   "ordinary-percentile-bootstrap");

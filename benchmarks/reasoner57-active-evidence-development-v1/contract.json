@@ -1,12 +1,17 @@
 {
-  "schema": "zero.reasoner57_active_evidence_development_contract.v3",
+  "schema": "zero.reasoner57_active_evidence_development_contract.v4",
   "experiment": "reasoner57-active-evidence-development-v1",
-  "version": "5.7-development-scaffolding-3",
+  "version": "5.7-development-scaffolding-4",
   "status": "gated-development-scaffolding",
   "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
   "prerequisite": {
     "state": "blocked-reasoner56-channel-readiness-gate",
-    "base_commit": "80e3bbb757ad4e516b9ec7c86ea505782cb8284b",
+    "base_commit": "c9e635bebd82e89aeb468201098baa3b2e9e3f2d",
+    "r56_contract": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/contract.json",
+      "sha256": "ee275a8fa1a5649dde3eec7d5395d0d84d56d1588d3963261db771b83e5aeebe",
+      "schema": "zero.reasoner56_passive_noise_development_contract.v5"
+    },
     "r56_artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
       "sha256": "404cff98a8d92eb11cf203710c20c356fbaec31370ea525c416857e641bd4004"
@@ -85,9 +90,11 @@
     "likelihood_row_normalization_is_checked": true
   },
   "shared_harness": {
-    "commit": "2303a1a1769a7e4ccd32f5167e18645550651509",
+    "commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f",
     "library": "scripts/lib/reasoner5_harness.mjs",
-    "library_sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66",
+    "library_sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5",
+    "proposal_record_binding": true,
+    "proposal_work_charge_floor": true,
     "bootstrap_receipt_schema": "v2",
     "confidence_interval_method": "ordinary-percentile-bootstrap",
     "p_value_method": "recentered-null-bootstrap",
