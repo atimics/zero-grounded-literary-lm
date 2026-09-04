@@ -5,7 +5,7 @@
   "run_id": "zero5-c61-eval-20260901-10f8435",
   "instance_id": "i-0263c49dfdda5f8d5",
   "git_commit": "10f8435107abebcd038d6310b9e42ca49738a859",
-  "recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+  "recovery_contract_sha256": "50bc8455a8af1af7bb9eb987895df963e988d01e5131f14d631ddb869ddb4e9f",
   "training_executed": false,
   "exit_code": 0,
   "elapsed_instance_seconds": 3800,

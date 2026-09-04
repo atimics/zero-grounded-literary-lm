@@ -99,8 +99,12 @@ assert.match(userData,
   /--recovery-contract "\$RECOVERY_CONTRACT"\s+--scientific-contract benchmarks\/zero5-c61-shared-state-v1\/contract\.json/u,
   "evaluation user-data does not pass the scientific contract to preflight");
 assert.match(userData,
-  /timeout --signal=TERM --kill-after=90s "\$\{remaining\}s" \\\n\s+node scripts\/run_zero5_c61_evaluation_recovery\.mjs \\\n\s+"\$\{runner_args\[@\]\}" --out "\$OUT" &/u,
+  /timeout --signal=TERM --kill-after=90s "\$\{remaining\}s" \\\n\s+node scripts\/run_zero5_c61_evaluation_recovery\.mjs \\\n\s+"\$\{runner_args\[@\]\}" \$resume_arg --out "\$OUT" &/u,
   "evaluation runner escaped its hard timeout");
+assert(userData.includes("--resume-evaluation"),
+  "evaluation user-data does not support resume-evaluation");
+assert(userData.includes("aws s3 sync"),
+  "evaluation user-data does not download prior synced state");
 
 // ── Hash coverage: derived contracts, receipts, and checkpoint state must
 //    be checked against trusted records before parsing ──

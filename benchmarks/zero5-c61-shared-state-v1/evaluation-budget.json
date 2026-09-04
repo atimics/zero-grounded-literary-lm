@@ -1,0 +1,82 @@
+{
+  "schema": "zero.c61_evaluation_experiment_budget.v1",
+  "experiment": "zero5-c61-shared-state-v1",
+  "status": "preregistered",
+  "purpose": "Size the evaluation-only recovery venue envelope from measured C6.1 phase costs so that a recoverable termination continues evaluation from synced atomic-task checkpoints instead of restarting it.",
+  "scientific_inference_allowed": false,
+  "phase_profile_source": {
+    "experiment": "zero5-cpu-phase-profile-v1",
+    "result": "benchmarks/zero5-cpu-phase-profile-v1/result.json",
+    "result_sha256": "1b55adb340a5a5cd1120944c6c0ff9fb3844a547ce1cdcdce5616bd48ca7440c",
+    "platform": "c6i.4xlarge us-east-1 on-demand",
+    "measured_at": "2026-08-27T21:42:05.012Z"
+  },
+  "venue": {
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "backend": "openblas",
+    "on_demand_usd_per_hour": 0.68,
+    "price_checked_at": "2026-08-27",
+    "price_source": "https://aws.amazon.com/ec2/pricing/on-demand/"
+  },
+  "measured_phase_costs": {
+    "training": {
+      "wall_seconds": 9600,
+      "source": "two-instance continuation: fresh run 8842s + continuation 8849s, final resumed training segment 532s",
+      "compute_usd": 1.813333333333
+    },
+    "evaluation": {
+      "wall_seconds": 8660,
+      "source": "anchored local duration calibration: base arm 1103s, candidate arm 781s, ablation arm 760s, auxiliary 427s; on-instance anchor ratio 2.81x",
+      "compute_usd": 1.635777777778
+    },
+    "full_cycle": {
+      "wall_seconds": 18260,
+      "compute_usd": 3.449111111111
+    }
+  },
+  "per_instance_ceiling": {
+    "max_instance_seconds": 9000,
+    "max_compute_usd": 1.7,
+    "source": "existing C6.1 AWS venue envelope"
+  },
+  "cumulative_budget": {
+    "max_instance_seconds": 18300,
+    "max_compute_usd": 3.46,
+    "instances": 3,
+    "phases": [
+      {
+        "id": "training",
+        "max_instance_seconds": 9600,
+        "max_compute_usd": 1.82,
+        "instances": 2
+      },
+      {
+        "id": "evaluation",
+        "max_instance_seconds": 8700,
+        "max_compute_usd": 1.65,
+        "instances": 1,
+        "resumable": true
+      }
+    ]
+  },
+  "evaluation_resume": {
+    "checkpoint_strategy": "hash-bound atomic task cache synced to S3 every 30 seconds",
+    "progress_schema": "zero.c61_evaluation_progress.v1",
+    "cache_schema": "zero.c61_evaluation_cache.v1",
+    "atomic_tasks": 18,
+    "resume_on_recoverable": true,
+    "restart_on_recoverable": false
+  },
+  "workload": {
+    "seed": 0,
+    "update_groups": 28707,
+    "pack_sequences": 37768,
+    "combined_validation_packs": 128,
+    "evidence_validation_packs": 128,
+    "evaluation_jobs": 4,
+    "openblas_threads": 16,
+    "outputs_are_diagnostic_only": true
+  }
+}

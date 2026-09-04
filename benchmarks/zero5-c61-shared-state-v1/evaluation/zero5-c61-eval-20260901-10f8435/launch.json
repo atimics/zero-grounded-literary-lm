@@ -5,7 +5,7 @@
   "source_commit": "10f8435107abebcd038d6310b9e42ca49738a859",
   "source_sha256": "17042ebb3b944295d10fc2282d011d4ba7fc73fe80055278f02a4d1a963ded4e",
   "asset_sha256": "b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94",
-  "recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+  "recovery_contract_sha256": "50bc8455a8af1af7bb9eb987895df963e988d01e5131f14d631ddb869ddb4e9f",
   "approval_id": "zero5-c61-evaluation-recovery-aws-2026-09-01-v1",
   "launched_at": "2026-09-01T03:58:11Z",
   "launch_epoch": 1788235085,

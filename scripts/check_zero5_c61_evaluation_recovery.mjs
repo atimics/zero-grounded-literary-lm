@@ -67,8 +67,8 @@ assert.equal(safety.schema, "zero.c61_runtime_safety_amendment.v1");
 assert.equal(safety.execution_authorized, false);
 assert.equal(safety.recovery_contract_sha256, digest(contractBytes));
 assert.equal(safety.current.path, contract.implementation.user_data.path);
-assert.equal(safety.historical.sha256, contract.implementation.user_data.sha256);
-assert.equal(safety.historical.bytes, contract.implementation.user_data.bytes);
+assert.equal(safety.current.sha256, contract.implementation.user_data.sha256);
+assert.equal(safety.current.bytes, contract.implementation.user_data.bytes);
 checkArtifact(safety.historical, "executed user-data");
 checkArtifact(safety.current, "current user-data");
 for (const [name, record] of Object.entries(contract.implementation)) {
@@ -82,6 +82,14 @@ assert.equal(contract.execution.maximum_ec2_usd, 1.7);
 assert.equal(contract.execution.evaluation_jobs, 4);
 assert.equal(contract.execution.cache_sync_seconds, 30);
 assert.equal(contract.execution.independent_retry_authorized, false);
+assert.equal(contract.execution.budget,
+  "benchmarks/zero5-c61-shared-state-v1/evaluation-budget.json");
+assert.equal(contract.execution.cumulative_max_execution_seconds, 18300);
+assert.equal(contract.execution.cumulative_max_ec2_usd, 3.46);
+assert.equal(contract.execution.resumable_evaluation, true);
+assert.equal(authorization.scope.cumulative_maximum_execution_seconds, 18300);
+assert.equal(authorization.scope.cumulative_maximum_ec2_usd, 3.46);
+assert.equal(authorization.scope.resumable_evaluation, true);
 assert.equal(contract.claim_boundary.evaluation_only, true);
 assert.equal(contract.claim_boundary.training_rerun, false);
 assert.equal(contract.claim_boundary.scientific_gates_changed, false);

@@ -88,6 +88,11 @@ async function cachedTask(directory, task) {
         cached.binding_sha256 !== task.binding_sha256 ||
         !finiteNumbers(cached.result))
       fail(`cached evaluation task ${task.key} does not match its binding`);
+    process.stdout.write(JSON.stringify({
+      schema: "zero.c61_evaluation_progress.v1",
+      task: task.key,
+      cached: true,
+    }) + "\n");
     return cached.result;
   }
   const result = await task.compute();
@@ -110,13 +115,39 @@ async function cachedTask(directory, task) {
   return result;
 }
 
-async function runTaskPool(directory, tasks, jobs) {
+async function runTaskPool(directory, tasks, jobs, progressPath, bindingSha256) {
   const results = new Map();
   let cursor = 0;
+  const completed = new Set();
+  const writeProgress = () => {
+    if (!progressPath) return;
+    const record = {
+      schema: "zero.c61_evaluation_progress_checkpoint.v1",
+      total_tasks: tasks.length,
+      completed_tasks: completed.size,
+      binding_sha256: bindingSha256,
+      resumed: completed.size > 0 && cursor > 0,
+    };
+    const temporary = `${progressPath}.${process.pid}.tmp`;
+    fs.writeFileSync(temporary, JSON.stringify(record, null, 2) + "\n",
+      { flag: "w" });
+    fs.renameSync(temporary, progressPath);
+  };
+  const loadProgress = () => {
+    if (!progressPath || !fs.existsSync(progressPath)) return;
+    const checkpoint = JSON.parse(fs.readFileSync(progressPath, "utf8"));
+    if (checkpoint.schema !== "zero.c61_evaluation_progress_checkpoint.v1" ||
+        checkpoint.total_tasks !== tasks.length ||
+        checkpoint.binding_sha256 !== bindingSha256)
+      fail("evaluation progress checkpoint does not match its binding");
+  };
+  loadProgress();
   async function worker() {
     while (cursor < tasks.length) {
       const task = tasks[cursor++];
       results.set(task.key, await cachedTask(directory, task));
+      completed.add(task.key);
+      writeProgress();
     }
   }
   await Promise.all(Array.from({ length: Math.min(jobs, tasks.length) },
@@ -419,7 +450,10 @@ try {
     const ablationTasks = armTasks("bridge-off", true);
     const stateKey = invoke("candidate-state", ["--aux-eval", auxiliaryFile],
       "zero.c61_state_eval.v1");
-    const taskResults = await runTaskPool(cacheDirectory, tasks, jobs);
+    const progressPath = path.join(cacheDirectory, "progress.json");
+    const evaluationBinding = sha256(Buffer.from(JSON.stringify(commonBinding)));
+    const taskResults = await runTaskPool(cacheDirectory, tasks, jobs,
+      progressPath, evaluationBinding);
     const base = taskResults.get(baseKey);
     const buildArm = refs => ({
       combined_nats_per_token:

@@ -50,18 +50,18 @@
   "implementation": {
     "evaluator": {
       "path": "scripts/evaluate_zero5_c61_shared_state_recovery.mjs",
-      "sha256": "ead4b1141bca1fcdcb8b4220eaac8af632c7bd875f965ca4ea8e3334ef5e8baf",
-      "bytes": 20006
+      "sha256": "660cccd62356a7a180233cd769d35808344456a0a8e8a2a1d0a1374a7d5d3887",
+      "bytes": 21417
     },
     "runner": {
       "path": "scripts/run_zero5_c61_evaluation_recovery.mjs",
-      "sha256": "e4a8d63a325441854e60ca0b03f4a3d801dadf77391495bb406f520f0efb6aa7",
-      "bytes": 11470
+      "sha256": "5bc48af588cb20a9e1727d73291098aadc9f29d4e896a8bdc1d10821309c3a80",
+      "bytes": 12083
     },
     "user_data": {
       "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
-      "sha256": "9e28ff5d920f5306281ebc6d4deec56a9afdf10c0fa9981d128743319263c567",
-      "bytes": 8548
+      "sha256": "cc2e960878d4e10f329bdfe7b5ffde6ad510693dee8fa0367efd8ff9e5d77ea9",
+      "bytes": 9423
     },
     "launcher": {
       "path": "scripts/aws/zero5-c61-evaluation-run-instance.sh",
@@ -88,7 +88,11 @@
     "asset_archive": {
       "key": "experiments/zero5-c61-shared-state-v1/inputs/assets-b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94.tar.gz",
       "sha256": "b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94"
-    }
+    },
+    "budget": "benchmarks/zero5-c61-shared-state-v1/evaluation-budget.json",
+    "cumulative_max_execution_seconds": 18300,
+    "cumulative_max_ec2_usd": 3.46,
+    "resumable_evaluation": true
   },
   "claim_boundary": {
     "evaluation_only": true,

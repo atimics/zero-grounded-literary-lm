@@ -81,3 +81,30 @@ instance seconds for an estimated $0.717777777778. The result SHA-256 is
 The frozen decision is no-go. Auxiliary state-learning and retention gates
 passed. Retrieval, paired-choice, and bridge-contribution gates failed. The
 sealed test stayed closed.
+
+## Cumulative experiment budget and resumable evaluation (issue #196)
+
+The C6.1 AWS envelope (9,000s / $1.70 per instance) is structurally below the
+real cycle: ~9,600s training + ~8,700s evaluation ~= 18,300s. Every run hit
+the ceiling and paid a continuation tax; because the evaluator had no
+checkpoints, every continuation re-ran evaluation from scratch.
+
+The phase profiling to size this correctly already exists
+(`zero5-cpu-phase-profile-v1`). A cumulative experiment budget
+(`evaluation-budget.json`) is now derived from the measured phase costs:
+
+- **Training phase**: 9,600s wall / $1.81 (measured from two-instance
+  continuation: 8,842s + 8,849s, final resumed segment 532s).
+- **Evaluation phase**: 8,660s wall / $1.64 (anchored from local duration
+  calibration: base arm 1,103s, candidate arm 781s, ablation arm 760s,
+  auxiliary 427s; on-instance anchor ratio 2.81x).
+- **Full cycle**: 18,260s / $3.45.
+- **Cumulative budget**: 18,300s / $3.46 across 3 instances (2 training, 1
+  evaluation), replacing the per-instance ceiling as the governing limit.
+
+The evaluator now emits a `zero.c61_evaluation_progress_checkpoint.v1` file
+after each atomic task completes. The user-data downloads prior synced state
+(including the hash-bound task cache) before starting evaluation, and passes
+`--resume-evaluation` when a prior `execution.json` exists without a result.
+A `recoverable` termination therefore continues evaluation from the cached
+atomic-task checkpoints instead of restarting it.

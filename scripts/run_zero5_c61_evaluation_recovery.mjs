@@ -161,17 +161,27 @@ const validationPath = path.join(out, "validation.json");
 const resultPath = path.join(out, "result.json");
 const executionPath = path.join(out, "execution.json");
 const cacheDirectory = path.join(out, "cache");
+const resumeEvaluation = process.argv.includes("--resume-evaluation");
 if (fs.existsSync(resultPath)) fail("C6.1 evaluation result already exists");
 fs.mkdirSync(out, { recursive: true });
-fs.writeFileSync(executionPath, JSON.stringify({
-  schema: "zero.c61_evaluation_recovery_execution.v1",
-  status: "running",
-  recovery_contract_sha256: recoveryContractSha256,
-  evaluation_authorization_sha256: sha256(authorizationBytes),
-  source_training_contract_sha256:
-    recoveryContract.source_training.scientific_contract_sha256,
-  checkpoint: checkpointArtifact,
-}, null, 2) + "\n");
+fs.mkdirSync(cacheDirectory, { recursive: true });
+if (resumeEvaluation && fs.existsSync(executionPath)) {
+  const execution = JSON.parse(fs.readFileSync(executionPath, "utf8"));
+  if (execution.schema !== "zero.c61_evaluation_recovery_execution.v1" ||
+      execution.recovery_contract_sha256 !== recoveryContractSha256 ||
+      execution.evaluation_authorization_sha256 !== sha256(authorizationBytes))
+    fail("resume execution belongs to a different authorization");
+} else {
+  fs.writeFileSync(executionPath, JSON.stringify({
+    schema: "zero.c61_evaluation_recovery_execution.v1",
+    status: "running",
+    recovery_contract_sha256: recoveryContractSha256,
+    evaluation_authorization_sha256: sha256(authorizationBytes),
+    source_training_contract_sha256:
+      recoveryContract.source_training.scientific_contract_sha256,
+    checkpoint: checkpointArtifact,
+  }, null, 2) + "\n");
+}
 
 const evaluator = recoveryContract.implementation.evaluator.path;
 const evaluatorArguments = [
@@ -227,6 +237,7 @@ const result = {
     source_run_id: recoveryContract.source_training.source_run_id,
     cached_atomic_tasks: fs.readdirSync(cacheDirectory)
       .filter(name => name.endsWith(".json")).length,
+    resumed_from_prior: resumeEvaluation,
     training_rerun: false,
   },
   publication: { checkpoint_published: false, result_published: false },

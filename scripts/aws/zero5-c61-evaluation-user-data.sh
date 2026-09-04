@@ -209,6 +209,16 @@ node scripts/run_zero5_c61_evaluation_recovery.mjs \
 
 OUT=build/zero5-c61-shared-state-v1/evaluation-recovery
 install -d -m 0700 "$OUT"
+
+# Download any prior synced state so a recoverable termination resumes
+# evaluation from the cached atomic-task checkpoints instead of restarting.
+aws s3 sync "s3://${TRAINING_BUCKET}/${STATE_PREFIX}/" "$OUT/" \
+  --only-show-errors || true
+resume_arg=""
+if [ -f "$OUT/execution.json" ] && [ ! -f "$OUT/result.json" ]; then
+  resume_arg="--resume-evaluation"
+fi
+
 PHASE=evaluation
 write_status running 0
 upload_status
@@ -217,7 +227,7 @@ test "$remaining" -gt 0
 set +e
 timeout --signal=TERM --kill-after=90s "${remaining}s" \
   node scripts/run_zero5_c61_evaluation_recovery.mjs \
-    "${runner_args[@]}" --out "$OUT" &
+    "${runner_args[@]}" $resume_arg --out "$OUT" &
 RUNNER_PID=$!
 while kill -0 "$RUNNER_PID" 2>/dev/null; do
   sync_state || true
