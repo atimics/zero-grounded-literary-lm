@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
             return 2;
         }
         fprintf(stderr,
-            "Reasoner 5.7 development is gated on corrected Reasoner 5.6 "
-            "channel-readiness evidence.\n");
+            "Reasoner 5.7 development is gated on the Reasoner 5.6 sealed "
+            "interface and static-metadata proxy audit.\n");
         return 3;
     }
     if (argc == 2 && strcmp(argv[1], "execute") == 0) {

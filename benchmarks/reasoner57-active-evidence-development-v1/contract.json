@@ -5,25 +5,36 @@
   "status": "gated-development-scaffolding",
   "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
   "prerequisite": {
-    "state": "pending-corrected-reasoner56-channel-readiness",
-    "base_commit": "ecb275a45291b5fbc174e0befbb180ea51e05f6d",
+    "state": "pending-reasoner56-sealed-interface-proxy-audit",
+    "base_commit": "1606515ba363a74d62d9659dbf5189434abd84fa",
     "r56_artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
       "sha256": "404cff98a8d92eb11cf203710c20c356fbaec31370ea525c416857e641bd4004"
     },
-    "superseded_assessment": {
-      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "e369a39dab84355ad7ab6b9b4c6bd2cfaecb03a50d859452fe4fab38ceb9a2f3",
-      "channel_readiness_assessment_sha256": "0c17cc6336535224b9754b7de1b57353dd85ba45329efcbe99e56229857f6070"
+    "r56_family_manifest": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/family-manifest.json",
+      "sha256": "f162c5c255cf578a704f90b44582b7821d9eff205fce9fdc4b03f64b6016c7b7"
     },
-    "required_evidence": [
-      "coverage inference over eight program-family units",
-      "one-sided 95 percent family-level Wilson lower limit at least 0.97",
+    "r56_assessment": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
+      "sha256": "a03d2857663ae1bb33da6a95dc3e361cef0900e3ce39f6a32d17baa4a498df15",
+      "channel_readiness_assessment_sha256": "4d8533921272e267c613bd040e65bc963605d0c21cbf584222ca1905adf3b2ee",
+      "channel_readiness_status": "development-no-go"
+    },
+    "family_coverage": {
+      "program_families": 99,
+      "registered_draws": 792,
+      "covered_families": 99,
+      "one_sided_95_wilson_lower": 0.9733982695317235,
+      "required_lower": 0.97,
+      "passed": true
+    },
+    "development_interface_template_proxy_severity_proxy_and_taint_passed": true,
+    "pending_evidence": [
       "prospective sealed-interface audit",
-      "sealed static-metadata proxy audit",
-      "severity proxy check"
+      "sealed static-metadata proxy audit"
     ],
-    "required_corrected_assessment_sha256": null
+    "required_passing_assessment_sha256": null
   },
   "semantic_splits": {
     "policy_training_families": 48,
@@ -62,6 +73,19 @@
   },
   "development_outputs": null,
   "scientific_decision": null,
+  "protected_sources": {
+    "reasoner51.c": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50",
+    "reasoner52.c": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943",
+    "reasoner5_followup.c": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+  },
+  "implementation": {
+    "files": [
+      "reasoner57.c",
+      "reasoner57.h",
+      "reasoner57_cli.c",
+      "scripts/check_reasoner57_scaffolding.mjs"
+    ]
+  },
   "execution": {
     "authorized": false,
     "sealed_seeds_present": false,
