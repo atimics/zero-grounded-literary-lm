@@ -77,6 +77,7 @@ for (const required of [
   "case-insensitive evaluator-field rejection",
   "semantic and syntax candidate-multiset parity",
   "registered candidate-universe enforcement",
+  "proposal record binding and work-charge floor",
   "immutable verifier input",
   "canonical digest-bound fallback order",
   "expansion-to-verifier trace linkage",
