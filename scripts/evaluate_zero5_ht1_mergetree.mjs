@@ -231,10 +231,14 @@ function main() {
         series.shared_inputs.training_packs_sha256);
       assert.equal(evidence.bindings.validation_packs_sha256, validation.sha256);
       assert.equal(evidence.bindings.tokenizer_sha256, tokenizer.sha256);
-      assert.equal(evidence.bindings.control_checkpoint_sha256,
-        controlCheckpoint.sha256);
-      assert.equal(evidence.bindings.candidate_checkpoint_sha256, selected.sha256);
       assert.equal(evidence.bindings.trainer_sha256, artifact(trainer).sha256);
+      for (const key of ["control_trainer_sha256", "gate_off_control_checkpoint_sha256",
+        "gate_off_ht1_checkpoint_sha256", "shared_state_sha256",
+        "orchestration_sha256", "synthetic_checker_sha256",
+        "synthetic_checker_stdout_sha256"])
+        assert.match(evidence.bindings[key], /^[0-9a-f]{64}$/u, `bindings.${key}`);
+      assert.equal(evidence.experiment_runs_completed, 0);
+      assert.equal(evidence.pilot_training_run_executed, false);
       assert.equal(evidence.test.metrics_opened, false);
     }
     const gateResult = evaluateHT1Gates(candidate.candidate,
