@@ -2,14 +2,23 @@
 
 #include <errno.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define R56_ARTIFACT_VERSION 1u
 #define R56_SOURCE_PROGRAM_COUNT 256u
-#define R56_DEVELOPMENT_EPISODES 6u
-#define R56_DEVELOPMENT_ARMS 5u
+#define R56_CALIBRATION_FIT_FAMILIES 16u
+#define R56_CALIBRATION_COVERAGE_FAMILIES 99u
+#define R56_CALIBRATION_DRAWS 8u
+#define R56_DEVELOPMENT_PROGRAM_FAMILIES 8u
+#define R56_DEVELOPMENT_CORRUPTION_FAMILIES 8u
+#define R56_DEVELOPMENT_REPEATS 2u
+#define R56_DEVELOPMENT_EPISODES \
+    (R56_DEVELOPMENT_PROGRAM_FAMILIES * \
+     R56_DEVELOPMENT_CORRUPTION_FAMILIES * R56_DEVELOPMENT_REPEATS)
+#define R56_DEVELOPMENT_ARMS 45u
 #define R56_DEVELOPMENT_OBSERVATIONS 18u
 #define R56_PROPOSAL_BUDGET 24u
 #define R56_GLOBAL_CAP R56_SEMANTIC_CLASSES
@@ -145,6 +154,40 @@ int r56_build_universe(r56_universe *universe) {
         universe->semantic_count != R56_SEMANTIC_CLASSES)
         return 3;
     return 0;
+}
+
+static int r56_universe_shape_valid(const r56_universe *universe) {
+    if (!universe || universe->syntax_count != R56_SYNTAX_PROGRAMS ||
+        universe->semantic_count != R56_SEMANTIC_CLASSES)
+        return 0;
+    for (uint32_t index = 0u; index < R56_SYNTAX_PROGRAMS; ++index)
+        if (universe->syntax_to_semantic[index] >= R56_SEMANTIC_CLASSES)
+            return 0;
+    return 1;
+}
+
+static int r56_universe_content_valid(const r56_universe *universe) {
+    uint32_t multiplicity = 0u;
+    if (!r56_universe_shape_valid(universe)) return 0;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic) {
+        uint8_t rebuilt[R56_MODULUS];
+        for (uint32_t position = 0u; position < R56_PROGRAM_DEPTH; ++position)
+            if (universe->semantic[semantic].representative[position] >=
+                R56_PRIMITIVES)
+                return 0;
+        r56_program_table(universe->semantic[semantic].representative, rebuilt);
+        if (memcmp(rebuilt, universe->semantic[semantic].table,
+                   R56_MODULUS) != 0)
+            return 0;
+        multiplicity += universe->semantic[semantic].multiplicity;
+    }
+    for (uint32_t syntax = 0u; syntax < R56_SYNTAX_PROGRAMS; ++syntax) {
+        uint16_t semantic = universe->syntax_to_semantic[syntax];
+        if (memcmp(universe->syntax[syntax].table,
+                   universe->semantic[semantic].table, R56_MODULUS) != 0)
+            return 0;
+    }
+    return multiplicity == R56_SYNTAX_PROGRAMS;
 }
 
 void r56_generate_source_program(uint64_t seed, uint32_t index,
@@ -332,8 +375,7 @@ int r56_build_artifact(r56_artifact *artifact, const r56_universe *universe,
     uint32_t index;
     uint64_t program_digest = UINT64_C(1469598103934665603) ^ 5601u;
     uint64_t corruption_digest = UINT64_C(1469598103934665603) ^ 5602u;
-    if (!artifact || !universe ||
-        universe->semantic_count != R56_SEMANTIC_CLASSES)
+    if (!artifact || !r56_universe_content_valid(universe))
         return 1;
     memset(artifact, 0, sizeof(*artifact));
     artifact->version = R56_ARTIFACT_VERSION;
@@ -433,33 +475,73 @@ int r56_build_artifact(r56_artifact *artifact, const r56_universe *universe,
             artifact->source_samples += 1u;
         }
 
-    for (uint8_t previous_sensor = 0u;
-         previous_sensor < R56_SENSORS; ++previous_sensor)
-        for (uint8_t current_sensor = 0u;
-             current_sensor < R56_SENSORS; ++current_sensor)
-            for (uint8_t previous_state = 0u;
-                 previous_state < R56_CHANNEL_STATES; ++previous_state)
-                for (uint32_t repeat = 0u;
-                     artifact->transition_exact_support[
-                         r56_transition_exact_context(previous_sensor,
-                             current_sensor, previous_state)] <
-                         R56_SUPPORT_MIN; ++repeat) {
-                    r56_corruption_family family;
-                    uint32_t family_index = ((((uint32_t)previous_sensor *
-                        R56_SENSORS + current_sensor) * R56_CHANNEL_STATES +
-                        previous_state) * R56_SUPPORT_MIN) + repeat;
-                    uint8_t state;
-                    r56_generate_corruption_family(
-                        corruption_seed ^ UINT64_C(0x56bb), family_index,
-                        &family);
-                    state = r56_channel_state(&family, corruption_seed,
-                        current_sensor, (uint8_t)(repeat % R56_MODULUS),
-                        (uint8_t)((repeat * 5u) % R56_MODULUS),
-                        previous_state, repeat + 1u);
-                    r56_add_transition(artifact, previous_sensor,
-                                       current_sensor, previous_state, state);
-                    artifact->source_samples += 1u;
+    {
+        uint32_t missing_contexts = 0u;
+        uint32_t sequence_index = 0u;
+        for (uint32_t context = 0u;
+             context < R56_TRANSITION_EXACT_CONTEXTS; ++context)
+            missing_contexts +=
+                artifact->transition_exact_support[context] < R56_SUPPORT_MIN;
+        while (missing_contexts > 0u && sequence_index < 1000000u) {
+            uint8_t token[R56_PROGRAM_DEPTH];
+            uint8_t table[R56_MODULUS];
+            uint8_t order[R56_MAX_OBSERVATIONS];
+            r56_corruption_family family;
+            uint8_t previous_state = 0u;
+            uint8_t previous_sensor = 0u;
+            r56_generate_source_program(source_seed ^ UINT64_C(0x56bb),
+                                        sequence_index, token);
+            r56_program_table(token, table);
+            r56_generate_corruption_family(
+                corruption_seed ^ UINT64_C(0x56bb), sequence_index, &family);
+            for (uint32_t cell = 0u; cell < R56_MAX_OBSERVATIONS; ++cell)
+                order[cell] = (uint8_t)cell;
+            for (uint32_t cell = R56_MAX_OBSERVATIONS - 1u; cell > 0u;
+                 --cell) {
+                uint32_t selected = (uint32_t)(r56_event_key(
+                    source_seed ^ UINT64_C(0x56bc), sequence_index, cell,
+                    5608u, 0u, 0u) % (cell + 1u));
+                uint8_t temporary = order[cell];
+                order[cell] = order[selected];
+                order[selected] = temporary;
+            }
+            for (uint32_t position = 0u; position < R56_MAX_OBSERVATIONS;
+                 ++position) {
+                uint8_t cell = order[position];
+                uint8_t sensor = (uint8_t)(cell / R56_MODULUS);
+                uint8_t input = (uint8_t)(cell % R56_MODULUS);
+                uint8_t clean = table[input];
+                uint8_t state = r56_channel_state(&family,
+                    corruption_seed ^ r56_mix64(sequence_index), sensor,
+                    input, clean, previous_state, position);
+                r56_add_local(artifact, sensor, input, clean, state);
+                if (position == 0u) {
+                    artifact->initial_support[sensor] += 1u;
+                    artifact->initial_count[(size_t)sensor *
+                        R56_CHANNEL_STATES + state] += 1u;
+                } else {
+                    size_t context = r56_transition_exact_context(
+                        previous_sensor, sensor, previous_state);
+                    uint32_t before = artifact->transition_exact_support[context];
+                    r56_add_transition(artifact, previous_sensor, sensor,
+                                       previous_state, state);
+                    if (before < R56_SUPPORT_MIN &&
+                        artifact->transition_exact_support[context] ==
+                            R56_SUPPORT_MIN)
+                        missing_contexts -= 1u;
                 }
+                previous_sensor = sensor;
+                previous_state = state;
+                artifact->source_samples += 1u;
+            }
+            program_digest = r56_hash_update(program_digest, token,
+                                             sizeof(token));
+            corruption_digest = r56_hash_update(corruption_digest, &family,
+                                                sizeof(family));
+            sequence_index += 1u;
+        }
+        if (missing_contexts != 0u) return 2;
+    }
 
     artifact->source_program_digest = program_digest;
     artifact->corruption_generator_digest = corruption_digest;
@@ -555,6 +637,105 @@ static int32_t r56_transition_score(const r56_artifact *artifact,
     return artifact->transition_global_log_q20[current_state];
 }
 
+static uint8_t r56_deranged_state(uint32_t derangement, uint8_t state) {
+    uint32_t a = 1u;
+    uint32_t b;
+    if (derangement < 17u) {
+        b = derangement + 1u;
+    } else if (derangement < 26u) {
+        a = 5u;
+        b = 1u + 2u * (derangement - 17u);
+    } else {
+        a = 7u;
+        b = 1u + (derangement - 26u);
+    }
+    return (uint8_t)((a * state + b) % R56_CHANNEL_STATES);
+}
+
+static int32_t r56_mask_log_probability(uint32_t missing_count,
+                                        uint32_t support, int missing) {
+    uint32_t count = missing ? missing_count : support - missing_count;
+    uint32_t outcomes = missing ? 1u : R56_MODULUS;
+    double probability = ((double)count + (double)outcomes) /
+                         ((double)support + (double)R56_CHANNEL_STATES);
+    return (int32_t)llround(log(probability) * (double)R56_Q20_ONE);
+}
+
+static int32_t r56_local_mask_score(const r56_artifact *artifact,
+                                    uint8_t sensor, uint8_t input,
+                                    uint8_t value, int missing,
+                                    uint32_t *reads) {
+    r56_local_backoff level = r56_local_backoff_level(artifact, sensor, input,
+                                                      value);
+    const uint32_t *counts;
+    uint32_t support;
+    *reads += 1u;
+    if (level == R56_BACKOFF_EXACT) {
+        size_t context = r56_local_exact_context(sensor, input, value);
+        counts = &artifact->local_exact_count[context * R56_CHANNEL_STATES];
+        support = artifact->local_exact_support[context];
+    } else if (level == R56_BACKOFF_VALUE) {
+        size_t context = r56_local_value_context(sensor, value);
+        counts = &artifact->local_value_count[context * R56_CHANNEL_STATES];
+        support = artifact->local_value_support[context];
+    } else if (level == R56_BACKOFF_SENSOR) {
+        counts = &artifact->local_sensor_count[(size_t)sensor *
+                                               R56_CHANNEL_STATES];
+        support = artifact->local_sensor_support[sensor];
+    } else {
+        counts = artifact->local_global_count;
+        support = artifact->local_global_support;
+    }
+    return r56_mask_log_probability(counts[R56_MODULUS], support, missing);
+}
+
+static int32_t r56_transition_mask_score(const r56_artifact *artifact,
+                                         uint8_t previous_sensor,
+                                         uint8_t current_sensor,
+                                         int previous_missing,
+                                         int current_missing,
+                                         uint32_t *reads) {
+    uint8_t previous_state = previous_missing ? R56_MODULUS : 0u;
+    r56_transition_backoff level = r56_transition_backoff_level(
+        artifact, previous_sensor, current_sensor, previous_state);
+    const uint32_t *counts;
+    uint32_t support;
+    *reads += 1u;
+    if (level == R56_TRANSITION_EXACT) {
+        size_t context = r56_transition_exact_context(previous_sensor,
+            current_sensor, previous_state);
+        counts = &artifact->transition_exact_count[
+            context * R56_CHANNEL_STATES];
+        support = artifact->transition_exact_support[context];
+    } else if (level == R56_TRANSITION_CURRENT) {
+        size_t context = r56_transition_current_context(current_sensor,
+                                                        previous_state);
+        counts = &artifact->transition_current_count[
+            context * R56_CHANNEL_STATES];
+        support = artifact->transition_current_support[context];
+    } else if (level == R56_TRANSITION_PREVIOUS) {
+        counts = &artifact->transition_previous_count[
+            (size_t)previous_state * R56_CHANNEL_STATES];
+        support = artifact->transition_previous_support[previous_state];
+    } else {
+        counts = artifact->transition_global_count;
+        support = artifact->transition_global_support;
+    }
+    return r56_mask_log_probability(counts[R56_MODULUS], support,
+                                    current_missing);
+}
+
+static int32_t r56_initial_mask_score(const r56_artifact *artifact,
+                                      uint8_t sensor, int missing,
+                                      uint32_t *reads) {
+    const uint32_t *counts = &artifact->initial_count[
+        (size_t)sensor * R56_CHANNEL_STATES];
+    *reads += 1u;
+    return r56_mask_log_probability(counts[R56_MODULUS],
+                                    artifact->initial_support[sensor],
+                                    missing);
+}
+
 static int r56_validate_view(const r56_ranker_view *view) {
     uint32_t index;
     if (!view || view->observation_count == 0u ||
@@ -643,20 +824,26 @@ int r56_posterior(const r56_artifact *artifact, const r56_universe *universe,
     int64_t maximum = INT64_MIN;
     double normalizer = 0.0;
     uint32_t reads = 0u;
-    int source_free = arm == R56_ARM_SOURCE_FREE ||
-                      arm == R56_ARM_SOURCE_ABLATION ||
-                      arm == R56_ARM_ONE_TRIM;
-    if (!artifact || !universe || !probability || !score_q20 ||
+    int isolated = arm == R56_ARM_TARGET_ONLY ||
+                   arm == R56_ARM_SOURCE_FREE ||
+                   arm == R56_ARM_SOURCE_ABLATION;
+    int derangement = arm >= R56_ARM_DERANGEMENT_00 &&
+                      arm <= R56_ARM_DERANGEMENT_30;
+    if (!r56_universe_shape_valid(universe) || !probability || !score_q20 ||
         !source_artifact_reads || r56_validate_view(view) != 0 ||
-        universe->semantic_count != R56_SEMANTIC_CLASSES ||
-        artifact->version != R56_ARTIFACT_VERSION ||
-        arm < R56_ARM_FULL || arm > R56_ARM_CHANNEL_ONLY)
+        arm < R56_ARM_FULL || arm > R56_ARM_DERANGEMENT_30 ||
+        arm == R56_ARM_ORACLE_CHANNEL || arm == R56_ARM_CLEAN_ORACLE)
         return 1;
-    if (artifact->temperature_q20 <= 0) return 2;
+    if (!isolated && (!artifact || artifact->version != R56_ARTIFACT_VERSION ||
+                      artifact->temperature_q20 <= 0))
+        return 2;
     for (semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic) {
         const uint8_t *table = universe->semantic[semantic].table;
         int64_t score = 0;
-        if (source_free) {
+        if (arm == R56_ARM_TARGET_ONLY) {
+            score = 0;
+        } else if (arm == R56_ARM_SOURCE_FREE ||
+                   arm == R56_ARM_SOURCE_ABLATION) {
             uint32_t mismatch = 0u;
             for (uint32_t observation = 0u;
                  observation < view->observation_count; ++observation) {
@@ -665,39 +852,79 @@ int r56_posterior(const r56_artifact *artifact, const r56_universe *universe,
                 if (!item->missing && table[item->input] != item->observed)
                     mismatch += 1u;
             }
-            if (arm == R56_ARM_ONE_TRIM && mismatch > 0u) mismatch -= 1u;
+            if (mismatch > 0u) mismatch -= 1u;
             score = -(int64_t)mismatch * R56_Q20_ONE;
         } else {
             uint8_t previous_state = 0u;
             uint8_t previous_sensor = 0u;
+            int previous_missing = 0;
             if (arm != R56_ARM_CHANNEL_ONLY) {
                 score += artifact->class_log_q20[semantic];
                 reads += 1u;
             }
-            if (arm != R56_ARM_PROGRAM_PRIOR_ONLY) {
+            if (arm == R56_ARM_ROBUST_HAMMING ||
+                arm == R56_ARM_ONE_TRIM) {
+                uint32_t mismatch = 0u;
                 for (uint32_t observation = 0u;
                      observation < view->observation_count; ++observation) {
                     const r56_public_observation *item =
                         &view->observations[observation];
+                    if (!item->missing && table[item->input] != item->observed)
+                        mismatch += 1u;
+                }
+                if (arm == R56_ARM_ONE_TRIM && mismatch > 0u) mismatch -= 1u;
+                score -= (int64_t)mismatch * R56_Q20_ONE;
+            } else if (arm != R56_ARM_PROGRAM_PRIOR_ONLY) {
+                for (uint32_t observation = 0u;
+                     observation < view->observation_count; ++observation) {
+                    const r56_public_observation *item =
+                        &view->observations[observation];
+                    uint8_t sensor = arm == R56_ARM_SHUFFLED_SENSOR ?
+                        (uint8_t)((item->sensor + 1u) % R56_SENSORS) :
+                        item->sensor;
                     uint8_t state = r56_observation_state(item,
                                                           table[item->input]);
-                    score += r56_local_score(artifact, item->sensor,
-                        item->input, table[item->input], state, &reads);
+                    if (derangement)
+                        state = r56_deranged_state(
+                            (uint32_t)arm - R56_ARM_DERANGEMENT_00, state);
+                    if (arm == R56_ARM_MASK_ONLY) {
+                        score += r56_local_mask_score(artifact, sensor,
+                            item->input, table[item->input], item->missing,
+                            &reads);
+                    } else if (arm != R56_ARM_VALUE_ONLY || !item->missing) {
+                        score += r56_local_score(artifact, sensor,
+                            item->input, table[item->input], state, &reads);
+                    }
                     if (observation == 0u) {
-                        score += artifact->initial_log_q20[
-                            (size_t)item->sensor * R56_CHANNEL_STATES + state];
-                        reads += 1u;
+                        if (arm != R56_ARM_VALUE_ONLY) {
+                            if (arm == R56_ARM_MASK_ONLY)
+                                score += r56_initial_mask_score(artifact,
+                                    sensor, item->missing, &reads);
+                            else {
+                                score += artifact->initial_log_q20[
+                                    (size_t)sensor * R56_CHANNEL_STATES + state];
+                                reads += 1u;
+                            }
+                        }
                     } else if (arm != R56_ARM_MARKOV_OFF) {
-                        score += r56_transition_score(artifact,
-                            previous_sensor, item->sensor, previous_state,
-                            state, &reads);
+                        if (arm == R56_ARM_MASK_ONLY) {
+                            score += r56_transition_mask_score(artifact,
+                                previous_sensor, sensor, previous_missing,
+                                item->missing, &reads);
+                        } else if (arm != R56_ARM_VALUE_ONLY ||
+                                   (!previous_missing && !item->missing)) {
+                            score += r56_transition_score(artifact,
+                                previous_sensor, sensor, previous_state,
+                                state, &reads);
+                        }
                     }
                     previous_state = state;
-                    previous_sensor = item->sensor;
+                    previous_sensor = sensor;
+                    previous_missing = item->missing;
                 }
             }
         }
-        score_q20[semantic] = source_free ? score :
+        score_q20[semantic] = isolated ? score :
             (score * R56_Q20_ONE) / artifact->temperature_q20;
         if (score_q20[semantic] > maximum) maximum = score_q20[semantic];
     }
@@ -710,7 +937,7 @@ int r56_posterior(const r56_artifact *artifact, const r56_universe *universe,
     if (!(normalizer > 0.0) || !isfinite(normalizer)) return 3;
     for (semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic)
         probability[semantic] /= normalizer;
-    *source_artifact_reads = source_free ? 0u : reads;
+    *source_artifact_reads = isolated ? 0u : reads;
     return 0;
 }
 
@@ -802,30 +1029,39 @@ static uint64_t r56_calibration_digest(const r56_ranker_view *views,
 
 int r56_calibrate(r56_artifact *artifact, const r56_universe *universe,
                   const r56_ranker_view *fit_views,
-                  const uint16_t *fit_truth, uint32_t fit_count,
+                  const uint16_t *fit_truth, uint32_t fit_family_count,
                   const r56_ranker_view *coverage_views,
-                  const uint16_t *coverage_truth, uint32_t coverage_count) {
+                  const uint16_t *coverage_truth,
+                  uint32_t coverage_family_count,
+                  uint32_t draws_per_family) {
     uint32_t temperature;
     uint32_t best = 0u;
     double best_loss = HUGE_VAL;
     double *mass;
     if (!artifact || !universe || !fit_views || !fit_truth ||
-        !coverage_views || !coverage_truth || fit_count == 0u ||
-        coverage_count == 0u)
+        !coverage_views || !coverage_truth || fit_family_count == 0u ||
+        coverage_family_count == 0u || draws_per_family == 0u ||
+        !r56_universe_shape_valid(universe))
         return 1;
     for (temperature = 0u; temperature < R56_TEMPERATURES; ++temperature) {
         double loss = 0.0;
         artifact->temperature_q20 = r56_temperature_q20[temperature];
-        for (uint32_t episode = 0u; episode < fit_count; ++episode) {
-            double probability[R56_SEMANTIC_CLASSES];
-            int64_t score[R56_SEMANTIC_CLASSES];
-            uint32_t reads;
-            if (fit_truth[episode] >= R56_SEMANTIC_CLASSES ||
-                r56_posterior(artifact, universe, &fit_views[episode],
-                              R56_ARM_FULL, probability, score, &reads) != 0)
-                return 2;
-            loss -= log(probability[fit_truth[episode]] > 1e-300 ?
-                        probability[fit_truth[episode]] : 1e-300);
+        for (uint32_t family = 0u; family < fit_family_count; ++family) {
+            double family_loss = 0.0;
+            for (uint32_t draw = 0u; draw < draws_per_family; ++draw) {
+                uint32_t episode = family * draws_per_family + draw;
+                double probability[R56_SEMANTIC_CLASSES];
+                int64_t score[R56_SEMANTIC_CLASSES];
+                uint32_t reads;
+                if (fit_truth[episode] >= R56_SEMANTIC_CLASSES ||
+                    r56_posterior(artifact, universe, &fit_views[episode],
+                                  R56_ARM_FULL, probability, score,
+                                  &reads) != 0)
+                    return 2;
+                family_loss -= log(probability[fit_truth[episode]] > 1e-300 ?
+                    probability[fit_truth[episode]] : 1e-300);
+            }
+            loss += family_loss / (double)draws_per_family;
         }
         if (loss < best_loss) {
             best_loss = loss;
@@ -834,23 +1070,29 @@ int r56_calibrate(r56_artifact *artifact, const r56_universe *universe,
     }
     artifact->temperature_index = best;
     artifact->temperature_q20 = r56_temperature_q20[best];
-    mass = (double *)malloc((size_t)coverage_count * sizeof(*mass));
+    mass = (double *)malloc((size_t)coverage_family_count * sizeof(*mass));
     if (!mass) return 3;
-    for (uint32_t episode = 0u; episode < coverage_count; ++episode) {
-        double probability[R56_SEMANTIC_CLASSES];
-        int64_t score[R56_SEMANTIC_CLASSES];
-        uint32_t reads;
-        if (coverage_truth[episode] >= R56_SEMANTIC_CLASSES ||
-            r56_posterior(artifact, universe, &coverage_views[episode],
-                          R56_ARM_FULL,
-                          probability, score, &reads) != 0) {
-            free(mass);
-            return 4;
+    for (uint32_t family = 0u; family < coverage_family_count; ++family) {
+        double worst = 0.0;
+        for (uint32_t draw = 0u; draw < draws_per_family; ++draw) {
+            uint32_t episode = family * draws_per_family + draw;
+            double probability[R56_SEMANTIC_CLASSES];
+            int64_t score[R56_SEMANTIC_CLASSES];
+            uint32_t reads;
+            double score_value;
+            if (coverage_truth[episode] >= R56_SEMANTIC_CLASSES ||
+                r56_posterior(artifact, universe, &coverage_views[episode],
+                              R56_ARM_FULL, probability, score, &reads) != 0) {
+                free(mass);
+                return 4;
+            }
+            score_value = r56_truth_cumulative(probability,
+                                               coverage_truth[episode]);
+            if (score_value > worst) worst = score_value;
         }
-        mass[episode] = r56_truth_cumulative(probability,
-                                             coverage_truth[episode]);
+        mass[family] = worst;
     }
-    for (uint32_t index = 1u; index < coverage_count; ++index) {
+    for (uint32_t index = 1u; index < coverage_family_count; ++index) {
         double value = mass[index];
         uint32_t position = index;
         while (position > 0u && mass[position - 1u] > value) {
@@ -861,23 +1103,24 @@ int r56_calibrate(r56_artifact *artifact, const r56_universe *universe,
     }
     {
         uint32_t quantile = (uint32_t)ceil(
-            0.99 * (double)(coverage_count + 1u));
+            0.99 * (double)(coverage_family_count + 1u));
         double selected;
         if (quantile == 0u) quantile = 1u;
-        if (quantile > coverage_count) quantile = coverage_count;
-        selected = mass[quantile - 1u];
+        selected = quantile > coverage_family_count ? 1.0 :
+            mass[quantile - 1u];
         artifact->conformal_mass_q20 = (int32_t)ceil(selected * R56_Q20_ONE);
         if (artifact->conformal_mass_q20 > R56_Q20_ONE)
             artifact->conformal_mass_q20 = R56_Q20_ONE;
         if (artifact->conformal_mass_q20 < 1)
             artifact->conformal_mass_q20 = 1;
     }
-    artifact->calibration_fit_episodes = fit_count;
-    artifact->calibration_coverage_episodes = coverage_count;
+    artifact->calibration_fit_episodes = fit_family_count;
+    artifact->calibration_coverage_episodes = coverage_family_count;
     artifact->calibration_fit_digest = r56_calibration_digest(
-        fit_views, fit_truth, fit_count, 5608u);
+        fit_views, fit_truth, fit_family_count * draws_per_family, 5608u);
     artifact->calibration_coverage_digest = r56_calibration_digest(
-        coverage_views, coverage_truth, coverage_count, 5609u);
+        coverage_views, coverage_truth,
+        coverage_family_count * draws_per_family, 5609u);
     free(mass);
     return r56_refresh_artifact_digest(artifact);
 }
@@ -888,8 +1131,8 @@ int r56_verify_semantic_class(const r56_universe *universe,
                               r56_certificate *certificate) {
     uint8_t rebuilt[R56_MODULUS];
     int accepted;
-    if (!universe || !target || !certificate ||
-        semantic_class >= universe->semantic_count)
+    if (!r56_universe_shape_valid(universe) || !target || !certificate ||
+        semantic_class >= R56_SEMANTIC_CLASSES)
         return 0;
     memset(certificate, 0, sizeof(*certificate));
     r56_program_table(universe->semantic[semantic_class].representative,
@@ -910,22 +1153,24 @@ int r56_verified_search(const r56_universe *universe,
                         uint32_t global_cap, uint16_t injected_invalid,
                         r56_search_result *result) {
     uint8_t seen[R56_SEMANTIC_CLASSES];
-    if (!universe || !target || !proposals || proposal_count == 0u ||
+    if (!r56_universe_shape_valid(universe) || !target || !proposals ||
+        proposal_count == 0u ||
         !result || global_cap == 0u || global_cap == UINT32_MAX ||
-        injected_invalid >= universe->semantic_count ||
+        global_cap > R56_SEMANTIC_CLASSES ||
+        injected_invalid >= R56_SEMANTIC_CLASSES ||
         proposals[0] != injected_invalid)
         return 1;
     memset(result, 0, sizeof(*result));
     memset(seen, 0, sizeof(seen));
     result->accepted_class = UINT32_MAX;
     for (uint32_t phase = 0u; phase < 2u && !result->solved; ++phase) {
-        uint32_t count = phase == 0u ? proposal_count : universe->semantic_count;
+        uint32_t count = phase == 0u ? proposal_count : R56_SEMANTIC_CLASSES;
         if (phase == 1u) result->fallback_started = 1u;
         for (uint32_t index = 0u; index < count; ++index) {
             uint16_t semantic = phase == 0u ? proposals[index] : (uint16_t)index;
             r56_certificate certificate;
             int accepted;
-            if (semantic >= universe->semantic_count) return 2;
+            if (semantic >= R56_SEMANTIC_CLASSES) return 2;
             result->partial_expansions += 1u;
             if (phase == 1u) result->fallback_partial_expansions += 1u;
             if (seen[semantic]) continue;
@@ -1301,26 +1546,22 @@ int r56_read_artifact(const char *path, r56_artifact *artifact) {
     return status == 0 ? 0 : 6;
 }
 
-static void r56_generate_view(uint64_t target_seed,
-                              uint64_t corruption_seed,
-                              uint64_t order_seed, uint32_t episode_index,
-                              uint32_t program_family,
+static void r56_generate_view(uint64_t corruption_seed,
+                              uint64_t order_seed, uint32_t episode_nonce,
+                              uint32_t order_slot, uint16_t truth,
                               uint32_t corruption_index,
                               const r56_universe *universe,
-                              r56_ranker_view *view, uint16_t *truth) {
+                              r56_ranker_view *view) {
     uint8_t order[R56_MAX_OBSERVATIONS];
     r56_corruption_family family;
     uint8_t previous_state = 0u;
-    uint64_t target_key = r56_event_key(target_seed, program_family,
-                                        56u, 1u, 0u, 0u);
-    *truth = (uint16_t)(target_key % R56_SEMANTIC_CLASSES);
     r56_generate_corruption_family(corruption_seed, corruption_index,
                                    &family);
     for (uint32_t index = 0u; index < R56_MAX_OBSERVATIONS; ++index)
         order[index] = (uint8_t)index;
     for (uint32_t index = R56_MAX_OBSERVATIONS - 1u; index > 0u; --index) {
         uint32_t selected = (uint32_t)(r56_event_key(order_seed,
-            episode_index, index, 2u, 0u, 0u) % (index + 1u));
+            order_slot, index, 2u, 0u, 0u) % (index + 1u));
         uint8_t temporary = order[index];
         order[index] = order[selected];
         order[selected] = temporary;
@@ -1332,9 +1573,9 @@ static void r56_generate_view(uint64_t target_seed,
         uint8_t cell = order[position];
         uint8_t sensor = (uint8_t)(cell / R56_MODULUS);
         uint8_t input = (uint8_t)(cell % R56_MODULUS);
-        uint8_t clean = universe->semantic[*truth].table[input];
+        uint8_t clean = universe->semantic[truth].table[input];
         uint8_t state = r56_channel_state(&family,
-            corruption_seed ^ r56_mix64(episode_index), sensor, input, clean,
+            corruption_seed ^ r56_mix64(episode_nonce), sensor, input, clean,
             previous_state, position);
         r56_public_observation *observation = &view->observations[position];
         observation->input = input;
@@ -1346,11 +1587,181 @@ static void r56_generate_view(uint64_t target_seed,
     }
 }
 
+static uint32_t r56_mark_source_classes(const r56_universe *universe,
+                                        uint64_t source_seed,
+                                        uint8_t used[R56_SEMANTIC_CLASSES]) {
+    uint32_t count = 0u;
+    memset(used, 0, R56_SEMANTIC_CLASSES);
+    for (uint32_t index = 0u; index < R56_SOURCE_PROGRAM_COUNT; ++index) {
+        uint8_t token[R56_PROGRAM_DEPTH];
+        uint32_t syntax;
+        uint16_t semantic;
+        r56_generate_source_program(source_seed, index, token);
+        syntax = ((uint32_t)token[0] * R56_PRIMITIVES + token[1]) *
+                 R56_PRIMITIVES + token[2];
+        semantic = universe->syntax_to_semantic[syntax];
+        if (!used[semantic]) {
+            used[semantic] = 1u;
+            count += 1u;
+        }
+    }
+    return count;
+}
+
+static int r56_select_classes(uint64_t seed, uint32_t desired,
+                              uint16_t lower, uint16_t upper,
+                              uint8_t used[R56_SEMANTIC_CLASSES],
+                              uint16_t *selected, uint32_t *rejections) {
+    uint32_t accepted = 0u;
+    uint32_t counter = 0u;
+    uint32_t width;
+    if (!selected || !rejections || lower > upper ||
+        upper >= R56_SEMANTIC_CLASSES)
+        return 1;
+    width = (uint32_t)upper - lower + 1u;
+    while (accepted < desired && counter < 1000000u) {
+        uint16_t semantic = (uint16_t)(lower +
+            r56_event_key(seed, counter, 56u, 2u, 0u, 0u) % width);
+        counter += 1u;
+        if (used[semantic]) {
+            *rejections += 1u;
+            continue;
+        }
+        used[semantic] = 1u;
+        selected[accepted++] = semantic;
+    }
+    return accepted == desired ? 0 : 2;
+}
+
+static int r56_select_development_classes(
+    uint8_t used[R56_SEMANTIC_CLASSES],
+    uint16_t selected[R56_DEVELOPMENT_PROGRAM_FAMILIES],
+    uint32_t *rejections) {
+    static const uint16_t anchors[R56_DEVELOPMENT_PROGRAM_FAMILIES] = {
+        16u, 23u, 30u, 37u, 44u, 51u, 58u, 63u
+    };
+    for (uint32_t index = 0u; index < R56_DEVELOPMENT_PROGRAM_FAMILIES;
+         ++index) {
+        uint16_t candidate = anchors[index];
+        uint32_t attempts = 0u;
+        while (used[candidate] && attempts < 48u) {
+            *rejections += 1u;
+            candidate = (uint16_t)(16u + ((candidate - 16u + 1u) % 48u));
+            attempts += 1u;
+        }
+        if (attempts == 48u) return 1;
+        used[candidate] = 1u;
+        selected[index] = candidate;
+    }
+    return 0;
+}
+
 static double r56_probability_sum(const double *probability) {
     double total = 0.0;
     for (uint32_t index = 0u; index < R56_SEMANTIC_CLASSES; ++index)
         total += probability[index];
     return total;
+}
+
+static int r56_normalize_scores(
+    const int64_t score_q20[R56_SEMANTIC_CLASSES],
+    double probability[R56_SEMANTIC_CLASSES]) {
+    int64_t maximum = INT64_MIN;
+    double normalizer = 0.0;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic)
+        if (score_q20[semantic] > maximum) maximum = score_q20[semantic];
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic) {
+        double weight = exp((double)(score_q20[semantic] - maximum) /
+                            (double)R56_Q20_ONE);
+        probability[semantic] = weight;
+        normalizer += weight;
+    }
+    if (!(normalizer > 0.0) || !isfinite(normalizer)) return 1;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic)
+        probability[semantic] /= normalizer;
+    return 0;
+}
+
+static int r56_oracle_posterior(
+    const r56_artifact *artifact, const r56_universe *universe,
+    const r56_ranker_view *view, const r56_corruption_family *family,
+    uint64_t corruption_seed, uint32_t episode_nonce, uint16_t truth,
+    int clean_oracle, double probability[R56_SEMANTIC_CLASSES],
+    int64_t score_q20[R56_SEMANTIC_CLASSES], uint32_t *reads) {
+    if (!artifact || !r56_universe_shape_valid(universe) || !view || !family ||
+        truth >= R56_SEMANTIC_CLASSES || !probability || !score_q20 || !reads)
+        return 1;
+    *reads = 0u;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic) {
+        int64_t score = artifact->class_log_q20[semantic];
+        uint32_t mismatch = 0u;
+        uint8_t previous_state = 0u;
+        *reads += 1u;
+        if (clean_oracle) {
+            mismatch = semantic == truth ? 0u : R56_MODULUS;
+        } else {
+            for (uint32_t position = 0u; position < view->observation_count;
+                 ++position) {
+                const r56_public_observation *item = &view->observations[position];
+                uint8_t clean = universe->semantic[semantic].table[item->input];
+                uint8_t state = r56_channel_state(family,
+                    corruption_seed ^ r56_mix64(episode_nonce), item->sensor,
+                    item->input, clean, previous_state, position);
+                int missing = state == R56_MODULUS;
+                uint8_t observed = missing ? 0u :
+                    r56_mod((int32_t)clean + state);
+                mismatch += missing != item->missing ||
+                            observed != item->observed;
+                previous_state = state;
+            }
+        }
+        score -= (int64_t)mismatch * 8 * R56_Q20_ONE;
+        score_q20[semantic] = (score * R56_Q20_ONE) /
+                              artifact->temperature_q20;
+    }
+    return r56_normalize_scores(score_q20, probability);
+}
+
+static uint32_t r56_truth_rank(
+    const double probability[R56_SEMANTIC_CLASSES], uint16_t truth) {
+    uint16_t order[R56_SEMANTIC_CLASSES];
+    r56_probability_order(probability, order);
+    for (uint32_t rank = 0u; rank < R56_SEMANTIC_CLASSES; ++rank)
+        if (order[rank] == truth) return rank + 1u;
+    return 0u;
+}
+
+static double r56_brier_score(
+    const double probability[R56_SEMANTIC_CLASSES], uint16_t truth) {
+    double score = 0.0;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES; ++semantic) {
+        double expected = semantic == truth ? 1.0 : 0.0;
+        double difference = probability[semantic] - expected;
+        score += difference * difference;
+    }
+    return score;
+}
+
+static void r56_backoff_counts(const r56_artifact *artifact,
+                               const r56_universe *universe,
+                               const r56_ranker_view *view, uint16_t truth,
+                               uint32_t local[4], uint32_t transition[4]) {
+    uint8_t previous_sensor = 0u;
+    uint8_t previous_state = 0u;
+    memset(local, 0, 4u * sizeof(local[0]));
+    memset(transition, 0, 4u * sizeof(transition[0]));
+    for (uint32_t position = 0u; position < view->observation_count; ++position) {
+        const r56_public_observation *item = &view->observations[position];
+        uint8_t clean = universe->semantic[truth].table[item->input];
+        uint8_t state = r56_observation_state(item, clean);
+        local[r56_local_backoff_level(artifact, item->sensor, item->input,
+                                      clean)] += 1u;
+        if (position > 0u)
+            transition[r56_transition_backoff_level(artifact, previous_sensor,
+                item->sensor, previous_state)] += 1u;
+        previous_sensor = item->sensor;
+        previous_state = state;
+    }
 }
 
 static uint64_t r56_universe_digest(const r56_universe *universe) {
@@ -1401,16 +1812,59 @@ static uint64_t r56_verifier_digest(const r56_universe *universe) {
     return digest;
 }
 
-static const char *r56_arm_name(r56_arm arm) {
+static const char *r56_arm_name(r56_arm arm, char buffer[32]) {
     switch (arm) {
         case R56_ARM_FULL: return "full";
+        case R56_ARM_ROBUST_HAMMING: return "robust_hamming";
+        case R56_ARM_TARGET_ONLY: return "target_only";
         case R56_ARM_SOURCE_FREE: return "source_free";
         case R56_ARM_SOURCE_ABLATION: return "source_ablation";
         case R56_ARM_ONE_TRIM: return "one_trim";
         case R56_ARM_MARKOV_OFF: return "markov_off";
+        case R56_ARM_SHUFFLED_SENSOR: return "shuffled_sensor";
+        case R56_ARM_VALUE_ONLY: return "value_only";
+        case R56_ARM_MASK_ONLY: return "mask_only";
         case R56_ARM_PROGRAM_PRIOR_ONLY: return "program_prior_only";
-        default: return "channel_only";
+        case R56_ARM_CHANNEL_ONLY: return "channel_only";
+        case R56_ARM_ORACLE_CHANNEL: return "oracle_channel";
+        case R56_ARM_CLEAN_ORACLE: return "clean_oracle";
+        default:
+            if (arm >= R56_ARM_DERANGEMENT_00 &&
+                arm <= R56_ARM_DERANGEMENT_30) {
+                snprintf(buffer, 32u, "derangement_%02u",
+                    (unsigned)arm - R56_ARM_DERANGEMENT_00);
+                return buffer;
+            }
+            return "invalid";
     }
+}
+
+static void r56_fill_development_arms(r56_arm arms[R56_DEVELOPMENT_ARMS]) {
+    static const r56_arm fixed[] = {
+        R56_ARM_FULL, R56_ARM_ROBUST_HAMMING, R56_ARM_TARGET_ONLY,
+        R56_ARM_SOURCE_FREE, R56_ARM_SOURCE_ABLATION, R56_ARM_ONE_TRIM,
+        R56_ARM_MARKOV_OFF, R56_ARM_SHUFFLED_SENSOR, R56_ARM_VALUE_ONLY,
+        R56_ARM_MASK_ONLY, R56_ARM_CHANNEL_ONLY, R56_ARM_PROGRAM_PRIOR_ONLY,
+        R56_ARM_ORACLE_CHANNEL, R56_ARM_CLEAN_ORACLE
+    };
+    uint32_t cursor = 0u;
+    for (uint32_t index = 0u; index < sizeof(fixed) / sizeof(fixed[0]); ++index)
+        arms[cursor++] = fixed[index];
+    for (uint32_t index = 0u; index < R56_DERANGEMENT_COUNT; ++index)
+        arms[cursor++] = (r56_arm)(R56_ARM_DERANGEMENT_00 + index);
+}
+
+static int r56_append(char *buffer, size_t capacity, size_t *length,
+                      const char *format, ...) {
+    int added;
+    va_list arguments;
+    if (*length >= capacity) return 1;
+    va_start(arguments, format);
+    added = vsnprintf(buffer + *length, capacity - *length, format, arguments);
+    va_end(arguments);
+    if (added < 0 || (size_t)added >= capacity - *length) return 1;
+    *length += (size_t)added;
+    return 0;
 }
 
 static int r56_make_public_tree(const r56_ranker_view *view,
@@ -1442,7 +1896,8 @@ static int r56_make_public_tree(const r56_ranker_view *view,
     return 0;
 }
 
-int r56_run_development(r56_development_result *result,
+#if 0
+static int r56_run_development_legacy(r56_development_result *result,
                         const char *trace_path, const char *artifact_path) {
     static const r56_arm arms[R56_DEVELOPMENT_ARMS] = {
         R56_ARM_FULL, R56_ARM_SOURCE_FREE, R56_ARM_SOURCE_ABLATION,
@@ -1705,16 +2160,498 @@ int r56_run_development(r56_development_result *result,
     return 0;
 }
 
+#endif
+
+static int r56_compare_u32(const void *left, const void *right) {
+    uint32_t a = *(const uint32_t *)left;
+    uint32_t b = *(const uint32_t *)right;
+    return a < b ? -1 : a > b;
+}
+
+static int r56_self_test_schema(void);
+
+int r56_run_development(r56_development_result *result,
+                        const char *trace_path, const char *artifact_path) {
+    r56_arm arms[R56_DEVELOPMENT_ARMS];
+    r56_universe *universe = NULL;
+    r56_artifact *artifact = NULL;
+    r56_artifact *roundtrip = NULL;
+    r56_ranker_view *fit_views = NULL;
+    r56_ranker_view *coverage_views = NULL;
+    uint16_t *fit_truth = NULL;
+    uint16_t *coverage_truth = NULL;
+    uint16_t fit_classes[R56_CALIBRATION_FIT_FAMILIES];
+    uint16_t coverage_classes[R56_CALIBRATION_COVERAGE_FAMILIES];
+    uint16_t development_classes[R56_DEVELOPMENT_PROGRAM_FAMILIES];
+    uint8_t used[R56_SEMANTIC_CLASSES];
+    uint32_t target_costs[R56_DEVELOPMENT_EPISODES];
+    uint32_t source_class_count;
+    uint32_t split_rejections = 0u;
+    uint32_t order_template_count[8][8];
+    uint64_t trace_digest = UINT64_C(1469598103934665603) ^ 5606u;
+    FILE *trace = NULL;
+    int status = 1;
+    size_t fit_episode_count = (size_t)R56_CALIBRATION_FIT_FAMILIES *
+                               R56_CALIBRATION_DRAWS;
+    size_t coverage_episode_count =
+        (size_t)R56_CALIBRATION_COVERAGE_FAMILIES * R56_CALIBRATION_DRAWS;
+
+    if (!result || !trace_path || !artifact_path) return 1;
+    memset(result, 0, sizeof(*result));
+    memset(order_template_count, 0, sizeof(order_template_count));
+    r56_fill_development_arms(arms);
+    universe = (r56_universe *)malloc(sizeof(*universe));
+    artifact = (r56_artifact *)malloc(sizeof(*artifact));
+    roundtrip = (r56_artifact *)malloc(sizeof(*roundtrip));
+    fit_views = (r56_ranker_view *)calloc(fit_episode_count,
+                                         sizeof(*fit_views));
+    coverage_views = (r56_ranker_view *)calloc(coverage_episode_count,
+                                              sizeof(*coverage_views));
+    fit_truth = (uint16_t *)calloc(fit_episode_count, sizeof(*fit_truth));
+    coverage_truth = (uint16_t *)calloc(coverage_episode_count,
+                                       sizeof(*coverage_truth));
+    if (!universe || !artifact || !roundtrip || !fit_views ||
+        !coverage_views || !fit_truth || !coverage_truth) {
+        status = 2;
+        goto cleanup;
+    }
+    if (r56_build_universe(universe) != 0 ||
+        r56_build_artifact(artifact, universe, UINT64_C(0x56010001),
+                           UINT64_C(0x56020002)) != 0) {
+        status = 3;
+        goto cleanup;
+    }
+    source_class_count = r56_mark_source_classes(
+        universe, UINT64_C(0x56010001), used);
+    if (r56_select_classes(UINT64_C(0x56ca1100),
+            R56_CALIBRATION_FIT_FAMILIES, 64u,
+            R56_SEMANTIC_CLASSES - 1u, used, fit_classes,
+            &split_rejections) != 0 ||
+        r56_select_classes(UINT64_C(0x56cb1100),
+            R56_CALIBRATION_COVERAGE_FAMILIES, 64u,
+            R56_SEMANTIC_CLASSES - 1u, used, coverage_classes,
+            &split_rejections) != 0 ||
+        r56_select_development_classes(used, development_classes,
+                                       &split_rejections) != 0) {
+        status = 4;
+        goto cleanup;
+    }
+    for (uint32_t family = 0u;
+         family < R56_CALIBRATION_FIT_FAMILIES; ++family) {
+        for (uint32_t draw = 0u; draw < R56_CALIBRATION_DRAWS; ++draw) {
+            uint32_t episode = family * R56_CALIBRATION_DRAWS + draw;
+            fit_truth[episode] = fit_classes[family];
+            r56_generate_view(UINT64_C(0x56ca1200),
+                UINT64_C(0x56ca1300), episode, (family + draw) % 8u,
+                fit_classes[family], draw + 8u * family, universe,
+                &fit_views[episode]);
+        }
+    }
+    for (uint32_t family = 0u;
+         family < R56_CALIBRATION_COVERAGE_FAMILIES; ++family) {
+        for (uint32_t draw = 0u; draw < R56_CALIBRATION_DRAWS; ++draw) {
+            uint32_t episode = family * R56_CALIBRATION_DRAWS + draw;
+            coverage_truth[episode] = coverage_classes[family];
+            r56_generate_view(UINT64_C(0x56cb1200),
+                UINT64_C(0x56cb1300), episode, (family + draw) % 8u,
+                coverage_classes[family], draw + 8u * (family + 1000u),
+                universe, &coverage_views[episode]);
+        }
+    }
+    if (r56_calibrate(artifact, universe, fit_views, fit_truth,
+            R56_CALIBRATION_FIT_FAMILIES, coverage_views, coverage_truth,
+            R56_CALIBRATION_COVERAGE_FAMILIES,
+            R56_CALIBRATION_DRAWS) != 0 ||
+        r56_write_artifact(artifact_path, artifact) != 0 ||
+        r56_read_artifact(artifact_path, roundtrip) != 0) {
+        status = 5;
+        goto cleanup;
+    }
+    result->artifact_roundtrip_valid =
+        roundtrip->artifact_digest == artifact->artifact_digest;
+    trace = fopen(trace_path, "wb");
+    if (!trace) {
+        status = 6;
+        goto cleanup;
+    }
+
+    for (uint32_t program = 0u;
+         program < R56_DEVELOPMENT_PROGRAM_FAMILIES; ++program) {
+        for (uint32_t mechanism = 0u;
+             mechanism < R56_DEVELOPMENT_CORRUPTION_FAMILIES; ++mechanism) {
+            for (uint32_t repeat = 0u; repeat < R56_DEVELOPMENT_REPEATS;
+                 ++repeat) {
+                uint32_t episode = ((program *
+                    R56_DEVELOPMENT_CORRUPTION_FAMILIES) + mechanism) *
+                    R56_DEVELOPMENT_REPEATS + repeat;
+                uint32_t corruption_index = mechanism + 8u *
+                    (repeat + R56_DEVELOPMENT_REPEATS * program + 2000u);
+                uint32_t order_slot = (program + mechanism + repeat) % 8u;
+                uint16_t truth = development_classes[program];
+                r56_ranker_view view;
+                r56_corruption_family family;
+                double source_free_probability[R56_SEMANTIC_CLASSES];
+                int64_t source_free_score[R56_SEMANTIC_CLASSES];
+                r56_search_result source_free_search;
+                uint32_t source_free_reads = 1u;
+                uint32_t local_backoff[4];
+                uint32_t transition_backoff[4];
+                r56_generate_corruption_family(UINT64_C(0x56de0002),
+                                               corruption_index, &family);
+                r56_generate_view(UINT64_C(0x56de0002),
+                    UINT64_C(0x56de0003), episode, order_slot, truth,
+                    corruption_index, universe, &view);
+                order_template_count[order_slot][mechanism] += 1u;
+                r56_backoff_counts(artifact, universe, &view, truth,
+                                   local_backoff, transition_backoff);
+                {
+                    r56_public_node root;
+                    r56_public_node array;
+                    r56_public_node observations[R56_MAX_OBSERVATIONS];
+                    r56_public_node leaves[R56_MAX_OBSERVATIONS * 4u];
+                    if (r56_make_public_tree(&view, &root, &array,
+                            observations, leaves) != 0 ||
+                        r56_validate_ranker_tree(&root) != 0) {
+                        status = 7;
+                        goto cleanup;
+                    }
+                }
+                for (uint32_t arm_index = 0u;
+                     arm_index < R56_DEVELOPMENT_ARMS; ++arm_index) {
+                    r56_arm arm = arms[arm_index];
+                    double probability[R56_SEMANTIC_CLASSES];
+                    int64_t score[R56_SEMANTIC_CLASSES];
+                    uint16_t order[R56_SEMANTIC_CLASSES];
+                    uint16_t proposals[R56_PROPOSAL_BUDGET];
+                    uint16_t injected;
+                    r56_search_result search;
+                    r56_certificate certificate;
+                    uint32_t reads = 0u;
+                    uint32_t truth_rank;
+                    uint32_t candidate_set_size;
+                    uint8_t candidate_set[R56_SEMANTIC_CLASSES];
+                    double sum;
+                    double truth_probability;
+                    double normalized_log_loss;
+                    double brier;
+                    char arm_buffer[32];
+                    const char *arm_name = r56_arm_name(arm, arm_buffer);
+                    char line[8192];
+                    size_t length = 0u;
+                    int posterior_status;
+                    if (arm == R56_ARM_ORACLE_CHANNEL ||
+                        arm == R56_ARM_CLEAN_ORACLE) {
+                        posterior_status = r56_oracle_posterior(artifact,
+                            universe, &view, &family,
+                            UINT64_C(0x56de0002), episode, truth,
+                            arm == R56_ARM_CLEAN_ORACLE, probability, score,
+                            &reads);
+                    } else {
+                        const r56_artifact *ranker_artifact =
+                            (arm == R56_ARM_TARGET_ONLY ||
+                             arm == R56_ARM_SOURCE_FREE ||
+                             arm == R56_ARM_SOURCE_ABLATION) ? NULL : artifact;
+                        posterior_status = r56_posterior(ranker_artifact,
+                            universe, &view, arm, probability, score, &reads);
+                    }
+                    if (posterior_status != 0) {
+                        status = 8;
+                        goto cleanup;
+                    }
+                    sum = r56_probability_sum(probability);
+                    if (fabs(sum - 1.0) <= 1e-12)
+                        result->normalized_rows += 1u;
+                    truth_rank = r56_truth_rank(probability, truth);
+                    truth_probability = probability[truth];
+                    normalized_log_loss = -log(truth_probability > 1e-300 ?
+                        truth_probability : 1e-300) /
+                        log((double)R56_SEMANTIC_CLASSES);
+                    brier = r56_brier_score(probability, truth);
+                    candidate_set_size = r56_candidate_set(probability,
+                        (double)artifact->conformal_mass_q20 /
+                        (double)R56_Q20_ONE, candidate_set);
+                    if (candidate_set_size == 0u) {
+                        status = 9;
+                        goto cleanup;
+                    }
+                    if (arm == R56_ARM_FULL) {
+                        result->candidate_set_rows += 1u;
+                        result->candidate_set_truth_covered +=
+                            candidate_set[truth] != 0u;
+                        result->candidate_set_total_size += candidate_set_size;
+                        result->full_mean_normalized_log_loss +=
+                            normalized_log_loss;
+                        result->full_mean_brier += brier;
+                    }
+                    r56_probability_order(probability, order);
+                    injected = order[0] == truth ? order[1] : order[0];
+                    proposals[0] = injected;
+                    {
+                        uint32_t cursor = 1u;
+                        for (uint32_t rank = 0u;
+                             rank < R56_SEMANTIC_CLASSES &&
+                             cursor < R56_PROPOSAL_BUDGET; ++rank)
+                            if (order[rank] != injected)
+                                proposals[cursor++] = order[rank];
+                        if (cursor != R56_PROPOSAL_BUDGET) {
+                            status = 10;
+                            goto cleanup;
+                        }
+                    }
+                    if (r56_verified_search(universe,
+                            universe->semantic[truth].table, proposals,
+                            R56_PROPOSAL_BUDGET, R56_GLOBAL_CAP, injected,
+                            &search) != 0 || !search.solved ||
+                        !r56_verify_semantic_class(universe,
+                            (uint16_t)search.accepted_class,
+                            universe->semantic[truth].table, &certificate)) {
+                        status = 11;
+                        goto cleanup;
+                    }
+                    result->trace_rows += 1u;
+                    result->exact_rows += search.certificate_valid;
+                    result->fallback_rows += search.fallback_started;
+                    result->invalid_first_rejections +=
+                        search.invalid_first_rejected;
+                    if (arm == R56_ARM_TARGET_ONLY)
+                        target_costs[episode] = search.primary_cost;
+                    if (arm == R56_ARM_SOURCE_FREE) {
+                        memcpy(source_free_probability, probability,
+                               sizeof(source_free_probability));
+                        memcpy(source_free_score, score,
+                               sizeof(source_free_score));
+                        source_free_search = search;
+                        source_free_reads = reads;
+                    } else if (arm == R56_ARM_SOURCE_ABLATION &&
+                        source_free_reads == 0u && reads == 0u &&
+                        memcmp(source_free_probability, probability,
+                               sizeof(source_free_probability)) == 0 &&
+                        memcmp(source_free_score, score,
+                               sizeof(source_free_score)) == 0 &&
+                        memcmp(&source_free_search, &search,
+                               sizeof(search)) == 0) {
+                        result->source_ablation_matches += 1u;
+                    }
+                    if (r56_append(line, sizeof(line), &length,
+                        "{\"schema\":\"zero.reasoner56_native_trace.v2\","
+                        "\"experiment\":\"reasoner56-passive-noise-development-v1\","
+                        "\"lane\":\"development\",\"generator_id\":\"r56-gf17-v2\","
+                        "\"family_id\":\"program-%u\","
+                        "\"cross_family_id\":\"mechanism-%u\","
+                        "\"program_family_id\":\"program-%u\","
+                        "\"corruption_family_id\":\"mechanism-%u\","
+                        "\"nested_repeat_id\":\"draw-%u\","
+                        "\"episode_id\":\"dev-p%u-m%u-r%u\","
+                        "\"shift_stratum\":\"primary-id-development\","
+                        "\"mechanism_id\":%u,\"parameter_draw\":%u,"
+                        "\"order_slot\":%u,\"corruption_index\":%u,"
+                        "\"truth_class\":%u,\"arm\":\"%s\","
+                        "\"exact\":true,\"certificate_valid\":true,"
+                        "\"premature_commit\":false,\"primary_cost\":%u,"
+                        "\"verifier_checks\":%u,"
+                        "\"proposal_verifier_checks\":%u,"
+                        "\"partial_expansions\":%u,"
+                        "\"fallback_verifier_checks\":%u,"
+                        "\"fallback_partial_expansions\":%u,"
+                        "\"observation_queries\":%u,"
+                        "\"observations_consumed\":%u,"
+                        "\"fallback_started\":%s,\"global_cap_hit\":false,"
+                        "\"injected_invalid_rejected\":true,"
+                        "\"source_artifact_reads\":%u,"
+                        "\"accepted_class\":%u,"
+                        "\"certificate_table_digest\":\"%016llx\","
+                        "\"probability_sum\":%.17g,\"truth_rank\":%u,"
+                        "\"top_one_truth\":%s,\"truth_probability\":%.17g,"
+                        "\"normalized_log_loss\":%.17g,\"brier\":%.17g,"
+                        "\"candidate_set_size\":%u,"
+                        "\"candidate_set_contains_truth\":%s,"
+                        "\"candidate_universe_count\":%u,"
+                        "\"candidate_universe_digest\":\"%016llx\","
+                        "\"initial_evidence_digest\":\"%016llx\","
+                        "\"verifier_digest\":\"%016llx\","
+                        "\"artifact_digest\":\"%016llx\","
+                        "\"local_backoff_counts\":[%u,%u,%u,%u],"
+                        "\"transition_backoff_counts\":[%u,%u,%u,%u],"
+                        "\"proposal_classes\":[",
+                        program, mechanism, program, mechanism, repeat,
+                        program, mechanism, repeat, mechanism, repeat,
+                        order_slot, corruption_index, truth, arm_name,
+                        search.primary_cost, search.verifier_checks,
+                        search.proposal_verifier_checks,
+                        search.partial_expansions,
+                        search.fallback_verifier_checks,
+                        search.fallback_partial_expansions,
+                        view.observation_count,
+                        view.observation_count,
+                        search.fallback_started ? "true" : "false", reads,
+                        search.accepted_class,
+                        (unsigned long long)certificate.table_digest, sum,
+                        truth_rank, truth_rank == 1u ? "true" : "false",
+                        truth_probability, normalized_log_loss, brier,
+                        candidate_set_size,
+                        candidate_set[truth] ? "true" : "false",
+                        R56_SEMANTIC_CLASSES,
+                        (unsigned long long)r56_universe_digest(universe),
+                        (unsigned long long)r56_public_view_digest(&view),
+                        (unsigned long long)r56_verifier_digest(universe),
+                        (unsigned long long)artifact->artifact_digest,
+                        local_backoff[0], local_backoff[1], local_backoff[2],
+                        local_backoff[3], transition_backoff[0],
+                        transition_backoff[1], transition_backoff[2],
+                        transition_backoff[3]) != 0) {
+                        status = 12;
+                        goto cleanup;
+                    }
+                    for (uint32_t index = 0u; index < R56_PROPOSAL_BUDGET;
+                         ++index)
+                        if (r56_append(line, sizeof(line), &length,
+                                "%s%u", index ? "," : "", proposals[index]) != 0) {
+                            status = 12;
+                            goto cleanup;
+                        }
+                    if (r56_append(line, sizeof(line), &length,
+                                   "],\"observations\":[") != 0) {
+                        status = 12;
+                        goto cleanup;
+                    }
+                    for (uint32_t index = 0u;
+                         index < view.observation_count; ++index) {
+                        const r56_public_observation *item =
+                            &view.observations[index];
+                        if (r56_append(line, sizeof(line), &length,
+                            "%s{\"input\":%u,\"sensor\":%u,"
+                            "\"observed\":%u,\"missing\":%s}",
+                            index ? "," : "", item->input, item->sensor,
+                            item->observed,
+                            item->missing ? "true" : "false") != 0) {
+                            status = 12;
+                            goto cleanup;
+                        }
+                    }
+                    if (r56_append(line, sizeof(line), &length, "]}\n") != 0 ||
+                        fwrite(line, 1u, length, trace) != length) {
+                        status = 12;
+                        goto cleanup;
+                    }
+                    trace_digest = r56_hash_update(trace_digest, line, length);
+                }
+            }
+        }
+    }
+    if (fclose(trace) != 0) {
+        trace = NULL;
+        status = 13;
+        goto cleanup;
+    }
+    trace = NULL;
+    result->episodes = R56_DEVELOPMENT_EPISODES;
+    result->temperature_index = artifact->temperature_index;
+    result->temperature_q20 = artifact->temperature_q20;
+    result->conformal_mass_q20 = artifact->conformal_mass_q20;
+    result->calibration_fit_episodes = artifact->calibration_fit_episodes;
+    result->calibration_coverage_episodes =
+        artifact->calibration_coverage_episodes;
+    result->artifact_digest = artifact->artifact_digest;
+    result->trace_digest = trace_digest;
+    result->calibration_fit_digest = artifact->calibration_fit_digest;
+    result->calibration_coverage_digest =
+        artifact->calibration_coverage_digest;
+    result->source_semantic_classes = source_class_count;
+    result->calibration_fit_families = R56_CALIBRATION_FIT_FAMILIES;
+    result->calibration_coverage_families =
+        R56_CALIBRATION_COVERAGE_FAMILIES;
+    result->development_program_families =
+        R56_DEVELOPMENT_PROGRAM_FAMILIES;
+    result->development_corruption_families =
+        R56_DEVELOPMENT_CORRUPTION_FAMILIES;
+    result->nested_repeats = R56_DEVELOPMENT_REPEATS;
+    result->split_rejections = split_rejections;
+    result->development_class_count = R56_DEVELOPMENT_PROGRAM_FAMILIES;
+    memcpy(result->development_classes, development_classes,
+           sizeof(development_classes));
+    result->full_mean_normalized_log_loss /= R56_DEVELOPMENT_EPISODES;
+    result->full_mean_brier /= R56_DEVELOPMENT_EPISODES;
+    qsort(target_costs, R56_DEVELOPMENT_EPISODES,
+          sizeof(target_costs[0]), r56_compare_u32);
+    result->target_only_min_cost = target_costs[0];
+    result->target_only_max_cost =
+        target_costs[R56_DEVELOPMENT_EPISODES - 1u];
+    result->target_only_median_cost =
+        ((double)target_costs[R56_DEVELOPMENT_EPISODES / 2u - 1u] +
+         (double)target_costs[R56_DEVELOPMENT_EPISODES / 2u]) / 2.0;
+    result->hidden_field_rejections = r56_self_test_schema() == 0 ? 2u : 0u;
+    {
+        uint32_t expected = R56_DEVELOPMENT_PROGRAM_FAMILIES *
+                            R56_DEVELOPMENT_REPEATS / 8u;
+        result->proxy_audit_passed = 1u;
+        for (uint32_t order_slot = 0u; order_slot < 8u; ++order_slot)
+            for (uint32_t mechanism = 0u; mechanism < 8u; ++mechanism)
+                if (order_template_count[order_slot][mechanism] != expected)
+                    result->proxy_audit_passed = 0u;
+    }
+    {
+        r56_ranker_view view;
+        r56_artifact changed = *artifact;
+        double first_probability[R56_SEMANTIC_CLASSES];
+        double second_probability[R56_SEMANTIC_CLASSES];
+        int64_t first_score[R56_SEMANTIC_CLASSES];
+        int64_t second_score[R56_SEMANTIC_CLASSES];
+        uint32_t first_reads = 1u;
+        uint32_t second_reads = 1u;
+        changed.version = 0u;
+        changed.temperature_q20 = 0;
+        r56_generate_view(UINT64_C(0x56de0002), UINT64_C(0x56de0003),
+            0u, 0u, development_classes[0], 16000u, universe, &view);
+        result->taint_audit_passed =
+            r56_posterior(NULL, universe, &view, R56_ARM_SOURCE_FREE,
+                first_probability, first_score, &first_reads) == 0 &&
+            r56_posterior(&changed, universe, &view, R56_ARM_SOURCE_FREE,
+                second_probability, second_score, &second_reads) == 0 &&
+            first_reads == 0u && second_reads == 0u &&
+            memcmp(first_probability, second_probability,
+                   sizeof(first_probability)) == 0 &&
+            memcmp(first_score, second_score, sizeof(first_score)) == 0;
+    }
+    if (result->trace_rows != R56_DEVELOPMENT_EPISODES *
+                              R56_DEVELOPMENT_ARMS ||
+        result->exact_rows != result->trace_rows ||
+        result->normalized_rows != result->trace_rows ||
+        result->source_ablation_matches != R56_DEVELOPMENT_EPISODES ||
+        result->invalid_first_rejections != result->trace_rows ||
+        result->artifact_roundtrip_valid != 1u ||
+        result->calibration_fit_episodes != R56_CALIBRATION_FIT_FAMILIES ||
+        result->calibration_coverage_episodes !=
+            R56_CALIBRATION_COVERAGE_FAMILIES ||
+        result->target_only_median_cost < 16.0 ||
+        result->target_only_median_cost > 64.0 ||
+        !result->proxy_audit_passed || !result->taint_audit_passed) {
+        status = 14;
+        goto cleanup;
+    }
+    status = 0;
+
+cleanup:
+    if (trace) fclose(trace);
+    free(universe);
+    free(artifact);
+    free(roundtrip);
+    free(fit_views);
+    free(coverage_views);
+    free(fit_truth);
+    free(coverage_truth);
+    return status;
+}
+
 int r56_write_development_result(const char *path,
                                  const r56_development_result *result) {
     FILE *file;
-    int ok;
+    int ok = 1;
     if (!path || !result) return 1;
     file = fopen(path, "wb");
     if (!file) return 2;
-    ok = fprintf(file,
+    if (fprintf(file,
         "{\n"
-        "  \"schema\": \"zero.reasoner56_development_result.v1\",\n"
+        "  \"schema\": \"zero.reasoner56_development_result.v2\",\n"
         "  \"experiment\": \"reasoner56-passive-noise-development-v1\",\n"
         "  \"status\": \"development-only\",\n"
         "  \"scientific_decision\": null,\n"
@@ -1739,11 +2676,22 @@ int r56_write_development_result(const char *path,
         "  \"calibration_coverage_episodes\": %u,\n"
         "  \"candidate_set_rows\": %u,\n"
         "  \"candidate_set_truth_covered\": %u,\n"
-        "  \"artifact_digest\": \"%016llx\",\n"
-        "  \"trace_digest\": \"%016llx\",\n"
-        "  \"calibration_fit_digest\": \"%016llx\",\n"
-        "  \"calibration_coverage_digest\": \"%016llx\"\n"
-        "}\n",
+        "  \"candidate_set_total_size\": %u,\n"
+        "  \"source_semantic_classes\": %u,\n"
+        "  \"calibration_fit_families\": %u,\n"
+        "  \"calibration_coverage_families\": %u,\n"
+        "  \"development_program_families\": %u,\n"
+        "  \"development_corruption_families\": %u,\n"
+        "  \"nested_repeats\": %u,\n"
+        "  \"split_rejections\": %u,\n"
+        "  \"proxy_audit_passed\": %s,\n"
+        "  \"taint_audit_passed\": %s,\n"
+        "  \"target_only_min_cost\": %u,\n"
+        "  \"target_only_max_cost\": %u,\n"
+        "  \"target_only_median_cost\": %.17g,\n"
+        "  \"full_mean_normalized_log_loss\": %.17g,\n"
+        "  \"full_mean_brier\": %.17g,\n"
+        "  \"development_classes\": [",
         R56_SYNTAX_PROGRAMS, R56_SEMANTIC_CLASSES, R56_SENSORS,
         R56_SUPPORT_MIN, result->episodes, result->trace_rows,
         result->exact_rows, result->normalized_rows,
@@ -1755,10 +2703,37 @@ int r56_write_development_result(const char *path,
         result->conformal_mass_q20, result->calibration_fit_episodes,
         result->calibration_coverage_episodes, result->candidate_set_rows,
         result->candidate_set_truth_covered,
+        result->candidate_set_total_size,
+        result->source_semantic_classes,
+        result->calibration_fit_families,
+        result->calibration_coverage_families,
+        result->development_program_families,
+        result->development_corruption_families,
+        result->nested_repeats, result->split_rejections,
+        result->proxy_audit_passed ? "true" : "false",
+        result->taint_audit_passed ? "true" : "false",
+        result->target_only_min_cost, result->target_only_max_cost,
+        result->target_only_median_cost,
+        result->full_mean_normalized_log_loss,
+        result->full_mean_brier) < 0)
+        ok = 0;
+    for (uint32_t index = 0u;
+         ok && index < result->development_class_count; ++index)
+        if (fprintf(file, "%s%u", index ? ", " : "",
+                    result->development_classes[index]) < 0)
+            ok = 0;
+    if (ok && fprintf(file,
+        "],\n"
+        "  \"artifact_digest\": \"%016llx\",\n"
+        "  \"trace_digest\": \"%016llx\",\n"
+        "  \"calibration_fit_digest\": \"%016llx\",\n"
+        "  \"calibration_coverage_digest\": \"%016llx\"\n"
+        "}\n",
         (unsigned long long)result->artifact_digest,
         (unsigned long long)result->trace_digest,
         (unsigned long long)result->calibration_fit_digest,
-        (unsigned long long)result->calibration_coverage_digest) > 0;
+        (unsigned long long)result->calibration_coverage_digest) < 0)
+        ok = 0;
     if (fclose(file) != 0) ok = 0;
     return ok ? 0 : 3;
 }
@@ -1884,19 +2859,20 @@ int r56_self_test(void) {
             status = 17; goto bytes_done;
         }
         for (uint32_t index = 0u; index < 8u; ++index) {
+            fit_truth[index] = (uint16_t)index;
+            coverage_truth[index] = (uint16_t)(index + 8u);
             r56_generate_view(UINT64_C(0x56ca1100),
-                              UINT64_C(0x56ca1200),
-                              UINT64_C(0x56ca1300), index, index, index,
-                              universe, &fit_views[index], &fit_truth[index]);
+                              UINT64_C(0x56ca1200), index, index,
+                              fit_truth[index], index, universe,
+                              &fit_views[index]);
             r56_generate_view(UINT64_C(0x56cb1100),
-                              UINT64_C(0x56cb1200),
-                              UINT64_C(0x56cb1300), index, index + 8u,
-                              index + 8u, universe, &coverage_views[index],
-                              &coverage_truth[index]);
+                              UINT64_C(0x56cb1200), index, index,
+                              coverage_truth[index], index + 8u, universe,
+                              &coverage_views[index]);
         }
         if (r56_calibrate(second, universe,
                           fit_views, fit_truth, 8u,
-                          coverage_views, coverage_truth, 8u) != 0 ||
+                          coverage_views, coverage_truth, 8u, 1u) != 0 ||
             second->temperature_index >= R56_TEMPERATURES ||
             second->temperature_q20 !=
                 r56_temperature_q20[second->temperature_index] ||
@@ -1930,8 +2906,8 @@ int r56_self_test(void) {
         r56_ranker_view view;
         r56_ranker_view same_order;
         r56_ranker_view different_order;
-        uint16_t truth;
-        uint16_t other_truth;
+        uint16_t truth = 16u;
+        uint16_t other_truth = 17u;
         double full[R56_SEMANTIC_CLASSES];
         double source_free[R56_SEMANTIC_CLASSES];
         double ablation[R56_SEMANTIC_CLASSES];
@@ -1943,14 +2919,12 @@ int r56_self_test(void) {
         uint32_t ablation_reads;
         uint8_t included[R56_SEMANTIC_CLASSES];
         r56_generate_view(UINT64_C(0x56de0001), UINT64_C(0x56de0002),
-                          UINT64_C(0x56de0003), 0u, 0u, 0u, universe,
-                          &view, &truth);
-        r56_generate_view(UINT64_C(0x77de0001), UINT64_C(0x77de0002),
-                          UINT64_C(0x56de0003), 0u, 9u, 7u, universe,
-                          &same_order, &other_truth);
-        r56_generate_view(UINT64_C(0x56de0001), UINT64_C(0x56de0002),
-                          UINT64_C(0x66de0003), 0u, 0u, 0u, universe,
-                          &different_order, &other_truth);
+                          0u, 0u, truth, 0u, universe, &view);
+        r56_generate_view(UINT64_C(0x77de0001), UINT64_C(0x56de0002),
+                          0u, 0u, other_truth, 7u, universe, &same_order);
+        r56_generate_view(UINT64_C(0x56de0001), UINT64_C(0x66de0003),
+                          0u, 0u, other_truth, 0u, universe,
+                          &different_order);
         {
             uint32_t changed = 0u;
             for (uint32_t index = 0u; index < view.observation_count;
@@ -1982,9 +2956,9 @@ int r56_self_test(void) {
                 status = 20; goto bytes_done;
             }
         }
-        if (r56_posterior(first, universe, &view, R56_ARM_SOURCE_FREE,
+        if (r56_posterior(NULL, universe, &view, R56_ARM_SOURCE_FREE,
                           source_free, source_free_score, &source_reads) != 0 ||
-            r56_posterior(first, universe, &view, R56_ARM_SOURCE_ABLATION,
+            r56_posterior(NULL, universe, &view, R56_ARM_SOURCE_ABLATION,
                           ablation, ablation_score, &ablation_reads) != 0 ||
             source_reads != 0u || ablation_reads != 0u ||
             memcmp(source_free, ablation, sizeof(source_free)) != 0 ||
@@ -2022,6 +2996,33 @@ int r56_self_test(void) {
                 !complete.fallback_started ||
                 !complete.invalid_first_rejected) {
                 status = 25; goto bytes_done;
+            }
+        }
+        {
+            uint32_t saved_semantic_count = universe->semantic_count;
+            r56_certificate certificate;
+            uint16_t proposal[1] = {0u};
+            r56_search_result search;
+            universe->semantic_count = R56_SEMANTIC_CLASSES + 1u;
+            if (r56_verify_semantic_class(universe, 0u,
+                    universe->semantic[truth].table, &certificate) != 0 ||
+                r56_verified_search(universe,
+                    universe->semantic[truth].table, proposal, 1u, 1u,
+                    0u, &search) == 0) {
+                status = 27; goto bytes_done;
+            }
+            universe->semantic_count = saved_semantic_count;
+        }
+        for (uint32_t permutation = 0u;
+             permutation < R56_DERANGEMENT_COUNT; ++permutation) {
+            uint8_t seen[R56_CHANNEL_STATES] = {0};
+            for (uint8_t state = 0u; state < R56_CHANNEL_STATES; ++state) {
+                uint8_t mapped = r56_deranged_state(permutation, state);
+                if (mapped >= R56_CHANNEL_STATES || mapped == state ||
+                    seen[mapped]) {
+                    status = 28; goto bytes_done;
+                }
+                seen[mapped] = 1u;
             }
         }
     }

@@ -96,13 +96,24 @@ typedef enum {
 
 typedef enum {
     R56_ARM_FULL = 0,
-    R56_ARM_SOURCE_FREE = 1,
-    R56_ARM_SOURCE_ABLATION = 2,
-    R56_ARM_ONE_TRIM = 3,
-    R56_ARM_MARKOV_OFF = 4,
-    R56_ARM_PROGRAM_PRIOR_ONLY = 5,
-    R56_ARM_CHANNEL_ONLY = 6
+    R56_ARM_ROBUST_HAMMING = 1,
+    R56_ARM_TARGET_ONLY = 2,
+    R56_ARM_SOURCE_FREE = 3,
+    R56_ARM_SOURCE_ABLATION = 4,
+    R56_ARM_ONE_TRIM = 5,
+    R56_ARM_MARKOV_OFF = 6,
+    R56_ARM_SHUFFLED_SENSOR = 7,
+    R56_ARM_VALUE_ONLY = 8,
+    R56_ARM_MASK_ONLY = 9,
+    R56_ARM_CHANNEL_ONLY = 10,
+    R56_ARM_PROGRAM_PRIOR_ONLY = 11,
+    R56_ARM_ORACLE_CHANNEL = 12,
+    R56_ARM_CLEAN_ORACLE = 13,
+    R56_ARM_DERANGEMENT_00 = 14,
+    R56_ARM_DERANGEMENT_30 = 44
 } r56_arm;
+
+#define R56_DERANGEMENT_COUNT 31u
 
 typedef struct {
     uint32_t version;
@@ -200,6 +211,23 @@ typedef struct {
     uint32_t calibration_coverage_episodes;
     uint32_t candidate_set_rows;
     uint32_t candidate_set_truth_covered;
+    uint32_t candidate_set_total_size;
+    uint32_t source_semantic_classes;
+    uint32_t calibration_fit_families;
+    uint32_t calibration_coverage_families;
+    uint32_t development_program_families;
+    uint32_t development_corruption_families;
+    uint32_t nested_repeats;
+    uint32_t split_rejections;
+    uint32_t proxy_audit_passed;
+    uint32_t taint_audit_passed;
+    uint32_t target_only_min_cost;
+    uint32_t target_only_max_cost;
+    double target_only_median_cost;
+    double full_mean_normalized_log_loss;
+    double full_mean_brier;
+    uint32_t development_class_count;
+    uint16_t development_classes[16];
     uint64_t artifact_digest;
     uint64_t trace_digest;
     uint64_t calibration_fit_digest;
@@ -229,9 +257,11 @@ int r56_posterior(const r56_artifact *artifact, const r56_universe *universe,
                   uint32_t *source_artifact_reads);
 int r56_calibrate(r56_artifact *artifact, const r56_universe *universe,
                   const r56_ranker_view *fit_views,
-                  const uint16_t *fit_truth, uint32_t fit_count,
+                  const uint16_t *fit_truth, uint32_t fit_family_count,
                   const r56_ranker_view *coverage_views,
-                  const uint16_t *coverage_truth, uint32_t coverage_count);
+                  const uint16_t *coverage_truth,
+                  uint32_t coverage_family_count,
+                  uint32_t draws_per_family);
 uint32_t r56_candidate_set(const double probability[R56_SEMANTIC_CLASSES],
                            double cumulative_threshold,
                            uint8_t included[R56_SEMANTIC_CLASSES]);
