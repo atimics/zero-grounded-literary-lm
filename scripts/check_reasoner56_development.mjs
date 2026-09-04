@@ -100,6 +100,16 @@ assert.equal(contract.generators.development_program_families, 8);
 assert.equal(contract.generators.development_corruption_families, 8);
 assert.equal(contract.generators.nested_repeats, 2);
 assert.equal(contract.arms.length, 45);
+assert.equal(contract.shared_harness.commit,
+  "2303a1a1769a7e4ccd32f5167e18645550651509");
+assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
+  contract.shared_harness.library_sha256,
+"shared harness hash differs from the R5.6 contract");
+assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");
+assert.equal(contract.shared_harness.confidence_interval_method,
+  "ordinary-percentile-bootstrap");
+assert.equal(contract.shared_harness.p_value_method,
+  "recentered-null-bootstrap");
 
 for (const [file, expected] of Object.entries(contract.protected_sources))
   assert.equal(sha256(readFileSync(file)), expected,
@@ -217,6 +227,20 @@ try {
   assert.equal(bundle.result.status, "development-only");
   assert.equal(bundle.result.scientific_decision, null);
   assert.equal(bundle.result.exactness.all_final_answers_exact, true);
+  const inferences = [
+    bundle.result.registered_analysis.primary,
+    ...bundle.result.registered_analysis.strata.map(item => item.inference),
+    ...bundle.result.registered_analysis.mechanisms.map(item => item.inference),
+  ];
+  assert.ok(inferences.every(inference =>
+    inference.interval.schema.endsWith("_bootstrap.v2") &&
+    inference.interval.confidence_interval_method ===
+      "ordinary-percentile-bootstrap" &&
+    inference.interval.p_value_method === "recentered-null-bootstrap" &&
+    /^[0-9a-f]{64}$/u.test(inference.interval.null_bootstrap_sha256)));
+  assert.equal(bundle.result.registered_analysis.primary.interval
+    .null_bootstrap_sha256,
+  contract.shared_harness.primary_null_bootstrap_sha256);
   assert.equal(bundle.audit.passed, true);
   assert.equal(bundle.audit.accuracy_delta, 0);
   assert.ok(bundle.audit.severity.accuracy_delta <= 0.02);
