@@ -46,6 +46,24 @@ assert(contract.digest?.algorithm === "sha256",
   "harness digest algorithm changed");
 assert(contract.digest?.canonical_encoding === "stable-json-utf8",
   "harness canonical encoding changed");
+assert(contract.digest?.scientific_number_encoding ===
+  "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero",
+  "harness scientific-number encoding changed");
+assert(contract.digest?.scientific_relative_tolerance === 1e-13,
+  "harness scientific-number tolerance changed");
+assert(contract.reference_math?.algorithm ===
+  "pure-js-binary64-fixed-order-v1", "harness reference math changed");
+assert(Array.isArray(contract.reference_math?.functions) &&
+  contract.reference_math.functions.join("\n") ===
+    ["log", "exp", "sqrt"].join("\n"),
+"harness reference functions changed");
+assert(contract.reference_math?.registered_positive_domain_max === 4097,
+  "harness registered reference-math domain changed");
+assert(contract.reference_math?.relative_or_near_zero_absolute_tolerance ===
+  2e-14, "harness reference-math tolerance changed");
+const librarySource = readFileSync(contract.implementation.library, "utf8");
+assert(!/Math\.(?:log|exp|sqrt)\s*\(/u.test(librarySource),
+  "receipt library uses a runtime transcendental function");
 assert(contract.statistics?.confidence_interval ===
   "ordinary percentile cluster bootstrap",
 "harness confidence interval method changed");
@@ -66,6 +84,10 @@ assert(new Set(requiredChecks).size === requiredChecks.length,
   "harness required checks contain duplicates");
 for (const required of [
   "strict canonical JSON domain",
+  "deterministic reference logarithm, exponential, and square root",
+  "registered positive-domain reference-math accuracy",
+  "known Reasoner 5 numeric portability regressions",
+  "bounded final scientific-number encoding",
   "transactional registration rollback",
   "hash-bound replay registry",
   "intrinsic function-source hashing",
