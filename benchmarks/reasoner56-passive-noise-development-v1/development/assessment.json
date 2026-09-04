@@ -1,10 +1,10 @@
 {
-  "assessment_sha256": "dd669af4027e1a45a094870daa7139e8af7014ea1d440d32b87044abf432b2f7",
+  "assessment_sha256": "bbe7f80035de9ea59720c3c0da46c6c3c7cff683fcbb931db6990c108f17c5ae",
   "channel_readiness": {
-    "assessment_sha256": "4d8533921272e267c613bd040e65bc963605d0c21cbf584222ca1905adf3b2ee",
+    "assessment_sha256": "ce52e6d23ce35ef3d9455db0b0369f3fc70cade016f09ee0fb4afdd4b5d98d6d",
     "checks": {
       "candidate_set_coverage_lower_bound": true,
-      "candidate_set_size_ratio_at_matched_coverage": true,
+      "candidate_set_size_ratio_at_matched_coverage": false,
       "development_and_sealed_interface_and_proxy_audits_clean": false,
       "log_loss_below_derangement_median": true,
       "log_loss_below_program_prior_only": true,
@@ -12,6 +12,7 @@
       "normalized_every_candidate_set": true
     },
     "failures": [
+      "candidate_set_size_ratio_at_matched_coverage",
       "development_and_sealed_interface_and_proxy_audits_clean"
     ],
     "metrics": {
@@ -22,12 +23,12 @@
         "coverage_families": 99,
         "coverage_independent_unit": "program-family-worst-draw",
         "coverage_lane": "calibration-coverage",
-        "coverage_receipt_sha256": "cb6e4d159039a1601fc27150389b047d54912152c9ad26524cb5f930c635a8d9",
+        "coverage_receipt_sha256": "a93a41448c16406bd8ae2e428da084a389d361728f7fb0e271dd324aef9ab20a",
         "covered_families": 99,
-        "full_mean_size": 1,
+        "full_mean_size": 427,
         "one_sided_95_wilson_lower": 0.9733982695317235,
         "program_prior_only_mean_size": 427,
-        "size_ratio": 0.00234192037470726,
+        "size_ratio": 1,
         "threshold_basis": "99 disjoint program families with worst-draw score"
       },
       "comparisons": {

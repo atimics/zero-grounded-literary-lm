@@ -340,22 +340,22 @@
     "registration_sha256": "3db77de71b19c73fc810eb57e2e537fb793355aa331fc376f5fc8404d2615d71"
   },
   "integrity": {
-    "coverage_sha256": "e274c4e5192975b909a7687aa357fed4ce9389bd00b53f2ad0dd825004cf363e",
+    "coverage_sha256": "4c613af9c3cef7e3841b4506196981facfa49fa7d6619f1803e9273299109d78",
     "manifest_digest_valid": true,
     "trace_contract_valid": true
   },
-  "manifest_sha256": "bb7fe5fbfa35906f37cfbe5e5ad42fdf0d82544ff060a1e391c9a416955d534a",
+  "manifest_sha256": "89da45b11dc5f3ca6d6db35a94e67eb4ff73aefada1223d74d21b3a31133bba6",
   "provenance": {
     "analysis_contract_sha256": "8850b8a94911ec2af996b00b5201c604c28283d8e1f2bbd96028f7413be0abc0",
     "analysis_function_sha256": "38e46e48d569c61ecf0b98c50aec97bdc6dd7a82bc65564c91670fd4059fc773",
     "analysis_settings_sha256": "ec33a929e2e38bad86cbf826664979b729bdf54bcd4b258daa5613337d583a79",
     "common_gate_registration_sha256": "3db77de71b19c73fc810eb57e2e537fb793355aa331fc376f5fc8404d2615d71",
     "episodes": 128,
-    "manifest_sha256": "bb7fe5fbfa35906f37cfbe5e5ad42fdf0d82544ff060a1e391c9a416955d534a",
+    "manifest_sha256": "89da45b11dc5f3ca6d6db35a94e67eb4ff73aefada1223d74d21b3a31133bba6",
     "raw_trace_sha256": "b8c99ad304429779bf34e2572504806da57be59585623b1716b7a4169756fa93",
     "rows": 5760,
     "schema": "zero.reasoner5_result_provenance.v1",
-    "trace_coverage_sha256": "e274c4e5192975b909a7687aa357fed4ce9389bd00b53f2ad0dd825004cf363e"
+    "trace_coverage_sha256": "4c613af9c3cef7e3841b4506196981facfa49fa7d6619f1803e9273299109d78"
   },
   "raw_trace_sha256": "b8c99ad304429779bf34e2572504806da57be59585623b1716b7a4169756fa93",
   "registered_analysis": {
@@ -4534,11 +4534,11 @@
       }
     ]
   },
-  "result_sha256": "2758241e59171392d77d980d65ea6fd1fb503b109d10f98b1e6008e7e0e1a674",
+  "result_sha256": "bf9884488296f072f0eb873a8365a0e933b80a418b54ffe879bec7792297d120",
   "schema": "zero.reasoner5_trace_result.v1",
   "scientific_decision": null,
   "sealed_execution_authorized": false,
   "status": "development-only",
-  "trace_coverage_sha256": "e274c4e5192975b909a7687aa357fed4ce9389bd00b53f2ad0dd825004cf363e",
+  "trace_coverage_sha256": "4c613af9c3cef7e3841b4506196981facfa49fa7d6619f1803e9273299109d78",
   "trace_rows": 5760
 }
