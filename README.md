@@ -1,98 +1,158 @@
-# Zero-grounded language models in C
+# ZERO — a language model built from zero, in C
 
-Read [**The ZERO Manifesto**](MANIFESTO.md) and the
-[mathematical foundations](FOUNDATIONS.md).
+This is a from-scratch neural language model project with a thesis:
+**start from nothing, account for everything.**
 
-This project contains two dependency-free neural language models together with
-checked corpus generators, validators, faculty-controller experiments, and a
-small browser runtime:
+- Two dependency-free C11 language models. No PyTorch, no autodiff, no
+  tokenizer or ML library — the transformer backward pass is hand-written and
+  verified by finite differences in `make check`.
+- A 4,852,992-parameter transformer trained on Shakespeare, Blake, Crowley,
+  the King James Bible, and structured multi-speaker channels, then quantized
+  to a 4.7 MB artifact that runs **entirely in your browser** — no server, no
+  API key, no framework.
+- A small model that learned exact arithmetic (99.6% exact commits) not by
+  memorizing numbers, but by learning **when to delegate to a deterministic
+  kernel** — after six preregistered experiments that failed and were
+  published anyway.
 
-- `zero_lm`: a 7,436-parameter character MLP that makes the construction easy
-  to inspect.
-- `literary_lm`: a configurable decoder-only transformer designed to train on
-  collections such as Shakespeare, William Blake, and Aleister Crowley.
-- `logic_corpus`: a reproducible generator for compact natural-deduction
-  proofs over hereditarily finite sets.
-- `brainfuck_corpus`: an interpreter-checked generator for execution,
-  trace-composition, repair, and synthesis records.
-- `state_corpus` and `modal_corpus`: experimental generators for
-  modality-neutral state composition and finite-world reachability. They are
-  not yet part of the Makefile training pipeline.
-- `channel_corpus`: a converter that turns scripts, verse, and consented chat
-  exports into multi-speaker channels with explicit reply edges and learned
-  lossy-memory transitions.
+The philosophy is in [The ZERO Manifesto](MANIFESTO.md); the mathematics is
+in [FOUNDATIONS.md](FOUNDATIONS.md). Read them when you want the depth, not
+before you're allowed to be curious.
 
-Both are written in C11. On macOS, `literary_lm` automatically uses Apple's
-built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
-when its development package is installed and otherwise retains the portable C
-fallback. Set `LITERARY_BACKEND=portable`, `openblas`, or `accelerate` to make
-the intended build explicit where supported.
-
-The `docs/` directory contains a static chat interface for GitHub Pages. It
-runs a mixed-format export—row-wise int8 matrices with floating-point scales
-and normalization gains—entirely in the browser using the same C inference
-code compiled to WebAssembly. No prompt or generated text is sent to a server.
-
-`bpe_tokenizer` is the companion corpus normalizer and experimental byte-pair
-trainer. Tests at 256, 512, and 2,048 vocabulary entries overfit fragments on
-this corpus, so the final preset uses its cleaned 128-character ASCII stream
-with no merges. The smaller vocabulary reallocates capacity to the transformer
-while keeping the total parameter count unchanged.
-
-## Build
+## Try it in 60 seconds
 
 ```sh
-make
-make check
-```
-
-`make check` includes finite-difference checks of the hand-written transformer
-backward pass as well as short end-to-end training runs.
-
-## Run the browser chat
-
-Build the 4.7 MB inference model and WebAssembly runtime from the deployed
-browser checkpoint:
-
-```sh
-make web
+make            # build everything, C11, no dependencies
+make check      # finite-difference gradient checks + smoke training runs
+make web        # build the 4.7 MB browser model and WebAssembly runtime
 python3 -m http.server 8000 --directory docs
 ```
 
-The checked-in `docs/model.litq8` is the promoted ZERO.4 artifact selected
-prospectively from Q2.6 seed 2 at update 500, SHA-256
-`44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50`.
-`make web` reproduces it directly from the content-identical checked-in
-candidate. [`docs/model.json`](docs/model.json) binds the deployment to the
-three-seed aggregate, AWS completion record, and source result.
+Open `http://localhost:8000`. The first visit downloads
+[`docs/model.litq8`](docs/model.litq8) — the promoted ZERO.4 artifact — after
+which inference and conversation memory stay inside the page. The UI shows the
+model's evolving lossy channel memory and any recalled holographic echo, with
+mixed / Shakespeare / Blake / Crowley opening voices, temperature, top-k,
+repetition, and length controls.
 
-Then open `http://localhost:8000`. The first visit downloads `model.litq8`;
-after that, inference and conversation memory remain within the page. The UI
-shows the model's evolving lossy channel memory and any recalled holographic
-echo. It offers mixed, Shakespeare, Blake, and Crowley opening voices, together
-with temperature, top-k, repetition, and output-length controls.
-
-The standalone quantized C engine can also be tested without a browser:
+Or skip the browser and talk to the quantized engine directly:
 
 ```sh
 ./literary_infer docs/model.litq8 "The zero opened its eyes, and" 240
 ./literary_infer docs/model.litq8 --chat D "What walks beneath the moon?" 240
-./literary_infer docs/model.litq8 --memory D "old memory" "new message" "reply" 100
 node tests/test_web_model.mjs
 ```
 
-GitHub Pages serves directly from `docs/`; no backend, API key, JavaScript
-framework, or hosted inference service is required.
+## What's in the box
 
-## Run the ZERO.4 faculty gates
+| Component | What it is |
+| --- | --- |
+| `zero_lm` | A 7,436-parameter character MLP — the smallest construction that is still fully inspectable (ZERO.1). |
+| `literary_lm` | A configurable decoder-only transformer with hand-written forward and backward passes. Presets range from a 119K-parameter test model to the 4.85M-parameter literary model. |
+| `bpe_tokenizer` | Corpus normalizer and experimental byte-pair trainer. The final preset uses a cleaned 128-character ASCII stream with no merges — reallocating capacity to the transformer at a fixed parameter count. |
+| `logic_corpus` | A reproducible generator for compact natural-deduction proofs over hereditarily finite sets, with an independent checker. |
+| `brainfuck_corpus` | An interpreter-checked generator for program execution, trace-composition, repair, and synthesis records. |
+| `channel_corpus` | Converts scripts, verse, and consented chat exports into multi-speaker channels with explicit reply edges and learned lossy-memory transitions. |
+| `state_corpus`, `modal_corpus` | Experimental generators for state composition and finite-world reachability; not yet in the training pipeline. |
 
-ZERO.4-Q1, Q2, and Q2.1 are measured experiments, not promoted models. Q2.2 is
-the frozen follow-up instrumentation experiment. Q1
-tests neural arithmetic artifacts. Q2 keeps the three historical teachers
-immutable, routes them by corpus, trains typed quantity requests as hard
-targets, and lets an input-bound deterministic kernel alone calculate and
-commit exact results. Q2.1 moves source-argument binding into the controller so
-the student selects only the typed operation:
+On macOS the transformer uses Apple's Accelerate framework for matrix
+multiplication; Linux uses OpenBLAS when installed, otherwise a portable C
+fallback. Set `LITERARY_BACKEND=portable`, `openblas`, or `accelerate` to be
+explicit.
+
+## The idea: grounded in zero
+
+The full set-theoretic construction, transformer equations, channel
+objective, memory system, and formal claims are in
+[FOUNDATIONS.md](FOUNDATIONS.md). Concretely, the finite mathematical ladder
+looks like this in C:
+
+| Foundational idea | C representation |
+| --- | --- |
+| `0` / empty initial state | `calloc`-allocated storage |
+| finite ordinals | array indices and dimensions |
+| ordered sequences | byte-token arrays |
+| finite functions | tables, matrices, and C functions |
+| real-valued vectors | arrays of `float` approximations |
+| function composition | transformer forward pass |
+| parameter selection | backpropagation and AdamW |
+
+Model storage begins zero-filled; deterministic initialization, tokens,
+attention relations, and gradient updates then introduce structure. A seed of
+zero is valid and is first taken through a successor-like `+1` operation.
+
+One distinction matters: setting every weight to exactly zero would make
+neurons permutation-symmetric and collapse them into identical gradients.
+**Grounding** means the constructed objects share a common empty basis;
+**collapse** means erasing the relations that distinguish them. The model does
+the former without the latter. C does not execute the ZFC axioms — it
+implements a finite encoding whose specification can be formalized within ZFC.
+
+## The lineage
+
+| Model | What it is | The new idea |
+| --- | --- | --- |
+| ZERO.1 | `zero_lm`, 7,436 parameters | The zero-grounded construction itself. |
+| ZERO.2 | Literary transformer, 4.85M parameters | Author corpora + channel-native training with lossy memory. |
+| ZERO.3 | Distilled from both predecessors | Two frozen teachers replayed on every sequence to prevent catastrophic forgetting. |
+| ZERO.4 | The current deployed model | Learned *when* to delegate arithmetic to a deterministic kernel, trained under preregistered gates. |
+
+The promoted ZERO.4 checkpoint is the Q2.6 seed-2 update-500 artifact, SHA-256
+`44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50`.
+[`docs/model.json`](docs/model.json) binds the deployment to the three-seed
+aggregate, AWS completion record, and source result.
+
+## The ZERO.4 experiment arc
+
+The question: **can a 4.85M-parameter model learn exact quantity behavior
+without forgetting its language?** Every attempt was preregistered with
+frozen gates, evaluated on declared seeds, and published — including the
+failures.
+
+The arc, in one breath:
+
+1. **Q1–Q2:** the model can name operations perfectly but cannot copy
+   arguments exactly. Lesson: route, don't compute.
+2. **Q2.1:** move argument binding into the controller. Seed 2 hit 500/500
+   exact commits — and missed the replay ceiling by 0.011 percentage points.
+3. **Q2.2–Q2.2-R:** better measurement and repair; the family still split
+   one-go/two-no-go. Lesson: the optimizer itself interferes with replay.
+4. **Q2.3–Q2.5:** transactional AdamW with rollback, then a cumulative
+   replay budget, then step-size backtracking. Each no-go, each narrowing the
+   problem: the budget controlled, but no scalar step was small enough to
+   learn under it.
+5. **Q2.6:** change the *direction* of each update instead of its size —
+   project out the component that points uphill on the replay surface. 700/700
+   attempts committed, 99.8% limiting quantity rates, 1.1833% replay
+   regression. **Go.**
+6. **Q2.6-R:** seeds 1 and 3 replicated on AWS (after an infrastructure failure
+   that invalidated a first passing run and was itself published). Three-seed
+   conjunction: **go**. ZERO.4 promoted.
+
+The authoritative decision lineage, with what changed, what was tested, and
+what was decided, is in [`EXPERIMENTS.md`](EXPERIMENTS.md). Per-experiment
+details live under `benchmarks/`:
+
+| Experiment | Result | Details |
+| --- | --- | --- |
+| Q1, Q2, Q2.1 | Learned routing, not exact argument copying | [RESULTS](benchmarks/zero4-q1-v1/RESULTS.md), [RESULTS](benchmarks/zero4-q2-v1/RESULTS.md), [AGGREGATE](benchmarks/zero4-q21-v1/AGGREGATE.md) |
+| Q2.2 / Q2.2-R | One go, two no-go; family **no-go** | [AGGREGATE](benchmarks/zero4-q22r-v1/AGGREGATE.md) |
+| Q2.3 | Local per-attempt budget did not control cumulative drift | [contract](benchmarks/zero4-q23-v1/contract.json) |
+| Q2.4 | Cumulative budget held, but blocked learning entirely | [RESULTS](benchmarks/zero4-q24-v1/seed2/RESULTS.md) |
+| Q2.5 | Step-size backtracking bought 5 updates, then exhausted | [RESULTS](benchmarks/zero4-q25-v1/seed2/RESULTS.md) |
+| Q2.6 | Direction-changing projection — **go** | [RESULTS](benchmarks/zero4-q26-v1/seed2/RESULTS.md) |
+| Q2.6-R | Seeds 1 and 3 replicated — **ZERO.4 promoted** | [AGGREGATE](benchmarks/zero4-q26r-v1/AGGREGATE.md) |
+| Q2.7 | Language-preservation repair: train only 11.15% of weights; AWS path staged, budget unauthorized | [contract](benchmarks/zero4-q27-v1/contract.json) |
+
+Every go directory publishes its selected `selected.litq8` model, and the
+results-integrity check fails closed if the model is missing, has the wrong
+byte count, or does not match the SHA-256 frozen in `manifest.json`.
+
+### Run the faculty gates
+
+The gates are measured experiments, not promoted models. Commands reproduce
+the recorded seed-2 lineage; new seeds require their own source frontiers
+before repair runs:
 
 ```sh
 make zero4-q1
@@ -117,400 +177,78 @@ make zero4-q27-check
 # Q2.7's AWS path is staged but its budget remains unauthorized.
 ```
 
-The paired Q2.2/Q2.2-R commands above reproduce the recorded seed-2 lineage.
-New seed-1 and seed-3 replications require their own Q2.2 source frontiers
-before Q2.2-R can repair them.
-
-The frozen seed-1 reports are in
-[`benchmarks/zero4-q1-v1/RESULTS.md`](benchmarks/zero4-q1-v1/RESULTS.md) and
-[`benchmarks/zero4-q2-v1/RESULTS.md`](benchmarks/zero4-q2-v1/RESULTS.md). The
-Q2.1 multi-seed result is in
-[`benchmarks/zero4-q21-v1/AGGREGATE.md`](benchmarks/zero4-q21-v1/AGGREGATE.md).
-Q2 learned closure, grammar, and operation routing perfectly, but not exact
-numeric argument copying; bound-request commit therefore remained closed. Q2.1
-fixed that responsibility boundary: seed 2 reached 500/500 exact commits with
-controller-bound arguments, deterministic arithmetic, and zero rejected-state
-mutations. The two-seed run still failed promotion because seed 2 replay loss
-regressed 2.011%, just above the frozen 2.000% ceiling. Seed 3 was not run and
-no ZERO.4 checkpoint replaces ZERO.3.
-
-Q2.2 freezes the Q2.1 architecture and teacher weights, evaluates quantity and
-replay jointly every 100 updates, and retains a feasibility-aware Pareto
-frontier. Its first seed-2 replay report was invalidated because the evaluation
-adapter accidentally restored a 2x foundation weight. The corrected adapter
-preserves equal historical-source weights and reproduces the declared `1.6310`
-baseline.
-
-Q2.2-R repaired retained updates 400 and 300 using replay only. Seed 2 selected
-update 400 plus 100 repair updates and passed: 488/500 promotion operations and
-commits (97.6%), zero state mutations, and 1.919% replay regression. Seeds 1 and
-3 then completed under the frozen acquisition policy and both stopped after
-replay exceeded 2% on two consecutive full evaluations. Their strongest
-retained diagnostics also missed the operation, exact-request, commit, and
-exact-artifact gates. The final family decision is therefore **no-go** (one go,
-two no-go); the failed seeds never touched the disjoint promotion split and no
-ZERO.4 checkpoint replaces ZERO.3. The multi-seed report is in
-[`benchmarks/zero4-q22r-v1/AGGREGATE.md`](benchmarks/zero4-q22r-v1/AGGREGATE.md).
-Every Q2.2-R seed-level go directory also publishes its selected `selected.litq8`
-model. The results-integrity check fails closed if that model is absent, has the
-wrong byte count, or does not match the SHA-256 frozen in `manifest.json`.
-
-Q2.3 is the preregistered lower-level follow-up. It makes each AdamW attempt a
-transaction, measures faculty/replay conflict globally and by tensor, and
-commits or rejects weights and optimizer moments together. Checkpoint v4 keeps
-the committed counter separate from attempt, RNG, and rejection state. The
-observer command runs a matching unguarded trajectory and requires the learned
-checkpoint payload to remain byte-identical; its frozen calibration rule then
-sets the nonzero guard band. The full seed-2 observer passed: 200/200 attempts
-committed with byte-identical learned state, calibrating a 0.25% hard direct
-functional-probe budget. Its first-order replay predictor was non-predictive,
-so projection remains disabled. The guarded seed-2 run was a no-go: all 200
-attempts committed, quantity reached the frozen threshold, and public replay
-regressed 2.685%. No local probe increase reached the hard band, demonstrating
-that the per-attempt budget did not control cumulative drift. Promotion and
-seeds 1 and 3 remain sealed; the next design target is a preregistered
-cumulative direct functional budget. See the machine-readable
-[`contract.json`](benchmarks/zero4-q23-v1/contract.json),
-[`ZERO4.md`](ZERO4.md#18-design-proposal--zero4-q23-transactional-optimizer),
-and [`ZERO4-BACKLOG.md`](ZERO4-BACKLOG.md).
-
-Q2.4 is that cumulative follow-up. Every candidate is evaluated
-on the fixed validation window of all six replay sources and compared with the
-same composite evaluated by immutable ZERO.3. A candidate above the frozen
-1.5% cumulative budget is rolled back, leaving 0.5 percentage points of reserve
-below the 2% public balanced-replay ceiling. The prospective seed-2 run was a
-no-go: 66 candidates committed, then attempts 67–74 all exceeded the hard
-budget and rolled back. The frozen eight-rejection fallback stopped the run
-before its first 100-commit public checkpoint. Promotion was never evaluated,
-and seeds 1 and 3 remain sealed. See
-[`contract.json`](benchmarks/zero4-q24-v1/contract.json) and
-[`RESULTS.md`](benchmarks/zero4-q24-v1/seed2/RESULTS.md).
-
-Q2.5 kept every Q2.4 authority and gate fixed, but retried a rejected outer
-attempt at deterministic learning-rate scales from 1 through 1/128. Each retry
-restored the same pre-attempt weights and AdamW moments, reused the frozen
-minibatch and clipped gradient, and committed the first trial at or below the
-unchanged 1.5% cumulative replay ceiling. The prospective seed-2 run was a
-**no-go**: 66 full-scale updates and five backtracked updates committed, with a
-minimum accepted scale of 1/128 and a maximum committed replay increase of
-1.49944%. Attempts 72–79 then exhausted every scale, stopping at 71 commits
-before the first 100-commit public checkpoint. Promotion was never evaluated,
-and seeds 1 and 3 remain sealed. Scalar step reduction was therefore
-insufficient; the next proposal must change update direction or optimization
-geometry without weakening the gates. See
-[`contract.json`](benchmarks/zero4-q25-v1/contract.json) and
-[`RESULTS.md`](benchmarks/zero4-q25-v1/seed2/RESULTS.md).
-
-Q2.6 is the direction-changing follow-up. At each committed pre-attempt state
-it forms the arithmetic-mean gradient of the same six frozen replay windows.
-For every registered Q2.5 learning-rate scale, it removes only the component
-of the candidate weight displacement that points uphill on that mean replay
-surface, then submits the projected candidate to the unchanged direct 1.5%
-cumulative functional guard. Candidate moments commit with selected weights;
-weights and both moment arrays restore together before retries or rejection.
-The gradient is candidate construction, never authority. The prospective
-seed-2 run resolved **go**: 700/700 attempts committed, 423 selected candidates
-were projected, and six of seven public checkpoints were jointly feasible.
-Update 500 was selected with 99.8% limiting quantity rates and 1.1833% replay
-regression; the one-time promotion evaluation passed at 99.6%. This
-prospectively selected quantized model became ZERO.4 only after seeds 1 and 3
-passed the unchanged replication contract.
-See
-[`contract.json`](benchmarks/zero4-q26-v1/contract.json) and
-[`RESULTS.md`](benchmarks/zero4-q26-v1/seed2/RESULTS.md).
-
-Q2.7 is the preregistered language-preservation repair. It starts from
-immutable ZERO.3 and changes only the trainable boundary: `layer.5.norm2`,
-`layer.5.w1`, `layer.5.w2`, and `final_norm`, totaling 541,184 parameters
-(11.151554%). The trainer computes clipping and tangent projection only in
-that subspace, protects every frozen weight and AdamW moment byte-for-byte,
-and binds the scope into checkpoints so mismatched resume fails closed.
-`make zero4-q27-check` validates those mechanics plus the proposed $1.17
-seed-2 AWS ceiling and non-waiting dispatch/collector path; it launches no
-scientific compute. A candidate-ready quantity result would still require a
-separate candidate-bound $0.12 language-gate authorization. See the frozen
-[`contract.json`](benchmarks/zero4-q27-v1/contract.json).
-
-Q2.6-R prospectively authorized those two replications without altering the
-diagnostic record. After the portable-backend cancellation and two
-infrastructure-only recovery failures, the bounded OpenBLAS recovery-3 run
-completed both declared seeds. Seed 1 resolved **go** with 98.0% limiting
-quantity rates and 1.0423% replay regression; seed 3 resolved **go** with
-96.0% limiting rates and 1.2753% replay regression. Both exactly-once
-promotion evaluations passed. Together with seed 2, the frozen conjunction is
-**go**, so the seed-2 candidate is promoted as ZERO.4. See the
-[`replication contract`](benchmarks/zero4-q26r-v1/contract.json),
-[`aggregate`](benchmarks/zero4-q26r-v1/AGGREGATE.md), and
-[`AWS completion record`](benchmarks/zero4-q26r-v1/aws-v2/COMPLETED).
-
-## Evaluate ZERO.4 on external language tasks
-
-[`ZERO-EVAL-1`](benchmarks/zero-eval-1/README.md) freezes an evaluation-only
-comparison of the bare ZERO.3 and ZERO.4 models on BLiMP, HellaSwag, adapted
-LAMBADA, and TinyStories bits per byte. Upstream revisions, source and prepared
-data hashes, ASCII normalization, the 512-character context policy, task order,
-models, metrics, and interpretation limits are all preregistered. The suite
-does not train or invoke the quantity controller.
-
-The bounded 1,000-case-per-task AWS screen is complete. ZERO.4 versus ZERO.3
-was +0.5 points on BLiMP raw accuracy (0.537 versus 0.532), worse on
-TinyStories bits/byte (2.570353 versus 2.527861), -0.5 points on HellaSwag
-normalized accuracy (0.266 versus 0.271), and tied at zero adapted-LAMBADA
-exact matches. It completed in 2,502 launch-relative seconds for $0.4726.
-These mixed results do not justify the proposed 8h30m/$5.78 full run, which is
-now explicitly closed as `do_not_run`.
-
-Future training candidates use the
-[`ZERO language-preservation gate v1`](benchmarks/zero-language-gate-v1/README.md):
-candidate-only BLiMP and TinyStories, with the frozen ZERO.3 aggregates reused.
-The observed candidate runtime is about 305 seconds; the proposed ceiling is
-600 seconds/$0.12. The gate emits non-copyright per-case correctness/score
-traces for future paired comparisons, but no execution is authorized yet.
-Local commands test mechanics and the consumed evidence:
-
-```sh
-make external-eval-check
-make experiment-budget-check
-make zero-language-gate-check
-```
-
-The one-time
-[`openblas-pilot-v1`](benchmarks/openblas-pilot-v1/README.md) completed 97
-diagnostic attempts in 776 seconds at a sustained 0.125 attempts/second. It
-projects the full 1,400-attempt workload at 3h06m40s and $2.12, excluding an
-89-second cold start and driver evaluation overhead. The pilot is consumed and
-its output cannot support a scientific decision.
-
-The authorized
-[`openblas-e2e-calibration-v1`](benchmarks/openblas-e2e-calibration-v1/README.md)
-measures that missing baseline, recovery, and full-evaluation overhead on AWS
-under a 25-minute/$0.29 ceiling. Seed 89 and a separate diagnostic driver keep
-the output outside the frozen Q2.6-R scientific record. The one-time run
-completed 100/100 accepted optimizer updates and all four sentinel evaluations,
-then exhausted the budget during the first 500-case full evaluation. Its
-component timings project about 7h46m/$5.28 per seed before contingency, making
-the serial quantity evaluator the next engineering bottleneck.
-
-Quantity JSON evaluation now uses deterministic worker processes, defaulting
-to the machine's online CPU count (capped at 32). Workers inherit the loaded
-model through copy-on-write, evaluate independent cases, and return per-case
-records that the parent reduces in original corpus order; serial and parallel
-JSON therefore remain byte-identical. Use `--jobs N` for an individual
-evaluation or `ZERO_QUANTITY_JOBS=N` for existing drivers; `--jobs 1` selects
-the serial reference path. Sample-printing mode remains serial.
-
-This is an execution optimization, not new scientific evidence. The
-[`parallel-quantity-eval-calibration-v1`](benchmarks/parallel-quantity-eval-calibration-v1/README.md)
-completed one diagnostic AWS execution under the same 25-minute/$0.29 ceiling.
-The 16-worker evaluator was 13.52× faster on 64 cases and 13.62× faster on 500,
-with byte-identical serial/parallel JSON. The component projection is now
-3h09m08s/$2.14 per seed before contingency, or 7h34m/$5.16 for both remaining
-seeds with 20% contingency. The run did not train or open promotion data, and
-the [`combined Q2.6-R AWS budget`](benchmarks/zero4-q26r-v1/aws-v1/README.md)
-authorized one bounded execution. Both instances published complete,
-in-budget `go` candidates, but the frozen collector ran after AWS had purged
-the terminated instance records and could no longer reproduce the mandatory
-venue identity checks. The candidates are therefore unaccepted, no family
-inference is made, and ZERO.3 remains current. The authorization is consumed;
-see the
-[`execution failure record`](benchmarks/zero4-q26r-v1/aws-v1/execution-failure-30047634061.json).
-The
-[`aws-v2 replacement registration`](benchmarks/zero4-q26r-v1/aws-v2/README.md)
-kept the frozen science unchanged and made launch-time EC2 identity durable.
-Its recovery-3 execution finished seeds 1 and 3 for $1.8817 combined, below
-the $2.34 recovery ceiling; all execution attempts together cost about
-$1.9359, below the approved $2.3942 all-in cap. Run the contract and promotion
-checks with:
+Verify the frozen promotion record:
 
 ```sh
 make experiment-budget-check
 make zero4-promotion-check
 ```
 
+Quantity JSON evaluation uses deterministic worker processes (default: online
+CPU count, capped at 32) with copy-on-write model sharing; serial and parallel
+output are byte-identical. `--jobs N` selects the degree,
+`ZERO_QUANTITY_JOBS=N` works for existing drivers, `--jobs 1` is the serial
+reference path. This is an execution optimization, not new evidence; the
+calibration record is in
+[`benchmarks/parallel-quantity-eval-calibration-v1/`](benchmarks/parallel-quantity-eval-calibration-v1/README.md).
+
+### External language evaluation
+
+[`ZERO-EVAL-1`](benchmarks/zero-eval-1/README.md) froze an evaluation-only
+comparison of ZERO.3 versus ZERO.4 on BLiMP, HellaSwag, adapted LAMBADA, and
+TinyStories bits/byte. The bounded 1,000-case AWS screen came back mixed:
++0.5 points BLiMP, worse TinyStories bits/byte, -0.5 points HellaSwag, zero
+adapted-LAMBADA exact matches. The proposed full run is closed as
+`do_not_run`.
+
+Future training candidates use the
+[`ZERO language-preservation gate v1`](benchmarks/zero-language-gate-v1/README.md)
+(candidate-only BLiMP and TinyStories, frozen ZERO.3 aggregates reused,
+~305s observed / 600s ceiling). Mechanics checks:
+
+```sh
+make external-eval-check
+make zero-language-gate-check
+```
+
 ## Measure channel behavior
 
 The frozen [`zero-channel-v1`](benchmarks/zero-channel-v1/README.md) benchmark
 tests matched coherent/incoherent continuations and deterministic episodic
-recall. It evaluates the deployed 4.85M-parameter checkpoint without sampling:
+recall on the deployed checkpoint, without sampling:
 
 ```sh
 make zero-benchmark
 make zero-benchmark-check
 ```
 
+The current baseline and its interpretation are in
+[`benchmarks/zero-channel-v1/results/BASELINE.md`](benchmarks/zero-channel-v1/results/BASELINE.md);
+the four-way training comparison is frozen in
+[`ablation-contract.json`](benchmarks/zero-channel-v1/ablation-contract.json).
 The browser exposes the same bounded runtime policies: a recent transcript
-window, recurrent lossy memory, recurrent memory with flat Holo recall, and an
-experimental partitioned Holo index. The current checked-in result and its
-interpretation are in
-[`benchmarks/zero-channel-v1/results/BASELINE.md`](benchmarks/zero-channel-v1/results/BASELINE.md).
-The architecture stays fixed; the four-way training comparison is frozen in
-[`ablation-contract.json`](benchmarks/zero-channel-v1/ablation-contract.json),
-and the larger sequence of work is tracked in [`ZEROADMAP.md`](ZEROADMAP.md).
+window, recurrent lossy memory, memory with flat Holo recall, and an
+experimental partitioned Holo index.
 
-## Build ZERO.3
+## Train the models
 
-ZERO.3 is a single literary-transformer parameter set distilled from both
-earlier models. It does not average their incompatible arrays. Instead:
+### Quick verification
 
-- the ZERO.2 transformer checkpoint initializes the student and remains loaded
-  as a frozen teacher over every training sequence;
-- `zero_lm` exports its deterministic 7,436-parameter ZERO.1 network as a
-  frozen character-distribution teacher;
-- the ZERO.1 teacher is applied only to the explicit foundation stream; and
-- ordinary next-character loss continues to learn Shakespeare, Blake,
-  Crowley, the King James Bible, and structured channel replies.
-
-The bridge statements in `corpus/zero-foundation.txt` do not modify ZERO.1's
-embedded corpus or weights. They are new hard targets presented to ZERO.3 while
-the original ZERO.1 function remains frozen.
-
-For one sequence, ZERO.3 minimizes the weighted cross entropy
-
-```text
-0.60 * observed target + 0.15 * ZERO.2 distribution
-                       + 0.25 * ZERO.1 distribution
-```
-
-on foundation examples. Outside that stream, the observed target receives
-weight `0.85` and ZERO.2 receives `0.15`. The frozen ZERO.2 target is replayed
-on all sources to limit catastrophic forgetting while the new corpus is
-absorbed.
-
-Prepare the teachers and all token streams:
-
-```sh
-make zero3-data
-```
-
-This includes the existing Shakespeare, Blake, Crowley, and channel data. It
-also prepares a cleaned King James Bible from Project Gutenberg eBook 30. The
-Bible is sampled as one ordinary text file, independently of its byte size; in
-the recommended mix it receives one-twelfth of training sequences, while the
-channel stream receives one-half and the foundation stream one-sixth. This
-keeps its repetitive verse structure from dominating the small model.
-
-Train from the consolidated ZERO.2 checkpoint:
-
-```sh
-make zero3-train
-```
-
-The target runs three deterministic stages: broad absorption, higher-weight
-ZERO.2 consolidation, and a short retention-balance pass. The later stages
-were added because mixed-corpus validation alone did not fully preserve the
-frozen channel benchmark.
-
-The default input is `literary-v8-consolidated.ckpt`; override it or the number
-of updates when needed:
-
-```sh
-make zero3-train \
-  ZERO2_CHECKPOINT=another-zero2.ckpt \
-  ZERO3_STEPS=8000 \
-  ZERO3_CONSOLIDATION_STEPS=1600 \
-  ZERO3_BALANCE_STEPS=600
-```
-
-The stage checkpoints are `zero3.ckpt`, `zero3-consolidated.ckpt`, and
-`zero3-balanced.ckpt`; the last is the recommended result. Teacher checkpoints
-affect only training. ZERO.3 uses the unchanged 4,852,992-parameter transformer
-and the existing WebAssembly export/runtime.
-
-### Historical ZERO.3 training result
-
-The completed run selected these hard-target validation states:
-
-| Stage | Update | Validation loss |
-| --- | ---: | ---: |
-| Broad absorption | 16,100 | 1.7540 |
-| ZERO.2 consolidation | 16,200 | 1.7387 |
-| Retention balance | 16,300 | 1.7347 |
-
-On the frozen `zero-channel-v1` benchmark, the final int8 export scored 13/18
-transcript and 17/24 recurrent contrastive wins, compared with 14/18 and 18/24
-for the exact ZERO.2 teacher. The binary counts are each one lower, but ZERO.3
-has better mean positive-token bits (`2.3612` vs `2.3831` transcript and
-`2.4835` vs `2.5004` recurrent) and equal or better mean margins. Flat and
-partitioned holographic recall are unchanged at 7/8 and 5/8 because that index
-is parameter-free. This is a real tradeoff rather than an unqualified channel
-win, so the checked-in browser model was not replaced automatically. This
-table describes the historical update-16,300 run. The subsequently frozen
-teacher is a distinct update-16,600 artifact whose authoritative metrics are
-recorded in `teachers/registry.json` and `TEACHERS.md`.
-
-## Train the channel-native model
-
-The original literary checkpoint is a useful language base, but raw dramatic
-text does not identify which participant the model should speak as. Build the
-structured channel data first:
-
-```sh
-make channel-data
-```
-
-Records contain a compact channel memory or vibe, up to three recent messages,
-locally anonymized speaker roles, and either ZERO's target reply or an updated
-lossy-memory target. The learned loop is `old memory + recent messages -> new
-memory`, followed by `memory + recent messages -> reply`. Control values 1–7
-reuse otherwise dormant rows in the existing 128-token vocabulary, so this
-representation does not increase model size.
-
-The browser also includes a 256-dimensional, 32-entry episodic index in the C
-inference runtime. It follows `holostuff`'s `LocalAgentCore` contract:
-deterministic text hypervectors plus exact cosine recall. Each completed
-exchange is stored under its lexical content with the learned compressed memory
-as its value. A later prompt can recall one sufficiently similar old episode as
-an `echo`; the learned memory update then decides whether to retain it. The
-index adds roughly 32 KiB of runtime state but no transformer parameters, model
-weights, network service, or browser persistence.
-
-Continue training from the literary checkpoint with the channel file weighted
-more heavily than any individual author:
-
-```sh
-./literary_lm \
-  --resume literary-v6.ckpt \
-  --tokenizer corpus/literary.bpe \
-  --text corpus/bpe/shakespeare.tok \
-  --text corpus/bpe/blake.tok \
-  --text corpus/bpe/crowley.tok \
-  --channel corpus/channel/literary-dialogue.tok \
-  --channel-weight 6 \
-  --steps 4000 --batch 2 --lr 0.00005 \
-  --dropout 0.1 --cosine \
-  --report 100 --validation 20 \
-  --best literary-v8.ckpt --patience 20 \
-  --save literary-v8-last.ckpt --save-every 500 \
-  --tokens 0
-```
-
-For channel records, training and validation use only the target reply or
-memory span for cross-entropy. Headers and previous messages still condition
-that target through attention. Sampling begins at record boundaries, and
-validation begins on whole held-out records rather than an arbitrary byte
-inside a conversation. After every exchange, the browser generates a new
-memory and drops that completed pair from its working context.
-The import format for consented human channel data is documented in
-[`corpus/channel/README.md`](corpus/channel/README.md).
-
-## Try the transformer
-
-With no `--text` arguments, the program trains on a small embedded corpus. This
-is useful for verifying the implementation:
+With no `--text` arguments, `literary_lm` trains on a small embedded corpus —
+useful for verifying the implementation:
 
 ```sh
 ./literary_lm --steps 2000 --batch 2 --save tiny.ckpt
 ```
 
-The default `tiny` preset has a 64-byte context, two layers, and 119,104
-parameters. It is a functional test and experimentation model, not the intended
-author-corpus configuration.
+The default `tiny` preset (64-byte context, 2 layers, 119,104 parameters) is a
+test model, not the intended configuration.
 
-## Train the literary model
+### The literary model (ZERO.2 lineage)
 
-Verified training editions are included under `corpus/`; their sources,
-transformations, and checksums are documented in `corpus/README.md`. Build the
-balanced literary tokenizer and encoded corpus first:
+Verified training editions are in `corpus/`; sources, transformations, and
+checksums are documented in [`corpus/README.md`](corpus/README.md). Build the
+tokenizer and encoded corpus:
 
 ```sh
 mkdir -p corpus/bpe
@@ -521,7 +259,7 @@ mkdir -p corpus/bpe
   --text corpus/crowley.txt     --out corpus/bpe/crowley.tok
 ```
 
-Then train the fixed-budget model:
+Train the fixed-budget model:
 
 ```sh
 ./literary_lm \
@@ -542,41 +280,134 @@ Then train the fixed-budget model:
   --tokens 0
 ```
 
-The `literary` preset has:
+The `literary` preset: 512-character context, 128-character ASCII vocabulary,
+256-dimensional embeddings, 8 attention heads, 6 transformer blocks,
+1,056-dimensional feed-forward layers, parameter-free rotary positions, and
+4,852,992 trainable parameters — the same parameter count as the original
+256-byte preset, with twice the context.
 
-- 512-character context
-- 128-character normalized ASCII vocabulary
-- 256-dimensional embeddings
-- 8 attention heads
-- 6 transformer blocks
-- 1,056-dimensional feed-forward layers
-- parameter-free rotary positions
-- 4,852,992 trainable parameters
+With multiple `--text` files, each training sequence picks a file uniformly
+regardless of size, and the final 5% of every file is held out for validation.
+This keeps the much larger Shakespeare collection from overwhelming Blake and
+Crowley. It is still a small specialist model, not a generally knowledgeable
+modern LLM.
 
-This is exactly the same parameter count as the original 256-byte literary
-preset. The context is twice the original model's length, and corpus cleanup
-removes typographic and editorial noise before training. It
-is still a small specialist model—not a generally knowledgeable modern LLM.
+**Result:** the final run stopped at update 16,600 after 50 validation reports
+without improvement; `literary-v6.ckpt` preserves the best state (update 11,600)
+with held-out loss 1.6641.
 
-With multiple `--text` arguments, the program chooses a file uniformly for each
-training sequence, regardless of file size. It holds out the final 5% of every
-file and averages validation across files. This prevents the much larger
-Shakespeare collection from overwhelming Blake and Crowley.
+### The channel-native model
 
-Long training runs can be stopped with Ctrl-C. The current update is saved when
-`--save` is present.
+Raw dramatic text does not identify which participant the model should speak
+as. `make channel-data` builds structured records: a compact channel memory,
+up to three recent messages, locally anonymized speaker roles, and either a
+target reply or an updated memory target. The learned loop is
+`old memory + recent messages -> new memory`, then
+`memory + recent messages -> reply`. Control values 1–7 reuse otherwise
+dormant vocabulary rows, so this adds no model size.
 
-### Trained result
+The browser runtime adds a 256-dimensional, 32-entry episodic index on top of
+the C engine: deterministic text hypervectors with exact cosine recall. A
+sufficiently similar later prompt recalls an old exchange as an `echo`, and
+the learned memory update decides whether to keep it — roughly 32 KiB of
+state, no extra parameters, no network, no browser persistence. The consented
+human-data import format is documented in
+[`corpus/channel/README.md`](corpus/channel/README.md).
 
-The final run stopped automatically at update 16,600 after 50 validation
-reports without improvement. `literary-v6.ckpt` preserves update 11,600, the
-best state, with held-out loss 1.6641. `literary-v6-last.ckpt` preserves the
-later optimizer state for experiments but is not the recommended generation
-checkpoint.
+Continue training from the literary checkpoint:
 
-## Resume and generate
+```sh
+./literary_lm \
+  --resume literary-v6.ckpt \
+  --tokenizer corpus/literary.bpe \
+  --text corpus/bpe/shakespeare.tok \
+  --text corpus/bpe/blake.tok \
+  --text corpus/bpe/crowley.tok \
+  --channel corpus/channel/literary-dialogue.tok \
+  --channel-weight 6 \
+  --steps 4000 --batch 2 --lr 0.00005 \
+  --dropout 0.1 --cosine \
+  --report 100 --validation 20 \
+  --best literary-v8.ckpt --patience 20 \
+  --save literary-v8-last.ckpt --save-every 500 \
+  --tokens 0
+```
 
-Resume for additional updates:
+For channel records, cross-entropy is computed only on the target reply or
+memory span; headers and previous messages still condition the target through
+attention.
+
+### ZERO.3: distillation with permanent teachers
+
+ZERO.3 is a single parameter set distilled from both earlier models — not by
+averaging incompatible arrays. Instead:
+
+- the ZERO.2 transformer checkpoint initializes the student and stays loaded
+  as a frozen teacher over every training sequence;
+- `zero_lm` exports its deterministic ZERO.1 network as a frozen
+  character-distribution teacher, applied only to the explicit foundation
+  stream;
+- ordinary next-character loss keeps learning Shakespeare, Blake, Crowley,
+  the King James Bible, and structured channel replies.
+
+For one foundation sequence, ZERO.3 minimizes the weighted cross entropy
+
+```text
+0.60 * observed target + 0.15 * ZERO.2 distribution
+                       + 0.25 * ZERO.1 distribution
+```
+
+Outside that stream: `0.85` observed, `0.15` ZERO.2. The frozen ZERO.2 target
+is replayed on all sources to limit catastrophic forgetting. The bridge
+statements in `corpus/zero-foundation.txt` are new hard targets; ZERO.1's
+embedded corpus and weights remain untouched.
+
+```sh
+make zero3-data    # teachers + all token streams, incl. cleaned KJB
+make zero3-train   # absorption -> consolidation -> retention-balance
+```
+
+The recommended mix gives the Bible one-twelfth of sequences, channels
+one-half, and the foundation stream one-sixth, keeping repetitive verse from
+dominating the small model. Override the input or stage lengths as needed:
+
+```sh
+make zero3-train \
+  ZERO2_CHECKPOINT=another-zero2.ckpt \
+  ZERO3_STEPS=8000 \
+  ZERO3_CONSOLIDATION_STEPS=1600 \
+  ZERO3_BALANCE_STEPS=600
+```
+
+The stages produce `zero3.ckpt`, `zero3-consolidated.ckpt`, and
+`zero3-balanced.ckpt`; the last is the recommended result. The later stages
+exist because mixed-corpus validation alone did not fully preserve the frozen
+channel benchmark.
+
+**Historical result (update 16,300):**
+
+| Stage | Update | Validation loss |
+| --- | ---: | ---: |
+| Broad absorption | 16,100 | 1.7540 |
+| ZERO.2 consolidation | 16,200 | 1.7387 |
+| Retention balance | 16,300 | 1.7347 |
+
+On the frozen channel benchmark the final int8 export scored 13/18 transcript
+and 17/24 recurrent wins versus 14/18 and 18/24 for the exact ZERO.2 teacher,
+but with better mean positive-token bits and equal-or-better margins — a real
+tradeoff, not an unqualified win. The subsequently frozen teacher is a
+distinct update-16,600 artifact whose authoritative metrics are in
+[`teachers/registry.json`](teachers/registry.json) and
+[`TEACHERS.md`](TEACHERS.md).
+
+### Resume and generate
+
+A checkpoint contains the architecture, weights, AdamW moments, update number,
+and RNG state, so resumed training continues from the saved optimizer state.
+Use the same training files in the same order so the restored random sequence
+selects the same corpus ranges.
+
+Resume:
 
 ```sh
 ./literary_lm \
@@ -589,7 +420,7 @@ Resume for additional updates:
   --tokens 0
 ```
 
-Generate without training:
+Generate:
 
 ```sh
 ./literary_lm \
@@ -603,14 +434,7 @@ Generate without training:
   --repetition 1.1
 ```
 
-A checkpoint contains the architecture, weights, AdamW moments, update number,
-and random-generator state. Resumed training therefore continues from the
-saved optimizer state rather than merely loading weights. Use the same training
-files in the same order when resuming so the restored random sequence selects
-the same corpus ranges.
-
-Run `./literary_lm --help` for every architecture, training, checkpoint, and
-generation option.
+Run `./literary_lm --help` for every option.
 
 ## Generate a formal-logic corpus
 
@@ -620,10 +444,10 @@ changing the transformer architecture. Its small trusted checker combines:
 - intuitionistic implication and conjunction rules;
 - de Bruijn-indexed hypotheses, avoiding variable-capture ambiguity;
 - canonical hereditarily finite sets built with empty set, pairing, union,
-  and von Neumann successor; and
+  and von Neumann successor;
 - exact evaluation of atomic membership, equality, and subset claims.
 
-Generate and independently re-read/check a corpus:
+Generate and independently re-read a corpus:
 
 ```sh
 ./logic_corpus \
@@ -636,13 +460,13 @@ Generate and independently re-read/check a corpus:
 ./logic_corpus --verify corpus/logic/hf.txt
 ```
 
-Every record is kept below 480 ASCII characters by default, so a complete
-problem and proof fit within the literary model's 512-token character context.
-The final 5% of records use proof shapes absent from the earlier records,
-providing a structural validation tail. The model's own split is measured in
-tokens rather than records, so the boundaries are approximate.
+Every record stays below 480 ASCII characters by default, so a full problem
+and proof fit the model's 512-character context; the final 5% of records use
+proof shapes absent from earlier records, giving a structural validation
+tail. The concrete syntax and held-out templates are documented in
+[`corpus/logic/README.md`](corpus/logic/README.md).
 
-Encode and train it through the existing pipeline:
+Encode and train through the existing pipeline:
 
 ```sh
 ./bpe_tokenizer \
@@ -660,78 +484,39 @@ Encode and train it through the existing pipeline:
   --tokens 0
 ```
 
-The concrete syntax, proof rules, held-out templates, and limitations are
-documented in [`corpus/logic/README.md`](corpus/logic/README.md).
+**What the model learned — and didn't:**
 
-### Trained logic-v1 result
-
-The first formal run used 250,000 generated records (46,955,875 character
-tokens) and completed all 30,000 updates. `logic-v1.ckpt` preserves update
-26,600, the best state, with held-out next-character loss 0.1491.
-`logic-v1-last.ckpt` preserves the completed update-30,000 optimizer state.
-
-A small deterministic proof probe on fresh formulas produced kernel-valid
-proofs for all six proof shapes present in the training region. It produced one
-valid proof out of four structurally held-out shapes: duplication succeeded,
-while implication composition, conjunction reassociation, and nested
-projection failed. This is a diagnostic rather than a statistically complete
-benchmark, but it shows that low character loss does not imply general proof
-search at this model size.
-
-### Continued logic + Shakespeare result
-
-`logic-shakespeare-v1` resumed the best pure-logic checkpoint for 20,000
-additional updates, sampling logic and Shakespeare with equal probability. The
-phase used a `1e-4` peak learning rate with cosine decay. The selected
-`logic-shakespeare-v1.ckpt` is global update 43,300 with equal-weighted mixed
-validation loss 0.8828; `logic-shakespeare-v1-last.ckpt` preserves the completed
-global update 46,600 state.
-
-On the same small deterministic proof probe, five of six trained proof shapes
-remained kernel-valid, while none of the four structurally held-out shapes
-succeeded. Shakespeare-prompted output gained recognizable dramatic cadence
-and vocabulary. This demonstrates a usable hybrid model, but also measurable
-formal-logic forgetting and continued weak proof-schema generalization.
+- `logic-v1` (250,000 records, 30,000 updates): best held-out character loss
+  0.1491. A deterministic proof probe on fresh formulas produced kernel-valid
+  proofs for all six trained proof shapes, but only one of four structurally
+  held-out shapes. Low character loss does not imply general proof search at
+  this model size.
+- `logic-shakespeare-v1` (+20,000 mixed updates, loss 0.8828): five of six
+  trained shapes stayed kernel-valid, none of the held-out shapes succeeded,
+  and Shakespeare-prompted output gained real dramatic cadence — a usable
+  hybrid model with measurable formal-logic forgetting.
 
 ## Train the Infinite Monkey curriculum
 
-The Brainfuck faculty extends the same checked-corpus idea from proof terms to
-program execution. `brainfuck_corpus` constructs bounded terminating programs,
-runs every record under a strict 8-bit interpreter, and emits both a readable
-audit and a target-masked channel stream. Its held-out tail uses loop and data
-movement shapes absent from training.
-
-Build and independently verify the program corpus:
+The Brainfuck faculty extends the checked-corpus idea from proof terms to
+program execution: bounded terminating programs, run under a strict 8-bit
+interpreter, emitted as both a readable audit and a target-masked channel
+stream. The held-out tail uses loop and data-movement shapes absent from
+training.
 
 ```sh
-make brainfuck-data
-```
-
-Run a short end-to-end check of all curriculum transitions:
-
-```sh
-make monkey-smoke
-```
-
-Then train Brainfuck, the generated finite-set logic language, Shakespeare,
-Blake, and Crowley in cumulative stages:
-
-```sh
-make monkey-train
+make brainfuck-data     # build and independently verify the corpus
+make monkey-smoke       # short end-to-end check of all transitions
+make monkey-train       # cumulative stages, replaying every earlier corpus
 make monkey-eval
 ```
 
 Each stage gives the newly introduced language additional sampling weight but
-continues replaying every earlier corpus. Formal consolidation is followed by
-a literature-heavy polish and a final rebalance at `3/3/2/2/2` for Brainfuck,
-logic, Shakespeare, Blake, and Crowley. All stages
-share the fixed 128-character tokenizer and the existing 4,852,992-parameter,
-512-character transformer. Exact semantics, split policy, options, and stage
-overrides are documented in
-[`corpus/brainfuck/README.md`](corpus/brainfuck/README.md).
-
-The completed seed-89 baseline and its measured capacity verdict are in
-[`benchmarks/infinite-monkey-v1/RESULTS.md`](benchmarks/infinite-monkey-v1/RESULTS.md).
+continues replaying earlier corpora, finishing at `3/3/2/2/2` for Brainfuck,
+logic, Shakespeare, Blake, and Crowley — all on the fixed 128-character
+tokenizer and the same 4,852,992-parameter transformer. `make monkey-eval` writes the
+completed seed-89 baseline and capacity verdict to
+`benchmarks/infinite-monkey-v1/RESULTS.md`.
 
 For the systematic-execution experiment, generate grouped state traces and
 train the 9,876,800-parameter specialist:
@@ -744,10 +529,12 @@ make monkey-trace10m-eval
 ```
 
 Each six-record `bf2` episode teaches two primitive transitions, a composed
-multi-instruction block, completion from that state, whole-program behavior,
-and synthesis or repair. The compact state emitted as one chunk's channel
-summary becomes the next chunk's channel memory exactly. Validation withholds
-program compositions while retaining the primitive instruction vocabulary.
+block, completion, whole-program behavior, and synthesis or repair — the
+compact state emitted as one chunk's channel summary becomes the next chunk's
+channel memory exactly. Validation withholds program compositions while
+retaining the primitive instruction vocabulary. Exact semantics, split
+policy, options, and stage overrides are documented in
+`corpus/brainfuck/README.md` (written by `make brainfuck-data`).
 
 ## Architecture
 
@@ -762,38 +549,24 @@ program compositions while retaining the primitive instruction vocabulary.
 7. residual dropout, mini-batch gradient accumulation, gradient clipping,
    AdamW, cosine decay, early stopping, and best-validation checkpoints.
 
-There is no external tensor, automatic-differentiation, tokenizer, or machine-
-learning library. The tokenizer and every model operation are implemented in
-C; Accelerate supplies optimized matrix multiplication on macOS.
+There is no external tensor, automatic-differentiation, tokenizer, or
+machine-learning library. Everything is C; Accelerate and OpenBLAS only
+supply optimized matrix multiplication.
 
-## What “grounded in zero” means here
+## Documentation map
 
-The full set-theoretic construction, transformer equations, channel objective,
-recurrent-memory system, holographic index, and formal claims are given in
-[`FOUNDATIONS.md`](FOUNDATIONS.md).
-
-The finite mathematical ladder is represented concretely:
-
-| Foundational idea | C representation |
+| Document | What it covers |
 | --- | --- |
-| `0` / empty initial state | `calloc`-allocated storage |
-| finite ordinals | array indices and dimensions |
-| ordered sequences | byte-token arrays |
-| finite functions | tables, matrices, and C functions |
-| real-valued vectors | arrays of `float` approximations |
-| function composition | transformer forward pass |
-| parameter selection | backpropagation and AdamW |
+| [MANIFESTO.md](MANIFESTO.md) | The philosophy: why begin at zero. |
+| [FOUNDATIONS.md](FOUNDATIONS.md) | Set-theoretic construction, transformer equations, channel objective, memory, formal claims. |
+| [FACULTY.md](FACULTY.md) | The faculty-controller design behind the quantity experiments. |
+| [TEACHERS.md](TEACHERS.md) | Frozen teacher registry and authoritative metrics. |
+| [EXPERIMENTS.md](EXPERIMENTS.md) | The authoritative experiment decision lineage. |
+| [ZERO4.md](ZERO4.md) | ZERO.4 proposals and design rationale. |
+| [ZEROADMAP.md](ZEROADMAP.md) | The longer roadmap and frozen comparisons. |
+| [SATURATION.md](SATURATION.md) | Capacity analysis. |
+| [PROPOSALS.md](PROPOSALS.md) / [ENG.md](ENG.md) | Open proposals and engineering notes. |
+| [`benchmarks/`](benchmarks) | Per-experiment contracts, results, and promotion records. |
 
-Model storage begins zero-filled. Index-dependent deterministic initialization,
-tokens, attention relations, and gradient updates then introduce structure. A
-seed of zero is valid and is first taken through a successor-like `+1` operation.
-
-This distinction matters: setting every weight to exactly zero would make
-neurons permutation-symmetric, causing them to receive identical gradients.
-Grounding means that the constructed objects have a common empty basis;
-collapse means erasing the relations that distinguish those objects. The model
-does the former without doing the latter.
-
-C does not execute the ZFC axioms or construct exact set-theoretic real numbers.
-It implements a finite encoding whose mathematical specification can be
-formalized within ZFC.
+GitHub Pages serves directly from `docs/` — no backend, API key, JavaScript
+framework, or hosted inference service is required.
