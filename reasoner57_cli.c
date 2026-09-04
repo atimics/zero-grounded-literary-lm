@@ -29,20 +29,14 @@ int main(int argc, char **argv) {
         return status == 0 ? 0 : 1;
     }
     if (argc >= 2 && strcmp(argv[1], "develop") == 0) {
-        r57_development_result result;
-        const char *artifact = argc == 6 ? argv[5] : default_r56_artifact;
-        int status;
         if (argc != 5 && argc != 6) {
             usage(argv[0]);
             return 2;
         }
-        status = r57_run_development(&result, argv[3], argv[4], artifact);
-        if (status == 0)
-            status = r57_write_development_result(argv[2], &result);
-        if (status != 0)
-            fprintf(stderr, "Reasoner 5.7 development failed at check %d\n",
-                    status);
-        return status == 0 ? 0 : 1;
+        fprintf(stderr,
+            "Reasoner 5.7 development is gated on corrected Reasoner 5.6 "
+            "channel-readiness evidence.\n");
+        return 3;
     }
     if (argc == 2 && strcmp(argv[1], "execute") == 0) {
         fprintf(stderr,

@@ -396,20 +396,6 @@ static double r57_input_disagreement(
     return 1.0 - square;
 }
 
-static double r57_input_max_mass(
-    const r56_universe *universe,
-    const double probability[R56_SEMANTIC_CLASSES], uint8_t input) {
-    double mass[R56_MODULUS] = {0.0};
-    double maximum = 0.0;
-    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES;
-         ++semantic)
-        mass[universe->semantic[semantic].table[input]] +=
-            probability[semantic];
-    for (uint32_t value = 0u; value < R56_MODULUS; ++value)
-        if (mass[value] > maximum) maximum = mass[value];
-    return maximum;
-}
-
 static uint32_t r57_action_type(const r56_ranker_view *view,
                                 r57_action action) {
     int input_seen = 0;
@@ -551,37 +537,205 @@ static int r57_posterior(const r56_artifact *channel,
     return status;
 }
 
-static double r57_analytic_action_score(
-    r57_selector selector, const r56_artifact *channel,
-    const r56_universe *universe,
-    const double probability[R56_SEMANTIC_CLASSES], r57_action action) {
-    double disagreement = r57_input_disagreement(universe, probability,
-                                                 action.input);
-    double reliability = r57_sensor_reliability(channel, action.sensor);
-    if (selector == R57_SELECTOR_MAX_DISAGREEMENT) return disagreement;
-    if (selector == R57_SELECTOR_NOISY_GBS)
-        return (1.0 - r57_input_max_mass(universe, probability,
-                                         action.input)) *
-               (0.5 + 0.5 * reliability);
-    return disagreement * reliability;
+static int32_t r57_local_log_score(const r56_artifact *channel,
+                                   uint8_t sensor, uint8_t input,
+                                   uint8_t value, uint8_t state) {
+    r56_local_backoff level = r56_local_backoff_level(channel, sensor, input,
+                                                       value);
+    if (level == R56_BACKOFF_EXACT) {
+        size_t context = ((size_t)sensor * R56_MODULUS + input) *
+                         R56_MODULUS + value;
+        return channel->local_exact_log_q20[
+            context * R56_CHANNEL_STATES + state];
+    }
+    if (level == R56_BACKOFF_VALUE) {
+        size_t context = (size_t)sensor * R56_MODULUS + value;
+        return channel->local_value_log_q20[
+            context * R56_CHANNEL_STATES + state];
+    }
+    if (level == R56_BACKOFF_SENSOR)
+        return channel->local_sensor_log_q20[
+            (size_t)sensor * R56_CHANNEL_STATES + state];
+    return channel->local_global_log_q20[state];
 }
 
-static r57_action r57_select_analytic(
+static int32_t r57_transition_log_score(const r56_artifact *channel,
+                                        uint8_t previous_sensor,
+                                        uint8_t current_sensor,
+                                        uint8_t previous_state,
+                                        uint8_t current_state) {
+    r56_transition_backoff level = r56_transition_backoff_level(channel,
+        previous_sensor, current_sensor, previous_state);
+    if (level == R56_TRANSITION_EXACT) {
+        size_t context = (((size_t)previous_sensor * R56_SENSORS +
+            current_sensor) * R56_CHANNEL_STATES) + previous_state;
+        return channel->transition_exact_log_q20[
+            context * R56_CHANNEL_STATES + current_state];
+    }
+    if (level == R56_TRANSITION_CURRENT) {
+        size_t context = (size_t)current_sensor * R56_CHANNEL_STATES +
+                         previous_state;
+        return channel->transition_current_log_q20[
+            context * R56_CHANNEL_STATES + current_state];
+    }
+    if (level == R56_TRANSITION_PREVIOUS)
+        return channel->transition_previous_log_q20[
+            (size_t)previous_state * R56_CHANNEL_STATES + current_state];
+    return channel->transition_global_log_q20[current_state];
+}
+
+/*
+ * Noisy GBS maximizes balance in the predictive outcome distribution. EC2's
+ * efficient posterior edge-cut objective is the expected increase in squared
+ * posterior mass. The latter equals the expected reduction in the total
+ * weight of edges between distinct semantic classes.
+ */
+static int r57_expected_objectives(
+    const double *prior, const double *likelihood, uint32_t hypotheses,
+    double *noisy_gbs, double *ec2) {
+    double outcome_mass[R56_CHANNEL_STATES] = {0.0};
+    double squared_joint[R56_CHANNEL_STATES] = {0.0};
+    double prior_total = 0.0;
+    double prior_square = 0.0;
+    double largest_outcome = 0.0;
+    double posterior_square = 0.0;
+    if (!prior || !likelihood || hypotheses == 0u ||
+        hypotheses > R56_SEMANTIC_CLASSES || !noisy_gbs || !ec2)
+        return 1;
+    for (uint32_t semantic = 0u; semantic < hypotheses; ++semantic) {
+        double row_total = 0.0;
+        if (!isfinite(prior[semantic]) || prior[semantic] < 0.0) return 2;
+        prior_total += prior[semantic];
+        prior_square += prior[semantic] * prior[semantic];
+        for (uint32_t outcome = 0u; outcome < R56_CHANNEL_STATES;
+             ++outcome) {
+            double value = likelihood[
+                (size_t)semantic * R56_CHANNEL_STATES + outcome];
+            double joint;
+            if (!isfinite(value) || value < 0.0) return 3;
+            row_total += value;
+            joint = prior[semantic] * value;
+            outcome_mass[outcome] += joint;
+            squared_joint[outcome] += joint * joint;
+        }
+        if (fabs(row_total - 1.0) > 1e-9) return 4;
+    }
+    if (fabs(prior_total - 1.0) > 1e-9) return 5;
+    for (uint32_t outcome = 0u; outcome < R56_CHANNEL_STATES; ++outcome) {
+        if (outcome_mass[outcome] > largest_outcome)
+            largest_outcome = outcome_mass[outcome];
+        if (outcome_mass[outcome] > 0.0)
+            posterior_square += squared_joint[outcome] /
+                                outcome_mass[outcome];
+    }
+    *noisy_gbs = 1.0 - largest_outcome;
+    *ec2 = posterior_square - prior_square;
+    if (*ec2 < 0.0 && *ec2 > -1e-12) *ec2 = 0.0;
+    return isfinite(*noisy_gbs) && isfinite(*ec2) && *noisy_gbs >= 0.0 &&
+           *ec2 >= 0.0 ? 0 : 6;
+}
+
+static int r57_channel_action_objectives(
+    const r56_artifact *channel, const r56_universe *universe,
+    const r56_ranker_view *view,
+    const double probability[R56_SEMANTIC_CLASSES], r57_action action,
+    double *noisy_gbs, double *ec2, uint32_t *channel_reads) {
+    double likelihood[R56_SEMANTIC_CLASSES * R56_CHANNEL_STATES];
+    const r56_public_observation *previous;
+    if (!channel || !r57_universe_valid(universe) || !view ||
+        view->observation_count == 0u ||
+        view->observation_count >= R57_TOTAL_OBSERVATIONS ||
+        !probability || !r57_action_valid(action) || !noisy_gbs || !ec2 ||
+        !channel_reads || channel->temperature_q20 <= 0)
+        return 1;
+    previous = &view->observations[view->observation_count - 1u];
+    if (previous->input >= R56_MODULUS ||
+        previous->sensor >= R56_SENSORS ||
+        previous->observed >= R56_MODULUS || previous->missing > 1u ||
+        (previous->missing && previous->observed != 0u))
+        return 2;
+    for (uint32_t semantic = 0u; semantic < R56_SEMANTIC_CLASSES;
+         ++semantic) {
+        const uint8_t *table = universe->semantic[semantic].table;
+        uint8_t previous_state = previous->missing ? R56_MODULUS :
+            r57_mod((int32_t)previous->observed - table[previous->input]);
+        uint8_t clean = table[action.input];
+        double maximum = -INFINITY;
+        double normalizer = 0.0;
+        for (uint32_t outcome = 0u; outcome < R56_CHANNEL_STATES;
+             ++outcome) {
+            uint8_t state = outcome == R56_MODULUS ? R56_MODULUS :
+                r57_mod((int32_t)outcome - clean);
+            int64_t score = (int64_t)r57_local_log_score(channel,
+                action.sensor, action.input, clean, state) +
+                r57_transition_log_score(channel, previous->sensor,
+                    action.sensor, previous_state, state);
+            double scaled = (double)score /
+                            (double)channel->temperature_q20;
+            likelihood[(size_t)semantic * R56_CHANNEL_STATES + outcome] =
+                scaled;
+            if (scaled > maximum) maximum = scaled;
+            *channel_reads += 2u;
+        }
+        for (uint32_t outcome = 0u; outcome < R56_CHANNEL_STATES;
+             ++outcome) {
+            size_t index = (size_t)semantic * R56_CHANNEL_STATES + outcome;
+            likelihood[index] = exp(likelihood[index] - maximum);
+            normalizer += likelihood[index];
+        }
+        if (!(normalizer > 0.0) || !isfinite(normalizer)) return 3;
+        for (uint32_t outcome = 0u; outcome < R56_CHANNEL_STATES;
+             ++outcome)
+            likelihood[(size_t)semantic * R56_CHANNEL_STATES + outcome] /=
+                normalizer;
+    }
+    return r57_expected_objectives(probability, likelihood,
+                                   R56_SEMANTIC_CLASSES, noisy_gbs, ec2);
+}
+
+static int r57_analytic_action_score(
     r57_selector selector, const r56_artifact *channel,
-    const r56_universe *universe,
-    const double probability[R56_SEMANTIC_CLASSES]) {
+    const r56_universe *universe, const r56_ranker_view *view,
+    const double probability[R56_SEMANTIC_CLASSES], r57_action action,
+    double *score, uint32_t *channel_reads) {
+    double noisy_gbs;
+    double ec2;
+    if (!score || !channel_reads) return 1;
+    if (selector == R57_SELECTOR_MAX_DISAGREEMENT) {
+        *score = r57_input_disagreement(universe, probability, action.input);
+        return 0;
+    }
+    if (selector != R57_SELECTOR_NOISY_GBS &&
+        selector != R57_SELECTOR_EC2)
+        return 2;
+    if (r57_channel_action_objectives(channel, universe, view, probability,
+            action, &noisy_gbs, &ec2, channel_reads) != 0)
+        return 3;
+    *score = selector == R57_SELECTOR_NOISY_GBS ? noisy_gbs : ec2;
+    return 0;
+}
+
+static int r57_select_analytic(
+    r57_selector selector, const r56_artifact *channel,
+    const r56_universe *universe, const r56_ranker_view *view,
+    const double probability[R56_SEMANTIC_CLASSES], r57_action *selected,
+    uint32_t *channel_reads) {
     r57_action best = r57_action_from_index(0u);
     double best_score = -1.0;
+    if (!selected || !channel_reads) return 1;
     for (uint32_t index = 0u; index < R57_ACTIONS; ++index) {
         r57_action action = r57_action_from_index(index);
-        double score = r57_analytic_action_score(selector, channel, universe,
-                                                  probability, action);
+        double score;
+        if (r57_analytic_action_score(selector, channel, universe, view,
+                probability, action, &score, channel_reads) != 0)
+            return 2;
         if (score > best_score) {
             best = action;
             best_score = score;
         }
     }
-    return best;
+    *selected = best;
+    return 0;
 }
 
 static int r57_fill_policy_view(
@@ -667,8 +821,9 @@ static int r57_choose_action(
     }
     if (selector == R57_SELECTOR_MAX_DISAGREEMENT ||
         selector == R57_SELECTOR_NOISY_GBS || selector == R57_SELECTOR_EC2) {
-        *selected = r57_select_analytic(selector, channel, universe,
-                                        probability);
+        if (r57_select_analytic(selector, channel, universe, view,
+                probability, selected, channel_reads) != 0)
+            return 2;
         *candidate_updates += R57_ACTIONS;
         return 0;
     }
@@ -722,8 +877,9 @@ static int r57_choose_action(
         }
         *candidate_updates += R57_ACTIONS;
         if (!have_supported) {
-            *selected = r57_select_analytic(R57_SELECTOR_EC2, channel,
-                                            universe, probability);
+            if (r57_select_analytic(R57_SELECTOR_EC2, channel, universe,
+                    view, probability, selected, channel_reads) != 0)
+                return 2;
             *policy_fallbacks += 1u;
         } else {
             *selected = r57_action_from_index(best_index);
@@ -844,8 +1000,9 @@ static int r57_rollout_cost(const r56_artifact *channel,
         if (r57_posterior(channel, universe, &view, probability,
                           &channel_reads) != 0)
             return 2;
-        action = r57_select_analytic(R57_SELECTOR_EC2, channel, universe,
-                                     probability);
+        if (r57_select_analytic(R57_SELECTOR_EC2, channel, universe, &view,
+                probability, &action, &channel_reads) != 0)
+            return 2;
         if (r57_append_response(universe, episode, &view, action, NULL) != 0)
             return 3;
     }
@@ -1048,8 +1205,10 @@ int r57_build_policy(r57_policy_artifact *policy,
                         logged = r57_action_from_index(
                             (uint32_t)(key % R57_ACTIONS));
                     } else {
-                        logged = r57_select_analytic(R57_SELECTOR_EC2,
-                            channel, universe, probability);
+                        if (r57_select_analytic(R57_SELECTOR_EC2, channel,
+                                universe, &view, probability, &logged,
+                                &channel_reads) != 0)
+                            return 5;
                     }
                     history[step].action = logged;
                     if (r57_append_response(universe, &episode, &view, logged,
@@ -1611,6 +1770,8 @@ int r57_run_development(r57_development_result *result,
     double evidence_checks = 0.0;
     double evidence_queries = 0.0;
     int status = 0;
+    if (!R57_DEVELOPMENT_PREREQUISITE_READY)
+        return R57_PREREQUISITE_PENDING;
     if (!result || !trace_path || !policy_path || !r56_artifact_path)
         return 1;
     memset(result, 0, sizeof(*result));
@@ -2148,6 +2309,97 @@ int r57_self_test(const char *r56_artifact_path) {
                 &queries) != 0 || checks == 0u || queries >= checks ||
             checks > R56_SEMANTIC_CLASSES || queries > R56_MODULUS) {
             status = 17;
+            goto cleanup;
+        }
+    }
+    {
+        /*
+         * Two equally likely hypotheses and a symmetric 90/10 channel give
+         * predictive outcome masses 1/2 and 1/2. The posterior-L2 EC2 gain is
+         * (0.9^2 + 0.1^2) - (0.5^2 + 0.5^2) = 0.32. A former
+         * disagreement-times-0.8-reliability proxy would report 0.40.
+         */
+        const double prior[2] = {0.5, 0.5};
+        double likelihood[2 * R56_CHANNEL_STATES] = {0.0};
+        double noisy_gbs;
+        double ec2;
+        likelihood[0u * R56_CHANNEL_STATES + 0u] = 0.9;
+        likelihood[0u * R56_CHANNEL_STATES + R56_MODULUS] = 0.1;
+        likelihood[1u * R56_CHANNEL_STATES + 0u] = 0.1;
+        likelihood[1u * R56_CHANNEL_STATES + R56_MODULUS] = 0.9;
+        if (r57_expected_objectives(prior, likelihood, 2u, &noisy_gbs,
+                &ec2) != 0 || fabs(noisy_gbs - 0.5) > 1e-12 ||
+            fabs(ec2 - 0.32) > 1e-12 || fabs(ec2 - 0.40) < 1e-3) {
+            status = 18;
+            goto cleanup;
+        }
+    }
+    {
+        /*
+         * The first action has balanced 18-outcome predictions even though
+         * both hypotheses share its clean value. The second action has an
+         * 80/20 prediction despite splitting the clean values. Multiclass
+         * noisy-GBS selects the first (0.5 > 0.2); clean max-mass selects the
+         * second (0 < 0.5).
+         */
+        const double prior[2] = {0.5, 0.5};
+        double balanced[2 * R56_CHANNEL_STATES] = {0.0};
+        double skewed[2 * R56_CHANNEL_STATES] = {0.0};
+        double balanced_gbs;
+        double balanced_ec2;
+        double skewed_gbs;
+        double skewed_ec2;
+        const double old_clean_max_mass_balanced = 0.0;
+        const double old_clean_max_mass_skewed = 0.5;
+        balanced[0u * R56_CHANNEL_STATES + 0u] = 0.9;
+        balanced[0u * R56_CHANNEL_STATES + R56_MODULUS] = 0.1;
+        balanced[1u * R56_CHANNEL_STATES + 0u] = 0.1;
+        balanced[1u * R56_CHANNEL_STATES + R56_MODULUS] = 0.9;
+        skewed[0u * R56_CHANNEL_STATES + 0u] = 0.8;
+        skewed[0u * R56_CHANNEL_STATES + R56_MODULUS] = 0.2;
+        skewed[1u * R56_CHANNEL_STATES + 0u] = 0.8;
+        skewed[1u * R56_CHANNEL_STATES + R56_MODULUS] = 0.2;
+        if (r57_expected_objectives(prior, balanced, 2u, &balanced_gbs,
+                &balanced_ec2) != 0 ||
+            r57_expected_objectives(prior, skewed, 2u, &skewed_gbs,
+                &skewed_ec2) != 0 ||
+            fabs(balanced_gbs - 0.5) > 1e-12 ||
+            fabs(skewed_gbs - 0.2) > 1e-12 ||
+            !(balanced_gbs > skewed_gbs) ||
+            !(old_clean_max_mass_balanced < old_clean_max_mass_skewed) ||
+            fabs(skewed_ec2) > 1e-12) {
+            status = 19;
+            goto cleanup;
+        }
+    }
+    {
+        const double prior[2] = {0.5, 0.5};
+        double uniform[2 * R56_CHANNEL_STATES];
+        double noisy_gbs;
+        double ec2;
+        for (uint32_t index = 0u; index < 2u * R56_CHANNEL_STATES;
+             ++index)
+            uniform[index] = 1.0 / (double)R56_CHANNEL_STATES;
+        if (r57_expected_objectives(prior, uniform, 2u, &noisy_gbs,
+                &ec2) != 0 ||
+            fabs(noisy_gbs - 17.0 / 18.0) > 1e-12 ||
+            fabs(ec2) > 1e-12) {
+            status = 20;
+            goto cleanup;
+        }
+        uniform[0] += 0.01;
+        if (r57_expected_objectives(prior, uniform, 2u, &noisy_gbs,
+                &ec2) == 0) {
+            status = 21;
+            goto cleanup;
+        }
+    }
+    {
+        r57_development_result blocked_result;
+        if (r57_run_development(&blocked_result, "/tmp/r57-blocked-trace",
+                "/tmp/r57-blocked-policy", r56_artifact_path) !=
+                R57_PREREQUISITE_PENDING) {
+            status = 22;
             goto cleanup;
         }
     }

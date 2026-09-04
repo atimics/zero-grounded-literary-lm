@@ -1,0 +1,73 @@
+{
+  "schema": "zero.reasoner57_active_evidence_development_contract.v1",
+  "experiment": "reasoner57-active-evidence-development-v1",
+  "version": "5.7-development-scaffolding-1",
+  "status": "gated-development-scaffolding",
+  "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
+  "prerequisite": {
+    "state": "pending-corrected-reasoner56-channel-readiness",
+    "base_commit": "ecb275a45291b5fbc174e0befbb180ea51e05f6d",
+    "r56_artifact": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
+      "sha256": "404cff98a8d92eb11cf203710c20c356fbaec31370ea525c416857e641bd4004"
+    },
+    "superseded_assessment": {
+      "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
+      "sha256": "e369a39dab84355ad7ab6b9b4c6bd2cfaecb03a50d859452fe4fab38ceb9a2f3",
+      "channel_readiness_assessment_sha256": "0c17cc6336535224b9754b7de1b57353dd85ba45329efcbe99e56229857f6070"
+    },
+    "required_evidence": [
+      "coverage inference over eight program-family units",
+      "one-sided 95 percent family-level Wilson lower limit at least 0.97",
+      "prospective sealed-interface audit",
+      "sealed static-metadata proxy audit",
+      "severity proxy check"
+    ],
+    "required_corrected_assessment_sha256": null
+  },
+  "semantic_splits": {
+    "policy_training_families": 48,
+    "selector_choice_families": 12,
+    "policy_calibration_families": 16,
+    "development_program_families": 8,
+    "sealed_reserve_families": 27,
+    "split_before_generation": true,
+    "all_five_identities_are_disjoint": true,
+    "disjoint_from_all_reasoner56_lanes": true
+  },
+  "primary": {
+    "initial_reads": 3,
+    "active_queries": 4,
+    "actions": 51,
+    "action_order": "input-then-sensor",
+    "outcomes": 18,
+    "missing_outcome": 17,
+    "exact_semantic_classes": 427,
+    "exact_verifier_points": 17
+  },
+  "analytic_controls": {
+    "likelihood": "r(h,y|a)=exp((local_log_q20+transition_log_q20)/temperature_q20); L(h,y|a)=r(h,y|a)/sum_z r(h,z|a)",
+    "predictive_outcome": "q(y|a)=sum_h p(h)L(h,y|a)",
+    "multiclass_noisy_gbs": "1-max_y q(y|a)",
+    "posterior_l2_ec2_edge_cut": "sum_y q(y|a) sum_h (p(h)L(h,y|a)/q(y|a))^2-sum_h p(h)^2",
+    "tie_break": "canonical input-then-sensor order",
+    "channel_source": "exact R5.6 local emission, first-order transition, and temperature bytes"
+  },
+  "control_tests": {
+    "two_hypothesis_ec2_expected": 0.32,
+    "two_hypothesis_noisy_gbs_balanced_expected": 0.5,
+    "two_hypothesis_noisy_gbs_skewed_expected": 0.2,
+    "uniform_18_outcome_noisy_gbs_expected": "17/18",
+    "likelihood_row_normalization_is_checked": true
+  },
+  "development_outputs": null,
+  "scientific_decision": null,
+  "execution": {
+    "authorized": false,
+    "sealed_seeds_present": false,
+    "development_fixture_generation_open": false,
+    "scientific_executions": 0,
+    "scientific_retries": 0,
+    "cloud_resources": false
+  }
+}
