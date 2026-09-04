@@ -14,6 +14,7 @@ import {
   createSplitState,
   finalizeManifest,
   freezeFamilySplits,
+  overlapReceipt,
   registerEpisode,
   registerFamily,
   registerReplayPipeline,
@@ -98,6 +99,14 @@ const LANE_ROOT = Object.freeze({
   development: R58_DEVELOPMENT_ROOT,
 });
 const SHA256 = /^[0-9a-f]{64}$/u;
+
+function deepFreeze(value) {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const item of Object.values(value)) deepFreeze(item);
+  }
+  return value;
+}
 
 export const R58_RANKER_POLICY = Object.freeze({
   schema: "zero.reasoner5_ranker_policy.v1",
@@ -214,6 +223,17 @@ export function enumerateR58Universe() {
         .length),
     candidates,
   };
+}
+
+export function r58UniverseSha256(universe = enumerateR58Universe()) {
+  const hash = createHash("sha256");
+  for (const candidate of universe.candidates) {
+    const operations = [...candidate.ast.operations];
+    while (operations.length < R58_MAX_DEPTH) operations.push(0);
+    hash.update(Buffer.from([candidate.ast.operations.length, ...operations,
+      ...candidate.semantic]));
+  }
+  return hash.digest("hex");
 }
 
 function distinctOutputs(semantic) {
@@ -609,12 +629,48 @@ function selectedEpisodeFamilies(families) {
   });
 }
 
+export function reconstructR58SourceCounts(episodes) {
+  const sourceEpisodes = episodes.filter(episode =>
+    episode.lane === "source-training");
+  assert.equal(sourceEpisodes.length, 64,
+    "R5.8 source count replay needs all 64 source episodes");
+  const sourceCandidates = enumerateR58Universe().candidates.filter(candidate =>
+    candidate.ast.operations.length <= 2);
+  const counts = {
+    positiveLabels: 0,
+    negativeLabels: 0,
+    featurePositive: Array(116).fill(0),
+    featureNegative: Array(116).fill(0),
+    transitionPositive: Array(72).fill(0),
+    transitionNegative: Array(72).fill(0),
+    rawTokenPositive: Array(24).fill(0),
+    rawTokenNegative: Array(24).fill(0),
+  };
+  for (const episode of sourceEpisodes) {
+    const target = episode.content.evaluator.episode_spec.operation_roles;
+    for (const candidate of sourceCandidates) {
+      const operations = candidate.ast.operations;
+      const positive = operations.length <= target.length &&
+        operations.every((operation, index) => operation === target[index]);
+      counts[positive ? "positiveLabels" : "negativeLabels"] += 1;
+      for (const feature of featureIndices(candidate))
+        counts[positive ? "featurePositive" : "featureNegative"][feature] += 1;
+      for (const transition of transitionIndices(candidate))
+        counts[positive ? "transitionPositive" : "transitionNegative"]
+          [transition] += 1;
+      for (const token of rawTokenIndices(candidate))
+        counts[positive ? "rawTokenPositive" : "rawTokenNegative"][token] += 1;
+    }
+  }
+  return counts;
+}
+
 function episodeCandidates() {
   const universe = enumerateR58Universe();
-  return universe.candidates.map((candidate, index) => ({
+  return deepFreeze(universe.candidates.map((candidate, index) => ({
     ...candidate,
     partial_expansions: index === 0 ? 0 : 1,
-  }));
+  })));
 }
 
 function parityValues(content, candidates) {
@@ -761,6 +817,27 @@ export function buildR58Manifest(artifact) {
       },
     });
   }
+  const splitDivergence = [];
+  for (const [leftLane, rightLane] of [["source-training", "development"],
+    ["calibration", "development"]]) {
+    for (const field of ["atoms", "typed_subtrees"]) {
+      const receipt = overlapReceipt(state.episodes, field, leftLane, rightLane);
+      const union = receipt.left_distinct + receipt.right_distinct -
+        receipt.overlap_count;
+      splitDivergence.push({
+        ...receipt,
+        union_count: union,
+        jaccard_divergence: union === 0 ? 0 :
+          (union - receipt.overlap_count) / union,
+      });
+    }
+  }
+  const sourceCounts = reconstructR58SourceCounts(state.episodes);
+  for (const field of ["positiveLabels", "negativeLabels", "featurePositive",
+    "featureNegative", "transitionPositive", "transitionNegative",
+    "rawTokenPositive", "rawTokenNegative"])
+    assert.deepEqual(sourceCounts[field], artifact.guide[field],
+      `source artifact ${field} differs from its registered source episodes`);
   return finalizeManifest(state, {
     status: "development-only",
     execution: {
@@ -778,6 +855,7 @@ export function buildR58Manifest(artifact) {
     },
     generators: GENERATOR_SPECS,
     input_generators: INPUT_GENERATOR_SPECS,
+    split_divergence: splitDivergence,
     source_artifact: {
       schema: artifact.schema,
       canonical_bytes: artifact.bytes.length,
@@ -785,6 +863,8 @@ export function buildR58Manifest(artifact) {
       source_tasks: artifact.sourceTasks,
       training_family_ids: families.filter(family =>
         family.lane === "source-training").map(family => family.family_id),
+      source_count_receipt_sha256: canonicalDigest(
+        "reasoner58-source-training-counts", sourceCounts),
     },
     analysis_contract: analysisContract(),
   });
@@ -898,7 +978,8 @@ function armUsesArtifact(arm) {
   return !R58_SOURCE_ISOLATED_ARMS.includes(arm);
 }
 
-export function executeR58Arm(episode, candidates, artifact, arm) {
+export function executeR58Arm(episode, candidates, artifact, arm,
+  frozenFallback = null) {
   assert(R58_ARMS.includes(arm), `unknown R5.8 arm ${arm}`);
   const publicView = episode.content.public;
   const expected = episode.content.evaluator.behavior;
@@ -913,10 +994,11 @@ export function executeR58Arm(episode, candidates, artifact, arm) {
   } else {
     ranking = rankR58Candidates(publicView, candidates, artifact, arm);
   }
-  const proposals = [invalid, ...ranking.filter(candidate => candidate !== invalid)];
+  const proposals = arm === "target_only" ? [invalid] :
+    [invalid, ...ranking.filter(candidate => candidate !== invalid)];
   const search = runVerifiedSearch({
     proposals,
-    fallback: canonicalCandidateOrder(candidates),
+    fallback: frozenFallback ?? deepFreeze(canonicalCandidateOrder(candidates)),
     candidate_universe: candidates,
     verify: exactVerifier(expected),
     global_cap: candidates.length,
@@ -964,7 +1046,7 @@ export function makeR58RawRow(episode, arm, execution) {
     observation_queries: episode.content.public.examples.length,
     parity_digest: episode.trace_binding.parity_digest,
     partial_expansions: search.partial_expansions,
-    peak_bytes: 0,
+    peak_bytes: null,
     potential_response_digest: episode.trace_binding.potential_response_digest,
     premature_commit: search.premature_commits > 0,
     primary_cost: search.partial_expansions,
@@ -974,7 +1056,7 @@ export function makeR58RawRow(episode, arm, execution) {
     verified_search: search,
     verifier_checks: search.verifier_checks,
     verifier_digest: episode.trace_binding.verifier_digest,
-    wall_ns: 0,
+    wall_ns: null,
   };
   assert.deepEqual(Object.keys(row).sort(), [...REASONER5_TRACE_ROW_FIELDS].sort());
   return row;
@@ -1029,6 +1111,7 @@ export function cloneSourceAblationRow(sourceFreeRow) {
 
 export function generateR58RawRows(manifest, artifact) {
   const candidates = episodeCandidates();
+  const fallback = deepFreeze(canonicalCandidateOrder(candidates));
   const rows = [];
   for (const episode of manifest.episodes.filter(item =>
     item.lane === "development")) {
@@ -1040,7 +1123,7 @@ export function generateR58RawRows(manifest, artifact) {
         continue;
       }
       const row = makeR58RawRow(episode, arm,
-        executeR58Arm(episode, candidates, artifact, arm));
+        executeR58Arm(episode, candidates, artifact, arm, fallback));
       rows.push(row);
       if (arm === "source_free_jit") sourceFreeRow = row;
     }

@@ -1,0 +1,162 @@
+{
+  "schema": "zero.reasoner58_development_contract.v1",
+  "experiment": "reasoner58-compositional-behavior-transfer-v1",
+  "status": "development-only",
+  "purpose": "qualify nonlinear compositional behavior transfer before preregistration",
+  "base_design": {
+    "plan": {
+      "path": "benchmarks/reasoner5-next-set-v1/PLAN.json",
+      "sha256": "2e1b2ad724e44f6dd8aa87b21dc3ac80d46a4ad4a490c3bfe5506ad110973c7f"
+    },
+    "document": {
+      "path": "docs/REASONER5-NEXT.md",
+      "sha256": "a479882ee565aea082da2f490a0d067a832f1fa2778f8b23af2ee59ecdf7792c"
+    },
+    "shared_harness_commit": "24e113f34185aca28092e92d0c7f6f7a79f4ab4e"
+  },
+  "execution": {
+    "authorized": false,
+    "allowed_lane": "development",
+    "sealed_seeds_present": false,
+    "sealed_manifest": null,
+    "cloud_run": null,
+    "scientific_executions": 0
+  },
+  "implementation": {
+    "files": {
+      "core": {
+        "path": "reasoner58.c",
+        "sha256": "849c33a7fc2a116721611b145722fcaee6ad54757680e705d4bb487128eb66a7"
+      },
+      "header": {
+        "path": "reasoner58.h",
+        "sha256": "a8c1658a1a74c48ae2e6f392994917aaf231995081a4c59471ab44373a7a57b5"
+      },
+      "cli": {
+        "path": "reasoner58_cli.c",
+        "sha256": "594c45edd5baaccdce6ceed0d7b4f8d7588f80af7af8676027096c5da4211906"
+      },
+      "replay": {
+        "path": "scripts/lib/reasoner58_replay.mjs",
+        "sha256": "752fc970eb94fde3bebd626c33dea134cc4383a6b2fb37e5ab1ea279c92c5a07"
+      },
+      "runner": {
+        "path": "scripts/run_reasoner58_development.mjs",
+        "sha256": "59fe5f29bcb41efde9af905666135548d1f65a3d0d6c601c470570593863fa39"
+      },
+      "development_check": {
+        "path": "scripts/check_reasoner58_development.mjs",
+        "sha256": "2ce083942debd699698772fa0f263cfb8501e3843688b670607206f2207f080c"
+      },
+      "contract_check": {
+        "path": "scripts/check_reasoner58_contract.mjs",
+        "sha256": "bfb752a634d093c338e279c2a54512f5d772dcc0e4b2d9204f7f424acdc46a91"
+      },
+      "shared_harness": {
+        "path": "scripts/lib/reasoner5_harness.mjs",
+        "sha256": "32f24aaa946ab8611a6085830ce0172835394fdf077cab41b9e014460a425e6c"
+      },
+      "development_document": {
+        "path": "docs/REASONER58-DEVELOPMENT.md",
+        "sha256": "87734e39976bdac52b02354725fae54602cac0fe30a5d8260b220c80d1314687"
+      }
+    },
+    "protected_predecessors": {
+      "reasoner51": {
+        "path": "reasoner51.c",
+        "sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50"
+      },
+      "reasoner52": {
+        "path": "reasoner52.c",
+        "sha256": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943"
+      },
+      "reasoner5_followup": {
+        "path": "reasoner5_followup.c",
+        "sha256": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+      }
+    }
+  },
+  "domain": {
+    "field": "GF(17)",
+    "type": "unary GF(17) to GF(17)",
+    "operations": 8,
+    "source_max_depth": 2,
+    "target_max_depth": 3,
+    "syntax_programs": 585,
+    "semantic_classes": 428,
+    "semantic_collisions": 157,
+    "semantic_identity": "complete 17-value truth table"
+  },
+  "generators": [
+    "syntax-first",
+    "behavior-skeleton"
+  ],
+  "shift_strata": [
+    "known-operation-new-composition",
+    "changed-semantic-class-order",
+    "new-cross-class-composition",
+    "longer-tree-deeper-partial-chain"
+  ],
+  "controls": [
+    "target_only",
+    "source_free_jit",
+    "source_ablation",
+    "transition_only",
+    "raw_token",
+    "behavior_off",
+    "shuffled_behavior",
+    "token_permuted",
+    "source_only",
+    "oracle_truth_rank"
+  ],
+  "derangements": 31,
+  "artifact_format": {
+    "magic": "R58A0001",
+    "byte_order": "little-endian",
+    "score_format": "signed Q20",
+    "accumulator": "signed int64",
+    "checksum": "SHA-256 over every preceding artifact byte"
+  },
+  "artifacts": {
+    "source": {
+      "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/SOURCE_ARTIFACT.hex",
+      "canonical_bytes": 2608,
+      "content_sha256": "090f07100c33eee75f9d50bcb0aee9aeba6fc055758ceab229a564b6a245ce57"
+    },
+    "files": {
+      "core": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/CORE-DEVELOPMENT.json",
+        "file_sha256": "976f73bc20440658cf0ce016ae2cbe0e5d4ca1f9a239b30c19605e1bfcb96b79"
+      },
+      "source": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/SOURCE_ARTIFACT.hex",
+        "file_sha256": "f0c3ce9a8009f028fa50ef5e583d9856a7ceec2d8162b935680c537ed21495af"
+      },
+      "manifest": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/MANIFEST.json",
+        "file_sha256": "8ea20fbd64f0e587623c369f20db12338351c527de595b77864a26c5c33b9210"
+      },
+      "raw_trace": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/DEVELOPMENT-TRACE.jsonl",
+        "file_sha256": "7ba655940e444b06d7ec93975a5632cc240e1a9633c2c1b889fda34f92c244bb"
+      },
+      "result": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/DEVELOPMENT.json",
+        "file_sha256": "ad6d614723114d95968f34326f11150f8618a1ac2c6c2dd4c34f5c3ae4c8b703"
+      }
+    }
+  },
+  "measurements": {
+    "source_tasks": 64,
+    "source_artifact_sha256": "090f07100c33eee75f9d50bcb0aee9aeba6fc055758ceab229a564b6a245ce57",
+    "source_count_receipt_sha256": "b0227745fc3ac7a634593b69807507acf002466ef8e56751bdbebef989193b88",
+    "development_families": 12,
+    "raw_rows": 504,
+    "manifest_sha256": "e79ccf2791185bb28b6b847c60b25f388ad673bf0687fb9e129b78ddf4be5126",
+    "raw_trace_sha256": "c4d697f9276dd2488e31757e64a90606a8d7407022f528660f4d06594b4d3b4b",
+    "result_sha256": "5385c28f6ba0e01ffede7baa5c8303c9af68701e4540fa102c3d587e1a3112bb",
+    "decision": "no-go",
+    "scientific_claim": "withheld"
+  },
+  "next_boundary": "select a powered development family count and freeze sealed seeds only after the common development gate is ready"
+}

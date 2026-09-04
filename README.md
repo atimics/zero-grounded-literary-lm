@@ -86,6 +86,8 @@ small browser runtime:
 - `reasoner52`: Reasoner 5.2, a frozen semantic-transition ranker tested on a
   deeper nonlinear polynomial family, with acceptance decided only by an exact
   finite-domain truth-table verifier.
+- `reasoner58`: Reasoner 5.8, a development-only behavior guide for exact
+  nonlinear composition search over exhaustive `GF(17)` truth tables.
 
 They are written in C11. On macOS, the transformer trainers automatically use Apple's
 built-in Accelerate framework for matrix multiplication. Linux uses OpenBLAS
