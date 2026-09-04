@@ -2954,3 +2954,12 @@ clean: clean-reasoner56
 
 clean-reasoner56:
 	rm -f reasoner56
+
+.PHONY: reasoner5-harness-check reasoner5-harness-contract-check
+reasoner5-harness-check:
+	node scripts/check_reasoner5_harness.mjs
+
+reasoner5-harness-contract-check:
+	node scripts/check_reasoner5_harness_contract.mjs
+
+check: reasoner5-harness-check reasoner5-harness-contract-check
