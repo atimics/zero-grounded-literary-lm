@@ -1,0 +1,18 @@
+{
+  "schema": "zero.reasoner58_core_development.v1",
+  "status": "development-only",
+  "execution_authorized": false,
+  "field": {"modulus": 17, "domain_points": 17},
+  "program": {"operations": 8, "source_max_depth": 2, "target_max_depth": 3},
+  "syntax_programs": 585,
+  "semantic_classes": 428,
+  "semantic_collisions": 157,
+  "nonlinear_classes": 333,
+  "source_tasks": 64,
+  "positive_labels": 184,
+  "negative_labels": 3976,
+  "exact_verifier_checks": 7276,
+  "artifact_bytes": 2608,
+  "universe_sha256": "d1fc9bf537947183ca6a108396386569c9afeffbf6a51f50d71a4900affb846f",
+  "artifact_sha256": "090f07100c33eee75f9d50bcb0aee9aeba6fc055758ceab229a564b6a245ce57"
+}

@@ -1,0 +1,545 @@
+#!/usr/bin/env node
+
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import {
+  closeSync,
+  copyFileSync,
+  createReadStream,
+  createWriteStream,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  readSync,
+  rmSync,
+  writeSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { Readable, Writable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { createGunzip, createGzip } from "node:zlib";
+
+import { stableJson } from "./zero_data_lib.mjs";
+import {
+  canonicalDigest,
+  assertManifestDigest,
+  assertRawTraceCoverage,
+  assertResultReplay,
+} from "./lib/reasoner5_harness.mjs";
+import {
+  R56_ANALYSIS_SETTINGS,
+  R56_EXPERIMENT,
+  assertR56CalibrationCoverageReplay,
+  assessR56ChannelReadiness,
+  auditR56ProxyTaint,
+  buildR56HarnessBundle,
+  reconstructR56Result,
+  selectSemanticSplits,
+} from "./lib/reasoner56_development.mjs";
+
+const root = `benchmarks/${R56_EXPERIMENT}`;
+const contractPath = `${root}/contract.json`;
+const updateFixtures = process.argv.includes("--update-fixtures");
+const sanitizersOnly = process.argv.includes("--sanitizers-only");
+const nativeBinary = process.env.REASONER56_BINARY || "./reasoner56";
+
+function sha256(data) {
+  return createHash("sha256").update(data).digest("hex");
+}
+
+function sha256File(file) {
+  const descriptor = openSync(file, "r");
+  const hash = createHash("sha256");
+  const chunk = Buffer.allocUnsafe(1024 * 1024);
+  try {
+    let bytesRead;
+    while ((bytesRead = readSync(descriptor, chunk, 0, chunk.length, null)) > 0)
+      hash.update(chunk.subarray(0, bytesRead));
+  } finally {
+    closeSync(descriptor);
+  }
+  return hash.digest("hex");
+}
+
+function *jsonLines(rows) {
+  for (const row of rows) yield `${JSON.stringify(row)}\n`;
+}
+
+function sha256JsonLines(rows) {
+  const hash = createHash("sha256");
+  for (const line of jsonLines(rows)) hash.update(line);
+  return hash.digest("hex");
+}
+
+async function sha256GzipContent(file) {
+  const hash = createHash("sha256");
+  const sink = new Writable({
+    write(chunk, encoding, callback) {
+      void encoding;
+      hash.update(chunk);
+      callback();
+    },
+  });
+  await pipeline(createReadStream(file), createGunzip(), sink);
+  return hash.digest("hex");
+}
+
+async function writeHarnessTrace(rows, outputPath) {
+  await pipeline(
+    Readable.from(jsonLines(rows), { objectMode: false }),
+    createGzip({ level: 9, mtime: 0 }),
+    createWriteStream(outputPath),
+  );
+  const descriptor = openSync(outputPath, "r+");
+  try {
+    writeSync(descriptor, Buffer.from([255]), 0, 1, 9);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function tamperCalibrationManifest(manifest, mutate) {
+  const originalReceipt = manifest.calibration_coverage_receipt;
+  const families = [...originalReceipt.families];
+  const draws = [...families[0].draws];
+  draws[0] = { ...draws[0] };
+  families[0] = { ...families[0], draws };
+  const receipt = { ...originalReceipt, families };
+  mutate({ receipt, family: families[0], draw: draws[0] });
+  const { receipt_sha256: ignored, ...body } = receipt;
+  void ignored;
+  receipt.receipt_sha256 = canonicalDigest(
+    "r56-calibration-coverage-receipt", body);
+  return { ...manifest, calibration_coverage_receipt: receipt };
+}
+
+function expectFailure(action, pattern) {
+  assert.throws(action, pattern);
+}
+
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, { encoding: "utf8", ...options });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return result;
+}
+
+function runSanitizers() {
+  const directory = mkdtempSync(path.join(tmpdir(), "reasoner56-sanitize-"));
+  try {
+    const binary = path.join(directory, "reasoner56-sanitize");
+    run(process.env.CC || "cc", [
+      "-O1", "-g", "-std=c11", "-Wall", "-Wextra", "-Wpedantic",
+      "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+      "reasoner56.c", "reasoner56_cli.c", "-lm", "-o", binary,
+    ]);
+    run(binary, ["--self-test"], {
+      env: { ...process.env, ASAN_OPTIONS: "detect_leaks=0:halt_on_error=1",
+        UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1" },
+    });
+    run(binary, ["develop", path.join(directory, "result.json"),
+      path.join(directory, "trace.jsonl"), path.join(directory, "artifact.bin")], {
+      env: { ...process.env, ASAN_OPTIONS: "detect_leaks=0:halt_on_error=1",
+        UBSAN_OPTIONS: "halt_on_error=1:print_stacktrace=1" },
+    });
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+if (sanitizersOnly) {
+  runSanitizers();
+  console.log("Reasoner 5.6 sanitizer checks passed");
+  process.exit(0);
+}
+
+const contract = JSON.parse(readFileSync(contractPath, "utf8"));
+assert.equal(contract.schema,
+  "zero.reasoner56_passive_noise_development_contract.v7");
+assert.equal(contract.status, "development-only");
+assert.equal(contract.execution.authorized, false);
+assert.equal(contract.execution.sealed_seeds_present, false);
+assert.equal(contract.execution.scientific_executions, 0);
+assert.equal(contract.domain.syntax_programs, 512);
+assert.equal(contract.domain.semantic_classes, 427);
+assert.equal(contract.channel.sensors, 3);
+assert.equal(contract.channel.minimum_leaf_support, 32);
+assert.deepEqual(contract.calibration.temperature_grid,
+  [0.25, 0.5, 1, 2, 4, 8]);
+assert.equal(contract.calibration.candidate_set_coverage, 0.99);
+assert.equal(contract.calibration.fit_program_families, 16);
+assert.equal(contract.calibration.coverage_program_families, 99);
+assert.equal(contract.calibration.draws_per_program_family, 8);
+assert.equal(contract.calibration.log_loss_evaluation.score_domain_rule,
+  "logsumexp(score_q20/Q20)-truth_score_q20/Q20");
+assert.equal(contract.calibration.log_loss_evaluation.stable_tail_rule,
+  "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)");
+assert.equal(contract.calibration.log_loss_evaluation.probability_field_role,
+  "diagnostic only");
+assert.equal(contract.generators.development_program_families, 8);
+assert.equal(contract.generators.development_corruption_families, 8);
+assert.equal(contract.generators.nested_repeats, 2);
+assert.equal(contract.analysis.log_loss_comparison_input,
+  "stable score-domain normalized_log_loss; truth_probability is diagnostic only");
+assert.equal(contract.analysis.full_log_loss_replay_episodes, 128);
+assert.equal(contract.native_diagnostic_serialization
+  .significant_decimal_digits, 14);
+assert.equal(contract.native_diagnostic_serialization.final_boundary,
+  "retain the first 14 significant decimal digits without rounding");
+assert.equal(contract.native_diagnostic_serialization
+  .authoritative_log_loss_evidence,
+"stable signed-Q20 score-space replay");
+assert.equal(contract.arms.length, 45);
+assert.equal(contract.shared_harness.commit,
+  "a46382178fea84200a331c3ba0a0a22109b00747");
+assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
+  contract.shared_harness.library_sha256,
+"shared harness hash differs from the R5.6 contract");
+assert.equal(contract.shared_harness.scientific_number_encoding,
+  "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero");
+assert.equal(contract.shared_harness.scientific_relative_tolerance, 1e-13);
+assert.equal(contract.shared_harness.reference_math_algorithm,
+  "pure-js-binary64-fixed-order-v1");
+assert.deepEqual(contract.shared_harness.reference_math_functions,
+  ["log", "exp", "sqrt"]);
+assert.equal(contract.shared_harness
+  .reference_math_relative_or_near_zero_absolute_tolerance, 2e-14);
+assert.equal(contract.shared_harness.proposal_record_binding, true);
+assert.equal(contract.shared_harness.proposal_work_charge_floor, true);
+assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");
+assert.equal(contract.shared_harness.confidence_interval_method,
+  "ordinary-percentile-bootstrap");
+assert.equal(contract.shared_harness.p_value_method,
+  "recentered-null-bootstrap");
+
+for (const [file, expected] of Object.entries(contract.protected_sources))
+  assert.equal(sha256(readFileSync(file)), expected,
+    `${file} changed while Reasoner 5.6 was built`);
+if (!updateFixtures) {
+  for (const [file, expected] of Object.entries(contract.implementation.files))
+    assert.equal(sha256(readFileSync(file)), expected,
+      `${file} hash differs from the development contract`);
+}
+
+run(nativeBinary, ["--self-test"]);
+
+function runDevelopment(directory) {
+  const resultPath = path.join(directory, "result.json");
+  const tracePath = path.join(directory, "raw-trace.jsonl");
+  const artifactPath = path.join(directory, "artifact.bin");
+  run(nativeBinary, ["develop", resultPath, tracePath, artifactPath]);
+  return { resultPath, tracePath, artifactPath };
+}
+
+const firstDirectory = mkdtempSync(path.join(tmpdir(), "reasoner56-a-"));
+const secondDirectory = mkdtempSync(path.join(tmpdir(), "reasoner56-b-"));
+try {
+  const first = runDevelopment(firstDirectory);
+  const second = runDevelopment(secondDirectory);
+  assert.equal(sha256File(first.resultPath), sha256File(second.resultPath),
+    "development result must be byte deterministic");
+  assert.equal(sha256File(first.tracePath), sha256File(second.tracePath),
+    "development trace must be byte deterministic");
+  assert.equal(sha256File(first.artifactPath), sha256File(second.artifactPath),
+    "development artifact must be byte deterministic");
+
+  const firstResult = readFileSync(first.resultPath);
+  const firstTrace = readFileSync(first.tracePath);
+  const firstArtifact = readFileSync(first.artifactPath);
+  const nativeResult = JSON.parse(firstResult.toString("utf8"));
+  const nativeRows = firstTrace.toString("utf8").trim().split("\n")
+    .map(JSON.parse);
+  assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v4");
+  assert.equal(nativeResult.status, "development-only");
+  assert.equal(nativeResult.scientific_decision, null);
+  assert.equal(nativeResult.sealed_execution_authorized, false);
+  assert.equal(nativeResult.episodes, 128);
+  assert.equal(nativeResult.trace_rows, 5760);
+  assert.equal(nativeResult.exact_rows, 5760);
+  assert.equal(nativeResult.normalized_rows, 5760);
+  assert.equal(nativeResult.source_ablation_matches, 128);
+  assert.equal(nativeResult.invalid_first_rejections, 5760);
+  assert.equal(nativeResult.artifact_roundtrip_valid, true);
+  assert.equal(nativeResult.hidden_field_rejections, 2);
+  assert.equal(nativeResult.calibration_fit_episodes, 16);
+  assert.equal(nativeResult.calibration_coverage_episodes, 99);
+  assert.equal(nativeResult.calibration_fit_families, 16);
+  assert.equal(nativeResult.calibration_coverage_families, 99);
+  assert.equal(nativeResult.calibration_coverage_records.length, 99);
+  assert.ok(nativeResult.calibration_coverage_records.every((record, index) =>
+    record.family_index === index && record.draws === 8 &&
+    record.all_draws_covered === true &&
+    Number.isInteger(record.worst_truth_cumulative_mass_q20) &&
+    record.worst_truth_cumulative_mass_q20 >= 1 &&
+    record.worst_truth_cumulative_mass_q20 <= 1048576));
+  assert.equal(nativeResult.proxy_audit_passed, true);
+  assert.equal(nativeResult.taint_audit_passed, true);
+  assert.equal(nativeResult.conformal_mass_q20, 1048576);
+  assert.equal(nativeResult.candidate_set_total_size, 128 * 427);
+  assert.equal(nativeResult.candidate_set_truth_covered, 128);
+  assert.ok(nativeResult.target_only_median_cost >= 16);
+  assert.equal(nativeRows.length, 5760);
+  assert.ok(nativeRows.every(row =>
+    row.schema === "zero.reasoner56_native_trace.v3"));
+  assert.equal(new Set(nativeRows.map(row => row.episode_id)).size, 128);
+  assert.equal(new Set(nativeRows.map(row => row.arm)).size, 45);
+  assert.ok(nativeRows.every(row => row.exact && row.certificate_valid &&
+    row.injected_invalid_rejected && !row.global_cap_hit &&
+    Math.abs(row.probability_sum - 1) <= 1e-12));
+  assert.ok(nativeRows.every(row => row.candidate_set_size === 427 &&
+    row.candidate_set_contains_truth));
+  assert.ok(nativeRows.every(row => row.primary_cost === row.verifier_checks &&
+    row.verifier_checks === row.proposal_verifier_checks +
+      row.fallback_verifier_checks &&
+    row.partial_expansions >= row.verifier_checks &&
+      row.observation_queries === 18 && row.observations_consumed === 18));
+  assert.ok(Number.isFinite(nativeResult.full_mean_normalized_log_loss) &&
+    nativeResult.full_mean_normalized_log_loss > 0);
+  assert.ok(nativeRows.some(row => row.arm === "full" &&
+    row.truth_probability === 1 && row.normalized_log_loss > 0),
+  "score-space loss must preserve competing mass after probability rounds to one");
+
+  const splits = selectSemanticSplits();
+  const splitClasses = [splits.source, splits.fit, splits.coverage,
+    splits.development, splits.sealed].flat();
+  assert.equal(new Set(splitClasses).size, splitClasses.length,
+    "semantic classes must stay disjoint across every registered lane");
+  const byEpisodeArm = new Map(nativeRows.map(row =>
+    [`${row.episode_id}:${row.arm}`, row]));
+  for (const episodeId of new Set(nativeRows.map(row => row.episode_id))) {
+    const sourceFree = structuredClone(byEpisodeArm.get(
+      `${episodeId}:source_free`));
+    const sourceAblation = structuredClone(byEpisodeArm.get(
+      `${episodeId}:source_ablation`));
+    delete sourceFree.arm;
+    delete sourceAblation.arm;
+    assert.deepEqual(sourceAblation, sourceFree,
+      `source-free aliases diverged for ${episodeId}`);
+  }
+
+  const bundle = buildR56HarnessBundle({ nativeRows, nativeResult,
+    artifactBytes: firstArtifact });
+  assert.equal(bundle.rawRows.length, 5760);
+  assert.equal(bundle.coverage.rows, 5760);
+  assert.equal(bundle.replayReceipt.episodes, 128);
+  assert.equal(bundle.calibrationReplayReceipt.families, 99);
+  assert.equal(bundle.calibrationReplayReceipt.episodes, 792);
+  assert.equal(bundle.calibrationReplayReceipt.covered, 99);
+  assert.equal(bundle.manifest.calibration_coverage_receipt.candidate_set_rule,
+    "exact-full-universe-at-threshold-one");
+  assert.ok(bundle.manifest.calibration_coverage_receipt.families.every(
+    family => family.all_draws_covered && family.draws.every(draw =>
+      draw.candidate_set_size === 427 &&
+      draw.candidate_set_contains_truth)));
+  assert.equal(bundle.result.status, "development-only");
+  assert.equal(bundle.result.scientific_decision, null);
+  assert.equal(bundle.result.exactness.all_final_answers_exact, true);
+  const inferences = [
+    bundle.result.registered_analysis.primary,
+    ...bundle.result.registered_analysis.strata.map(item => item.inference),
+    ...bundle.result.registered_analysis.mechanisms.map(item => item.inference),
+  ];
+  assert.ok(inferences.every(inference =>
+    inference.interval.schema.endsWith("_bootstrap.v2") &&
+    inference.interval.confidence_interval_method ===
+      "ordinary-percentile-bootstrap" &&
+    inference.interval.p_value_method === "recentered-null-bootstrap" &&
+    /^[0-9a-f]{64}$/u.test(inference.interval.null_bootstrap_sha256)));
+  assert.equal(bundle.result.registered_analysis.primary.interval
+    .null_bootstrap_sha256,
+  contract.shared_harness.primary_null_bootstrap_sha256);
+  assert.equal(bundle.audit.passed, true);
+  assert.equal(bundle.audit.accuracy_delta, 0);
+  assert.ok(bundle.audit.severity.accuracy_delta <= 0.02);
+  assert.ok(bundle.audit.maximum_severity_fraction_per_nonopaque_cell < 1);
+  assert.equal(bundle.readiness.scope, "development-only");
+  assert.equal(bundle.readiness.schema,
+    "zero.reasoner56_channel_readiness_development.v2");
+  assert.equal(bundle.readiness.status, "development-no-go");
+  assert.deepEqual(bundle.readiness.failures,
+    contract.development_expected_readiness_failures);
+  assert.equal(bundle.readiness.metrics.candidate_set.full_mean_size, 427);
+  assert.equal(bundle.readiness.metrics.candidate_set
+    .program_prior_only_mean_size, 427);
+  assert.equal(bundle.readiness.metrics.candidate_set.size_ratio, 1);
+  assert.ok(bundle.readiness.metrics.full_mean_log_loss > 0);
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.method,
+    "stable-q20-score-logsumexp-minus-truth-score");
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.tail_rule,
+    "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)");
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.episodes, 128);
+  assert.equal(bundle.readiness.metrics.full_log_loss_replay.replay_sha256,
+    contract.analysis.full_log_loss_replay_sha256);
+  assert.ok(bundle.readiness.metrics.full_log_loss_replay
+    .maximum_relative_error <= 1e-12);
+  assert.equal(bundle.readiness.metrics.candidate_set.coverage_families, 99);
+  assert.equal(bundle.readiness.metrics.candidate_set.covered_families, 99);
+  assert.ok(bundle.readiness.metrics.candidate_set
+    .one_sided_95_wilson_lower >= 0.97);
+  assert.equal(bundle.readiness.metrics.interface_and_proxy_audits
+    .sealed.status, "pending-preregistration");
+  assert.deepEqual(bundle.assessment.harness_gate.failures,
+    contract.development_expected_gate_failures);
+
+  const generated = {
+    result: { path: first.resultPath },
+    trace: { path: first.tracePath },
+    artifact: { path: first.artifactPath },
+    manifest: { bytes: Buffer.from(stableJson(bundle.manifest)) },
+    harness_trace: { rows: bundle.rawRows },
+    harness_result: { bytes: Buffer.from(stableJson(bundle.result)) },
+    audit: { bytes: Buffer.from(stableJson(bundle.audit)) },
+    assessment: { bytes: Buffer.from(stableJson(bundle.assessment)) },
+  };
+
+  if (updateFixtures) {
+    for (const [name, value] of Object.entries(generated)) {
+      const output = contract.development_outputs[name];
+      assert.ok(output, `contract needs a development output for ${name}`);
+      if (value.rows) {
+        const harnessTracePath = path.join(firstDirectory,
+          "harness-trace.jsonl.gz");
+        await writeHarnessTrace(value.rows, harnessTracePath);
+        copyFileSync(harnessTracePath, output.path);
+      } else if (value.path) copyFileSync(value.path, output.path);
+      else writeFileSync(output.path, value.bytes);
+    }
+  } else {
+    for (const [name, value] of Object.entries(generated)) {
+      const output = contract.development_outputs[name];
+      if (value.rows) {
+        assert.equal(sha256JsonLines(value.rows), output.content_sha256,
+          `${name} content differs from the development contract`);
+        assert.equal(await sha256GzipContent(output.path),
+          output.content_sha256,
+          `${name} fixture content differs from the development contract`);
+        assert.equal(sha256File(output.path), output.sha256,
+          `${name} digest differs from the development contract`);
+        continue;
+      }
+      const generatedDigest = value.path ? sha256File(value.path) :
+        sha256(value.bytes);
+      const committedDigest = sha256File(output.path);
+      assert.equal(generatedDigest, committedDigest,
+        `${name} differs from the committed development fixture`);
+      assert.equal(committedDigest, output.sha256,
+        `${name} digest differs from the development contract`);
+    }
+  }
+
+  const badManifest = { ...bundle.manifest,
+    source_artifact: { ...bundle.manifest.source_artifact,
+      sha256: "0".repeat(64) } };
+  expectFailure(() => assertManifestDigest(badManifest), /SHA-256|digest/u);
+
+  const badCalibrationManifest = tamperCalibrationManifest(bundle.manifest,
+    ({ draw }) => { draw.content_sha256 = "0".repeat(64); });
+  expectFailure(() => assertR56CalibrationCoverageReplay(
+    badCalibrationManifest, firstArtifact), /content digest changed/u);
+
+  const forgedCoverageManifest = tamperCalibrationManifest(bundle.manifest,
+    ({ family }) => { family.all_draws_covered = false; });
+  expectFailure(() => assertR56CalibrationCoverageReplay(
+    forgedCoverageManifest, firstArtifact), /family coverage changed/u);
+
+  const forgedNativeResult = { ...nativeResult,
+    calibration_coverage_records: nativeResult.calibration_coverage_records
+      .map((record, index) => index === 0 ?
+        { ...record, all_draws_covered: false } : record) };
+  expectFailure(() => buildR56HarnessBundle({ nativeRows,
+    nativeResult: forgedNativeResult, artifactBytes: firstArtifact }),
+  /native calibration coverage differs from independent replay/u);
+
+  const forgedDrawManifest = tamperCalibrationManifest(bundle.manifest,
+    ({ draw }) => { draw.candidate_set_size = 1; });
+  expectFailure(() => assertR56CalibrationCoverageReplay(
+    forgedDrawManifest, firstArtifact), /coverage outcome changed/u);
+
+  const changedArtifact = Buffer.from(firstArtifact);
+  changedArtifact[128] ^= 1;
+  expectFailure(() => assertR56CalibrationCoverageReplay(bundle.manifest,
+    changedArtifact), /artifact SHA-256 changed/u);
+
+  const taintedRows = [...bundle.rawRows];
+  const sourceIndex = taintedRows.findIndex(row => row.arm === "source_free");
+  taintedRows[sourceIndex] = { ...taintedRows[sourceIndex],
+    source_artifact_reads: 1 };
+  expectFailure(() => assertRawTraceCoverage({ manifest: bundle.manifest,
+    rawTraces: taintedRows }), /read the source artifact/u);
+  const taintedAudit = auditR56ProxyTaint(bundle.manifest, taintedRows,
+    nativeResult);
+  assert.equal(taintedAudit.passed, false);
+
+  const leakingManifest = { ...bundle.manifest,
+    episodes: bundle.manifest.episodes.map(episode => {
+      const orderSlot = episode.content.evaluator.episode_spec.order_slot;
+      return { ...episode, cross_family_id: `mechanism-${orderSlot}` };
+    }) };
+  const leakingAudit = auditR56ProxyTaint(leakingManifest, bundle.rawRows,
+    nativeResult);
+  assert.equal(leakingAudit.passed, false);
+  assert.equal(leakingAudit.maximum_template_fraction_per_nonopaque_cell, 1);
+
+  const severityLeakingManifest = { ...bundle.manifest,
+    episodes: bundle.manifest.episodes.map(episode => {
+      const episodeSpec = episode.content.evaluator.episode_spec;
+      const orderSlot = episodeSpec.order_slot;
+      return { ...episode, content: { ...episode.content,
+        evaluator: { ...episode.content.evaluator,
+          episode_spec: { ...episodeSpec,
+            corruption_family: { ...episodeSpec.corruption_family,
+              severity: 1 + orderSlot % 4 } } } } };
+    }) };
+  const severityLeakingAudit = auditR56ProxyTaint(severityLeakingManifest,
+    bundle.rawRows, nativeResult);
+  assert.equal(severityLeakingAudit.passed, false);
+  assert.equal(severityLeakingAudit
+    .maximum_severity_fraction_per_nonopaque_cell, 1);
+
+  const changedResult = { ...bundle.result, result_sha256: "0".repeat(64) };
+  expectFailure(() => assertResultReplay({
+    experiment: R56_EXPERIMENT,
+    manifest: bundle.manifest,
+    rawTraces: bundle.rawRows,
+    reconstruct: reconstructR56Result,
+    analysisSettings: R56_ANALYSIS_SETTINGS,
+    result: changedResult,
+  }), /does not reproduce/u);
+
+  const changedReadiness = assessR56ChannelReadiness(nativeRows, {
+    ...bundle.audit, passed: false,
+  }, bundle.manifest, firstArtifact);
+  assert.equal(changedReadiness.status, "development-no-go");
+  assert.deepEqual(changedReadiness.failures,
+    contract.development_expected_readiness_failures);
+  assert.equal(changedReadiness.metrics.interface_and_proxy_audits
+    .development.status, "failed");
+
+  assert.equal(firstArtifact.subarray(0, 8).toString("ascii"), "R56ART1\0");
+  assert.equal(firstArtifact.readUInt32LE(8), 1);
+  assert.equal(firstArtifact.readUInt32LE(12), 17);
+  assert.equal(firstArtifact.readUInt32LE(16), 8);
+  assert.equal(firstArtifact.readUInt32LE(20), 3);
+  assert.equal(firstArtifact.readUInt32LE(24), 512);
+  assert.equal(firstArtifact.readUInt32LE(28), 427);
+  assert.equal(firstArtifact.readUInt32LE(32), 3);
+  assert.equal(firstArtifact.readUInt32LE(40), 32);
+  assert.equal(firstArtifact.length, contract.artifact.serialized_bytes);
+} finally {
+  rmSync(firstDirectory, { recursive: true, force: true });
+  rmSync(secondDirectory, { recursive: true, force: true });
+}
+
+const unauthorized = spawnSync(nativeBinary, ["execute"], {
+  encoding: "utf8",
+  env: { ...process.env, REASONER56_APPROVAL: "forged" },
+});
+assert.equal(unauthorized.status, 3);
+assert.match(unauthorized.stderr, /not authorized/u);
+
+runSanitizers();
+console.log(updateFixtures ?
+  "Reasoner 5.6 development fixtures updated" :
+  "Reasoner 5.6 development checks passed");

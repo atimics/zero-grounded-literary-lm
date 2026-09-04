@@ -1,0 +1,221 @@
+{
+  "schema": "zero.reasoner58_development_contract.v1",
+  "experiment": "reasoner58-compositional-behavior-transfer-v1",
+  "status": "development-only",
+  "purpose": "qualify nonlinear compositional behavior transfer before preregistration",
+  "base_design": {
+    "plan": {
+      "path": "benchmarks/reasoner5-next-set-v1/PLAN.json",
+      "sha256": "2e1b2ad724e44f6dd8aa87b21dc3ac80d46a4ad4a490c3bfe5506ad110973c7f"
+    },
+    "document": {
+      "path": "docs/REASONER5-NEXT.md",
+      "sha256": "ae07ad514d42058a506ef93dfa6cb1e11c6e636a09a2a84e0d12d463e4d84748"
+    },
+    "shared_harness_commit": "a46382178fea84200a331c3ba0a0a22109b00747"
+  },
+  "execution": {
+    "authorized": false,
+    "allowed_lane": "development",
+    "sealed_seeds_present": false,
+    "sealed_manifest": null,
+    "cloud_run": null,
+    "scientific_executions": 0
+  },
+  "implementation": {
+    "files": {
+      "core": {
+        "path": "reasoner58.c",
+        "sha256": "849c33a7fc2a116721611b145722fcaee6ad54757680e705d4bb487128eb66a7"
+      },
+      "header": {
+        "path": "reasoner58.h",
+        "sha256": "a8c1658a1a74c48ae2e6f392994917aaf231995081a4c59471ab44373a7a57b5"
+      },
+      "cli": {
+        "path": "reasoner58_cli.c",
+        "sha256": "594c45edd5baaccdce6ceed0d7b4f8d7588f80af7af8676027096c5da4211906"
+      },
+      "replay": {
+        "path": "scripts/lib/reasoner58_replay.mjs",
+        "sha256": "aa55891c26c3ec37e647f6a89a6e343e841b0f7f849e320d712305fcc423b577"
+      },
+      "runner": {
+        "path": "scripts/run_reasoner58_development.mjs",
+        "sha256": "59fe5f29bcb41efde9af905666135548d1f65a3d0d6c601c470570593863fa39"
+      },
+      "development_check": {
+        "path": "scripts/check_reasoner58_development.mjs",
+        "sha256": "077a4c1598f954519aea94270f020271fd2942b769cd24b7c210910d61e0e449"
+      },
+      "contract_check": {
+        "path": "scripts/check_reasoner58_contract.mjs",
+        "sha256": "88ba47e66db9338e2b238fc8378dde18ca6b67c8906b6587c8a30ac8e73f3928"
+      },
+      "shared_harness": {
+        "path": "scripts/lib/reasoner5_harness.mjs",
+        "sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883"
+      },
+      "development_document": {
+        "path": "docs/REASONER58-DEVELOPMENT.md",
+        "sha256": "9d647954e13aa1323af909b1bf61c94cd1f97ede3771ff8e9d3b18c699f98511"
+      }
+    },
+    "protected_predecessors": {
+      "reasoner51": {
+        "path": "reasoner51.c",
+        "sha256": "78ac34fc121a1825cd4ff5d1c0f37fe60bca853d17a38ddc80c1aa68a0df2c50"
+      },
+      "reasoner52": {
+        "path": "reasoner52.c",
+        "sha256": "83c0ce4221d8f8b2b1d908757378475853a4035247007e923a638fb49bef9943"
+      },
+      "reasoner5_followup": {
+        "path": "reasoner5_followup.c",
+        "sha256": "0ce6f99b3bc7547bf3947cc0dbfafee408780685ad8de213620b59eb3b27d214"
+      }
+    }
+  },
+  "domain": {
+    "field": "GF(17)",
+    "type": "unary GF(17) to GF(17)",
+    "operations": 8,
+    "source_max_depth": 2,
+    "target_max_depth": 3,
+    "syntax_programs": 585,
+    "semantic_classes": 428,
+    "semantic_collisions": 157,
+    "semantic_identity": "complete 17-value truth table"
+  },
+  "generators": [
+    "syntax-first",
+    "behavior-skeleton"
+  ],
+  "generator_design": {
+    "program_generators": [
+      {
+        "id": "syntax-first",
+        "rule": "syntax-first canonical enumeration"
+      },
+      {
+        "id": "behavior-skeleton",
+        "rule": "behavior signature skeleton then shortest syntax"
+      }
+    ],
+    "input_generators": [
+      {
+        "id": "seeded-distinct",
+        "public_values": 2,
+        "rule": "two seeded distinct GF(17) values"
+      },
+      {
+        "id": "fixed-zero-one",
+        "public_values": 2,
+        "rule": "fixed GF(17) anchors zero and one"
+      }
+    ],
+    "program_and_input_generators_varied_independently": true,
+    "fixed_program_generator_environments": 2,
+    "input_generators_per_program_family": 2,
+    "program_families_per_shift_per_environment": 2,
+    "independent_program_families_per_shift": 4,
+    "source_program_input_stratum_combinations": 16,
+    "source_families_per_combination": 4
+  },
+  "shift_strata": [
+    "known-operation-new-composition",
+    "changed-semantic-class-order",
+    "new-cross-class-composition",
+    "longer-tree-deeper-partial-chain"
+  ],
+  "controls": [
+    "target_only",
+    "source_free_jit",
+    "source_ablation",
+    "transition_only",
+    "raw_token",
+    "behavior_off",
+    "shuffled_behavior",
+    "token_permuted",
+    "source_only",
+    "oracle_truth_rank"
+  ],
+  "derangements": 31,
+  "artifact_format": {
+    "magic": "R58A0001",
+    "byte_order": "little-endian",
+    "score_format": "signed Q20",
+    "accumulator": "signed int64",
+    "checksum": "SHA-256 over every preceding artifact byte"
+  },
+  "search": {
+    "enumerator": "parent-gated bottom-up priority queue",
+    "development_proposals": "complete 428-class semantic order",
+    "fallback": "digest-bound canonical order after proposal exhaustion",
+    "censoring_charge": "cap plus one for every unsolved search",
+    "token_control": "registered public surface bijection with semantic order preserved"
+  },
+  "artifacts": {
+    "source": {
+      "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/SOURCE_ARTIFACT.hex",
+      "canonical_bytes": 2608,
+      "content_sha256": "090f07100c33eee75f9d50bcb0aee9aeba6fc055758ceab229a564b6a245ce57"
+    },
+    "files": {
+      "core": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/CORE-DEVELOPMENT.json",
+        "file_sha256": "976f73bc20440658cf0ce016ae2cbe0e5d4ca1f9a239b30c19605e1bfcb96b79"
+      },
+      "source": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/SOURCE_ARTIFACT.hex",
+        "file_sha256": "f0c3ce9a8009f028fa50ef5e583d9856a7ceec2d8162b935680c537ed21495af"
+      },
+      "manifest": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/MANIFEST.json",
+        "file_sha256": "cc12319e898f21293064e43ec840102158d9b3d7267654dda6eb177af70d8576"
+      },
+      "raw_trace": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/DEVELOPMENT-TRACE.jsonl",
+        "file_sha256": "c41c97ef470a3377fd089cc4bf98278eaee4aea25dd2ed4a5e86129758c93906"
+      },
+      "result": {
+        "path": "benchmarks/reasoner58-compositional-behavior-transfer-v1/DEVELOPMENT.json",
+        "file_sha256": "3354d27f260d7c9ba461c86583dcda1a8cb51e164f072ec72ceb73a2e71f2e89"
+      }
+    }
+  },
+  "measurements": {
+    "source_tasks": 64,
+    "source_artifact_sha256": "090f07100c33eee75f9d50bcb0aee9aeba6fc055758ceab229a564b6a245ce57",
+    "source_count_receipt_sha256": "b0227745fc3ac7a634593b69807507acf002466ef8e56751bdbebef989193b88",
+    "calibration_families": 16,
+    "calibration_episodes": 32,
+    "development_families": 16,
+    "development_episodes": 32,
+    "sealed_family_slots": 16,
+    "independent_program_families": 16,
+    "fixed_program_generator_environments": 2,
+    "nested_input_generator_episodes_per_family": 2,
+    "public_values_per_input_generator": 2,
+    "raw_rows": 1344,
+    "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
+    "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
+    "result_sha256": "efaf78bc71bf4026dd3db08bb461c2bb48f221589c22cd18b806a0132710b60a",
+    "primary_null_bootstrap_sha256": "0bfebc2767f742d61c96862db0ad02407c1a60ea41408ef8da9432dd8d86b07f",
+    "behavior_mechanism_null_bootstrap_sha256": "316ded0568fd16acf686116f2df2494cf88c1300c65c0b4dba0443075e75c6ca",
+    "behavior_mechanism_p_value": 0.10894552723638,
+    "decision": "measurement-floor",
+    "source_free_median_primary_cost": 6,
+    "registered_headroom_minimum": 16,
+    "full_to_source_free_geometric_ratio": 1.1040313985489,
+    "full_to_source_free_interval_99": [
+      0.91479589464313,
+      1.3079624321642
+    ],
+    "wins": 7,
+    "ties": 1,
+    "losses": 8,
+    "scientific_claim": "withheld"
+  },
+  "next_boundary": "Reasoner 6.0 stays closed until a later Reasoner 5.8 design passes its sealed gate"
+}

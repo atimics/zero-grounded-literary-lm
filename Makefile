@@ -2941,6 +2941,106 @@ clean: clean-reasoner5-followups
 clean-reasoner5-followups:
 	rm -f reasoner53 reasoner54
 
+.PHONY: reasoner58-check reasoner58-sanitize-check reasoner58-development \
+	reasoner58-development-check reasoner58-contract-check clean-reasoner58
+
+reasoner58: reasoner58.c reasoner58.h reasoner58_cli.c
+	$(CC) $(CFLAGS) reasoner58.c reasoner58_cli.c -o $@
+
+reasoner58-check: reasoner58
+	./reasoner58 --self-test
+	@if ./reasoner58 execute >/dev/null 2>&1; then \
+		echo "Reasoner 5.8 scientific execution unexpectedly opened"; exit 1; \
+	fi
+
+reasoner58-sanitize-check:
+	$(CC) -O1 -g -std=c11 -Wall -Wextra -Wpedantic \
+		-fsanitize=address,undefined -fno-omit-frame-pointer \
+		reasoner58.c reasoner58_cli.c -o /tmp/reasoner58-sanitize
+	/tmp/reasoner58-sanitize --self-test
+
+reasoner58-development: reasoner58
+	node scripts/run_reasoner58_development.mjs --write
+
+reasoner58-development-check: reasoner58
+	node scripts/check_reasoner58_development.mjs
+
+reasoner58-contract-check:
+	node scripts/check_reasoner58_contract.mjs
+
+all: reasoner58
+check: reasoner58-check reasoner58-development-check reasoner58-contract-check
+clean: clean-reasoner58
+clean-reasoner58:
+	rm -f reasoner58
+
+.PHONY: reasoner56 reasoner56-check reasoner56-sanitize-check reasoner56-contract-check clean-reasoner56
+all: reasoner56
+
+reasoner56: reasoner56.c reasoner56.h reasoner56_cli.c
+	$(CC) $(CFLAGS) reasoner56.c reasoner56_cli.c -lm -o $@
+
+reasoner56-check: reasoner56
+	node scripts/check_reasoner56_development.mjs
+
+reasoner56-sanitize-check:
+	node scripts/check_reasoner56_development.mjs --sanitizers-only
+
+reasoner56-contract-check: reasoner56-check
+
+check: reasoner56-check
+clean: clean-reasoner56
+
+clean-reasoner56:
+	rm -f reasoner56
+
+REASONER55_FIXTURE := benchmarks/reasoner55-generated-primitive-transfer-v1
+
+.PHONY: reasoner55-check reasoner55-development-check \
+	reasoner55-development-fixture reasoner55-development-analysis-fixture \
+	clean-reasoner55
+
+all: reasoner55
+
+reasoner55: reasoner55.c reasoner55.h reasoner55_cli.c
+	$(CC) $(CFLAGS) reasoner55.c reasoner55_cli.c -o $@
+
+reasoner55-development-fixture: reasoner55
+	mkdir -p $(REASONER55_FIXTURE)
+	./reasoner55 development \
+		$(REASONER55_FIXTURE)/DEVELOPMENT.json \
+		$(REASONER55_FIXTURE)/DEVELOPMENT-TRACE.jsonl \
+		$(REASONER55_FIXTURE)/SOURCE_ARTIFACT.hex
+
+reasoner55-development-analysis-fixture: reasoner55-development-fixture
+	node scripts/check_reasoner55_development.mjs --write-analysis
+
+reasoner55-development-check:
+	node scripts/check_reasoner55_development.mjs
+
+reasoner55-check: reasoner55 reasoner55-development-check
+	./reasoner55 --self-test
+	@status=0; ./reasoner55 execute >/tmp/reasoner55-authorization-check.txt \
+		2>&1 || status=$$?; test $$status -eq 3
+	./reasoner55 development /tmp/reasoner55-development.json \
+		/tmp/reasoner55-development-trace.jsonl \
+		/tmp/reasoner55-source-artifact.hex
+	node scripts/check_reasoner55_development.mjs \
+		/tmp/reasoner55-development.json \
+		/tmp/reasoner55-development-trace.jsonl \
+		/tmp/reasoner55-source-artifact.hex
+	cmp $(REASONER55_FIXTURE)/DEVELOPMENT.json \
+		/tmp/reasoner55-development.json
+	cmp $(REASONER55_FIXTURE)/DEVELOPMENT-TRACE.jsonl \
+		/tmp/reasoner55-development-trace.jsonl
+	cmp $(REASONER55_FIXTURE)/SOURCE_ARTIFACT.hex \
+		/tmp/reasoner55-source-artifact.hex
+
+check: reasoner55-check
+clean: clean-reasoner55
+clean-reasoner55:
+	rm -f reasoner55
+
 .PHONY: reasoner5-harness-check reasoner5-harness-contract-check
 reasoner5-harness-check:
 	node scripts/check_reasoner5_harness.mjs

@@ -1,0 +1,1713 @@
+{
+  "status": "development-only",
+  "execution_authorized": false,
+  "scientific_claim": "withheld pending a separately authorized sealed run",
+  "development_measurements": {
+    "episodes": 32,
+    "rows": 1344,
+    "arms": [
+      {
+        "arm": "full",
+        "episodes": 32,
+        "primary_cost_total": 222,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 254,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "target_only",
+        "episodes": 32,
+        "primary_cost_total": 7640,
+        "primary_cost_median": 221,
+        "verifier_checks_total": 7672,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 0
+      },
+      {
+        "arm": "source_free_jit",
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 0
+      },
+      {
+        "arm": "source_ablation",
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 0
+      },
+      {
+        "arm": "transition_only",
+        "episodes": 32,
+        "primary_cost_total": 237,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 269,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "raw_token",
+        "episodes": 32,
+        "primary_cost_total": 218,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 250,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "behavior_off",
+        "episodes": 32,
+        "primary_cost_total": 247,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 279,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_behavior",
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "token_permuted",
+        "episodes": 32,
+        "primary_cost_total": 222,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 254,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "source_only",
+        "episodes": 32,
+        "primary_cost_total": 8352,
+        "primary_cost_median": 265,
+        "verifier_checks_total": 8384,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "oracle_truth_rank",
+        "episodes": 32,
+        "primary_cost_total": 96,
+        "primary_cost_median": 3,
+        "verifier_checks_total": 128,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 0
+      },
+      {
+        "arm": "shuffled_00",
+        "episodes": 32,
+        "primary_cost_total": 202,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 234,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_01",
+        "episodes": 32,
+        "primary_cost_total": 215,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 247,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_02",
+        "episodes": 32,
+        "primary_cost_total": 239,
+        "primary_cost_median": 7.5,
+        "verifier_checks_total": 271,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_03",
+        "episodes": 32,
+        "primary_cost_total": 213,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 245,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_04",
+        "episodes": 32,
+        "primary_cost_total": 193,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 225,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_05",
+        "episodes": 32,
+        "primary_cost_total": 235,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 267,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_06",
+        "episodes": 32,
+        "primary_cost_total": 221,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 253,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_07",
+        "episodes": 32,
+        "primary_cost_total": 208,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 240,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_08",
+        "episodes": 32,
+        "primary_cost_total": 190,
+        "primary_cost_median": 5.5,
+        "verifier_checks_total": 222,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_09",
+        "episodes": 32,
+        "primary_cost_total": 233,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 265,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_10",
+        "episodes": 32,
+        "primary_cost_total": 253,
+        "primary_cost_median": 8,
+        "verifier_checks_total": 285,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_11",
+        "episodes": 32,
+        "primary_cost_total": 215,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 247,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_12",
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_13",
+        "episodes": 32,
+        "primary_cost_total": 247,
+        "primary_cost_median": 7.5,
+        "verifier_checks_total": 279,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_14",
+        "episodes": 32,
+        "primary_cost_total": 236,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 268,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_15",
+        "episodes": 32,
+        "primary_cost_total": 171,
+        "primary_cost_median": 4,
+        "verifier_checks_total": 203,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_16",
+        "episodes": 32,
+        "primary_cost_total": 199,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 231,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_17",
+        "episodes": 32,
+        "primary_cost_total": 251,
+        "primary_cost_median": 8,
+        "verifier_checks_total": 283,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_18",
+        "episodes": 32,
+        "primary_cost_total": 218,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 250,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_19",
+        "episodes": 32,
+        "primary_cost_total": 220,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 252,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_20",
+        "episodes": 32,
+        "primary_cost_total": 172,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 204,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_21",
+        "episodes": 32,
+        "primary_cost_total": 213,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 245,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_22",
+        "episodes": 32,
+        "primary_cost_total": 226,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 258,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_23",
+        "episodes": 32,
+        "primary_cost_total": 192,
+        "primary_cost_median": 5,
+        "verifier_checks_total": 224,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_24",
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_25",
+        "episodes": 32,
+        "primary_cost_total": 228,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 260,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_26",
+        "episodes": 32,
+        "primary_cost_total": 229,
+        "primary_cost_median": 7.5,
+        "verifier_checks_total": 261,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_27",
+        "episodes": 32,
+        "primary_cost_total": 203,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 235,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_28",
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_29",
+        "episodes": 32,
+        "primary_cost_total": 235,
+        "primary_cost_median": 6.5,
+        "verifier_checks_total": 267,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      },
+      {
+        "arm": "shuffled_30",
+        "episodes": 32,
+        "primary_cost_total": 245,
+        "primary_cost_median": 8,
+        "verifier_checks_total": 277,
+        "fallback_episodes": 0,
+        "source_artifact_reads": 83456
+      }
+    ],
+    "shifts": [
+      {
+        "shift": "known-operation-new-composition",
+        "families": 4,
+        "full_primary_cost": 42,
+        "source_free_primary_cost": 58
+      },
+      {
+        "shift": "changed-semantic-class-order",
+        "families": 4,
+        "full_primary_cost": 59,
+        "source_free_primary_cost": 46
+      },
+      {
+        "shift": "new-cross-class-composition",
+        "families": 4,
+        "full_primary_cost": 50,
+        "source_free_primary_cost": 44
+      },
+      {
+        "shift": "longer-tree-deeper-partial-chain",
+        "families": 4,
+        "full_primary_cost": 71,
+        "source_free_primary_cost": 57
+      }
+    ]
+  },
+  "schema": "zero.reasoner5_trace_result.v1",
+  "experiment": "reasoner58-compositional-behavior-transfer-v1",
+  "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
+  "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
+  "trace_coverage_sha256": "2c908f11e94b0eef1a2a3eac71b9ca0b0cf2b45edd7532c3d924ed8ee81bb0ba",
+  "analysis_settings_sha256": "01668a54278e8e51a839d9f881ffeeb74fb6a3cae4393194ead98aa4b930581c",
+  "analysis_function_sha256": "1a9af62e746339ccd4cc648c3866dff42889571956220d361d4a6dd6696da847",
+  "integrity": {
+    "manifest_digest_valid": true,
+    "trace_contract_valid": true,
+    "coverage_sha256": "2c908f11e94b0eef1a2a3eac71b9ca0b0cf2b45edd7532c3d924ed8ee81bb0ba"
+  },
+  "exactness": {
+    "schema": "zero.reasoner5_trace_exactness.v1",
+    "all_final_answers_exact": true,
+    "all_certificates_valid": true,
+    "premature_commits": 0,
+    "all_injected_invalid_first_candidates_rejected": true,
+    "all_primary_episodes_solved_within_global_cap": true,
+    "fallback_work_counted": true
+  },
+  "cost_totals": {
+    "primary_cost": 24566,
+    "verifier_checks": 25910,
+    "partial_expansions": 24566,
+    "fallback_verifier_checks": 0,
+    "fallback_partial_expansions": 0,
+    "observation_queries": 2688,
+    "wall_ns": null,
+    "peak_bytes": null,
+    "source_artifact_reads": 3171328
+  },
+  "registered_analysis": {
+    "schema": "zero.reasoner5_registered_analysis.v1",
+    "primary": {
+      "schema": "zero.reasoner5_family_inference.v1",
+      "settings": {
+        "design": "one-way",
+        "direction": "lower",
+        "seed": "58a1000000000001",
+        "replicates": 2000,
+        "alpha": 0.01,
+        "environment_field": "generator_id",
+        "row_field": "family_id",
+        "column_field": "cross_family_id",
+        "wilson_z": 1.6448536269514722
+      },
+      "units": [
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s0-00",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s0-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 5,
+          "mean_comparator_cost": 11.5,
+          "mean_log_ratio": -0.70723261904329,
+          "geometric_mean_ratio": 0.49300664859163,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s0-01",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s0-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 6.5,
+          "mean_comparator_cost": 7.5,
+          "mean_log_ratio": -0.1682361183106,
+          "geometric_mean_ratio": 0.84515425472851,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s1-00",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s1-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 8.5,
+          "mean_log_ratio": -0.091160778396977,
+          "geometric_mean_ratio": 0.91287092917527,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s1-01",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s1-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 6,
+          "mean_log_ratio": 0.27980789396771,
+          "geometric_mean_ratio": 1.3228756555322,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s2-00",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s2-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 5,
+          "mean_comparator_cost": 4.5,
+          "mean_log_ratio": 0.066765696312261,
+          "geometric_mean_ratio": 1.0690449676496,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s2-01",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s2-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7,
+          "mean_comparator_cost": 7.5,
+          "mean_log_ratio": -0.052680257828913,
+          "geometric_mean_ratio": 0.94868329805051,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s3-00",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s3-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 9.5,
+          "mean_comparator_cost": 5.5,
+          "mean_log_ratio": 0.45814536593707,
+          "geometric_mean_ratio": 1.5811388300841,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s3-01",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s3-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 6.5,
+          "mean_comparator_cost": 6.5,
+          "mean_log_ratio": 0,
+          "geometric_mean_ratio": 1,
+          "win": false,
+          "tie": true
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s0-00",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s0-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 4.5,
+          "mean_comparator_cost": 3,
+          "mean_log_ratio": 0.27980789396771,
+          "geometric_mean_ratio": 1.3228756555322,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s0-01",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s0-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 5,
+          "mean_comparator_cost": 7,
+          "mean_log_ratio": -0.20273255405408,
+          "geometric_mean_ratio": 0.81649658092772,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s1-00",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s1-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 10,
+          "mean_comparator_cost": 5.5,
+          "mean_log_ratio": 0.60198640216296,
+          "geometric_mean_ratio": 1.8257418583505,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s1-01",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s1-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 4.5,
+          "mean_comparator_cost": 3,
+          "mean_log_ratio": 0.27980789396771,
+          "geometric_mean_ratio": 1.3228756555322,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s2-00",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s2-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 7,
+          "mean_log_ratio": -0.024395082084715,
+          "geometric_mean_ratio": 0.97590007294853,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s2-01",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s2-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 5.5,
+          "mean_comparator_cost": 3,
+          "mean_log_ratio": 0.40546510810816,
+          "geometric_mean_ratio": 1.5,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s3-00",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s3-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 10.5,
+          "mean_comparator_cost": 4.5,
+          "mean_log_ratio": 0.69314718055994,
+          "geometric_mean_ratio": 2,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s3-01",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s3-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 9,
+          "mean_comparator_cost": 12,
+          "mean_log_ratio": -0.23500181462286,
+          "geometric_mean_ratio": 0.79056941504209,
+          "win": true,
+          "tie": false
+        }
+      ],
+      "summary": {
+        "schema": "zero.reasoner5_family_summary.v1",
+        "independent_families": 16,
+        "family_weighted_geometric_mean_ratio": 1.1040313985489,
+        "family_weighted_median_ratio": 1.0345224838248,
+        "wins": 7,
+        "ties": 1,
+        "losses": 8,
+        "win_rate": 0.4375,
+        "wilson_lower": 0.2576580088298
+      },
+      "interval": {
+        "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+        "independent_units": 16,
+        "replicates": 2000,
+        "alpha": 0.01,
+        "point_log_ratio": 0.09896838816513,
+        "point_ratio": 1.1040313985489,
+        "lower_log_ratio": -0.089054304553314,
+        "upper_log_ratio": 0.26847053103555,
+        "lower_ratio": 0.91479589464313,
+        "upper_ratio": 1.3079624321642,
+        "confidence_interval_method": "ordinary-percentile-bootstrap",
+        "p_value_method": "recentered-null-bootstrap",
+        "null_hypothesis_point_log_ratio": 0,
+        "one_sided_p_lower_than_zero": 0.89855072463768,
+        "one_sided_p_higher_than_zero": 0.10194902548725,
+        "uncentered_sign_tail_fraction_lower": 0.88505747126436,
+        "uncentered_sign_tail_fraction_higher": 0.11544227886056,
+        "bootstrap_sha256": "916d6a151d264bb6560251d2cb4ac813fd292153253aae78905d8f8c4a59d014",
+        "null_bootstrap_sha256": "0bfebc2767f742d61c96862db0ad02407c1a60ea41408ef8da9432dd8d86b07f",
+        "fixed_environments": 2,
+        "fixed_environment_weighting": "equal",
+        "environment_summaries": {
+          "behavior-skeleton": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 1.2520229817009,
+            "family_weighted_median_ratio": 1.3228756555322,
+            "wins": 3,
+            "ties": 0,
+            "losses": 5,
+            "win_rate": 0.375,
+            "wilson_lower": 0.16117233776067
+          },
+          "syntax-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.97353271209614,
+            "family_weighted_median_ratio": 0.97434164902525,
+            "wins": 4,
+            "ties": 1,
+            "losses": 3,
+            "win_rate": 0.5,
+            "wilson_lower": 0.2486418902125
+          }
+        }
+      },
+      "receipt_sha256": "27e8b9517986c432c19fd6ead03ee0fc58930f60d719fc6911439b39f37f3cdc"
+    },
+    "strata": [
+      {
+        "name": "known-operation-new-composition",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "58b0000000000000",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s0-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 11.5,
+              "mean_log_ratio": -0.70723261904329,
+              "geometric_mean_ratio": 0.49300664859163,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s0-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s0-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": -0.1682361183106,
+              "geometric_mean_ratio": 0.84515425472851,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": 0.27980789396771,
+              "geometric_mean_ratio": 1.3228756555322,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 7,
+              "mean_log_ratio": -0.20273255405408,
+              "geometric_mean_ratio": 0.81649658092772,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.81905966285788,
+            "family_weighted_median_ratio": 0.83082541782812,
+            "wins": 3,
+            "ties": 0,
+            "losses": 1,
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 4,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": -0.19959834936006,
+            "point_ratio": 0.81905966285788,
+            "lower_log_ratio": -0.45498258654868,
+            "upper_log_ratio": 0.055785887828554,
+            "lower_ratio": 0.63445901597322,
+            "upper_ratio": 1.0573712634405,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.066466766616691,
+            "one_sided_p_higher_than_zero": 0.93403298350824,
+            "uncentered_sign_tail_fraction_lower": 0.062468765617191,
+            "uncentered_sign_tail_fraction_higher": 0.93803098450774,
+            "bootstrap_sha256": "8324944a4625263baf8799e5c7ec49fe29972152920238a8d38609ce68185c6d",
+            "null_bootstrap_sha256": "552bc7609af82678de5bf43b0668d3b40964eed403d13d6b6ad6debd645b2d4f",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-skeleton": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.0392898776254,
+                "family_weighted_median_ratio": 1.06968611823,
+                "wins": 1,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 0.6454972243679,
+                "family_weighted_median_ratio": 0.66908045166007,
+                "wins": 2,
+                "ties": 0,
+                "losses": 0,
+                "win_rate": 1,
+                "wilson_lower": 0.42503060900634
+              }
+            }
+          },
+          "receipt_sha256": "255f9716a299b9e468300239bd633f782147b1c8bdf0c63bebace4b56e4ca24d"
+        }
+      },
+      {
+        "name": "changed-semantic-class-order",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "58b0000000000001",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s1-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 8.5,
+              "mean_log_ratio": -0.091160778396977,
+              "geometric_mean_ratio": 0.91287092917527,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s1-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s1-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 6,
+              "mean_log_ratio": 0.27980789396771,
+              "geometric_mean_ratio": 1.3228756555322,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s1-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 10,
+              "mean_comparator_cost": 5.5,
+              "mean_log_ratio": 0.60198640216296,
+              "geometric_mean_ratio": 1.8257418583505,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s1-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s1-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": 0.27980789396771,
+              "geometric_mean_ratio": 1.3228756555322,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.3068378352572,
+            "family_weighted_median_ratio": 1.3228756555322,
+            "wins": 1,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.057907321199858
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 4,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": 0.26761035292535,
+            "point_ratio": 1.3068378352572,
+            "lower_log_ratio": 0.094323557785366,
+            "upper_log_ratio": 0.44089714806533,
+            "lower_ratio": 1.0989152509857,
+            "upper_ratio": 1.5541008518427,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 1,
+            "one_sided_p_higher_than_zero": 0.00049975012493753,
+            "uncentered_sign_tail_fraction_lower": 1,
+            "uncentered_sign_tail_fraction_higher": 0.00049975012493753,
+            "bootstrap_sha256": "213f2c0f55819081cee27f2bf58b8f1a61bdda0bad9493338645810b777bb613",
+            "null_bootstrap_sha256": "fb4a8aa3fe89bd677a69ad5fe278ae9047614115d00312035c15d93ec86a8e3f",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-skeleton": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.5541008518427,
+                "family_weighted_median_ratio": 1.5743087569414,
+                "wins": 0,
+                "ties": 0,
+                "losses": 2,
+                "win_rate": 0,
+                "wilson_lower": 0
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.0989152509857,
+                "family_weighted_median_ratio": 1.1178732923537,
+                "wins": 1,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227
+              }
+            }
+          },
+          "receipt_sha256": "899b6bd75de4eb303bf8d2059961d0113d421c9f69d898255a89446bbe9f20a4"
+        }
+      },
+      {
+        "name": "new-cross-class-composition",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "58b0000000000002",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s2-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0.066765696312261,
+              "geometric_mean_ratio": 1.0690449676496,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s2-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s2-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 7,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": -0.052680257828913,
+              "geometric_mean_ratio": 0.94868329805051,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s2-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 7,
+              "mean_log_ratio": -0.024395082084715,
+              "geometric_mean_ratio": 0.97590007294853,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s2-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s2-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5.5,
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": 0.40546510810816,
+              "geometric_mean_ratio": 1.5,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.1038332183712,
+            "family_weighted_median_ratio": 1.0224725202991,
+            "wins": 2,
+            "ties": 0,
+            "losses": 2,
+            "win_rate": 0.5,
+            "wilson_lower": 0.18240016325464
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 4,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": 0.098788866126698,
+            "point_ratio": 1.1038332183712,
+            "lower_log_ratio": -0.038537669956814,
+            "upper_log_ratio": 0.23611540221021,
+            "lower_ratio": 0.96219545819576,
+            "upper_ratio": 1.2663204379123,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.81709145427286,
+            "one_sided_p_higher_than_zero": 0.18340829585207,
+            "uncentered_sign_tail_fraction_lower": 0.82608695652173,
+            "uncentered_sign_tail_fraction_higher": 0.17441279360319,
+            "bootstrap_sha256": "37fad3caf0d126303a295bf5bae14eb38053006ade3543ab3913b1daf8295b91",
+            "null_bootstrap_sha256": "3a5feef1d2d866a94b6e76687b3291562b906b804b6d21cb834afe9ed707ac71",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-skeleton": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.2098967350244,
+                "family_weighted_median_ratio": 1.2379500364742,
+                "wins": 1,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.0070675775111,
+                "family_weighted_median_ratio": 1.0088641328501,
+                "wins": 1,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227
+              }
+            }
+          },
+          "receipt_sha256": "cd1c042dc4c74c4f968db866d0416c9d861243617db200a8d68da5435be0bb28"
+        }
+      },
+      {
+        "name": "longer-tree-deeper-partial-chain",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "58b0000000000003",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 5.5,
+              "mean_log_ratio": 0.45814536593707,
+              "geometric_mean_ratio": 1.5811388300841,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 6.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 10.5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0.69314718055994,
+              "geometric_mean_ratio": 2,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 12,
+              "mean_log_ratio": -0.23500181462286,
+              "geometric_mean_ratio": 0.79056941504209,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.2574334296829,
+            "family_weighted_median_ratio": 1.290569415042,
+            "wins": 1,
+            "ties": 1,
+            "losses": 2,
+            "win_rate": 0.25,
+            "wilson_lower": 0.057907321199858
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 4,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": 0.22907268296853,
+            "point_ratio": 1.2574334296829,
+            "lower_log_ratio": -0.11750090731143,
+            "upper_log_ratio": 0.5756462732485,
+            "lower_ratio": 0.88913970501946,
+            "upper_ratio": 1.7782794100389,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.81409295352323,
+            "one_sided_p_higher_than_zero": 0.18640679660169,
+            "uncentered_sign_tail_fraction_lower": 0.80759620189905,
+            "uncentered_sign_tail_fraction_higher": 0.19290354822588,
+            "bootstrap_sha256": "ec65374d1ee97255efa1a8fae4010e0746362380e5aca7e6eaf900fe96ded5c6",
+            "null_bootstrap_sha256": "e1efbb0b9e812a77660023891c80e864d3062b8d0168418c5d2b91e914c7f3e3",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-skeleton": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.2574334296829,
+                "family_weighted_median_ratio": 1.395284707521,
+                "wins": 1,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.2574334296829,
+                "family_weighted_median_ratio": 1.290569415042,
+                "wins": 0,
+                "ties": 1,
+                "losses": 1,
+                "win_rate": 0,
+                "wilson_lower": 0
+              }
+            }
+          },
+          "receipt_sha256": "e19a61f56d066cfc5c5a1a9bb0eda314d2c72192a56d91249b004e6196dc71a1"
+        }
+      }
+    ],
+    "mechanisms": [
+      {
+        "name": "behavior-features",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "higher",
+            "seed": "58c0000000000001",
+            "replicates": 2000,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s0-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 5,
+              "mean_log_ratio": 0.79315774750662,
+              "geometric_mean_ratio": 2.210365192839,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s0-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s0-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 6.5,
+              "mean_log_ratio": 0.36618394685661,
+              "geometric_mean_ratio": 1.4422205101855,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s1-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": 0.17833747196936,
+              "geometric_mean_ratio": 1.1952286093343,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s1-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s1-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": -0.18864711557073,
+              "geometric_mean_ratio": 0.82807867121082,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s2-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5.5,
+              "mean_comparator_cost": 5,
+              "mean_log_ratio": 0.058891517828191,
+              "geometric_mean_ratio": 1.0606601717798,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s2-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s2-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 8.5,
+              "mean_comparator_cost": 7,
+              "mean_log_ratio": 0.10678705014902,
+              "geometric_mean_ratio": 1.1126972805283,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 9.5,
+              "mean_log_ratio": -0.034496435743475,
+              "geometric_mean_ratio": 0.96609178307929,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 6.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 5,
+              "mean_log_ratio": 0.15922686555926,
+              "geometric_mean_ratio": 1.1726039399558,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s1-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 10,
+              "mean_log_ratio": -0.052680257828913,
+              "geometric_mean_ratio": 0.94868329805051,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s1-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s1-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s2-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 8.5,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": 0.1682361183106,
+              "geometric_mean_ratio": 1.1832159566199,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s2-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s2-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 3.5,
+              "mean_comparator_cost": 5.5,
+              "mean_log_ratio": -0.29389333245105,
+              "geometric_mean_ratio": 0.74535599249992,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 8,
+              "mean_comparator_cost": 10.5,
+              "mean_log_ratio": -0.22091637613951,
+              "geometric_mean_ratio": 0.80178372573727,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 11.5,
+              "mean_comparator_cost": 9,
+              "mean_log_ratio": 0.18232155679395,
+              "geometric_mean_ratio": 1.2,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 16,
+            "family_weighted_geometric_mean_ratio": 1.0794015825365,
+            "family_weighted_median_ratio": 1.0303300858899,
+            "wins": 5,
+            "ties": 3,
+            "losses": 8,
+            "win_rate": 0.3125,
+            "wilson_lower": 0.16126565708702
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2",
+            "independent_units": 16,
+            "replicates": 2000,
+            "alpha": 0.05,
+            "point_log_ratio": 0.076406797327495,
+            "point_ratio": 1.0794015825365,
+            "lower_log_ratio": -0.012003017496716,
+            "upper_log_ratio": 0.17918933926096,
+            "lower_ratio": 0.98806873136327,
+            "upper_ratio": 1.1962472192913,
+            "confidence_interval_method": "ordinary-percentile-bootstrap",
+            "p_value_method": "recentered-null-bootstrap",
+            "null_hypothesis_point_log_ratio": 0,
+            "one_sided_p_lower_than_zero": 0.89155422288855,
+            "one_sided_p_higher_than_zero": 0.10894552723638,
+            "uncentered_sign_tail_fraction_lower": 0.92103948025987,
+            "uncentered_sign_tail_fraction_higher": 0.079460269865067,
+            "bootstrap_sha256": "63590f796bb00b44dde978c7dc694b20b62efdfdd5684f07bf1e8e4a97609b9b",
+            "null_bootstrap_sha256": "316ded0568fd16acf686116f2df2494cf88c1300c65c0b4dba0443075e75c6ca",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "behavior-skeleton": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 8,
+                "family_weighted_geometric_mean_ratio": 0.99281277431298,
+                "family_weighted_median_ratio": 1,
+                "wins": 3,
+                "ties": 2,
+                "losses": 3,
+                "win_rate": 0.375,
+                "wilson_lower": 0.16117233776067
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 8,
+                "family_weighted_geometric_mean_ratio": 1.1735422896716,
+                "family_weighted_median_ratio": 1.086678726154,
+                "wins": 2,
+                "ties": 1,
+                "losses": 5,
+                "win_rate": 0.25,
+                "wilson_lower": 0.086514844199062
+              }
+            }
+          },
+          "receipt_sha256": "3f615b3f5598fb1a93192269a14567785dd492fe1f4654e9b107ddb0ee22fd33"
+        }
+      }
+    ],
+    "derangement": {
+      "observed": 2.0005488364114,
+      "values": [
+        1.8910077668316,
+        1.9598102333217,
+        2.064048512282,
+        1.9655890563997,
+        1.8464683047381,
+        2.0293538412687,
+        1.9764938900698,
+        1.9328860474144,
+        1.8311363385991,
+        2.0318239414981,
+        2.1107841960181,
+        1.9883863946725,
+        1.9076233042769,
+        2.0850062444122,
+        2.0495003303173,
+        1.7749019935578,
+        1.8921366253859,
+        2.0949579235096,
+        1.9813112358184,
+        1.9822299537826,
+        1.7932892194052,
+        1.9458818406246,
+        2.0024799490556,
+        1.8771798448754,
+        1.9115395246689,
+        2.0182183352086,
+        2.0228473976332,
+        1.9316027297596,
+        1.9291873649377,
+        2.0497292027922,
+        2.0788165596071
+      ]
+    },
+    "source_ablation": {
+      "matches": true,
+      "episodes": 32,
+      "receipt_sha256": "5f34f42f33114d14aa072ba48e5981523d629d9582f8bbc57312c0033f6e90ed"
+    },
+    "headroom": {
+      "comparator_arm": "source_free_jit",
+      "median_primary_cost": 6,
+      "registered_minimum": 16,
+      "measurement_floor": true
+    },
+    "analysis_sha256": "380577932233aabc2a46e4348d4665012b391974381e041ee6eef7804b00296b"
+  },
+  "decision": "measurement-floor",
+  "gate": {
+    "decision": "measurement-floor",
+    "passed": false,
+    "failures": [
+      "measurement_floor"
+    ],
+    "checks": {
+      "integrity_valid": true,
+      "exact_run_valid": true,
+      "measurement_floor": true
+    }
+  },
+  "provenance": {
+    "schema": "zero.reasoner5_result_provenance.v1",
+    "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
+    "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
+    "trace_coverage_sha256": "2c908f11e94b0eef1a2a3eac71b9ca0b0cf2b45edd7532c3d924ed8ee81bb0ba",
+    "analysis_contract_sha256": "8c7ac68c05b2055d2f8a13101db8ce9fafd62226a2517a8bdd08ecaed8250f9a",
+    "analysis_settings_sha256": "01668a54278e8e51a839d9f881ffeeb74fb6a3cae4393194ead98aa4b930581c",
+    "analysis_function_sha256": "1a9af62e746339ccd4cc648c3866dff42889571956220d361d4a6dd6696da847",
+    "common_gate_registration_sha256": "6af32da4d57f606cda162763c5479accc3f75c2c7260ba352ddf2cf3c7635979",
+    "episodes": 32,
+    "rows": 1344
+  },
+  "result_sha256": "efaf78bc71bf4026dd3db08bb461c2bb48f221589c22cd18b806a0132710b60a"
+}
