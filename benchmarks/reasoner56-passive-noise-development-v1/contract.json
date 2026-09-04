@@ -215,7 +215,7 @@
       "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
       "scripts/lib/reasoner56_development.mjs": "234f0e18ab9e22ed6bdd62b0793f421dbbac673631982d0742bd07d14c106137",
-      "scripts/check_reasoner56_development.mjs": "8a1910a9144e6184ae979cd9c458bfaccd165f2cf00a98d8796c00eaebd2fec2"
+      "scripts/check_reasoner56_development.mjs": "463091cca3064db60d92ed6dcc56a92c27c68df55c63111881001a8cb4551e58"
     }
   },
   "development_outputs": {
@@ -254,8 +254,8 @@
   },
   "shared_harness": {
     "integrated": true,
-    "commit": "2303a1a1769a7e4ccd32f5167e18645550651509",
-    "library_sha256": "6d3880708464a8fa643e09d5bfdb7822d657d94348e814bf22d6b1de4b29be66",
+    "commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f",
+    "library_sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5",
     "bootstrap_receipt_schema": "v2",
     "confidence_interval_method": "ordinary-percentile-bootstrap",
     "p_value_method": "recentered-null-bootstrap",
@@ -264,6 +264,8 @@
     "family_manifest_replay": true,
     "arm_parity": true,
     "canonical_fallback_binding": true,
+    "proposal_record_binding": true,
+    "proposal_work_charge_floor": true,
     "two_way_program_by_corruption_bootstrap": true,
     "result_replay": true,
     "calibration_coverage_family_records": 99,
