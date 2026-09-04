@@ -3084,20 +3084,3 @@ clean-reasoner59a:
 .PHONY: model-card-charts
 model-card-charts:
 	node scripts/render_model_card_charts.mjs
-
-.PHONY: reasoner55-diagnostics reasoner55-diagnostics-check
-build/reasoner55_diagnostics: reasoner55_diagnostics.c reasoner55.c reasoner55.h
-	mkdir -p build
-	$(CC) $(CFLAGS) reasoner55_diagnostics.c -o $@
-
-reasoner55-diagnostics: build/reasoner55_diagnostics
-	node scripts/run_reasoner55_diagnostics.mjs --write
-
-reasoner55-diagnostics-check: build/reasoner55_diagnostics
-	node scripts/check_reasoner55_diagnostics.mjs
-
-check: reasoner55-diagnostics-check
-
-build/reasoner55_semantic_guide: reasoner55_semantic_guide.c reasoner55_diagnostics.c reasoner55.c reasoner55.h
-	mkdir -p build
-	$(CC) $(CFLAGS) reasoner55_semantic_guide.c -lm -o $@

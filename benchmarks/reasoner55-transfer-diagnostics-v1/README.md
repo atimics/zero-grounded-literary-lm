@@ -96,10 +96,12 @@ order, and result digest. Repeated timings may vary with the host load.
 ## How to reproduce
 
 ```sh
-make reasoner55-diagnostics
-make reasoner55-diagnostics-check
+make -f Makefile.reasoner55 reasoner55-diagnostics
+make -f Makefile.reasoner55 reasoner55-diagnostics-check
 ```
 
+The separate make file extends the build. The main Makefile is recorded by the
+R5.9a contract. CI runs the experiment checks on all three build platforms.
 The first command writes the two result files. The second rebuilds and compares
 all deterministic native rows. It independently reconstructs the source guides
 and replays all 480 search rows with the existing R5.5 replay code. It also
