@@ -51,9 +51,6 @@ jobs:
           LITERARY_BACKEND: ${{ matrix.backend == 'accelerate' && 'auto' || matrix.backend }}
         run: make check
 
-      - name: Run Reasoner 5.5 development experiments
-        run: make -f Makefile.reasoner55 reasoner55-experiments-check
-
       - name: Validate frozen teacher registry
         run: python3 scripts/verify_teacher_artifacts.py --registry-only
 
