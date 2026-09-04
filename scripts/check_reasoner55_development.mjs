@@ -25,6 +25,7 @@ import {
   familyInferenceReceipt,
   finalizeManifest,
   freezeFamilySplits,
+  portableNumber,
   registerEpisode,
   registerFamily,
   registerReplayPipeline,
@@ -402,8 +403,8 @@ function sourceFreeSelectionReceipt(analysisRows) {
   });
   assert.equal(units.length, 16,
     "source-free selection needs every environment-family unit");
-  const meanLogRatio = units.reduce((sum, unit) =>
-    sum + unit.mean_log_ratio, 0) / units.length;
+  const meanLogRatio = portableNumber(units.reduce((sum, unit) =>
+    sum + unit.mean_log_ratio, 0) / units.length);
   const selectedArm = meanLogRatio < 0 ? "source_free_jit" : "target_only";
   const body = {
     schema: "zero.reasoner55_source_free_selection.v1",
@@ -412,7 +413,8 @@ function sourceFreeSelectionReceipt(analysisRows) {
     independent_environment_family_units: units.length,
     nested_tie_repeats_per_unit: 2,
     source_free_jit_to_target_only_log_ratio: meanLogRatio,
-    source_free_jit_to_target_only_ratio: Math.exp(meanLogRatio),
+    source_free_jit_to_target_only_ratio:
+      portableNumber(Math.exp(meanLogRatio)),
     selected_arm: selectedArm,
   };
   return {
@@ -447,14 +449,15 @@ function absoluteArmStatistic(analysisRows, arm) {
   for (const row of analysisRows.filter(item => item.arm === arm)) {
     const key = `${row.generator_id}\0${row.family_id}`;
     const values = grouped.get(key) ?? [];
-    values.push(Math.log(row.primary_cost + 1));
+    values.push(portableNumber(Math.log(row.primary_cost + 1)));
     grouped.set(key, values);
   }
   assert.equal(grouped.size, 16,
     `${arm} derangement statistic needs 16 independent units`);
-  const means = [...grouped.values()].map(values =>
-    values.reduce((sum, value) => sum + value, 0) / values.length);
-  return means.reduce((sum, value) => sum + value, 0) / means.length;
+  const means = [...grouped.values()].map(values => portableNumber(
+    values.reduce((sum, value) => sum + value, 0) / values.length));
+  return portableNumber(
+    means.reduce((sum, value) => sum + value, 0) / means.length);
 }
 
 function derangementAnalysis(analysisRows) {
