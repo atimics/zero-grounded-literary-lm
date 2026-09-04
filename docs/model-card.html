@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171612">
+  <meta name="description" content="The ZERO.4 model card: architecture, how it was built, training curves, evaluation results, limitations, and provenance.">
+  <link rel="canonical" href="https://atimics.github.io/zero-grounded-literary-lm/model-card.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ZERO">
+  <meta property="og:title" content="ZERO.4 model card">
+  <meta property="og:description" content="How ZERO.4 was built, its training curves, its evaluation results, and its limits.">
+  <meta property="og:url" content="https://atimics.github.io/zero-grounded-literary-lm/model-card.html">
+  <meta property="og:image" content="https://atimics.github.io/zero-grounded-literary-lm/assets/zero4-social.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ZERO.4 model card">
+  <meta name="twitter:description" content="How ZERO.4 was built, its training curves, its evaluation results, and its limits.">
+  <meta name="twitter:image" content="https://atimics.github.io/zero-grounded-literary-lm/assets/zero4-social.png">
+  <title>ZERO.4 — model card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&amp;family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="model-card.css">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <main class="shell">
+    <header class="masthead">
+      <a class="wordmark" href="./" aria-label="Return to the ZERO.4 chat">
+        <span class="zero-mark">0</span>
+        <span>ZERO / 4</span>
+      </a>
+      <span class="status ready" aria-live="off"><span class="status-dot"></span>MODEL CARD</span>
+      <nav class="masthead-links" aria-label="Project pages">
+        <a href="./">CHAT</a>
+        <a href="lab.html">LAB</a>
+        <a href="dashboard/">TRAINING</a>
+      </nav>
+    </header>
+
+    <section class="card-hero" aria-labelledby="pageTitle">
+      <p class="eyebrow">SMALL MODEL · EVERYTHING ON THE RECORD</p>
+      <h1 id="pageTitle">ZERO.4<br><em>the model card.</em></h1>
+      <p class="dek">A 4,852,992-parameter character-level transformer, written in dependency-free C,
+      trained under preregistered gates, and promoted after three seeds passed them. This card shows
+      how it was built, what the training looked like, what it can and cannot do — warts included.</p>
+      <div class="card-links">
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/MODEL_CARD.md">MODEL_CARD.md</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/EXPERIMENTS.md">EXPERIMENTS.md</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/MANIFESTO.md">MANIFESTO.md</a>
+      </div>
+    </section>
+
+    <section class="card-section" aria-labelledby="specTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">01 — THE MODEL</p>
+        <h2 id="specTitle">Model details</h2>
+        <p>A decoder-only transformer with hand-written forward and backward passes. There is no
+        external tensor library, no autodiff, and no tokenizer library; the gradient is verified
+        against finite differences in every <code>make check</code>.</p>
+      </div>
+      <div class="spec-grid">
+        <div class="spec-cell"><span class="label">PARAMETERS</span><span class="value">4,852,992</span></div>
+        <div class="spec-cell"><span class="label">ARCHITECTURE</span><span class="value">6 blocks · 8 heads · 256-dim <small>· 1056-dim FFN</small></span></div>
+        <div class="spec-cell"><span class="label">VOCABULARY</span><span class="value">128 ASCII characters <small>· character-level, no merges</small></span></div>
+        <div class="spec-cell"><span class="label">CONTEXT</span><span class="value">512 characters <small>· parameter-free rotary positions</small></span></div>
+        <div class="spec-cell"><span class="label">OUTPUT</span><span class="value">Tied embeddings <small>· next-character cross entropy</small></span></div>
+        <div class="spec-cell"><span class="label">RELEASE ARTIFACT</span><span class="value">4.92 MB int8 <small>· row scales + normalization gains</small></span></div>
+        <div class="spec-cell"><span class="label">RUNTIME</span><span class="value">C11 / WebAssembly <small>· no network, no server</small></span></div>
+        <div class="spec-cell"><span class="label">LICENSE</span><span class="value">CC BY-SA 4.0 <small>artifacts · Apache 2.0 code</small></span></div>
+      </div>
+      <p class="digest">model.litq8 SHA-256 · 44b32f2262be2754fd2eeaf16ed206bae32b4ce30d7f5541a1059cd21257ae50 · selected prospectively at update 500 (seed 2) · promoted 2026-07-24 after three-seed replication</p>
+    </section>
+
+    <section class="card-section" aria-labelledby="buildTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">02 — HOW IT WAS BUILT</p>
+        <h2 id="buildTitle">Four models, never merged</h2>
+        <p>ZERO.4 was not trained from random weights onto a pile of text. Each generation was
+        trained against frozen, immutable teachers from the generations before it — the student
+        never averages weights, and the teachers never change under it.</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/charts/lineage.svg" alt="Diagram: ZERO.1 distills into ZERO.2, ZERO.2 into ZERO.3, and all three frozen teachers feed ZERO.4, which initializes from ZERO.3." loading="lazy" decoding="async">
+        <figcaption>Every earlier model stays loaded as a frozen teacher. The teachers' SHA-256
+        hashes are pinned in teachers/registry.json and checked during training.</figcaption>
+      </figure>
+      <div class="chart-pair">
+        <div>
+          <table class="card-table">
+            <thead><tr><th>FROZEN TEACHER</th><th>WHAT IT CONSTRAINS</th></tr></thead>
+            <tbody>
+              <tr><td>ZERO.1</td><td>A 7,436-parameter MLP. Constrains the explicit foundation stream only.</td></tr>
+              <tr><td>ZERO.2</td><td>The 4.85M literary transformer. Replayed on every source to prevent forgetting.</td></tr>
+              <tr><td>ZERO.3</td><td>The distilled integrator. Initializes the student and holds the replay baseline.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-prose">
+          <p>On foundation sequences the student minimizes
+          <code>0.60·observed + 0.15·ZERO.2 + 0.25·ZERO.1</code>; elsewhere
+          <code>0.85·observed + 0.15·ZERO.2</code>. The quantity faculty adds typed
+          operation records, but the model never computes arithmetic itself: it learns to emit the
+          right <em>request</em>, and an input-bound deterministic kernel alone calculates and
+          commits exact results.</p>
+          <p>That responsibility split is the whole trick. Small models cannot copy numbers
+          reliably — earlier experiments proved it — but they can learn when to delegate.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card-section" aria-labelledby="trainTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">03 — TRAINING</p>
+        <h2 id="trainTitle">700 updates, every one a transaction</h2>
+        <p>The promoted run (Q2.6, seed 2) trained for 700 updates on one CPU core. Before every
+        commit, the candidate update was projected off the direction that would hurt replay, and
+        accepted only if cumulative replay stayed within budget.</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/charts/training-loss.svg" alt="Line chart of training and validation cross entropy over 700 updates, falling from about 2.4 to about 1.2." loading="lazy" decoding="async">
+        <figcaption>Data: benchmarks/zero4-q26-v1/seed2/training.log — the frozen log of the promoted run.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/charts/capability-vs-guard.svg" alt="Two-panel chart: exact quantity artifacts rising from 0 to 99.8 percent at each 100-update public evaluation, while replay regression falls from 2.3 percent to about 1.2 percent under a frozen 2 percent ceiling." loading="lazy" decoding="async">
+        <figcaption>Data: benchmarks/zero4-q26-v1/seed2/events.jsonl — public evaluation every 100
+        updates, sentinel windows every 25. Six preregistered experiments failed to reach this
+        panel honestly; their records are published too (EXPERIMENTS.md).</figcaption>
+      </figure>
+      <div class="note">
+        <span class="note-label">WHY THE CURVES DIP TOGETHER</span>
+        Each update was first stripped of the component pointing uphill on the mean replay surface
+        (computed from six frozen replay windows), then submitted to the unchanged 1.5% cumulative
+        budget. 700 of 700 attempts committed; 423 were projected. The guard never had to reject
+        anything — the direction was chosen so it wouldn't have to.
+      </div>
+    </section>
+
+    <section class="card-section" aria-labelledby="replicateTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">04 — REPLICATION</p>
+        <h2 id="replicateTitle">One seed is not evidence</h2>
+        <p>The update-500 model became ZERO.4 only after seeds 1 and 3 passed the same frozen
+        contract, with no post-hoc selection and no optional stopping.</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/charts/replication.svg" alt="Bar chart: exact quantity artifacts of 98.0, 99.8, and 96.0 percent for seeds 1, 2, and 3, each above the frozen 95 percent gate, with replay regressions 1.04, 1.18, and 1.28 percent." loading="lazy" decoding="async">
+        <figcaption>Data: benchmarks/zero4-q26r-v1/aggregate.json — the frozen three-seed decision record.</figcaption>
+      </figure>
+    </section>
+
+    <section class="card-section" aria-labelledby="evalTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">05 — EVALUATION</p>
+        <h2 id="evalTitle">Scores, honestly reported</h2>
+        <p>A 4.85M character model does not become a general assistant. These are the measured
+        results on frozen, preregistered evaluations — including the ones that disappointed us.</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/charts/external-eval.svg" alt="Grouped bars comparing ZERO.3 and ZERO.4 on BLiMP, HellaSwag, TinyStories, and adapted LAMBADA: mixed results, essentially tied." loading="lazy" decoding="async">
+        <figcaption>Data: benchmarks/zero-eval-1/screen/results/result.json — one frozen 1,000-case
+        screen per task. ZERO.4 is +0.005 BLiMP, −0.005 HellaSwag, worse on TinyStories bits/byte,
+        and tied at zero LAMBADA. The proposed full run was closed as do-not-run on this evidence.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/charts/channel-benchmark.svg" alt="Bar chart of channel coherence contrast win rates around 70 percent across four runtime modes, with episodic recall of 87.5 and 62.5 percent for the two recall policies." loading="lazy" decoding="async">
+        <figcaption>Data: benchmarks/zero-channel-v1/results/baseline.json — the frozen diagnostic
+        baseline on the ZERO.3-era int8 export, teacher-forced, no sampling. A corpus proxy for
+        dialogue coherence, not a semantic verifier; the multi-way training comparison is frozen
+        separately.</figcaption>
+      </figure>
+      <div class="note">
+        <span class="note-label">ALSO ON THE RECORD</span>
+        The release gate includes a deterministic prompted-continuation overlap check
+        (zero4-memorization-v1.json). It is a release gate, not proof that memorization is
+        impossible. Training text and token streams are deliberately excluded from the release
+        artifact set.
+      </div>
+    </section>
+
+    <section class="card-section" aria-labelledby="limitsTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">06 — LIMITS</p>
+        <h2 id="limitsTitle">Intended use and out-of-scope use</h2>
+        <p>What ZERO.4 is for, and what nobody should use it for.</p>
+      </div>
+      <div class="chart-pair">
+        <table class="card-table">
+          <thead><tr><th>INTENDED FOR</th></tr></thead>
+          <tbody>
+            <tr><td>Research</td></tr>
+            <tr><td>Teaching: every operation is readable C</td></tr>
+            <tr><td>Regression testing of small-model ideas</td></tr>
+            <tr><td>Studying replay-protected continual learning</td></tr>
+            <tr><td>Studying delegated-tool correctness</td></tr>
+          </tbody>
+        </table>
+        <table class="card-table">
+          <thead><tr><th>NOT FOR</th></tr></thead>
+          <tbody>
+            <tr><td>General assistance or advice</td></tr>
+            <tr><td>Factual question answering</td></tr>
+            <tr><td>Production chat with real people</td></tr>
+            <tr><td>Any claim of general language skill</td></tr>
+            <tr><td>Children or safety-critical contexts</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-prose">
+        <p><strong>Training data.</strong> Project-authored foundation statements; Shakespeare
+        and Blake editions marked public-domain in the USA by Project Gutenberg; Crowley works
+        from Project Gutenberg and CC BY-SA Wikisource transcriptions; a deliberately low-weight
+        King James Bible stream; literary dialogue records derived from those sources; and
+        generated typed quantity records. <em>No human chat export appears in the bound training
+        lineage.</em> Full provenance, attribution, and jurisdiction notes are in
+        CORPUS_RIGHTS.md.</p>
+        <p><strong>Known weaknesses.</strong> External scores are weak by modern standards; greedy
+        generation can loop; the channel memory is lossy and the episodic index is a small exact
+        hash-recall, not learned retrieval; the quantity delegation is honest only because the
+        kernel is input-bound and the controller rejects mismatched arguments.</p>
+      </div>
+    </section>
+
+    <section class="card-section" aria-labelledby="verifyTitle">
+      <div class="lab-section-heading">
+        <p class="eyebrow">07 — VERIFY</p>
+        <h2 id="verifyTitle">Check everything yourself</h2>
+        <p>Every number on this card regenerates from frozen records in the repository.</p>
+      </div>
+      <div class="card-prose">
+        <p>Regenerate these charts:
+        <code>node scripts/render_model_card_charts.mjs</code>.
+        Verify the promotion record:
+        <code>make zero4-promotion-check</code>.
+        Reproduce the deployed artifact:
+        <code>make web</code>.
+        Run the model locally without a browser:
+        <code>./literary_infer docs/model.litq8 "The zero opened its eyes, and" 240</code>.</p>
+      </div>
+      <div class="card-links">
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/MODEL_CARD.md">FULL MARKDOWN CARD</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/benchmarks/zero4-q26-v1/seed2/RESULTS.md">Q2.6 RESULTS</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/benchmarks/zero4-q26r-v1/AGGREGATE.md">REPLICATION AGGREGATE</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/LICENSES.md">LICENSES</a>
+        <a href="https://github.com/atimics/zero-grounded-literary-lm/blob/main/CORPUS_RIGHTS.md">CORPUS RIGHTS</a>
+        <a href="https://huggingface.co/atimics/zero4">HUGGING FACE RELEASE</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

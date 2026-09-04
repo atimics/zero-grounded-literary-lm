@@ -23,8 +23,8 @@
   },
   "source_files": {
     "Makefile": {
-      "bytes": 134508,
-      "sha256": "2d4153b9b43e4cf10777cbd5035c27cb8ab5e885b2c804afeeeadc4eb5be38df"
+      "bytes": 134663,
+      "sha256": "617806b512722716eb9ab6ffab893a9b893d25eeb1a39f6f3429a968121a104e"
     },
     "reasoner59a.h": {
       "bytes": 1547,
@@ -97,5 +97,5 @@
     "result_sha256": "6be98f64deda119829c282bf68da4fdccb9298a8dbf50c452ee3e62c18998e2e",
     "result_decision": "no-go"
   },
-  "contract_sha256": "e7977c734a42b011730a6af0bc5ab9e527394da812abc192251057f4914a41e5"
+  "contract_sha256": "21e357588432b4fec3b0b34b1f54dd7fda0041078b85aadb7d7e63ebf8972eda"
 }

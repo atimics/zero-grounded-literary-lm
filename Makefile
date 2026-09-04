@@ -2979,3 +2979,8 @@ check: reasoner59a-check
 clean: clean-reasoner59a
 clean-reasoner59a:
 	rm -f reasoner59a
+
+# Regenerate the model-card charts from frozen benchmark records.
+.PHONY: model-card-charts
+model-card-charts:
+	node scripts/render_model_card_charts.mjs
