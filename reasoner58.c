@@ -129,14 +129,6 @@ static void r58_digest(const uint8_t *bytes, size_t size, uint8_t digest[32])
     r58_sha256_final(&sha, digest);
 }
 
-static uint64_t r58_mix64(uint64_t value)
-{
-    value += UINT64_C(0x9e3779b97f4a7c15);
-    value = (value ^ (value >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
-    value = (value ^ (value >> 27)) * UINT64_C(0x94d049bb133111eb);
-    return value ^ (value >> 31);
-}
-
 const char *r58_operation_name(uint8_t operation)
 {
     static const char *names[R58_OPERATIONS] = {
@@ -523,18 +515,16 @@ int r58_build_source_artifact(const r58_universe *universe,
     memset(artifact, 0, sizeof(*artifact));
     for (class_index = 0; class_index < universe->semantic_classes;
          ++class_index)
-        if (universe->classes[class_index].canonical_program.length ==
-            R58_SOURCE_MAX_DEPTH)
+        if (universe->classes[class_index].canonical_program.length > 0 &&
+            universe->classes[class_index].canonical_program.length <=
+                R58_SOURCE_MAX_DEPTH)
             source_indices[source_count++] = class_index;
-    if (source_count < R58_SOURCE_TASKS_PER_GENERATOR) return -1;
+    if (source_count !=
+        R58_SOURCE_TASKS_PER_GENERATOR * R58_GENERATORS) return -1;
     for (generator = 0; generator < R58_GENERATORS; ++generator) {
         uint32_t task;
         for (task = 0; task < R58_SOURCE_TASKS_PER_GENERATOR; ++task) {
-            uint64_t mixed = r58_mix64(UINT64_C(0x58a17e2026000000) ^
-                ((uint64_t)generator << 40) ^ task);
-            uint32_t selected = generator == 0 ?
-                (uint32_t)(mixed % source_count) :
-                (uint32_t)(((mixed >> 17) + task * 11u) % source_count);
+            uint32_t selected = task * R58_GENERATORS + generator;
             const r58_program *target = &universe->classes[
                 source_indices[selected]].canonical_program;
             for (class_index = 0; class_index < universe->semantic_classes;
@@ -583,6 +573,8 @@ int64_t r58_score_program(const r58_program *program,
                     feature = r58_derange_feature(feature, derangement);
                 score += guide->feature_log_odds_q20[feature];
             }
+            score += guide->feature_log_odds_q20[
+                r58_nonlinear_feature(program)];
         }
         score += guide->feature_log_odds_q20[r58_role_feature(program)];
     }
