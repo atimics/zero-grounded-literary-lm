@@ -2938,6 +2938,39 @@ clean: clean-reasoner5-followups
 clean-reasoner5-followups:
 	rm -f reasoner53 reasoner54
 
+.PHONY: reasoner58-check reasoner58-sanitize-check reasoner58-development \
+	reasoner58-development-check reasoner58-contract-check clean-reasoner58
+
+reasoner58: reasoner58.c reasoner58.h reasoner58_cli.c
+	$(CC) $(CFLAGS) reasoner58.c reasoner58_cli.c -o $@
+
+reasoner58-check: reasoner58
+	./reasoner58 --self-test
+	@if ./reasoner58 execute >/dev/null 2>&1; then \
+		echo "Reasoner 5.8 scientific execution unexpectedly opened"; exit 1; \
+	fi
+
+reasoner58-sanitize-check:
+	$(CC) -O1 -g -std=c11 -Wall -Wextra -Wpedantic \
+		-fsanitize=address,undefined -fno-omit-frame-pointer \
+		reasoner58.c reasoner58_cli.c -o /tmp/reasoner58-sanitize
+	/tmp/reasoner58-sanitize --self-test
+
+reasoner58-development: reasoner58
+	node scripts/run_reasoner58_development.mjs --write
+
+reasoner58-development-check: reasoner58
+	node scripts/check_reasoner58_development.mjs
+
+reasoner58-contract-check:
+	node scripts/check_reasoner58_contract.mjs
+
+all: reasoner58
+check: reasoner58-check reasoner58-development-check reasoner58-contract-check
+clean: clean-reasoner58
+clean-reasoner58:
+	rm -f reasoner58
+
 .PHONY: reasoner5-harness-check reasoner5-harness-contract-check
 reasoner5-harness-check:
 	node scripts/check_reasoner5_harness.mjs
