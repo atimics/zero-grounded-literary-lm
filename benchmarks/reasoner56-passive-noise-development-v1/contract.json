@@ -1,7 +1,7 @@
 {
-  "schema": "zero.reasoner56_passive_noise_development_contract.v5",
+  "schema": "zero.reasoner56_passive_noise_development_contract.v6",
   "experiment": "reasoner56-passive-noise-development-v1",
-  "version": "5.6-development-5",
+  "version": "5.6-development-6",
   "status": "development-only",
   "question": "Can a frozen source-learned observation model improve exact search on new GF(17) program and corruption families?",
   "domain": {
@@ -153,9 +153,28 @@
     "headroom_comparator": "target_only",
     "log_loss_comparison_input": "stable score-domain normalized_log_loss; truth_probability is diagnostic only",
     "full_log_loss_replay_episodes": 128,
-    "full_log_loss_replay_sha256": "b29871d1599061d48e9653aadcbfdfbeedc60c31d5a008cfefb6726316f2fb93",
+    "full_log_loss_replay_sha256": "e96badecce81e8fc614099a96fab1ea0138d4355f4f0bca74022ba7e43717f98",
     "minimum_development_median_cost": 16,
     "development_decision_has_no_scientific_authority": true
+  },
+  "native_diagnostic_serialization": {
+    "fields": [
+      "probability_sum",
+      "truth_probability",
+      "normalized_log_loss",
+      "brier",
+      "target_only_median_cost",
+      "full_mean_normalized_log_loss",
+      "full_mean_brier"
+    ],
+    "significant_decimal_digits": 14,
+    "final_boundary": "retain the first 14 significant decimal digits without rounding",
+    "authoritative_log_loss_evidence": "stable signed-Q20 score-space replay",
+    "observed_platform_pair": "macOS arm64 and Linux x86_64",
+    "maximum_observed_native_absolute_drift": "4.440892098500626e-16",
+    "maximum_observed_native_relative_drift": "3.109391836691082e-16",
+    "maximum_observed_serialization_absolute_error": "9.57811607804615e-12",
+    "maximum_observed_serialization_relative_error": "9.832082644494586e-14"
   },
   "proxy_and_taint": {
     "classifier": "frozen categorical multinomial lookup with global fallback",
@@ -211,21 +230,21 @@
   },
   "implementation": {
     "files": {
-      "reasoner56.c": "c208fca19b477724afeee2e50bcfad1f41b842dd911004be394bcb88f5e1032c",
+      "reasoner56.c": "00c1836d0b8b97d022863e569238816b808c46ccec0d4879b37e3c07eeb5a020",
       "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
       "scripts/lib/reasoner56_development.mjs": "234f0e18ab9e22ed6bdd62b0793f421dbbac673631982d0742bd07d14c106137",
-      "scripts/check_reasoner56_development.mjs": "463091cca3064db60d92ed6dcc56a92c27c68df55c63111881001a8cb4551e58"
+      "scripts/check_reasoner56_development.mjs": "d2984cb573baa4a97adaf572321ed2f748809a3606971214021206fbf52b6add"
     }
   },
   "development_outputs": {
     "result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/result.json",
-      "sha256": "609d64c4a41e2c7791c73a030ac07db4ffd5a1786d9c1674860b6881442659de"
+      "sha256": "5e77b03594263f90b4da1e920fd7acdb01df2681001cab2fc36e9ec2e04a8e31"
     },
     "trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/raw-trace.jsonl",
-      "sha256": "1310a29272ac32679c29bcc56aa610d0de303644a1d18e9683b7d9dae97a1b34"
+      "sha256": "5c64f2bd818032d17f213aa1aede39b3324e5ac0a9576b90fb3c03d27e775920"
     },
     "artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
@@ -237,7 +256,8 @@
     },
     "harness_trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-trace.jsonl.gz",
-      "sha256": "c86b7547414732e9922534511eb0ba0132c8d1c990a079d92ab8747053dadc75"
+      "sha256": "c86b7547414732e9922534511eb0ba0132c8d1c990a079d92ab8747053dadc75",
+      "content_sha256": "048b5b52534ae90faf8c4b9dba5d07f363ac07c95495c0e09f0333b59a835bbb"
     },
     "harness_result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-result.json",
@@ -249,7 +269,7 @@
     },
     "assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "165c973fc2d796347544fe55beea9ecfbb8e9828112d0a64cc3b03e63fccfbeb"
+      "sha256": "abad818c75ecad2cbad57f9112c4eb684f2d8648b4c18e03d0f9582de296f250"
     }
   },
   "shared_harness": {

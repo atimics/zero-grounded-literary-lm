@@ -36,6 +36,14 @@ Reasoner 5 harness checks every one of the 5,760 episode-arm rows, family
 manifest replay, arm parity, exact-search receipts, two-way aggregation, and
 result replay.
 
+Native floating-point diagnostics retain the first 14 significant decimal
+digits without final rounding. This boundary gives identical bytes on macOS
+arm64 and Linux x86_64 for all 5,760 rows. The largest observed native drift
+was `4.440892098500626e-16` absolute and `3.109391836691082e-16` relative. The
+largest serialization change was `9.57811607804615e-12` absolute and
+`9.832082644494586e-14` relative. Stable signed-Q20 score-space replay remains
+the source of log-loss evidence.
+
 The search-cost gate gives a development `no-go`. The separate channel check
 also gives a development `no-go`. All 99 calibration-coverage program families
 cover the truth across their eight draws. The one-sided Wilson lower bound is
