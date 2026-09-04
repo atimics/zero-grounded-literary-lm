@@ -3,7 +3,9 @@
 Status: gated development scaffolding. The bound R5.6 channel-readiness
 assessment is `development-no-go`. Its exact threshold-one candidate sets have
 a full-to-program-prior size ratio of one, above the registered maximum of
-0.8. Its prospective sealed interface and proxy audit is also pending.
+0.8. The bound v2 assessment computes full-arm log loss in stable Q20 score
+space and independently replays its positive 2.035434e-32 mean. Its
+prospective sealed interface and proxy audit is also pending.
 
 R5.7 consumes the exact published R5.6 observation artifact after channel
 readiness passes. The current R5.6 assessment uses 99 independent calibration

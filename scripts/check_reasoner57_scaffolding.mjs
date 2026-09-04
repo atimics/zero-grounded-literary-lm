@@ -13,10 +13,10 @@ function sha256(path) {
 }
 
 assert.equal(contract.schema,
-  "zero.reasoner57_active_evidence_development_contract.v2");
+  "zero.reasoner57_active_evidence_development_contract.v3");
 assert.equal(contract.status, "gated-development-scaffolding");
 assert.equal(contract.prerequisite.base_commit,
-  "ea466a593ea65c9657e9355d064b8cba5c2e8e47");
+  "80e3bbb757ad4e516b9ec7c86ea505782cb8284b");
 assert.equal(contract.prerequisite.state,
   "blocked-reasoner56-channel-readiness-gate");
 
@@ -32,9 +32,20 @@ for (const receipt of [
 const assessment = JSON.parse(readFileSync(
   contract.prerequisite.r56_assessment.path, "utf8"));
 const readiness = assessment.channel_readiness;
+assert.equal(assessment.schema,
+  contract.prerequisite.r56_assessment.schema);
+assert.equal(readiness.schema,
+  contract.prerequisite.r56_assessment.channel_readiness_schema);
 assert.equal(readiness.assessment_sha256,
   contract.prerequisite.r56_assessment.channel_readiness_assessment_sha256);
 assert.equal(readiness.status, "development-no-go");
+assert.equal(readiness.metrics.full_mean_log_loss,
+  contract.prerequisite.r56_assessment.full_mean_log_loss);
+assert.ok(readiness.metrics.full_mean_log_loss > 0);
+assert.equal(readiness.metrics.full_log_loss_replay.method,
+  "stable-q20-score-logsumexp-minus-truth-score");
+assert.equal(readiness.metrics.full_log_loss_replay.replay_sha256,
+  contract.prerequisite.r56_assessment.full_log_loss_replay_sha256);
 assert.deepEqual(readiness.failures,
   ["candidate_set_size_ratio_at_matched_coverage",
     "development_and_sealed_interface_and_proxy_audits_clean"]);
