@@ -149,6 +149,10 @@ Unknown wall time and peak memory are stored as JSON `null`.
 The contract binds both the stored gzip bytes and the canonical uncompressed
 JSONL content. Cross-platform checks stream the content digest, so differences
 between supported zlib encoders do not change the scientific trace identity.
+Shared statistical receipts use the fixed pure-JavaScript binary64 reference
+logarithm, exponential, and square root from harness commit `a463821`. Final
+scientific numbers retain 14 of 17 source digits within a `1e-13` relative
+tolerance.
 
 ## Development result
 

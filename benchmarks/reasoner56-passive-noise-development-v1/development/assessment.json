@@ -1,7 +1,7 @@
 {
-  "assessment_sha256": "ad0e99ea69abe9c40fde43aa37e97b6db8b43e735c1716c163cfc4373e6ef9f0",
+  "assessment_sha256": "d53e68333b24333ef0272bcec458bbd3a6f214cd8bf84c0dd9d444059651549a",
   "channel_readiness": {
-    "assessment_sha256": "1bfbf6a526e88fc7c0949bab39beb8c2a4ab1e36f2e665f73f53232d952d11c4",
+    "assessment_sha256": "86d3727f7ee9cd0aea1a7cb37b03be3777723875480d19376a62ed8f57e82145",
     "checks": {
       "candidate_set_coverage_lower_bound": true,
       "candidate_set_size_ratio_at_matched_coverage": false,
@@ -26,7 +26,7 @@
         "coverage_receipt_sha256": "a93a41448c16406bd8ae2e428da084a389d361728f7fb0e271dd324aef9ab20a",
         "covered_families": 99,
         "full_mean_size": 427,
-        "one_sided_95_wilson_lower": 0.9733982695317235,
+        "one_sided_95_wilson_lower": 0.97339826953172,
         "program_prior_only_mean_size": 427,
         "size_ratio": 1,
         "threshold_basis": "99 disjoint program families with worst-draw score"

@@ -157,7 +157,7 @@ if (sanitizersOnly) {
 
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 assert.equal(contract.schema,
-  "zero.reasoner56_passive_noise_development_contract.v6");
+  "zero.reasoner56_passive_noise_development_contract.v7");
 assert.equal(contract.status, "development-only");
 assert.equal(contract.execution.authorized, false);
 assert.equal(contract.execution.sealed_seeds_present, false);
@@ -193,10 +193,19 @@ assert.equal(contract.native_diagnostic_serialization
 "stable signed-Q20 score-space replay");
 assert.equal(contract.arms.length, 45);
 assert.equal(contract.shared_harness.commit,
-  "db3e85b5808252bbd174e95e8b17ee804594ae2f");
+  "a46382178fea84200a331c3ba0a0a22109b00747");
 assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
   contract.shared_harness.library_sha256,
 "shared harness hash differs from the R5.6 contract");
+assert.equal(contract.shared_harness.scientific_number_encoding,
+  "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero");
+assert.equal(contract.shared_harness.scientific_relative_tolerance, 1e-13);
+assert.equal(contract.shared_harness.reference_math_algorithm,
+  "pure-js-binary64-fixed-order-v1");
+assert.deepEqual(contract.shared_harness.reference_math_functions,
+  ["log", "exp", "sqrt"]);
+assert.equal(contract.shared_harness
+  .reference_math_relative_or_near_zero_absolute_tolerance, 2e-14);
 assert.equal(contract.shared_harness.proposal_record_binding, true);
 assert.equal(contract.shared_harness.proposal_work_charge_floor, true);
 assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");

@@ -43,6 +43,9 @@ was `4.440892098500626e-16` absolute and `3.109391836691082e-16` relative. The
 largest serialization change was `9.57811607804615e-12` absolute and
 `9.832082644494586e-14` relative. Stable signed-Q20 score-space replay remains
 the source of log-loss evidence.
+Shared result receipts use the deterministic reference logarithm,
+exponential, and square root from harness commit `a463821`, followed by the
+same 14-digit scientific-number boundary.
 
 The search-cost gate gives a development `no-go`. The separate channel check
 also gives a development `no-go`. All 99 calibration-coverage program families

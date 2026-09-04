@@ -1,7 +1,7 @@
 {
-  "schema": "zero.reasoner56_passive_noise_development_contract.v6",
+  "schema": "zero.reasoner56_passive_noise_development_contract.v7",
   "experiment": "reasoner56-passive-noise-development-v1",
-  "version": "5.6-development-6",
+  "version": "5.6-development-7",
   "status": "development-only",
   "question": "Can a frozen source-learned observation model improve exact search on new GF(17) program and corruption families?",
   "domain": {
@@ -234,7 +234,7 @@
       "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
       "scripts/lib/reasoner56_development.mjs": "234f0e18ab9e22ed6bdd62b0793f421dbbac673631982d0742bd07d14c106137",
-      "scripts/check_reasoner56_development.mjs": "d2984cb573baa4a97adaf572321ed2f748809a3606971214021206fbf52b6add"
+      "scripts/check_reasoner56_development.mjs": "9d92b4560dc20bfbfe9560031c466ec3a73070013744ee1600b608abb074c7b8"
     }
   },
   "development_outputs": {
@@ -261,7 +261,7 @@
     },
     "harness_result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-result.json",
-      "sha256": "dfe76019c9a1959e10659f3d7acab673e5bdd6a25fae388d6d6773d3e1fbc5e6"
+      "sha256": "a97653680c60b26e248a802bb214998b7f122d0f702f9321a0d4e576b57d3717"
     },
     "audit": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/proxy-taint-audit.json",
@@ -269,13 +269,18 @@
     },
     "assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "abad818c75ecad2cbad57f9112c4eb684f2d8648b4c18e03d0f9582de296f250"
+      "sha256": "52e1eb8abe6c10b118196f81d8e41a1dce1408add79e33458443397beab07d21"
     }
   },
   "shared_harness": {
     "integrated": true,
-    "commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f",
-    "library_sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5",
+    "commit": "a46382178fea84200a331c3ba0a0a22109b00747",
+    "library_sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883",
+    "scientific_number_encoding": "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero",
+    "scientific_relative_tolerance": 1e-13,
+    "reference_math_algorithm": "pure-js-binary64-fixed-order-v1",
+    "reference_math_functions": ["log", "exp", "sqrt"],
+    "reference_math_relative_or_near_zero_absolute_tolerance": 2e-14,
     "bootstrap_receipt_schema": "v2",
     "confidence_interval_method": "ordinary-percentile-bootstrap",
     "p_value_method": "recentered-null-bootstrap",
