@@ -1,7 +1,7 @@
 {
-  "assessment_sha256": "feb741675912e599670d24686dc63a7407a976116001f25c940599b134d9383d",
+  "assessment_sha256": "d53e68333b24333ef0272bcec458bbd3a6f214cd8bf84c0dd9d444059651549a",
   "channel_readiness": {
-    "assessment_sha256": "487402fbc1dd433901a4ac61ba8985c741da74fcf6ff2ae92c324dd9f1a4b6ed",
+    "assessment_sha256": "86d3727f7ee9cd0aea1a7cb37b03be3777723875480d19376a62ed8f57e82145",
     "checks": {
       "candidate_set_coverage_lower_bound": true,
       "candidate_set_size_ratio_at_matched_coverage": false,
@@ -26,7 +26,7 @@
         "coverage_receipt_sha256": "a93a41448c16406bd8ae2e428da084a389d361728f7fb0e271dd324aef9ab20a",
         "covered_families": 99,
         "full_mean_size": 427,
-        "one_sided_95_wilson_lower": 0.9733982695317235,
+        "one_sided_95_wilson_lower": 0.97339826953172,
         "program_prior_only_mean_size": 427,
         "size_ratio": 1,
         "threshold_basis": "99 disjoint program families with worst-draw score"
@@ -34,18 +34,18 @@
       "comparisons": {
         "derangement_median": {
           "bootstrap_replicates": 4096,
-          "bootstrap_sha256": "1e8a8415a1fad78ae8a2e9af775547e71a0220765702a4fa99b7e818676d9f12",
-          "family_mean_difference": -246.9316693296368,
-          "one_sided_95_upper_difference": -238.6187850763254,
+          "bootstrap_sha256": "7dae52be6a667dfdc1980436e536e38e82345c28303448a962e7e83126dc6720",
+          "family_mean_difference": -246.93166932963393,
+          "one_sided_95_upper_difference": -238.61878507632252,
           "program_families": 8,
           "reference_arm": "derangement_28",
-          "reference_mean_log_loss": 246.93166932963675
+          "reference_mean_log_loss": 246.9316693296339
         },
         "program_prior_only": {
           "bootstrap_replicates": 4096,
-          "bootstrap_sha256": "57b3f3315a15dd26f498d9a5f213623bad85f03a8cab1c52f7cc6fd1facfcef8",
-          "family_mean_difference": -9.234741659673405,
-          "one_sided_95_upper_difference": -9.234741659673405,
+          "bootstrap_sha256": "535d60e3f65107fa7d312600f998ad506f3510b2f49727cf8bdbe6dda3186498",
+          "family_mean_difference": -9.234741659673292,
+          "one_sided_95_upper_difference": -9.234741659673292,
           "program_families": 8
         },
         "uniform": {
@@ -73,12 +73,12 @@
       "full_fallback_rate": 0,
       "full_log_loss_replay": {
         "episodes": 128,
-        "maximum_relative_error": 2.0700567131457103e-16,
+        "maximum_relative_error": 6.945519952359513e-14,
         "method": "stable-q20-score-logsumexp-minus-truth-score",
-        "replay_sha256": "b29871d1599061d48e9653aadcbfdfbeedc60c31d5a008cfefb6726316f2fb93",
+        "replay_sha256": "e96badecce81e8fc614099a96fab1ea0138d4355f4f0bca74022ba7e43717f98",
         "tail_rule": "log(maximum-tie-count)+log1p(lower-tail/maximum-tie-count)"
       },
-      "full_mean_brier": 5.3030289404845934e-62,
+      "full_mean_brier": 5.303028940484531e-62,
       "full_mean_log_loss": 2.0354340134641815e-32,
       "interface_and_proxy_audits": {
         "development": {
@@ -92,7 +92,7 @@
           "status": "pending-preregistration"
         }
       },
-      "program_prior_only_mean_log_loss": 9.23474165967341,
+      "program_prior_only_mean_log_loss": 9.234741659673311,
       "reliability_bins": [
         {
           "count": 0,

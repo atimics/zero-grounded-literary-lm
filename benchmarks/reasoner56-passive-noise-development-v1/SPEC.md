@@ -68,6 +68,15 @@ development comparisons compute log loss directly from Q20 scores as
 ties and applies `log1p` to the lower tail. This preserves small competing
 mass when the displayed truth probability rounds to one.
 
+Native floating-point fields are diagnostic. Their JSON form retains the
+first 14 significant decimal digits without final rounding. A macOS arm64 and
+Linux x86_64 comparison found a maximum native absolute drift of
+`4.440892098500626e-16` and a maximum relative drift of
+`3.109391836691082e-16`. The largest change from the serialization boundary
+was `9.57811607804615e-12` absolute and `9.832082644494586e-14` relative. The
+stable signed-Q20 score-space replay remains the authoritative log-loss
+evidence.
+
 Six temperatures are eligible: `0.25, 0.5, 1, 2, 4, 8`. Sixteen disjoint
 program families select one temperature from their family-mean log loss over
 eight channel draws. A further 99 disjoint program families set the 99 percent
@@ -137,6 +146,13 @@ strict schema, checks exact episode-by-arm coverage, reconstructs every family
 manifest episode, binds arm parity, verifies fallback linkage, aggregates the
 two-way program-by-corruption design, and rebuilds the result from raw traces.
 Unknown wall time and peak memory are stored as JSON `null`.
+The contract binds both the stored gzip bytes and the canonical uncompressed
+JSONL content. Cross-platform checks stream the content digest, so differences
+between supported zlib encoders do not change the scientific trace identity.
+Shared statistical receipts use the fixed pure-JavaScript binary64 reference
+logarithm, exponential, and square root from harness commit `a463821`. Final
+scientific numbers retain 14 of 17 source digits within a `1e-13` relative
+tolerance.
 
 ## Development result
 
@@ -151,7 +167,7 @@ The separate channel-readiness assessment resolves `development-no-go`. The
 full arm has mean log loss 2.035434e-32, compared with 6.056784 for uniform
 and 9.234742 for program-prior-only. All 128 displayed full-arm truth
 probabilities round to one. Independent score replay preserves their positive
-loss and matches the native values within 2.08e-16 relative error. The exact
+loss and matches the native values within 6.95e-14 relative error. The exact
 threshold-one rule gives both the full and program-prior-only arms a
 family-weighted mean candidate-set size of 427. The
 size ratio is 1, so the registered 0.8 size gate fails. Candidate-set coverage

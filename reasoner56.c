@@ -19,6 +19,7 @@
 #define R56_DEVELOPMENT_OBSERVATIONS 18u
 #define R56_PROPOSAL_BUDGET 24u
 #define R56_GLOBAL_CAP R56_SEMANTIC_CLASSES
+#define R56_DIAGNOSTIC_SIGNIFICANT_DIGITS 14u
 
 /* The shared harness orders complete candidate records by their canonical
  * SHA-256 keys. This frozen table is the matching order for the R5.6 GF(17)
@@ -1930,6 +1931,88 @@ static void r56_fill_development_arms(r56_arm arms[R56_DEVELOPMENT_ARMS]) {
         arms[cursor++] = (r56_arm)(R56_ARM_DERANGEMENT_00 + index);
 }
 
+/* Native floating-point fields are diagnostics. Keep their serialized form
+ * stable across supported libm implementations by retaining the first 14
+ * significant decimal digits without rounding at the final boundary. */
+static int r56_format_diagnostic(double value, char *buffer, size_t capacity) {
+    char scientific[64];
+    char digits[18];
+    char output[96];
+    char *exponent_marker;
+    char *exponent_end;
+    long exponent;
+    size_t digit_count = 0u;
+    size_t significant = R56_DIAGNOSTIC_SIGNIFICANT_DIGITS;
+    size_t cursor = 0u;
+    size_t decimal_position;
+    int written;
+    int negative;
+
+    if (!buffer || capacity == 0u || !isfinite(value)) return 1;
+    if (value == 0.0) {
+        if (capacity < 2u) return 1;
+        buffer[0] = '0';
+        buffer[1] = '\0';
+        return 0;
+    }
+    negative = signbit(value) != 0;
+    written = snprintf(scientific, sizeof(scientific), "%.16e", fabs(value));
+    if (written <= 0 || (size_t)written >= sizeof(scientific)) return 1;
+    exponent_marker = strchr(scientific, 'e');
+    if (!exponent_marker) return 1;
+    exponent = strtol(exponent_marker + 1, &exponent_end, 10);
+    if (*exponent_end != '\0') return 1;
+    for (char *current = scientific; current < exponent_marker; ++current) {
+        if (*current >= '0' && *current <= '9') {
+            if (digit_count >= sizeof(digits)) return 1;
+            digits[digit_count++] = *current;
+        }
+    }
+    if (digit_count < significant) return 1;
+    while (significant > 1u && digits[significant - 1u] == '0')
+        --significant;
+    if (negative) output[cursor++] = '-';
+    if (exponent < -4 || exponent >= 15) {
+        output[cursor++] = digits[0];
+        if (significant > 1u) {
+            output[cursor++] = '.';
+            memcpy(output + cursor, digits + 1u, significant - 1u);
+            cursor += significant - 1u;
+        }
+        written = snprintf(output + cursor, sizeof(output) - cursor,
+                           "e%ld", exponent);
+        if (written <= 0 || (size_t)written >= sizeof(output) - cursor)
+            return 1;
+        cursor += (size_t)written;
+    } else {
+        decimal_position = (size_t)(exponent + 1);
+        if (exponent < 0) {
+            output[cursor++] = '0';
+            output[cursor++] = '.';
+            for (long zero = -1; zero > exponent; --zero)
+                output[cursor++] = '0';
+            memcpy(output + cursor, digits, significant);
+            cursor += significant;
+        } else if (decimal_position >= significant) {
+            memcpy(output + cursor, digits, significant);
+            cursor += significant;
+            while (cursor < (size_t)negative + decimal_position)
+                output[cursor++] = '0';
+        } else {
+            memcpy(output + cursor, digits, decimal_position);
+            cursor += decimal_position;
+            output[cursor++] = '.';
+            memcpy(output + cursor, digits + decimal_position,
+                   significant - decimal_position);
+            cursor += significant - decimal_position;
+        }
+    }
+    if (cursor + 1u > capacity) return 1;
+    output[cursor] = '\0';
+    memcpy(buffer, output, cursor + 1u);
+    return 0;
+}
+
 static int r56_append(char *buffer, size_t capacity, size_t *length,
                       const char *format, ...) {
     int added;
@@ -2448,6 +2531,10 @@ int r56_run_development(r56_development_result *result,
                     double truth_probability;
                     double normalized_log_loss;
                     double brier;
+                    char sum_text[96];
+                    char truth_probability_text[96];
+                    char normalized_log_loss_text[96];
+                    char brier_text[96];
                     char arm_buffer[32];
                     const char *arm_name = r56_arm_name(arm, arm_buffer);
                     char line[8192];
@@ -2485,6 +2572,19 @@ int r56_run_development(r56_development_result *result,
                         goto cleanup;
                     }
                     brier = r56_brier_score(probability, truth);
+                    if (r56_format_diagnostic(sum, sum_text,
+                            sizeof(sum_text)) != 0 ||
+                        r56_format_diagnostic(truth_probability,
+                            truth_probability_text,
+                            sizeof(truth_probability_text)) != 0 ||
+                        r56_format_diagnostic(normalized_log_loss,
+                            normalized_log_loss_text,
+                            sizeof(normalized_log_loss_text)) != 0 ||
+                        r56_format_diagnostic(brier, brier_text,
+                            sizeof(brier_text)) != 0) {
+                        status = 9;
+                        goto cleanup;
+                    }
                     candidate_set_size = r56_candidate_set(probability,
                         (double)artifact->conformal_mass_q20 /
                         (double)R56_Q20_ONE, candidate_set);
@@ -2578,9 +2678,9 @@ int r56_run_development(r56_development_result *result,
                         "\"source_artifact_reads\":%u,"
                         "\"accepted_class\":%u,"
                         "\"certificate_table_digest\":\"%016llx\","
-                        "\"probability_sum\":%.17g,\"truth_rank\":%u,"
-                        "\"top_one_truth\":%s,\"truth_probability\":%.17g,"
-                        "\"normalized_log_loss\":%.17g,\"brier\":%.17g,"
+                        "\"probability_sum\":%s,\"truth_rank\":%u,"
+                        "\"top_one_truth\":%s,\"truth_probability\":%s,"
+                        "\"normalized_log_loss\":%s,\"brier\":%s,"
                         "\"candidate_set_size\":%u,"
                         "\"candidate_set_contains_truth\":%s,"
                         "\"candidate_universe_count\":%u,"
@@ -2603,9 +2703,10 @@ int r56_run_development(r56_development_result *result,
                         view.observation_count,
                         search.fallback_started ? "true" : "false", reads,
                         search.accepted_class,
-                        (unsigned long long)certificate.table_digest, sum,
+                        (unsigned long long)certificate.table_digest, sum_text,
                         truth_rank, truth_rank == 1u ? "true" : "false",
-                        truth_probability, normalized_log_loss, brier,
+                        truth_probability_text, normalized_log_loss_text,
+                        brier_text,
                         candidate_set_size,
                         candidate_set[truth] ? "true" : "false",
                         R56_SEMANTIC_CLASSES,
@@ -2776,8 +2877,18 @@ cleanup:
 int r56_write_development_result(const char *path,
                                  const r56_development_result *result) {
     FILE *file;
+    char median_cost_text[96];
+    char mean_log_loss_text[96];
+    char mean_brier_text[96];
     int ok = 1;
     if (!path || !result) return 1;
+    if (r56_format_diagnostic(result->target_only_median_cost,
+            median_cost_text, sizeof(median_cost_text)) != 0 ||
+        r56_format_diagnostic(result->full_mean_normalized_log_loss,
+            mean_log_loss_text, sizeof(mean_log_loss_text)) != 0 ||
+        r56_format_diagnostic(result->full_mean_brier,
+            mean_brier_text, sizeof(mean_brier_text)) != 0)
+        return 2;
     file = fopen(path, "wb");
     if (!file) return 2;
     if (fprintf(file,
@@ -2819,9 +2930,9 @@ int r56_write_development_result(const char *path,
         "  \"taint_audit_passed\": %s,\n"
         "  \"target_only_min_cost\": %u,\n"
         "  \"target_only_max_cost\": %u,\n"
-        "  \"target_only_median_cost\": %.17g,\n"
-        "  \"full_mean_normalized_log_loss\": %.17g,\n"
-        "  \"full_mean_brier\": %.17g,\n"
+        "  \"target_only_median_cost\": %s,\n"
+        "  \"full_mean_normalized_log_loss\": %s,\n"
+        "  \"full_mean_brier\": %s,\n"
         "  \"development_classes\": [",
         R56_SYNTAX_PROGRAMS, R56_SEMANTIC_CLASSES, R56_SENSORS,
         R56_SUPPORT_MIN, result->episodes, result->trace_rows,
@@ -2844,9 +2955,7 @@ int r56_write_development_result(const char *path,
         result->proxy_audit_passed ? "true" : "false",
         result->taint_audit_passed ? "true" : "false",
         result->target_only_min_cost, result->target_only_max_cost,
-        result->target_only_median_cost,
-        result->full_mean_normalized_log_loss,
-        result->full_mean_brier) < 0)
+        median_cost_text, mean_log_loss_text, mean_brier_text) < 0)
         ok = 0;
     for (uint32_t index = 0u;
          ok && index < result->development_class_count; ++index)
@@ -2917,12 +3026,35 @@ int r56_self_test(void) {
     r56_artifact *first = (r56_artifact *)malloc(sizeof(*first));
     r56_artifact *second = (r56_artifact *)malloc(sizeof(*second));
     r56_artifact *decoded = (r56_artifact *)malloc(sizeof(*decoded));
-    uint8_t *bytes;
-    uint8_t *other_bytes;
+    uint8_t *bytes = NULL;
+    uint8_t *other_bytes = NULL;
     size_t size = r56_artifact_serialized_size();
     size_t written = 0u;
     size_t other_written = 0u;
     int status = 0;
+    {
+        char diagnostic[96];
+        if (r56_format_diagnostic(6.389945594502464e-59,
+                diagnostic, sizeof(diagnostic)) != 0 ||
+            strcmp(diagnostic, "6.3899455945024e-59") != 0 ||
+            r56_format_diagnostic(6.389945594502465e-59,
+                diagnostic, sizeof(diagnostic)) != 0 ||
+            strcmp(diagnostic, "6.3899455945024e-59") != 0 ||
+            r56_format_diagnostic(1.9646127668504201,
+                diagnostic, sizeof(diagnostic)) != 0 ||
+            strcmp(diagnostic, "1.9646127668504") != 0 ||
+            r56_format_diagnostic(1.9646127668504199,
+                diagnostic, sizeof(diagnostic)) != 0 ||
+            strcmp(diagnostic, "1.9646127668504") != 0 ||
+            r56_format_diagnostic(42.0, diagnostic,
+                sizeof(diagnostic)) != 0 || strcmp(diagnostic, "42") != 0 ||
+            r56_format_diagnostic(0.0001234567890123456, diagnostic,
+                sizeof(diagnostic)) != 0 ||
+            strcmp(diagnostic, "0.00012345678901234") != 0) {
+            status = 27;
+            goto done;
+        }
+    }
     if (!universe || !first || !second || !decoded) {
         status = 1; goto done;
     }

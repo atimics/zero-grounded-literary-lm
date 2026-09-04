@@ -3,15 +3,24 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
+  closeSync,
+  copyFileSync,
+  createReadStream,
+  createWriteStream,
   mkdtempSync,
+  openSync,
   readFileSync,
+  readSync,
   rmSync,
+  writeSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { gzipSync } from "node:zlib";
+import { Readable, Writable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { createGunzip, createGzip } from "node:zlib";
 
 import { stableJson } from "./zero_data_lib.mjs";
 import {
@@ -35,9 +44,76 @@ const root = `benchmarks/${R56_EXPERIMENT}`;
 const contractPath = `${root}/contract.json`;
 const updateFixtures = process.argv.includes("--update-fixtures");
 const sanitizersOnly = process.argv.includes("--sanitizers-only");
+const nativeBinary = process.env.REASONER56_BINARY || "./reasoner56";
 
 function sha256(data) {
   return createHash("sha256").update(data).digest("hex");
+}
+
+function sha256File(file) {
+  const descriptor = openSync(file, "r");
+  const hash = createHash("sha256");
+  const chunk = Buffer.allocUnsafe(1024 * 1024);
+  try {
+    let bytesRead;
+    while ((bytesRead = readSync(descriptor, chunk, 0, chunk.length, null)) > 0)
+      hash.update(chunk.subarray(0, bytesRead));
+  } finally {
+    closeSync(descriptor);
+  }
+  return hash.digest("hex");
+}
+
+function *jsonLines(rows) {
+  for (const row of rows) yield `${JSON.stringify(row)}\n`;
+}
+
+function sha256JsonLines(rows) {
+  const hash = createHash("sha256");
+  for (const line of jsonLines(rows)) hash.update(line);
+  return hash.digest("hex");
+}
+
+async function sha256GzipContent(file) {
+  const hash = createHash("sha256");
+  const sink = new Writable({
+    write(chunk, encoding, callback) {
+      void encoding;
+      hash.update(chunk);
+      callback();
+    },
+  });
+  await pipeline(createReadStream(file), createGunzip(), sink);
+  return hash.digest("hex");
+}
+
+async function writeHarnessTrace(rows, outputPath) {
+  await pipeline(
+    Readable.from(jsonLines(rows), { objectMode: false }),
+    createGzip({ level: 9, mtime: 0 }),
+    createWriteStream(outputPath),
+  );
+  const descriptor = openSync(outputPath, "r+");
+  try {
+    writeSync(descriptor, Buffer.from([255]), 0, 1, 9);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function tamperCalibrationManifest(manifest, mutate) {
+  const originalReceipt = manifest.calibration_coverage_receipt;
+  const families = [...originalReceipt.families];
+  const draws = [...families[0].draws];
+  draws[0] = { ...draws[0] };
+  families[0] = { ...families[0], draws };
+  const receipt = { ...originalReceipt, families };
+  mutate({ receipt, family: families[0], draw: draws[0] });
+  const { receipt_sha256: ignored, ...body } = receipt;
+  void ignored;
+  receipt.receipt_sha256 = canonicalDigest(
+    "r56-calibration-coverage-receipt", body);
+  return { ...manifest, calibration_coverage_receipt: receipt };
 }
 
 function expectFailure(action, pattern) {
@@ -81,7 +157,7 @@ if (sanitizersOnly) {
 
 const contract = JSON.parse(readFileSync(contractPath, "utf8"));
 assert.equal(contract.schema,
-  "zero.reasoner56_passive_noise_development_contract.v5");
+  "zero.reasoner56_passive_noise_development_contract.v7");
 assert.equal(contract.status, "development-only");
 assert.equal(contract.execution.authorized, false);
 assert.equal(contract.execution.sealed_seeds_present, false);
@@ -108,12 +184,28 @@ assert.equal(contract.generators.nested_repeats, 2);
 assert.equal(contract.analysis.log_loss_comparison_input,
   "stable score-domain normalized_log_loss; truth_probability is diagnostic only");
 assert.equal(contract.analysis.full_log_loss_replay_episodes, 128);
+assert.equal(contract.native_diagnostic_serialization
+  .significant_decimal_digits, 14);
+assert.equal(contract.native_diagnostic_serialization.final_boundary,
+  "retain the first 14 significant decimal digits without rounding");
+assert.equal(contract.native_diagnostic_serialization
+  .authoritative_log_loss_evidence,
+"stable signed-Q20 score-space replay");
 assert.equal(contract.arms.length, 45);
 assert.equal(contract.shared_harness.commit,
-  "db3e85b5808252bbd174e95e8b17ee804594ae2f");
+  "a46382178fea84200a331c3ba0a0a22109b00747");
 assert.equal(sha256(readFileSync("scripts/lib/reasoner5_harness.mjs")),
   contract.shared_harness.library_sha256,
 "shared harness hash differs from the R5.6 contract");
+assert.equal(contract.shared_harness.scientific_number_encoding,
+  "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero");
+assert.equal(contract.shared_harness.scientific_relative_tolerance, 1e-13);
+assert.equal(contract.shared_harness.reference_math_algorithm,
+  "pure-js-binary64-fixed-order-v1");
+assert.deepEqual(contract.shared_harness.reference_math_functions,
+  ["log", "exp", "sqrt"]);
+assert.equal(contract.shared_harness
+  .reference_math_relative_or_near_zero_absolute_tolerance, 2e-14);
 assert.equal(contract.shared_harness.proposal_record_binding, true);
 assert.equal(contract.shared_harness.proposal_work_charge_floor, true);
 assert.equal(contract.shared_harness.bootstrap_receipt_schema, "v2");
@@ -131,18 +223,14 @@ if (!updateFixtures) {
       `${file} hash differs from the development contract`);
 }
 
-run("./reasoner56", ["--self-test"]);
+run(nativeBinary, ["--self-test"]);
 
 function runDevelopment(directory) {
   const resultPath = path.join(directory, "result.json");
   const tracePath = path.join(directory, "raw-trace.jsonl");
   const artifactPath = path.join(directory, "artifact.bin");
-  run("./reasoner56", ["develop", resultPath, tracePath, artifactPath]);
-  return {
-    result: readFileSync(resultPath),
-    trace: readFileSync(tracePath),
-    artifact: readFileSync(artifactPath),
-  };
+  run(nativeBinary, ["develop", resultPath, tracePath, artifactPath]);
+  return { resultPath, tracePath, artifactPath };
 }
 
 const firstDirectory = mkdtempSync(path.join(tmpdir(), "reasoner56-a-"));
@@ -150,15 +238,18 @@ const secondDirectory = mkdtempSync(path.join(tmpdir(), "reasoner56-b-"));
 try {
   const first = runDevelopment(firstDirectory);
   const second = runDevelopment(secondDirectory);
-  assert.deepEqual(first.result, second.result,
+  assert.equal(sha256File(first.resultPath), sha256File(second.resultPath),
     "development result must be byte deterministic");
-  assert.deepEqual(first.trace, second.trace,
+  assert.equal(sha256File(first.tracePath), sha256File(second.tracePath),
     "development trace must be byte deterministic");
-  assert.deepEqual(first.artifact, second.artifact,
+  assert.equal(sha256File(first.artifactPath), sha256File(second.artifactPath),
     "development artifact must be byte deterministic");
 
-  const nativeResult = JSON.parse(first.result.toString("utf8"));
-  const nativeRows = first.trace.toString("utf8").trim().split("\n")
+  const firstResult = readFileSync(first.resultPath);
+  const firstTrace = readFileSync(first.tracePath);
+  const firstArtifact = readFileSync(first.artifactPath);
+  const nativeResult = JSON.parse(firstResult.toString("utf8"));
+  const nativeRows = firstTrace.toString("utf8").trim().split("\n")
     .map(JSON.parse);
   assert.equal(nativeResult.schema, "zero.reasoner56_development_result.v4");
   assert.equal(nativeResult.status, "development-only");
@@ -229,7 +320,7 @@ try {
   }
 
   const bundle = buildR56HarnessBundle({ nativeRows, nativeResult,
-    artifactBytes: first.artifact });
+    artifactBytes: firstArtifact });
   assert.equal(bundle.rawRows.length, 5760);
   assert.equal(bundle.coverage.rows, 5760);
   assert.equal(bundle.replayReceipt.episodes, 128);
@@ -292,81 +383,81 @@ try {
   assert.deepEqual(bundle.assessment.harness_gate.failures,
     contract.development_expected_gate_failures);
 
-  const harnessRaw = Buffer.from(bundle.rawRows.map(row =>
-    `${JSON.stringify(row)}\n`).join(""));
-  const harnessCompressed = gzipSync(harnessRaw, { level: 9, mtime: 0 });
-  harnessCompressed[9] = 255;
   const generated = {
-    result: first.result,
-    trace: first.trace,
-    artifact: first.artifact,
-    manifest: Buffer.from(stableJson(bundle.manifest)),
-    harness_trace: harnessCompressed,
-    harness_result: Buffer.from(stableJson(bundle.result)),
-    audit: Buffer.from(stableJson(bundle.audit)),
-    assessment: Buffer.from(stableJson(bundle.assessment)),
+    result: { path: first.resultPath },
+    trace: { path: first.tracePath },
+    artifact: { path: first.artifactPath },
+    manifest: { bytes: Buffer.from(stableJson(bundle.manifest)) },
+    harness_trace: { rows: bundle.rawRows },
+    harness_result: { bytes: Buffer.from(stableJson(bundle.result)) },
+    audit: { bytes: Buffer.from(stableJson(bundle.audit)) },
+    assessment: { bytes: Buffer.from(stableJson(bundle.assessment)) },
   };
 
   if (updateFixtures) {
-    for (const [name, bytes] of Object.entries(generated)) {
+    for (const [name, value] of Object.entries(generated)) {
       const output = contract.development_outputs[name];
       assert.ok(output, `contract needs a development output for ${name}`);
-      writeFileSync(output.path, bytes);
+      if (value.rows) {
+        const harnessTracePath = path.join(firstDirectory,
+          "harness-trace.jsonl.gz");
+        await writeHarnessTrace(value.rows, harnessTracePath);
+        copyFileSync(harnessTracePath, output.path);
+      } else if (value.path) copyFileSync(value.path, output.path);
+      else writeFileSync(output.path, value.bytes);
     }
   } else {
-    for (const [name, bytes] of Object.entries(generated)) {
+    for (const [name, value] of Object.entries(generated)) {
       const output = contract.development_outputs[name];
-      const committed = readFileSync(output.path);
-      assert.deepEqual(bytes, committed,
+      if (value.rows) {
+        assert.equal(sha256JsonLines(value.rows), output.content_sha256,
+          `${name} content differs from the development contract`);
+        assert.equal(await sha256GzipContent(output.path),
+          output.content_sha256,
+          `${name} fixture content differs from the development contract`);
+        assert.equal(sha256File(output.path), output.sha256,
+          `${name} digest differs from the development contract`);
+        continue;
+      }
+      const generatedDigest = value.path ? sha256File(value.path) :
+        sha256(value.bytes);
+      const committedDigest = sha256File(output.path);
+      assert.equal(generatedDigest, committedDigest,
         `${name} differs from the committed development fixture`);
-      assert.equal(sha256(committed), output.sha256,
+      assert.equal(committedDigest, output.sha256,
         `${name} digest differs from the development contract`);
     }
   }
 
-  const badManifest = structuredClone(bundle.manifest);
-  badManifest.source_artifact.sha256 = "0".repeat(64);
+  const badManifest = { ...bundle.manifest,
+    source_artifact: { ...bundle.manifest.source_artifact,
+      sha256: "0".repeat(64) } };
   expectFailure(() => assertManifestDigest(badManifest), /SHA-256|digest/u);
 
-  const badCalibrationManifest = structuredClone(bundle.manifest);
-  const badCalibrationReceipt =
-    badCalibrationManifest.calibration_coverage_receipt;
-  badCalibrationReceipt.families[0].draws[0].content_sha256 = "0".repeat(64);
-  const badCalibrationBody = structuredClone(badCalibrationReceipt);
-  delete badCalibrationBody.receipt_sha256;
-  badCalibrationReceipt.receipt_sha256 = canonicalDigest(
-    "r56-calibration-coverage-receipt", badCalibrationBody);
+  const badCalibrationManifest = tamperCalibrationManifest(bundle.manifest,
+    ({ draw }) => { draw.content_sha256 = "0".repeat(64); });
   expectFailure(() => assertR56CalibrationCoverageReplay(
-    badCalibrationManifest, first.artifact), /content digest changed/u);
+    badCalibrationManifest, firstArtifact), /content digest changed/u);
 
-  const forgedCoverageManifest = structuredClone(bundle.manifest);
-  const forgedCoverageReceipt =
-    forgedCoverageManifest.calibration_coverage_receipt;
-  forgedCoverageReceipt.families[0].all_draws_covered = false;
-  const forgedCoverageBody = structuredClone(forgedCoverageReceipt);
-  delete forgedCoverageBody.receipt_sha256;
-  forgedCoverageReceipt.receipt_sha256 = canonicalDigest(
-    "r56-calibration-coverage-receipt", forgedCoverageBody);
+  const forgedCoverageManifest = tamperCalibrationManifest(bundle.manifest,
+    ({ family }) => { family.all_draws_covered = false; });
   expectFailure(() => assertR56CalibrationCoverageReplay(
-    forgedCoverageManifest, first.artifact), /family coverage changed/u);
+    forgedCoverageManifest, firstArtifact), /family coverage changed/u);
 
-  const forgedNativeResult = structuredClone(nativeResult);
-  forgedNativeResult.calibration_coverage_records[0].all_draws_covered = false;
+  const forgedNativeResult = { ...nativeResult,
+    calibration_coverage_records: nativeResult.calibration_coverage_records
+      .map((record, index) => index === 0 ?
+        { ...record, all_draws_covered: false } : record) };
   expectFailure(() => buildR56HarnessBundle({ nativeRows,
-    nativeResult: forgedNativeResult, artifactBytes: first.artifact }),
+    nativeResult: forgedNativeResult, artifactBytes: firstArtifact }),
   /native calibration coverage differs from independent replay/u);
 
-  const forgedDrawManifest = structuredClone(bundle.manifest);
-  const forgedDrawReceipt = forgedDrawManifest.calibration_coverage_receipt;
-  forgedDrawReceipt.families[0].draws[0].candidate_set_size = 1;
-  const forgedDrawBody = structuredClone(forgedDrawReceipt);
-  delete forgedDrawBody.receipt_sha256;
-  forgedDrawReceipt.receipt_sha256 = canonicalDigest(
-    "r56-calibration-coverage-receipt", forgedDrawBody);
+  const forgedDrawManifest = tamperCalibrationManifest(bundle.manifest,
+    ({ draw }) => { draw.candidate_set_size = 1; });
   expectFailure(() => assertR56CalibrationCoverageReplay(
-    forgedDrawManifest, first.artifact), /coverage outcome changed/u);
+    forgedDrawManifest, firstArtifact), /coverage outcome changed/u);
 
-  const changedArtifact = Buffer.from(first.artifact);
+  const changedArtifact = Buffer.from(firstArtifact);
   changedArtifact[128] ^= 1;
   expectFailure(() => assertR56CalibrationCoverageReplay(bundle.manifest,
     changedArtifact), /artifact SHA-256 changed/u);
@@ -381,30 +472,33 @@ try {
     nativeResult);
   assert.equal(taintedAudit.passed, false);
 
-  const leakingManifest = structuredClone(bundle.manifest);
-  for (const episode of leakingManifest.episodes) {
-    const orderSlot = episode.content.evaluator.episode_spec.order_slot;
-    episode.cross_family_id = `mechanism-${orderSlot}`;
-  }
+  const leakingManifest = { ...bundle.manifest,
+    episodes: bundle.manifest.episodes.map(episode => {
+      const orderSlot = episode.content.evaluator.episode_spec.order_slot;
+      return { ...episode, cross_family_id: `mechanism-${orderSlot}` };
+    }) };
   const leakingAudit = auditR56ProxyTaint(leakingManifest, bundle.rawRows,
     nativeResult);
   assert.equal(leakingAudit.passed, false);
   assert.equal(leakingAudit.maximum_template_fraction_per_nonopaque_cell, 1);
 
-  const severityLeakingManifest = structuredClone(bundle.manifest);
-  for (const episode of severityLeakingManifest.episodes) {
-    const orderSlot = episode.content.evaluator.episode_spec.order_slot;
-    episode.content.evaluator.episode_spec.corruption_family.severity =
-      1 + orderSlot % 4;
-  }
+  const severityLeakingManifest = { ...bundle.manifest,
+    episodes: bundle.manifest.episodes.map(episode => {
+      const episodeSpec = episode.content.evaluator.episode_spec;
+      const orderSlot = episodeSpec.order_slot;
+      return { ...episode, content: { ...episode.content,
+        evaluator: { ...episode.content.evaluator,
+          episode_spec: { ...episodeSpec,
+            corruption_family: { ...episodeSpec.corruption_family,
+              severity: 1 + orderSlot % 4 } } } } };
+    }) };
   const severityLeakingAudit = auditR56ProxyTaint(severityLeakingManifest,
     bundle.rawRows, nativeResult);
   assert.equal(severityLeakingAudit.passed, false);
   assert.equal(severityLeakingAudit
     .maximum_severity_fraction_per_nonopaque_cell, 1);
 
-  const changedResult = structuredClone(bundle.result);
-  changedResult.result_sha256 = "0".repeat(64);
+  const changedResult = { ...bundle.result, result_sha256: "0".repeat(64) };
   expectFailure(() => assertResultReplay({
     experiment: R56_EXPERIMENT,
     manifest: bundle.manifest,
@@ -416,29 +510,29 @@ try {
 
   const changedReadiness = assessR56ChannelReadiness(nativeRows, {
     ...bundle.audit, passed: false,
-  }, bundle.manifest, first.artifact);
+  }, bundle.manifest, firstArtifact);
   assert.equal(changedReadiness.status, "development-no-go");
   assert.deepEqual(changedReadiness.failures,
     contract.development_expected_readiness_failures);
   assert.equal(changedReadiness.metrics.interface_and_proxy_audits
     .development.status, "failed");
 
-  assert.equal(first.artifact.subarray(0, 8).toString("ascii"), "R56ART1\0");
-  assert.equal(first.artifact.readUInt32LE(8), 1);
-  assert.equal(first.artifact.readUInt32LE(12), 17);
-  assert.equal(first.artifact.readUInt32LE(16), 8);
-  assert.equal(first.artifact.readUInt32LE(20), 3);
-  assert.equal(first.artifact.readUInt32LE(24), 512);
-  assert.equal(first.artifact.readUInt32LE(28), 427);
-  assert.equal(first.artifact.readUInt32LE(32), 3);
-  assert.equal(first.artifact.readUInt32LE(40), 32);
-  assert.equal(first.artifact.length, contract.artifact.serialized_bytes);
+  assert.equal(firstArtifact.subarray(0, 8).toString("ascii"), "R56ART1\0");
+  assert.equal(firstArtifact.readUInt32LE(8), 1);
+  assert.equal(firstArtifact.readUInt32LE(12), 17);
+  assert.equal(firstArtifact.readUInt32LE(16), 8);
+  assert.equal(firstArtifact.readUInt32LE(20), 3);
+  assert.equal(firstArtifact.readUInt32LE(24), 512);
+  assert.equal(firstArtifact.readUInt32LE(28), 427);
+  assert.equal(firstArtifact.readUInt32LE(32), 3);
+  assert.equal(firstArtifact.readUInt32LE(40), 32);
+  assert.equal(firstArtifact.length, contract.artifact.serialized_bytes);
 } finally {
   rmSync(firstDirectory, { recursive: true, force: true });
   rmSync(secondDirectory, { recursive: true, force: true });
 }
 
-const unauthorized = spawnSync("./reasoner56", ["execute"], {
+const unauthorized = spawnSync(nativeBinary, ["execute"], {
   encoding: "utf8",
   env: { ...process.env, REASONER56_APPROVAL: "forged" },
 });
