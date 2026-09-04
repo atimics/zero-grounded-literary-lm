@@ -121,14 +121,15 @@ for (const file of checkedFiles) {
 const ht1 = contracts.get("zero5-ht1-mergetree-v1");
 const ht1Implementation = JSON.parse(fs.readFileSync(ht1ImplementationPath));
 assert.equal(ht1Implementation.schema, "zero.ht1_mergetree_implementation.v1");
-assert.equal(ht1Implementation.status, "implemented-awaiting-artifact-preflight");
+assert.equal(ht1Implementation.status,
+  "artifact-preflight-complete-awaiting-training-authorization");
 assert.equal(ht1Implementation.implementation_complete, true);
 assert.equal(ht1Implementation.experiment_runs_completed, 0);
 assert.equal(sha256(ht1Implementation.preregistration.contract),
   ht1Implementation.preregistration.contract_sha256);
 assert.equal(sha256(ht1Implementation.preregistration.series),
   ht1Implementation.preregistration.series_sha256);
-for (const name of ["trainer", "base_trainer", "evaluator", "checker",
+for (const name of ["trainer", "base_trainer", "evaluator", "checker", "preflight",
   "test_header", "review_notes", "launcher"]) {
   assert.equal(sha256(ht1Implementation.implementation[name]),
     ht1Implementation.implementation[`${name}_sha256`]);
@@ -138,14 +139,35 @@ assert.equal(ht1Implementation.model.total_parameters,
     ht1Implementation.model.gate_parameters);
 assert.equal(ht1Implementation.synthetic_mechanics.ten_update_gate_off_identity,
   true);
-assert.equal(ht1Implementation.artifact_preflight.status, "pending");
+assert.equal(ht1Implementation.artifact_preflight.status, "complete-pass");
+assert.equal(sha256(ht1Implementation.artifact_preflight.evidence),
+  ht1Implementation.artifact_preflight.evidence_sha256);
+const ht1Preflight = JSON.parse(fs.readFileSync(
+  ht1Implementation.artifact_preflight.evidence));
+assert.equal(ht1Preflight.schema, "zero.ht1_preflight_evidence.v1");
+assert.equal(ht1Preflight.status, "complete-pass");
+assert.equal(ht1Preflight.eligible_for_pilot_authorization, true);
+assert.equal(ht1Preflight.experiment_runs_completed, 0);
+assert.equal(ht1Preflight.pilot_training_run_executed, false);
+assert.equal(ht1Preflight.gates.compute, true);
+assert.equal(ht1Preflight.gates.wall_time, true);
+assert.equal(ht1Implementation.artifact_preflight.actual_c2_checkpoint_gate_off_updates,
+  ht1Preflight.mechanics.gate_off_updates);
+assert.equal(ht1Implementation.artifact_preflight.actual_c51_training_pack_gate_off_updates,
+  ht1Preflight.mechanics.gate_off_updates);
+assert.equal(ht1Implementation.artifact_preflight.measured_compute_ratio,
+  ht1Preflight.resources.compute_ratio);
+assert.equal(ht1Implementation.artifact_preflight.measured_wall_time_ratio,
+  ht1Preflight.resources.wall_time_ratio);
+assertNoTestAccess(ht1Preflight.test);
 assert.equal(ht1Implementation.authorization.training_authorized, false);
 assert.equal(ht1Implementation.authorization.runs_authorized, 0);
 assertNoTestAccess(ht1Implementation.test);
 assert.equal(fs.readFileSync(ht1Implementation.implementation.base_trainer)
   .equals(fs.readFileSync(ht1Implementation.implementation.trainer)), false);
 checkedFiles.push(ht1ImplementationPath,
-  ht1Implementation.implementation.review_notes);
+  ht1Implementation.implementation.review_notes,
+  ht1Implementation.artifact_preflight.evidence);
 assert.equal(ht1.tokenizer.base_tokens + ht1.tokenizer.merge_tokens,
   ht1.tokenizer.vocabulary);
 assert.equal(ht1.tokenizer.segmentation_changed, false);

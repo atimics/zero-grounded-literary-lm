@@ -56,17 +56,19 @@ syntax tree, semantic value, duplicate count, work charge, or fallback order
 changes or invalidates the receipt.
 
 The common verifier helper gives the verifier a frozen candidate snapshot and
-returns one accept-or-reject value to the ranker. Every proposal must belong to
-the registered candidate universe. Experiment code supplies the exact
-semantic bytes and an evaluator-only counterexample receipt. A test places an
-invalid candidate first and checks that it is rejected. Canonical exhaustive
-fallback walks the full registered universe and charges duplicate expansions,
-partial expansions, and verifier checks. Each unique expansion is linked to
-the matching verifier row. Every unsolved search receives the registered
-cap-plus-one cost. Its receipt states whether the global cap stopped the run or
-the complete fallback was exhausted. Source ablation and the source-free path
-must produce the same complete operational row, apart from the registered arm
-name, with zero source-artifact reads.
+returns one accept-or-reject value to the ranker. Every proposal must match a
+registered candidate record after removing only its `partial_expansions` work
+charge. A proposal may add measured work above the frozen baseline. It cannot
+reduce that baseline. Experiment code supplies the exact semantic bytes and an
+evaluator-only counterexample receipt. A test places an invalid candidate first
+and checks that it is rejected. Canonical exhaustive fallback walks the full
+registered universe and charges duplicate expansions, partial expansions, and
+verifier checks. Each unique expansion is linked to the matching verifier row.
+Every unsolved search receives the registered cap-plus-one cost. Its receipt
+states whether the global cap stopped the run or the complete fallback was
+exhausted. Source ablation and the source-free path must produce the same
+complete operational row, apart from the registered arm name, with zero
+source-artifact reads.
 
 ## Statistics
 
