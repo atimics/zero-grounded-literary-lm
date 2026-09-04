@@ -10,6 +10,7 @@ import {
   analysisFunctionDigest,
   armParityReceipt,
   assertArmParity,
+  assertFamilyInferenceReceipt,
   assertInjectedInvalidRejected,
   assertManifestReplay,
   assertRegisteredOverlap,
@@ -33,6 +34,7 @@ import {
   freezeFamilySplits,
   normalizeHexSeed,
   oneWayClusterBootstrap,
+  orderHolmByCalibratedNullPValue,
   overlapReceipt,
   reconstructCommonGate,
   registerReplayPipeline,
@@ -1054,6 +1056,111 @@ function testFamilyStatistics() {
   assert.equal(randomization.beats_median, true);
 }
 
+function testRecenteredNullBootstrap() {
+  const oneWayUnits = [-4, 1, 1, 1].map((meanLogRatio, index) => ({
+    family_id: `null-one-${index}`,
+    mean_log_ratio: meanLogRatio,
+  }));
+  const oneWay = oneWayClusterBootstrap(oneWayUnits, {
+    seed: DEVELOPMENT_SEED_A,
+    replicates: 257,
+  });
+  assert.equal(oneWay.schema,
+    "zero.reasoner5_one_way_cluster_bootstrap.v2");
+  assert.equal(oneWay.confidence_interval_method,
+    "ordinary-percentile-bootstrap");
+  assert.equal(oneWay.p_value_method, "recentered-null-bootstrap");
+  assert.deepEqual([oneWay.lower_log_ratio, oneWay.upper_log_ratio], [-1.5, 1]);
+  assert.notEqual(oneWay.one_sided_p_lower_than_zero,
+    oneWay.uncentered_sign_tail_fraction_lower);
+  assert.match(oneWay.null_bootstrap_sha256, /^[0-9a-f]{64}$/u);
+  assert.notEqual(oneWay.null_bootstrap_sha256, oneWay.bootstrap_sha256);
+
+  const stratifiedUnits = [
+    { generator: "a", mean_log_ratio: -4 },
+    { generator: "a", mean_log_ratio: 1 },
+    { generator: "b", mean_log_ratio: 1 },
+    { generator: "b", mean_log_ratio: 1 },
+  ];
+  const stratified = oneWayClusterBootstrap(stratifiedUnits, {
+    seed: DEVELOPMENT_SEED_A,
+    replicates: 257,
+    environmentField: "generator",
+  });
+  assert.equal(stratified.schema,
+    "zero.reasoner5_stratified_one_way_cluster_bootstrap.v2");
+  assert.equal(stratified.fixed_environments, 2);
+  assert.equal(stratified.fixed_environment_weighting, "equal");
+  assert.deepEqual([stratified.lower_log_ratio, stratified.upper_log_ratio],
+    [-1.5, 1]);
+  assert.notEqual(stratified.one_sided_p_lower_than_zero,
+    stratified.uncentered_sign_tail_fraction_lower);
+  assert.match(stratified.null_bootstrap_sha256, /^[0-9a-f]{64}$/u);
+
+  const crossed = [
+    { family_id: "r0", cross_family_id: "c0", mean_log_ratio: -4 },
+    { family_id: "r0", cross_family_id: "c1", mean_log_ratio: 1 },
+    { family_id: "r1", cross_family_id: "c0", mean_log_ratio: 1 },
+    { family_id: "r1", cross_family_id: "c1", mean_log_ratio: 1 },
+  ];
+  const twoWay = twoWayClusterBootstrap(crossed, {
+    seed: DEVELOPMENT_SEED_A,
+    replicates: 257,
+  });
+  assert.equal(twoWay.schema,
+    "zero.reasoner5_two_way_cluster_bootstrap.v2");
+  assert.deepEqual([twoWay.lower_log_ratio, twoWay.upper_log_ratio], [-4, 1]);
+  assert.notEqual(twoWay.one_sided_p_lower_than_zero,
+    twoWay.uncentered_sign_tail_fraction_lower);
+  assert.match(twoWay.null_bootstrap_sha256, /^[0-9a-f]{64}$/u);
+
+  const inference = familyInferenceReceipt(oneWayUnits, {
+    design: "one-way",
+    direction: "lower",
+    seed: DEVELOPMENT_SEED_A,
+    replicates: 257,
+    alpha: 0.05,
+  });
+  const changedNullDigest = structuredClone(inference);
+  changedNullDigest.interval.null_bootstrap_sha256 = "0".repeat(64);
+  expectFailure(() => assertFamilyInferenceReceipt(changedNullDigest),
+    /does not replay/u);
+
+  const mechanism = (name, values) => ({
+    name,
+    inference: familyInferenceReceipt(values.map((meanLogRatio, index) => ({
+      family_id: `${name}-${index}`,
+      mean_log_ratio: meanLogRatio,
+    })), {
+      design: "one-way",
+      direction: "higher",
+      seed: DEVELOPMENT_SEED_A,
+      replicates: 257,
+      alpha: 0.05,
+    }),
+  });
+  const mechanisms = [
+    mechanism("null-first", [-5, -5, 4, 7]),
+    mechanism("tail-first", [-5, -1, 4, 4]),
+  ];
+  const uncenteredOrder = [...mechanisms].sort((left, right) =>
+    left.inference.interval.uncentered_sign_tail_fraction_higher -
+      right.inference.interval.uncentered_sign_tail_fraction_higher)
+    .map(item => item.name);
+  assert.deepEqual(uncenteredOrder, ["tail-first", "null-first"]);
+  assert.deepEqual(orderHolmByCalibratedNullPValue(mechanisms)
+    .map(item => item.name), ["null-first", "tail-first"]);
+  expectFailure(() => orderHolmByCalibratedNullPValue([{
+    name: "legacy-tail",
+    inference: {
+      interval: {
+        p_value_method: "uncentered-sign-tail",
+        one_sided_p_higher_than_zero: 0.01,
+      },
+    },
+  }]), /calibrated null p-value/u);
+}
+
 function passingGate() {
   const universe = candidateMultisetReceipt([
     { semantic: [0], ast: { op: "fixture" } },
@@ -1300,6 +1407,7 @@ testSplitsReplayAndOverlap();
 testRankerViewsAndParity();
 testVerifierAndAblation();
 testFamilyStatistics();
+testRecenteredNullBootstrap();
 testGateAndTraceReplay();
 
 const coverage = {
@@ -1328,6 +1436,12 @@ const coverage = {
   nested_family_aggregation: true,
   family_level_unit_restriction: true,
   one_way_cluster_bootstrap: true,
+  ordinary_percentile_confidence_bounds: true,
+  recentered_null_one_way_bootstrap: true,
+  recentered_null_stratified_one_way_bootstrap: true,
+  recentered_null_two_way_bootstrap: true,
+  null_bootstrap_digest_binding: true,
+  holm_uses_calibrated_null_p_values: true,
   complete_crossing_two_way_bootstrap: true,
   wilson_lower_bound: true,
   derangement_randomization: true,

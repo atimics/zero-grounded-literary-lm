@@ -46,6 +46,18 @@ assert(contract.digest?.algorithm === "sha256",
   "harness digest algorithm changed");
 assert(contract.digest?.canonical_encoding === "stable-json-utf8",
   "harness canonical encoding changed");
+assert(contract.statistics?.confidence_interval ===
+  "ordinary percentile cluster bootstrap",
+"harness confidence interval method changed");
+assert(contract.statistics?.one_sided_p_value ===
+  "recentered null cluster bootstrap",
+"harness p-value method changed");
+assert(contract.statistics?.fixed_environment_weighting === "equal",
+  "harness fixed-environment weighting changed");
+assert(contract.statistics?.ordinary_and_null_sample_receipts ===
+  "separate SHA-256 digests", "harness bootstrap receipt design changed");
+assert(contract.statistics?.holm_ordering === "calibrated null p-values",
+  "harness Holm ordering changed");
 
 const requiredChecks = contract.required_checks;
 assert(Array.isArray(requiredChecks) && requiredChecks.length > 0,
@@ -72,6 +84,12 @@ for (const required of [
   "exhausted-search cap-plus-one censoring reason",
   "full operational source-ablation equality",
   "family-level independent-unit restriction",
+  "ordinary percentile confidence interval",
+  "recentered null one-way bootstrap",
+  "recentered null stratified one-way bootstrap",
+  "recentered null two-way bootstrap",
+  "null-bootstrap digest binding",
+  "Holm ordering on calibrated null p-values",
   "complete-crossing two-way bootstrap",
   "strict raw-trace schema and provenance derivation",
   "scientific mechanism miss produces no-go",
