@@ -777,8 +777,8 @@ function testVerifierAndAblation() {
   const invalidDigest = candidateSemanticDigest(invalid);
   const search = runVerifiedSearch({
     proposals: [invalid, duplicateInvalid],
-    fallback: canonicalCandidateOrder([duplicateInvalid, truth]),
-    candidate_universe: [duplicateInvalid, truth],
+    fallback: canonicalCandidateOrder([invalid, duplicateInvalid, truth]),
+    candidate_universe: [invalid, duplicateInvalid, truth],
     global_cap: 4,
     injected_invalid_sha256: invalidDigest,
     verify: candidate => {
@@ -828,6 +828,39 @@ function testVerifierAndAblation() {
     verify: () => ({ accepted: false, certificate_valid: false,
       counterexample: { input: 0 } }),
   }), /proposal falls outside/u);
+  const charged = {
+    semantic: [3],
+    ast: { op: "charged" },
+    partial_expansions: 7,
+    public_label: "registered",
+  };
+  const chargedFallback = canonicalCandidateOrder([charged]);
+  expectFailure(() => runVerifiedSearch({
+    proposals: [{ ...charged, partial_expansions: 0 }],
+    fallback: chargedFallback,
+    candidate_universe: [charged],
+    global_cap: 1,
+    verify: () => ({ accepted: true, certificate_valid: true,
+      certificate: { exact: true }, answer_ir: { value: 3 } }),
+  }), /below the frozen candidate baseline/u);
+  expectFailure(() => runVerifiedSearch({
+    proposals: [{ ...charged, public_label: "changed" }],
+    fallback: chargedFallback,
+    candidate_universe: [charged],
+    global_cap: 1,
+    verify: () => ({ accepted: true, certificate_valid: true,
+      certificate: { exact: true }, answer_ir: { value: 3 } }),
+  }), /proposal falls outside/u);
+  const surcharged = runVerifiedSearch({
+    proposals: [{ ...charged, partial_expansions: 11 }],
+    fallback: chargedFallback,
+    candidate_universe: [charged],
+    global_cap: 1,
+    verify: () => ({ accepted: true, certificate_valid: true,
+      certificate: { exact: true }, answer_ir: { value: 3 } }),
+  });
+  assert.equal(surcharged.partial_expansions, 11);
+  assertVerifiedSearchReceipt(surcharged);
   const canonicalFallback = canonicalCandidateOrder([invalid, truth]);
   expectFailure(() => runVerifiedSearch({
     proposals: [invalid],
@@ -1427,6 +1460,9 @@ const coverage = {
   case_insensitive_hidden_field_rejection: true,
   candidate_multiset_arm_parity: true,
   exact_invalid_candidate_rejection: true,
+  proposal_record_binding: true,
+  proposal_work_charge_floor: true,
+  proposal_work_surcharge: true,
   verified_search_receipt_replay: true,
   expansion_verifier_trace_cross_link: true,
   canonical_fallback_order: true,

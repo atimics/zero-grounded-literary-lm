@@ -3,6 +3,62 @@
 Read [**The ZERO Manifesto**](MANIFESTO.md) and the
 [mathematical foundations](FOUNDATIONS.md).
 
+## Start here
+
+This repository is a research lab for small language models and small
+reasoning systems. The code is written in C so that each important step can be
+read, tested, and reproduced.
+
+The project has two connected research lines:
+
+- **Language models** test tokenizers, training data, model shapes, and
+  learning methods on governed text collections.
+- **Reasoner** is the main active research line. It tests whether a small
+  learned guide can find correct programs faster on new problem families.
+
+Reasoner is a small decision system. A learned ranker chooses which legal step
+to try next. Exact code checks every accepted answer. The answer is sealed
+before an optional language renderer explains it. This keeps the evidence
+separate from the wording.
+
+### How a Reasoner experiment works
+
+1. Code generates many problem families with exact answers.
+2. The families are split before any final test is created.
+3. Source families build the reusable guide.
+4. Calibration and development families set fixed choices and show whether
+   the test can measure a useful difference.
+5. Sealed families provide the one-time final result.
+6. Strong controls test whether the guide, the new data, or a simpler method
+   caused the result.
+7. The repository records a pass or a no-go with its contract, hashes, raw
+   traces, checks, cost, and limits.
+
+A **contract** freezes the question and success rules. A **gate** is a required
+success condition. A **sealed** family is held back until the method is fixed.
+A **no-go** is a complete result that did not meet every gate. It stays in the
+record because it narrows the next useful question.
+
+### Current research state
+
+Reasoner 5.0 through 5.4 are complete. They tested transfer to a residual,
+unseen primitive IDs, nonlinear programs, changed evidence, and synthetic
+pixels. Two experiments passed and three produced no-go results. The next set
+tests generated primitive families, learned noisy channels, active evidence
+choice, nonlinear composition, and ambiguous grounded concepts.
+
+Start with:
+
+- [the Reasoner overview](docs/REASONER.md) for the result history and current
+  claim boundary;
+- [the next Reasoner 5 design](docs/REASONER5-NEXT.md) for the planned research
+  order and shared test rules;
+- [the first Reasoner 5 series record](benchmarks/reasoner5-first-five-v1/SERIES.md)
+  for a compact result table;
+- [the build section](#build) to run the checks locally.
+
+## Project contents
+
 This project contains dependency-free neural language models together with
 checked corpus generators, validators, faculty-controller experiments, and a
 small browser runtime:

@@ -57,6 +57,7 @@
     "complete recursive ranker schema",
     "case-insensitive evaluator-field rejection",
     "registered candidate-universe enforcement",
+    "proposal record binding and work-charge floor",
     "immutable verifier input",
     "invalid-first-candidate rejection",
     "canonical digest-bound fallback order",
