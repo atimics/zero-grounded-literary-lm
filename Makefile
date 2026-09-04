@@ -3097,3 +3097,7 @@ reasoner55-diagnostics-check: build/reasoner55_diagnostics
 	node scripts/check_reasoner55_diagnostics.mjs
 
 check: reasoner55-diagnostics-check
+
+build/reasoner55_semantic_guide: reasoner55_semantic_guide.c reasoner55_diagnostics.c reasoner55.c reasoner55.h
+	mkdir -p build
+	$(CC) $(CFLAGS) reasoner55_semantic_guide.c -lm -o $@
