@@ -1,0 +1,701 @@
+{
+  "schema": "zero.reasoner5_next_set_design.v1",
+  "status": "design-only",
+  "designed_at": "2026-09-03",
+  "base_commit": "9930d057b2285972b63596eb568c6d0ad8b45d28",
+  "execution": {
+    "authorized": false,
+    "rule": "Each experiment requires a later frozen preregistration and explicit sealed-run approval."
+  },
+  "scientific_boundary": {
+    "ranker_role": "order candidates, score observations, or select evidence",
+    "verifier_role": "sole authority for final acceptance",
+    "claim_unit": "experiment-specific generated task family, with two-way family analysis for crossed designs",
+    "nested_repeats": [
+      "tie salts",
+      "corruption draws",
+      "renderings",
+      "repeated queries"
+    ]
+  },
+  "shared_protocol": {
+    "split_order": [
+      "source-training families",
+      "calibration families",
+      "development families",
+      "sealed families",
+      "episode generation"
+    ],
+    "default_evaluator_only_metadata": [
+      "family ID",
+      "shift stratum",
+      "generator seed",
+      "tie salt",
+      "renderer family",
+      "corruption family",
+      "response-tape index",
+      "latent state"
+    ],
+    "cross_split_checks": [
+      "complete target AST deduplication",
+      "exact complete-program semantic-signature deduplication",
+      "complete episode-specification deduplication",
+      "registered atom and typed-subtree overlap measurement",
+      "family-ID isolation",
+      "generator-hash recording"
+    ],
+    "generator_requirements": {
+      "reasoner55_program_generators_min": 2,
+      "reasoner58_program_generators_min": 2,
+      "reasoner59_concept_and_support_generators_min": 2,
+      "program_and_input_generators_varied_independently": true,
+      "publish_seeds": true,
+      "publish_rejection_counts": true,
+      "cross_generator_test": true
+    },
+    "development_headroom": {
+      "target_only_median_checks_planning_min": 16,
+      "target_only_median_checks_planning_max": 64,
+      "final_band_selected_on_development_only": true
+    },
+    "power": {
+      "minimum_useful_reduction": 0.2,
+      "target_power": 0.9,
+      "candidate_family_counts_per_primary_stratum": [32, 64, 96, 128],
+      "planning_generator_seeds": 5,
+      "method": "full frozen-decision simulation including comparator selection crossed families heavy-tailed costs timeouts fallback win gates strata power and null type-I error"
+    },
+    "sampling": {
+      "reasoner55_and_reasoner58": "task family within each fixed registered generator environment",
+      "reasoner56": "complete program-family by corruption-family crossing with two-way resampling",
+      "reasoner59": "complete concept-family by renderer-family crossing with two-way resampling",
+      "nested_only": [
+        "episode seed",
+        "tie salt",
+        "repeated render",
+        "repeated query"
+      ]
+    },
+    "arm_parity": "same grammar candidate universe initial evidence allowed actions latent episode potential-response function verifier and caps; the registered intervention may change realized evidence",
+    "fallback": {
+      "on_abstention_or_proposal_budget": "canonical exhaustive fallback with all work charged",
+      "global_cap_result": "unsolved with frozen cap-plus-one cost and failed exact-result gate"
+    },
+    "primary_cost": "experiment-specific operational cost with verifier checks always reported separately",
+    "common_metrics": [
+      "exact final answers",
+      "valid certificates",
+      "premature commits",
+      "verifier checks",
+      "partial expansions",
+      "observation queries",
+      "wall time",
+      "peak memory",
+      "source build cost",
+      "artifact bytes",
+      "break-even target count",
+      "family wins ties and losses",
+      "paired log cost ratio",
+      "family-weighted geometric mean cost ratio",
+      "one-way or two-way family-clustered confidence interval",
+      "family win rate and one-sided Wilson lower limit",
+      "solve-versus-budget curve",
+      "performance profile",
+      "per-shift result",
+      "worst-family result"
+    ],
+    "common_controls": [
+      "complete transfer",
+      "target-only",
+      "source-free just-in-time",
+      "source ablation",
+      "frequency-matched shuffled source",
+      "main mechanism ablation",
+      "source-only",
+      "oracle"
+    ],
+    "pass_gate": {
+      "all_final_answers_exact": true,
+      "all_certificates_valid": true,
+      "all_injected_invalid_first_candidates_rejected": true,
+      "all_primary_episodes_solved_within_global_cap": true,
+      "fallback_work_counted": true,
+      "family_weighted_geometric_mean_cost_ratio_max": 0.8,
+      "upper_cost_ratio_limit_below": 1.0,
+      "family_win_rate_min": 0.6,
+      "one_sided_wilson_lower_win_rate_above": 0.5,
+      "crossed_design_win_gate_applies_to_each_marginal_family_axis": true,
+      "every_primary_shift_family_weighted_ratio_max": 0.9,
+      "every_primary_shift_one_sided_confidence": 0.95,
+      "every_primary_shift_upper_ratio_limit_below": 1.0,
+      "formal_mechanism_ablations_max_per_experiment": 2,
+      "each_formal_mechanism_ablation_to_full_ratio_min": 1.1,
+      "formal_mechanism_holm_adjusted_one_sided_confidence": 0.95,
+      "frozen_source_derangements": 31,
+      "full_beats_derangement_median": true,
+      "derangement_randomization_p_max": 0.05,
+      "source_ablation_matches_source_free_path": true
+    },
+    "one_sided_primary_alpha": {
+      "reasoner55": 0.01,
+      "reasoner56": 0.01,
+      "reasoner57": 0.01,
+      "reasoner58": 0.01,
+      "reasoner59_symbolic": 0.005,
+      "reasoner59_grounded": 0.005,
+      "total": 0.05
+    },
+    "decision_states": [
+      "pass",
+      "no-go",
+      "measurement-floor",
+      "invalid-run"
+    ]
+  },
+  "experiments": [
+    {
+      "version": "5.5",
+      "id": "reasoner55-generated-primitive-transfer-v1",
+      "question": "Does exact semantic adaptation preserve a frozen guide across many unseen primitive families and independent generators?",
+      "artifact": "semantic-role guide plus exact adapter receipts",
+      "dependency": "shared generated-family harness",
+      "learning_rule": "smoothed integer semantic-role frequencies and typed adjacent-role transitions from source solutions",
+      "primary_design": "two-by-two exact-adapter by frozen-source-guide factorial",
+      "families": [
+        "permutations",
+        "translations",
+        "nonzero scales",
+        "shears and coordinate mixes",
+        "short typed compositions"
+      ],
+      "primary_contrast": "adapter plus guide versus adapter-only",
+      "primary_cost": "distinct complete semantic program classes submitted to exact verifier through charged fallback",
+      "factorial_interaction": "guide effect with adapter minus guide effect without adapter on paired family log cost",
+      "primary_error_rule": "intersection-union at one-sided alpha 0.01; the simple effect and complete transfer versus the mandatory source-free comparator each pass the common gate and the interaction upper confidence limit is below zero",
+      "mandatory_operational_comparator": "development-selected strongest source-free semantic method",
+      "operational_comparator_gate": "complete transfer versus the frozen source-free comparator passes the full common gate at the allocated one-sided alpha 0.01",
+      "formal_mechanism_contrasts": [
+        "raw lexical guide"
+      ],
+      "formal_mechanism_gate": "raw-lexical-to-complete-transfer cost ratio at least 1.10 with Holm-adjusted one-sided 95 percent lower interval above 1.0",
+      "required_falsifications": [
+        "adapter-only",
+        "raw lexical guide",
+        "shuffled semantic guide",
+        "oracle adapter"
+      ],
+      "extra_gates": [
+        "recovered affine coefficients equal hidden generator coefficients",
+        "negative adapter-by-guide interaction at allocated confidence",
+        "benefit on both program generators",
+        "benefit on cross-generator stratum"
+      ],
+      "secondary": "one two four and eight demonstration exposure sweep"
+    },
+    {
+      "version": "5.6",
+      "id": "reasoner56-learned-noise-transfer-v1",
+      "question": "Does a source-learned observation likelihood reduce exact search under varied corruption and missingness?",
+      "artifact": "smoothed integer local emission table plus fixed first-order error-and-mask table conditioned on previous state and current and previous sensor IDs",
+      "dependency": "shared generated-family harness",
+      "source_data": "paired clean and observed source episodes with all 17 inputs through three sensors plus direct probes",
+      "support": {
+        "minimum_leaf_observations": 32,
+        "backoff": [
+          "sensor exact-input candidate-value",
+          "sensor candidate-value",
+          "sensor",
+          "global"
+        ],
+        "report_target_backoff_use": true
+      },
+      "sequence_model": {
+        "public_source_order": "fresh random permutation of all 51 input-sensor cells per source program",
+        "public_target_order": "true acquisition order sampled from a seed independent of target program and hidden channel parameters",
+        "initial_state": "smoothed P(error1 mask1 given sensor1)",
+        "transition": "smoothed P(current error and mask given previous error and mask plus previous and current sensor)",
+        "minimum_transition_cell_observations": 32,
+        "transition_backoff": [
+          "previous-sensor current-sensor previous-state",
+          "current-sensor previous-state",
+          "previous-state",
+          "global"
+        ]
+      },
+      "probability": {
+        "candidate_unit": "complete semantic class",
+        "formula": "normalized frozen-program-prior times frozen-channel-likelihood",
+        "tie_rule": "equal probability within a score tie",
+        "temperature_grid": [0.25, 0.5, 1, 2, 4, 8],
+        "temperature_lane": "calibration-fit",
+        "candidate_set_target_coverage": 0.99,
+        "candidate_set_lane": "disjoint calibration-coverage"
+      },
+      "ranker_visible_fields": [
+        "candidate semantics",
+        "public inputs",
+        "sensor IDs",
+        "observations",
+        "missing masks",
+        "frozen artifact"
+      ],
+      "evaluator_only_fields": [
+        "clean target values",
+        "corruption family",
+        "corruption rate",
+        "corruption location",
+        "corruption direction"
+      ],
+      "proxy_audit": "freeze the multinomial classifier and thresholds on development static metadata; repeat on sealed static metadata before observations open; episode ID order and seed add at most two balanced-accuracy points over sensor-only and no public cell identifies one hidden template; any sealed breach invalidates the run",
+      "corruption_families": [
+        "symmetric replacement",
+        "asymmetric value-dependent replacement",
+        "input-dependent error",
+        "first-order episode burst",
+        "MCAR missingness",
+        "MAR missingness",
+        "value-dependent missingness",
+        "block missingness"
+      ],
+      "mechanism_ood_only": [
+        "stale observation",
+        "swapped observation",
+        "other registered longer-range channel"
+      ],
+      "test_strata": [
+        "primary ID mixture with seen templates and disjoint parameters and seeds",
+        "descriptive held-out mechanism OOD",
+        "descriptive severity OOD"
+      ],
+      "primary_contrast": "learned channel versus development-selected rule-based robust scorer",
+      "primary_cost": "distinct complete semantic program classes submitted to exact verifier through charged fallback",
+      "formal_mechanism_contrasts": [
+        "Reasoner 5.3 one-trim",
+        "first-order Markov-off"
+      ],
+      "formal_mechanism_gate": "each ablation-to-full ratio at least 1.10 with Holm-adjusted one-sided 95 percent lower interval above 1.0",
+      "derangement": "31 frozen outcome-label derangements within each conditioning row preserving totals marginals sparsity smoothing entropy normalization and bytes",
+      "required_falsifications": [
+        "Reasoner 5.3 one-trim",
+        "untrimmed loss",
+        "shuffled sensor IDs",
+        "channel derangement distribution",
+        "value-likelihood-only",
+        "mask-likelihood-only",
+        "Markov-off",
+        "channel-only",
+        "program-prior-only",
+        "oracle channel",
+        "clean-evidence oracle"
+      ],
+      "extra_metrics": [
+        "truth rank before verification",
+        "top-one truth rate",
+        "log loss",
+        "Brier score",
+        "reliability bins",
+        "99 percent candidate-set coverage",
+        "fallback rate",
+        "backoff-level use",
+        "worst corruption-family cost"
+      ],
+      "channel_readiness_for_reasoner57": {
+        "normalized_every_candidate_set": true,
+        "calibration_sampling": "registered ID corruption mixture treated as fixed; one family-mean log loss and one worst-draw conformal score per program family",
+        "ID_log_loss_below_uniform_program_prior_only_and_derangement_median_with_one_sided_95_percent_paired_program_family_interval": true,
+        "family_weighted_candidate_set_size_ratio_to_program_prior_only_at_matched_coverage_max": 0.8,
+        "candidate_set_target_coverage": 0.99,
+        "one_sided_95_percent_lower_coverage_min": 0.97,
+        "development_and_sealed_interface_and_proxy_audits_clean": true
+      }
+    },
+    {
+      "version": "5.7",
+      "id": "reasoner57-active-evidence-transfer-v1",
+      "question": "Does a source-learned policy choose more useful input and sensor queries under a fixed evidence budget?",
+      "artifact": "frozen query policy plus exact published Reasoner 5.6 artifact",
+      "dependency": "Reasoner 5.6 channel-readiness gate",
+      "family_isolation": "all policy training calibration development and sealed task families are disjoint from every Reasoner 5.6 lane",
+      "all_primary_arms_hold_constant": [
+        "exact Reasoner 5.6 artifact bytes",
+        "program guide",
+        "candidate semantic classes",
+        "posterior update",
+        "temperature",
+        "initial evidence",
+        "allowed action cells",
+        "exact verifier"
+      ],
+      "channel_lanes": {
+        "primary": "modeled Reasoner 5.6 templates with fresh parameter families and seeds and in-range severity",
+        "secondary": [
+          "mechanism OOD",
+          "severity OOD"
+        ]
+      },
+      "initial_evidence": "exactly three reads at inputs 0 1 2 with one per sensor and one of six sensor-input permutations selected by episode hash",
+      "policy_visible": [
+        "allowed input-sensor actions",
+        "ordered observations and masks",
+        "action history",
+        "remaining budget",
+        "candidate semantic summaries",
+        "frozen artifacts"
+      ],
+      "evaluator_only": [
+        "family ID",
+        "shift stratum",
+        "generator seed",
+        "tie salt",
+        "response-tree indices",
+        "mechanism parameters",
+        "severity",
+        "latent channel state"
+      ],
+      "learning_rule": "states logged by an equal seeded-random and EC2 mixture; every legal action labelled by later verifier-check reduction under a fixed EC2 continuation; smoothed integer state-action table with EC2 unseen-state fallback",
+      "primary_query_budget": 4,
+      "secondary_query_budgets": [1, 2, 4, 8],
+      "action": "one unit-cost sensor read at one input and sensor; choosing the same pair again is another read",
+      "potential_response": "sealed structural function of episode root seed full canonical action-observation history and next input-sensor action; evaluator-only innovations are keyed by history hash and action",
+      "supported_actions": "only input-sensor emissions and ordered sensor-pair prior-state transitions covered by Reasoner 5.6 at registered non-global backoff levels",
+      "development_headroom": "oracle policy verifier checks at most 80 percent of strongest policy-source-free selector at four reads; all selectors may use the common Reasoner 5.6 channel",
+      "primary_contrast": "transferred policy versus development-selected policy-source-free active rule after equal query counts",
+      "primary_cost": "distinct semantic program classes submitted to exact verifier after four unit-cost reads through charged fallback",
+      "controls": [
+        "fixed Reasoner 5.3-style schedule 0-sensor0 1-sensor1 2-sensor2 and repeated 1-sensor1",
+        "seeded random",
+        "maximum disagreement",
+        "noisy generalized binary search",
+        "EC2 posterior edge cutting",
+        "repeat and vote",
+        "shuffled policy",
+        "oracle policy"
+      ],
+      "policy_derangement": "31 frozen within-state action-score derangements preserving sensor and input frequencies score marginals ties backoff rows and bytes",
+      "formal_mechanism_contrasts": [],
+      "separate_evidence_oracle": "verifier counterexample pays one verifier check plus one exact target-evidence query",
+      "policy_calibration": "fresh Reasoner 5.7 families; unchanged Reasoner 5.6 temperature; policy-specific candidate-set thresholds are secondary reports only",
+      "primary_routing": "after four reads rank all semantic classes and exact-check until acceptance with no policy-specific threshold; fallback fully charged",
+      "secondary_weighted_cost": "verifier-checks plus lambda times reads plus rho times policy-updates; lambda and rho frozen from declared acquisition settings and excluded from pass decision",
+      "extra_metrics": [
+        "queries by sensor",
+        "verifier checks after fixed queries",
+        "policy candidate updates",
+        "policy wall time",
+        "query-check Pareto curve",
+        "risk-coverage curve"
+      ]
+    },
+    {
+      "version": "5.8",
+      "id": "reasoner58-compositional-behavior-transfer-v1",
+      "question": "Does a frozen behavior guide reduce exact search across nonlinear compositional shifts?",
+      "artifact": "complete and partial-execution behavior guide",
+      "dependency": "shared generated-family harness",
+      "learning_rule": "exact source enumeration labels shortest-solution-path partial programs; smoothed integer feature and transition log-odds are frozen",
+      "domain": "unary typed finite nonlinear programs from GF(17) to GF(17) with exhaustive 17-value semantic tables",
+      "shift_strata": [
+        "known operation in a new composition",
+        "changed semantic class order",
+        "new cross-class composition with familiar atoms",
+        "longer tree and deeper partial-execution chain"
+      ],
+      "primary_contrast": "frozen behavior guide versus development-selected source-free guide",
+      "primary_cost": "unique canonical semantic partial programs popped from bottom-up priority queue through charged fallback",
+      "formal_mechanism_contrasts": [
+        "behavior-off guide with types roles transitions labels and artifact size preserved"
+      ],
+      "required_falsifications": [
+        "Reasoner 5.2 transition-only guide",
+        "raw token guide",
+        "behavior-off guide with types roles transitions labels and artifact size preserved",
+        "shuffled behavior signatures",
+        "consistent episode-level token permutation",
+        "target-only",
+        "source-free just-in-time",
+        "oracle truth rank"
+      ],
+      "extra_gates": [
+        "common stratum effect and confidence gate in every registered shift",
+        "full finite behavior used for semantic deduplication"
+      ],
+      "unlocks": "Reasoner 6.0 bounded recursion"
+    },
+    {
+      "version": "5.9",
+      "id": "reasoner59-ambiguous-grounded-transfer-v1",
+      "question": "Does a source concept prior reduce exact search on the same ambiguous episodes as scene graphs and held-out pixels?",
+      "artifacts": {
+        "concept_prior": "smoothed normalized typed-AST production subtree-role and variable-binding counts from source concepts",
+        "shared_pixel_parser": "parser trained on source render-and-graph pairs with disjoint ID calibration; identical bytes in every pixel arm"
+      },
+      "dependency": "Reasoner 5.9a symbolic decision passes before Reasoner 5.9b pixel work",
+      "generators": {
+        "concept_count": 2,
+        "concept_mechanisms": [
+          "syntax first",
+          "behavior constraint first then shortest legal program"
+        ],
+        "support_count": 2,
+        "support_mechanisms": [
+          "greedy version-space split with ambiguity retained",
+          "hard-negative-first balanced rejection sampling"
+        ],
+        "cross_generator_directions": 2
+      },
+      "scene_universe": {
+        "object_count_min": 1,
+        "object_count_max": 3,
+        "grid_cells": 4,
+        "grid_shape": "two by two",
+        "overlap_allowed": false,
+        "colors": 3,
+        "shapes": 3,
+        "sizes": 2,
+        "relations": [
+          "left",
+          "right",
+          "above",
+          "below",
+          "same row",
+          "same column"
+        ],
+        "object_identity": "removed before canonical cell-order encoding",
+        "cardinality": 25344
+      },
+      "concept_language": [
+        "attributes",
+        "counts and comparisons",
+        "relations",
+        "Boolean composition",
+        "variable binding",
+        "episode-local symbols"
+      ],
+      "concept_grammar": {
+        "AST_nodes_max": 7,
+        "canonical_joint_AST_and_legend_candidates_before_semantic_dedup_max": 16384,
+        "candidate_truncation_allowed": false,
+        "legend_symbols": 2,
+        "legend_mapping": "injective map into eight atomic color shape or size predicates"
+      },
+      "verification": "exact joint behavior-class agreement for the canonical AST and legend-map pair over all 25344 registered symbolic scenes; any canonical pair in the correct joint class is accepted",
+      "verifier_feedback": "accept or reject only; first counterexample stays evaluator-only",
+      "ambiguity_gate": {
+        "minimum_consistent_semantic_classes": 8,
+        "primary_unit": "semantic-class verifier checks",
+        "development_target_only_median_checks_planning_min": 16,
+        "development_target_only_median_checks_planning_max": 64,
+        "tie_salts_apply_only_to_distinct_equal-score_semantic_classes": true
+      },
+      "primary_design": "two-by-two source-concept-prior by exact-scene-graph-or-pixel factorial",
+      "primary_cost": "distinct semantic concept classes submitted to exact verifier through charged fallback",
+      "pixel_shift_matrix": [
+        "concept ID by renderer ID",
+        "concept OOD by renderer ID",
+        "concept ID by renderer OOD",
+        "concept OOD by renderer OOD"
+      ],
+      "semantic_shift_strata": [
+        "color by shape binding",
+        "relation by attribute binding",
+        "operation by attribute compound",
+        "episode-local legend"
+      ],
+      "renderer_shift_strata": [
+        "texture",
+        "lighting",
+        "camera",
+        "background",
+        "blur",
+        "occlusion"
+      ],
+      "parser_calibration": {
+        "temperature_grid": [0.25, 0.5, 1, 2, 4, 8],
+        "temperature_fit": "minimum family-mean graph log loss on parser-calibration-fit lane",
+        "ID_target_exact_graph_coverage": 0.99,
+        "one_sided_95_percent_lower_coverage_min": 0.97,
+        "ID_graph_log_loss_below_uniform_with_one_sided_95_percent_family_interval": true,
+        "k_max": 32,
+        "selection": "smallest k reaching target on disjoint parser-calibration-coverage lane",
+        "OOD_use": "freeze ID temperature and k and report empirical calibration and coverage only"
+      },
+      "renderer_identifiability": {
+        "render_acceptance_before_target_selection": true,
+        "every_object_visible_fraction_min": 0.6,
+        "every_object_visible_pixels_min": 64,
+        "ambiguous_grid_cell_allowed": false,
+        "exact_pixel_collision_check": true,
+        "development_privileged_ceiling_exact_graph_match_min": 0.999
+      },
+      "joint_rank": "normalized semantic-class probability after marginalizing registered graph-hypothesis probabilities across support images and multiplying by the concept prior",
+      "ordered_decisions": [
+        {
+          "name": "Reasoner 5.9a symbolic",
+          "alpha": 0.005,
+          "contrast": "source prior versus target-only on exact scene graphs",
+          "gate": "full common gate"
+        },
+        {
+          "name": "Reasoner 5.9b grounded",
+          "dependency": "Reasoner 5.9a pass",
+          "alpha": 0.005,
+          "contrast": "source prior versus target-only on pixels through identical parser bytes",
+          "gate": "full common gate with two-way concept-by-renderer analysis",
+          "symbolic_effect_retention_point_min": 0.5
+        }
+      ],
+      "pre_reasoner59a_freeze": "full Reasoner 5.9b parser bytes renderer code settings paired pixel manifest controls analysis and hashes; only execution is conditional",
+      "required_falsifications": [
+        "exact scene-graph oracle",
+        "source-prior ablation",
+        "uniform parser likelihood",
+        "graph-likelihood derangement within graph-cardinality strata",
+        "type-and-frequency-preserving prior derangements",
+        "consistent surface-label bijection across artifact graph renderer legend target and verifier",
+        "visual-only means uniform concept prior",
+        "oracle program order"
+      ],
+      "extra_metrics": [
+        "set-matched object attributes",
+        "relation F1",
+        "exact scene-graph match",
+        "graph top-k coverage",
+        "semantic-class truth rank after graph marginalization",
+        "full-universe predictive accuracy",
+        "semantic-class verifier checks",
+        "joint graph-program hypotheses expanded",
+        "parser calls",
+        "wall time"
+      ]
+    }
+  ],
+  "deferred": {
+    "version": "6.0",
+    "id": "reasoner60-bounded-recursion-v1",
+    "dependency": "Reasoner 5.8 pass plus Reasoner 6.0 development readiness",
+    "question": "Does a frozen source guide for recursive structure reduce exact synthesis cost on new list functions and longer traces?",
+    "input_universe": {
+      "type": "lists",
+      "alphabet": [0, 1, 2],
+      "length_min": 0,
+      "length_max": 8,
+      "cardinality": 9841
+    },
+    "lane_universe_cardinality": {
+      "source_length_0_through_3": 40,
+      "development_length_0_through_5": 364,
+      "sealed_length_0_through_8": 9841
+    },
+    "candidate_grammar": [
+      "typed base predicates",
+      "head",
+      "tail",
+      "typed constants",
+      "one self-call on exact tail",
+      "registered scalar Boolean or list combination"
+    ],
+    "structural_schema": "f(empty) equals base; f(head tail) equals combine(local(head), f(tail))",
+    "generated_task_forms": [
+      "count",
+      "modular sum",
+      "any",
+      "all",
+      "map",
+      "filter"
+    ],
+    "planning_AST_nodes_max": 9,
+    "composition_split": "all atoms visible in source; complete typed compounds held out for target",
+    "excluded_primary_control_flow": [
+      "fold",
+      "repeat-until",
+      "graph worklist"
+    ],
+    "project_planning_trace_lengths": {
+      "source": [0, 1, 2, 3],
+      "development": [4, 5],
+      "sealed": [6, 7, 8]
+    },
+    "shift_strata": [
+      "depth only",
+      "composition only",
+      "combined depth and composition"
+    ],
+    "stratum_verifier_universe": {
+      "depth_only": 9841,
+      "composition_only": 40,
+      "combined": 9841
+    },
+    "public_target_example_lengths": [0, 1, 2],
+    "public_target_example_count": "frozen after development before preregistration",
+    "depth_scope": "one exact tail call per frame makes input length equal call depth; tree shape generalization is deferred",
+    "artifact": "smoothed integer log-odds for base reduction recursive-call combination partial-behavior and typed transitions from exact shortest source solutions",
+    "ranker_inputs": [
+      "public input-output examples",
+      "partial candidate AST",
+      "types",
+      "public partial executions",
+      "evaluator fuel limit",
+      "frozen artifact"
+    ],
+    "primary_contrast": "frozen recursion guide versus identical recursive grammar and enumerator with source artifact zeroed",
+    "primary_cost": "candidate semantic verifier checks",
+    "verifier_feedback": "accept or reject only; first failing input stays evaluator-only",
+    "fuel": {
+      "owner": "evaluator",
+      "initial": "list length plus one",
+      "per_frame_cost": 1,
+      "successful_final": 0,
+      "invalid": [
+        "exhaustion before base",
+        "underflow",
+        "extra call",
+        "cycle",
+        "false base case",
+        "nondecreasing argument",
+        "unused fuel"
+      ]
+    },
+    "trace_fields": [
+      "schema version",
+      "trace ID",
+      "call ID",
+      "parent call ID",
+      "preorder index",
+      "stack depth",
+      "candidate AST hash",
+      "canonical input bytes or manifest reference and SHA-256",
+      "branch and typed local values",
+      "canonical child input bytes and hash",
+      "fuel before and after",
+      "typed child and final return values",
+      "canonical output bytes and SHA-256"
+    ],
+    "certificates": [
+      "execution certificate for full call replay",
+      "semantic certificate for equality over the registered 9841-list or 40-list stratum universe"
+    ],
+    "controls": [
+      "source ablation",
+      "source-free just-in-time",
+      "31 type-and-frequency-preserving guide derangements",
+      "fixed-depth unrolled",
+      "target-only",
+      "oracle"
+    ],
+    "development_readiness": [
+      "target-only search headroom",
+      "base reduction return and combination coverage",
+      "full decision power and type-I simulation",
+      "golden trace-checker failure injections"
+    ]
+  },
+  "recommended_build_order": [
+    "shared generated-family harness",
+    "Reasoner 5.5 and Reasoner 5.6 in parallel",
+    "Reasoner 5.7 after Reasoner 5.6 channel-readiness",
+    "Reasoner 5.8",
+    "build and freeze Reasoner 5.9a plus the full Reasoner 5.9b grounded stack before opening Reasoner 5.9a",
+    "execute Reasoner 5.9b only after the Reasoner 5.9a pass",
+    "Reasoner 6.0 after Reasoner 5.8 pass and Reasoner 6.0 development readiness"
+  ]
+}
