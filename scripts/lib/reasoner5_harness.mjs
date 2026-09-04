@@ -122,6 +122,10 @@ export const REASONER5_TRACE_ROW_FIELDS = Object.freeze([
   "verifier_digest",
   "wall_ns",
 ]);
+const CANDIDATE_SNAPSHOT_CACHE = new WeakMap();
+const CANDIDATE_RECEIPT_CACHE = new WeakMap();
+const CANDIDATE_ORDER_CACHE = new WeakMap();
+const CANDIDATE_KEY_CACHE = new WeakMap();
 
 function plainObject(value, label) {
   requireValue(value !== null && typeof value === "object" &&
@@ -231,6 +235,11 @@ function deepFreeze(value) {
     for (const item of Object.values(value)) deepFreeze(item);
   }
   return value;
+}
+
+function isDeepFrozen(value) {
+  if (value === null || typeof value !== "object") return true;
+  return Object.isFrozen(value) && Object.values(value).every(isDeepFrozen);
 }
 
 function sortedUnique(values) {
@@ -1096,6 +1105,8 @@ export function canonicalCandidateOrder(candidates) {
 export function candidateMultisetReceipt(candidates) {
   requireValue(Array.isArray(candidates) && candidates.length > 0,
     "candidate multiset must be a non-empty array");
+  if (isDeepFrozen(candidates) && CANDIDATE_RECEIPT_CACHE.has(candidates))
+    return cloneJson(CANDIDATE_RECEIPT_CACHE.get(candidates));
   const snapshots = cloneJson(candidates, "candidate multiset");
   const digests = snapshots.map(candidateSemanticDigest).sort();
   const astDigests = snapshots.map(candidateAstDigest).sort();
@@ -1107,7 +1118,7 @@ export function candidateMultisetReceipt(candidates) {
   const recordDigests = snapshots.map(candidate =>
     canonicalDigest("candidate-record", candidate)).sort();
   const canonicalOrder = canonicalCandidateOrder(snapshots);
-  return {
+  const receipt = {
     schema: "zero.reasoner5_candidate_multiset.v1",
     count: digests.length,
     distinct_count: new Set(digests).size,
@@ -1120,6 +1131,9 @@ export function candidateMultisetReceipt(candidates) {
       "candidate-record-multiset", recordDigests),
     canonical_order_sha256: candidateSequenceDigest(canonicalOrder),
   };
+  if (isDeepFrozen(candidates)) CANDIDATE_RECEIPT_CACHE.set(candidates,
+    deepFreeze(cloneJson(receipt)));
+  return receipt;
 }
 
 export function armParityReceipt({
@@ -1212,14 +1226,22 @@ export function runVerifiedSearch({
       SHA256.test(injected_invalid_sha256)),
   "injected invalid candidate needs a lowercase SHA-256 digest");
   safeInteger(global_cap, "global verifier cap", 1);
-  const snapshotCandidates = (candidates, label) => candidates.map(candidate => {
-    const snapshot = deepFreeze(cloneJson(candidate, `${label} candidate`));
-    const expansions = snapshot && typeof snapshot === "object" &&
-      Object.hasOwn(snapshot, "partial_expansions") ?
-      snapshot.partial_expansions : 0;
-    safeInteger(expansions, `${label} candidate partial expansions`);
-    return snapshot;
-  });
+  const snapshotCandidates = (candidates, label) => {
+    if (isDeepFrozen(candidates) && CANDIDATE_SNAPSHOT_CACHE.has(candidates))
+      return CANDIDATE_SNAPSHOT_CACHE.get(candidates);
+    const snapshots = candidates.map(candidate => {
+      const snapshot = deepFreeze(cloneJson(candidate, `${label} candidate`));
+      const expansions = snapshot && typeof snapshot === "object" &&
+        Object.hasOwn(snapshot, "partial_expansions") ?
+        snapshot.partial_expansions : 0;
+      safeInteger(expansions, `${label} candidate partial expansions`);
+      return snapshot;
+    });
+    deepFreeze(snapshots);
+    if (isDeepFrozen(candidates))
+      CANDIDATE_SNAPSHOT_CACHE.set(candidates, snapshots);
+    return snapshots;
+  };
   const universeCandidates = snapshotCandidates(candidate_universe,
     "candidate universe");
   const fallbackCandidates = snapshotCandidates(fallback, "fallback");
@@ -1228,12 +1250,20 @@ export function runVerifiedSearch({
   const fallbackReceipt = candidateMultisetReceipt(fallbackCandidates);
   requireValue(isDeepStrictEqual(universeReceipt, fallbackReceipt),
     "fallback must cover the complete canonical candidate universe");
-  const canonicalFallback = canonicalCandidateOrder(universeCandidates);
+  let canonicalFallback = CANDIDATE_ORDER_CACHE.get(universeCandidates);
+  if (canonicalFallback === undefined) {
+    canonicalFallback = deepFreeze(canonicalCandidateOrder(universeCandidates));
+    CANDIDATE_ORDER_CACHE.set(universeCandidates, canonicalFallback);
+  }
   requireValue(isDeepStrictEqual(fallbackCandidates, canonicalFallback),
     "fallback order differs from the canonical candidate order");
   const fallbackOrderSha256 = candidateSequenceDigest(fallbackCandidates);
-  const universeKeys = new Set(universeCandidates.map(candidate =>
-    `${candidateSemanticDigest(candidate)}:${candidateAstDigest(candidate)}`));
+  let universeKeys = CANDIDATE_KEY_CACHE.get(universeCandidates);
+  if (universeKeys === undefined) {
+    universeKeys = new Set(universeCandidates.map(candidate =>
+      `${candidateSemanticDigest(candidate)}:${candidateAstDigest(candidate)}`));
+    CANDIDATE_KEY_CACHE.set(universeCandidates, universeKeys);
+  }
   for (const candidate of proposalCandidates)
     requireValue(universeKeys.has(
       `${candidateSemanticDigest(candidate)}:${candidateAstDigest(candidate)}`),
@@ -2834,9 +2864,12 @@ export function assertRawTraceCoverage({
       `raw trace ${row.episode_id} execution trace digest changed`);
     for (const field of ["primary_cost", "verifier_checks",
       "partial_expansions", "fallback_verifier_checks",
-      "fallback_partial_expansions", "observation_queries", "wall_ns",
-      "peak_bytes", "source_artifact_reads"])
+      "fallback_partial_expansions", "observation_queries",
+      "source_artifact_reads"])
       safeInteger(row[field], `raw trace ${row.episode_id} ${field}`);
+    for (const field of ["wall_ns", "peak_bytes"])
+      requireValue(row[field] === null || Number.isSafeInteger(row[field]),
+        `raw trace ${row.episode_id} ${field} must be null or a safe integer`);
     for (const field of ["exact", "certificate_valid", "premature_commit",
       "fallback_started", "global_cap_hit", "fallback_exhausted",
       "injected_invalid", "injected_invalid_rejected"])
@@ -2937,8 +2970,10 @@ export function assertRawTraceCoverage({
       sum + row.fallback_partial_expansions, 0),
     observation_queries: rawTraces.reduce((sum, row) =>
       sum + row.observation_queries, 0),
-    wall_ns: rawTraces.reduce((sum, row) => sum + row.wall_ns, 0),
-    peak_bytes: Math.max(...rawTraces.map(row => row.peak_bytes)),
+    wall_ns: rawTraces.every(row => row.wall_ns !== null) ?
+      rawTraces.reduce((sum, row) => sum + row.wall_ns, 0) : null,
+    peak_bytes: rawTraces.every(row => row.peak_bytes !== null) ?
+      Math.max(...rawTraces.map(row => row.peak_bytes)) : null,
     source_artifact_reads: rawTraces.reduce((sum, row) =>
       sum + row.source_artifact_reads, 0),
   };
