@@ -7,9 +7,9 @@
   "purpose": "Complete the unchanged frozen C6.1 validation and bridge-off ablation from the already-trained private checkpoint without another training update.",
   "source_training": {
     "scientific_contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
-    "scientific_contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
+    "scientific_contract_sha256": "ff5c4b302a87e783e7a5ffe0b63a6f6f2d5b930747fcd19626a1fb43f9e73456",
     "training_authorization": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
-    "training_authorization_sha256": "9ee9cb31b26629d225dfba90ebe105e902a7360409e1419f068fd14c30b3ca5c",
+    "training_authorization_sha256": "10c820b0269b854170febb89fe1a24b988127a519ea3f419db2bddcef7108288",
     "source_run_id": "zero5-c61-aws-20260831-e977b63r1",
     "checkpoint": {
       "filename": "best.ckpt",
@@ -50,13 +50,13 @@
   "implementation": {
     "evaluator": {
       "path": "scripts/evaluate_zero5_c61_shared_state_recovery.mjs",
-      "sha256": "ead4b1141bca1fcdcb8b4220eaac8af632c7bd875f965ca4ea8e3334ef5e8baf",
-      "bytes": 20006
+      "sha256": "be516fefd7de41373cac6730b14aac4008906a19a8b631a34a79ebb45a8debef",
+      "bytes": 20247
     },
     "runner": {
       "path": "scripts/run_zero5_c61_evaluation_recovery.mjs",
-      "sha256": "e4a8d63a325441854e60ca0b03f4a3d801dadf77391495bb406f520f0efb6aa7",
-      "bytes": 11470
+      "sha256": "7048274d6210213fc3a3546a1a23d1bbe4ebbee96dcdbd855a03167240724209",
+      "bytes": 11539
     },
     "user_data": {
       "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",

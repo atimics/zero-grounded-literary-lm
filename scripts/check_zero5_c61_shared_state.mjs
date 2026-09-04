@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import { scientificHash, implementationHash } from "./contract_tiers.mjs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -52,6 +53,16 @@ for (const name of ["trainer", "importer", "evaluator", "runner",
   contract.implementation[`${name}_sha256`], `${name} changed`);
 assert.equal(sha256(contract.control.c51_contract),
   contract.control.c51_contract_sha256);
+
+// Contract tier verification: scientific and implementation hashes
+assert.equal(contract.contract_tiers?.schema, "zero.contract_tiers.v1",
+  "contract_tiers schema is absent");
+assert.equal(scientificHash(contract),
+  contract.contract_tiers.scientific_invariants_sha256,
+  "scientific invariant hash is stale");
+assert.equal(implementationHash(contract),
+  contract.contract_tiers.implementation_artifacts_sha256,
+  "implementation artifacts hash is stale");
 
 assert.equal(contract.model.base_parameters, 4852992);
 assert.equal(contract.model.bottleneck_width, 152);

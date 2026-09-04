@@ -171,13 +171,13 @@
   },
   "implementation": {
     "trainer": "zero5_c61_bottleneck_lm.c",
-    "trainer_sha256": "5177fa54b6d73173fb2c1ad34874eb1c361a35c4cd366ffcceb14ab3368ac62e",
+    "trainer_sha256": "d0d283f4648317087c674b5b2a4e9faec33da5ef3bcadc7c083f68b1ff1b4d62",
     "importer": "scripts/prepare_zero5_c52_targets.mjs",
     "importer_sha256": "773ca4dd122a83fa125a9466c60f3262b27b0a4a70e1837e70a98b13b83c2464",
     "evaluator": "scripts/evaluate_zero5_c61_shared_state.mjs",
-    "evaluator_sha256": "969e09cc8b19f4b233d43f4757b9440f58de3e681bade7d6cf1810a8adabcc9e",
+    "evaluator_sha256": "cdbd49ca9a70d550920c11cf808b6b8458460561777e35e1f5e3312b9308083f",
     "runner": "scripts/run_zero5_c61_shared_state.mjs",
-    "runner_sha256": "54d64674e5b9bdd5ddddfa1a994f2ad4f0cc3b4f84e872ba1ac3bba355afa4ae",
+    "runner_sha256": "83354f3f1f889f21be943184a56affc5cca2a248547e2f050b459b07c262ff25",
     "c51_evaluator": "scripts/evaluate_zero5_c51.mjs",
     "c51_evaluator_sha256": "c6e2cdd1ed6da0a4bae906fe63c2ad66918b0d28392da62c185357860456b770"
   },
@@ -205,5 +205,37 @@
       "source_contract_sha256": "cf855417a5e1fb83a825c66f11519671474de43f11aec6869f4be6232b2f9218",
       "supersedes": "zero5-c61-shared-state-aws-2026-08-29-v1 (consumed by three executions: the original 93c8003 launch and resumes r1/r2, all terminated recoverable without a result; superseded by the corrective parser amendment 2026-08-31)"
     }
+  },
+  "contract_tiers": {
+    "schema": "zero.contract_tiers.v1",
+    "description": "Scientific invariants vs implementation artifacts. Checkpoints bind the scientific hash so implementation-only amendments keep resume valid.",
+    "scientific_fields": [
+      "schema",
+      "experiment",
+      "ilxyr",
+      "specification",
+      "braid",
+      "control",
+      "verified_target_import",
+      "inputs",
+      "model",
+      "treatment",
+      "training",
+      "evaluation",
+      "gates",
+      "claim_boundary",
+      "test"
+    ],
+    "implementation_fields": [
+      "implementation"
+    ],
+    "metadata_fields": [
+      "status",
+      "authorized",
+      "authorization",
+      "contract_tiers"
+    ],
+    "scientific_invariants_sha256": "ff5c4b302a87e783e7a5ffe0b63a6f6f2d5b930747fcd19626a1fb43f9e73456",
+    "implementation_artifacts_sha256": "9bda7d8fb37d90de61494b6245d4dfbfd3dd7271a1d2969d8472a9fc3fddd21d"
   }
 }

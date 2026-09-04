@@ -6,6 +6,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { scientificHash } from "./contract_tiers.mjs";
 
 function fail(message) { throw new Error(message); }
 
@@ -225,7 +226,9 @@ try {
   if (process.argv.includes("--preflight-only")) {
     process.stdout.write(JSON.stringify({
       schema: "zero.c61_shared_state_evaluator_preflight.v1",
-      contract_sha256: sha256(contractBytes), artifacts_verified: true,
+      contract_sha256: sha256(contractBytes),
+      scientific_contract_sha256: scientificHash(contract),
+      artifacts_verified: true,
       test_metrics_opened: false,
     }) + "\n");
     process.exit(0);
@@ -300,6 +303,7 @@ try {
   gate.checks.test_metrics_opened = false;
   const result = { schema: "zero.c61_shared_state_validation.v1",
     experiment: contract.experiment, contract_sha256: sha256(contractBytes),
+    scientific_contract_sha256: scientificHash(contract),
     checkpoint: artifact(checkpoint),
     bottleneck: artifact(`${checkpoint}.aux`), candidate, bridge_off: ablation,
     state, derived: gate.derived, gates: gate.checks,

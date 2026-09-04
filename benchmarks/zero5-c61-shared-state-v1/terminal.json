@@ -9,13 +9,13 @@
   },
   "source": {
     "scientific_contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
-    "scientific_contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
+    "scientific_contract_sha256": "a093afa0f22ae8e68bab7f7d7a171a5864375fcbf901ff78ac7d660411763c47",
     "training_authorization": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
-    "training_authorization_sha256": "9ee9cb31b26629d225dfba90ebe105e902a7360409e1419f068fd14c30b3ca5c",
+    "training_authorization_sha256": "10c820b0269b854170febb89fe1a24b988127a519ea3f419db2bddcef7108288",
     "evaluation_recovery_contract": "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json",
-    "evaluation_recovery_contract_sha256": "55f56532f1abb545d3b363c7dbf19a9f162fd163999d05c9ff8440f7fcad5dc5",
+    "evaluation_recovery_contract_sha256": "476b68aa457aba278de12c22a5510f51fe103f87396cc6aef1762b0ba3724b09",
     "evaluation_authorization": "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json",
-    "evaluation_authorization_sha256": "6f60177bd77c3b44dcfcececc6412db155a03c8b6bd826b165464a3dc721da78"
+    "evaluation_authorization_sha256": "414d956a0e507994b35e629d403e140a9ebb991a4fbd05d7bd7cb24aab29df55"
   },
   "training": {
     "source_run_id": "zero5-c61-aws-20260831-e977b63r1",
@@ -46,11 +46,13 @@
     },
     "launch_receipt": {
       "path": "benchmarks/zero5-c61-shared-state-v1/evaluation/zero5-c61-eval-20260901-10f8435/launch.json",
-      "sha256": "a11fd6ba9a76b3162400bb76453b3d5418fd1a6491434c6fb01becfc1cb0b3e3"
+      "sha256": "15cbb0839cde90ee63a024d64e2b251eb74979feb238a0d164ad24ca1cf7d97c",
+      "bytes": 706
     },
     "status_receipt": {
       "path": "benchmarks/zero5-c61-shared-state-v1/evaluation/zero5-c61-eval-20260901-10f8435/status.json",
-      "sha256": "8168264c7aa2471bab2eba600888cf376bc3589fa4c483a3f1f1caec3604be72"
+      "sha256": "b4d7f869e061618786f55ac6b3763e32653854b2c71e8c9300781af6d94c82ba",
+      "bytes": 675
     }
   },
   "gates": {

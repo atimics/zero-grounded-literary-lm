@@ -6,6 +6,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
+import { scientificHash as computeScientificHash } from "./contract_tiers.mjs";
 
 function fail(message) {
   process.stderr.write(`error: ${message}\n`);
@@ -149,6 +150,11 @@ const contractPath = path.resolve(option("--contract",
 const contractBytes = fs.readFileSync(contractPath);
 const contract = JSON.parse(contractBytes);
 const contractSha256 = sha256(contractBytes);
+const scientificContractSha256 = computeScientificHash(contract);
+if (contract.contract_tiers?.scientific_invariants_sha256 !== undefined &&
+    contract.contract_tiers.scientific_invariants_sha256 !==
+      scientificContractSha256)
+  fail("C6.1 contract scientific invariant hash is stale; regenerate it");
 if (contract.schema !== "zero.c61_shared_state_contract.v1" ||
     !["frozen-awaiting-ilxyr-authorization", "authorized-unrun",
       "authorized-unrun-aws"].includes(contract.status))
@@ -279,6 +285,7 @@ try {
       "--packed-validation", files.validation,
       "--aux-targets", path.join(targetImport, "train.targets.z5aux"),
       "--run-contract-sha256", contractSha256,
+      "--scientific-contract-sha256", scientificContractSha256,
       "--steps", String(training.update_groups),
       "--batch", String(training.maximum_batch_sequences),
       "--parallel-batch", String(training.parallel_workers),
