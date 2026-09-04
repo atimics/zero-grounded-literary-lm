@@ -1895,7 +1895,7 @@ int r55_write_development_json(const char *path,
         "  \"source_ablation\": {\"matches\": %u, \"cases\": %u},\n"
         "  \"full_oracle\": {\"matches\": %u, \"cases\": %u},\n"
         "  \"target_only_headroom\": {\"minimum\": %u, \"median\": %u, \"maximum\": %u},\n"
-        "  \"development_gate\": {\"target_only_headroom\": %s, "
+        "  \"fixture_qualification\": {\"target_only_headroom\": %s, "
         "\"decision\": \"%s\"},\n"
         "  \"family_selection_rule\": "
         "\"target-only median over four fixed generator-tie environments "

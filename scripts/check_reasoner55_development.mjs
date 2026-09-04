@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
@@ -19,13 +19,17 @@ import {
   createDeterministicRng,
   createReplayRegistry,
   createSplitState,
+  aggregateNestedFamilies,
   buildResultFromRawTraces,
+  factorialInteractionFamilies,
+  familyInferenceReceipt,
   finalizeManifest,
   freezeFamilySplits,
   registerEpisode,
   registerFamily,
   registerReplayPipeline,
   replayFunctionDigest,
+  reconstructCommonGate,
   runVerifiedSearch,
 } from "./lib/reasoner5_harness.mjs";
 import {
@@ -47,10 +51,16 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = resolve(root,
   "benchmarks/reasoner55-generated-primitive-transfer-v1");
-const resultPath = process.argv[2] ?? resolve(fixture, "DEVELOPMENT.json");
-const tracePath = process.argv[3] ?? resolve(fixture, "DEVELOPMENT-TRACE.jsonl");
-const artifactPath = process.argv[4] ?? resolve(fixture, "SOURCE_ARTIFACT.hex");
+const writeAnalysis = process.argv.includes("--write-analysis");
+const positionalArgs = process.argv.slice(2)
+  .filter(argument => argument !== "--write-analysis");
+const resultPath = positionalArgs[0] ?? resolve(fixture, "DEVELOPMENT.json");
+const tracePath = positionalArgs[1] ??
+  resolve(fixture, "DEVELOPMENT-TRACE.jsonl");
+const artifactPath = positionalArgs[2] ??
+  resolve(fixture, "SOURCE_ARTIFACT.hex");
 const contractPath = resolve(fixture, "contract.json");
+const analysisPath = resolve(fixture, "DEVELOPMENT-ANALYSIS.json");
 
 function check(condition, message) {
   if (!condition) throw new Error(message);
@@ -116,7 +126,145 @@ const R55_ANALYSIS_SETTINGS = Object.freeze({
   lane: "development",
   cost_field: "primary_cost",
   family_weighting: "target-family",
+  intersection_union: {
+    alpha: 0.01,
+    independent_unit_fields: ["generator_id", "family_id"],
+    primary_strata: [
+      "target-syntax-first",
+      "target-skeleton-first",
+      "cross-generator",
+    ],
+    simple_effect: {
+      full_arm: "full",
+      comparator_arm: "adapter_only",
+      primary_seed: "55a1000000000001",
+      stratum_seeds: [
+        "55a1000000000002",
+        "55a1000000000003",
+        "55a1000000000004",
+      ],
+    },
+    operational_comparator: {
+      full_arm: "full",
+      comparator_arm: "source_free_jit",
+      unit_fields: ["generator_id", "family_id"],
+      design: "one-way",
+      direction: "lower",
+      replicates: 256,
+      alpha: 0.01,
+      environment_field: "generator_id",
+      primary_seed: "55a1000000000011",
+      stratum_seeds: [
+        "55a1000000000012",
+        "55a1000000000013",
+        "55a1000000000014",
+      ],
+    },
+    factorial_interaction: {
+      adapter_guide_arm: "full",
+      adapter_only_arm: "adapter_only",
+      guide_only_arm: "raw_lexical",
+      raw_arm: "target_only",
+      required_upper_log_ratio: 0,
+      seed: "55a1000000000007",
+    },
+    formal_mechanism: {
+      full_arm: "raw_lexical",
+      comparator_arm: "full",
+      minimum_ratio: 1.1,
+      alpha: 0.05,
+      seed: "55a1000000000006",
+    },
+  },
 });
+
+const R55_UNIT_FIELDS = Object.freeze(["generator_id", "family_id"]);
+const R55_OPERATIONAL_PRIMARY = Object.freeze({
+  ...R55_ANALYSIS_SETTINGS.intersection_union.operational_comparator,
+  seed: R55_ANALYSIS_SETTINGS.intersection_union.operational_comparator
+    .primary_seed,
+});
+
+function crossGeneratorEpisodeIds() {
+  const ids = [];
+  for (const [source, target] of [
+    ["syntax-first", "skeleton-first"],
+    ["skeleton-first", "syntax-first"],
+  ]) {
+    for (let ordinal = 0; ordinal < 4; ordinal += 1)
+      for (let tie = 0; tie < 2; tie += 1)
+        ids.push(`${source}-to-${target}-${String(ordinal).padStart(3, "0")}` +
+          `-tie-${tie}`);
+  }
+  return ids;
+}
+
+function primaryStrata(comparison, seeds) {
+  assert.equal(seeds.length, 3, "R5.5 needs three registered strata seeds");
+  return [
+    {
+      ...comparison,
+      name: "target-syntax-first",
+      field: "generator_id",
+      values: ["syntax-first"],
+      seed: seeds[0],
+      alpha: 0.05,
+    },
+    {
+      ...comparison,
+      name: "target-skeleton-first",
+      field: "generator_id",
+      values: ["skeleton-first"],
+      seed: seeds[1],
+      alpha: 0.05,
+    },
+    {
+      ...comparison,
+      name: "cross-generator",
+      field: "episode_id",
+      values: crossGeneratorEpisodeIds(),
+      seed: seeds[2],
+      alpha: 0.05,
+    },
+  ];
+}
+
+function comparisonRows(rawTraces, comparison) {
+  if (comparison.field === undefined) return rawTraces;
+  const values = new Set(comparison.values);
+  return rawTraces.filter(row => values.has(row[comparison.field]));
+}
+
+function comparisonInference(rawTraces, comparison) {
+  const units = aggregateNestedFamilies(comparisonRows(rawTraces, comparison), {
+    fullArm: comparison.full_arm,
+    comparatorArm: comparison.comparator_arm,
+    unitFields: comparison.unit_fields,
+    costField: "primary_cost",
+  });
+  return familyInferenceReceipt(units, {
+    design: comparison.design,
+    direction: comparison.direction,
+    seed: comparison.seed,
+    replicates: comparison.replicates,
+    alpha: comparison.alpha,
+    environmentField: comparison.environment_field,
+  });
+}
+
+function operationalAnalysis(rawTraces) {
+  return {
+    arm: R55_OPERATIONAL_PRIMARY.comparator_arm,
+    primary: comparisonInference(rawTraces, R55_OPERATIONAL_PRIMARY),
+    strata: primaryStrata(R55_OPERATIONAL_PRIMARY,
+      R55_ANALYSIS_SETTINGS.intersection_union.operational_comparator
+        .stratum_seeds)
+      .map(analysis => ({
+        name: analysis.name,
+        inference: comparisonInference(rawTraces, analysis),
+      })),
+  };
+}
 
 function reconstructR55Development(rawTraces) {
   const arms = {};
@@ -141,6 +289,7 @@ function reconstructR55Development(rawTraces) {
     status: "development-only",
     execution_authorized: false,
     arm_totals: arms,
+    operational_comparator: operationalAnalysis(rawTraces),
   };
 }
 
@@ -234,9 +383,9 @@ const headroomPass = result.target_only_headroom.median >=
   contract.development_gates.target_only_median_minimum &&
   result.target_only_headroom.median <=
     contract.development_gates.target_only_median_maximum;
-check(result.development_gate.target_only_headroom === headroomPass &&
-  result.development_gate.decision === (headroomPass ? "pass" : "no-go"),
-"development gate must derive from the registered headroom range");
+check(result.fixture_qualification.target_only_headroom === headroomPass &&
+  result.fixture_qualification.decision === (headroomPass ? "pass" : "no-go"),
+"fixture qualification must derive from the registered headroom range");
 const strongestSourceFree =
   result.development_selection.target_only_primary_cost <=
     result.development_selection.source_free_jit_primary_cost ?
@@ -246,6 +395,23 @@ check(result.development_selection.strongest_source_free_arm ===
   contract.development_selection.strongest_source_free_arm ===
     strongestSourceFree,
 "development must freeze the measured strongest source-free comparator");
+check(contract.registered_analysis.primary_error_rule ===
+    "intersection-union at one-sided alpha 0.01" &&
+  contract.registered_analysis.simple_effect.full_arm === "full" &&
+  contract.registered_analysis.simple_effect.comparator_arm ===
+    "adapter_only" &&
+  contract.registered_analysis.operational_comparator.full_arm === "full" &&
+  contract.registered_analysis.operational_comparator.comparator_arm ===
+    strongestSourceFree &&
+  contract.registered_analysis.factorial_interaction
+    .required_upper_log_ratio === 0 &&
+  contract.registered_analysis.formal_mechanism.contrast ===
+    "raw_lexical versus full" &&
+  JSON.stringify(contract.registered_analysis.primary_strata) ===
+    JSON.stringify(R55_ANALYSIS_SETTINGS.intersection_union.primary_strata) &&
+  contract.registered_analysis.target_only_role ===
+    "registered fixture headroom only",
+"registered intersection-union contract changed");
 check(result.family_selection_rule ===
   contract.development_selection.family_headroom_rule,
 "development family headroom rule changed");
@@ -503,10 +669,10 @@ function makeParityBundle(family, universe) {
 }
 
 function analysisContract() {
-  const unitFields = ["generator_id", "family_id"];
+  const unitFields = R55_UNIT_FIELDS;
   const comparison = {
     full_arm: "full",
-    comparator_arm: "target_only",
+    comparator_arm: "adapter_only",
     unit_fields: unitFields,
     design: "one-way",
     direction: "lower",
@@ -528,8 +694,12 @@ function analysisContract() {
       reconstructR55Development),
     common_gate_registration: {
       primary_alpha: 0.01,
-      primary_strata: ["generated-affine"],
-      formal_mechanisms: [],
+      primary_strata: [
+        "target-syntax-first",
+        "target-skeleton-first",
+        "cross-generator",
+      ],
+      formal_mechanisms: ["raw-lexical-guide"],
       crossed_design: false,
       marginal_axes: [],
       derangements: 31,
@@ -538,15 +708,17 @@ function analysisContract() {
     },
     trace_schema: "zero.reasoner5_trace_row.v1",
     primary_analysis: comparison,
-    stratum_analyses: [{
+    stratum_analyses: primaryStrata(comparison,
+      R55_ANALYSIS_SETTINGS.intersection_union.simple_effect.stratum_seeds),
+    mechanism_analyses: [{
       ...comparison,
-      name: "generated-affine",
-      field: "shift_stratum",
-      values: ["generated-affine"],
-      seed: "55a1000000000002",
+      name: "raw-lexical-guide",
+      full_arm: "raw_lexical",
+      comparator_arm: "full",
+      direction: "higher",
+      seed: "55a1000000000006",
       alpha: 0.05,
     }],
-    mechanism_analyses: [],
     factorial_analysis: {
       adapter_guide_arm: "full",
       adapter_only_arm: "adapter_only",
@@ -555,7 +727,7 @@ function analysisContract() {
       unit_fields: unitFields,
       design: "one-way",
       direction: "lower",
-      seed: "55a1000000000003",
+      seed: "55a1000000000007",
       replicates: 256,
       alpha: 0.01,
       environment_field: "generator_id",
@@ -575,6 +747,126 @@ function analysisContract() {
         contract.development_gates.target_only_median_minimum,
     },
   };
+}
+
+function operationalCommonGate(commonResult, rawTraces, registration) {
+  const operational = commonResult.operational_comparator;
+  check(operational.arm === "source_free_jit",
+    "operational comparator must stay frozen to source_free_jit");
+  return reconstructCommonGate({
+    integrity_valid: commonResult.integrity.manifest_digest_valid &&
+      commonResult.integrity.trace_contract_valid,
+    registration,
+    exact: {
+      ...commonResult.exactness,
+      fallback_receipts: rawTraces.map(row => row.fallback_receipt),
+    },
+    measurement_floor:
+      commonResult.registered_analysis.headroom.measurement_floor,
+    primary: { inference: operational.primary },
+    strata: operational.strata,
+    mechanisms: commonResult.registered_analysis.mechanisms,
+    derangement: commonResult.registered_analysis.derangement,
+    source_ablation_matches_source_free:
+      commonResult.registered_analysis.source_ablation.matches,
+    factorial: {
+      inference: commonResult.registered_analysis.factorial,
+    },
+  });
+}
+
+function intersectionUnionGate(simpleGate, operationalGate,
+  factorialInteraction) {
+  const checks = {
+    simple_effect_common_gate: simpleGate.passed === true,
+    operational_comparator_common_gate: operationalGate.passed === true,
+    negative_factorial_interaction: factorialInteraction === true,
+  };
+  const failures = Object.entries(checks)
+    .filter(([, passed]) => !passed).map(([name]) => name);
+  const invalid = [simpleGate, operationalGate]
+    .some(gate => gate.decision === "invalid-run");
+  const measurementFloor = [simpleGate, operationalGate]
+    .some(gate => gate.decision === "measurement-floor");
+  const decision = invalid ? "invalid-run" : measurementFloor ?
+    "measurement-floor" : failures.length === 0 ? "pass" : "no-go";
+  const body = {
+    schema: "zero.reasoner55_intersection_union_gate.v1",
+    alpha: 0.01,
+    rule: "simple-effect common gate AND operational-comparator common gate AND negative factorial upper limit",
+    checks,
+    failures,
+    decision,
+    passed: decision === "pass",
+  };
+  return {
+    ...body,
+    gate_sha256: canonicalDigest("reasoner55-intersection-union-gate", body),
+  };
+}
+
+function buildR55AnalysisRecord(commonResult, rawTraces, registration) {
+  const operationalGate = operationalCommonGate(commonResult, rawTraces,
+    registration);
+  const factorial = commonResult.registered_analysis.factorial;
+  const factorialPass = factorial.interval.upper_log_ratio < 0;
+  check(commonResult.gate.checks.factorial_interaction === factorialPass,
+    "shared factorial gate and registered receipt differ");
+  const gate = intersectionUnionGate(commonResult.gate, operationalGate,
+    factorialPass);
+  const body = {
+    schema: "zero.reasoner55_development_analysis.v1",
+    experiment: commonResult.experiment,
+    status: "development-only",
+    execution_authorized: false,
+    simple_effect: {
+      full_arm: "full",
+      comparator_arm: "adapter_only",
+      primary: commonResult.registered_analysis.primary,
+      strata: commonResult.registered_analysis.strata,
+      common_gate: commonResult.gate,
+    },
+    operational_comparator: {
+      full_arm: "full",
+      comparator_arm: "source_free_jit",
+      primary: commonResult.operational_comparator.primary,
+      strata: commonResult.operational_comparator.strata,
+      common_gate: operationalGate,
+    },
+    factorial_interaction: {
+      contrast: "log(full) - log(adapter_only) - log(raw_lexical) + log(target_only)",
+      inference: factorial,
+      upper_log_ratio_below_zero: factorialPass,
+    },
+    formal_mechanisms: commonResult.registered_analysis.mechanisms,
+    target_only_headroom: commonResult.registered_analysis.headroom,
+    intersection_union_gate: gate,
+    provenance: {
+      common_result_sha256: commonResult.result_sha256,
+      manifest_sha256: commonResult.manifest_sha256,
+      raw_trace_sha256: commonResult.raw_trace_sha256,
+      trace_coverage_sha256: commonResult.trace_coverage_sha256,
+      analysis_settings_sha256: commonResult.analysis_settings_sha256,
+      analysis_function_sha256: commonResult.analysis_function_sha256,
+    },
+  };
+  return {
+    ...body,
+    analysis_sha256: canonicalDigest("reasoner55-development-analysis", body),
+  };
+}
+
+assert.equal(intersectionUnionGate(
+  { passed: true, decision: "pass" },
+  { passed: true, decision: "pass" }, true).decision, "pass");
+for (const [simple, operational, factorial] of [
+  [false, true, true], [true, false, true], [true, true, false],
+]) {
+  assert.equal(intersectionUnionGate(
+    { passed: simple, decision: simple ? "pass" : "no-go" },
+    { passed: operational, decision: operational ? "pass" : "no-go" },
+    factorial).decision, "no-go",
+  "every intersection-union component must fail closed");
 }
 
 function buildSharedManifestAndTraces() {
@@ -852,11 +1144,40 @@ check(commonReplay.result_sha256 === commonResult.result_sha256 &&
   commonResult.integrity.manifest_digest_valid &&
   commonResult.integrity.trace_contract_valid,
 "common result must replay from strict raw traces");
-check(contract.shared_replay.strict_trace_schema ===
-  "zero.reasoner5_trace_row.v1" &&
-  contract.shared_replay.coverage_sha256 === coverage.coverage_sha256 &&
-  contract.shared_replay.common_result_sha256 === commonResult.result_sha256,
-"contract shared replay receipt changed");
+const r55Analysis = buildR55AnalysisRecord(commonResult, shared.normalized,
+  shared.manifest.analysis_contract.common_gate_registration);
+const replayedR55Analysis = buildR55AnalysisRecord(commonResult,
+  shared.normalized,
+  shared.manifest.analysis_contract.common_gate_registration);
+assert.deepEqual(replayedR55Analysis, r55Analysis,
+  "R5.5 intersection-union analysis must replay exactly");
+check(r55Analysis.operational_comparator.comparator_arm ===
+    contract.development_selection.strongest_source_free_arm &&
+  r55Analysis.simple_effect.comparator_arm === "adapter_only",
+"registered intersection-union comparators changed");
+check(r55Analysis.factorial_interaction.upper_log_ratio_below_zero ===
+    r55Analysis.intersection_union_gate.checks
+      .negative_factorial_interaction,
+"intersection-union gate must use the replayed factorial upper limit");
+const analysisBytes = Buffer.from(`${JSON.stringify(r55Analysis, null, 2)}\n`);
+if (writeAnalysis) writeFileSync(analysisPath, analysisBytes);
+else {
+  const committedAnalysisBytes = readFileSync(analysisPath);
+  assert.deepEqual(JSON.parse(committedAnalysisBytes), r55Analysis,
+    "committed R5.5 analysis differs from replay");
+  check(sha256(committedAnalysisBytes) ===
+      contract.shared_replay.development_analysis_file_sha256,
+  "development analysis file digest changed");
+}
+if (!writeAnalysis) {
+  check(contract.shared_replay.strict_trace_schema ===
+    "zero.reasoner5_trace_row.v1" &&
+    contract.shared_replay.coverage_sha256 === coverage.coverage_sha256 &&
+    contract.shared_replay.common_result_sha256 === commonResult.result_sha256 &&
+    contract.shared_replay.intersection_union_analysis_sha256 ===
+      r55Analysis.analysis_sha256,
+  "contract shared replay receipt changed");
+}
 const normalizedByEpisode = new Map();
 for (const row of shared.normalized) {
   const episode = normalizedByEpisode.get(row.episode_id) ?? new Map();
@@ -870,4 +1191,6 @@ for (const [episodeId, arms] of normalizedByEpisode)
 console.log(`Reasoner 5.5 development checks passed: ${rows.length} rows, ` +
   `${familyRows.size} environment-family views, shared coverage ` +
   `${coverage.coverage_sha256}, common result ${commonResult.result_sha256}, ` +
-  `artifact ${result.artifact_sha256}`);
+  `intersection result ${r55Analysis.analysis_sha256}, decision ` +
+  `${r55Analysis.intersection_union_gate.decision}, artifact ` +
+  `${result.artifact_sha256}`);

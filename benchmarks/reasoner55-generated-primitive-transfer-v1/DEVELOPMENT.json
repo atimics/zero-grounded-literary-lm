@@ -16,7 +16,7 @@
   "source_ablation": {"matches": 32, "cases": 32},
   "full_oracle": {"matches": 32, "cases": 32},
   "target_only_headroom": {"minimum": 2, "median": 18, "maximum": 29},
-  "development_gate": {"target_only_headroom": true, "decision": "pass"},
+  "fixture_qualification": {"target_only_headroom": true, "decision": "pass"},
   "family_selection_rule": "target-only median over four fixed generator-tie environments must be 16 through 64 before split freeze",
   "development_selection": {"strongest_source_free_arm": "source_free_jit", "target_only_primary_cost": 571, "source_free_jit_primary_cost": 539},
   "proposal_budget": 64,

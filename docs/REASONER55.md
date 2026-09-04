@@ -76,6 +76,20 @@ The controls are an oracle adapter, a frequency-only lexical guide, a
 source-free just-in-time guide, its byte-for-byte source ablation path, a
 source-only guide, and 31 fixed role derangements.
 
+The registered decision is an intersection-union gate at one-sided alpha
+0.01. It requires all three of these results:
+
+1. `full` passes the common gate against `adapter_only`.
+2. `full` passes the common gate against the frozen strongest source-free
+   comparator, `source_free_jit`.
+3. The upper confidence limit for the adapter-by-guide log interaction is
+   below zero.
+
+`target_only` remains the registered headroom arm. It is also the off/off cell
+of the factorial. The raw lexical guide is the formal mechanism contrast.
+The common gates cover both target generators and the fixed cross-generator
+stratum.
+
 Every arm receives the same candidate multiset, evidence, allowed actions,
 latent task, potential responses, verifier, and caps. Canonical fallback order
 comes from the shared Reasoner 5 harness. Each raw row carries a source artifact
@@ -90,8 +104,16 @@ Fixed-point and duplicate draws are rejected. Their shared canonical digest is
 ## Development fixture
 
 The checked-in fixture has 1,280 raw arm rows. Its target-only median is 18
-checks, inside the registered 16-to-64 development range. The development lane
-selects `source_free_jit` as the stronger source-free comparator.
+checks, inside the registered 16-to-64 development range. This qualifies the
+fixture for analysis. The development lane selects `source_free_jit` as the
+stronger source-free comparator.
+
+The registered development analysis is a no-go. The full-to-adapter-only
+family-weighted cost ratio is 0.8551 with an upper limit of 1.2208. The
+full-to-`source_free_jit` ratio is 0.9901 with an upper limit of 1.9148. The
+factorial interaction is -0.0508 with an upper limit of 0.3952. The raw lexical
+mechanism ratio is 1.0521 with a lower limit of 0.7692. The result keeps the
+scientific gate closed while preserving the valid development measurements.
 
 Observation queries and candidate expansions are logical work counters.
 Source artifact access counts the canonical guide bytes made available to an
@@ -110,9 +132,10 @@ make reasoner55-check
 The checker replays every aggregate from raw rows, confirms arm parity,
 validates artifact and trace hashes, verifies nested family structure, and
 compares a fresh deterministic run with the checked-in files. It also rebuilds
-the common result from strict shared rows and verifies that result a second
-time from the raw traces.
+both common gates from strict shared rows. It then rebuilds the complete
+intersection-union result from the raw traces.
 
 See the [development record](../benchmarks/reasoner55-generated-primitive-transfer-v1/DEVELOPMENT.md),
+the [development analysis](../benchmarks/reasoner55-generated-primitive-transfer-v1/DEVELOPMENT-ANALYSIS.json),
 the [development contract](../benchmarks/reasoner55-generated-primitive-transfer-v1/contract.json),
 and the [next-set design](REASONER5-NEXT.md).

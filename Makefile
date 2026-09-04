@@ -2941,7 +2941,8 @@ clean-reasoner5-followups:
 REASONER55_FIXTURE := benchmarks/reasoner55-generated-primitive-transfer-v1
 
 .PHONY: reasoner55-check reasoner55-development-check \
-	reasoner55-development-fixture clean-reasoner55
+	reasoner55-development-fixture reasoner55-development-analysis-fixture \
+	clean-reasoner55
 
 all: reasoner55
 
@@ -2954,6 +2955,9 @@ reasoner55-development-fixture: reasoner55
 		$(REASONER55_FIXTURE)/DEVELOPMENT.json \
 		$(REASONER55_FIXTURE)/DEVELOPMENT-TRACE.jsonl \
 		$(REASONER55_FIXTURE)/SOURCE_ARTIFACT.hex
+
+reasoner55-development-analysis-fixture: reasoner55-development-fixture
+	node scripts/check_reasoner55_development.mjs --write-analysis
 
 reasoner55-development-check:
 	node scripts/check_reasoner55_development.mjs

@@ -1,0 +1,1745 @@
+{
+  "schema": "zero.reasoner55_development_analysis.v1",
+  "experiment": "reasoner55-generated-primitive-transfer-v1",
+  "status": "development-only",
+  "execution_authorized": false,
+  "simple_effect": {
+    "full_arm": "full",
+    "comparator_arm": "adapter_only",
+    "primary": {
+      "schema": "zero.reasoner5_family_inference.v1",
+      "settings": {
+        "design": "one-way",
+        "direction": "lower",
+        "seed": "55a1000000000001",
+        "replicates": 256,
+        "alpha": 0.01,
+        "environment_field": "generator_id",
+        "row_field": "family_id",
+        "column_field": "cross_family_id",
+        "wilson_z": 1.6448536269514722
+      },
+      "units": [
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-000",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-000"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 23.5,
+          "mean_comparator_cost": 19.75,
+          "mean_log_ratio": 0.24466657049784768,
+          "geometric_mean_ratio": 1.2771953875785163,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-001",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-001"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 9,
+          "mean_comparator_cost": 16.75,
+          "mean_log_ratio": -0.6056408798034663,
+          "geometric_mean_ratio": 0.545724570688268,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-002",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-002"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 16,
+          "mean_log_ratio": -0.9608941579535863,
+          "geometric_mean_ratio": 0.3825506722750971,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-003",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-003"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 9.5,
+          "mean_comparator_cost": 16.25,
+          "mean_log_ratio": -0.46075741236078743,
+          "geometric_mean_ratio": 0.6308056845002927,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-000",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-000"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 25,
+          "mean_comparator_cost": 24,
+          "mean_log_ratio": 0.04050822568918431,
+          "geometric_mean_ratio": 1.0413398754054384,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-001",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-001"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 17.75,
+          "mean_comparator_cost": 16.25,
+          "mean_log_ratio": 0.205503663769426,
+          "geometric_mean_ratio": 1.228143480588161,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-002",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-002"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 11.5,
+          "mean_comparator_cost": 17.75,
+          "mean_log_ratio": -0.37187606576285104,
+          "geometric_mean_ratio": 0.6894396824107493,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-003",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-003"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 24.5,
+          "mean_comparator_cost": 16,
+          "mean_log_ratio": 0.6558124751669739,
+          "geometric_mean_ratio": 1.926707283445326,
+          "win": false,
+          "tie": false
+        }
+      ],
+      "summary": {
+        "schema": "zero.reasoner5_family_summary.v1",
+        "independent_families": 8,
+        "family_weighted_geometric_mean_ratio": 0.8550590931873792,
+        "family_weighted_median_ratio": 0.8653897789080938,
+        "wins": 4,
+        "ties": 0,
+        "losses": 4,
+        "win_rate": 0.5,
+        "wilson_lower": 0.24864189021250815
+      },
+      "interval": {
+        "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+        "independent_units": 8,
+        "replicates": 256,
+        "alpha": 0.01,
+        "point_log_ratio": -0.15658469759465737,
+        "point_ratio": 0.8550590931873792,
+        "lower_log_ratio": -0.4706480393528238,
+        "upper_log_ratio": 0.1994844922627237,
+        "lower_ratio": 0.62459737342532,
+        "upper_ratio": 1.2207732778529323,
+        "one_sided_p_lower_than_zero": 0.17120622568093385,
+        "one_sided_p_higher_than_zero": 0.8326848249027238,
+        "bootstrap_sha256": "24aded8c5983a0923978418a54ed106bf791d7aaf4c2299f9e79562fabdb5bfa",
+        "fixed_environments": 2,
+        "fixed_environment_weighting": "equal",
+        "environment_summaries": {
+          "skeleton-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.6404037322329883,
+            "family_weighted_median_ratio": 0.5882651275942803,
+            "wins": 3,
+            "ties": 0,
+            "losses": 1,
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985064
+          },
+          "syntax-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.141664259658669,
+            "family_weighted_median_ratio": 1.1347416779967996,
+            "wins": 1,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
+          }
+        }
+      },
+      "receipt_sha256": "7a1e8553aba1b892214a0e7fe0fb5d3a7ee515d7ec0a18f2a0d9e5fc90dee566"
+    },
+    "strata": [
+      {
+        "name": "target-syntax-first",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "55a1000000000002",
+            "replicates": 256,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-000",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-000"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 25,
+              "mean_comparator_cost": 24,
+              "mean_log_ratio": 0.04050822568918431,
+              "geometric_mean_ratio": 1.0413398754054384,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-001",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-001"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 17.75,
+              "mean_comparator_cost": 16.25,
+              "mean_log_ratio": 0.205503663769426,
+              "geometric_mean_ratio": 1.228143480588161,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-002",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-002"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 11.5,
+              "mean_comparator_cost": 17.75,
+              "mean_log_ratio": -0.37187606576285104,
+              "geometric_mean_ratio": 0.6894396824107493,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-003",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-003"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 24.5,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": 0.6558124751669739,
+              "geometric_mean_ratio": 1.926707283445326,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.141664259658669,
+            "family_weighted_median_ratio": 1.1347416779967996,
+            "wins": 1,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "independent_units": 4,
+            "replicates": 256,
+            "alpha": 0.05,
+            "point_log_ratio": 0.1324870747156833,
+            "point_ratio": 1.141664259658669,
+            "lower_log_ratio": -0.12443506051677294,
+            "upper_log_ratio": 0.3988903399345177,
+            "lower_ratio": 0.8829956007825785,
+            "upper_ratio": 1.4901701974857449,
+            "one_sided_p_lower_than_zero": 0.7470817120622568,
+            "one_sided_p_higher_than_zero": 0.25680933852140075,
+            "bootstrap_sha256": "75bedc498214c7d3e016319729171e6ea11acd59a03093d806dc4fecbbaf91fe",
+            "fixed_environments": 1,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 1.141664259658669,
+                "family_weighted_median_ratio": 1.1347416779967996,
+                "wins": 1,
+                "ties": 0,
+                "losses": 3,
+                "win_rate": 0.25,
+                "wilson_lower": 0.05790732119985868
+              }
+            }
+          },
+          "receipt_sha256": "019585b7d548a19e9cc67bfe3aa6ff684b0e7830f2d03152c13dce2501e4538f"
+        }
+      },
+      {
+        "name": "target-skeleton-first",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "55a1000000000003",
+            "replicates": 256,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-000",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-000"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 23.5,
+              "mean_comparator_cost": 19.75,
+              "mean_log_ratio": 0.24466657049784768,
+              "geometric_mean_ratio": 1.2771953875785163,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-001",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-001"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 16.75,
+              "mean_log_ratio": -0.6056408798034663,
+              "geometric_mean_ratio": 0.545724570688268,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-002",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-002"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -0.9608941579535863,
+              "geometric_mean_ratio": 0.3825506722750971,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-003",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-003"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 16.25,
+              "mean_log_ratio": -0.46075741236078743,
+              "geometric_mean_ratio": 0.6308056845002927,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.6404037322329883,
+            "family_weighted_median_ratio": 0.5882651275942803,
+            "wins": 3,
+            "ties": 0,
+            "losses": 1,
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985064
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "independent_units": 4,
+            "replicates": 256,
+            "alpha": 0.05,
+            "point_log_ratio": -0.4456564699049981,
+            "point_ratio": 0.6404037322329883,
+            "lower_log_ratio": -0.7832675188785263,
+            "upper_log_ratio": -0.14426628779213957,
+            "lower_ratio": 0.45691060547314466,
+            "upper_ratio": 0.8656572034195075,
+            "one_sided_p_lower_than_zero": 0.01556420233463035,
+            "one_sided_p_higher_than_zero": 0.9883268482490273,
+            "bootstrap_sha256": "cbf0452614e6b1abb72f904277913f75d954072eee3c945cb95e21bccb5b6a7e",
+            "fixed_environments": 1,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "skeleton-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.6404037322329883,
+                "family_weighted_median_ratio": 0.5882651275942803,
+                "wins": 3,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.75,
+                "wilson_lower": 0.3561680085985064
+              }
+            }
+          },
+          "receipt_sha256": "5ea9e6d443d45db1a0a7f7eafa234a2cd12628501c0aa0e67699faff45677456"
+        }
+      },
+      {
+        "name": "cross-generator",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "55a1000000000004",
+            "replicates": 256,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-000",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-000"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 26,
+              "mean_comparator_cost": 20.5,
+              "mean_log_ratio": 0.25018192496548003,
+              "geometric_mean_ratio": 1.284259034217134,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-001",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-001"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -0.2397865401309431,
+              "geometric_mean_ratio": 0.7867957924694432,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-002",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-002"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 2,
+              "mean_comparator_cost": 16,
+              "mean_log_ratio": -1.7276323014662154,
+              "geometric_mean_ratio": 0.17770466332772775,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-003",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-003"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12,
+              "mean_comparator_cost": 15,
+              "mean_log_ratio": -0.10141003917114785,
+              "geometric_mean_ratio": 0.9035624609139906,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-000",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-000"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 29,
+              "mean_comparator_cost": 28,
+              "mean_log_ratio": 0.03449643574347571,
+              "geometric_mean_ratio": 1.0350983390135313,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-001",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-001"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 16,
+              "mean_comparator_cost": 11,
+              "mean_log_ratio": 0.49214773049410626,
+              "geometric_mean_ratio": 1.6358257627039396,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-002",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-002"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 11,
+              "mean_comparator_cost": 18.5,
+              "mean_log_ratio": -0.47722124891926565,
+              "geometric_mean_ratio": 0.620505227994023,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-003",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-003"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 22,
+              "mean_comparator_cost": 20.5,
+              "mean_log_ratio": 0.07424781117195667,
+              "geometric_mean_ratio": 1.077073683318948,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.809068228686189,
+            "family_weighted_median_ratio": 0.969330399963761,
+            "wins": 4,
+            "ties": 0,
+            "losses": 4,
+            "win_rate": 0.5,
+            "wilson_lower": 0.24864189021250815
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "independent_units": 8,
+            "replicates": 256,
+            "alpha": 0.05,
+            "point_log_ratio": -0.21187202841406919,
+            "point_ratio": 0.809068228686189,
+            "lower_log_ratio": -0.6060994532964218,
+            "upper_log_ratio": 0.13154123532223994,
+            "lower_ratio": 0.5454743732370398,
+            "upper_ratio": 1.1405849391401943,
+            "one_sided_p_lower_than_zero": 0.16731517509727625,
+            "one_sided_p_higher_than_zero": 0.8365758754863813,
+            "bootstrap_sha256": "8f7bbc75f4726fdd9ef8f65c2ca62645763a46d0c9dac78cd7eec4327e3b8cb0",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "skeleton-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.6346626132846201,
+                "family_weighted_median_ratio": 0.8451791266917169,
+                "wins": 3,
+                "ties": 0,
+                "losses": 1,
+                "win_rate": 0.75,
+                "wilson_lower": 0.3561680085985064
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 1.0314005976839382,
+                "family_weighted_median_ratio": 1.0560860111662396,
+                "wins": 1,
+                "ties": 0,
+                "losses": 3,
+                "win_rate": 0.25,
+                "wilson_lower": 0.05790732119985868
+              }
+            }
+          },
+          "receipt_sha256": "4edbda213437c6c47c349d3bfd14a4fff58e907c8ad3f6fb7d407f8251da2af0"
+        }
+      }
+    ],
+    "common_gate": {
+      "decision": "no-go",
+      "passed": false,
+      "failures": [
+        "primary_ratio",
+        "primary_upper_limit",
+        "family_win_rate",
+        "family_win_lower_limit",
+        "primary_strata",
+        "mechanism_effects",
+        "factorial_interaction",
+        "derangement_median",
+        "derangement_randomization"
+      ],
+      "checks": {
+        "integrity_valid": true,
+        "all_final_answers_exact": true,
+        "all_certificates_valid": true,
+        "no_premature_commits": true,
+        "invalid_first_candidates_rejected": true,
+        "all_primary_episodes_solved": true,
+        "fallback_work_counted": true,
+        "primary_ratio": false,
+        "primary_upper_limit": false,
+        "family_win_rate": false,
+        "family_win_lower_limit": false,
+        "marginal_win_gates": true,
+        "primary_strata": false,
+        "mechanism_effects": false,
+        "factorial_interaction": false,
+        "derangement_median": false,
+        "derangement_randomization": false,
+        "source_ablation_matches_source_free": true
+      },
+      "registration_sha256": "370384a65f5b8e6cf158c7266c9933a72e52908a79215b6e9af4cbcdf874d66c",
+      "derangement": {
+        "observed": 2.696433413210845,
+        "derangements": 31,
+        "median": 2.556428136845855,
+        "beats_median": false,
+        "p_value": 0.8125
+      }
+    }
+  },
+  "operational_comparator": {
+    "full_arm": "full",
+    "comparator_arm": "source_free_jit",
+    "primary": {
+      "schema": "zero.reasoner5_family_inference.v1",
+      "settings": {
+        "design": "one-way",
+        "direction": "lower",
+        "seed": "55a1000000000011",
+        "replicates": 256,
+        "alpha": 0.01,
+        "environment_field": "generator_id",
+        "row_field": "family_id",
+        "column_field": "cross_family_id",
+        "wilson_z": 1.6448536269514722
+      },
+      "units": [
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-000",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-000"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 23.5,
+          "mean_comparator_cost": 27,
+          "mean_log_ratio": -0.13876485049388146,
+          "geometric_mean_ratio": 0.8704326862109958,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-001",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-001"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 9,
+          "mean_comparator_cost": 23,
+          "mean_log_ratio": -0.9226240770895207,
+          "geometric_mean_ratio": 0.39747466725706065,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-002",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-002"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 10,
+          "mean_log_ratio": -0.5290604636566864,
+          "geometric_mean_ratio": 0.5891582453098055,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-003",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-003"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 9.5,
+          "mean_comparator_cost": 18,
+          "mean_log_ratio": -0.6222435295957541,
+          "geometric_mean_ratio": 0.5367388961676616,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-000",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-000"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 25,
+          "mean_comparator_cost": 21.75,
+          "mean_log_ratio": 0.12221167926180385,
+          "geometric_mean_ratio": 1.1299932726074624,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-001",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-001"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 17.75,
+          "mean_comparator_cost": 23,
+          "mean_log_ratio": -0.25138348050048404,
+          "geometric_mean_ratio": 0.7777240723501446,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-002",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-002"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 11.5,
+          "mean_comparator_cost": 10,
+          "mean_log_ratio": 0.12703273082639796,
+          "geometric_mean_ratio": 1.1354541815269814,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-003",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-003"
+          },
+          "nested_measurements": 4,
+          "mean_full_cost": 24.5,
+          "mean_comparator_cost": 2,
+          "mean_log_ratio": 2.1352370743840674,
+          "geometric_mean_ratio": 8.459051693633016,
+          "win": false,
+          "tie": false
+        }
+      ],
+      "summary": {
+        "schema": "zero.reasoner5_family_summary.v1",
+        "independent_families": 8,
+        "family_weighted_geometric_mean_ratio": 0.9900999665798295,
+        "family_weighted_median_ratio": 0.8240783792805702,
+        "wins": 5,
+        "ties": 0,
+        "losses": 3,
+        "win_rate": 0.625,
+        "wilson_lower": 0.3479914384047327
+      },
+      "interval": {
+        "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+        "independent_units": 8,
+        "replicates": 256,
+        "alpha": 0.01,
+        "point_log_ratio": -0.00994936460800716,
+        "point_ratio": 0.9900999665798295,
+        "lower_log_ratio": -0.41541116382659615,
+        "upper_log_ratio": 0.6496366657096829,
+        "lower_ratio": 0.6600688284778051,
+        "upper_ratio": 1.914844973767904,
+        "one_sided_p_lower_than_zero": 0.42023346303501946,
+        "one_sided_p_higher_than_zero": 0.5836575875486382,
+        "bootstrap_sha256": "731c1a4f9fe405037fd40406e7766ab57181d0b9c5f269a7347223b56b95af6e",
+        "fixed_environments": 2,
+        "fixed_environment_weighting": "equal",
+        "environment_summaries": {
+          "skeleton-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.5751219175093855,
+            "family_weighted_median_ratio": 0.5629485707387336,
+            "wins": 4,
+            "ties": 0,
+            "losses": 0,
+            "win_rate": 1,
+            "wilson_lower": 0.5965213747972954
+          },
+          "syntax-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.70450458237906,
+            "family_weighted_median_ratio": 1.132723727067222,
+            "wins": 1,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
+          }
+        }
+      },
+      "receipt_sha256": "ae4afa99777636eefbfd610c38e9c816b79d8e4e840c013bb94446802b6cda10"
+    },
+    "strata": [
+      {
+        "name": "target-syntax-first",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "55a1000000000012",
+            "replicates": 256,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-000",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-000"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 25,
+              "mean_comparator_cost": 21.75,
+              "mean_log_ratio": 0.12221167926180385,
+              "geometric_mean_ratio": 1.1299932726074624,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-001",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-001"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 17.75,
+              "mean_comparator_cost": 23,
+              "mean_log_ratio": -0.25138348050048404,
+              "geometric_mean_ratio": 0.7777240723501446,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-002",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-002"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 11.5,
+              "mean_comparator_cost": 10,
+              "mean_log_ratio": 0.12703273082639796,
+              "geometric_mean_ratio": 1.1354541815269814,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-003",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-003"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 24.5,
+              "mean_comparator_cost": 2,
+              "mean_log_ratio": 2.1352370743840674,
+              "geometric_mean_ratio": 8.459051693633016,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.70450458237906,
+            "family_weighted_median_ratio": 1.132723727067222,
+            "wins": 1,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "independent_units": 4,
+            "replicates": 256,
+            "alpha": 0.05,
+            "point_log_ratio": 0.5332745009929463,
+            "point_ratio": 1.70450458237906,
+            "lower_log_ratio": -0.15677942766876352,
+            "upper_log_ratio": 1.5385819356629296,
+            "lower_ratio": 0.854892603677581,
+            "upper_ratio": 4.657980269689022,
+            "one_sided_p_lower_than_zero": 0.8365758754863813,
+            "one_sided_p_higher_than_zero": 0.16731517509727625,
+            "bootstrap_sha256": "502986de24f854312b7231d437c98cc6009811504b8e19586e8db01a9b184087",
+            "fixed_environments": 1,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 1.70450458237906,
+                "family_weighted_median_ratio": 1.132723727067222,
+                "wins": 1,
+                "ties": 0,
+                "losses": 3,
+                "win_rate": 0.25,
+                "wilson_lower": 0.05790732119985868
+              }
+            }
+          },
+          "receipt_sha256": "02aac93bec7fe365d429c00d62bb05ea87859b489ea4eae31d0694a078ed4019"
+        }
+      },
+      {
+        "name": "target-skeleton-first",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "55a1000000000013",
+            "replicates": 256,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-000",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-000"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 23.5,
+              "mean_comparator_cost": 27,
+              "mean_log_ratio": -0.13876485049388146,
+              "geometric_mean_ratio": 0.8704326862109958,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-001",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-001"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 23,
+              "mean_log_ratio": -0.9226240770895207,
+              "geometric_mean_ratio": 0.39747466725706065,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-002",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-002"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 10,
+              "mean_log_ratio": -0.5290604636566864,
+              "geometric_mean_ratio": 0.5891582453098055,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-003",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-003"
+              },
+              "nested_measurements": 4,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 18,
+              "mean_log_ratio": -0.6222435295957541,
+              "geometric_mean_ratio": 0.5367388961676616,
+              "win": true,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.5751219175093855,
+            "family_weighted_median_ratio": 0.5629485707387336,
+            "wins": 4,
+            "ties": 0,
+            "losses": 0,
+            "win_rate": 1,
+            "wilson_lower": 0.5965213747972954
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "independent_units": 4,
+            "replicates": 256,
+            "alpha": 0.05,
+            "point_log_ratio": -0.5531732302089606,
+            "point_ratio": 0.5751219175093855,
+            "lower_log_ratio": -0.7491380368578705,
+            "upper_log_ratio": -0.3339126570752839,
+            "lower_ratio": 0.47277389082904103,
+            "upper_ratio": 0.7161163271901925,
+            "one_sided_p_lower_than_zero": 0.0038910505836575876,
+            "one_sided_p_higher_than_zero": 1,
+            "bootstrap_sha256": "8468b57ed2b409dc56ad468291160d51005d047a5d425d31b9bce4131226ff47",
+            "fixed_environments": 1,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "skeleton-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.5751219175093855,
+                "family_weighted_median_ratio": 0.5629485707387336,
+                "wins": 4,
+                "ties": 0,
+                "losses": 0,
+                "win_rate": 1,
+                "wilson_lower": 0.5965213747972954
+              }
+            }
+          },
+          "receipt_sha256": "f620edcc3f44a24b624494440bd75b8278aa315009d30851e3420802cc6a0797"
+        }
+      },
+      {
+        "name": "cross-generator",
+        "inference": {
+          "schema": "zero.reasoner5_family_inference.v1",
+          "settings": {
+            "design": "one-way",
+            "direction": "lower",
+            "seed": "55a1000000000014",
+            "replicates": 256,
+            "alpha": 0.05,
+            "environment_field": "generator_id",
+            "row_field": "family_id",
+            "column_field": "cross_family_id",
+            "wilson_z": 1.6448536269514722
+          },
+          "units": [
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-000",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-000"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 26,
+              "mean_comparator_cost": 27,
+              "mean_log_ratio": -0.03636764417087483,
+              "geometric_mean_ratio": 0.9642857142857143,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-001",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-001"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12,
+              "mean_comparator_cost": 23,
+              "mean_log_ratio": -0.613104472886409,
+              "geometric_mean_ratio": 0.5416666666666666,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-002",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-002"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 2,
+              "mean_comparator_cost": 10,
+              "mean_log_ratio": -1.2992829841302609,
+              "geometric_mean_ratio": 0.2727272727272727,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-003",
+              "unit": {
+                "generator_id": "skeleton-first",
+                "family_id": "development-skeleton-first-003"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 12,
+              "mean_comparator_cost": 18,
+              "mean_log_ratio": -0.3794896217049037,
+              "geometric_mean_ratio": 0.6842105263157895,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-000",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-000"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 29,
+              "mean_comparator_cost": 22,
+              "mean_log_ratio": 0.2666492398090246,
+              "geometric_mean_ratio": 1.3055824196677337,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-001",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-001"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 16,
+              "mean_comparator_cost": 23,
+              "mean_log_ratio": -0.3448404862917295,
+              "geometric_mean_ratio": 0.7083333333333334,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-002",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-002"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 11,
+              "mean_comparator_cost": 10,
+              "mean_log_ratio": 0.08701137698962969,
+              "geometric_mean_ratio": 1.0909090909090908,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-003",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "development-syntax-first-003"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 22,
+              "mean_comparator_cost": 2,
+              "mean_log_ratio": 2.03688192726104,
+              "geometric_mean_ratio": 7.666666666666668,
+              "win": false,
+              "tie": false
+            }
+          ],
+          "summary": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.9652985636221267,
+            "family_weighted_median_ratio": 0.8363095238095238,
+            "wins": 5,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.625,
+            "wilson_lower": 0.3479914384047327
+          },
+          "interval": {
+            "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+            "independent_units": 8,
+            "replicates": 256,
+            "alpha": 0.05,
+            "point_log_ratio": -0.03531783314056042,
+            "point_ratio": 0.9652985636221267,
+            "lower_log_ratio": -0.37592338202641024,
+            "upper_log_ratio": 0.42902822810681784,
+            "lower_ratio": 0.6866549411370578,
+            "upper_ratio": 1.5357643855066077,
+            "one_sided_p_lower_than_zero": 0.43190661478599224,
+            "one_sided_p_higher_than_zero": 0.5719844357976653,
+            "bootstrap_sha256": "7284ebdd32c143796182f5256b6e05afd5733224f3a07d3be7229a42fb64e84a",
+            "fixed_environments": 2,
+            "fixed_environment_weighting": "equal",
+            "environment_summaries": {
+              "skeleton-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 0.5587455033831776,
+                "family_weighted_median_ratio": 0.6129385964912281,
+                "wins": 4,
+                "ties": 0,
+                "losses": 0,
+                "win_rate": 1,
+                "wilson_lower": 0.5965213747972954
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 4,
+                "family_weighted_geometric_mean_ratio": 1.6676667844106632,
+                "family_weighted_median_ratio": 1.1982457552884123,
+                "wins": 1,
+                "ties": 0,
+                "losses": 3,
+                "win_rate": 0.25,
+                "wilson_lower": 0.05790732119985868
+              }
+            }
+          },
+          "receipt_sha256": "388f82b06d9ce61db49412d756505bfa4921516e81df8b3053f4f31086a83f3a"
+        }
+      }
+    ],
+    "common_gate": {
+      "decision": "no-go",
+      "passed": false,
+      "failures": [
+        "primary_ratio",
+        "primary_upper_limit",
+        "family_win_lower_limit",
+        "primary_strata",
+        "mechanism_effects",
+        "factorial_interaction",
+        "derangement_median",
+        "derangement_randomization"
+      ],
+      "checks": {
+        "integrity_valid": true,
+        "all_final_answers_exact": true,
+        "all_certificates_valid": true,
+        "no_premature_commits": true,
+        "invalid_first_candidates_rejected": true,
+        "all_primary_episodes_solved": true,
+        "fallback_work_counted": true,
+        "primary_ratio": false,
+        "primary_upper_limit": false,
+        "family_win_rate": true,
+        "family_win_lower_limit": false,
+        "marginal_win_gates": true,
+        "primary_strata": false,
+        "mechanism_effects": false,
+        "factorial_interaction": false,
+        "derangement_median": false,
+        "derangement_randomization": false,
+        "source_ablation_matches_source_free": true
+      },
+      "registration_sha256": "370384a65f5b8e6cf158c7266c9933a72e52908a79215b6e9af4cbcdf874d66c",
+      "derangement": {
+        "observed": 2.696433413210845,
+        "derangements": 31,
+        "median": 2.556428136845855,
+        "beats_median": false,
+        "p_value": 0.8125
+      }
+    }
+  },
+  "factorial_interaction": {
+    "contrast": "log(full) - log(adapter_only) - log(raw_lexical) + log(target_only)",
+    "inference": {
+      "schema": "zero.reasoner5_family_inference.v1",
+      "settings": {
+        "design": "one-way",
+        "direction": "lower",
+        "seed": "55a1000000000007",
+        "replicates": 256,
+        "alpha": 0.01,
+        "environment_field": "generator_id",
+        "row_field": "family_id",
+        "column_field": "cross_family_id",
+        "wilson_z": 1.6448536269514722
+      },
+      "units": [
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-000",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-000"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": 0.17809702955069096,
+          "mean_log_ratio": 0.17809702955069096,
+          "useful_interaction": false
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-001",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-001"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": -0.5053007056726981,
+          "mean_log_ratio": -0.5053007056726981,
+          "useful_interaction": true
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-002",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-002"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": -0.8302465416171921,
+          "mean_log_ratio": -0.8302465416171921,
+          "useful_interaction": true
+        },
+        {
+          "generator_id": "skeleton-first",
+          "family_id": "development-skeleton-first-003",
+          "unit": {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-003"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": -0.8438766301852804,
+          "mean_log_ratio": -0.8438766301852804,
+          "useful_interaction": true
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-000",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-000"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": 1.1939969795751406,
+          "mean_log_ratio": 1.1939969795751406,
+          "useful_interaction": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-001",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-001"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": 0.44089714806533964,
+          "mean_log_ratio": 0.44089714806533964,
+          "useful_interaction": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-002",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-002"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": -0.668511656056554,
+          "mean_log_ratio": -0.668511656056554,
+          "useful_interaction": true
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "development-syntax-first-003",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-003"
+          },
+          "nested_measurements": 4,
+          "mean_interaction": 0.628279026564353,
+          "mean_log_ratio": 0.628279026564353,
+          "useful_interaction": false
+        }
+      ],
+      "summary": {
+        "schema": "zero.reasoner5_family_summary.v1",
+        "independent_families": 8,
+        "family_weighted_geometric_mean_ratio": 0.9504372199625984,
+        "family_weighted_median_ratio": 0.8991326926917358,
+        "wins": 4,
+        "ties": 0,
+        "losses": 4,
+        "win_rate": 0.5,
+        "wilson_lower": 0.24864189021250815
+      },
+      "interval": {
+        "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+        "independent_units": 8,
+        "replicates": 256,
+        "alpha": 0.01,
+        "point_log_ratio": -0.05083316872202506,
+        "point_ratio": 0.9504372199625984,
+        "lower_log_ratio": -0.4663486003263074,
+        "upper_log_ratio": 0.3951518351018568,
+        "lower_ratio": 0.6272885729269604,
+        "upper_ratio": 1.4846095896570242,
+        "one_sided_p_lower_than_zero": 0.4046692607003891,
+        "one_sided_p_higher_than_zero": 0.5992217898832685,
+        "bootstrap_sha256": "e0511732445ba9be504e28e24472d6cab2a0a9ad0390040e5e1e66c4aac92e9e",
+        "fixed_environments": 2,
+        "fixed_environment_weighting": "equal",
+        "environment_summaries": {
+          "skeleton-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.6063294995913459,
+            "family_weighted_median_ratio": 0.5196329602181486,
+            "wins": 3,
+            "ties": 0,
+            "losses": 1,
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985064
+          },
+          "syntax-first": {
+            "schema": "zero.reasoner5_family_summary.v1",
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.489834998460507,
+            "family_weighted_median_ratio": 1.7142414460447184,
+            "wins": 1,
+            "ties": 0,
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
+          }
+        }
+      },
+      "receipt_sha256": "0ccbf1ca53faaf38439b46dfa8a4234f23372c45efb7aa295a28f3f451fa2251"
+    },
+    "upper_log_ratio_below_zero": false
+  },
+  "formal_mechanisms": [
+    {
+      "name": "raw-lexical-guide",
+      "inference": {
+        "schema": "zero.reasoner5_family_inference.v1",
+        "settings": {
+          "design": "one-way",
+          "direction": "higher",
+          "seed": "55a1000000000006",
+          "replicates": 256,
+          "alpha": 0.05,
+          "environment_field": "generator_id",
+          "row_field": "family_id",
+          "column_field": "cross_family_id",
+          "wilson_z": 1.6448536269514722
+        },
+        "units": [
+          {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-000",
+            "unit": {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-000"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 20,
+            "mean_comparator_cost": 23.5,
+            "mean_log_ratio": -0.1780970295506908,
+            "geometric_mean_ratio": 0.8368612192811304,
+            "win": true,
+            "tie": false
+          },
+          {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-001",
+            "unit": {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-001"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 16.5,
+            "mean_comparator_cost": 9,
+            "mean_log_ratio": 0.5053007056726982,
+            "geometric_mean_ratio": 1.6574838603294897,
+            "win": false,
+            "tie": false
+          },
+          {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-002",
+            "unit": {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-002"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 14,
+            "mean_comparator_cost": 7.5,
+            "mean_log_ratio": 0.8302465416171924,
+            "geometric_mean_ratio": 2.293884208478005,
+            "win": false,
+            "tie": false
+          },
+          {
+            "generator_id": "skeleton-first",
+            "family_id": "development-skeleton-first-003",
+            "unit": {
+              "generator_id": "skeleton-first",
+              "family_id": "development-skeleton-first-003"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 22.75,
+            "mean_comparator_cost": 9.5,
+            "mean_log_ratio": 0.8438766301852805,
+            "geometric_mean_ratio": 2.3253641029212617,
+            "win": false,
+            "tie": false
+          },
+          {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-000",
+            "unit": {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-000"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 9.5,
+            "mean_comparator_cost": 25,
+            "mean_log_ratio": -1.1939969795751404,
+            "geometric_mean_ratio": 0.3030077247494477,
+            "win": true,
+            "tie": false
+          },
+          {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-001",
+            "unit": {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-001"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 11.75,
+            "mean_comparator_cost": 17.75,
+            "mean_log_ratio": -0.44089714806533964,
+            "geometric_mean_ratio": 0.6434588841607617,
+            "win": true,
+            "tie": false
+          },
+          {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-002",
+            "unit": {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-002"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 23.5,
+            "mean_comparator_cost": 11.5,
+            "mean_log_ratio": 0.6685116560565538,
+            "geometric_mean_ratio": 1.9513309067639724,
+            "win": false,
+            "tie": false
+          },
+          {
+            "generator_id": "syntax-first",
+            "family_id": "development-syntax-first-003",
+            "unit": {
+              "generator_id": "syntax-first",
+              "family_id": "development-syntax-first-003"
+            },
+            "nested_measurements": 4,
+            "mean_full_cost": 15,
+            "mean_comparator_cost": 24.5,
+            "mean_log_ratio": -0.628279026564353,
+            "geometric_mean_ratio": 0.5335091665028809,
+            "win": true,
+            "tie": false
+          }
+        ],
+        "summary": {
+          "schema": "zero.reasoner5_family_summary.v1",
+          "independent_families": 8,
+          "family_weighted_geometric_mean_ratio": 1.0521473475537417,
+          "family_weighted_median_ratio": 1.2471725398053102,
+          "wins": 4,
+          "ties": 0,
+          "losses": 4,
+          "win_rate": 0.5,
+          "wilson_lower": 0.24864189021250815
+        },
+        "interval": {
+          "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
+          "independent_units": 8,
+          "replicates": 256,
+          "alpha": 0.05,
+          "point_log_ratio": 0.050833168722025174,
+          "point_ratio": 1.0521473475537417,
+          "lower_log_ratio": -0.26243510888496124,
+          "upper_log_ratio": 0.4240266097622346,
+          "lower_ratio": 0.7691762754553356,
+          "upper_ratio": 1.5281022556807469,
+          "one_sided_p_lower_than_zero": 0.5797665369649806,
+          "one_sided_p_higher_than_zero": 0.42412451361867703,
+          "bootstrap_sha256": "efcc93fe7278efd69f11b20d582d792948c8cc168ef224a1adf966e8dd72013b",
+          "fixed_environments": 2,
+          "fixed_environment_weighting": "equal",
+          "environment_summaries": {
+            "skeleton-first": {
+              "schema": "zero.reasoner5_family_summary.v1",
+              "independent_families": 4,
+              "family_weighted_geometric_mean_ratio": 1.649268262015918,
+              "family_weighted_median_ratio": 1.9756840344037472,
+              "wins": 1,
+              "ties": 0,
+              "losses": 3,
+              "win_rate": 0.25,
+              "wilson_lower": 0.05790732119985868
+            },
+            "syntax-first": {
+              "schema": "zero.reasoner5_family_summary.v1",
+              "independent_families": 4,
+              "family_weighted_geometric_mean_ratio": 0.6712152694985224,
+              "family_weighted_median_ratio": 0.5884840253318213,
+              "wins": 3,
+              "ties": 0,
+              "losses": 1,
+              "win_rate": 0.75,
+              "wilson_lower": 0.3561680085985064
+            }
+          }
+        },
+        "receipt_sha256": "2a39363082185704dc3ad9be83a7c6015702004a90e02cb8439aff91e2055931"
+      }
+    }
+  ],
+  "target_only_headroom": {
+    "comparator_arm": "target_only",
+    "median_primary_cost": 18,
+    "registered_minimum": 16,
+    "measurement_floor": false
+  },
+  "intersection_union_gate": {
+    "schema": "zero.reasoner55_intersection_union_gate.v1",
+    "alpha": 0.01,
+    "rule": "simple-effect common gate AND operational-comparator common gate AND negative factorial upper limit",
+    "checks": {
+      "simple_effect_common_gate": false,
+      "operational_comparator_common_gate": false,
+      "negative_factorial_interaction": false
+    },
+    "failures": [
+      "simple_effect_common_gate",
+      "operational_comparator_common_gate",
+      "negative_factorial_interaction"
+    ],
+    "decision": "no-go",
+    "passed": false,
+    "gate_sha256": "0f2fa44211a4a6b41d13642379c61ba1ca4f06c3e0ef45294a4d6618da38f127"
+  },
+  "provenance": {
+    "common_result_sha256": "6a9f1485bd03b0a5e7f3cf05b32b259923fb0ee73a32feb891611b015fd88380",
+    "manifest_sha256": "c73f5af4777cf02e2814def0a97b96277b9d637eadee72b1a5a87d33655c2595",
+    "raw_trace_sha256": "c4d413dd5af504cbe0e56805657d31a350d704213e87b4a26aa3d286cebcdb73",
+    "trace_coverage_sha256": "a221aa499220e85473f3a60272fc9066dc6a859346c5a4745bd341f853f0a78b",
+    "analysis_settings_sha256": "770c09a84572c5503b38d6b7ed51f4feb9aa2bb63829fffed10f8949a21e5fe3",
+    "analysis_function_sha256": "6fa159b0a9c6d6811ec1f599f41ea96b8760233418709ea43c9620cac34f1ef6"
+  },
+  "analysis_sha256": "99806f32e24766fdb07e2dd4c2b67d48ab7e8a219a40325d45e3ec340a3cd14a"
+}

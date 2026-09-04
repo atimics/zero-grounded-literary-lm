@@ -28,7 +28,7 @@ adapter, search arms, and trace contract before preregistration.
 | Full-to-oracle path matches | 32 / 32 |
 | Target-only cost range | 2 to 29 |
 | Target-only median | 18 |
-| Registered headroom gate | pass |
+| Registered fixture headroom | pass |
 
 ## Arm totals
 
@@ -49,6 +49,26 @@ These values guide development choices. A future preregistered run will make
 the sealed decision. The stronger source-free development comparator is
 `source_free_jit`.
 
+## Registered development analysis
+
+The analysis uses an intersection-union rule. Every component must pass.
+
+| Component | Point estimate | One-sided upper limit | Development result |
+| --- | ---: | ---: | --- |
+| Full vs adapter-only cost ratio | 0.8551 | 1.2208 | no-go |
+| Full vs `source_free_jit` cost ratio | 0.9901 | 1.9148 | no-go |
+| Factorial log interaction | -0.0508 | 0.3952 | no-go |
+
+The final development decision is **no-go**. The simple effect won 4 of 8
+target-family units. Its Wilson lower limit is 0.2486. The operational
+comparison won 5 of 8 units. Its Wilson lower limit is 0.3480. Both
+comparisons improve on the skeleton-first generator. Both miss the registered
+gate on the syntax-first generator and the cross-generator stratum.
+
+The raw-lexical-to-full mechanism ratio is 1.0521. Its lower limit is 0.7692.
+The full arm also misses the frozen shuffled-guide median. These results are
+development evidence. The sealed lane stays closed.
+
 Every raw row includes a source artifact digest and a hash-bound replay
 preimage. The checker independently reconstructs all candidates, ranks,
 fallback steps, and exact-verifier outcomes. It then validates all 1,280 rows
@@ -62,11 +82,16 @@ with the strict shared Reasoner 5 schema and rebuilds the common result.
 - Raw trace SHA-256:
   `7f5acbab6f1b76c11962c4084f46e227843b5836154b89ff761644b1e3771c27`
 - Shared coverage SHA-256:
-  `307bef880949ce04c786c76b9d0b51bd15179f9f842c7dae49be4c086c9110a7`
+  `a221aa499220e85473f3a60272fc9066dc6a859346c5a4745bd341f853f0a78b`
 - Replayed common result SHA-256:
-  `36ffc6cfd29e249825211caf78e0ff5ef1471c0d1a939f1506aab1d9b3a645a6`
+  `6a9f1485bd03b0a5e7f3cf05b32b259923fb0ee73a32feb891611b015fd88380`
+- Intersection-union analysis SHA-256:
+  `99806f32e24766fdb07e2dd4c2b67d48ab7e8a219a40325d45e3ec340a3cd14a`
+- Development analysis file SHA-256:
+  `dd0795d6be587a81b2fe3e33395f1f93caf355abbb95a594d430aa00810721fb`
 
 The machine-readable files are
 [`DEVELOPMENT.json`](DEVELOPMENT.json),
+[`DEVELOPMENT-ANALYSIS.json`](DEVELOPMENT-ANALYSIS.json),
 [`DEVELOPMENT-TRACE.jsonl`](DEVELOPMENT-TRACE.jsonl), and
 [`SOURCE_ARTIFACT.hex`](SOURCE_ARTIFACT.hex).
