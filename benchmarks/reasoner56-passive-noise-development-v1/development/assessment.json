@@ -1,24 +1,31 @@
 {
-  "assessment_sha256": "48c8ce02639024a4cbdd089736a0839f2c08717a7bdfda8001ea8490b1f02062",
+  "assessment_sha256": "dd669af4027e1a45a094870daa7139e8af7014ea1d440d32b87044abf432b2f7",
   "channel_readiness": {
-    "assessment_sha256": "0c17cc6336535224b9754b7de1b57353dd85ba45329efcbe99e56229857f6070",
+    "assessment_sha256": "4d8533921272e267c613bd040e65bc963605d0c21cbf584222ca1905adf3b2ee",
     "checks": {
       "candidate_set_coverage_lower_bound": true,
       "candidate_set_size_ratio_at_matched_coverage": true,
-      "interface_and_proxy_audits_clean": true,
+      "development_and_sealed_interface_and_proxy_audits_clean": false,
       "log_loss_below_derangement_median": true,
       "log_loss_below_program_prior_only": true,
       "log_loss_below_uniform": true,
       "normalized_every_candidate_set": true
     },
-    "failures": [],
+    "failures": [
+      "development_and_sealed_interface_and_proxy_audits_clean"
+    ],
     "metrics": {
       "candidate_set": {
         "comparator_threshold": 1,
         "conservative_threshold": 1,
         "coverage": 1,
+        "coverage_families": 99,
+        "coverage_independent_unit": "program-family-worst-draw",
+        "coverage_lane": "calibration-coverage",
+        "coverage_receipt_sha256": "cb6e4d159039a1601fc27150389b047d54912152c9ad26524cb5f930c635a8d9",
+        "covered_families": 99,
         "full_mean_size": 1,
-        "one_sided_95_wilson_lower": 0.9793004689579549,
+        "one_sided_95_wilson_lower": 0.9733982695317235,
         "program_prior_only_mean_size": 427,
         "size_ratio": 0.00234192037470726,
         "threshold_basis": "99 disjoint program families with worst-draw score"
@@ -65,6 +72,18 @@
       "full_fallback_rate": 0,
       "full_mean_brier": 5.3030289404845934e-62,
       "full_mean_log_loss": 0,
+      "interface_and_proxy_audits": {
+        "development": {
+          "audit_sha256": "1c9c7a6e9127e59b2c86dae515948cc19c9377c0f04c1a07f949aefba01d95ca",
+          "passed": true,
+          "status": "passed"
+        },
+        "sealed": {
+          "audit_sha256": null,
+          "passed": false,
+          "status": "pending-preregistration"
+        }
+      },
       "program_prior_only_mean_log_loss": 9.23474165967341,
       "reliability_bins": [
         {
@@ -147,7 +166,7 @@
     },
     "schema": "zero.reasoner56_channel_readiness_development.v1",
     "scope": "development-only",
-    "status": "development-ready"
+    "status": "development-no-go"
   },
   "harness_gate": {
     "checks": {

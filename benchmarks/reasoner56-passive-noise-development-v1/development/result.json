@@ -1,5 +1,5 @@
 {
-  "schema": "zero.reasoner56_development_result.v2",
+  "schema": "zero.reasoner56_development_result.v3",
   "experiment": "reasoner56-passive-noise-development-v1",
   "status": "development-only",
   "scientific_decision": null,
@@ -40,6 +40,107 @@
   "full_mean_normalized_log_loss": 0,
   "full_mean_brier": 5.3030289404845934e-62,
   "development_classes": [165, 48, 107, 418, 127, 417, 391, 407],
+  "calibration_coverage_records": [
+    {"family_index": 0, "semantic_class": 298, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 1, "semantic_class": 327, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 2, "semantic_class": 294, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 3, "semantic_class": 367, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 4, "semantic_class": 222, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 5, "semantic_class": 203, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 6, "semantic_class": 230, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 7, "semantic_class": 91, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 8, "semantic_class": 178, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 9, "semantic_class": 248, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 10, "semantic_class": 373, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 11, "semantic_class": 217, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 12, "semantic_class": 75, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 13, "semantic_class": 157, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 14, "semantic_class": 105, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 15, "semantic_class": 204, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 16, "semantic_class": 144, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 17, "semantic_class": 83, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 18, "semantic_class": 89, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 19, "semantic_class": 282, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 20, "semantic_class": 375, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 21, "semantic_class": 206, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 22, "semantic_class": 109, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 23, "semantic_class": 243, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 24, "semantic_class": 393, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 25, "semantic_class": 169, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 26, "semantic_class": 266, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 27, "semantic_class": 114, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 28, "semantic_class": 272, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 29, "semantic_class": 84, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 30, "semantic_class": 101, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 31, "semantic_class": 182, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 32, "semantic_class": 185, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 33, "semantic_class": 241, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 34, "semantic_class": 314, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 35, "semantic_class": 242, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 36, "semantic_class": 108, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 37, "semantic_class": 364, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 38, "semantic_class": 262, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 39, "semantic_class": 412, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 40, "semantic_class": 322, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 41, "semantic_class": 308, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 42, "semantic_class": 197, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 43, "semantic_class": 219, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 44, "semantic_class": 259, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 45, "semantic_class": 102, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 46, "semantic_class": 174, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 47, "semantic_class": 186, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 48, "semantic_class": 258, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 49, "semantic_class": 162, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 50, "semantic_class": 338, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 51, "semantic_class": 224, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 52, "semantic_class": 181, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 53, "semantic_class": 423, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 54, "semantic_class": 65, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 55, "semantic_class": 93, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 56, "semantic_class": 246, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 57, "semantic_class": 88, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 58, "semantic_class": 151, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 59, "semantic_class": 347, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 60, "semantic_class": 354, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 61, "semantic_class": 220, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 62, "semantic_class": 184, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 63, "semantic_class": 179, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 64, "semantic_class": 158, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 65, "semantic_class": 374, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 66, "semantic_class": 190, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 67, "semantic_class": 155, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 68, "semantic_class": 156, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 69, "semantic_class": 66, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 70, "semantic_class": 383, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 71, "semantic_class": 260, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 72, "semantic_class": 395, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 73, "semantic_class": 336, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 74, "semantic_class": 164, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 75, "semantic_class": 221, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 76, "semantic_class": 377, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 77, "semantic_class": 68, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 78, "semantic_class": 226, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 79, "semantic_class": 337, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 80, "semantic_class": 387, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 81, "semantic_class": 306, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 82, "semantic_class": 311, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 83, "semantic_class": 299, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 84, "semantic_class": 414, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 85, "semantic_class": 193, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 86, "semantic_class": 153, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 87, "semantic_class": 210, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 88, "semantic_class": 329, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 89, "semantic_class": 390, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 90, "semantic_class": 146, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 91, "semantic_class": 216, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 92, "semantic_class": 225, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 93, "semantic_class": 134, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 94, "semantic_class": 405, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 95, "semantic_class": 227, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 96, "semantic_class": 369, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 97, "semantic_class": 422, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+    ,{"family_index": 98, "semantic_class": 205, "draws": 8, "worst_truth_cumulative_mass_q20": 1048576, "all_draws_covered": true}
+  ],
   "artifact_digest": "0ea69dbf1705cb12",
   "trace_digest": "66cf1f7ad1a4090f",
   "calibration_fit_digest": "9d62b059e8a38575",

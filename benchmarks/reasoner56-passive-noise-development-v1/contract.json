@@ -1,7 +1,7 @@
 {
-  "schema": "zero.reasoner56_passive_noise_development_contract.v2",
+  "schema": "zero.reasoner56_passive_noise_development_contract.v3",
   "experiment": "reasoner56-passive-noise-development-v1",
-  "version": "5.6-development-2",
+  "version": "5.6-development-3",
   "status": "development-only",
   "question": "Can a frozen source-learned observation model improve exact search on new GF(17) program and corruption families?",
   "domain": {
@@ -154,7 +154,8 @@
     "training_split": "repeat 0",
     "evaluation_split": "repeat 1",
     "maximum_balanced_accuracy_delta": 0.02,
-    "no_nonopaque_static_cell_may_identify_one_template": true,
+    "hidden_labels": ["corruption-template", "severity"],
+    "no_nonopaque_static_cell_may_identify_one_hidden_label": true,
     "source_free_and_source_ablation_artifact_reads": 0
   },
   "artifact": {
@@ -198,17 +199,17 @@
   },
   "implementation": {
     "files": {
-      "reasoner56.c": "440bfb5e0b7edab88d0c2a2fe17b4174aaeb160c89e156143609af8e9ca2e723",
-      "reasoner56.h": "58881355743580f423cc532aa9593efdda74acd8a5d59dc598f1f8157b579a69",
+      "reasoner56.c": "f19bae58ba380db466fb39aac1ccfffad379cd6d05b9bc4ca540adfb4a71d473",
+      "reasoner56.h": "1727b0ca3c924cf853c163b0a3fff11ad47a22c8fa6e0e2ffe3b952d6102e7b7",
       "reasoner56_cli.c": "2bb951c8507e831ebfb330ed0ac622305437013502eae354a068176cd6beeb3c",
-      "scripts/lib/reasoner56_development.mjs": "5461c696f62b9f0527c8816ba53b685feb6bcf43e79e88129c8a9d2ac2ca2efa",
-      "scripts/check_reasoner56_development.mjs": "6c66355d2bd6430903c44e4dc16c8f6f67444d7a68aa6d759c5f4e622238fd49"
+      "scripts/lib/reasoner56_development.mjs": "58008618e13fa58f6ae903c67ec945d80188bb0558d2bb5c1bf9c62ae53f888a",
+      "scripts/check_reasoner56_development.mjs": "060a63be5579338695051162ec5257806fadcd5c2824eb2358fdca44591e67ef"
     }
   },
   "development_outputs": {
     "result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/result.json",
-      "sha256": "e1a05fc8921c86ac74aafb1853aa8cd69ea9bdf65b9f11e9d97d15500fb29d31"
+      "sha256": "abcb28c7be6b502a7702f9a17fcb3bb48960b855afa58bdb9529c31d6f378b5c"
     },
     "trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/raw-trace.jsonl",
@@ -220,23 +221,23 @@
     },
     "manifest": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/family-manifest.json",
-      "sha256": "6218a28cf2e5e413adeecb8000e261ef71e9863eb8d30203175f2be0e1441e35"
+      "sha256": "f162c5c255cf578a704f90b44582b7821d9eff205fce9fdc4b03f64b6016c7b7"
     },
     "harness_trace": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-trace.jsonl.gz",
-      "sha256": "1385374662093933e4bea77d6823f43074e8a5fd4fd25270c4cb2f02f531590e"
+      "sha256": "c86b7547414732e9922534511eb0ba0132c8d1c990a079d92ab8747053dadc75"
     },
     "harness_result": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/harness-result.json",
-      "sha256": "60e14aa97facb356b90e4da24c0fa4f0de3c57c928085d9ed6eab839f74f5db8"
+      "sha256": "969738786278591460c1f51bfdb0a2741df6e492337eac14f292d165e56d9cf6"
     },
     "audit": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/proxy-taint-audit.json",
-      "sha256": "ac4d7bc2813c8accd7863d8a1885e44265dc509c2b223ede8222f4651e5f8149"
+      "sha256": "908201a20d42cf1ff6a91f38ec68d5091f420dfb8bea1c9a7f24a318805ba0b6"
     },
     "assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "e369a39dab84355ad7ab6b9b4c6bd2cfaecb03a50d859452fe4fab38ceb9a2f3"
+      "sha256": "a03d2857663ae1bb33da6a95dc3e361cef0900e3ce39f6a32d17baa4a498df15"
     }
   },
   "shared_harness": {
@@ -246,12 +247,16 @@
     "arm_parity": true,
     "canonical_fallback_binding": true,
     "two_way_program_by_corruption_bootstrap": true,
-    "result_replay": true
+    "result_replay": true,
+    "calibration_coverage_family_records": 99,
+    "calibration_coverage_draw_receipts": 792,
+    "calibration_coverage_replay": true
   },
   "remaining_scientific_boundary": [
     "fresh sealed family selection",
     "power calculation",
     "frozen publication rule",
-    "explicit execution approval"
+    "explicit execution approval",
+    "sealed interface and proxy audit"
   ]
 }

@@ -15,6 +15,9 @@
 #define R56_SUPPORT_MIN 32u
 #define R56_TEMPERATURES 6u
 #define R56_Q20_ONE INT32_C(1048576)
+#define R56_CALIBRATION_FIT_FAMILIES 16u
+#define R56_CALIBRATION_COVERAGE_FAMILIES 99u
+#define R56_CALIBRATION_DRAWS 8u
 
 #define R56_LOCAL_EXACT_CONTEXTS \
     (R56_SENSORS * R56_MODULUS * R56_MODULUS)
@@ -189,6 +192,7 @@ typedef struct {
     uint32_t fallback_partial_expansions;
     uint32_t fallback_started;
     uint32_t global_cap_hit;
+    uint32_t fallback_exhausted;
     uint32_t primary_cost;
     uint32_t invalid_first_rejected;
     uint32_t certificate_valid;
@@ -228,6 +232,13 @@ typedef struct {
     double full_mean_brier;
     uint32_t development_class_count;
     uint16_t development_classes[16];
+    uint32_t calibration_coverage_record_count;
+    uint16_t calibration_coverage_classes[
+        R56_CALIBRATION_COVERAGE_FAMILIES];
+    uint32_t calibration_coverage_worst_mass_q20[
+        R56_CALIBRATION_COVERAGE_FAMILIES];
+    uint32_t calibration_coverage_family_covered[
+        R56_CALIBRATION_COVERAGE_FAMILIES];
     uint64_t artifact_digest;
     uint64_t trace_digest;
     uint64_t calibration_fit_digest;

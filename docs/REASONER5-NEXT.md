@@ -447,7 +447,8 @@ The development implementation and frozen local fixtures live in
 `benchmarks/reasoner56-passive-noise-development-v1/`. This implementation is
 development-only. Its 5,760 rows now pass strict shared-harness coverage,
 manifest replay, arm parity, and result replay. The deterministic fixture gives
-a search-cost no-go and a separate development-ready channel assessment.
+a search-cost no-go and a separate channel assessment that remains closed
+until the sealed interface and proxy audit passes.
 Preregistration, fresh sealed family selection, and explicit execution
 approval remain the next boundary.
 
