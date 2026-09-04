@@ -1,0 +1,188 @@
+{
+  "assessment_sha256": "48c8ce02639024a4cbdd089736a0839f2c08717a7bdfda8001ea8490b1f02062",
+  "channel_readiness": {
+    "assessment_sha256": "0c17cc6336535224b9754b7de1b57353dd85ba45329efcbe99e56229857f6070",
+    "checks": {
+      "candidate_set_coverage_lower_bound": true,
+      "candidate_set_size_ratio_at_matched_coverage": true,
+      "interface_and_proxy_audits_clean": true,
+      "log_loss_below_derangement_median": true,
+      "log_loss_below_program_prior_only": true,
+      "log_loss_below_uniform": true,
+      "normalized_every_candidate_set": true
+    },
+    "failures": [],
+    "metrics": {
+      "candidate_set": {
+        "comparator_threshold": 1,
+        "conservative_threshold": 1,
+        "coverage": 1,
+        "full_mean_size": 1,
+        "one_sided_95_wilson_lower": 0.9793004689579549,
+        "program_prior_only_mean_size": 427,
+        "size_ratio": 0.00234192037470726,
+        "threshold_basis": "99 disjoint program families with worst-draw score"
+      },
+      "comparisons": {
+        "derangement_median": {
+          "bootstrap_replicates": 4096,
+          "bootstrap_sha256": "1e8a8415a1fad78ae8a2e9af775547e71a0220765702a4fa99b7e818676d9f12",
+          "family_mean_difference": -246.9316693296368,
+          "one_sided_95_upper_difference": -238.6187850763254,
+          "program_families": 8,
+          "reference_arm": "derangement_28",
+          "reference_mean_log_loss": 246.93166932963675
+        },
+        "program_prior_only": {
+          "bootstrap_replicates": 4096,
+          "bootstrap_sha256": "57b3f3315a15dd26f498d9a5f213623bad85f03a8cab1c52f7cc6fd1facfcef8",
+          "family_mean_difference": -9.234741659673405,
+          "one_sided_95_upper_difference": -9.234741659673405,
+          "program_families": 8
+        },
+        "uniform": {
+          "bootstrap_replicates": 4096,
+          "bootstrap_sha256": "3a905f3d9e1d9ae817abde96672f38f9d58082ba267f60a54d69f47d30285f66",
+          "family_mean_difference": -6.056784013228624,
+          "one_sided_95_upper_difference": -6.056784013228624,
+          "program_families": 8
+        }
+      },
+      "full_backoff_counts": {
+        "local": [
+          2304,
+          0,
+          0,
+          0
+        ],
+        "transition": [
+          2176,
+          0,
+          0,
+          0
+        ]
+      },
+      "full_fallback_rate": 0,
+      "full_mean_brier": 5.3030289404845934e-62,
+      "full_mean_log_loss": 0,
+      "program_prior_only_mean_log_loss": 9.23474165967341,
+      "reliability_bins": [
+        {
+          "count": 0,
+          "lower": 0,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.1
+        },
+        {
+          "count": 0,
+          "lower": 0.1,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.2
+        },
+        {
+          "count": 0,
+          "lower": 0.2,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.3
+        },
+        {
+          "count": 0,
+          "lower": 0.3,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.4
+        },
+        {
+          "count": 0,
+          "lower": 0.4,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.5
+        },
+        {
+          "count": 0,
+          "lower": 0.5,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.6
+        },
+        {
+          "count": 0,
+          "lower": 0.6,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.7
+        },
+        {
+          "count": 0,
+          "lower": 0.7,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.8
+        },
+        {
+          "count": 0,
+          "lower": 0.8,
+          "mean_truth_probability": null,
+          "top_one_rate": null,
+          "upper": 0.9
+        },
+        {
+          "count": 128,
+          "lower": 0.9,
+          "mean_truth_probability": 1,
+          "top_one_rate": 1,
+          "upper": 1
+        }
+      ],
+      "uniform_log_loss": 6.056784013228625,
+      "worst_corruption_family_cost": {
+        "maximum_primary_cost": 2,
+        "mean_primary_cost": 2,
+        "mechanism": 0
+      }
+    },
+    "schema": "zero.reasoner56_channel_readiness_development.v1",
+    "scope": "development-only",
+    "status": "development-ready"
+  },
+  "harness_gate": {
+    "checks": {
+      "all_certificates_valid": true,
+      "all_final_answers_exact": true,
+      "all_primary_episodes_solved": true,
+      "derangement_median": true,
+      "derangement_randomization": true,
+      "factorial_interaction": true,
+      "fallback_work_counted": true,
+      "family_win_lower_limit": false,
+      "family_win_rate": false,
+      "integrity_valid": true,
+      "invalid_first_candidates_rejected": true,
+      "marginal_win_gates": false,
+      "mechanism_effects": false,
+      "no_premature_commits": true,
+      "primary_ratio": false,
+      "primary_strata": false,
+      "primary_upper_limit": false,
+      "source_ablation_matches_source_free": true
+    },
+    "decision": "no-go",
+    "failures": [
+      "primary_ratio",
+      "primary_upper_limit",
+      "family_win_rate",
+      "family_win_lower_limit",
+      "marginal_win_gates",
+      "primary_strata",
+      "mechanism_effects"
+    ],
+    "passed": false
+  },
+  "schema": "zero.reasoner56_development_assessment.v1",
+  "scientific_decision": null,
+  "status": "development-only"
+}

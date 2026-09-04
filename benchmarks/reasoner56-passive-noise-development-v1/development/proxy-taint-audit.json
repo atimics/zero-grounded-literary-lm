@@ -1,0 +1,18 @@
+{
+  "accuracy_delta": 0,
+  "audit_sha256": "ad605d7c4204dfaddc1e3f3fab0739993c9d6d8600cdb76be8eec272bd8fe251",
+  "augmented_static_balanced_accuracy": 0.125,
+  "classifier": "frozen categorical multinomial lookup with global fallback",
+  "evaluation_episodes": 64,
+  "maximum_template_fraction_per_nonopaque_cell": 0.125,
+  "native_proxy_audit_passed": true,
+  "nonopaque_static_cells": 8,
+  "passed": true,
+  "registered_maximum_delta": 0.02,
+  "schema": "zero.reasoner56_proxy_taint_audit.v1",
+  "sensor_only_balanced_accuracy": 0.125,
+  "source_isolated_rows": 256,
+  "source_isolation_taint_passed": true,
+  "split": "repeat-0 training and repeat-1 evaluation",
+  "training_episodes": 64
+}
