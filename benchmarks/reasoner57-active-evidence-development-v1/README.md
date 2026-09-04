@@ -16,7 +16,8 @@ The prospective sealed-interface and static-metadata proxy audit is the open
 prerequisite.
 
 The current draft contains no R5.7 fixture or scientific result. The `execute`
-command remains closed.
+command remains closed. Its prerequisite receipts now bind the final portable
+R5.6 tree at `ea006c3` and deterministic shared harness at `a463821`.
 
 See [SPEC.md](SPEC.md) for the exact control equations and
 [../../docs/REASONER57.md](../../docs/REASONER57.md) for the implementation

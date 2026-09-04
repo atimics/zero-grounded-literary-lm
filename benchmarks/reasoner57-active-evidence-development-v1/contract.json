@@ -1,16 +1,16 @@
 {
-  "schema": "zero.reasoner57_active_evidence_development_contract.v4",
+  "schema": "zero.reasoner57_active_evidence_development_contract.v5",
   "experiment": "reasoner57-active-evidence-development-v1",
-  "version": "5.7-development-scaffolding-4",
+  "version": "5.7-development-scaffolding-5",
   "status": "gated-development-scaffolding",
   "question": "Does a source-learned policy choose more useful input and sensor queries on new target program families under a fixed evidence budget?",
   "prerequisite": {
     "state": "blocked-reasoner56-channel-readiness-gate",
-    "base_commit": "c9e635bebd82e89aeb468201098baa3b2e9e3f2d",
+    "base_commit": "ea006c398010773b2186e3b7b4de68f0c4370ae5",
     "r56_contract": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/contract.json",
-      "sha256": "ee275a8fa1a5649dde3eec7d5395d0d84d56d1588d3963261db771b83e5aeebe",
-      "schema": "zero.reasoner56_passive_noise_development_contract.v5"
+      "sha256": "270ffe750995e253a791ca11a3fbc9c4ff9de3eb6eaa9dd0fe7bf4c3a8c8c230",
+      "schema": "zero.reasoner56_passive_noise_development_contract.v7"
     },
     "r56_artifact": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/artifact.bin",
@@ -22,19 +22,19 @@
     },
     "r56_assessment": {
       "path": "benchmarks/reasoner56-passive-noise-development-v1/development/assessment.json",
-      "sha256": "165c973fc2d796347544fe55beea9ecfbb8e9828112d0a64cc3b03e63fccfbeb",
+      "sha256": "52e1eb8abe6c10b118196f81d8e41a1dce1408add79e33458443397beab07d21",
       "schema": "zero.reasoner56_development_assessment.v2",
       "channel_readiness_schema": "zero.reasoner56_channel_readiness_development.v2",
-      "channel_readiness_assessment_sha256": "487402fbc1dd433901a4ac61ba8985c741da74fcf6ff2ae92c324dd9f1a4b6ed",
+      "channel_readiness_assessment_sha256": "86d3727f7ee9cd0aea1a7cb37b03be3777723875480d19376a62ed8f57e82145",
       "channel_readiness_status": "development-no-go",
       "full_mean_log_loss": 2.0354340134641815e-32,
-      "full_log_loss_replay_sha256": "b29871d1599061d48e9653aadcbfdfbeedc60c31d5a008cfefb6726316f2fb93"
+      "full_log_loss_replay_sha256": "e96badecce81e8fc614099a96fab1ea0138d4355f4f0bca74022ba7e43717f98"
     },
     "family_coverage": {
       "program_families": 99,
       "registered_draws": 792,
       "covered_families": 99,
-      "one_sided_95_wilson_lower": 0.9733982695317235,
+      "one_sided_95_wilson_lower": 0.97339826953172,
       "required_lower": 0.97,
       "passed": true
     },
@@ -90,9 +90,14 @@
     "likelihood_row_normalization_is_checked": true
   },
   "shared_harness": {
-    "commit": "db3e85b5808252bbd174e95e8b17ee804594ae2f",
+    "commit": "a46382178fea84200a331c3ba0a0a22109b00747",
     "library": "scripts/lib/reasoner5_harness.mjs",
-    "library_sha256": "823b730e342cfe64165a0cf907329f9ee8e1c08a07c16a9d5134a6b8dd29bbd5",
+    "library_sha256": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883",
+    "scientific_number_encoding": "final-receipt-truncate-first-14-of-17-scientific-digits-toward-zero",
+    "scientific_relative_tolerance": 1e-13,
+    "reference_math_algorithm": "pure-js-binary64-fixed-order-v1",
+    "reference_math_functions": ["log", "exp", "sqrt"],
+    "reference_math_relative_or_near_zero_absolute_tolerance": 2e-14,
     "proposal_record_binding": true,
     "proposal_work_charge_floor": true,
     "bootstrap_receipt_schema": "v2",

@@ -13,10 +13,10 @@ function sha256(path) {
 }
 
 assert.equal(contract.schema,
-  "zero.reasoner57_active_evidence_development_contract.v4");
+  "zero.reasoner57_active_evidence_development_contract.v5");
 assert.equal(contract.status, "gated-development-scaffolding");
 assert.equal(contract.prerequisite.base_commit,
-  "c9e635bebd82e89aeb468201098baa3b2e9e3f2d");
+  "ea006c398010773b2186e3b7b4de68f0c4370ae5");
 assert.equal(contract.prerequisite.state,
   "blocked-reasoner56-channel-readiness-gate");
 
@@ -38,6 +38,17 @@ assert.equal(r56Contract.shared_harness.commit,
   contract.shared_harness.commit);
 assert.equal(r56Contract.shared_harness.library_sha256,
   contract.shared_harness.library_sha256);
+assert.equal(r56Contract.shared_harness.scientific_number_encoding,
+  contract.shared_harness.scientific_number_encoding);
+assert.equal(r56Contract.shared_harness.scientific_relative_tolerance,
+  contract.shared_harness.scientific_relative_tolerance);
+assert.equal(r56Contract.shared_harness.reference_math_algorithm,
+  contract.shared_harness.reference_math_algorithm);
+assert.deepEqual(r56Contract.shared_harness.reference_math_functions,
+  contract.shared_harness.reference_math_functions);
+assert.equal(
+  r56Contract.shared_harness.reference_math_relative_or_near_zero_absolute_tolerance,
+  contract.shared_harness.reference_math_relative_or_near_zero_absolute_tolerance);
 assert.equal(r56Contract.shared_harness.proposal_record_binding, true);
 assert.equal(r56Contract.shared_harness.proposal_work_charge_floor, true);
 
@@ -103,7 +114,7 @@ assert.equal(contract.analytic_controls.posterior_l2_ec2_edge_cut,
 assert.equal(contract.primary.outcomes, 18);
 assert.equal(contract.primary.missing_outcome, 17);
 assert.equal(contract.shared_harness.commit,
-  "db3e85b5808252bbd174e95e8b17ee804594ae2f");
+  "a46382178fea84200a331c3ba0a0a22109b00747");
 assert.equal(contract.shared_harness.library,
   "scripts/lib/reasoner5_harness.mjs");
 assert.equal(sha256(contract.shared_harness.library),
