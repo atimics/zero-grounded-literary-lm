@@ -22,8 +22,12 @@ The four target shifts use these affine and nonlinear atom patterns:
 
 The syntax-first generator uses canonical program order. The behavior-skeleton
 generator orders programs by exact output structure before it selects a short
-syntax. Each development shift has three independent families and includes
-both generators.
+syntax. Two separate input generators expose either two seeded distinct field
+values or the fixed anchors zero and one. Program generation and input
+generation vary independently. Each development shift has two program
+families in each of two fixed program-generator environments. Every program
+family is paired with both input generators. The paired input episodes stay
+nested inside the program family.
 
 ## Frozen source guide
 
@@ -47,7 +51,7 @@ SHA-256 identity. Its parser checks every field and every stored score.
 Every arm uses the same 428-class semantic universe, one bottom-up search
 interface, an exhaustive 17-point verifier, and one common cap. The main arm
 uses the frozen behavior guide. The source-free guide learns only from the
-public example. Registered controls cover target-only enumeration,
+two public examples. Registered controls cover target-only enumeration,
 transition-only scoring, raw-token scoring, behavior-off scoring, shuffled
 behavior signatures, consistent token permutation, source-only scoring, and
 oracle truth rank. Thirty-one frozen behavior derangements support the random
@@ -83,10 +87,28 @@ The shared harness enforces field names, leaf types, provenance classes, arm
 parity, and exact raw-row keys.
 
 The manifest registers families before it assigns episode seeds. It includes
-64 source episodes, eight calibration episodes, 12 development episodes, and
-12 sealed family slots. The sealed slots contain no episode seed. Generator
-code, input generation, replay code, source counts, artifact bytes, raw rows,
-analysis settings, and the final result all have linked SHA-256 receipts.
+64 source episodes, 32 calibration episodes from 16 program families, 32
+development episodes from 16 program families, and 16 sealed family slots.
+The sealed slots contain no episode seed. Every recorded input-generator rule
+produces exactly two distinct public field values.
+Generator code, input generation, replay code, source counts, artifact bytes,
+raw rows, analysis settings, and the final result all have linked SHA-256
+receipts.
+
+## Development result
+
+The full crossed development set has 16 independent program families, 32
+episodes, and 1,344 raw rows. The two fixed program-generator environments
+have equal weight. Each shift has four independent program families and eight
+input-generator episodes. Four families exceed the registered minimum of
+three. The selected source-free comparator has a median primary cost of 6.
+The registered measurement floor is 16. The development decision is therefore
+`measurement-floor`.
+
+The full guide has a family-weighted geometric cost ratio of 1.1040 against
+the source-free comparator. The 99 percent interval is 0.9148 to 1.3080.
+There are 7 wins, 1 tie, and 8 losses. These measurements describe the
+development set. They carry no scientific claim.
 
 ## Execution boundary
 
@@ -94,6 +116,7 @@ This branch authorizes development fixtures. The `execute`, `sealed`, and
 `run` commands require a later frozen contract and explicit approval. The
 checked manifest records zero scientific executions. The current development
 decision is an engineering measurement and carries no scientific claim.
+Reasoner 6.0 stays behind the registered Reasoner 5.8 pass gate.
 
 Run the focused checks with:
 

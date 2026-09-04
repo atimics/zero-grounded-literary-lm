@@ -57,17 +57,61 @@ assert(manifest.manifest_sha256 === contract.measurements.manifest_sha256,
 assert(manifest.source_artifact.source_count_receipt_sha256 ===
   contract.measurements.source_count_receipt_sha256,
 "Reasoner 5.8 source count receipt changed");
+assert(JSON.stringify(manifest.generators.map(item => ({
+  id: item.generator,
+  rule: item.rule,
+}))) === JSON.stringify(contract.generator_design.program_generators),
+"Reasoner 5.8 program-generator rules changed");
+assert(JSON.stringify(manifest.input_generators.map(item => ({
+  id: item.generator,
+  public_values: item.public_values,
+  rule: item.rule,
+}))) === JSON.stringify(contract.generator_design.input_generators),
+"Reasoner 5.8 input-generator rules changed");
+assert(contract.generator_design.program_and_input_generators_varied_independently
+  === true, "Reasoner 5.8 generator axes must vary independently");
+assert(contract.generator_design.fixed_program_generator_environments === 2,
+  "Reasoner 5.8 needs two fixed program-generator environments");
+assert(contract.generator_design.input_generators_per_program_family === 2,
+  "Reasoner 5.8 needs both input generators in every program family");
+assert(contract.generator_design.program_families_per_shift_per_environment ===
+  2, "Reasoner 5.8 needs two program families per shift and environment");
+assert(contract.generator_design.independent_program_families_per_shift === 4,
+  "Reasoner 5.8 needs at least three independent program families per shift");
+assert(contract.generator_design.source_program_input_stratum_combinations ===
+  16, "Reasoner 5.8 source generator matrix is incomplete");
+assert(contract.generator_design.source_families_per_combination === 4,
+  "Reasoner 5.8 source generator matrix is unbalanced");
 assert(result.raw_trace_sha256 === contract.measurements.raw_trace_sha256,
   "Reasoner 5.8 raw trace receipt changed");
 assert(result.result_sha256 === contract.measurements.result_sha256,
   "Reasoner 5.8 result receipt changed");
 assert(result.decision === contract.measurements.decision,
   "Reasoner 5.8 development decision changed");
-assert(result.development_measurements.episodes === 12 &&
-  result.development_measurements.rows === 504,
+assert(result.development_measurements.episodes === 32 &&
+  result.development_measurements.rows === 1344,
 "Reasoner 5.8 development coverage changed");
+assert(result.registered_analysis.primary.summary.independent_families === 16,
+  "Reasoner 5.8 independent program-family count changed");
+assert(result.registered_analysis.primary.interval.fixed_environments === 2,
+  "Reasoner 5.8 fixed program-generator environments changed");
+assert(result.registered_analysis.primary.units.every(unit =>
+  unit.nested_measurements === 2),
+"Reasoner 5.8 input-generator episodes must stay nested by program family");
 assert(manifest.episode_counts["source-training"] === 64,
   "Reasoner 5.8 source provenance is incomplete");
+assert(manifest.episode_counts.calibration === 32 &&
+  manifest.episode_counts.development === 32,
+"Reasoner 5.8 generator crossing is incomplete");
+assert(manifest.family_counts.calibration === 16 &&
+  manifest.family_counts.development === 16 &&
+  manifest.family_counts.sealed === 16,
+"Reasoner 5.8 registered family matrix is incomplete");
+for (const family of manifest.families.filter(item =>
+  item.lane !== "source-training"))
+  assert(JSON.stringify(family.family_spec.input_generator_ids) ===
+    JSON.stringify(["seeded-distinct", "fixed-zero-one"]),
+  `Reasoner 5.8 input-generator cross changed at ${family.family_id}`);
 assert(manifest.episode_counts.sealed === 0,
   "Reasoner 5.8 sealed lane must stay closed");
 

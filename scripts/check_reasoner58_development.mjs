@@ -26,6 +26,8 @@ import {
   R58_BASE_ARMS,
   R58_DERANGEMENT_ARMS,
   R58_EXPERIMENT,
+  R58_GENERATORS,
+  R58_INPUT_GENERATORS,
   R58_RANKER_POLICY,
   R58_SHIFT_STRATA,
   R58_SOURCE_ISOLATED_ARMS,
@@ -123,14 +125,14 @@ assert.deepEqual(manifest.execution, {
 });
 assert.deepEqual(manifest.family_counts, {
   "source-training": 64,
-  calibration: 8,
-  development: 12,
-  sealed: 12,
+  calibration: 16,
+  development: 16,
+  sealed: 16,
 });
 assert.deepEqual(manifest.episode_counts, {
   "source-training": 64,
-  calibration: 8,
-  development: 12,
+  calibration: 32,
+  development: 32,
   sealed: 0,
 });
 assert.equal(manifest.source_artifact.sha256, artifact.sha256);
@@ -144,6 +146,18 @@ assert.equal(sourceEpisodes.length, 64,
   "every artifact-contributing source family needs an exact episode");
 assert.deepEqual(new Set(sourceEpisodes.map(episode => episode.family_id)),
   new Set(manifest.source_artifact.training_family_ids));
+const sourceGeneratorStrata = new Map();
+for (const episode of sourceEpisodes) {
+  const spec = episode.content.evaluator.episode_spec;
+  const key = `${spec.program_generator_code}:` +
+    `${spec.input_generator_code}:${spec.stratum_code}`;
+  sourceGeneratorStrata.set(key, (sourceGeneratorStrata.get(key) ?? 0) + 1);
+}
+assert.equal(sourceGeneratorStrata.size, 16,
+  "source families need every program-input-stratum combination");
+for (const count of sourceGeneratorStrata.values())
+  assert.equal(count, 4,
+    "source program-input-stratum combinations need equal weight");
 const sourceCounts = reconstructR58SourceCounts(manifest.episodes);
 for (const field of ["positiveLabels", "negativeLabels", "featurePositive",
   "featureNegative", "transitionPositive", "transitionNegative",
@@ -160,17 +174,80 @@ assert.equal(rebuiltManifest.manifest_sha256, manifest.manifest_sha256,
 assert.deepEqual(rebuiltManifest, manifest,
   "stored development manifest differs from regeneration");
 const replay = assertManifestReplay(manifest, createR58ReplayRegistry());
-assert.equal(replay.episodes, 84);
+assert.equal(replay.episodes, 128);
 
 const developmentEpisodes = manifest.episodes.filter(episode =>
   episode.lane === "development");
-assert.equal(developmentEpisodes.length, 12);
+assert.equal(developmentEpisodes.length, 32);
 for (const shift of R58_SHIFT_STRATA) {
   const selected = developmentEpisodes.filter(episode =>
     episode.shift_stratum === shift);
-  assert.equal(selected.length, 3, `${shift} needs three generated families`);
+  assert.equal(selected.length, 8,
+    `${shift} needs four program families crossed with two input generators`);
+  assert.deepEqual(new Set(selected.map(episode =>
+    episode.content.evaluator.episode_spec.program_generator_code)),
+  new Set([0, 1]), `${shift} needs both program generators`);
+  assert.deepEqual(new Set(selected.map(episode =>
+    episode.content.evaluator.episode_spec.input_generator_code)),
+  new Set([0, 1]), `${shift} needs both input generators`);
+  assert.equal(new Set(selected.map(episode => {
+    const spec = episode.content.evaluator.episode_spec;
+    return `${spec.program_generator_code}:${spec.input_generator_code}`;
+  })).size, 4, `${shift} needs all four fixed generator environments`);
   assert.equal(new Set(selected.map(episode => episode.generator_id)).size, 2,
-    `${shift} needs both independent generators`);
+    `${shift} needs two fixed program-generator environments`);
+  const byFamily = new Map();
+  for (const episode of selected) {
+    const episodes = byFamily.get(episode.family_id) ?? [];
+    episodes.push(episode);
+    byFamily.set(episode.family_id, episodes);
+  }
+  assert.equal(byFamily.size, 4,
+    `${shift} needs at least three independent program families`);
+  const behaviors = new Set();
+  for (const episodes of byFamily.values()) {
+    assert.equal(episodes.length, 2,
+      `${shift} program families need both input generators`);
+    const [left, right] = episodes;
+    const leftSpec = left.content.evaluator.episode_spec;
+    const rightSpec = right.content.evaluator.episode_spec;
+    assert.deepEqual(new Set([leftSpec.input_generator_code,
+      rightSpec.input_generator_code]), new Set([0, 1]),
+    `${shift} program family input cross changed`);
+    assert.equal(leftSpec.program_generator_code,
+      rightSpec.program_generator_code,
+    `${shift} input generator changed the program generator`);
+    assert.equal(leftSpec.stratum_code, rightSpec.stratum_code,
+      `${shift} input generator changed the shift stratum`);
+    assert.equal(leftSpec.ordinal, rightSpec.ordinal,
+      `${shift} input generator changed the program-family ordinal`);
+    assert.deepEqual(left.content.evaluator.ast, right.content.evaluator.ast,
+      `${shift} input generator changed the hidden program`);
+    assert.deepEqual(left.content.evaluator.behavior,
+      right.content.evaluator.behavior,
+    `${shift} input generator changed the hidden behavior`);
+    assert.deepEqual(left.content.public.grammar, right.content.public.grammar,
+      `${shift} input generator changed the public grammar`);
+    behaviors.add(left.content.evaluator.behavior.join(","));
+  }
+  assert.equal(behaviors.size, 4,
+    `${shift} needs four distinct hidden program behaviors`);
+}
+
+for (const episode of manifest.episodes) {
+  const spec = episode.content.evaluator.episode_spec;
+  const inputs = episode.content.public.examples.map(example =>
+    example.input_symbol);
+  assert.equal(inputs.length, 2,
+    `${episode.episode_id} needs two public input values`);
+  assert.equal(new Set(inputs).size, 2,
+    `${episode.episode_id} public input values must be distinct`);
+  assert.equal(episode.generator_id,
+    R58_GENERATORS[spec.program_generator_code],
+  `${episode.episode_id} generator environment ID changed`);
+  if (spec.input_generator_code === 1)
+    assert.deepEqual(inputs, [0, 1],
+      `${episode.episode_id} fixed input generator changed`);
 }
 
 const candidateBySemantic = new Map(universe.candidates.map(candidate =>
@@ -279,7 +356,7 @@ assert.throws(() => assertRankerView(wrongPublicType, {
   leafContracts: R58_RANKER_POLICY.leaf_contracts,
 }), /registered type/u, "public ranker leaf types must be exact");
 
-assert.equal(rawTraces.length, 12 * R58_ARMS.length);
+assert.equal(rawTraces.length, 32 * R58_ARMS.length);
 assert.deepEqual(R58_BASE_ARMS, [
   "full", "target_only", "source_free_jit", "source_ablation",
   "transition_only", "raw_token", "behavior_off", "shuffled_behavior",
@@ -293,8 +370,8 @@ const coverage = assertRawTraceCoverage({
   selectedLanes: ["development"],
   sourceIsolatedArms: R58_SOURCE_ISOLATED_ARMS,
 });
-assert.equal(coverage.rows, 504);
-assert.equal(coverage.episodes, 12);
+assert.equal(coverage.rows, 1344);
+assert.equal(coverage.episodes, 32);
 assert.equal(coverage.exactness.all_final_answers_exact, true);
 assert.equal(coverage.exactness.all_certificates_valid, true);
 assert.equal(coverage.exactness.premature_commits, 0);
@@ -342,12 +419,21 @@ assertResultReplay({
 });
 assert.equal(result.status, "development-only");
 assert.equal(result.execution_authorized, false);
-assert.equal(result.development_measurements.episodes, 12);
-assert.equal(result.development_measurements.rows, 504);
+assert.equal(result.development_measurements.episodes, 32);
+assert.equal(result.development_measurements.rows, 1344);
+assert.equal(result.registered_analysis.primary.summary.independent_families,
+  16);
+assert.equal(result.registered_analysis.primary.interval.fixed_environments, 2);
+assert(result.registered_analysis.primary.units.every(unit =>
+  unit.nested_measurements === 2),
+"each independent program family needs two nested input-generator episodes");
 assert.equal(result.registered_analysis.headroom.comparator_arm,
   "source_free_jit");
-assert(result.registered_analysis.headroom.median_primary_cost >= 16,
-  "source-free development headroom is below the registered floor");
+assert(result.registered_analysis.headroom.median_primary_cost <
+  result.registered_analysis.headroom.registered_minimum,
+"source-free development headroom must record the observed measurement floor");
+assert.equal(result.registered_analysis.headroom.measurement_floor, true);
+assert.equal(result.decision, "measurement-floor");
 
 const tinyCandidates = [0, 1, 2].map(value => ({
   semantic: [value],

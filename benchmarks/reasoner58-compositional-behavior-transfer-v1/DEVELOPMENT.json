@@ -3,426 +3,426 @@
   "execution_authorized": false,
   "scientific_claim": "withheld pending a separately authorized sealed run",
   "development_measurements": {
-    "episodes": 12,
-    "rows": 504,
+    "episodes": 32,
+    "rows": 1344,
     "arms": [
       {
         "arm": "full",
-        "episodes": 12,
-        "primary_cost_total": 377,
-        "primary_cost_median": 24.5,
-        "verifier_checks_total": 389,
+        "episodes": 32,
+        "primary_cost_total": 222,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 254,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "target_only",
-        "episodes": 12,
-        "primary_cost_total": 2343,
-        "primary_cost_median": 167,
-        "verifier_checks_total": 2355,
+        "episodes": 32,
+        "primary_cost_total": 7640,
+        "primary_cost_median": 221,
+        "verifier_checks_total": 7672,
         "fallback_episodes": 0,
         "source_artifact_reads": 0
       },
       {
         "arm": "source_free_jit",
-        "episodes": 12,
-        "primary_cost_total": 371,
-        "primary_cost_median": 32,
-        "verifier_checks_total": 383,
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
         "fallback_episodes": 0,
         "source_artifact_reads": 0
       },
       {
         "arm": "source_ablation",
-        "episodes": 12,
-        "primary_cost_total": 371,
-        "primary_cost_median": 32,
-        "verifier_checks_total": 383,
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
         "fallback_episodes": 0,
         "source_artifact_reads": 0
       },
       {
         "arm": "transition_only",
-        "episodes": 12,
-        "primary_cost_total": 494,
-        "primary_cost_median": 41,
-        "verifier_checks_total": 506,
+        "episodes": 32,
+        "primary_cost_total": 237,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 269,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "raw_token",
-        "episodes": 12,
-        "primary_cost_total": 419,
-        "primary_cost_median": 30,
-        "verifier_checks_total": 431,
+        "episodes": 32,
+        "primary_cost_total": 218,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 250,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "behavior_off",
-        "episodes": 12,
-        "primary_cost_total": 524,
-        "primary_cost_median": 41.5,
-        "verifier_checks_total": 536,
+        "episodes": 32,
+        "primary_cost_total": 247,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 279,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_behavior",
-        "episodes": 12,
-        "primary_cost_total": 501,
-        "primary_cost_median": 34.5,
-        "verifier_checks_total": 513,
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "token_permuted",
-        "episodes": 12,
-        "primary_cost_total": 377,
-        "primary_cost_median": 24.5,
-        "verifier_checks_total": 389,
+        "episodes": 32,
+        "primary_cost_total": 222,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 254,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "source_only",
-        "episodes": 12,
-        "primary_cost_total": 3096,
-        "primary_cost_median": 320.5,
-        "verifier_checks_total": 3108,
+        "episodes": 32,
+        "primary_cost_total": 8352,
+        "primary_cost_median": 265,
+        "verifier_checks_total": 8384,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "oracle_truth_rank",
-        "episodes": 12,
-        "primary_cost_total": 36,
+        "episodes": 32,
+        "primary_cost_total": 96,
         "primary_cost_median": 3,
-        "verifier_checks_total": 48,
+        "verifier_checks_total": 128,
         "fallback_episodes": 0,
         "source_artifact_reads": 0
       },
       {
         "arm": "shuffled_00",
-        "episodes": 12,
-        "primary_cost_total": 496,
-        "primary_cost_median": 38.5,
-        "verifier_checks_total": 508,
+        "episodes": 32,
+        "primary_cost_total": 202,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 234,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_01",
-        "episodes": 12,
-        "primary_cost_total": 475,
-        "primary_cost_median": 41.5,
-        "verifier_checks_total": 487,
+        "episodes": 32,
+        "primary_cost_total": 215,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 247,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_02",
-        "episodes": 12,
-        "primary_cost_total": 542,
-        "primary_cost_median": 39,
-        "verifier_checks_total": 554,
+        "episodes": 32,
+        "primary_cost_total": 239,
+        "primary_cost_median": 7.5,
+        "verifier_checks_total": 271,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_03",
-        "episodes": 12,
-        "primary_cost_total": 456,
-        "primary_cost_median": 26,
-        "verifier_checks_total": 468,
+        "episodes": 32,
+        "primary_cost_total": 213,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 245,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_04",
-        "episodes": 12,
-        "primary_cost_total": 430,
-        "primary_cost_median": 34,
-        "verifier_checks_total": 442,
+        "episodes": 32,
+        "primary_cost_total": 193,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 225,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_05",
-        "episodes": 12,
-        "primary_cost_total": 557,
-        "primary_cost_median": 41.5,
-        "verifier_checks_total": 569,
+        "episodes": 32,
+        "primary_cost_total": 235,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 267,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_06",
-        "episodes": 12,
-        "primary_cost_total": 462,
-        "primary_cost_median": 43,
-        "verifier_checks_total": 474,
+        "episodes": 32,
+        "primary_cost_total": 221,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 253,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_07",
-        "episodes": 12,
-        "primary_cost_total": 427,
-        "primary_cost_median": 25,
-        "verifier_checks_total": 439,
+        "episodes": 32,
+        "primary_cost_total": 208,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 240,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_08",
-        "episodes": 12,
-        "primary_cost_total": 419,
-        "primary_cost_median": 34.5,
-        "verifier_checks_total": 431,
+        "episodes": 32,
+        "primary_cost_total": 190,
+        "primary_cost_median": 5.5,
+        "verifier_checks_total": 222,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_09",
-        "episodes": 12,
-        "primary_cost_total": 554,
-        "primary_cost_median": 40.5,
-        "verifier_checks_total": 566,
+        "episodes": 32,
+        "primary_cost_total": 233,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 265,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_10",
-        "episodes": 12,
-        "primary_cost_total": 635,
-        "primary_cost_median": 45.5,
-        "verifier_checks_total": 647,
+        "episodes": 32,
+        "primary_cost_total": 253,
+        "primary_cost_median": 8,
+        "verifier_checks_total": 285,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_11",
-        "episodes": 12,
-        "primary_cost_total": 397,
-        "primary_cost_median": 26,
-        "verifier_checks_total": 409,
+        "episodes": 32,
+        "primary_cost_total": 215,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 247,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_12",
-        "episodes": 12,
-        "primary_cost_total": 501,
-        "primary_cost_median": 34.5,
-        "verifier_checks_total": 513,
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_13",
-        "episodes": 12,
-        "primary_cost_total": 556,
-        "primary_cost_median": 38,
-        "verifier_checks_total": 568,
+        "episodes": 32,
+        "primary_cost_total": 247,
+        "primary_cost_median": 7.5,
+        "verifier_checks_total": 279,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_14",
-        "episodes": 12,
-        "primary_cost_total": 545,
-        "primary_cost_median": 41,
-        "verifier_checks_total": 557,
+        "episodes": 32,
+        "primary_cost_total": 236,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 268,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_15",
-        "episodes": 12,
-        "primary_cost_total": 380,
-        "primary_cost_median": 36,
-        "verifier_checks_total": 392,
+        "episodes": 32,
+        "primary_cost_total": 171,
+        "primary_cost_median": 4,
+        "verifier_checks_total": 203,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_16",
-        "episodes": 12,
-        "primary_cost_total": 445,
-        "primary_cost_median": 32,
-        "verifier_checks_total": 457,
+        "episodes": 32,
+        "primary_cost_total": 199,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 231,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_17",
-        "episodes": 12,
-        "primary_cost_total": 582,
-        "primary_cost_median": 41,
-        "verifier_checks_total": 594,
+        "episodes": 32,
+        "primary_cost_total": 251,
+        "primary_cost_median": 8,
+        "verifier_checks_total": 283,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_18",
-        "episodes": 12,
-        "primary_cost_total": 483,
-        "primary_cost_median": 35.5,
-        "verifier_checks_total": 495,
+        "episodes": 32,
+        "primary_cost_total": 218,
+        "primary_cost_median": 7,
+        "verifier_checks_total": 250,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_19",
-        "episodes": 12,
-        "primary_cost_total": 483,
-        "primary_cost_median": 36,
-        "verifier_checks_total": 495,
+        "episodes": 32,
+        "primary_cost_total": 220,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 252,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_20",
-        "episodes": 12,
-        "primary_cost_total": 462,
-        "primary_cost_median": 37,
-        "verifier_checks_total": 474,
+        "episodes": 32,
+        "primary_cost_total": 172,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 204,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_21",
-        "episodes": 12,
-        "primary_cost_total": 521,
-        "primary_cost_median": 43,
-        "verifier_checks_total": 533,
+        "episodes": 32,
+        "primary_cost_total": 213,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 245,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_22",
-        "episodes": 12,
-        "primary_cost_total": 508,
-        "primary_cost_median": 42,
-        "verifier_checks_total": 520,
+        "episodes": 32,
+        "primary_cost_total": 226,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 258,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_23",
-        "episodes": 12,
-        "primary_cost_total": 369,
-        "primary_cost_median": 30,
-        "verifier_checks_total": 381,
+        "episodes": 32,
+        "primary_cost_total": 192,
+        "primary_cost_median": 5,
+        "verifier_checks_total": 224,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_24",
-        "episodes": 12,
-        "primary_cost_total": 429,
-        "primary_cost_median": 30,
-        "verifier_checks_total": 441,
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_25",
-        "episodes": 12,
-        "primary_cost_total": 476,
-        "primary_cost_median": 41.5,
-        "verifier_checks_total": 488,
+        "episodes": 32,
+        "primary_cost_total": 228,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 260,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_26",
-        "episodes": 12,
-        "primary_cost_total": 549,
-        "primary_cost_median": 48.5,
-        "verifier_checks_total": 561,
+        "episodes": 32,
+        "primary_cost_total": 229,
+        "primary_cost_median": 7.5,
+        "verifier_checks_total": 261,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_27",
-        "episodes": 12,
-        "primary_cost_total": 462,
-        "primary_cost_median": 26,
-        "verifier_checks_total": 474,
+        "episodes": 32,
+        "primary_cost_total": 203,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 235,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_28",
-        "episodes": 12,
-        "primary_cost_total": 463,
-        "primary_cost_median": 31,
-        "verifier_checks_total": 475,
+        "episodes": 32,
+        "primary_cost_total": 205,
+        "primary_cost_median": 6,
+        "verifier_checks_total": 237,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_29",
-        "episodes": 12,
-        "primary_cost_total": 533,
-        "primary_cost_median": 42,
-        "verifier_checks_total": 545,
+        "episodes": 32,
+        "primary_cost_total": 235,
+        "primary_cost_median": 6.5,
+        "verifier_checks_total": 267,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       },
       {
         "arm": "shuffled_30",
-        "episodes": 12,
-        "primary_cost_total": 533,
-        "primary_cost_median": 41.5,
-        "verifier_checks_total": 545,
+        "episodes": 32,
+        "primary_cost_total": 245,
+        "primary_cost_median": 8,
+        "verifier_checks_total": 277,
         "fallback_episodes": 0,
-        "source_artifact_reads": 31296
+        "source_artifact_reads": 83456
       }
     ],
     "shifts": [
       {
         "shift": "known-operation-new-composition",
-        "families": 3,
-        "full_primary_cost": 66,
-        "source_free_primary_cost": 78
+        "families": 4,
+        "full_primary_cost": 42,
+        "source_free_primary_cost": 58
       },
       {
         "shift": "changed-semantic-class-order",
-        "families": 3,
-        "full_primary_cost": 68,
-        "source_free_primary_cost": 37
+        "families": 4,
+        "full_primary_cost": 59,
+        "source_free_primary_cost": 46
       },
       {
         "shift": "new-cross-class-composition",
-        "families": 3,
-        "full_primary_cost": 132,
-        "source_free_primary_cost": 125
+        "families": 4,
+        "full_primary_cost": 50,
+        "source_free_primary_cost": 44
       },
       {
         "shift": "longer-tree-deeper-partial-chain",
-        "families": 3,
-        "full_primary_cost": 111,
-        "source_free_primary_cost": 131
+        "families": 4,
+        "full_primary_cost": 71,
+        "source_free_primary_cost": 57
       }
     ]
   },
   "schema": "zero.reasoner5_trace_result.v1",
   "experiment": "reasoner58-compositional-behavior-transfer-v1",
-  "manifest_sha256": "8c32a690a3067930b5b4ecb78658fdc161f204012521ebbf863a7625fa7f0447",
-  "raw_trace_sha256": "6f543d210a559617ed3dc51ca681121043f9b44cfc9a46d7fa1068496d992ad7",
-  "trace_coverage_sha256": "e3d8c69926d9e2637c23941f352ec1ef0ccb2decabbfe8d6c4629941f2ca5fc6",
+  "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
+  "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
+  "trace_coverage_sha256": "2c908f11e94b0eef1a2a3eac71b9ca0b0cf2b45edd7532c3d924ed8ee81bb0ba",
   "analysis_settings_sha256": "01668a54278e8e51a839d9f881ffeeb74fb6a3cae4393194ead98aa4b930581c",
   "analysis_function_sha256": "1a9af62e746339ccd4cc648c3866dff42889571956220d361d4a6dd6696da847",
   "integrity": {
     "manifest_digest_valid": true,
     "trace_contract_valid": true,
-    "coverage_sha256": "e3d8c69926d9e2637c23941f352ec1ef0ccb2decabbfe8d6c4629941f2ca5fc6"
+    "coverage_sha256": "2c908f11e94b0eef1a2a3eac71b9ca0b0cf2b45edd7532c3d924ed8ee81bb0ba"
   },
   "exactness": {
     "schema": "zero.reasoner5_trace_exactness.v1",
@@ -434,15 +434,15 @@
     "fallback_work_counted": true
   },
   "cost_totals": {
-    "primary_cost": 24039,
-    "verifier_checks": 24543,
-    "partial_expansions": 24039,
+    "primary_cost": 24566,
+    "verifier_checks": 25910,
+    "partial_expansions": 24566,
     "fallback_verifier_checks": 0,
     "fallback_partial_expansions": 0,
-    "observation_queries": 504,
+    "observation_queries": 2688,
     "wall_ns": null,
     "peak_bytes": null,
-    "source_artifact_reads": 1189248
+    "source_artifact_reads": 3171328
   },
   "registered_analysis": {
     "schema": "zero.reasoner5_registered_analysis.v1",
@@ -462,104 +462,119 @@
       "units": [
         {
           "generator_id": "syntax-first",
-          "family_id": "r58-development-g0-s0-00",
+          "family_id": "r58-development-pg0-s0-00",
           "unit": {
             "generator_id": "syntax-first",
-            "family_id": "r58-development-g0-s0-00"
+            "family_id": "r58-development-pg0-s0-00"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 16,
-          "mean_comparator_cost": 35,
-          "mean_log_ratio": -0.750305594399894,
-          "geometric_mean_ratio": 0.4722222222222222,
+          "nested_measurements": 2,
+          "mean_full_cost": 5,
+          "mean_comparator_cost": 11.5,
+          "mean_log_ratio": -0.7072326190432934,
+          "geometric_mean_ratio": 0.49300664859163473,
           "win": true,
           "tie": false
         },
         {
           "generator_id": "syntax-first",
-          "family_id": "r58-development-g0-s0-02",
+          "family_id": "r58-development-pg0-s0-01",
           "unit": {
             "generator_id": "syntax-first",
-            "family_id": "r58-development-g0-s0-02"
+            "family_id": "r58-development-pg0-s0-01"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 19,
-          "mean_comparator_cost": 12,
-          "mean_log_ratio": 0.43078291609245434,
-          "geometric_mean_ratio": 1.5384615384615385,
+          "nested_measurements": 2,
+          "mean_full_cost": 6.5,
+          "mean_comparator_cost": 7.5,
+          "mean_log_ratio": -0.16823611831060645,
+          "geometric_mean_ratio": 0.8451542547285166,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s1-00",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s1-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 8.5,
+          "mean_log_ratio": -0.0911607783969773,
+          "geometric_mean_ratio": 0.9128709291752769,
+          "win": true,
+          "tie": false
+        },
+        {
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s1-01",
+          "unit": {
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s1-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 6,
+          "mean_log_ratio": 0.27980789396771133,
+          "geometric_mean_ratio": 1.3228756555322954,
           "win": false,
           "tie": false
         },
         {
           "generator_id": "syntax-first",
-          "family_id": "r58-development-g0-s1-01",
+          "family_id": "r58-development-pg0-s2-00",
           "unit": {
             "generator_id": "syntax-first",
-            "family_id": "r58-development-g0-s1-01"
+            "family_id": "r58-development-pg0-s2-00"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 10,
-          "mean_comparator_cost": 12,
-          "mean_log_ratio": -0.1670540846631662,
-          "geometric_mean_ratio": 0.8461538461538461,
-          "win": true,
-          "tie": false
-        },
-        {
-          "generator_id": "syntax-first",
-          "family_id": "r58-development-g0-s2-00",
-          "unit": {
-            "generator_id": "syntax-first",
-            "family_id": "r58-development-g0-s2-00"
-          },
-          "nested_measurements": 1,
-          "mean_full_cost": 59,
-          "mean_comparator_cost": 35,
-          "mean_log_ratio": 0.5108256237659907,
-          "geometric_mean_ratio": 1.6666666666666667,
+          "nested_measurements": 2,
+          "mean_full_cost": 5,
+          "mean_comparator_cost": 4.5,
+          "mean_log_ratio": 0.06676569631226129,
+          "geometric_mean_ratio": 1.0690449676496976,
           "win": false,
           "tie": false
         },
         {
           "generator_id": "syntax-first",
-          "family_id": "r58-development-g0-s2-02",
+          "family_id": "r58-development-pg0-s2-01",
           "unit": {
             "generator_id": "syntax-first",
-            "family_id": "r58-development-g0-s2-02"
+            "family_id": "r58-development-pg0-s2-01"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 22,
-          "mean_comparator_cost": 32,
-          "mean_log_ratio": -0.3610133455373305,
-          "geometric_mean_ratio": 0.696969696969697,
+          "nested_measurements": 2,
+          "mean_full_cost": 7,
+          "mean_comparator_cost": 7.5,
+          "mean_log_ratio": -0.05268025782891314,
+          "geometric_mean_ratio": 0.9486832980505138,
           "win": true,
           "tie": false
         },
         {
           "generator_id": "syntax-first",
-          "family_id": "r58-development-g0-s3-01",
+          "family_id": "r58-development-pg0-s3-00",
           "unit": {
             "generator_id": "syntax-first",
-            "family_id": "r58-development-g0-s3-01"
+            "family_id": "r58-development-pg0-s3-00"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 18,
-          "mean_comparator_cost": 43,
-          "mean_log_ratio": -0.8397506547518208,
-          "geometric_mean_ratio": 0.43181818181818177,
-          "win": true,
+          "nested_measurements": 2,
+          "mean_full_cost": 9.5,
+          "mean_comparator_cost": 5.5,
+          "mean_log_ratio": 0.45814536593707755,
+          "geometric_mean_ratio": 1.5811388300841898,
+          "win": false,
           "tie": false
         },
         {
-          "generator_id": "behavior-skeleton",
-          "family_id": "r58-development-g1-s0-01",
+          "generator_id": "syntax-first",
+          "family_id": "r58-development-pg0-s3-01",
           "unit": {
-            "generator_id": "behavior-skeleton",
-            "family_id": "r58-development-g1-s0-01"
+            "generator_id": "syntax-first",
+            "family_id": "r58-development-pg0-s3-01"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 31,
-          "mean_comparator_cost": 31,
+          "nested_measurements": 2,
+          "mean_full_cost": 6.5,
+          "mean_comparator_cost": 6.5,
           "mean_log_ratio": 0,
           "geometric_mean_ratio": 1,
           "win": false,
@@ -567,133 +582,178 @@
         },
         {
           "generator_id": "behavior-skeleton",
-          "family_id": "r58-development-g1-s1-00",
+          "family_id": "r58-development-pg1-s0-00",
           "unit": {
             "generator_id": "behavior-skeleton",
-            "family_id": "r58-development-g1-s1-00"
+            "family_id": "r58-development-pg1-s0-00"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 32,
-          "mean_comparator_cost": 15,
-          "mean_log_ratio": 0.723918839226699,
-          "geometric_mean_ratio": 2.0625,
+          "nested_measurements": 2,
+          "mean_full_cost": 4.5,
+          "mean_comparator_cost": 3,
+          "mean_log_ratio": 0.27980789396771133,
+          "geometric_mean_ratio": 1.3228756555322954,
           "win": false,
           "tie": false
         },
         {
           "generator_id": "behavior-skeleton",
-          "family_id": "r58-development-g1-s1-02",
+          "family_id": "r58-development-pg1-s0-01",
           "unit": {
             "generator_id": "behavior-skeleton",
-            "family_id": "r58-development-g1-s1-02"
+            "family_id": "r58-development-pg1-s0-01"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 26,
-          "mean_comparator_cost": 10,
-          "mean_log_ratio": 0.8979415932059586,
-          "geometric_mean_ratio": 2.4545454545454546,
-          "win": false,
-          "tie": false
-        },
-        {
-          "generator_id": "behavior-skeleton",
-          "family_id": "r58-development-g1-s2-01",
-          "unit": {
-            "generator_id": "behavior-skeleton",
-            "family_id": "r58-development-g1-s2-01"
-          },
-          "nested_measurements": 1,
-          "mean_full_cost": 51,
-          "mean_comparator_cost": 58,
-          "mean_log_ratio": -0.12629372532429212,
-          "geometric_mean_ratio": 0.8813559322033898,
+          "nested_measurements": 2,
+          "mean_full_cost": 5,
+          "mean_comparator_cost": 7,
+          "mean_log_ratio": -0.20273255405408222,
+          "geometric_mean_ratio": 0.816496580927726,
           "win": true,
           "tie": false
         },
         {
           "generator_id": "behavior-skeleton",
-          "family_id": "r58-development-g1-s3-00",
+          "family_id": "r58-development-pg1-s1-00",
           "unit": {
             "generator_id": "behavior-skeleton",
-            "family_id": "r58-development-g1-s3-00"
+            "family_id": "r58-development-pg1-s1-00"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 23,
-          "mean_comparator_cost": 32,
-          "mean_log_ratio": -0.3184537311185346,
-          "geometric_mean_ratio": 0.7272727272727273,
+          "nested_measurements": 2,
+          "mean_full_cost": 10,
+          "mean_comparator_cost": 5.5,
+          "mean_log_ratio": 0.601986402162968,
+          "geometric_mean_ratio": 1.8257418583505536,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s1-01",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s1-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 4.5,
+          "mean_comparator_cost": 3,
+          "mean_log_ratio": 0.27980789396771133,
+          "geometric_mean_ratio": 1.3228756555322954,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s2-00",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s2-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 7.5,
+          "mean_comparator_cost": 7,
+          "mean_log_ratio": -0.024395082084716024,
+          "geometric_mean_ratio": 0.9759000729485332,
           "win": true,
           "tie": false
         },
         {
           "generator_id": "behavior-skeleton",
-          "family_id": "r58-development-g1-s3-02",
+          "family_id": "r58-development-pg1-s2-01",
           "unit": {
             "generator_id": "behavior-skeleton",
-            "family_id": "r58-development-g1-s3-02"
+            "family_id": "r58-development-pg1-s2-01"
           },
-          "nested_measurements": 1,
-          "mean_full_cost": 70,
-          "mean_comparator_cost": 56,
-          "mean_log_ratio": 0.21962860920676536,
-          "geometric_mean_ratio": 1.2456140350877194,
+          "nested_measurements": 2,
+          "mean_full_cost": 5.5,
+          "mean_comparator_cost": 3,
+          "mean_log_ratio": 0.4054651081081644,
+          "geometric_mean_ratio": 1.5,
           "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s3-00",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s3-00"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 10.5,
+          "mean_comparator_cost": 4.5,
+          "mean_log_ratio": 0.6931471805599453,
+          "geometric_mean_ratio": 2,
+          "win": false,
+          "tie": false
+        },
+        {
+          "generator_id": "behavior-skeleton",
+          "family_id": "r58-development-pg1-s3-01",
+          "unit": {
+            "generator_id": "behavior-skeleton",
+            "family_id": "r58-development-pg1-s3-01"
+          },
+          "nested_measurements": 2,
+          "mean_full_cost": 9,
+          "mean_comparator_cost": 12,
+          "mean_log_ratio": -0.2350018146228678,
+          "geometric_mean_ratio": 0.7905694150420948,
+          "win": true,
           "tie": false
         }
       ],
       "summary": {
         "schema": "zero.reasoner5_family_summary.v1",
-        "independent_families": 12,
-        "family_weighted_geometric_mean_ratio": 1.0185216404255344,
-        "family_weighted_median_ratio": 0.9406779661016949,
-        "wins": 6,
+        "independent_families": 16,
+        "family_weighted_geometric_mean_ratio": 1.1040313985489811,
+        "family_weighted_median_ratio": 1.0345224838248488,
+        "wins": 7,
         "ties": 1,
-        "losses": 5,
-        "win_rate": 0.5,
-        "wilson_lower": 0.2855348543775254
+        "losses": 8,
+        "win_rate": 0.4375,
+        "wilson_lower": 0.257658008829804
       },
       "interval": {
         "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-        "independent_units": 12,
+        "independent_units": 16,
         "replicates": 2000,
         "alpha": 0.01,
-        "point_log_ratio": 0.018352203808569167,
-        "point_ratio": 1.0185216404255344,
-        "lower_log_ratio": -0.2841896522692428,
-        "upper_log_ratio": 0.3478382970694822,
-        "lower_ratio": 0.7526238943407106,
-        "upper_ratio": 1.4160032593496543,
-        "one_sided_p_lower_than_zero": 0.5422288855572214,
-        "one_sided_p_higher_than_zero": 0.45827086456771615,
-        "bootstrap_sha256": "2915f61cebb3fb5078df699d228d1252f8a14fb835730e54a1f4c9db4a4a267b",
+        "point_log_ratio": 0.09896838816513089,
+        "point_ratio": 1.1040313985489811,
+        "lower_log_ratio": -0.08905430455331637,
+        "upper_log_ratio": 0.2684705310355558,
+        "lower_ratio": 0.9147958946431338,
+        "upper_ratio": 1.3079624321642322,
+        "one_sided_p_lower_than_zero": 0.8850574712643678,
+        "one_sided_p_higher_than_zero": 0.11544227886056972,
+        "bootstrap_sha256": "4fd3cb571577afbd696c1cd5fba0114bfc814395c38f992f04a91c142174ecb6",
         "fixed_environments": 2,
         "fixed_environment_weighting": "equal",
         "environment_summaries": {
           "behavior-skeleton": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 6,
-            "family_weighted_geometric_mean_ratio": 1.2621167405006486,
-            "family_weighted_median_ratio": 1.1228070175438596,
-            "wins": 2,
-            "ties": 1,
-            "losses": 3,
-            "win_rate": 0.3333333333333333,
-            "wilson_lower": 0.1172760941022896
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 1.2520229817009407,
+            "family_weighted_median_ratio": 1.3228756555322954,
+            "wins": 3,
+            "ties": 0,
+            "losses": 5,
+            "win_rate": 0.375,
+            "wilson_lower": 0.16117233776067347
           },
           "syntax-first": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 6,
-            "family_weighted_geometric_mean_ratio": 0.8219416625466973,
-            "family_weighted_median_ratio": 0.7715617715617715,
+            "independent_families": 8,
+            "family_weighted_geometric_mean_ratio": 0.9735327120961452,
+            "family_weighted_median_ratio": 0.9743416490252569,
             "wins": 4,
-            "ties": 0,
-            "losses": 2,
-            "win_rate": 0.6666666666666666,
-            "wilson_lower": 0.34701476700031814
+            "ties": 1,
+            "losses": 3,
+            "win_rate": 0.5,
+            "wilson_lower": 0.24864189021250815
           }
         }
       },
-      "receipt_sha256": "4e1664427117273a6b2afc88ffe3b1bbbff1100dcba209f6f5e3abec70bb6307"
+      "receipt_sha256": "434c7947b42deded3c3eaea241f1768ecfaefe2c93caaa81cb42d84a4aa714b0"
     },
     "strata": [
       {
@@ -714,103 +774,118 @@
           "units": [
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s0-00",
+              "family_id": "r58-development-pg0-s0-00",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s0-00"
+                "family_id": "r58-development-pg0-s0-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 16,
-              "mean_comparator_cost": 35,
-              "mean_log_ratio": -0.750305594399894,
-              "geometric_mean_ratio": 0.4722222222222222,
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 11.5,
+              "mean_log_ratio": -0.7072326190432934,
+              "geometric_mean_ratio": 0.49300664859163473,
               "win": true,
               "tie": false
             },
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s0-02",
+              "family_id": "r58-development-pg0-s0-01",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s0-02"
+                "family_id": "r58-development-pg0-s0-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 19,
-              "mean_comparator_cost": 12,
-              "mean_log_ratio": 0.43078291609245434,
-              "geometric_mean_ratio": 1.5384615384615385,
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": -0.16823611831060645,
+              "geometric_mean_ratio": 0.8451542547285166,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": 0.27980789396771133,
+              "geometric_mean_ratio": 1.3228756555322954,
               "win": false,
               "tie": false
             },
             {
               "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s0-01",
+              "family_id": "r58-development-pg1-s0-01",
               "unit": {
                 "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s0-01"
+                "family_id": "r58-development-pg1-s0-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 31,
-              "mean_comparator_cost": 31,
-              "mean_log_ratio": 0,
-              "geometric_mean_ratio": 1,
-              "win": false,
-              "tie": true
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 7,
+              "mean_log_ratio": -0.20273255405408222,
+              "geometric_mean_ratio": 0.816496580927726,
+              "win": true,
+              "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 3,
-            "family_weighted_geometric_mean_ratio": 0.8989682524427431,
-            "family_weighted_median_ratio": 1,
-            "wins": 1,
-            "ties": 1,
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 0.8190596628578779,
+            "family_weighted_median_ratio": 0.8308254178281214,
+            "wins": 3,
+            "ties": 0,
             "losses": 1,
-            "win_rate": 0.3333333333333333,
-            "wilson_lower": 0.0782657263337284
+            "win_rate": 0.75,
+            "wilson_lower": 0.3561680085985064
           },
           "interval": {
             "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-            "independent_units": 3,
+            "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": -0.07988066957685991,
-            "point_ratio": 0.923226508823592,
-            "lower_log_ratio": -0.375152797199947,
-            "upper_log_ratio": 0.21539145804622717,
-            "lower_ratio": 0.6871842709362768,
-            "upper_ratio": 1.2403473458920846,
-            "one_sided_p_lower_than_zero": 0.24587706146926536,
-            "one_sided_p_higher_than_zero": 0.7546226886556722,
-            "bootstrap_sha256": "91eadc3af89500944ca9c2190c817260194899cbbc85081339e3d54c3322bf65",
+            "point_log_ratio": -0.19959834936006768,
+            "point_ratio": 0.8190596628578779,
+            "lower_log_ratio": -0.4549825865486878,
+            "upper_log_ratio": 0.05578588782855244,
+            "lower_ratio": 0.63445901597322,
+            "upper_ratio": 1.057371263440564,
+            "one_sided_p_lower_than_zero": 0.062468765617191405,
+            "one_sided_p_higher_than_zero": 0.9380309845077461,
+            "bootstrap_sha256": "591590cfd0dbff17797fefb8495650552ef9650c3855ee2089260b6c97e99233",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-skeleton": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 1,
-                "family_weighted_geometric_mean_ratio": 1,
-                "family_weighted_median_ratio": 1,
-                "wins": 0,
-                "ties": 1,
-                "losses": 0,
-                "win_rate": 0,
-                "wilson_lower": 0
-              },
-              "syntax-first": {
-                "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.8523471865945981,
-                "family_weighted_median_ratio": 1.0053418803418803,
+                "family_weighted_geometric_mean_ratio": 1.0392898776254118,
+                "family_weighted_median_ratio": 1.0696861182300106,
                 "wins": 1,
                 "ties": 0,
                 "losses": 1,
                 "win_rate": 0.5,
                 "wilson_lower": 0.12086631942227365
+              },
+              "syntax-first": {
+                "schema": "zero.reasoner5_family_summary.v1",
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 0.6454972243679028,
+                "family_weighted_median_ratio": 0.6690804516600757,
+                "wins": 2,
+                "ties": 0,
+                "losses": 0,
+                "win_rate": 1,
+                "wilson_lower": 0.42503060900634637
               }
             }
           },
-          "receipt_sha256": "541e40e1fcb6c0ebdb0567d98b20dbdd83b51f1f2bc3f3b29b7a642d189fad84"
+          "receipt_sha256": "49876e44c53d43a92f230d23fda7be22159fcb61ee8a84b336cd0dcb5c8e11e4"
         }
       },
       {
@@ -831,83 +906,98 @@
           "units": [
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s1-01",
+              "family_id": "r58-development-pg0-s1-00",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s1-01"
+                "family_id": "r58-development-pg0-s1-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 10,
-              "mean_comparator_cost": 12,
-              "mean_log_ratio": -0.1670540846631662,
-              "geometric_mean_ratio": 0.8461538461538461,
+              "nested_measurements": 2,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 8.5,
+              "mean_log_ratio": -0.0911607783969773,
+              "geometric_mean_ratio": 0.9128709291752769,
               "win": true,
               "tie": false
             },
             {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s1-00",
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s1-01",
               "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s1-00"
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s1-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 32,
-              "mean_comparator_cost": 15,
-              "mean_log_ratio": 0.723918839226699,
-              "geometric_mean_ratio": 2.0625,
+              "nested_measurements": 2,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 6,
+              "mean_log_ratio": 0.27980789396771133,
+              "geometric_mean_ratio": 1.3228756555322954,
               "win": false,
               "tie": false
             },
             {
               "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s1-02",
+              "family_id": "r58-development-pg1-s1-00",
               "unit": {
                 "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s1-02"
+                "family_id": "r58-development-pg1-s1-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 26,
-              "mean_comparator_cost": 10,
-              "mean_log_ratio": 0.8979415932059586,
-              "geometric_mean_ratio": 2.4545454545454546,
+              "nested_measurements": 2,
+              "mean_full_cost": 10,
+              "mean_comparator_cost": 5.5,
+              "mean_log_ratio": 0.601986402162968,
+              "geometric_mean_ratio": 1.8257418583505536,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s1-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s1-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": 0.27980789396771133,
+              "geometric_mean_ratio": 1.3228756555322954,
               "win": false,
               "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 3,
-            "family_weighted_geometric_mean_ratio": 1.624070170523562,
-            "family_weighted_median_ratio": 2.0625,
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.3068378352572798,
+            "family_weighted_median_ratio": 1.3228756555322954,
             "wins": 1,
             "ties": 0,
-            "losses": 2,
-            "win_rate": 0.3333333333333333,
-            "wilson_lower": 0.0782657263337284
+            "losses": 3,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
           },
           "interval": {
             "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-            "independent_units": 3,
+            "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": 0.3219380657765813,
-            "point_ratio": 1.3797993165116997,
-            "lower_log_ratio": 0.2784323772817664,
-            "upper_log_ratio": 0.3654437542713962,
-            "lower_ratio": 1.3210572688919688,
-            "upper_ratio": 1.4411533842457842,
+            "point_log_ratio": 0.26761035292535335,
+            "point_ratio": 1.3068378352572798,
+            "lower_log_ratio": 0.09432355778536702,
+            "upper_log_ratio": 0.44089714806533964,
+            "lower_ratio": 1.098915250985771,
+            "upper_ratio": 1.5541008518427109,
             "one_sided_p_lower_than_zero": 1,
             "one_sided_p_higher_than_zero": 0.0004997501249375312,
-            "bootstrap_sha256": "7ccfce8e930f42386a9ffe34a70488cdbc3e9145e9429a2a5ff77d47bb4185dd",
+            "bootstrap_sha256": "41c455ac1e21efe02ff8ca48417875d13e6ab8c0d9c2d71882369877a2fa83dc",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-skeleton": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 2.25,
-                "family_weighted_median_ratio": 2.2585227272727275,
+                "family_weighted_geometric_mean_ratio": 1.5541008518427109,
+                "family_weighted_median_ratio": 1.5743087569414245,
                 "wins": 0,
                 "ties": 0,
                 "losses": 2,
@@ -916,18 +1006,18 @@
               },
               "syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 1,
-                "family_weighted_geometric_mean_ratio": 0.8461538461538461,
-                "family_weighted_median_ratio": 0.8461538461538461,
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.098915250985771,
+                "family_weighted_median_ratio": 1.1178732923537862,
                 "wins": 1,
                 "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.2698659487840541
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227365
               }
             }
           },
-          "receipt_sha256": "66b9d60c7fa4479bdbf4fb187e280e88d94205b798970bb821c58a236f254c1e"
+          "receipt_sha256": "8482a7da1907cb5b0c4c4f8a2b5ffc7153985a596d27cee284f8d1b9d6a42a4e"
         }
       },
       {
@@ -948,94 +1038,109 @@
           "units": [
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s2-00",
+              "family_id": "r58-development-pg0-s2-00",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s2-00"
+                "family_id": "r58-development-pg0-s2-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 59,
-              "mean_comparator_cost": 35,
-              "mean_log_ratio": 0.5108256237659907,
-              "geometric_mean_ratio": 1.6666666666666667,
+              "nested_measurements": 2,
+              "mean_full_cost": 5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0.06676569631226129,
+              "geometric_mean_ratio": 1.0690449676496976,
               "win": false,
               "tie": false
             },
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s2-02",
+              "family_id": "r58-development-pg0-s2-01",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s2-02"
+                "family_id": "r58-development-pg0-s2-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 22,
-              "mean_comparator_cost": 32,
-              "mean_log_ratio": -0.3610133455373305,
-              "geometric_mean_ratio": 0.696969696969697,
+              "nested_measurements": 2,
+              "mean_full_cost": 7,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": -0.05268025782891314,
+              "geometric_mean_ratio": 0.9486832980505138,
               "win": true,
               "tie": false
             },
             {
               "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s2-01",
+              "family_id": "r58-development-pg1-s2-00",
               "unit": {
                 "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s2-01"
+                "family_id": "r58-development-pg1-s2-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 51,
-              "mean_comparator_cost": 58,
-              "mean_log_ratio": -0.12629372532429212,
-              "geometric_mean_ratio": 0.8813559322033898,
+              "nested_measurements": 2,
+              "mean_full_cost": 7.5,
+              "mean_comparator_cost": 7,
+              "mean_log_ratio": -0.024395082084716024,
+              "geometric_mean_ratio": 0.9759000729485332,
               "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s2-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s2-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5.5,
+              "mean_comparator_cost": 3,
+              "mean_log_ratio": 0.4054651081081644,
+              "geometric_mean_ratio": 1.5,
+              "win": false,
               "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 3,
-            "family_weighted_geometric_mean_ratio": 1.0078703271110154,
-            "family_weighted_median_ratio": 0.8813559322033898,
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.1038332183712078,
+            "family_weighted_median_ratio": 1.0224725202991154,
             "wins": 2,
             "ties": 0,
-            "losses": 1,
-            "win_rate": 0.6666666666666666,
-            "wilson_lower": 0.2535338682812242
+            "losses": 2,
+            "win_rate": 0.5,
+            "wilson_lower": 0.18240016325464492
           },
           "interval": {
             "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-            "independent_units": 3,
+            "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": -0.025693793104981003,
-            "point_ratio": 0.9746334834140352,
-            "lower_log_ratio": -0.2436535354308113,
-            "upper_log_ratio": 0.1922659492208493,
-            "lower_ratio": 0.7837591319979892,
-            "upper_ratio": 1.211992802648727,
-            "one_sided_p_lower_than_zero": 0.2543728135932034,
-            "one_sided_p_higher_than_zero": 0.7461269365317341,
-            "bootstrap_sha256": "40029dff94ecc0fbf07f5b251885d3f03f7d347233a94918f4feb71de4666979",
+            "point_log_ratio": 0.09878886612669913,
+            "point_ratio": 1.1038332183712078,
+            "lower_log_ratio": -0.03853766995681458,
+            "upper_log_ratio": 0.23611540221021282,
+            "lower_ratio": 0.9621954581957615,
+            "upper_ratio": 1.266320437912358,
+            "one_sided_p_lower_than_zero": 0.8260869565217391,
+            "one_sided_p_higher_than_zero": 0.1744127936031984,
+            "bootstrap_sha256": "130b6e5d4eb018c00ffa864d0ec8a573f4f9a1305b3e21eced6d35790786a0c8",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-skeleton": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 1,
-                "family_weighted_geometric_mean_ratio": 0.8813559322033898,
-                "family_weighted_median_ratio": 0.8813559322033898,
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.2098967350244398,
+                "family_weighted_median_ratio": 1.2379500364742666,
                 "wins": 1,
                 "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.2698659487840541
+                "losses": 1,
+                "win_rate": 0.5,
+                "wilson_lower": 0.12086631942227365
               },
               "syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 1.0777829844714388,
-                "family_weighted_median_ratio": 1.1818181818181819,
+                "family_weighted_geometric_mean_ratio": 1.0070675775111717,
+                "family_weighted_median_ratio": 1.0088641328501056,
                 "wins": 1,
                 "ties": 0,
                 "losses": 1,
@@ -1044,7 +1149,7 @@
               }
             }
           },
-          "receipt_sha256": "008c59242cf91734cc9a74ed2d8a21720bc47c66207e4d6e18a758ed6ea2a54d"
+          "receipt_sha256": "61ab666ad48825fe904bcc29ee6a951ee22b41f325e808c815a804f9f1930b83"
         }
       },
       {
@@ -1065,83 +1170,98 @@
           "units": [
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s3-01",
+              "family_id": "r58-development-pg0-s3-00",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s3-01"
+                "family_id": "r58-development-pg0-s3-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 18,
-              "mean_comparator_cost": 43,
-              "mean_log_ratio": -0.8397506547518208,
-              "geometric_mean_ratio": 0.43181818181818177,
-              "win": true,
-              "tie": false
-            },
-            {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s3-00",
-              "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s3-00"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 23,
-              "mean_comparator_cost": 32,
-              "mean_log_ratio": -0.3184537311185346,
-              "geometric_mean_ratio": 0.7272727272727273,
-              "win": true,
-              "tie": false
-            },
-            {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s3-02",
-              "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s3-02"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 70,
-              "mean_comparator_cost": 56,
-              "mean_log_ratio": 0.21962860920676536,
-              "geometric_mean_ratio": 1.2456140350877194,
+              "nested_measurements": 2,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 5.5,
+              "mean_log_ratio": 0.45814536593707755,
+              "geometric_mean_ratio": 1.5811388300841898,
               "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 6.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 10.5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0.6931471805599453,
+              "geometric_mean_ratio": 2,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 12,
+              "mean_log_ratio": -0.2350018146228678,
+              "geometric_mean_ratio": 0.7905694150420948,
+              "win": true,
               "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 3,
-            "family_weighted_geometric_mean_ratio": 0.7313533243062083,
-            "family_weighted_median_ratio": 0.7272727272727273,
-            "wins": 2,
-            "ties": 0,
-            "losses": 1,
-            "win_rate": 0.6666666666666666,
-            "wilson_lower": 0.2535338682812242
+            "independent_families": 4,
+            "family_weighted_geometric_mean_ratio": 1.2574334296829355,
+            "family_weighted_median_ratio": 1.290569415042095,
+            "wins": 1,
+            "ties": 1,
+            "losses": 2,
+            "win_rate": 0.25,
+            "wilson_lower": 0.05790732119985868
           },
           "interval": {
             "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-            "independent_units": 3,
+            "independent_units": 4,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": -0.4445816078538527,
-            "point_ratio": 0.6410924479730762,
-            "lower_log_ratio": -0.5791021929351776,
-            "upper_log_ratio": -0.3100610227725277,
-            "lower_ratio": 0.5604012729971797,
-            "upper_ratio": 0.7334022006230878,
-            "one_sided_p_lower_than_zero": 0.0004997501249375312,
-            "one_sided_p_higher_than_zero": 1,
-            "bootstrap_sha256": "4ae937d1a3f9dea0463b67fbd4d23361851caaf6e099412870a45150d9cdc3ea",
+            "point_log_ratio": 0.22907268296853878,
+            "point_ratio": 1.2574334296829355,
+            "lower_log_ratio": -0.1175009073114339,
+            "upper_log_ratio": 0.5756462732485115,
+            "lower_ratio": 0.8891397050194614,
+            "upper_ratio": 1.778279410038923,
+            "one_sided_p_lower_than_zero": 0.8075962018990505,
+            "one_sided_p_higher_than_zero": 0.19290354822588707,
+            "bootstrap_sha256": "9793f3e0bf88eddd3637f20c5883bc8126bb30ec8e230babba5320e2a3a3c9d1",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-skeleton": {
                 "schema": "zero.reasoner5_family_summary.v1",
                 "independent_families": 2,
-                "family_weighted_geometric_mean_ratio": 0.9517883779640474,
-                "family_weighted_median_ratio": 0.9864433811802233,
+                "family_weighted_geometric_mean_ratio": 1.2574334296829353,
+                "family_weighted_median_ratio": 1.3952847075210473,
                 "wins": 1,
                 "ties": 0,
                 "losses": 1,
@@ -1150,18 +1270,18 @@
               },
               "syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 1,
-                "family_weighted_geometric_mean_ratio": 0.43181818181818177,
-                "family_weighted_median_ratio": 0.43181818181818177,
-                "wins": 1,
-                "ties": 0,
-                "losses": 0,
-                "win_rate": 1,
-                "wilson_lower": 0.2698659487840541
+                "independent_families": 2,
+                "family_weighted_geometric_mean_ratio": 1.2574334296829355,
+                "family_weighted_median_ratio": 1.290569415042095,
+                "wins": 0,
+                "ties": 1,
+                "losses": 1,
+                "win_rate": 0,
+                "wilson_lower": 0
               }
             }
           },
-          "receipt_sha256": "a6bbc3c6e9db0feef232d41f68b3083313606318d7ca56e5d3b904ea6dd2d594"
+          "receipt_sha256": "b8c60ad8c2f6b666bf626a17e979800bbc5ff106cc451aea5c30a674bf5e823e"
         }
       }
     ],
@@ -1184,341 +1304,374 @@
           "units": [
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s0-00",
+              "family_id": "r58-development-pg0-s0-00",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s0-00"
+                "family_id": "r58-development-pg0-s0-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 41,
-              "mean_comparator_cost": 16,
-              "mean_log_ratio": 0.9044562742271522,
-              "geometric_mean_ratio": 2.4705882352941178,
+              "nested_measurements": 2,
+              "mean_full_cost": 13,
+              "mean_comparator_cost": 5,
+              "mean_log_ratio": 0.7931577475066232,
+              "geometric_mean_ratio": 2.210365192839022,
               "win": false,
               "tie": false
             },
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s0-02",
+              "family_id": "r58-development-pg0-s0-01",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s0-02"
+                "family_id": "r58-development-pg0-s0-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 49,
-              "mean_comparator_cost": 19,
-              "mean_log_ratio": 0.9162907318741551,
-              "geometric_mean_ratio": 2.5,
+              "nested_measurements": 2,
+              "mean_full_cost": 9.5,
+              "mean_comparator_cost": 6.5,
+              "mean_log_ratio": 0.3661839468566133,
+              "geometric_mean_ratio": 1.4422205101855958,
               "win": false,
               "tie": false
             },
             {
               "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s1-01",
+              "family_id": "r58-development-pg0-s1-00",
               "unit": {
                 "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s1-01"
+                "family_id": "r58-development-pg0-s1-00"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 20,
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": 0.1783374719693662,
+              "geometric_mean_ratio": 1.1952286093343936,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s1-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s1-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": -0.18864711557073405,
+              "geometric_mean_ratio": 0.828078671210825,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s2-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 5.5,
+              "mean_comparator_cost": 5,
+              "mean_log_ratio": 0.05889151782819173,
+              "geometric_mean_ratio": 1.0606601717798212,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s2-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s2-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 8.5,
+              "mean_comparator_cost": 7,
+              "mean_log_ratio": 0.10678705014902949,
+              "geometric_mean_ratio": 1.1126972805283735,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-00",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9,
+              "mean_comparator_cost": 9.5,
+              "mean_log_ratio": -0.03449643574347572,
+              "geometric_mean_ratio": 0.9660917830792959,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "syntax-first",
+              "family_id": "r58-development-pg0-s3-01",
+              "unit": {
+                "generator_id": "syntax-first",
+                "family_id": "r58-development-pg0-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 6.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s0-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s0-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 6.5,
+              "mean_comparator_cost": 5,
+              "mean_log_ratio": 0.1592268655592673,
+              "geometric_mean_ratio": 1.1726039399558574,
+              "win": false,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s1-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s1-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 9.5,
               "mean_comparator_cost": 10,
-              "mean_log_ratio": 0.6466271649250525,
-              "geometric_mean_ratio": 1.9090909090909092,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s2-00",
-              "unit": {
-                "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s2-00"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 41,
-              "mean_comparator_cost": 59,
-              "mean_log_ratio": -0.35667494393873245,
-              "geometric_mean_ratio": 0.7,
-              "win": true,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s2-02",
-              "unit": {
-                "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s2-02"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 65,
-              "mean_comparator_cost": 22,
-              "mean_log_ratio": 1.054160526097276,
-              "geometric_mean_ratio": 2.8695652173913047,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "syntax-first",
-              "family_id": "r58-development-g0-s3-01",
-              "unit": {
-                "generator_id": "syntax-first",
-                "family_id": "r58-development-g0-s3-01"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 43,
-              "mean_comparator_cost": 18,
-              "mean_log_ratio": 0.8397506547518208,
-              "geometric_mean_ratio": 2.3157894736842106,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s0-01",
-              "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s0-01"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 43,
-              "mean_comparator_cost": 31,
-              "mean_log_ratio": 0.3184537311185346,
-              "geometric_mean_ratio": 1.375,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s1-00",
-              "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s1-00"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 39,
-              "mean_comparator_cost": 32,
-              "mean_log_ratio": 0.1923718926474561,
-              "geometric_mean_ratio": 1.2121212121212122,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s1-02",
-              "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s1-02"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 28,
-              "mean_comparator_cost": 26,
-              "mean_log_ratio": 0.07145896398214505,
-              "geometric_mean_ratio": 1.0740740740740742,
-              "win": false,
-              "tie": false
-            },
-            {
-              "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s2-01",
-              "unit": {
-                "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s2-01"
-              },
-              "nested_measurements": 1,
-              "mean_full_cost": 42,
-              "mean_comparator_cost": 51,
-              "mean_log_ratio": -0.19004360288786498,
-              "geometric_mean_ratio": 0.8269230769230769,
+              "mean_log_ratio": -0.05268025782891314,
+              "geometric_mean_ratio": 0.9486832980505138,
               "win": true,
               "tie": false
             },
             {
               "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s3-00",
+              "family_id": "r58-development-pg1-s1-01",
               "unit": {
                 "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s3-00"
+                "family_id": "r58-development-pg1-s1-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 36,
-              "mean_comparator_cost": 23,
-              "mean_log_ratio": 0.4328640822962789,
-              "geometric_mean_ratio": 1.5416666666666667,
+              "nested_measurements": 2,
+              "mean_full_cost": 4.5,
+              "mean_comparator_cost": 4.5,
+              "mean_log_ratio": 0,
+              "geometric_mean_ratio": 1,
+              "win": false,
+              "tie": true
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s2-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s2-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 8.5,
+              "mean_comparator_cost": 7.5,
+              "mean_log_ratio": 0.16823611831060642,
+              "geometric_mean_ratio": 1.1832159566199232,
               "win": false,
               "tie": false
             },
             {
               "generator_id": "behavior-skeleton",
-              "family_id": "r58-development-g1-s3-02",
+              "family_id": "r58-development-pg1-s2-01",
               "unit": {
                 "generator_id": "behavior-skeleton",
-                "family_id": "r58-development-g1-s3-02"
+                "family_id": "r58-development-pg1-s2-01"
               },
-              "nested_measurements": 1,
-              "mean_full_cost": 77,
-              "mean_comparator_cost": 70,
-              "mean_log_ratio": 0.0940289496482764,
-              "geometric_mean_ratio": 1.0985915492957747,
+              "nested_measurements": 2,
+              "mean_full_cost": 3.5,
+              "mean_comparator_cost": 5.5,
+              "mean_log_ratio": -0.2938933324510595,
+              "geometric_mean_ratio": 0.7453559924999299,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-00",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-00"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 8,
+              "mean_comparator_cost": 10.5,
+              "mean_log_ratio": -0.22091637613951964,
+              "geometric_mean_ratio": 0.8017837257372731,
+              "win": true,
+              "tie": false
+            },
+            {
+              "generator_id": "behavior-skeleton",
+              "family_id": "r58-development-pg1-s3-01",
+              "unit": {
+                "generator_id": "behavior-skeleton",
+                "family_id": "r58-development-pg1-s3-01"
+              },
+              "nested_measurements": 2,
+              "mean_full_cost": 11.5,
+              "mean_comparator_cost": 9,
+              "mean_log_ratio": 0.18232155679395465,
+              "geometric_mean_ratio": 1.2,
               "win": false,
               "tie": false
             }
           ],
           "summary": {
             "schema": "zero.reasoner5_family_summary.v1",
-            "independent_families": 12,
-            "family_weighted_geometric_mean_ratio": 1.5072880389599257,
-            "family_weighted_median_ratio": 1.4583333333333335,
-            "wins": 2,
-            "ties": 0,
-            "losses": 10,
-            "win_rate": 0.16666666666666666,
-            "wilson_lower": 0.0567805527494444
+            "independent_families": 16,
+            "family_weighted_geometric_mean_ratio": 1.079401582536584,
+            "family_weighted_median_ratio": 1.0303300858899105,
+            "wins": 5,
+            "ties": 3,
+            "losses": 8,
+            "win_rate": 0.3125,
+            "wilson_lower": 0.16126565708702384
           },
           "interval": {
             "schema": "zero.reasoner5_stratified_one_way_cluster_bootstrap.v1",
-            "independent_units": 12,
+            "independent_units": 16,
             "replicates": 2000,
             "alpha": 0.05,
-            "point_log_ratio": 0.41031203539512917,
-            "point_ratio": 1.507288038959926,
-            "lower_log_ratio": 0.2305389425850909,
-            "upper_log_ratio": 0.562278860163553,
-            "lower_ratio": 1.2592785058911855,
-            "upper_ratio": 1.754666587370907,
-            "one_sided_p_lower_than_zero": 0.999000499750125,
-            "one_sided_p_higher_than_zero": 0.0014992503748125937,
-            "bootstrap_sha256": "e1bcbf6629a96cc8d12351eeb4682c0d6fcf79af9e4d6a04dd98de8aabf8cd27",
+            "point_log_ratio": 0.07640679732749689,
+            "point_ratio": 1.079401582536584,
+            "lower_log_ratio": -0.012003017496715954,
+            "upper_log_ratio": 0.17918933926096264,
+            "lower_ratio": 0.9880687313632802,
+            "upper_ratio": 1.19624721929132,
+            "one_sided_p_lower_than_zero": 0.92103948025987,
+            "one_sided_p_higher_than_zero": 0.07946026986506746,
+            "bootstrap_sha256": "0bd6765447fcab6f0f284a4437a9c0a329cbab6c57dd896d65cf62581dcdbc4d",
             "fixed_environments": 2,
             "fixed_environment_weighting": "equal",
             "environment_summaries": {
               "behavior-skeleton": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 6,
-                "family_weighted_geometric_mean_ratio": 1.1655452494428205,
-                "family_weighted_median_ratio": 1.1553563807084934,
-                "wins": 1,
-                "ties": 0,
-                "losses": 5,
-                "win_rate": 0.16666666666666666,
-                "wilson_lower": 0.038105570079342885
+                "independent_families": 8,
+                "family_weighted_geometric_mean_ratio": 0.9928127743129838,
+                "family_weighted_median_ratio": 1,
+                "wins": 3,
+                "ties": 2,
+                "losses": 3,
+                "win_rate": 0.375,
+                "wilson_lower": 0.16117233776067347
               },
               "syntax-first": {
                 "schema": "zero.reasoner5_family_summary.v1",
-                "independent_families": 6,
-                "family_weighted_geometric_mean_ratio": 1.949231257626189,
-                "family_weighted_median_ratio": 2.393188854489164,
-                "wins": 1,
-                "ties": 0,
+                "independent_families": 8,
+                "family_weighted_geometric_mean_ratio": 1.1735422896716095,
+                "family_weighted_median_ratio": 1.0866787261540973,
+                "wins": 2,
+                "ties": 1,
                 "losses": 5,
-                "win_rate": 0.16666666666666666,
-                "wilson_lower": 0.038105570079342885
+                "win_rate": 0.25,
+                "wilson_lower": 0.08651484419906225
               }
             }
           },
-          "receipt_sha256": "8ce30d52e3b70191c5b9c406acf4e0c5765cb2f42741248fd22737b444b6cd44"
+          "receipt_sha256": "b0da00f834997b1f40fd5cf849d5eb34e6a130408d1b670889ffdc5d62920da3"
         }
       }
     ],
     "derangement": {
-      "observed": 3.337598033663958,
+      "observed": 2.0005488364114536,
       "values": [
-        3.553525170691709,
-        3.586952017962915,
-        3.7592612367036806,
-        3.4868379389983466,
-        3.4733546600175695,
-        3.7787192760787165,
-        3.5879605010746567,
-        3.401446605583249,
-        3.417728523158221,
-        3.7570504950738073,
-        3.901701845900572,
-        3.421000339157429,
-        3.611509167586853,
-        3.7632336878639663,
-        3.723635501227044,
-        3.369853387526799,
-        3.525214677547646,
-        3.815698337557491,
-        3.5938225067987077,
-        3.57511482603325,
-        3.4496732631107694,
-        3.711500076131958,
-        3.6201903556238615,
-        3.3679084075331915,
-        3.40120901327627,
-        3.673347909882365,
-        3.698585406144479,
-        3.4841206811716687,
-        3.481667675586262,
-        3.7538056024229003,
-        3.711241426498411
+        1.8910077668316188,
+        1.9598102333217935,
+        2.0640485122820533,
+        1.9655890563997316,
+        1.8464683047381558,
+        2.02935384126876,
+        1.976493890069836,
+        1.9328860474144474,
+        1.8311363385991408,
+        2.031823941498149,
+        2.110784196018191,
+        1.98838639467257,
+        1.9076233042769646,
+        2.0850062444122233,
+        2.049500330317386,
+        1.7749019935578212,
+        1.892136625385953,
+        2.0949579235096776,
+        1.9813112358184555,
+        1.9822299537826673,
+        1.7932892194052443,
+        1.9458818406246337,
+        2.002479949055699,
+        1.8771798448754802,
+        1.9115395246689388,
+        2.018218335208665,
+        2.022847397633282,
+        1.9316027297596843,
+        1.9291873649377576,
+        2.0497292027922502,
+        2.0788165596071577
       ]
     },
     "source_ablation": {
       "matches": true,
-      "episodes": 12,
-      "receipt_sha256": "aea6377b4843eb414d5c7f3ef15a2dd09ea133fa75ff29b1484b82c87e4ab54e"
+      "episodes": 32,
+      "receipt_sha256": "5f34f42f33114d14aa072ba48e5981523d629d9582f8bbc57312c0033f6e90ed"
     },
     "headroom": {
       "comparator_arm": "source_free_jit",
-      "median_primary_cost": 32,
+      "median_primary_cost": 6,
       "registered_minimum": 16,
-      "measurement_floor": false
+      "measurement_floor": true
     },
-    "analysis_sha256": "faf18f122e9bb4c78e18d6a81fe5c2c22b3f59e49dcc3e218a8706dcc069f032"
+    "analysis_sha256": "8f45d7b831defd464a62bde29077eedbacc47fafd492708ba6da5a5837780a07"
   },
-  "decision": "no-go",
+  "decision": "measurement-floor",
   "gate": {
-    "decision": "no-go",
+    "decision": "measurement-floor",
     "passed": false,
     "failures": [
-      "primary_ratio",
-      "primary_upper_limit",
-      "family_win_rate",
-      "family_win_lower_limit",
-      "primary_strata"
+      "measurement_floor"
     ],
     "checks": {
       "integrity_valid": true,
-      "all_final_answers_exact": true,
-      "all_certificates_valid": true,
-      "no_premature_commits": true,
-      "invalid_first_candidates_rejected": true,
-      "all_primary_episodes_solved": true,
-      "fallback_work_counted": true,
-      "primary_ratio": false,
-      "primary_upper_limit": false,
-      "family_win_rate": false,
-      "family_win_lower_limit": false,
-      "marginal_win_gates": true,
-      "primary_strata": false,
-      "mechanism_effects": true,
-      "factorial_interaction": true,
-      "derangement_median": true,
-      "derangement_randomization": true,
-      "source_ablation_matches_source_free": true
-    },
-    "registration_sha256": "6af32da4d57f606cda162763c5479accc3f75c2c7260ba352ddf2cf3c7635979",
-    "derangement": {
-      "observed": 3.337598033663958,
-      "derangements": 31,
-      "median": 3.5879605010746567,
-      "beats_median": true,
-      "p_value": 0.03125
+      "exact_run_valid": true,
+      "measurement_floor": true
     }
   },
   "provenance": {
     "schema": "zero.reasoner5_result_provenance.v1",
-    "manifest_sha256": "8c32a690a3067930b5b4ecb78658fdc161f204012521ebbf863a7625fa7f0447",
-    "raw_trace_sha256": "6f543d210a559617ed3dc51ca681121043f9b44cfc9a46d7fa1068496d992ad7",
-    "trace_coverage_sha256": "e3d8c69926d9e2637c23941f352ec1ef0ccb2decabbfe8d6c4629941f2ca5fc6",
+    "manifest_sha256": "f9d919b0965c9b5f518dcecbc7417db5c82654d6df44b157b2092e13f3912cf1",
+    "raw_trace_sha256": "9849e23ab387ce9bc079fe31110afeaa8d023960d9aa6ef5a1cd078c1e8b9fa7",
+    "trace_coverage_sha256": "2c908f11e94b0eef1a2a3eac71b9ca0b0cf2b45edd7532c3d924ed8ee81bb0ba",
     "analysis_contract_sha256": "8c7ac68c05b2055d2f8a13101db8ce9fafd62226a2517a8bdd08ecaed8250f9a",
     "analysis_settings_sha256": "01668a54278e8e51a839d9f881ffeeb74fb6a3cae4393194ead98aa4b930581c",
     "analysis_function_sha256": "1a9af62e746339ccd4cc648c3866dff42889571956220d361d4a6dd6696da847",
     "common_gate_registration_sha256": "6af32da4d57f606cda162763c5479accc3f75c2c7260ba352ddf2cf3c7635979",
-    "episodes": 12,
-    "rows": 504
+    "episodes": 32,
+    "rows": 1344
   },
-  "result_sha256": "c530a7c2469adf77d123f2bf9235d651cbbfa778be3b3ebbac7f41440a5e52f1"
+  "result_sha256": "4ad32bf0183d4adb4dd3cb2b273b2f801f4fdafbdb679b171cb5ee3c5e9f2baf"
 }

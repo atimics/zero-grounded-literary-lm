@@ -33,6 +33,10 @@ export const R58_GENERATORS = Object.freeze([
   "syntax-first",
   "behavior-skeleton",
 ]);
+export const R58_INPUT_GENERATORS = Object.freeze([
+  "seeded-distinct",
+  "fixed-zero-one",
+]);
 export const R58_SHIFT_STRATA = Object.freeze([
   "known-operation-new-composition",
   "changed-semantic-class-order",
@@ -420,25 +424,28 @@ function behaviorSkeletonOrder(left, right) {
   return left.class_index - right.class_index;
 }
 
-function selectEpisodeCandidate(lane, generatorIndex, stratumIndex, ordinal,
+export function selectEpisodeCandidate(lane, programGeneratorIndex,
+  stratumIndex, ordinal,
   rootSeed) {
   const universe = enumerateR58Universe();
   if (lane === "source-training") {
     const allSource = universe.candidates.filter(candidate =>
       candidate.ast.operations.length > 0 &&
       candidate.ast.operations.length <= 2);
-    const pool = allSource.filter((_, index) => index % 2 === generatorIndex);
-    if (generatorIndex === 1) pool.sort(behaviorSkeletonOrder);
+    const pool = allSource.filter((_, index) =>
+      index % 2 === programGeneratorIndex);
+    if (programGeneratorIndex === 1) pool.sort(behaviorSkeletonOrder);
     return pool[ordinal];
   }
-  const partition = (lane === "calibration" ? 0 : 2) + generatorIndex;
+  const partition = (lane === "calibration" ? 0 : 2) +
+    programGeneratorIndex;
   const pool = universe.candidates.filter(candidate =>
     candidate.ast.operations.length === 3 &&
     candidatePattern(candidate) === PATTERNS[stratumIndex] &&
     candidate.class_index % 4 === partition);
-  if (generatorIndex === 1) pool.sort(behaviorSkeletonOrder);
+  if (programGeneratorIndex === 1) pool.sort(behaviorSkeletonOrder);
   const rng = createDeterministicRng(rootSeed,
-    `r58-program-${lane}-${generatorIndex}-${stratumIndex}`);
+    `r58-program-${lane}-${programGeneratorIndex}-${stratumIndex}`);
   return pool[(rng.index(pool.length) + ordinal) % pool.length];
 }
 
@@ -453,17 +460,14 @@ function surfacePermutation(rootSeed, coordinates) {
   return values;
 }
 
-function exampleInputs(rootSeed, coordinates, generatorIndex) {
+export function exampleInputs(rootSeed, coordinates, inputGeneratorIndex) {
+  if (inputGeneratorIndex === 1) return [0, 1];
   const rng = createDeterministicRng(rootSeed,
     `r58-input-${coordinates.join("-")}`);
   const inputs = [];
-  if (generatorIndex === 1) {
-    inputs.push(0);
-  } else {
-    while (inputs.length < 1) {
-      const value = rng.index(R58_MODULUS);
-      if (!inputs.includes(value)) inputs.push(value);
-    }
+  while (inputs.length < 2) {
+    const value = rng.index(R58_MODULUS);
+    if (!inputs.includes(value)) inputs.push(value);
   }
   return inputs;
 }
@@ -482,24 +486,31 @@ export function replayR58Episode(recipe) {
   assert.equal(recipe.schema, "zero.reasoner5_replay_recipe.v1");
   const path = recipe.seed_binding.derivation_path;
   assert.equal(path[0], "reasoner58-episode-v1");
-  const [, laneCode, generatorIndex, stratumIndex, ordinal] = path;
+  const [, laneCode, programGeneratorIndex, inputGeneratorIndex,
+    stratumIndex, ordinal] = path;
   const lane = Object.keys(LANE_CODE).find(key => LANE_CODE[key] === laneCode);
   assert(lane && lane !== "sealed", "R5.8 replay lane");
-  assert([0, 1].includes(generatorIndex), "R5.8 replay generator");
+  assert([0, 1].includes(programGeneratorIndex),
+    "R5.8 replay program generator");
+  assert([0, 1].includes(inputGeneratorIndex),
+    "R5.8 replay input generator");
   assert(Number.isInteger(stratumIndex) && stratumIndex >= 0 &&
     stratumIndex < R58_SHIFT_STRATA.length, "R5.8 replay stratum");
   assert(Number.isInteger(ordinal) && ordinal >= 0, "R5.8 replay ordinal");
   const rootSeed = recipe.seed_binding.root_seed;
-  const coordinates = [laneCode, generatorIndex, stratumIndex, ordinal];
-  const candidate = selectEpisodeCandidate(lane, generatorIndex,
+  const coordinates = [laneCode, programGeneratorIndex, inputGeneratorIndex,
+    stratumIndex, ordinal];
+  const programCoordinates = [laneCode, programGeneratorIndex, stratumIndex,
+    ordinal];
+  const candidate = selectEpisodeCandidate(lane, programGeneratorIndex,
     stratumIndex, ordinal, rootSeed);
   const surface = lane === "source-training"
     ? Array.from({ length: OPERATION_SPECS.length }, (_, index) => index)
-    : surfacePermutation(rootSeed, coordinates);
+    : surfacePermutation(rootSeed, programCoordinates);
   const symbolByOperation = Array(OPERATION_SPECS.length);
   for (let symbol = 0; symbol < surface.length; symbol += 1)
     symbolByOperation[surface[symbol]] = `u${symbol}`;
-  const inputs = exampleInputs(rootSeed, coordinates, generatorIndex);
+  const inputs = exampleInputs(rootSeed, coordinates, inputGeneratorIndex);
   const examples = inputs.map(input => ({
     input_symbol: input,
     observed_symbol: candidate.semantic[input],
@@ -529,7 +540,8 @@ export function replayR58Episode(recipe) {
       episode_spec: {
         protocol: "zero.reasoner58_episode_spec.v1",
         lane_code: laneCode,
-        generator_code: generatorIndex,
+        program_generator_code: programGeneratorIndex,
+        input_generator_code: inputGeneratorIndex,
         stratum_code: stratumIndex,
         ordinal,
         operation_roles: [...operations],
@@ -555,11 +567,13 @@ const GENERATOR_SPECS = R58_GENERATORS.map((generator, index) => ({
   rule: index === 0 ? "syntax-first canonical enumeration" :
     "behavior signature skeleton then shortest syntax",
 }));
-const INPUT_GENERATOR_SPECS = R58_GENERATORS.map((generator, index) => ({
+const INPUT_GENERATOR_SPECS = R58_INPUT_GENERATORS.map((generator, index) => ({
   schema: "zero.reasoner58_input_generator.v1",
   generator,
-  rule: index === 0 ? "two seeded distinct field values" :
-    "fixed finite-field anchors zero and one",
+  index,
+  public_values: 2,
+  rule: index === 0 ? "two seeded distinct GF(17) values" :
+    "fixed GF(17) anchors zero and one",
 }));
 export const R58_GENERATOR_DIGESTS = Object.freeze(GENERATOR_SPECS.map(spec =>
   canonicalDigest("reasoner58-program-generator", spec)));
@@ -568,62 +582,75 @@ export const R58_INPUT_GENERATOR_DIGESTS = Object.freeze(
     canonicalDigest("reasoner58-input-generator", spec)),
 );
 
-function episodeRecipe(lane, generatorIndex, stratumIndex, ordinal) {
+function episodeRecipe(lane, programGeneratorIndex, inputGeneratorIndex,
+  stratumIndex, ordinal) {
   const recipe = {
     schema: "zero.reasoner5_replay_recipe.v1",
-    generator_sha256: R58_GENERATOR_DIGESTS[generatorIndex],
-    input_generator_sha256: R58_INPUT_GENERATOR_DIGESTS[generatorIndex],
+    generator_sha256: R58_GENERATOR_DIGESTS[programGeneratorIndex],
+    input_generator_sha256: R58_INPUT_GENERATOR_DIGESTS[inputGeneratorIndex],
     replay_function_sha256: replayFunctionDigest(replayR58Episode),
     seed_binding: {
       root_seed: LANE_ROOT[lane],
       derivation_path: ["reasoner58-episode-v1", LANE_CODE[lane],
-        generatorIndex, stratumIndex, ordinal],
+        programGeneratorIndex, inputGeneratorIndex, stratumIndex, ordinal],
     },
   };
   return recipe;
 }
 
-function familyId(lane, generatorIndex, stratumIndex, ordinal) {
+function familyId(lane, programGeneratorIndex, stratumIndex, ordinal) {
   const laneName = lane.replace("source-training", "source");
-  return `r58-${laneName}-g${generatorIndex}-s${stratumIndex}-${String(ordinal)
-    .padStart(2, "0")}`;
+  return `r58-${laneName}-pg${programGeneratorIndex}` +
+    `-s${stratumIndex}-${String(ordinal).padStart(2, "0")}`;
+}
+
+function generatorEnvironmentId(programGeneratorIndex) {
+  return R58_GENERATORS[programGeneratorIndex];
 }
 
 function registeredFamilies() {
   const families = [];
   let serial = 0;
-  const add = (lane, generatorIndex, stratumIndex, ordinal) => {
+  const add = (lane, programGeneratorIndex, inputGeneratorIndexes,
+    stratumIndex, ordinal) => {
     families.push({
-      family_id: familyId(lane, generatorIndex, stratumIndex, ordinal),
+      family_id: familyId(lane, programGeneratorIndex, stratumIndex, ordinal),
       lane,
-      generator_id: R58_GENERATORS[generatorIndex],
+      generator_id: generatorEnvironmentId(programGeneratorIndex),
       shift_stratum: lane === "source-training"
         ? "short-source-composition"
         : R58_SHIFT_STRATA[stratumIndex],
       family_spec: {
         schema: "zero.reasoner58_family_spec.v1",
         field: "GF17",
-        construction: R58_GENERATORS[generatorIndex],
+        program_construction: R58_GENERATORS[programGeneratorIndex],
+        input_construction: lane === "source-training"
+          ? R58_INPUT_GENERATORS[inputGeneratorIndexes[0]]
+          : "complete registered input-generator cross",
+        input_generator_ids: inputGeneratorIndexes.map(index =>
+          R58_INPUT_GENERATORS[index]),
         composition_pattern: lane === "source-training" ? "source-depth-two" :
           PATTERNS[stratumIndex],
+        program_family_ordinal: ordinal,
         reserved_index: serial,
       },
-      coordinates: { lane, generatorIndex, stratumIndex, ordinal },
+      coordinates: { lane, programGeneratorIndex, inputGeneratorIndexes,
+        stratumIndex, ordinal },
     });
     serial += 1;
   };
-  for (let generator = 0; generator < 2; generator += 1)
+  for (let programGenerator = 0; programGenerator < 2; programGenerator += 1)
     for (let ordinal = 0; ordinal < 32; ordinal += 1)
-      add("source-training", generator, ordinal % 4, ordinal);
-  for (let generator = 0; generator < 2; generator += 1)
+      add("source-training", programGenerator,
+        [Math.floor(ordinal / 4) % 2], ordinal % 4, ordinal);
+  for (const lane of ["calibration", "development", "sealed"])
     for (let stratum = 0; stratum < 4; stratum += 1)
-      add("calibration", generator, stratum, 0);
-  for (let stratum = 0; stratum < 4; stratum += 1)
-    for (let ordinal = 0; ordinal < 3; ordinal += 1)
-      add("development", (ordinal + stratum) % 2, stratum, ordinal);
-  for (let stratum = 0; stratum < 4; stratum += 1)
-    for (let ordinal = 0; ordinal < 3; ordinal += 1)
-      add("sealed", (ordinal + stratum + 1) % 2, stratum, ordinal);
+      for (let programGenerator = 0; programGenerator < 2;
+           programGenerator += 1)
+        for (let programFamilyOrdinal = 0; programFamilyOrdinal < 2;
+             programFamilyOrdinal += 1)
+          add(lane, programGenerator, [0, 1], stratum,
+            programFamilyOrdinal);
   return families;
 }
 
@@ -787,41 +814,45 @@ export function buildR58Manifest(artifact) {
   freezeFamilySplits(state);
   const candidates = episodeCandidates();
   for (const family of selectedEpisodeFamilies(families)) {
-    const { lane, generatorIndex, stratumIndex, ordinal } = family.coordinates;
-    const recipe = episodeRecipe(lane, generatorIndex, stratumIndex, ordinal);
-    const content = replayR58Episode(recipe);
-    assertRankerView(content.public, {
-      whitelist: R58_RANKER_POLICY.leaf_whitelist,
-      leafContracts: R58_RANKER_POLICY.leaf_contracts,
-    });
-    const receipts = parityReceipts(content, candidates);
-    const base = receipts[0];
-    const episodeId = `${family.family_id}-repeat-0`;
-    registerEpisode(state, {
-      episode_id: episodeId,
-      lane,
-      family_id: family.family_id,
-      cross_family_id: null,
-      nested_repeat_id: "repeat-0",
-      seed_ref: canonicalDigest("episode-seed-reference", recipe),
-      replay_recipe: recipe,
-      ranker_policy: R58_RANKER_POLICY,
-      public: content.public,
-      evaluator: content.evaluator,
-      expected_arms: [...R58_ARMS],
-      arm_parity_receipts: receipts,
-      trace_binding: {
-        candidate_universe_digest: canonicalDigest("candidate-universe",
-          base.candidate_multiset),
-        grammar_digest: base.grammar_sha256,
-        initial_evidence_digest: base.initial_evidence_sha256,
-        allowed_actions_digest: base.allowed_actions_sha256,
-        latent_episode_digest: base.latent_episode_sha256,
-        potential_response_digest: base.potential_response_sha256,
-        verifier_digest: base.verifier_sha256,
-        caps_digest: base.caps_sha256,
-      },
-    });
+    const { lane, programGeneratorIndex, inputGeneratorIndexes, stratumIndex,
+      ordinal } = family.coordinates;
+    for (const inputGeneratorIndex of inputGeneratorIndexes) {
+      const recipe = episodeRecipe(lane, programGeneratorIndex,
+        inputGeneratorIndex, stratumIndex, ordinal);
+      const content = replayR58Episode(recipe);
+      assertRankerView(content.public, {
+        whitelist: R58_RANKER_POLICY.leaf_whitelist,
+        leafContracts: R58_RANKER_POLICY.leaf_contracts,
+      });
+      const receipts = parityReceipts(content, candidates);
+      const base = receipts[0];
+      const episodeId = `${family.family_id}-ig${inputGeneratorIndex}-repeat-0`;
+      registerEpisode(state, {
+        episode_id: episodeId,
+        lane,
+        family_id: family.family_id,
+        cross_family_id: null,
+        nested_repeat_id: `input-generator-${inputGeneratorIndex}`,
+        seed_ref: canonicalDigest("episode-seed-reference", recipe),
+        replay_recipe: recipe,
+        ranker_policy: R58_RANKER_POLICY,
+        public: content.public,
+        evaluator: content.evaluator,
+        expected_arms: [...R58_ARMS],
+        arm_parity_receipts: receipts,
+        trace_binding: {
+          candidate_universe_digest: canonicalDigest("candidate-universe",
+            base.candidate_multiset),
+          grammar_digest: base.grammar_sha256,
+          initial_evidence_digest: base.initial_evidence_sha256,
+          allowed_actions_digest: base.allowed_actions_sha256,
+          latent_episode_digest: base.latent_episode_sha256,
+          potential_response_digest: base.potential_response_sha256,
+          verifier_digest: base.verifier_sha256,
+          caps_digest: base.caps_sha256,
+        },
+      });
+    }
   }
   const splitDivergence = [];
   for (const [leftLane, rightLane] of [["source-training", "development"],
@@ -879,13 +910,16 @@ export function buildR58Manifest(artifact) {
 export function createR58ReplayRegistry() {
   const registry = createReplayRegistry();
   const digest = replayFunctionDigest(replayR58Episode);
-  for (let index = 0; index < R58_GENERATORS.length; index += 1)
-    registerReplayPipeline(registry, {
-      generator_sha256: R58_GENERATOR_DIGESTS[index],
-      input_generator_sha256: R58_INPUT_GENERATOR_DIGESTS[index],
-      replay_function_sha256: digest,
-      replay: replayR58Episode,
-    });
+  for (let programGenerator = 0; programGenerator < R58_GENERATORS.length;
+       programGenerator += 1)
+    for (let inputGenerator = 0;
+         inputGenerator < R58_INPUT_GENERATORS.length; inputGenerator += 1)
+      registerReplayPipeline(registry, {
+        generator_sha256: R58_GENERATOR_DIGESTS[programGenerator],
+        input_generator_sha256: R58_INPUT_GENERATOR_DIGESTS[inputGenerator],
+        replay_function_sha256: digest,
+        replay: replayR58Episode,
+      });
   return registry;
 }
 
