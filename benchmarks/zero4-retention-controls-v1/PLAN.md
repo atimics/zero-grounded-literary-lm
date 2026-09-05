@@ -78,7 +78,7 @@ conflicting gradient. The native training smoke records whether projection
 fires on its actual attempts. Both outcomes remain in the report.
 
 ```bash
-make LITERARY_BACKEND=portable literary_lm build/literary_retention_lm freeze_literary_teacher export_literary quantity_request_eval
+make -f Makefile.zero4-retention LITERARY_BACKEND=portable literary_lm build/literary_retention_lm freeze_literary_teacher export_literary quantity_request_eval
 python3 scripts/check_zero4_retention_controls.py --out build/zero4-retention-smoke
 ```
 

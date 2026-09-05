@@ -33,6 +33,8 @@ missing experiment-registry entry. It also found that adding diagnostics to
 the historical trainer broke four studies' source bindings. The new build
 preserves that trainer and applies a checked patch to a separate output file.
 The smoke creates its parent directories and the registry includes this study.
+The next CI run found that the shared Makefile was also bound by Reasoner.
+A separate Makefile now holds the diagnostic trainer targets.
 
 The smoke retains its zero final-artifact count and inactive projection. These
 observations belong to the known toy fixture. The earlier Q2.6 scientific

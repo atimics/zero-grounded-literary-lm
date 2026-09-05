@@ -907,12 +907,6 @@ zero_lm: zero_lm.c zero1_protocol.h
 literary_lm: literary_lm.c channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) literary_lm.c -o $@ $(LITERARY_LDLIBS)
 
-build/literary_retention.c: literary_lm.c scripts/zero4_retention.patch scripts/build_zero4_retention_source.py
-	python3 scripts/build_zero4_retention_source.py --out $@
-
-build/literary_retention_lm: build/literary_retention.c channel_protocol.h zero1_protocol.h
-	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) -I. build/literary_retention.c -o $@ $(LITERARY_LDLIBS)
-
 zero5_lm: zero5_lm.c channel_protocol.h zero1_protocol.h
 	$(CC) $(CFLAGS) $(LITERARY_CFLAGS) zero5_lm.c -o $@ $(LITERARY_LDLIBS)
 

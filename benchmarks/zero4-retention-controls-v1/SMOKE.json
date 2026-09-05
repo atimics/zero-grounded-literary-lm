@@ -144,7 +144,8 @@
   "schema": "zero.retention_controls_smoke.v1",
   "scope": "engineering_smoke",
   "sources": {
-    "Makefile": "7ed08b697634ea1dc289ab59c6fa5e0e35d877fd69ffea202eada3f4e159a46e",
+    "Makefile": "224a1439c9b322783c694cc2519bb8f5b4711e59b06e2a3b99eeefa34cfda067",
+    "Makefile.zero4-retention": "35a639ceb37f044ffc3dc2f5671f2779b7fbcb0c4f00832e5b99da975e017e3a",
     "channel_protocol.h": "0b382e315c8acd369973bb9377305d5ceae9ec387e7dbbc4e91ae670ef6f74e2",
     "export_literary.c": "c7b1ba5a2763211871df1720f01f49b765365253924b7d4c1113643403ce463c",
     "faculty_controller.c": "42681a75a11660aba6d9b274398abbc1ddc51f35f324302e01b994ea1e0627d9",
@@ -157,7 +158,7 @@
     "quantity_oracle.h": "8436a4793c1055c68f5e5ad5860bddf1e6d79716226a7b797c41078d4eb86701",
     "quantity_request_eval.c": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902",
     "scripts/build_zero4_retention_source.py": "094527ad47c9c2fcd0d6db5d13dbdb85a8b95643ab8e6d401fe797c5f8d2f2d6",
-    "scripts/check_zero4_retention_controls.py": "9be08e584b25c3a46b19034e02b782c208fe3bb91fa28df9ed467861c8d3f62d",
+    "scripts/check_zero4_retention_controls.py": "8e500d65264f7f5eedfdad0575533ae01df7635e2d461d5c7d35406cc7d823ad",
     "scripts/generate_zero4_q2.mjs": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded",
     "scripts/run_zero4_retention_controls.py": "0b900a85c570c0f2f35c7f1070776edcf0aa93ecce270e75bd54498edf47fd10",
     "scripts/zero4_retention.patch": "54f051a9c0e2456322145ab94eca2b441d8500f904fc4a74ff462adf069486f6",

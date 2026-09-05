@@ -36,7 +36,7 @@ def smoke(directory):
                     "quantity_request_eval.c", "quantity_oracle.c", "quantity_oracle.h",
                     "faculty_controller.c", "faculty_protocol.h", "literary_infer.c", "literary_infer.h",
                     "scripts/run_zero4_retention_controls.py", "scripts/check_zero4_retention_controls.py",
-                    "scripts/generate_zero4_q2.mjs", "freeze_literary_teacher.c", "Makefile",
+                    "scripts/generate_zero4_q2.mjs", "freeze_literary_teacher.c", "Makefile", "Makefile.zero4-retention",
                     "scripts/zero4_retention.patch", "scripts/build_zero4_retention_source.py"]
     manifest = {
         "schema": "zero.retention_controls.v1", "scope": "engineering_smoke", "arms": ARMS,
