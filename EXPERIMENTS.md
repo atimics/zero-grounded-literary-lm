@@ -254,6 +254,7 @@ invalidated trajectories, frontier checkpoints, or notices:
 | `selection.json` | If checkpoint selected | Selection policy, selected checkpoint, metrics |
 | `events.jsonl` | If multi-phase | Append-only training/evaluation event log |
 | `EVALUATION-NOTICE.md` | If errata | Corrections, caveats, known issues |
+| **zero4-retention-controls-v1** | `benchmarks/zero4-retention-controls-v1` | 2026-09-05 | Matched replay, guard, and projection controls | Adds a five-arm runner with complete process costs, sample traces, and saved checkpoints. | Does the runner preserve matched work and score complete final artifacts? | All five known toy arms complete; each scores 0/5 final artifacts and 5/5 oracle arithmetic. | Engineering checks pass; zero final answers and inactive projection remain recorded. | Freeze fresh cohorts and the cloud package |
 
 ---
 
