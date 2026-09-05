@@ -210,7 +210,49 @@ def training_args(manifest, root, arm, seed, directory, offset):
     return result
 
 
-def measure(manifest, root, processes, owner, directory, model, initial, offset):
+def check_retention_ranges(record, sources, requested_batches):
+    require(record["schema"] == "zero.literary_eval.v2", "retention schema differs")
+    count = len(sources)
+    windows = max(requested_batches // count, 1)
+    require(record["requested_validation_batches"] == requested_batches
+            and record["validation_batches"] == max(requested_batches, count)
+            and record["evaluated_windows"] == windows * count,
+            "retention window coverage differs")
+    require(math.isfinite(record["loss"]) and record["loss"] > 0, "invalid retention loss")
+    require(len(record["ranges"]) == count, "retention source roster differs")
+    result = []
+    for index, (row, source) in enumerate(zip(record["ranges"], sources)):
+        require(type(row["index"]) is int and row["index"] == index, "retention source order differs")
+        require(row["channel"] == int(source["kind"] == "channel")
+                and row["foundation"] == int(source["kind"] == "foundation"),
+                "retention source kind differs")
+        require(type(row["windows"]) is int and row["windows"] == windows,
+                "retention source windows differ")
+        require(math.isfinite(row["loss"]) and row["loss"] > 0
+                and math.isfinite(row["weight"]) and row["weight"] > 0,
+                "invalid retention source loss or weight")
+        result.append({"index": index, "source_sha256": source["file"]["sha256"],
+                       "kind": source["kind"], "weight": row["weight"],
+                       "windows": row["windows"], "loss": row["loss"]})
+    mean = sum(row["weight"] * row["loss"] for row in result) / sum(row["weight"] for row in result)
+    # Native aggregation rounds its products, sums, and divisions to float32.
+    require(math.isclose(mean, record["loss"], rel_tol=2e-6, abs_tol=1e-7),
+            "retention aggregate differs from source losses")
+    return result
+
+
+def retention_changes(rows, baseline):
+    require(len(rows) == len(baseline), "retention baseline roster differs")
+    result = []
+    for row, initial in zip(rows, baseline):
+        require(all(row[key] == initial[key] for key in ["index", "source_sha256", "kind", "weight", "windows"]),
+                "retention baseline identity differs")
+        require(math.isfinite(initial["loss"]) and initial["loss"] > 0, "invalid retention baseline loss")
+        result.append({**row, "relative_regression": (row["loss"] - initial["loss"]) / initial["loss"]})
+    return result
+
+
+def measure(manifest, root, processes, owner, directory, model, initial, offset, baseline=None):
     model_sha = sha(model)
     retained = None
     if not initial:
@@ -227,8 +269,8 @@ def measure(manifest, root, processes, owner, directory, model, initial, offset)
     arguments += data_args(manifest["retention_eval"], root)
     processes.run(arguments, owner, "retention_evaluation")
     replay = json.loads(replay_file.read_bytes())
-    require(replay["schema"] == "zero.literary_eval.v1" and math.isfinite(replay["loss"])
-            and replay["loss"] > 0, "invalid retention loss")
+    ranges = check_retention_ranges(replay, manifest["retention_eval"], manifest["validation_batches"])
+    ranges = retention_changes(ranges, baseline["retention_by_source"] if baseline else ranges)
     require(replay["learned_state_before"] == replay["learned_state_after"], "evaluation changed learned state")
     quantized = directory / f"checkpoint-{offset:06d}.litq8"
     processes.run([str(bound_path(manifest["binaries"]["export"], root)), str(model), str(quantized)], owner, "export")
@@ -244,6 +286,8 @@ def measure(manifest, root, processes, owner, directory, model, initial, offset)
     return {"attempts": offset, "model_sha256": model_sha,
             "retained_checkpoint": retained.name if retained else None, "quantized_sha256": sha(quantized),
             "retention_loss": replay["loss"], "quantity": quantity,
+            "retention_by_source": ranges,
+            "worst_source_relative_regression": max(row["relative_regression"] for row in ranges),
             "cpu_us": processes.cpu(owner), "learned_state": replay["learned_state_after"]}
 
 
@@ -330,7 +374,7 @@ def run_study(manifest, root, output):
                         require(offset < progress["attempts"] <= offset + manifest["chunk_attempts"], "attempt count differs")
                         verify_sample_roster(directory / "samples.jsonl", progress["attempts"], manifest["batch"])
                         snapshot = measure(manifest, root, processes, state["owner"], directory,
-                                           directory / "active.ckpt", False, progress["attempts"])
+                                           directory / "active.ckpt", False, progress["attempts"], state["snapshots"][0])
                         snapshot["checkpoint"] = progress
                         state["snapshots"].append(snapshot)
                         if progress["attempts"] != offset + manifest["chunk_attempts"] or progress["rejections"] >= 8:
