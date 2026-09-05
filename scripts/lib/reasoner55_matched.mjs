@@ -22,7 +22,8 @@ const files = ["reasoner55_matched_transfer.c", "reasoner55_fast_search.c", "rea
   "reasoner55_semantic_guide.c", "reasoner55_fixed_transfer.c", "scripts/embed_reasoner55_fast.mjs",
   "scripts/lib/reasoner55_matched.mjs", "scripts/run_reasoner55_matched.mjs", "scripts/check_reasoner55_matched.mjs", "Makefile.reasoner55-matched",
   "scripts/lib/reasoner55_fixed_transfer.mjs", "scripts/lib/reasoner55_semantic_guide.mjs",
-  "scripts/lib/reasoner55_replay.mjs", "scripts/lib/reasoner5_harness.mjs",
+  "scripts/lib/reasoner55_replay.mjs", "scripts/lib/reasoner5_harness.mjs", "scripts/zero_data_lib.mjs",
+  "Makefile", "Makefile.reasoner55",
   `${DIAGNOSTICS}/DIAGNOSTICS.json`, `${ORIGINAL}/DEVELOPMENT-TRACE.jsonl`,
   "benchmarks/reasoner55-fixed-transfer-v1/RESULTS.json", PLAN, MODEL];
 export const sourceBindings = () => Object.fromEntries(files.map(path => [path, sha(readFileSync(resolve(ROOT, path)))]));
