@@ -15,3 +15,17 @@ reasoner55-diagnostics-check: build/reasoner55_diagnostics
 
 reasoner55-experiments-check: reasoner55-diagnostics-check
 check: reasoner55-experiments-check
+
+build/reasoner55_semantic_guide: reasoner55_semantic_guide.c reasoner55_diagnostics.c reasoner55.c reasoner55.h
+	mkdir -p build
+	$(CC) $(CFLAGS) reasoner55_semantic_guide.c -lm -o $@
+
+.PHONY: reasoner55-semantic-guide reasoner55-semantic-guide-check
+reasoner55-semantic-guide: build/reasoner55_semantic_guide
+	node scripts/run_reasoner55_semantic_guide.mjs --write
+
+reasoner55-semantic-guide-check: build/reasoner55_semantic_guide
+	./build/reasoner55_semantic_guide --self-test
+	node scripts/check_reasoner55_semantic_guide.mjs
+
+reasoner55-experiments-check: reasoner55-semantic-guide-check
