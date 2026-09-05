@@ -1,0 +1,13 @@
+include Makefile.reasoner55
+
+build/reasoner55_matched_plain: reasoner55_matched_transfer.c $(R55FAST_HEADERS)
+	$(CC) $(CFLAGS) -I. -DR55FAST_HASH=0 -DR55FAST_SORT=0 $< -lm -o $@
+
+build/reasoner55_matched_fast: reasoner55_matched_transfer.c $(R55FAST_HEADERS)
+	$(CC) $(CFLAGS) -I. -DR55FAST_HASH=1 -DR55FAST_SORT=1 $< -lm $(R55FAST_CRYPTO_LIBS) -o $@
+
+.PHONY: reasoner55-matched-build reasoner55-matched-check
+reasoner55-matched-build: build/reasoner55_matched_plain build/reasoner55_matched_fast
+
+reasoner55-matched-check: reasoner55-matched-build
+	node scripts/check_reasoner55_matched.mjs
