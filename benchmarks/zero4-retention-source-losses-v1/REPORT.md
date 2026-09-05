@@ -48,6 +48,11 @@ scoring. [FAILURES.json](FAILURES.json) preserves the failed process and stderr
 digests. The corrected fixture uses two fixed ASCII strings. These inputs
 serve engineering checks; fresh language evidence remains a separate study.
 
+The first PR check also found that this report's directory was missing from
+`EXPERIMENTS.md`. The Linux and macOS native smokes passed, while the result
+registry check failed. Adding the entry repaired the index. The failed job is
+preserved in [CI-FAILURE.json](CI-FAILURE.json).
+
 ## Reproduce
 
 ```bash

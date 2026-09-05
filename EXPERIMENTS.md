@@ -255,6 +255,7 @@ invalidated trajectories, frontier checkpoints, or notices:
 | `events.jsonl` | If multi-phase | Append-only training/evaluation event log |
 | `EVALUATION-NOTICE.md` | If errata | Corrections, caveats, known issues |
 | **zero4-retention-controls-v1** | `benchmarks/zero4-retention-controls-v1` | 2026-09-05 | Matched replay, guard, and projection controls | Adds a five-arm runner with complete process costs, sample traces, and saved checkpoints. | Does the runner preserve matched work and score complete final artifacts? | All five known toy arms complete; each scores 0/5 final artifacts and 5/5 oracle arithmetic. | Engineering checks pass; zero final answers and inactive projection remain recorded. | Freeze fresh cohorts and the cloud package |
+| **zero4-retention-source-losses-v1** | `benchmarks/zero4-retention-source-losses-v1` | 2026-09-05 | Retention loss and coverage by source | Records each source's loss, weight, windows, and change during the existing evaluation forwards. | Can the runner reveal damage to one source when the combined mean stays steady? | Eleven focused checks, 35 native numerical checks, and the 79-process smoke pass; six mixed-source losses match separate evaluations exactly. | Engineering checks pass; the vocabulary fixture and missing registry entry failures are retained. | Freeze fresh source limits and a separate language screen |
 
 ---
 
