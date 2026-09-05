@@ -185,25 +185,27 @@ export function sourceBindings() {
     `${DIAGNOSTICS}/DIAGNOSTICS.json`,`${ORIGINAL}/DEVELOPMENT-TRACE.jsonl`];
   return Object.fromEntries(files.map(f=>[f,sha256(readFileSync(resolve(ROOT,f)))]));
 }
-export function validateResults(result,cohort=generateCohort()) {
+export function validateResults(result,cohort=generateCohort(),progress=()=>{}) {
   assert.equal(result.schema,"zero.reasoner55_fixed_transfer.v1");
   assert.deepEqual(result.source_bindings,sourceBindings());
   assert.deepEqual(result.families,cohort.records,"independent complete family selection");
   const model=loadModel(); assert.equal(result.model_sha256,MODEL_SHA);
   assert.deepEqual(result.arms.map(a=>a.arm),ARMS);
-  const references=new Map(), cache=new Map();
+  const references=new Map();
   for(const original of cohort.families)
     for(let source=0;source<2;source++) for(let tie=0;tie<2;tie++) {
       const family={...original,sourceGenerator:source,tie,tieSalt:deriveR55TieSalt(original.familySeed,source,tie)};
       const digest=sha256(Buffer.concat([Buffer.from("reasoner55-affine\0"),Buffer.from([...family.target.matrix,...family.target.bias])]));
       references.set(`0:${family.ordinal}:${source}:${tie}`,{family,row:{accepted_semantic_sha256:digest}});
     }
-  const context={references,bases:new Map()};
   let replayed=0;
-  for(const [a,arm] of result.arms.entries()) {
+  for(const arm of result.arms)
     assert.deepEqual(arm.rows.map(r=>r.episode),Array.from({length:512},(_,i)=>i));
-    for(const original of arm.rows) {
-      const ordinal=Math.floor(original.episode/4),source=Math.floor(original.episode/2)%2,tie=original.episode%2;
+  for(let ordinal=0;ordinal<128;ordinal++) {
+    // Candidate caches live for one target while all six methods are checked.
+    const cache=new Map(),context={references,bases:new Map()};
+    for(const [a,arm] of result.arms.entries()) for(const original of arm.rows.slice(ordinal*4,ordinal*4+4)) {
+      const source=Math.floor(original.episode/2)%2,tie=original.episode%2;
       const reference=references.get(`0:${ordinal}:${source}:${tie}`),family=reference.family;
       const row={...original,target_generator:0,ordinal,source_generator:source,tie,
         family_seed:family.familySeed.toString(16).padStart(16,"0")};
@@ -217,6 +219,7 @@ export function validateResults(result,cohort=generateCohort()) {
       } else replayRow(row,[1,3,5,7][a-2],model,context);
       assert.equal(row.exact,true); assert.equal(row.injected_invalid_rejected,true); replayed++;
     }
+    if((ordinal+1)%16===0) progress(ordinal+1);
   }
   return {families:128,episodes_per_arm:512,replayed_rows:replayed,exact_answers:replayed,
     source_sequence_exclusions:cohort.source_sequence_exclusions,model_bytes:1863};

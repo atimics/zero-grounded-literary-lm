@@ -29,7 +29,8 @@ for(let pass=0;pass<12;pass++) {
   }
   console.error(`Balanced timing pass ${pass+1}/12 complete.`);
 }
-result.evidence=validateResults(result,cohort);
+writeFileSync(resolve(ROOT,"build/reasoner55-fixed-transfer-collected.json"),JSON.stringify({result,timing}));
+result.evidence=validateResults(result,cohort,count=>console.error(`Independent replay: ${count}/128 families complete.`));
 const analysis=analyze(result,timing);
 const resultBytes=`${JSON.stringify(result,null,2)}\n`;
 timing.result_sha256=sha256(resultBytes);
