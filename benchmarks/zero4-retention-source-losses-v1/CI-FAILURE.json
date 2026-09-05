@@ -1,0 +1,14 @@
+{
+  "scope": "engineering_registry_failure",
+  "source_commit": "973fe8f6c956366bff267e65dceae58b851f7881",
+  "run_id": 33988242311,
+  "job_id": 101365660494,
+  "job_url": "https://github.com/atimics/zero-grounded-literary-lm/actions/runs/33988242311/job/101365660494",
+  "command": "python3 scripts/verify_results.py",
+  "exit_code": 1,
+  "error": "FAIL: benchmark directories missing from EXPERIMENTS.md: zero4-retention-source-losses-v1",
+  "local_reproduction": "same command and error at the recorded source commit",
+  "resolution": "Add the source-loss report directory to EXPERIMENTS.md and rerun the registry check.",
+  "job_log_sha256": "027ebba21092b6421a4534df990e09872c35fb61fa40adf718036ac6d06e421c",
+  "job_log_bytes": 14124
+}

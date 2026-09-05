@@ -35,6 +35,7 @@ belong in the manifest before a run starts.
 Every completed snapshot contains:
 
 - Full-precision native retention loss on six evaluation files.
+- Loss, weight, scored windows, and change from the initial model for each source.
 - Chosen-request and final-artifact counts from the quantity evaluator.
 - Controller argument-binding and oracle arithmetic counts as separate fields.
 - Source model, quantized model, and learned-state identities.

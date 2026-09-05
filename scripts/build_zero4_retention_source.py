@@ -8,7 +8,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_SHA256 = "5f4c47e0fedcc0f96d5eafcd8f45f6bfc4808a1d1af7434cb188693449ff53e3"
-RESULT_SHA256 = "944f28fdbc04185cbac905ccc78293fe3d0d8b259bbdc9d508d28123e543b99f"
+RESULT_SHA256 = "79d7b277a958ace1b5a952bf4c6a0cd731c2344e17fc67db332d5be571082fba"
 
 
 def build_source(source, patch, output):

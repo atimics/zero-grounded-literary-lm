@@ -9,7 +9,8 @@ import unittest
 
 from run_zero4_retention_controls import (ARMS, ROOT, ProcessLog, checkpoint, run_study,
                                           select_at_budget, sha, training_args, write_json,
-                                          finish_owner_cost, verify_sample_roster)
+                                          finish_owner_cost, verify_sample_roster,
+                                          check_retention_ranges, retention_changes)
 from build_zero4_retention_source import build_source
 
 LM = ROOT / "build/literary_retention_lm"
@@ -17,6 +18,46 @@ LM = ROOT / "build/literary_retention_lm"
 
 def binding(path):
     return {"path": str(path.resolve()), "sha256": sha(path)}
+
+
+def mixed_source_probe(processes, initial, task_path, directory):
+    directory.mkdir()
+    (directory / "letters.txt").write_text("alpha beta gamma delta. letters form words.\n" * 200)
+    (directory / "numbers.txt").write_text("1 2 3 5 8 13 21. count each value once.\n" * 200)
+    sources = [{"kind": kind, "file": binding(path)} for kind, path in [
+        ("foundation", ROOT / "corpus/zero-foundation.txt"),
+        ("text", ROOT / "corpus/blake.txt"),
+        ("text", directory / "letters.txt"),
+        ("text", directory / "numbers.txt"),
+        ("channel", task_path),
+        ("text", ROOT / "corpus/blake.txt")]]
+    arguments = [str(LM), "--init", initial["path"], "--eval-only", "--validation", "13",
+                 "--evaluation-json", str(directory / "mixed.json")]
+    for index, source in enumerate(sources):
+        arguments += ["--" + source["kind"], source["file"]["path"], "--sample-weight", str(index + 1)]
+    processes.run(arguments, "setup", "mixed_source_evaluation")
+    mixed = json.loads((directory / "mixed.json").read_bytes())
+    checked = check_retention_ranges(mixed, sources, 13)
+    assert [row["weight"] for row in checked] == [1, 2, 3, 4, 5, 6]
+    assert mixed["evaluated_windows"] == 12
+    assert mixed["learned_state_before"] == mixed["learned_state_after"]
+    individual = []
+    for index, source in enumerate(sources):
+        output = directory / f"source-{index}.json"
+        processes.run([str(LM), "--init", initial["path"], "--eval-only", "--validation", "2",
+                       "--" + source["kind"], source["file"]["path"],
+                       "--sample-weight", str(index + 1), "--evaluation-json", str(output)],
+                      "setup", "individual_source_evaluation")
+        row = json.loads(output.read_bytes())
+        single = check_retention_ranges(row, [source], 2)[0]
+        assert single["loss"] == checked[index]["loss"]
+        assert row["learned_state_before"] == row["learned_state_after"] == mixed["learned_state_before"]
+        individual.append({"index": index, "loss": single["loss"], "result_sha256": sha(output)})
+    assert sha(Path(initial["path"])) == initial["sha256"]
+    return {"sources": checked, "requested_windows": 13, "evaluated_windows": 12,
+            "combined_loss": mixed["loss"], "mixed_result_sha256": sha(directory / "mixed.json"),
+            "individual": individual, "all_source_losses_match": True,
+            "learned_state_preserved": True}
 
 
 def smoke(directory):
@@ -65,6 +106,11 @@ def smoke(directory):
         assert state["status"] == "complete"
         assert len(state["snapshots"]) == (1 if state["arm"] == "frozen" else 5)
         assert state["snapshots"][0]["model_sha256"] == initial["sha256"]
+        for snapshot in state["snapshots"]:
+            assert len(snapshot["retention_by_source"]) == 6
+            assert all(row["windows"] == 1 for row in snapshot["retention_by_source"])
+            assert all(row["loss"] == snapshot["retention_by_source"][0]["loss"]
+                       for row in snapshot["retention_by_source"])
         for snapshot in state["snapshots"][1:]:
             retained = directory / "run" / state["owner"] / snapshot["retained_checkpoint"]
             assert sha(retained) == snapshot["model_sha256"]
@@ -101,10 +147,68 @@ def smoke(directory):
     else:
         raise AssertionError("existing evaluation output overwritten")
     assert replay_path.read_bytes() == before
+    source_probe = mixed_source_probe(processes, initial, setup / "task/quantity-request.tok",
+                                     setup / "mixed-source-probe")
+    write_json(directory / "SOURCE-PROBE.json", source_probe)
     return result, manifest
 
 
 class BudgetTests(unittest.TestCase):
+    @staticmethod
+    def range_fixture(requested=6, losses=None):
+        sources = [{"kind": "text", "file": {"sha256": str(index) * 64}} for index in range(6)]
+        losses = losses or [1.0] * 6
+        windows = max(requested // 6, 1)
+        record = {"schema": "zero.literary_eval.v2", "loss": sum(losses) / 6,
+                  "requested_validation_batches": requested, "validation_batches": max(requested, 6),
+                  "evaluated_windows": windows * 6,
+                  "ranges": [{"index": index, "channel": 0, "foundation": 0, "weight": 1,
+                              "windows": windows, "loss": loss} for index, loss in enumerate(losses)]}
+        return record, sources
+
+    def test_unchanged_mean_retains_worst_source_damage(self):
+        original, sources = self.range_fixture()
+        changed, _ = self.range_fixture(losses=[2, 0.8, 0.8, 0.8, 0.8, 0.8])
+        baseline = check_retention_ranges(original, sources, 6)
+        rows = check_retention_ranges(changed, sources, 6)
+        measured = retention_changes(rows, baseline)
+        self.assertAlmostEqual(original["loss"], changed["loss"])
+        self.assertEqual(max(row["relative_regression"] for row in measured), 1)
+        self.assertAlmostEqual(measured[1]["relative_regression"], -0.2)
+
+    def test_source_loss_roster_kind_and_finite_values(self):
+        original, sources = self.range_fixture()
+        for field, replacement in [("index", 1), ("channel", 1), ("foundation", 1),
+                                   ("weight", 0), ("loss", float("nan")), ("windows", 2)]:
+            changed = deepcopy(original)
+            changed["ranges"][0][field] = replacement
+            with self.assertRaises(ValueError):
+                check_retention_ranges(changed, sources, 6)
+        changed = deepcopy(original)
+        changed["ranges"].pop()
+        with self.assertRaises(ValueError):
+            check_retention_ranges(changed, sources, 6)
+
+    def test_actual_window_count_and_aggregate_are_checked(self):
+        record, sources = self.range_fixture(requested=13)
+        self.assertEqual(len(check_retention_ranges(record, sources, 13)), 6)
+        self.assertEqual(record["evaluated_windows"], 12)
+        for field, value in [("evaluated_windows", 13), ("requested_validation_batches", 12), ("loss", 2)]:
+            changed = deepcopy(record)
+            changed[field] = value
+            with self.assertRaises(ValueError):
+                check_retention_ranges(changed, sources, 13)
+        record, sources = self.range_fixture(requested=1)
+        self.assertEqual(sum(row["windows"] for row in check_retention_ranges(record, sources, 1)), 6)
+
+    def test_baseline_sources_must_match(self):
+        record, sources = self.range_fixture()
+        rows = check_retention_ranges(record, sources, 6)
+        changed = deepcopy(rows)
+        changed[0]["source_sha256"] = "f" * 64
+        with self.assertRaises(ValueError):
+            retention_changes(changed, rows)
+
     def test_source_builder_rejects_changed_base_and_changed_patch(self):
         with tempfile.TemporaryDirectory() as name:
             directory = Path(name)
@@ -228,10 +332,13 @@ def main():
                            "replay_sha256": manifest["replay"][0]["file"]["sha256"],
                            "retention_eval_sha256": manifest["retention_eval"][0]["file"]["sha256"]},
                "instrumented_source_sha256": sha(ROOT / "build/literary_retention.c"),
+               "source_loss_probe": json.loads((directory / "SOURCE-PROBE.json").read_bytes()),
                "frozen_trainer_state_parity": {"arms": ARMS[1:], "attempts_each": 4, "identical": True},
                "retained_training_checkpoints": 16,
                "performance_evidence": False, "arms": [{"arm": state["arm"], "status": state["status"],
                   "snapshots": len(state["snapshots"]), "last_attempt": state["snapshots"][-1]["attempts"],
+                  "final_retention_by_source": state["snapshots"][-1]["retention_by_source"],
+                  "worst_source_relative_regression": state["snapshots"][-1]["worst_source_relative_regression"],
                   "final_quantity": state["snapshots"][-1]["quantity"]} for state in result["arms"]],
                "projection_path": projection,
                "paired_replay_samples": result["sample_parity"], "process_count": result["process_count"],
