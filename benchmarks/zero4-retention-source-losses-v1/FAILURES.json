@@ -1,0 +1,20 @@
+{
+  "scope": "engineering_fixture_failure",
+  "stage": "mixed_source_evaluation",
+  "exit_code": 1,
+  "process_record_sha256": "2dce2a8df8aaefb1e2bdaf0856b9fb39a51d71edd260341cf6db4a4d61cea061",
+  "stderr_sha256": "cfdc87c57f86339be61b3d6e1ef6fd8e5142795efbf2e95e941c6463c0c788f0",
+  "error": "training corpus contains a token outside the vocabulary",
+  "toy_vocabulary": 128,
+  "input_observations": {
+    "crowley.txt": {
+      "maximum_byte": 226,
+      "bytes_at_or_above_128": 6188
+    },
+    "shakespeare.txt": {
+      "maximum_byte": 226,
+      "bytes_at_or_above_128": 95047
+    }
+  },
+  "resolution": "Use two fixed ASCII text fixtures beside the original foundation, Blake, and channel inputs."
+}
