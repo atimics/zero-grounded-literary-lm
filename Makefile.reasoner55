@@ -29,3 +29,19 @@ reasoner55-semantic-guide-check: build/reasoner55_semantic_guide
 	node scripts/check_reasoner55_semantic_guide.mjs
 
 reasoner55-experiments-check: reasoner55-semantic-guide-check
+
+build/reasoner55_semantic_guide_embed.h: reasoner55_semantic_guide.c scripts/embed_reasoner55_guide.mjs
+	node scripts/embed_reasoner55_guide.mjs
+
+build/reasoner55_fixed_transfer: reasoner55_fixed_transfer.c build/reasoner55_semantic_guide_embed.h reasoner55_diagnostics.c reasoner55.c reasoner55.h
+	$(CC) $(CFLAGS) -I. reasoner55_fixed_transfer.c -lm -o $@
+
+.PHONY: reasoner55-fixed-transfer reasoner55-fixed-transfer-check
+reasoner55-fixed-transfer: build/reasoner55_fixed_transfer
+	node scripts/run_reasoner55_fixed_transfer.mjs --write
+
+reasoner55-fixed-transfer-check: build/reasoner55_fixed_transfer
+	./build/reasoner55_fixed_transfer --self-test
+	node scripts/check_reasoner55_fixed_transfer.mjs
+
+reasoner55-experiments-check: reasoner55-fixed-transfer-check
