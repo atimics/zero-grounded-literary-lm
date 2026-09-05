@@ -45,3 +45,35 @@ reasoner55-fixed-transfer-check: build/reasoner55_fixed_transfer
 	node scripts/check_reasoner55_fixed_transfer.mjs
 
 reasoner55-experiments-check: reasoner55-fixed-transfer-check
+
+ifeq ($(shell uname -s),Darwin)
+R55FAST_CRYPTO_LIBS =
+else
+R55FAST_CRYPTO_LIBS = -lcrypto
+endif
+
+R55FAST_INPUTS = reasoner55.c reasoner55_diagnostics.c reasoner55_semantic_guide.c reasoner55_fixed_transfer.c scripts/embed_reasoner55_fast.mjs
+build/reasoner55_fast_fixed.h: $(R55FAST_INPUTS)
+	node scripts/embed_reasoner55_fast.mjs
+
+R55FAST_HEADERS = build/reasoner55_fast_fixed.h reasoner55.h reasoner55_fast_hash.h reasoner55_fast_sort.h
+build/reasoner55_fast_hash: reasoner55_fast_search.c $(R55FAST_HEADERS)
+	$(CC) $(CFLAGS) -I. -DR55FAST_HASH=1 -DR55FAST_SORT=0 reasoner55_fast_search.c -lm $(R55FAST_CRYPTO_LIBS) -o $@
+
+build/reasoner55_fast_sort: reasoner55_fast_search.c $(R55FAST_HEADERS)
+	$(CC) $(CFLAGS) -I. -DR55FAST_HASH=0 -DR55FAST_SORT=1 reasoner55_fast_search.c -lm -o $@
+
+build/reasoner55_fast_both: reasoner55_fast_search.c $(R55FAST_HEADERS)
+	$(CC) $(CFLAGS) -I. -DR55FAST_HASH=1 -DR55FAST_SORT=1 reasoner55_fast_search.c -lm $(R55FAST_CRYPTO_LIBS) -o $@
+
+.PHONY: reasoner55-fast-build
+reasoner55-fast-build: build/reasoner55_fixed_transfer build/reasoner55_fast_hash build/reasoner55_fast_sort build/reasoner55_fast_both
+
+.PHONY: reasoner55-fast-search reasoner55-fast-search-check
+reasoner55-fast-search: reasoner55-fast-build
+	node scripts/run_reasoner55_fast_search.mjs --write
+
+reasoner55-fast-search-check: reasoner55-fast-build
+	node scripts/check_reasoner55_fast_search.mjs
+
+reasoner55-experiments-check: reasoner55-fast-search-check
