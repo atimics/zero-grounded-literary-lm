@@ -42,8 +42,15 @@ Every completed snapshot contains:
 
 Native evaluation verifies its learned-state digest before and after scoring.
 The controller also verifies the model file remains identical. It keeps each
-quantized checkpoint and each evaluation record. The active training checkpoint
-holds the current optimizer state; each snapshot records its model digest.
+full training checkpoint, quantized checkpoint, and evaluation record. A scored
+training checkpoint includes the optimizer and RNG state. Its file name and
+digest stay in the snapshot even after the active checkpoint advances.
+
+The historical `literary_lm.c` stays at its original digest. A checked patch adds
+sample traces and precise evaluation output to a separate diagnostic trainer.
+The builder verifies the original and generated source digests. The smoke
+compares final checkpoint bytes with the historical trainer in all four active
+arms. The native trace writes a sample after its gradient work completes.
 
 CPU cost includes child user and system CPU, controller work assigned to that
 arm, and a full charge for the shared initial file checks. The overall record
@@ -71,7 +78,7 @@ conflicting gradient. The native training smoke records whether projection
 fires on its actual attempts. Both outcomes remain in the report.
 
 ```bash
-make LITERARY_BACKEND=portable literary_lm freeze_literary_teacher export_literary quantity_request_eval
+make LITERARY_BACKEND=portable literary_lm build/literary_retention_lm freeze_literary_teacher export_literary quantity_request_eval
 python3 scripts/check_zero4_retention_controls.py --out build/zero4-retention-smoke
 ```
 

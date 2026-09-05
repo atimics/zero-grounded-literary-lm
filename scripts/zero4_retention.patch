@@ -1,0 +1,137 @@
+--- literary_lm.c
++++ literary_retention.c
+@@ -237,6 +237,8 @@
+     const char *resume_path;
+     const char *init_path;
+     int eval_only;
++    const char *evaluation_json_path;
++    const char *training_samples_path;
+     const char *prompt;
+     long generate_tokens;
+     float temperature;
+@@ -3622,6 +3624,8 @@
+     printf("  --schedule-total N   total phase updates for chunk-stable LR decay\n");
+     printf("  --report N           report interval (default: 100)\n");
+     printf("  --validation N       validation sequences per report (default: 8)\n");
++    printf("  --evaluation-json FILE  write precise loss and state digests with --eval-only\n");
++    printf("  --training-samples FILE  append consumed training-window identities\n");
+     printf("  --dropout X          residual dropout probability (default: 0.1)\n");
+     printf("  --trainable-scope S  all (default) or top-ffn\n");
+     printf("  --cosine             cosine-decay the learning rate over this run\n");
+@@ -4017,6 +4021,7 @@
+     uint32_t checkpoint_rejections = 0;
+     uint32_t checkpoint_transaction_mode = 0;
+     TransactionState transaction = {0};
++    FILE *training_samples = NULL;
+ 
+     memset(&options, 0, sizeof(options));
+     options.steps = 1000;
+@@ -4249,6 +4254,10 @@
+             options.init_path = argv[++i];
+         } else if (strcmp(argv[i], "--eval-only") == 0) {
+             options.eval_only = 1;
++        } else if (strcmp(argv[i], "--evaluation-json") == 0 && i + 1 < argc) {
++            options.evaluation_json_path = argv[++i];
++        } else if (strcmp(argv[i], "--training-samples") == 0 && i + 1 < argc) {
++            options.training_samples_path = argv[++i];
+         } else if (strcmp(argv[i], "--generate-only") == 0) {
+             options.steps = 0;
+         } else if (strcmp(argv[i], "--prompt") == 0 && i + 1 < argc) {
+@@ -4298,6 +4307,9 @@
+         cfg = artifact_peek(options.init_path);
+     }
+     validate_config(&cfg);
++    if (options.evaluation_json_path != NULL && !options.eval_only) {
++        fail("--evaluation-json requires --eval-only");
++    }
+     {
+         float same_arch_total = 0.0f;
+         int teacher;
+@@ -4563,6 +4575,8 @@
+         if (options.eval_only) {
+             float validation_loss;
+             int validation_batches = options.validation_batches;
++            uint64_t state_before = options.evaluation_json_path != NULL
++                                        ? model_learned_state_digest(&model) : 0;
+             if (text_count > 0) {
+                 if (validation_batches < text_count) {
+                     validation_batches = text_count;
+@@ -4577,8 +4591,33 @@
+             }
+             printf("evaluation-only val %.4f batches=%d (no update, no save)\n",
+                    validation_loss, validation_batches);
++            if (options.evaluation_json_path != NULL) {
++                uint64_t state_after = model_learned_state_digest(&model);
++                FILE *evaluation;
++                int written;
++                if (!isfinite(validation_loss) || state_before != state_after) {
++                    fail("evaluation loss or learned-state preservation failed");
++                }
++                evaluation = fopen(options.evaluation_json_path, "wx");
++                if (evaluation == NULL) fail("could not create evaluation JSON");
++                written = fprintf(evaluation,
++                    "{\"schema\":\"zero.literary_eval.v1\",\"loss\":%.9g,"
++                    "\"validation_batches\":%d,\"context\":%d,"
++                    "\"learned_state_before\":\"%016llx\","
++                    "\"learned_state_after\":\"%016llx\"}\n",
++                    validation_loss, validation_batches, cfg.context,
++                    (unsigned long long)state_before,
++                    (unsigned long long)state_after);
++                if (fclose(evaluation) != 0 || written < 0) {
++                    fail("could not write evaluation JSON");
++                }
++            }
+         } else {
+         signal(SIGINT, on_interrupt);
++        if (options.training_samples_path != NULL) {
++            training_samples = fopen(options.training_samples_path, "a");
++            if (training_samples == NULL) fail("could not open training samples");
++        }
+         training_start = wall_seconds();
+         interval_start = training_start;
+         {
+@@ -4615,10 +4654,12 @@
+                     0.0f, 0.0f, 0.0f
+                 };
+                 int teacher;
++                int selected_range = -1;
+                 if (text_count > 0) {
+                     int range_index = choose_weighted_range(
+                         text_ranges, text_count, &rng);
+                     const CorpusRange *range = &text_ranges[range_index];
++                    selected_range = range_index;
+                     if (options.transaction_mode != TRANSACTION_DISABLED) {
+                         if (range_index >= 64) {
+                             fail("transaction source mask supports at most 64 data ranges");
+@@ -4693,6 +4734,21 @@
+                         active_teacher_weights, MAX_FACULTY_TEACHERS);
+                     interval_loss += loss;
+                 }
++                if (training_samples != NULL) {
++                    uint64_t input_hash = hash_bytes(UINT64_C(1469598103934665603),
++                        corpus.data + start,
++                        ((size_t)cfg.context + 1) * sizeof(*corpus.data));
++                    int written = fprintf(training_samples,
++                        "{\"attempt\":%llu,\"batch\":%d,\"range\":%d,"
++                        "\"start\":%zu,\"context\":%d,\"tokens_hash\":\"%016llx\"}\n",
++                        (unsigned long long)(checkpoint_attempts +
++                                             (uint64_t)completed_steps + 1),
++                        batch, selected_range, start, cfg.context,
++                        (unsigned long long)input_hash);
++                    if (written < 0 || fflush(training_samples) != 0) {
++                        fail("could not write training sample");
++                    }
++                }
+                 ++interval_sequences;
+             }
+             ++completed_steps;
+@@ -4873,6 +4929,9 @@
+     }
+ 
+     corpus_destroy(&corpus);
++    if (training_samples != NULL && fclose(training_samples) != 0) {
++        fail("could not close training samples");
++    }
+     if (options.transaction_mode != TRANSACTION_DISABLED) {
+         transaction_state_destroy(&transaction);
+     }

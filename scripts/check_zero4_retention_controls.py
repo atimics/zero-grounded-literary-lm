@@ -10,6 +10,9 @@ import unittest
 from run_zero4_retention_controls import (ARMS, ROOT, ProcessLog, checkpoint, run_study,
                                           select_at_budget, sha, training_args, write_json,
                                           finish_owner_cost, verify_sample_roster)
+from build_zero4_retention_source import build_source
+
+LM = ROOT / "build/literary_retention_lm"
 
 
 def binding(path):
@@ -20,7 +23,7 @@ def smoke(directory):
     setup = directory / "setup"
     setup.mkdir()
     processes = ProcessLog(setup, 60, 180)
-    processes.run([str(ROOT / "literary_lm"), "--preset", "literary", "--context", "256", "--dim", "8", "--heads", "2",
+    processes.run([str(LM), "--preset", "literary", "--context", "256", "--dim", "8", "--heads", "2",
                    "--layers", "1", "--ff", "16", "--text", str(ROOT / "corpus/zero-foundation.txt"),
                    "--steps", "1", "--batch", "1", "--report", "1", "--validation", "1",
                    "--seed", "5", "--save", str(setup / "initial.ckpt"), "--tokens", "0"], "setup", "toy_initialization")
@@ -33,7 +36,8 @@ def smoke(directory):
                     "quantity_request_eval.c", "quantity_oracle.c", "quantity_oracle.h",
                     "faculty_controller.c", "faculty_protocol.h", "literary_infer.c", "literary_infer.h",
                     "scripts/run_zero4_retention_controls.py", "scripts/check_zero4_retention_controls.py",
-                    "scripts/generate_zero4_q2.mjs", "freeze_literary_teacher.c", "Makefile"]
+                    "scripts/generate_zero4_q2.mjs", "freeze_literary_teacher.c", "Makefile",
+                    "scripts/zero4_retention.patch", "scripts/build_zero4_retention_source.py"]
     manifest = {
         "schema": "zero.retention_controls.v1", "scope": "engineering_smoke", "arms": ARMS,
         "initial_model": initial, "task_train": binding(setup / "task/quantity-request.tok"),
@@ -44,7 +48,7 @@ def smoke(directory):
         "teachers": [{"file": initial, "weight": 0.15}], "zero1_teacher": None,
         "tokenizer": None, "sources": [binding(ROOT / name) for name in source_names],
         "binaries": {key: binding(ROOT / file) for key, file in
-                     {"lm": "literary_lm", "export": "export_literary", "quantity": "quantity_request_eval"}.items()},
+                     {"lm": "build/literary_retention_lm", "export": "export_literary", "quantity": "quantity_request_eval"}.items()},
         "seeds": [71], "attempts": 4, "chunk_attempts": 1, "batch": 1,
         "learning_rate": 1, "task_weight": 100, "guard_budget": 0.015,
         "dropout": 0, "warmup": 0, "validation_batches": 6, "case_limit": 5,
@@ -61,6 +65,10 @@ def smoke(directory):
         assert state["status"] == "complete"
         assert len(state["snapshots"]) == (1 if state["arm"] == "frozen" else 5)
         assert state["snapshots"][0]["model_sha256"] == initial["sha256"]
+        for snapshot in state["snapshots"][1:]:
+            retained = directory / "run" / state["owner"] / snapshot["retained_checkpoint"]
+            assert sha(retained) == snapshot["model_sha256"]
+            assert checkpoint(retained) == snapshot["checkpoint"]
         if state["arm"] != "frozen":
             progress = checkpoint(directory / "run" / state["owner"] / "active.ckpt")
             assert progress["attempts"] == 4
@@ -69,11 +77,23 @@ def smoke(directory):
     right = training_args(manifest, ROOT, "replay_projection", 71, directory / "same", 0)
     assert [(a, b) for a, b in zip(left, right) if a != b] == [("cumulative-backtracking", "cumulative-tangent")]
     # The numerical fixture exercises an active projection directly.
-    processes.run([str(ROOT / "literary_lm"), "--self-test"], "setup", "native_gradient_checks")
+    processes.run([str(LM), "--self-test"], "setup", "native_gradient_checks")
+    # Compare full checkpoint bytes, including RNG and optimizer state, with
+    # the frozen trainer after the same four training chunks in every arm.
+    for arm in ARMS[1:]:
+        original = setup / ("original-" + arm)
+        original.mkdir()
+        for offset in range(manifest["attempts"]):
+            command = training_args(manifest, ROOT, arm, 71, original, offset)
+            command[0] = str(ROOT / "literary_lm")
+            flag = command.index("--training-samples")
+            del command[flag:flag + 2]
+            processes.run(command, "setup", "frozen_trainer_parity")
+        assert (original / "active.ckpt").read_bytes() == (directory / "run" / f"seed-71-{arm}" / "active.ckpt").read_bytes()
     replay_path = directory / "run/seed-71-frozen/retention-000000.json"
     before = replay_path.read_bytes()
     try:
-        processes.run([str(ROOT / "literary_lm"), "--init", str(setup / "initial.teacher"),
+        processes.run([str(LM), "--init", str(setup / "initial.teacher"),
                        "--text", str(ROOT / "corpus/blake.txt"), "--eval-only",
                        "--evaluation-json", str(replay_path), "--validation", "1"], "setup", "existing_output")
     except ValueError:
@@ -85,6 +105,23 @@ def smoke(directory):
 
 
 class BudgetTests(unittest.TestCase):
+    def test_source_builder_rejects_changed_base_and_changed_patch(self):
+        with tempfile.TemporaryDirectory() as name:
+            directory = Path(name)
+            output = directory / "trainer.c"
+            output.write_text("preserved")
+            source = directory / "base.c"
+            source.write_bytes((ROOT / "literary_lm.c").read_bytes() + b"\n")
+            with self.assertRaisesRegex(ValueError, "frozen trainer"):
+                build_source(source, ROOT / "scripts/zero4_retention.patch", output)
+            patch = directory / "changed.patch"
+            patch.write_text((ROOT / "scripts/zero4_retention.patch").read_text().replace(
+                "+    const char *evaluation_json_path;", "+    const char *changed_json_path;"))
+            assert patch.read_bytes() != (ROOT / "scripts/zero4_retention.patch").read_bytes()
+            with self.assertRaisesRegex(ValueError, "instrumented trainer"):
+                build_source(ROOT / "literary_lm.c", patch, output)
+            self.assertEqual(output.read_text(), "preserved")
+
     def test_missing_manifest_fields_leave_a_terminal_record(self):
         with tempfile.TemporaryDirectory() as name:
             directory = Path(name) / "failed"
@@ -137,7 +174,7 @@ class BudgetTests(unittest.TestCase):
     def test_timeout_reaps_child_and_keeps_partial_output(self):
         with tempfile.TemporaryDirectory() as name:
             directory = Path(name)
-            processes = ProcessLog(directory, 0.2, 5)
+            processes = ProcessLog(directory, 0.5, 5)
             with self.assertRaises(ValueError):
                 processes.run(["python3", "-c", "import time; print('started', flush=True); time.sleep(5)"], "test", "timeout")
             record = json.loads((directory / "process-00000.json").read_bytes())
@@ -153,8 +190,8 @@ def main():
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(BudgetTests)
     if not unittest.TextTestRunner().run(suite).wasSuccessful():
         raise SystemExit(1)
-    directory = args.out or Path(tempfile.mkdtemp(prefix="zero4-retention-smoke-"))
-    directory.mkdir(exist_ok=True)
+    directory = (args.out or Path(tempfile.mkdtemp(prefix="zero4-retention-smoke-"))).resolve()
+    directory.mkdir(parents=True, exist_ok=True)
     print(f"Native smoke directory: {directory}", flush=True)
     result, manifest = smoke(directory)
     changed = deepcopy(manifest)
@@ -190,6 +227,9 @@ def main():
                            "task_eval_sha256": manifest["task_eval"]["sha256"],
                            "replay_sha256": manifest["replay"][0]["file"]["sha256"],
                            "retention_eval_sha256": manifest["retention_eval"][0]["file"]["sha256"]},
+               "instrumented_source_sha256": sha(ROOT / "build/literary_retention.c"),
+               "frozen_trainer_state_parity": {"arms": ARMS[1:], "attempts_each": 4, "identical": True},
+               "retained_training_checkpoints": 16,
                "performance_evidence": False, "arms": [{"arm": state["arm"], "status": state["status"],
                   "snapshots": len(state["snapshots"]), "last_attempt": state["snapshots"][-1]["attempts"],
                   "final_quantity": state["snapshots"][-1]["quantity"]} for state in result["arms"]],

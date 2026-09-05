@@ -20,5 +20,5 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
-      - run: make LITERARY_BACKEND=portable literary_lm freeze_literary_teacher export_literary quantity_request_eval
+      - run: make LITERARY_BACKEND=portable literary_lm build/literary_retention_lm freeze_literary_teacher export_literary quantity_request_eval
       - run: python3 scripts/check_zero4_retention_controls.py --out build/zero4-retention-smoke

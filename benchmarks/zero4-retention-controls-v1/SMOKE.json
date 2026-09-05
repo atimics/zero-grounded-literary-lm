@@ -111,6 +111,17 @@
     "task_train_sha256": "374feaf61dbdf03ca2207143be1dfd73dbc2ebcb7c8a6d2ee38aa83536eb4376",
     "training_seed": 71
   },
+  "frozen_trainer_state_parity": {
+    "arms": [
+      "task_only",
+      "replay",
+      "replay_guard",
+      "replay_projection"
+    ],
+    "attempts_each": 4,
+    "identical": true
+  },
+  "instrumented_source_sha256": "944f28fdbc04185cbac905ccc78293fe3d0d8b259bbdc9d508d28123e543b99f",
   "paired_replay_samples": [
     {
       "common_samples": 4,
@@ -129,10 +140,11 @@
     "backtracked_attempts": 1,
     "projected_trials": 0
   },
+  "retained_training_checkpoints": 16,
   "schema": "zero.retention_controls_smoke.v1",
   "scope": "engineering_smoke",
   "sources": {
-    "Makefile": "224a1439c9b322783c694cc2519bb8f5b4711e59b06e2a3b99eeefa34cfda067",
+    "Makefile": "7ed08b697634ea1dc289ab59c6fa5e0e35d877fd69ffea202eada3f4e159a46e",
     "channel_protocol.h": "0b382e315c8acd369973bb9377305d5ceae9ec387e7dbbc4e91ae670ef6f74e2",
     "export_literary.c": "c7b1ba5a2763211871df1720f01f49b765365253924b7d4c1113643403ce463c",
     "faculty_controller.c": "42681a75a11660aba6d9b274398abbc1ddc51f35f324302e01b994ea1e0627d9",
@@ -140,13 +152,15 @@
     "freeze_literary_teacher.c": "0b4ba4e0dbb7bd3b6284d6a6fca414bc3bd1acb4d40d260546e79b3c6bea2cdb",
     "literary_infer.c": "7a0d0156587647881e8b18108b8a1265117ddee5827e42c5ece37d066f852f76",
     "literary_infer.h": "f947d132d2ca5b9bdfe9a44fdea00f339850efe91fb26c673f0f6a1a6b004453",
-    "literary_lm.c": "044cb40779d9b4107069534d0f3071130d7011446b3d779b6acd9922f7bcc858",
+    "literary_lm.c": "5f4c47e0fedcc0f96d5eafcd8f45f6bfc4808a1d1af7434cb188693449ff53e3",
     "quantity_oracle.c": "7f55a9ff1a5f31d6cb8ec894c590c6239e7063fa578fe1badba123ff74f95467",
     "quantity_oracle.h": "8436a4793c1055c68f5e5ad5860bddf1e6d79716226a7b797c41078d4eb86701",
     "quantity_request_eval.c": "1627c00a2a49846170b8ee49160ac55ae02e1f4f687397f3e46641e271537902",
-    "scripts/check_zero4_retention_controls.py": "853f6baacf2b58dfa39042652ea483f97f9c5641ee0294fc3c981c7f1fb76268",
+    "scripts/build_zero4_retention_source.py": "094527ad47c9c2fcd0d6db5d13dbdb85a8b95643ab8e6d401fe797c5f8d2f2d6",
+    "scripts/check_zero4_retention_controls.py": "9be08e584b25c3a46b19034e02b782c208fe3bb91fa28df9ed467861c8d3f62d",
     "scripts/generate_zero4_q2.mjs": "de34a72d158127fd12cad86a353b81aad7b3790090d839a359be1766405f2ded",
-    "scripts/run_zero4_retention_controls.py": "2abb4b677f6e1cfd715a0b37e93c4f480dbd0deda277070ae8c4d0fea1f1ca30",
+    "scripts/run_zero4_retention_controls.py": "0b900a85c570c0f2f35c7f1070776edcf0aa93ecce270e75bd54498edf47fd10",
+    "scripts/zero4_retention.patch": "54f051a9c0e2456322145ab94eca2b441d8500f904fc4a74ff462adf069486f6",
     "zero1_protocol.h": "2f5503c7d0f2b15e7d2ed6c8f2eb2277c3114f772103b6c163c04e9ddec922c9"
   }
 }

@@ -6,6 +6,7 @@ import json
 import math
 import os
 from pathlib import Path
+import shutil
 import signal
 import struct
 import subprocess
@@ -126,7 +127,10 @@ class ProcessLog:
                         child.returncode = os.waitstatus_to_exitcode(status)
                         break
                     if not killed and time.monotonic() >= min(self.deadline, started + self.child_wall_seconds):
-                        os.killpg(child.pid, signal.SIGKILL)
+                        try:
+                            os.killpg(child.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
                         killed = True
                     time.sleep(0.02)
                 record.update({"exit_code": child.returncode, "timed_out": killed,
@@ -208,6 +212,13 @@ def training_args(manifest, root, arm, seed, directory, offset):
 
 def measure(manifest, root, processes, owner, directory, model, initial, offset):
     model_sha = sha(model)
+    retained = None
+    if not initial:
+        retained = directory / f"checkpoint-{offset:06d}.ckpt"
+        with model.open("rb") as source, retained.open("xb") as target:
+            shutil.copyfileobj(source, target)
+        require(sha(retained) == model_sha, "retained checkpoint differs")
+        model = retained
     replay_file = directory / f"retention-{offset:06d}.json"
     arguments = [str(bound_path(manifest["binaries"]["lm"], root)), "--init" if initial else "--resume", str(model),
                  "--eval-only", "--evaluation-json", str(replay_file), "--validation", str(manifest["validation_batches"])]
@@ -230,7 +241,8 @@ def measure(manifest, root, processes, owner, directory, model, initial, offset)
     for key in ["closed", "syntax", "operation", "arguments", "exact_request", "oracle_arithmetic", "committed", "exact_artifact"]:
         require(type(quantity[key]) is int and 0 <= quantity[key] <= quantity["cases"], "invalid quantity count")
     require(sha(model) == model_sha, "evaluation changed model file")
-    return {"attempts": offset, "model_sha256": model_sha, "quantized_sha256": sha(quantized),
+    return {"attempts": offset, "model_sha256": model_sha,
+            "retained_checkpoint": retained.name if retained else None, "quantized_sha256": sha(quantized),
             "retention_loss": replay["loss"], "quantity": quantity,
             "cpu_us": processes.cpu(owner), "learned_state": replay["learned_state_after"]}
 
