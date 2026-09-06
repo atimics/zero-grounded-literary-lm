@@ -1,0 +1,119 @@
+{
+  "schema": "zero.c61_evaluation_recovery_contract.v2",
+  "experiment": "zero5-c61-shared-state-v1",
+  "status": "evaluation-authorized",
+  "authorized": true,
+  "training_authorized": false,
+  "purpose": "Resume the unchanged frozen C6.1 validation and bridge-off ablation from hash-bound atomic evaluation state.",
+  "source_training": {
+    "scientific_contract": "benchmarks/zero5-c61-shared-state-v1/contract.json",
+    "scientific_contract_sha256": "26112674e9aad846610ba456e2e524df35809567be7e3c50ad2a285ad7a0f984",
+    "training_authorization": "benchmarks/zero5-c61-shared-state-v1/authorization-aws.json",
+    "training_authorization_sha256": "9ee9cb31b26629d225dfba90ebe105e902a7360409e1419f068fd14c30b3ca5c",
+    "source_run_id": "zero5-c61-aws-20260831-e977b63r1",
+    "checkpoint": {
+      "filename": "best.ckpt",
+      "key": "experiments/zero5-c61-shared-state-v1/zero5-c61-aws-20260831-e977b63r1/state/best.ckpt",
+      "sha256": "975a2c2be303147a05a37681d8baa5fd0472dceb36d6715f593826412df54078",
+      "bytes": 58236496
+    },
+    "bottleneck": {
+      "filename": "best.ckpt.aux",
+      "key": "experiments/zero5-c61-shared-state-v1/zero5-c61-aws-20260831-e977b63r1/state/best.ckpt.aux",
+      "sha256": "9e8426389293368d0bb1bcf5199c6371a22730796fed867c93f08e089533252c",
+      "bytes": 2316480
+    },
+    "training_log": {
+      "filename": "training.log",
+      "key": "experiments/zero5-c61-shared-state-v1/zero5-c61-aws-20260831-e977b63r1/state/training.log",
+      "sha256": "2961b31e4de4ac9b405512b7f2d9621a5c34a344493aa5e551ce1f483fe78b7e",
+      "bytes": 6141
+    },
+    "completed_accounting": {
+      "update_groups": 28707,
+      "pack_sequences": 37768,
+      "compute_token_exposures": 19337216,
+      "auxiliary_events": 293606,
+      "wraps": 0
+    }
+  },
+  "evaluation": {
+    "scientific_gates_sha256": "7b6c4f01c873ef4a826f05c7aec41be894f4defce837110ef0555c51b8478c2d",
+    "gate_source": "source scientific contract without modification",
+    "candidate_arm": "frozen bridge-on evaluation",
+    "ablation_arm": "same checkpoint with bridge scale zero",
+    "atomic_tasks": 18,
+    "cache_binding": "scientific contract, checkpoint pair, evaluator, binaries, task arguments, and bridge state",
+    "progress_schema": "zero.c61_evaluation_progress_checkpoint.v1",
+    "shared_state_prefix": "experiments/zero5-c61-shared-state-v1/evaluation-recovery-v2/state",
+    "sealed_test_opened": false,
+    "training_updates": 0
+  },
+  "implementation": {
+    "evaluator": {
+      "path": "scripts/evaluate_zero5_c61_shared_state_recovery.mjs",
+      "sha256": "5956569d91beb6ad15881681b034f22ea8fcc0755d317f9cf8423346c1d647ce",
+      "bytes": 22427
+    },
+    "runner": {
+      "path": "scripts/run_zero5_c61_evaluation_recovery.mjs",
+      "sha256": "c0e478a227e1236ae6c5f116c64394d245d06ebf5d39f400a653d8c7e9363681",
+      "bytes": 12616
+    },
+    "user_data": {
+      "path": "scripts/aws/zero5-c61-evaluation-user-data.sh",
+      "sha256": "41ecb76ab5b423f3a8789fd4e78c5a952d54b4f74b2ba2ab37c28063425ecfe2",
+      "bytes": 9908
+    },
+    "launcher": {
+      "path": "scripts/aws/zero5-c61-evaluation-run-instance.sh",
+      "sha256": "df86e1556599032df3e7bc0d88e67d31850b8d3b048aace6f3d57626a3e102ea",
+      "bytes": 7743
+    },
+    "stager": {
+      "path": "scripts/aws/zero5-c61-evaluation-stage.sh",
+      "sha256": "17161cfe22328f1bb31a03ec478a4826d7eef83394df07e2522f6cc639cfadec",
+      "bytes": 2369
+    }
+  },
+  "execution": {
+    "venue": "aws us-east-1 c6i.4xlarge on-demand",
+    "instance_type": "c6i.4xlarge",
+    "maximum_execution_seconds": 9000,
+    "maximum_ec2_usd": 1.7,
+    "maximum_attempts": 5,
+    "maximum_cumulative_execution_seconds": 45000,
+    "maximum_cumulative_ec2_usd": 8.5,
+    "approved_outer_maximum_ec2_usd": 10,
+    "on_demand_usd_per_hour": 0.68,
+    "evaluation_jobs": 4,
+    "openblas_threads": 16,
+    "cache_sync_seconds": 30,
+    "automatic_termination": true,
+    "independent_retry_authorized": false,
+    "continuation_requires_prior_recoverable_status": true,
+    "asset_archive": {
+      "key": "experiments/zero5-c61-shared-state-v1/inputs/assets-b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94.tar.gz",
+      "sha256": "b58acf1bf87f987887f8989443739fcaa86c45beed6dd93ec807f42b7f3b9e94"
+    },
+    "budget": "benchmarks/zero5-c61-shared-state-v1/evaluation-budget.json",
+    "budget_sha256": "4ef19abe213817254812de1c707dadea1194fd823b02db649716c78e2be32d39",
+    "measured_full_cycle_seconds": 18300,
+    "measured_full_cycle_ec2_usd": 3.46,
+    "resumable_evaluation": true
+  },
+  "claim_boundary": {
+    "evaluation_only": true,
+    "training_rerun": false,
+    "scientific_gates_changed": false,
+    "promotion_authorized": false,
+    "replication_authorized": false,
+    "checkpoint_publication_authorized": false,
+    "corpus_publication_authorized": false,
+    "sealed_test_access_authorized": false
+  },
+  "authorization": {
+    "approval_id": "zero5-c61-evaluation-recovery-aws-2026-09-04-v2",
+    "record": "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws-v2.json"
+  }
+}
