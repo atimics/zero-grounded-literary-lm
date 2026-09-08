@@ -95,7 +95,7 @@ try {
   for (const [arm, name] of ARMS.entries()) {
     selectedRows[name] = {};
     for (const planner of PLANNERS) {
-      stage = `${name}:${planner}`;
+      stage = `${name}-${planner}`;
       const rows = collectChild({ executable: BINARY, args: ['smoke', planner, name], output: resolve(output, stage), timeoutMs: 60000 });
       processes.push({ arm: name, planner, rows });
       const [meta] = rows, end = rows.at(-1), all = rows.slice(1, -1);
@@ -124,6 +124,17 @@ try {
     }
     assert.deepEqual(selectedRows[name].reference.map(shared), selectedRows[name].eligible.map(shared), `${name}: both planners agree`);
   }
+  stage = 'changed-evidence';
+  for (const mutate of [
+    row => { row.features_sha256 = '0'.repeat(64); },
+    row => { row.proposal_keys[0] += 1; },
+    row => { row.verifier_checks += 1; },
+    row => { row.fallback_attempts += 1; },
+  ]) {
+    const row = structuredClone(selectedRows.task_guide.eligible[0]);
+    mutate(row);
+    assert.throws(() => replay(row, 1));
+  }
   stage = 'failure-retention';
   const missing = mkdtempSync(resolve(tmpdir(), 'reasoner-eligible-missing-model-'));
   assert.throws(() => collectChild({ executable: BINARY, args: ['smoke', 'eligible', 'task_guide'],
@@ -134,7 +145,7 @@ try {
   for (const args of [[], ['smoke'], ['smoke','other','task_guide'], ['smoke','eligible','unknown']])
     assert.equal(spawnSync(BINARY, args, { cwd: ROOT, stdio: 'ignore' }).status, 2);
   const report = { schema: 'zero.reasoner55_eligible_smoke.v1', scope: 'opened_four_family_engineering', seed: SMOKE_SEED,
-    families: 4, arms: 4, planners: 2, native_episode_visits: 280, independent_measured_replays: replayed, heap_size_cases: 258,
+    families: 4, arms: 4, planners: 2, native_episode_visits: 280, independent_measured_replays: replayed, heap_size_cases: 258, changed_evidence_rejections: 4,
     timing_evidence: false, fresh_family_evaluations: 0, model_sha256: model.artifact_sha256,
     source_bindings: bindings(), cohort_sha256: sha(encode(cohort)),
     stable_rows_sha256: sha(encode(Object.fromEntries(ARMS.map(name => [name, Object.fromEntries(PLANNERS.map(planner => [planner, selectedRows[name][planner].map(stable)]))])))),

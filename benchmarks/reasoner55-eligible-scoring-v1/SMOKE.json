@@ -8,6 +8,7 @@
   "native_episode_visits": 280,
   "independent_measured_replays": 76,
   "heap_size_cases": 258,
+  "changed_evidence_rejections": 4,
   "timing_evidence": false,
   "fresh_family_evaluations": 0,
   "model_sha256": "db0afc1e460df5192917fac1f8129a2ec1e753ddb67939a975076fae5579bb7a",
@@ -41,7 +42,7 @@
     "reasoner55_eligible.c": "e5a1d980e737833c38d7ea427494e5701029455f181e3715e2b66dbcb5d2a9b5",
     "Makefile.reasoner55-eligible": "9ad8f142daff9cd8cd70b339bd2ca756cfd0250eea6de3a4e43240a51877b7e9",
     "scripts/embed_reasoner55_eligible.mjs": "53d0b33943428120a62a17a727a853fd6b382bc61bd835d0d3eb9e03ae403d03",
-    "scripts/check_reasoner55_eligible.mjs": "14f92d4f721e1876aab078ec83b2883c8c8419d29260ebfc7ed7697759286c17",
+    "scripts/check_reasoner55_eligible.mjs": "39909e07a64504f4d3c79375f64ec35f8f41e2a57b63115b61a57e81125a0598",
     "benchmarks/reasoner55-eligible-scoring-v1/PLAN.md": "782f87303085b0199c69a281dde4d1f3fa631f2ef33f814192489f4743926b28"
   },
   "cohort_sha256": "1b1d87fd1328e8a53502da8b6706c401b4b95999c543289021f84e4b7a4332f0",
