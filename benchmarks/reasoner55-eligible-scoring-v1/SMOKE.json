@@ -1,0 +1,134 @@
+{
+  "schema": "zero.reasoner55_eligible_smoke.v1",
+  "scope": "opened_four_family_engineering",
+  "seed": "55356d736d6f6b31",
+  "families": 4,
+  "arms": 4,
+  "planners": 2,
+  "native_episode_visits": 280,
+  "independent_measured_replays": 76,
+  "heap_size_cases": 258,
+  "changed_evidence_rejections": 4,
+  "timing_evidence": false,
+  "fresh_family_evaluations": 0,
+  "model_sha256": "db0afc1e460df5192917fac1f8129a2ec1e753ddb67939a975076fae5579bb7a",
+  "source_bindings": {
+    "reasoner55_matched_transfer.c": "d374de2b4089a8d1c7bdcbd3ae8da8002f8e8612b1cc4dc8c2205c5a26ce862c",
+    "reasoner55_fast_search.c": "00e36a7733701b8aa6889ffe53f0af07713e0a5bfff88f7dc26fcf502c32b8e9",
+    "reasoner55_fast_hash.h": "f1fd1b6190cebc9ad1731eb1ec3d47e13fecee34a83ca9537d4bfd6b20b592b0",
+    "reasoner55_fast_sort.h": "3140b56f66603694b050b3b3d3da96d781b028c27f15724bfc183e6ce50b8c85",
+    "reasoner55.c": "8a946ce9f04b7d3ecbc530d4c893ea59ab78121e34e52e263457589a1cf2875c",
+    "reasoner55.h": "3b0ec10cf07786c05236ff5b063c0848d19d63ef863afef040679909d255e218",
+    "reasoner55_diagnostics.c": "9917bccc16080fabee14d435d7a28c922d04b9698038a61fea99a3a53fd61412",
+    "reasoner55_semantic_guide.c": "86ec97d6f0c4c85a3b94e998810fdedae83f04bd0e95e13feed9fe1ed7cd24bc",
+    "reasoner55_fixed_transfer.c": "3a20a1b06b49842b16009652b8f101b6bfe3f09a9d07c05949f03a35599be670",
+    "scripts/embed_reasoner55_fast.mjs": "127dc7adcf148003100bbd5cb1556aef6030abdef07cccdd3d3a9d66aff22880",
+    "scripts/lib/reasoner55_matched.mjs": "e317ecd42cf20500445fd132ea29abb08d71653b931119fcf5ffcfad55bb0698",
+    "scripts/run_reasoner55_matched.mjs": "27b0595ad3e880243210458d9653112d52ca15b8d672fc5eacc406da065446fc",
+    "scripts/check_reasoner55_matched.mjs": "121630883d6cfc00c40aef0e253d24bb45191ea21f613c6477a2898c3fbaf797",
+    "Makefile.reasoner55-matched": "95d5e70e81b01b70490474d44d14d591b7b26bd539ac8c581df2b48eccaac1f3",
+    "scripts/lib/reasoner55_fixed_transfer.mjs": "20a5547af86366e6ae44c0884fdb2c7d2ae7ad19109780a6cd8c94301ef10ecb",
+    "scripts/lib/reasoner55_semantic_guide.mjs": "97e1beecf13bafb0a1f107a46720781831eab85beea6b33852195e3564b7f2ac",
+    "scripts/lib/reasoner55_replay.mjs": "dcca6e4f3e802315ae5c5611cd1baa7977982866cbd6937102eb003cce4d651d",
+    "scripts/lib/reasoner5_harness.mjs": "6abdde4d810b26d94ee6340aa6a97e9a9717523278b9533325ba2f2c3189a883",
+    "scripts/zero_data_lib.mjs": "ef1d98938d950410a731d6f235f8596c01f47ba6f2234a53a515480b7c914e90",
+    "Makefile": "224a1439c9b322783c694cc2519bb8f5b4711e59b06e2a3b99eeefa34cfda067",
+    "Makefile.reasoner55": "1eb9045f70b3efd0d09756750f9091c2992dbe1e832864598229d06d51311892",
+    "benchmarks/reasoner55-transfer-diagnostics-v1/DIAGNOSTICS.json": "823e83db92d244e9c6843b9976d478046ee5f50344295eebf3039e9d3570f410",
+    "benchmarks/reasoner55-generated-primitive-transfer-v1/DEVELOPMENT-TRACE.jsonl": "60f0886ec2291374c5a46c7ee69d104b2486f9962cc8833718178543c9f30287",
+    "benchmarks/reasoner55-fixed-transfer-v1/RESULTS.json": "377e96366957d7d5435670eb218e7cc3ed96c7dc8b57b5e5d82ec75d393c2655",
+    "benchmarks/reasoner55-matched-controls-v1/PLAN.md": "56fa7548cc1851a8811c19649813ed7dc277c5b38f8ca16777157341f49e185c",
+    "benchmarks/reasoner55-semantic-guide-v1/MODEL.hex": "2ea0b8246fcf2d817538055bece6b59c24f05320a349614fdc30316e6e1d3c73",
+    "reasoner55_eligible.c": "e5a1d980e737833c38d7ea427494e5701029455f181e3715e2b66dbcb5d2a9b5",
+    "Makefile.reasoner55-eligible": "9ad8f142daff9cd8cd70b339bd2ca756cfd0250eea6de3a4e43240a51877b7e9",
+    "scripts/embed_reasoner55_eligible.mjs": "53d0b33943428120a62a17a727a853fd6b382bc61bd835d0d3eb9e03ae403d03",
+    "scripts/check_reasoner55_eligible.mjs": "39909e07a64504f4d3c79375f64ec35f8f41e2a57b63115b61a57e81125a0598",
+    "benchmarks/reasoner55-eligible-scoring-v1/PLAN.md": "782f87303085b0199c69a281dde4d1f3fa631f2ef33f814192489f4743926b28"
+  },
+  "cohort_sha256": "1b1d87fd1328e8a53502da8b6706c401b4b95999c543289021f84e4b7a4332f0",
+  "stable_rows_sha256": "195eb68a6b39a3f92cf7647402ad8b4d1fdd79367566545f08463986c967c4e6",
+  "work": [
+    {
+      "arm": "semantic_frequency",
+      "reference": {
+        "feature_programs": 65536,
+        "prior_calls": 0,
+        "scored_groups": 47644,
+        "selected": 432,
+        "verifier_checks": 211,
+        "fallback_checks": 0
+      },
+      "eligible": {
+        "feature_programs": 644,
+        "prior_calls": 0,
+        "scored_groups": 432,
+        "selected": 432,
+        "verifier_checks": 211,
+        "fallback_checks": 0
+      }
+    },
+    {
+      "arm": "task_guide",
+      "reference": {
+        "feature_programs": 65536,
+        "prior_calls": 65536,
+        "scored_groups": 47644,
+        "selected": 432,
+        "verifier_checks": 243,
+        "fallback_checks": 0
+      },
+      "eligible": {
+        "feature_programs": 644,
+        "prior_calls": 644,
+        "scored_groups": 432,
+        "selected": 432,
+        "verifier_checks": 243,
+        "fallback_checks": 0
+      }
+    },
+    {
+      "arm": "raw_lexical_task_guide",
+      "reference": {
+        "feature_programs": 65536,
+        "prior_calls": 65536,
+        "scored_groups": 47644,
+        "selected": 432,
+        "verifier_checks": 176,
+        "fallback_checks": 0
+      },
+      "eligible": {
+        "feature_programs": 644,
+        "prior_calls": 644,
+        "scored_groups": 432,
+        "selected": 432,
+        "verifier_checks": 176,
+        "fallback_checks": 0
+      }
+    },
+    {
+      "arm": "task_without_prior_feature",
+      "reference": {
+        "feature_programs": 65536,
+        "prior_calls": 0,
+        "scored_groups": 47644,
+        "selected": 432,
+        "verifier_checks": 233,
+        "fallback_checks": 0
+      },
+      "eligible": {
+        "feature_programs": 644,
+        "prior_calls": 0,
+        "scored_groups": 432,
+        "selected": 432,
+        "verifier_checks": 233,
+        "fallback_checks": 0
+      }
+    }
+  ],
+  "fixtures": {
+    "zero_budget_fallbacks": 8,
+    "empty_set_fallbacks": 8,
+    "verifier_cap_stops": 8,
+    "missing_model_processes": 1
+  }
+}

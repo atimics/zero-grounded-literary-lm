@@ -1,0 +1,39 @@
+{
+  "schema": "zero.reasoner55_eligible_failures.v1",
+  "failures": [
+    {
+      "id": "artifact_filename_colon",
+      "kind": "observed_CI_collection_failure",
+      "run": "https://github.com/atimics/zero-grounded-literary-lm/actions/runs/34282868772",
+      "source_commit": "7cf6360",
+      "platforms": [
+        "ubuntu-24.04",
+        "macos-15"
+      ],
+      "behavior_check_step": "passed",
+      "artifact_upload_step": "failed",
+      "reason": "The uploader rejected raw_lexical_task_guide:eligible.jsonl because colons are excluded from portable artifact paths.",
+      "raw_CI_artifacts_collected": false,
+      "failure_log_sha256": "14ced7824136645c83168d051539d28e5e42288b57cd25a1584e34b554fbbcb5",
+      "resolution": "Use a hyphen in receipt filenames and rerun both platform jobs."
+    },
+    {
+      "id": "opened_guide_ranking_cost",
+      "kind": "opened_engineering_result",
+      "observation": "Across the same 16 opened measured visits, the full task guide used 243 verifier checks, semantic frequency 211, lexical guidance 176, and the prior-feature ablation 233.",
+      "interpretation": "The shared scoring change preserves the guide ranking. The earlier matched primary no-go remains the scientific reference."
+    },
+    {
+      "id": "forced_fallback_and_cap",
+      "kind": "injected_engineering_controls",
+      "observation": "Zero proposal budget and an empty eligible set each force canonical fallback. A cap of one stops after the invalid verifier challenge.",
+      "resolution": "Retain all fallback attempts and cap receipts. Check them with an independent replay."
+    },
+    {
+      "id": "missing_model",
+      "kind": "injected_input_failure",
+      "observation": "A child with its model file unavailable exits with failure after zero episode visits.",
+      "resolution": "Keep its partial stdout, stderr and terminal status before checking its exit code."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+name: Reasoner 5.5 eligible scoring
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  opened-check:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Check opened behavior and independent replay
+        env:
+          REASONER_ELIGIBLE_RECEIPTS: ${{ runner.temp }}/eligible-receipts
+        run: make -f Makefile.reasoner55-eligible reasoner55-eligible-check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eligible-${{ matrix.os }}
+          path: ${{ runner.temp }}/eligible-receipts
+          retention-days: 30

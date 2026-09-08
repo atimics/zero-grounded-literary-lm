@@ -1,0 +1,11 @@
+include Makefile.reasoner55-matched
+
+build/reasoner55_eligible_matched.h: reasoner55_matched_transfer.c scripts/embed_reasoner55_eligible.mjs build/reasoner55_fast_fixed.h
+	node scripts/embed_reasoner55_eligible.mjs
+
+build/reasoner55_eligible: reasoner55_eligible.c build/reasoner55_eligible_matched.h $(R55FAST_HEADERS)
+	$(CC) $(CFLAGS) -I. -DR55FAST_HASH=1 -DR55FAST_SORT=1 $< -lm $(R55FAST_CRYPTO_LIBS) -o $@
+
+.PHONY: reasoner55-eligible-check
+reasoner55-eligible-check: build/reasoner55_eligible
+	node scripts/check_reasoner55_eligible.mjs
