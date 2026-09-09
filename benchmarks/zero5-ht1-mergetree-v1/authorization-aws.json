@@ -1,0 +1,100 @@
+{
+  "schema": "zero.ht1_training_authorization.v1",
+  "authorization_id": "zero5-ht1-mergetree-aws-2026-09-04-v1",
+  "experiment": "zero5-ht1-mergetree-v1",
+  "status": "authorized-launch-path-ready",
+  "authorized": true,
+  "approved_by": "ratimics",
+  "approved_at": "2026-09-04T08:55:39Z",
+  "approved_statement": "I approve up to $10 of spend on both and the next experiment",
+  "bindings": {
+    "contract": "benchmarks/zero5-ht1-mergetree-v1/contract.json",
+    "contract_sha256": "bcb6eb3f139725a7abb30a27c87947f3144bf5ffff6babacd40052247937c317",
+    "series": "benchmarks/zero5-hierarchical-tokenization-v1/series.json",
+    "series_sha256": "c3fb49f0ed7488df461a2c7914e7e0145122cac6c29743419e8a20ba10a26385",
+    "implementation": "benchmarks/zero5-ht1-mergetree-v1/implementation.json",
+    "implementation_sha256": "fffe8446a32b8de6101befbe97b8dd0ac37d5de205c3f02b0c651a3dcc7d9426",
+    "preflight_evidence": "benchmarks/zero5-ht1-mergetree-v1/preflight-evidence.json",
+    "preflight_evidence_sha256": "7461a09967094addabfc38e8d0d0e2732abbebd62049afdeaae508fc3fd7723e",
+    "trainer": "zero5_ht1_mergetree_lm.c",
+    "trainer_sha256": "edf82dd3a625cb0b767ca917710a46807796fb499bf6ff77ca288b4ea907761c",
+    "evaluator": "scripts/evaluate_zero5_ht1_mergetree.mjs",
+    "evaluator_sha256": "9cf2755632abc252eb8048c5b333e718ce4305c7abd0a7c62a822550d2221458"
+  },
+  "execution": {
+    "authorized_evaluator": "scripts/evaluate_zero5_ht1_authorized.mjs",
+    "authorized_evaluator_sha256": "e052ebc713087fc44252635cbeece22c7b770c25762e693f061286ddde13ebc8",
+    "stage": "scripts/aws/zero5-ht1-stage.sh",
+    "stage_sha256": "b0a7c36aa090c4c45fd444c2d79a2c13b19371b208550425af49b6e34f0a9893",
+    "launcher": "scripts/aws/zero5-ht1-run-instance.sh",
+    "launcher_sha256": "1a7e7a1a28fff306cf4fb1f8177c2c205256e222a52467120c42956f3a8f2ad0",
+    "user_data": "scripts/aws/zero5-ht1-user-data.sh",
+    "user_data_sha256": "a5f5bbf31bc7f03afbb666f9a57dffdc20ca3bcbfb0eefd3ee1a4086f1c764f4",
+    "state_sync_seconds": 30,
+    "checkpoint_every_updates": 250,
+    "phases": [
+      "training",
+      "candidate-tasks",
+      "candidate-depth",
+      "control-depth",
+      "result"
+    ]
+  },
+  "pilot": {
+    "training_trajectories": 1,
+    "seed": 0,
+    "update_groups": 28707,
+    "pack_sequences": 37768,
+    "compute_token_exposures": 19337216,
+    "initial_checkpoint_sha256": "d6ca2c804f6aded47262060b30ba19e579ec2737e3fab5d0caf40a075148f849",
+    "training_packs_sha256": "96cd33db03f5cc4e837d4ff2cdfd2bf4aaf845b731a189ea7d4ae770a730b59f",
+    "validation_packs_sha256": "fa726ca05871c97c46dd2b39205b8315065ddf2d25d0388a3cd657a8d90b0734",
+    "tokenizer_sha256": "90b9ddf7b239b6e48c21b87ca9735cb149c34dcf6f03f49a85410df6efe2cadc",
+    "control_result_sha256": "e2c98c4733873898c82419d0ad399cc5a82272949e2e8fdba39cfa0b68e2dd7c",
+    "control_checkpoint_sha256": "dba1f0c27ad97097e3c745e99ca4fc84d9051e60b58d334385014e679547f6ab"
+  },
+  "budget": {
+    "maximum_approved_compute_usd": 10,
+    "provider": "aws",
+    "region": "us-east-1",
+    "instance_type": "c6i.4xlarge",
+    "market": "on-demand",
+    "hourly_price_usd": 0.68,
+    "maximum_attempts": 5,
+    "maximum_seconds_per_attempt": 9000,
+    "maximum_compute_usd_per_attempt": 1.7,
+    "maximum_cumulative_seconds": 45000,
+    "maximum_cumulative_compute_usd": 8.5,
+    "approval_reserve_usd": 1.5,
+    "automatic_termination_required": true,
+    "immutable_attempt_lock_required": true,
+    "state_sync_required": true,
+    "continuations_require_recoverable_status": true
+  },
+  "scope": {
+    "training_authorized": true,
+    "paid_compute_authorized": true,
+    "frozen_validation_authorized": true,
+    "independent_retries_authorized": false,
+    "replication_authorized": false,
+    "promotion_authorized": false,
+    "publication_authorized": false,
+    "checkpoint_publication_authorized": false,
+    "corpus_publication_authorized": false,
+    "sealed_test_access_authorized": false,
+    "source_upload_authorized": false,
+    "private_artifact_upload_authorized": false
+  },
+  "launch_readiness": {
+    "ready": false,
+    "code_ready": true,
+    "status": "launcher-ready-awaiting-input-and-upload-approval",
+    "required_before_launch": [
+      "merge this authorization and launcher",
+      "place the hash-bound C5.1 control checkpoint in the private input bundle",
+      "refresh the AWS session",
+      "approve the exact source and private artifact upload",
+      "record the upload approval and pass the AWS dry run"
+    ]
+  }
+}
