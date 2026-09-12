@@ -1,0 +1,6 @@
+{
+  "schema": "zero.q36_authorization_consumption.v1",
+  "authorization_sha256": "fe9be3c8ab20b9c19487fa7bb2ea1627a793ac9cb0d434f59828b42655485d68",
+  "source_commit": "8f048aab1f922e65abfbebef86f200e84ab528cd",
+  "output": "benchmarks/zero4-q36-factor-probe-v1/seed2"
+}
