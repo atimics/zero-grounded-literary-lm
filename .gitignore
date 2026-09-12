@@ -118,3 +118,4 @@ corpus/*.bpe
 !corpus/literary.bpe
 !corpus/literary-v2.bpe
 sparse_probe_diagnostics
+sparse_semantic_probe_v2
