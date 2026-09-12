@@ -117,3 +117,4 @@ screenlog.0
 corpus/*.bpe
 !corpus/literary.bpe
 !corpus/literary-v2.bpe
+sparse_probe_diagnostics

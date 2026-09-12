@@ -1,0 +1,335 @@
+{
+  "schema": "zero.zero4_q35_sparse_probe_result.v1",
+  "source_commit": "cb57a0170b17bcdacaab67efb95ca04233a6a3cd",
+  "contract_sha256": "c2b7baf5318c8ea105a83606e358d356355742d532f027ddf3b82b09fb6ab052",
+  "authorization_sha256": "1fa8bee978127a9d699f482c8099de75e5728608a13ebdbc70d9416d9fbf0857",
+  "projection_sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+  "scope": "feature-level diagnostic; no package, canonical, runtime, language, or promotion claim",
+  "arms": {
+    "linear": {
+      "feature_dim": 1536,
+      "trainable_parameters": 7685,
+      "feature_source": "deployment-exact-quantized-streaming",
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "969a7ddabb8b0bd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.5406640948650545,
+          "holdout_accuracy": 0.2980000000000002,
+          "per_class_accuracy": [
+            0.31,
+            0.15,
+            0,
+            0.93,
+            0.1
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "d2c018ba8df9bb36"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.4823752922613276,
+          "holdout_accuracy": 0.2940000000000002,
+          "per_class_accuracy": [
+            0.71,
+            0.35,
+            0.32,
+            0.09,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "f72d969837d1b5fd"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.328922460588492,
+          "holdout_accuracy": 0.4160000000000003,
+          "per_class_accuracy": [
+            0.01,
+            0.08,
+            0.49,
+            0.92,
+            0.58
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "0ab58377aacd4f75"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.4160000000000003,
+      "final_per_class_accuracy": [
+        0.01,
+        0.08,
+        0.49,
+        0.92,
+        0.58
+      ]
+    },
+    "dense": {
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "feature_source": "frozen-dense-expansion",
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "sparse": {
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "feature_source": "frozen-sparse-expansion-wta",
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "base_runtime_digest": "139a723e7d832129",
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    }
+  },
+  "primary_arm": "sparse",
+  "sparse_feature_gate_passed": false,
+  "dense_feature_gate_passed": false,
+  "linear_feature_gate_passed": false,
+  "q34_linear_reference_accuracy": 0.416,
+  "sparse_final_minus_q34_linear": -0.21599999999999983,
+  "scientific_decision": "feature_no_go",
+  "package_gates_run": false,
+  "canonical_gates_run": false,
+  "runtime_claim": false,
+  "language_gate": {
+    "authorized": false,
+    "executed": false
+  },
+  "deployment": {
+    "authorized": false,
+    "executed": false
+  },
+  "additional_seeds": {
+    "authorized": false,
+    "executed": false
+  }
+}

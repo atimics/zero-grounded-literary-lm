@@ -1,0 +1,23 @@
+{
+  "scope": "post-hoc exploratory mechanism diagnostic",
+  "tool": "sparse_probe_diagnostics.c",
+  "source_commit": "cb57a0170b17bcdacaab67efb95ca04233a6a3cd",
+  "sample_records": 500,
+  "sample": "last 500 holdout records of mixed-training.tok",
+  "raw": {
+    "mean": 0.00308343723,
+    "std": 0.999995247,
+    "abs_mean": 0.807165469
+  },
+  "expansion_pre_relu": {
+    "mean": -0.148805991,
+    "std": 12.4222449
+  },
+  "expansion_post_relu": {
+    "mean": 4.87829635,
+    "std": 7.18317619,
+    "nonzero_fraction": 0.496745443
+  },
+  "mean_unit_across_record_coefficient_of_variation": 1.12144252,
+  "interpretation": "The expanded code is healthy and informative: it is not near-constant, and units vary across records at least as much as their mean. The failure is therefore not representational. The post-ReLU feature scale (std 7.18) is about 7x the raw feature scale (std 1.0) while the head has 4x the inputs, so the unchanged global gradient-norm clip shrinks every step by an additional factor of roughly the gradient norm. The 30,725-parameter head stays at uniform logits and predicts one class. Note: this diagnostic explains the observed outcome; it is not part of the preregistered intervention and it did not change the recorded scientific decision."
+}
