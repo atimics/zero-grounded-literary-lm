@@ -1,0 +1,97 @@
+{
+  "schema": "zero.zero4_q35_sparse_probe_contract.v1",
+  "id": "zero4-q35-sparse-probe-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "training_allowed": false,
+  "question": "Does a frozen sparse ternary random expansion followed by winner-take-all lift frozen-base semantic operation routing above the Q3.4 linear no-go, at the unchanged data, optimizer, seed, and update budget?",
+  "lineage": {
+    "q34_result": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/results/result.json",
+      "sha256": "759f9ee26a758dcb3debabbc5256fa4a6764911fc23925b46179f7099a12958f",
+      "required_decision": "no-go",
+      "observed_semantic_accuracy": 0.416
+    },
+    "base_runtime": {
+      "path": "benchmarks/zero4-q31-v1/results/candidate.litqhead",
+      "sha256": "84c67ea546383be82d85b16f4be0e5e9a3d2d3641c7f0ca928a96d652a21d452",
+      "base_parameters": 4852992,
+      "base_trainable_parameters": 0
+    },
+    "projection": {
+      "path": "benchmarks/zero4-q35-sparse-probe-v1/projection.bin",
+      "sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+      "generator": "scripts/generate_zero4_q35_projection.mjs",
+      "seed_string": "zero4-q35-sparse-features-v1",
+      "expansion": 6144,
+      "input": 1536,
+      "density": "1/10",
+      "nonzero_entries": 944720,
+      "frozen": true
+    }
+  },
+  "arms": {
+    "linear": {
+      "feature_dim": 1536,
+      "feature_source": "deployment-exact-quantized-streaming",
+      "head_parameters": 7685,
+      "role": "in-run Q3.4 reference"
+    },
+    "dense": {
+      "feature_dim": 6144,
+      "feature_source": "frozen-dense-expansion",
+      "head_parameters": 30725,
+      "role": "sparsity control"
+    },
+    "sparse": {
+      "feature_dim": 6144,
+      "feature_source": "frozen-sparse-expansion-wta",
+      "head_parameters": 30725,
+      "top_k": 307,
+      "top_k_ratio": 0.049967447916666664,
+      "role": "primary claim"
+    }
+  },
+  "data": {
+    "training_tokens": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/mixed-training.tok",
+      "sha256": "efa8f4e7feb4830cdf68128eea33ff7515f7b6e1a269380506a7e6ee95b49783",
+      "records": 9000,
+      "holdout_records": 500
+    },
+    "semantic_private": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/semantic-private.tsv",
+      "sha256": "d390c5b66f0c0ea4e39f11c3404c9cd587fdd22c03f56ea6bc1c3f447c96ed9e",
+      "records": 500
+    },
+    "semantic_confirmation": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/semantic-confirmation.tsv",
+      "sha256": "c8e5f3623763b94391b06d63ace697dd3bffc512d196fe9581dcfd9ecfaafbac",
+      "records": 500
+    }
+  },
+  "pilot": {
+    "diagnostic_seed": 2,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 100],
+    "resume_allowed": false,
+    "maximum_compute_usd": 0.15
+  },
+  "gates": {
+    "feature_semantic_overall_minimum": 0.8,
+    "feature_semantic_per_class_minimum": 0.6,
+    "scope": "feature-level diagnostic only"
+  },
+  "not_authorized": {
+    "package_gates": false,
+    "canonical_regression_gates": false,
+    "runtime_claim": false,
+    "language_gate": false,
+    "deployment": false,
+    "additional_seed": false
+  },
+  "mechanics": {
+    "sparse_semantic_probe.c": "233f1998a4adf4c5a2578a03ccca938d91126a7a159f41118aa878679e03046b"
+  }
+}
