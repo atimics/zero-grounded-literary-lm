@@ -1184,6 +1184,16 @@ semantic_runtime_head_pilot: semantic_runtime_head_pilot.c \
 		literary_infer.h channel_protocol.h
 	$(CC) $(CFLAGS) semantic_runtime_head_pilot.c -o $@ -lm
 
+sparse_semantic_probe: sparse_semantic_probe.c \
+		runtime_operation_head_pilot.c operation_head_infer.c literary_infer.c \
+		literary_infer.h channel_protocol.h
+	$(CC) $(CFLAGS) sparse_semantic_probe.c -o $@ -lm
+
+sparse_semantic_probe_v2: sparse_semantic_probe_v2.c \
+		runtime_operation_head_pilot.c operation_head_infer.c literary_infer.c \
+		literary_infer.h channel_protocol.h
+	$(CC) $(CFLAGS) sparse_semantic_probe_v2.c -o $@ -lm
+
 runtime_operation_head_pilot: runtime_operation_head_pilot.c \
 		operation_head_infer.c literary_infer.c literary_infer.h \
 		channel_protocol.h
@@ -1235,6 +1245,12 @@ zero4-q34-semantic-head-check: semantic_runtime_head_pilot \
 
 zero4-q34-semantic-head-result-check:
 	node scripts/check_zero4_q34_semantic_head_result.mjs
+
+zero4-q35-sparse-probe: sparse_semantic_probe
+	node scripts/run_zero4_q35_sparse_probe.mjs
+
+zero4-q36-factor-probe: sparse_semantic_probe_v2
+	node scripts/run_zero4_q36_factorial_probe.mjs
 
 bpe_tokenizer: bpe_tokenizer.c
 	$(CC) $(CFLAGS) bpe_tokenizer.c -o $@

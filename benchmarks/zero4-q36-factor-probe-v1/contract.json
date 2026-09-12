@@ -1,0 +1,93 @@
+{
+  "schema": "zero.zero4_q36_factor_probe_contract.v1",
+  "id": "zero4-q36-factor-probe-v1",
+  "status": "implementation_staged_run_not_authorized",
+  "training_allowed": false,
+  "question": "Which constraint froze the Q3.5 expanded heads at uniform logits: the unscaled projection (H-scale) or the unchanged global gradient-norm clip (H-clip)?",
+  "lineage": {
+    "q35_result": {
+      "path": "benchmarks/zero4-q35-sparse-probe-v1/seed2/result.json",
+      "sha256": "da17f638af3c31eadc1f7f60e140321027cffeb4b927415bf8b317f0f4ab4d8e",
+      "required_decision": "feature_no_go",
+      "observed_sparse_accuracy": 0.2,
+      "observed_linear_accuracy": 0.416
+    },
+    "base_runtime": {
+      "path": "benchmarks/zero4-q31-v1/results/candidate.litqhead",
+      "sha256": "84c67ea546383be82d85b16f4be0e5e9a3d2d3641c7f0ca928a96d652a21d452",
+      "base_parameters": 4852992,
+      "base_trainable_parameters": 0
+    },
+    "projection": {
+      "path": "benchmarks/zero4-q35-sparse-probe-v1/projection.bin",
+      "sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+      "seed_string": "zero4-q35-sparse-features-v1",
+      "expansion": 6144,
+      "input": 1536,
+      "density": "1/10",
+      "scaling": "fan-in scaling divides unit i by sqrt(nonzeros in projection row i); applied at run time, projection bytes unchanged"
+    }
+  },
+  "hypotheses": {
+    "H-scale": {
+      "intervention": "fan-in scaled projection, inherited global clip unchanged",
+      "primary_arm": "sparse-fanin-global",
+      "supporting_arm": "dense-fanin-global"
+    },
+    "H-clip": {
+      "intervention": "unscaled projection, elementwise per-parameter clip to [-1, 1]",
+      "primary_arm": "sparse-unscaled-perparam",
+      "supporting_arm": "dense-unscaled-perparam"
+    },
+    "H-interaction": {
+      "intervention": "fan-in scaled projection and per-parameter clip together",
+      "primary_arm": "sparse-fanin-perparam",
+      "supporting_arm": "dense-fanin-perparam"
+    }
+  },
+  "arms": [
+    { "name": "linear", "features": "raw-1536", "scale": "unscaled", "clip": "global", "feature_dim": 1536, "head_parameters": 7685, "role": "Q3.4 anchor" },
+    { "name": "dense-unscaled-global", "features": "dense", "scale": "unscaled", "clip": "global", "feature_dim": 6144, "head_parameters": 30725, "role": "Q3.5 reproduction" },
+    { "name": "sparse-unscaled-global", "features": "sparse", "scale": "unscaled", "clip": "global", "feature_dim": 6144, "head_parameters": 30725, "role": "Q3.5 reproduction" },
+    { "name": "dense-unscaled-perparam", "features": "dense", "scale": "unscaled", "clip": "perparam", "feature_dim": 6144, "head_parameters": 30725, "role": "H-clip control" },
+    { "name": "sparse-unscaled-perparam", "features": "sparse", "scale": "unscaled", "clip": "perparam", "feature_dim": 6144, "head_parameters": 30725, "role": "H-clip primary" },
+    { "name": "dense-fanin-global", "features": "dense", "scale": "fanin", "clip": "global", "feature_dim": 6144, "head_parameters": 30725, "role": "H-scale control" },
+    { "name": "sparse-fanin-global", "features": "sparse", "scale": "fanin", "clip": "global", "feature_dim": 6144, "head_parameters": 30725, "role": "H-scale primary" },
+    { "name": "dense-fanin-perparam", "features": "dense", "scale": "fanin", "clip": "perparam", "feature_dim": 6144, "head_parameters": 30725, "role": "H-interaction control" },
+    { "name": "sparse-fanin-perparam", "features": "sparse", "scale": "fanin", "clip": "perparam", "feature_dim": 6144, "head_parameters": 30725, "role": "H-interaction primary" }
+  ],
+  "data": {
+    "training_tokens": {
+      "path": "benchmarks/zero4-q34-semantic-head-v1/mixed-training.tok",
+      "sha256": "efa8f4e7feb4830cdf68128eea33ff7515f7b6e1a269380506a7e6ee95b49783",
+      "records": 9000,
+      "holdout_records": 500
+    }
+  },
+  "pilot": {
+    "diagnostic_seed": 2,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "maximum_optimizer_updates": 100,
+    "measurement_updates": [0, 25, 50, 100],
+    "resume_allowed": false,
+    "maximum_compute_usd": 0.15
+  },
+  "gates": {
+    "feature_semantic_overall_minimum": 0.8,
+    "feature_semantic_per_class_minimum": 0.6,
+    "linear_anchor_expected_accuracy": 0.416,
+    "scope": "feature-level diagnostic only"
+  },
+  "not_authorized": {
+    "package_gates": false,
+    "canonical_regression_gates": false,
+    "runtime_claim": false,
+    "language_gate": false,
+    "deployment": false,
+    "additional_seed": false
+  },
+  "mechanics": {
+    "sparse_semantic_probe_v2.c": "123234ab2eed32a6225fd76830196e5f0e7f7f17b164876be6730c141f0e1a7e"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "zero.zero4_q35_projection_manifest.v1",
+  "seed_string": "zero4-q35-sparse-features-v1",
+  "expansion": 6144,
+  "input": 1536,
+  "density": "1/10",
+  "nonzero_entries": 944720,
+  "positive_entries": 472336,
+  "negative_entries": 472384,
+  "bytes": 9437184,
+  "sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+  "path": "benchmarks/zero4-q35-sparse-probe-v1/projection.bin"
+}

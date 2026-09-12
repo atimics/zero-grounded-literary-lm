@@ -52,6 +52,7 @@ runtime_operation_head_pilot
 package_runtime_operation_head
 semantic_operation_eval
 semantic_runtime_head_pilot
+sparse_semantic_probe
 conservative_exposure_pilot
 reasoner0
 reasoner1
@@ -116,3 +117,6 @@ screenlog.0
 corpus/*.bpe
 !corpus/literary.bpe
 !corpus/literary-v2.bpe
+sparse_probe_diagnostics
+sparse_semantic_probe_v2
+sparse_probe_separability

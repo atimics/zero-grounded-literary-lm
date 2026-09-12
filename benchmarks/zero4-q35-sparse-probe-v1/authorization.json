@@ -1,0 +1,29 @@
+{
+  "schema": "zero.q35_sparse_probe_budget.v1",
+  "id": "zero4-q35-sparse-probe-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "cb57a0170b17bcdacaab67efb95ca04233a6a3cd",
+    "diagnostic_seed": 2,
+    "maximum_optimizer_updates": 100,
+    "projection_sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+    "contract_sha256": "c2b7baf5318c8ea105a83606e358d356355742d532f027ddf3b82b09fb6ab052"
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q35-sparse-probe-local-1",
+    "source_commit": "cb57a0170b17bcdacaab67efb95ca04233a6a3cd",
+    "contract_sha256": "c2b7baf5318c8ea105a83606e358d356355742d532f027ddf3b82b09fb6ab052",
+    "maximum_optimizer_updates": 100,
+    "maximum_compute_usd": 0.15,
+    "training_authorized": true,
+    "feature_gate_authorized": true,
+    "package_gate_authorized": false,
+    "canonical_gate_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false,
+    "runtime_claim_authorized": false
+  }
+}

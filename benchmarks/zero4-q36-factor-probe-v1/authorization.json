@@ -1,0 +1,28 @@
+{
+  "schema": "zero.q36_factor_probe_budget.v1",
+  "id": "zero4-q36-factor-probe-v1",
+  "status": "run_authorized",
+  "proposed": {
+    "source_commit": "8f048aab1f922e65abfbebef86f200e84ab528cd",
+    "maximum_optimizer_updates": 100,
+    "projection_sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+    "contract_sha256": "230b874a109320ec316843ffe52a585b971349a8e69c088dc14e6b6bdb0ead9b"
+  },
+  "authorization": {
+    "authorized": true,
+    "one_execution_only": true,
+    "approval_id": "q36-factor-probe-local-1",
+    "source_commit": "8f048aab1f922e65abfbebef86f200e84ab528cd",
+    "contract_sha256": "230b874a109320ec316843ffe52a585b971349a8e69c088dc14e6b6bdb0ead9b",
+    "maximum_optimizer_updates": 100,
+    "maximum_compute_usd": 0.15,
+    "training_authorized": true,
+    "feature_gate_authorized": true,
+    "package_gate_authorized": false,
+    "canonical_gate_authorized": false,
+    "language_gate_authorized": false,
+    "deployment_authorized": false,
+    "additional_seed_authorized": false,
+    "runtime_claim_authorized": false
+  }
+}

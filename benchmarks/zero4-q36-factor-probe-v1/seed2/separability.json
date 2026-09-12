@@ -1,0 +1,13 @@
+{
+  "scope": "post-hoc class-separability diagnostic",
+  "tool": "sparse_probe_separability.c",
+  "source_commit": "8f048aab1f922e65abfbebef86f200e84ab528cd",
+  "method": "nearest class centroid; means from 1000 training records (200 per class), test on the 500-record semantic holdout",
+  "chance": 0.2,
+  "raw_1536_accuracy": 0.300000,
+  "dense_unscaled_accuracy": 0.332000,
+  "sparse_unscaled_accuracy": 0.420000,
+  "dense_fanin_accuracy": 0.328000,
+  "sparse_fanin_accuracy": 0.416000,
+  "interpretation": "The sparse winner-take-all code is more linearly separable than the raw features (0.420 vs 0.300) and than the dense expansion (0.332). A trivial nearest-centroid readout on the sparse code matches the gradient-trained raw linear head (Q3.4/Q3.6 linear anchor: 0.416). The representation is therefore not the cause of the Q3.5/Q3.6 expanded-head failure, and the fixed sparse random expansion does not exceed the raw features' linear-semantic ceiling. This is exploratory and made no scientific decision."
+}

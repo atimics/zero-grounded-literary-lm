@@ -1,0 +1,942 @@
+{
+  "schema": "zero.zero4_q36_factor_probe_result.v1",
+  "source_commit": "8f048aab1f922e65abfbebef86f200e84ab528cd",
+  "contract_sha256": "230b874a109320ec316843ffe52a585b971349a8e69c088dc14e6b6bdb0ead9b",
+  "authorization_sha256": "fe9be3c8ab20b9c19487fa7bb2ea1627a793ac9cb0d434f59828b42655485d68",
+  "projection_sha256": "efdf4306df47e188700d48803653703b63d75332665f49332e8dae07fda0e144",
+  "scope": "feature-level diagnostic; no package, canonical, runtime, language, or promotion claim",
+  "arms": {
+    "linear": {
+      "features": "raw-1536",
+      "scale": "unscaled",
+      "clip": "global",
+      "feature_dim": 1536,
+      "trainable_parameters": 7685,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "969a7ddabb8b0bd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.5406640948650545,
+          "holdout_accuracy": 0.2980000000000002,
+          "per_class_accuracy": [
+            0.31,
+            0.15,
+            0,
+            0.93,
+            0.1
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "d2c018ba8df9bb36"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.4823752922613276,
+          "holdout_accuracy": 0.2940000000000002,
+          "per_class_accuracy": [
+            0.71,
+            0.35,
+            0.32,
+            0.09,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "f72d969837d1b5fd"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.328922460588492,
+          "holdout_accuracy": 0.4160000000000003,
+          "per_class_accuracy": [
+            0.01,
+            0.08,
+            0.49,
+            0.92,
+            0.58
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "0ab58377aacd4f75"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.4160000000000003,
+      "final_per_class_accuracy": [
+        0.01,
+        0.08,
+        0.49,
+        0.92,
+        0.58
+      ]
+    },
+    "dense-unscaled-global": {
+      "features": "dense",
+      "scale": "unscaled",
+      "clip": "global",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "sparse-unscaled-global": {
+      "features": "sparse",
+      "scale": "unscaled",
+      "clip": "global",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "dense-unscaled-perparam": {
+      "features": "dense",
+      "scale": "unscaled",
+      "clip": "perparam",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "sparse-unscaled-perparam": {
+      "features": "sparse",
+      "scale": "unscaled",
+      "clip": "perparam",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "dense-fanin-global": {
+      "features": "dense",
+      "scale": "fanin",
+      "clip": "global",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "sparse-fanin-global": {
+      "features": "sparse",
+      "scale": "fanin",
+      "clip": "global",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "dense-fanin-perparam": {
+      "features": "dense",
+      "scale": "fanin",
+      "clip": "perparam",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    },
+    "sparse-fanin-perparam": {
+      "features": "sparse",
+      "scale": "fanin",
+      "clip": "perparam",
+      "feature_dim": 6144,
+      "trainable_parameters": 30725,
+      "measurements": [
+        {
+          "update": 0,
+          "holdout_cross_entropy": 1.6094378975329513,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "dd788bc1aebbabd3"
+        },
+        {
+          "update": 25,
+          "holdout_cross_entropy": 1.6094481103828704,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "2de19f88f15baa01"
+        },
+        {
+          "update": 50,
+          "holdout_cross_entropy": 1.6094605641726667,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "85a39bb828792406"
+        },
+        {
+          "update": 100,
+          "holdout_cross_entropy": 1.6094504839364978,
+          "holdout_accuracy": 0.20000000000000015,
+          "per_class_accuracy": [
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          "per_class_count": [
+            100,
+            100,
+            100,
+            100,
+            100
+          ],
+          "head_state_digest": "909cba599e453b51"
+        }
+      ],
+      "selected_feature_checkpoint": null,
+      "feature_gate_passed": false,
+      "final_accuracy": 0.20000000000000015,
+      "final_per_class_accuracy": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ]
+    }
+  },
+  "hypotheses": {
+    "H-scale": {
+      "intervention": "fan-in scaled projection, inherited global clip unchanged",
+      "primary_arm": "sparse-fanin-global",
+      "supporting_arm": "dense-fanin-global",
+      "primary_passed": false,
+      "supporting_passed": false
+    },
+    "H-clip": {
+      "intervention": "unscaled projection, elementwise per-parameter clip to [-1, 1]",
+      "primary_arm": "sparse-unscaled-perparam",
+      "supporting_arm": "dense-unscaled-perparam",
+      "primary_passed": false,
+      "supporting_passed": false
+    },
+    "H-interaction": {
+      "intervention": "fan-in scaled projection and per-parameter clip together",
+      "primary_arm": "sparse-fanin-perparam",
+      "supporting_arm": "dense-fanin-perparam",
+      "primary_passed": false,
+      "supporting_passed": false
+    }
+  },
+  "linear_anchor_matches_q35": true,
+  "hypotheses_supported": [],
+  "scientific_decision": "feature_no_go",
+  "package_gates_run": false,
+  "canonical_gates_run": false,
+  "runtime_claim": false,
+  "language_gate": {
+    "authorized": false,
+    "executed": false
+  },
+  "deployment": {
+    "authorized": false,
+    "executed": false
+  },
+  "additional_seeds": {
+    "authorized": false,
+    "executed": false
+  }
+}

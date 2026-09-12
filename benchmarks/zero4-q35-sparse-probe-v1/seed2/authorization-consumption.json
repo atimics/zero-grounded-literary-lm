@@ -1,0 +1,6 @@
+{
+  "schema": "zero.q35_authorization_consumption.v1",
+  "authorization_sha256": "1fa8bee978127a9d699f482c8099de75e5728608a13ebdbc70d9416d9fbf0857",
+  "source_commit": "cb57a0170b17bcdacaab67efb95ca04233a6a3cd",
+  "output": "benchmarks/zero4-q35-sparse-probe-v1/seed2"
+}
