@@ -76,11 +76,11 @@ if (process.argv.includes("--self-test")) {
 }
 
 const recoveryContractPath = path.resolve(option("--recovery-contract",
-  "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json"));
+  "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract-v2.json"));
 const recoveryContractBytes = fs.readFileSync(recoveryContractPath);
 const recoveryContract = JSON.parse(recoveryContractBytes);
 const recoveryContractSha256 = sha256(recoveryContractBytes);
-if (recoveryContract.schema !== "zero.c61_evaluation_recovery_contract.v1" ||
+if (recoveryContract.schema !== "zero.c61_evaluation_recovery_contract.v2" ||
     recoveryContract.status !== "evaluation-authorized" ||
     recoveryContract.authorized !== true ||
     recoveryContract.training_authorized !== false)
@@ -100,10 +100,10 @@ if (artifact(trainingAuthorization).sha256 !==
   fail("source C6.1 training authorization changed");
 
 const authorizationPath = path.resolve(option("--authorization",
-  "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws.json"));
+  "benchmarks/zero5-c61-shared-state-v1/evaluation-authorization-aws-v2.json"));
 const authorizationBytes = fs.readFileSync(authorizationPath);
 const authorization = JSON.parse(authorizationBytes);
-if (authorization.schema !== "zero.c61_evaluation_authorization.v1" ||
+if (authorization.schema !== "zero.c61_evaluation_authorization.v2" ||
     authorization.authorized !== true ||
     authorization.recovery_contract_sha256 !== recoveryContractSha256 ||
     authorization.scope?.evaluations !== 1 ||
@@ -114,7 +114,16 @@ if (authorization.schema !== "zero.c61_evaluation_authorization.v1" ||
     authorization.scope?.maximum_execution_seconds !==
       recoveryContract.execution.maximum_execution_seconds ||
     authorization.scope?.maximum_ec2_usd !==
-      recoveryContract.execution.maximum_ec2_usd)
+      recoveryContract.execution.maximum_ec2_usd ||
+    authorization.scope?.maximum_attempts !==
+      recoveryContract.execution.maximum_attempts ||
+    authorization.scope?.maximum_cumulative_execution_seconds !==
+      recoveryContract.execution.maximum_cumulative_execution_seconds ||
+    authorization.scope?.maximum_cumulative_ec2_usd !==
+      recoveryContract.execution.maximum_cumulative_ec2_usd ||
+    authorization.approval?.maximum_compute_usd !== 10 ||
+    recoveryContract.execution.maximum_cumulative_ec2_usd >
+      authorization.approval.maximum_compute_usd)
   fail("C6.1 evaluation authorization does not match the recovery contract");
 
 const checkpoint = path.resolve(option("--checkpoint"));
@@ -161,17 +170,27 @@ const validationPath = path.join(out, "validation.json");
 const resultPath = path.join(out, "result.json");
 const executionPath = path.join(out, "execution.json");
 const cacheDirectory = path.join(out, "cache");
+const resumeEvaluation = process.argv.includes("--resume-evaluation");
 if (fs.existsSync(resultPath)) fail("C6.1 evaluation result already exists");
 fs.mkdirSync(out, { recursive: true });
-fs.writeFileSync(executionPath, JSON.stringify({
-  schema: "zero.c61_evaluation_recovery_execution.v1",
-  status: "running",
-  recovery_contract_sha256: recoveryContractSha256,
-  evaluation_authorization_sha256: sha256(authorizationBytes),
-  source_training_contract_sha256:
-    recoveryContract.source_training.scientific_contract_sha256,
-  checkpoint: checkpointArtifact,
-}, null, 2) + "\n");
+fs.mkdirSync(cacheDirectory, { recursive: true });
+if (resumeEvaluation && fs.existsSync(executionPath)) {
+  const execution = JSON.parse(fs.readFileSync(executionPath, "utf8"));
+  if (execution.schema !== "zero.c61_evaluation_recovery_execution.v1" ||
+      execution.recovery_contract_sha256 !== recoveryContractSha256 ||
+      execution.evaluation_authorization_sha256 !== sha256(authorizationBytes))
+    fail("resume execution belongs to a different authorization");
+} else {
+  fs.writeFileSync(executionPath, JSON.stringify({
+    schema: "zero.c61_evaluation_recovery_execution.v1",
+    status: "running",
+    recovery_contract_sha256: recoveryContractSha256,
+    evaluation_authorization_sha256: sha256(authorizationBytes),
+    source_training_contract_sha256:
+      recoveryContract.source_training.scientific_contract_sha256,
+    checkpoint: checkpointArtifact,
+  }, null, 2) + "\n");
+}
 
 const evaluator = recoveryContract.implementation.evaluator.path;
 const evaluatorArguments = [
@@ -227,6 +246,7 @@ const result = {
     source_run_id: recoveryContract.source_training.source_run_id,
     cached_atomic_tasks: fs.readdirSync(cacheDirectory)
       .filter(name => name.endsWith(".json")).length,
+    resumed_from_prior: resumeEvaluation,
     training_rerun: false,
   },
   publication: { checkpoint_published: false, result_published: false },

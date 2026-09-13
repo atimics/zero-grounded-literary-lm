@@ -18,7 +18,7 @@ digest_file() {
 
 node scripts/check_zero5_c61_evaluation_recovery.mjs
 source_commit=$(git rev-parse HEAD)
-recovery_contract=benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json
+recovery_contract=benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract-v2.json
 recovery_contract_sha256=$(digest_file "$recovery_contract")
 asset_key=$(jq -r .execution.asset_archive.key "$recovery_contract")
 asset_sha256=$(jq -r .execution.asset_archive.sha256 "$recovery_contract")
