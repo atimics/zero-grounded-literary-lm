@@ -709,6 +709,7 @@ zero5-c52-targetbridge-check: zero5_c51_target_lm
 
 zero5-c61-shared-state-check: zero5_c61_bottleneck_lm
 	node scripts/check_zero5_c61_shared_state.mjs
+	node scripts/check_contract_amendment.mjs --self-test
 
 zero5-c61-evaluation-recovery-check: zero5-c61-shared-state-check
 	node scripts/check_zero5_c61_evaluation_recovery.mjs

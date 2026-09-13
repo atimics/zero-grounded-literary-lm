@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { spawnSync } from "node:child_process";
+import { scientificHash } from "./contract_tiers.mjs";
 
 const contractPath =
   "benchmarks/zero5-c61-shared-state-v1/evaluation-recovery-contract.json";
@@ -33,8 +34,11 @@ assert.equal(contract.experiment, "zero5-c61-shared-state-v1");
 assert.equal(contract.status, "evaluation-authorized");
 assert.equal(contract.authorized, true);
 assert.equal(contract.training_authorized, false);
+const scientificContractJson = JSON.parse(fs.readFileSync(
+  contract.source_training.scientific_contract));
 assert.equal(contract.source_training.scientific_contract_sha256,
-  artifact(contract.source_training.scientific_contract).sha256);
+  scientificHash(scientificContractJson),
+  "scientific_contract_sha256 must match the scientific invariant hash");
 assert.equal(contract.source_training.training_authorization_sha256,
   artifact(contract.source_training.training_authorization).sha256);
 assert.equal(contract.source_training.source_run_id,

@@ -63,6 +63,7 @@ typedef struct {
     const char *best_path;
     const char *save_path;
     const char *contract_sha256;
+    const char *scientific_contract_sha256;
     long steps;
     int batch;
     int parallel_batch;
@@ -809,7 +810,9 @@ static void aux_save_pair(const char *base_path, Model *model, AuxHead *head,
     state.packed_best_update = best_update;
     state.packed_best_validation = best_validation;
     state.reserved = (uint32_t)options->parallel_batch;
-    memcpy(state.run_contract_sha256, options->contract_sha256,
+    const char *bound_hash = options->scientific_contract_sha256 != NULL
+        ? options->scientific_contract_sha256 : options->contract_sha256;
+    memcpy(state.run_contract_sha256, bound_hash,
            sizeof(state.run_contract_sha256));
     checkpoint_save(base_path, model, update, rng, completed, 0U, 0U, &state);
     aux_head_save(aux_pair_path(base_path, head_path, sizeof(head_path)), head,
@@ -1222,6 +1225,7 @@ static AuxOptions aux_options(int argc, char **argv)
         AUX_VALUE("--best", best_path)
         AUX_VALUE("--save", save_path)
         AUX_VALUE("--run-contract-sha256", contract_sha256)
+        AUX_VALUE("--scientific-contract-sha256", scientific_contract_sha256)
         if (strcmp(argv[i], "--steps") == 0 && i + 1 < argc)
             options.steps = aux_parse_long(argv[++i], "--steps");
         else if (strcmp(argv[i], "--batch") == 0 && i + 1 < argc)
@@ -1438,10 +1442,14 @@ int main(int argc, char **argv)
         options.cloze_answer_weight < 1.0f ||
         options.retrieval_answer_weight < 1.0f)
         fail("invalid Shared-State Bottleneck run contract");
-    if (options.resume_path != NULL &&
-        memcmp(resume_state.run_contract_sha256, options.contract_sha256,
-               sizeof(resume_state.run_contract_sha256)) != 0) {
-        fail("resume checkpoint belongs to a different C6.1 contract");
+    if (options.resume_path != NULL) {
+        const char *resume_hash = options.scientific_contract_sha256 != NULL
+            ? options.scientific_contract_sha256 : options.contract_sha256;
+        if (strlen(resume_hash) != 64U ||
+            memcmp(resume_state.run_contract_sha256, resume_hash,
+                   sizeof(resume_state.run_contract_sha256)) != 0)
+            fail("resume checkpoint belongs to a different C6.1 contract "
+                 "scientific invariant tier");
     }
     packed_set_load(&train, options.train_path, &cfg);
     packed_set_load(&validation, options.validation_path, &cfg);

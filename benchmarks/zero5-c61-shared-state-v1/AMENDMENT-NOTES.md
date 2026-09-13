@@ -107,3 +107,32 @@ recovery boundary are recorded in `EVALUATION-RECOVERY-NOTES.md`.
   change is safe and returns 60 seconds of evaluation window per instance.
   A fresh continuation therefore has ~8,800s of evaluation window, which covers
   the estimated ~8,660s requirement.
+
+## Contract tier split (2026-09-03)
+
+Issue #195: the parser amendment above changed the trainer source hash, which
+changed the full contract hash, which invalidated the 28,707-update checkpoint
+(it binds the contract hash) and forced a $1.67 full re-train.  The contract is
+now split into two tiers so implementation-only amendments keep resume valid:
+
+1. **Scientific invariants** — SPEC, gates, training parameters, data hashes,
+   seeds, model architecture, treatment, evaluation, claim boundary, sealed-test
+   policy.  Changing any of these invalidates state as today.  The
+   `scientific_invariants_sha256` in `contract.json` covers exactly these fields.
+
+2. **Implementation artifacts** — source file hashes (trainer, importer,
+   evaluator, runner, c51_evaluator).  These may be amended via the field-set
+   diff checker (`scripts/check_contract_amendment.mjs`) which proves no
+   scientific field changed.
+
+Checkpoints now bind the **scientific hash** (via the trainer's new
+`--scientific-contract-sha256` option) instead of the full contract hash, so an
+implementation-only amendment does not invalidate the checkpoint.  The runner
+computes the scientific hash from the contract and passes it to the trainer;
+the trainer stores it in the checkpoint's `run_contract_sha256` field and
+verifies it on resume.
+
+The full contract hash still governs authorization (the authorization record
+binds it), so an amendment still requires a fresh authorization.  But a
+completed checkpoint can resume under the amended contract because its
+scientific hash is unchanged.

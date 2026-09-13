@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { scientificHash } from "./contract_tiers.mjs";
 
 function fail(message) {
   process.stderr.write(`error: ${message}\n`);
@@ -90,7 +91,7 @@ const scientificContractPath = path.resolve(option("--scientific-contract",
   "benchmarks/zero5-c61-shared-state-v1/contract.json"));
 const scientificContractBytes = fs.readFileSync(scientificContractPath);
 const scientificContract = JSON.parse(scientificContractBytes);
-if (sha256(scientificContractBytes) !==
+if (scientificHash(scientificContract) !==
     recoveryContract.source_training.scientific_contract_sha256)
   fail("source C6.1 scientific contract changed");
 const trainingAuthorization = path.resolve(option("--training-authorization",
@@ -202,7 +203,7 @@ run("node", [evaluator, ...evaluatorArguments], {
 const validation = JSON.parse(fs.readFileSync(validationPath));
 if (validation.schema !== "zero.c61_shared_state_validation.v1" ||
     validation.experiment !== scientificContract.experiment ||
-    validation.contract_sha256 !==
+    validation.scientific_contract_sha256 !==
       recoveryContract.source_training.scientific_contract_sha256 ||
     validation.checkpoint.sha256 !== checkpointArtifact.sha256 ||
     validation.bottleneck.sha256 !== bottleneckArtifact.sha256 ||
